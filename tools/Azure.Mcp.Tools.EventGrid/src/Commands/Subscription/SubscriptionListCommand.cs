@@ -19,11 +19,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 
     public override string Description =>
         """
-        List event subscriptions for topics with filtering and endpoint configuration. This tool shows all active
-        subscriptions including webhook endpoints, event filters, and delivery retry policies. Returns subscription
-        details as JSON array. Requires either --topic (bare topic name) OR --subscription. If only --topic is provided
-        the tool searches all accessible subscriptions for a topic with that name. Optional --resource-group/--location
-        may only be used alongside --subscription or --topic.
+        Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.
         """;
 
     public override string Title => CommandTitle;

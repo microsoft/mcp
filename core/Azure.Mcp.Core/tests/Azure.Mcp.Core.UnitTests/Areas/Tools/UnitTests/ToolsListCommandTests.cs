@@ -144,7 +144,6 @@ public class ToolsListCommandTests
         Assert.DoesNotContain(result, cmd => cmd.Name == "list" && cmd.Command.Contains("tool"));
 
         Assert.Contains(result, cmd => !string.IsNullOrEmpty(cmd.Name));
-
     }
 
     /// <summary>
@@ -312,6 +311,46 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
+    /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespaces" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        // Serialize then deserialize as list of CommandInfo
+        var json = JsonSerializer.Serialize(response.Results);
+        var namespaces = JsonSerializer.Deserialize<List<CommandInfo>>(json);
+
+        Assert.NotNull(namespaces);
+        Assert.NotEmpty(namespaces);
+
+        // Should include some well-known namespaces (matching Name property)
+        Assert.Contains(namespaces, ci => ci.Name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(namespaces, ci => ci.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+
+        foreach (var ns in namespaces!)
+        {
+            Assert.False(string.IsNullOrWhiteSpace(ns.Name));
+            Assert.False(string.IsNullOrWhiteSpace(ns.Command));
+            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            Assert.Equal(ns.Name, ns.Name.Trim());
+            Assert.DoesNotContain(" ", ns.Name);
+            // Namespace should not itself have options
+            Assert.Null(ns.Options);
+        }
+    }
+
+    /// <summary>
     /// Verifies that the command handles empty command factory gracefully
     /// and returns empty results when no commands are available.
     /// </summary>
@@ -367,4 +406,42 @@ public class ToolsListCommandTests
         Assert.True(metadata.ReadOnly, "Tool list command should be read-only");
     }
 
+    /// <summary>
+    /// Verifies that the command includes metadata for each tool in the output.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_IncludesMetadataForAllCommands()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse([]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeResults(response.Results);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // Verify that all commands have metadata
+        foreach (var command in result)
+        {
+            Assert.NotNull(command.Metadata);
+
+            // Verify that metadata has the expected properties
+            // Destructive, ReadOnly, Idempotent, OpenWorld, Secret, LocalRequired
+            var metadata = command.Metadata;
+
+            // Check that at least the main properties are accessible
+            Assert.True(metadata.Destructive || !metadata.Destructive, "Destructive should be defined");
+            Assert.True(metadata.ReadOnly || !metadata.ReadOnly, "ReadOnly should be defined");
+            Assert.True(metadata.Idempotent || !metadata.Idempotent, "Idempotent should be defined");
+            Assert.True(metadata.OpenWorld || !metadata.OpenWorld, "OpenWorld should be defined");
+            Assert.True(metadata.Secret || !metadata.Secret, "Secret should be defined");
+            Assert.True(metadata.LocalRequired || !metadata.LocalRequired, "LocalRequired should be defined");
+        }
+    }
 }

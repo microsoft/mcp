@@ -31,6 +31,11 @@ public abstract class SubscriptionCommand<
     {
         var options = base.BindOptions(parseResult);
         options.Subscription = CommandHelper.GetSubscription(parseResult);
+        if (!string.IsNullOrEmpty(options.Subscription))
+        {
+            // Trim any surrounding quotes that may have been included in the input
+            options.Subscription = options.Subscription.Trim('"', '\'');
+        }
 
         return options;
     }

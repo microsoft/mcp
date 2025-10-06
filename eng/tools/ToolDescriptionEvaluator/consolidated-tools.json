@@ -1,0 +1,1528 @@
+{
+  "consolidated_azure_tools": [
+    {
+      "name": "get_azure_subscriptions_and_resource_groups",
+      "description": "Get information about Azure subscriptions and resource groups that the user has access to.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_group_list",
+        "mcp_azure-mcp-ser_azmcp_subscription_list"
+      ]
+    },
+    {
+      "name": "get_azure_app_resource_details",
+      "description": "Get details about Azure application platform services, such as Azure Functions, and manage database integrations for App Service applications.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_appservice_database_add",
+        "mcp_azure-mcp-ser_azmcp_functionapp_get"
+      ]
+    },
+    {
+      "name": "get_azure_databases_details",
+      "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_mysql_database_list",
+        "mcp_azure-mcp-ser_azmcp_mysql_database_query",
+        "mcp_azure-mcp-ser_azmcp_mysql_server_config_get",
+        "mcp_azure-mcp-ser_azmcp_mysql_server_list",
+        "mcp_azure-mcp-ser_azmcp_mysql_server_param_get",
+        "mcp_azure-mcp-ser_azmcp_mysql_table_list",
+        "mcp_azure-mcp-ser_azmcp_mysql_table_schema_get",
+        "mcp_azure-mcp-ser_azmcp_postgres_database_list",
+        "mcp_azure-mcp-ser_azmcp_postgres_database_query",
+        "mcp_azure-mcp-ser_azmcp_postgres_server_config_get",
+        "mcp_azure-mcp-ser_azmcp_postgres_server_list",
+        "mcp_azure-mcp-ser_azmcp_postgres_server_param_get",
+        "mcp_azure-mcp-ser_azmcp_postgres_table_list",
+        "mcp_azure-mcp-ser_azmcp_postgres_table_schema_get",
+        "mcp_azure-mcp-ser_azmcp_sql_db_list",
+        "mcp_azure-mcp-ser_azmcp_sql_db_show",
+        "mcp_azure-mcp-ser_azmcp_sql_server_list",
+        "mcp_azure-mcp-ser_azmcp_sql_server_show",
+        "mcp_azure-mcp-ser_azmcp_cosmos_account_list",
+        "mcp_azure-mcp-ser_azmcp_cosmos_database_container_item_query",
+        "mcp_azure-mcp-ser_azmcp_cosmos_database_container_list",
+        "mcp_azure-mcp-ser_azmcp_cosmos_database_list"
+      ]
+    },
+    {
+      "name": "edit_azure_databases",
+      "description": "Edit Azure MySQL and PostgreSQL database server parameters",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_mysql_server_param_set",
+        "mcp_azure-mcp-ser_azmcp_postgres_server_param_set"
+      ]
+    },
+    {
+      "name": "get_azure_resource_and_app_health_status",
+      "description": "Get Azure resource and application health status and metrics and availability. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, and retrieve Application Insights recommendations for performance optimization.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_applicationinsights_recommendation_list",
+        "mcp_azure-mcp-ser_azmcp_applens_resource_diagnose",
+        "mcp_azure-mcp-ser_azmcp_grafana_list",
+        "mcp_azure-mcp-ser_azmcp_datadog_monitoredresources_list",
+        "mcp_azure-mcp-ser_azmcp_monitor_workspace_list",
+        "mcp_azure-mcp-ser_azmcp_monitor_healthmodels_entity_gethealth",
+        "mcp_azure-mcp-ser_azmcp_monitor_metrics_definitions",
+        "mcp_azure-mcp-ser_azmcp_monitor_metrics_query",
+        "mcp_azure-mcp-ser_azmcp_monitor_resource_log_query",
+        "mcp_azure-mcp-ser_azmcp_monitor_table_list",
+        "mcp_azure-mcp-ser_azmcp_monitor_table_type_list",
+        "mcp_azure-mcp-ser_azmcp_monitor_workspace_log_query",
+        "mcp_azure-mcp-ser_azmcp_resourcehealth_availability-status_get",
+        "mcp_azure-mcp-ser_azmcp_resourcehealth_availability-status_list"
+      ]
+    },
+    {
+      "name": "deploy_resources_and_applications_to_azure", 
+      "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_deploy_app_logs_get",
+        "mcp_azure-mcp-ser_azmcp_deploy_iac_rules_get",
+        "mcp_azure-mcp-ser_azmcp_deploy_pipeline_guidance_get",
+        "mcp_azure-mcp-ser_azmcp_deploy_plan_get"
+      ]
+    },
+    {
+      "name": "execute_azure_developer_cli",
+      "description": "Execute Azure Developer CLI (azd) commands for modern cloud-native application development workflows. Supports azd operations including project initialization, environment provisioning, application deployment, monitoring setup, and cleanup. Essential for cloud-native development teams using azd templates and Infrastructure as Code patterns with integrated CI/CD pipeline automation.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_extension_azd"
+      ]
+    },
+    {
+      "name": "get_azure_app_config_settings",
+      "description": "Get details about Azure App Configuration settings",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_appconfig_account_list",
+        "mcp_azure-mcp-ser_azmcp_appconfig_kv_list",
+        "mcp_azure-mcp-ser_azmcp_appconfig_kv_show"
+      ]
+    },
+    {
+      "name": "edit_azure_app_config_settings",
+      "description": "Delete or set Azure App Configuration settings with write operations.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_appconfig_kv_delete",
+        "mcp_azure-mcp-ser_azmcp_appconfig_kv_set"
+      ]
+    },
+    {
+      "name": "lock_unlock_azure_app_config_settings",
+      "description": "Lock and unlock Azure App Configuration settings",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_appconfig_kv_lock_set"
+      ]
+    },
+    {
+      "name": "edit_azure_workbooks",
+      "description": "Update or delete Azure Monitor Workbooks",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_workbooks_delete",
+        "mcp_azure-mcp-ser_azmcp_workbooks_update"
+      ]
+    },
+    {
+      "name": "create_azure_workbooks",
+      "description": "Create new Azure Monitor Workbooks",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_workbooks_create"
+      ]
+    },
+    {
+      "name": "get_azure_workbooks_details",
+      "description": "Get details about Azure Monitor Workbooks including listing workbooks and viewing specific workbook configurations.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_workbooks_list",
+        "mcp_azure-mcp-ser_azmcp_workbooks_show"
+      ]
+    },
+    {
+      "name": "audit_azure_resources_compliance",
+      "description": "Generate compliance and security audit reports for Azure resources using Azure Quick Review (azqr).",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_extension_azqr"
+      ]
+    },
+    {
+      "name": "execute_azure_cli",
+      "description": "Answer questions about an Azure environment by executing Azure CLI commands",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_extension_az"
+      ]
+    },
+    {
+      "name": "get_azure_security_configurations",
+      "description": "List Azure RBAC role assignments",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_role_assignment_list"
+      ]
+    },
+    {
+      "name": "get_azure_key_vault",
+      "description": "View and retrieve Azure Key Vault security artifacts, including certificates, keys (both listing and individual key details), and secrets",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_keyvault_certificate_get",
+        "mcp_azure-mcp-ser_azmcp_keyvault_certificate_list",
+        "mcp_azure-mcp-ser_azmcp_keyvault_key_get",
+        "mcp_azure-mcp-ser_azmcp_keyvault_key_list",
+        "mcp_azure-mcp-ser_azmcp_keyvault_secret_list"
+      ]
+    },
+    {
+      "name": "create_azure_key_vault_items",
+      "description": "Create new security artifacts in Azure Key Vault including certificates, keys, and secrets.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": true,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_keyvault_certificate_create",
+        "mcp_azure-mcp-ser_azmcp_keyvault_key_create",
+        "mcp_azure-mcp-ser_azmcp_keyvault_secret_create"
+      ]
+    },
+    {
+      "name": "import_azure_key_vault_certificates",
+      "description": "Import external certificates into Azure Key Vault",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": true
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_keyvault_certificate_import"
+      ]
+    },
+    {
+      "name": "get_azure_best_practices",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_azureterraformbestpractices_get",
+        "mcp_azure-mcp-ser_azmcp_bicepschema_get",
+        "mcp_azure-mcp-ser_azmcp_get_bestpractices_get"
+      ]
+    },
+    {
+      "name": "design_azure_architecture",
+      "description": "Comprehensive Azure architecture design and visualization tool. Provide cloud architecture consulting and recommend optimal Azure solutions following Well-Architected Framework principles. Also generates visual Mermaid diagrams from application topologies.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_cloudarchitect_design",
+        "mcp_azure-mcp-ser_azmcp_deploy_architecture_diagram_generate"
+      ]
+    },
+    {
+      "name": "get_azure_load_testing_details",
+      "description": "Get Azure Load Testing test configurations, results, and test resources including listing load testing resources.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testresource_list",
+        "mcp_azure-mcp-ser_azmcp_loadtesting_test_get",
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testrun_get",
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testrun_list"
+      ]
+    },
+    {
+      "name": "create_azure_load_testing",
+      "description": "Create Load Testing resource or execute Azure Load Testing tests.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_loadtesting_test_create",
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testresource_create",
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testrun_create"
+      ]
+    },
+    {
+      "name": "update_azure_load_testing_configurations",
+      "description": "Update Azure Load Testing configurations and test run settings.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_loadtesting_testrun_update"
+      ]
+    },
+    {
+      "name": "search_microsoft_docs",
+      "description": "Search official Microsoft and Azure documentation for accurate, up-to-date information.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_microsoft_docs_fetch",
+        "mcp_azure-mcp-ser_microsoft_docs_search"
+      ]
+    },
+    {
+      "name": "get_azure_ai_resources_details",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already and knowledge index schema by AI Foundry and related AI infrastructure.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_search_service_list",
+        "mcp_azure-mcp-ser_azmcp_search_index_get",
+        "mcp_azure-mcp-ser_azmcp_search_index_query",
+        "mcp_azure-mcp-ser_azmcp_foundry_models_deployments_list",
+        "mcp_azure-mcp-ser_azmcp_foundry_models_list",
+        "mcp_azure-mcp-ser_azmcp_foundry_knowledge_index_list",
+        "mcp_azure-mcp-ser_azmcp_foundry_knowledge_index_schema"
+      ]
+    },
+    {
+      "name": "deploy_azure_ai_models",
+      "description": "Deploy a model to Azure AI Foundry.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_foundry_models_deploy"
+      ]
+    },
+    {
+      "name": "connect_azure_ai_foundry_agents",
+      "description": "Connect to Azure AI Foundry agents for establishing agent connections and communication channels.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_foundry_agents_connect"
+      ]
+    },
+    {
+      "name": "evaluate_azure_ai_foundry_agents",
+      "description": "Evaluate Azure AI Foundry agents for performance assessment and testing of agent capabilities.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_foundry_agents_evaluate"
+      ]
+    },
+    {
+      "name": "get_azure_storage_details",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information including available SKUs, but not health status.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_azuremanagedlustre_filesystem_list",
+        "mcp_azure-mcp-ser_azmcp_azuremanagedlustre_filesystem_sku_get",
+        "mcp_azure-mcp-ser_azmcp_storage_account_get",
+        "mcp_azure-mcp-ser_azmcp_storage_blob_container_get",
+        "mcp_azure-mcp-ser_azmcp_storage_blob_get"
+      ]
+    },
+    {
+      "name": "create_azure_storage",
+      "description": "Create Azure Storage accounts and blob containers.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_storage_account_create",
+        "mcp_azure-mcp-ser_azmcp_storage_blob_container_create"
+      ]
+    },
+    {
+      "name": "upload_azure_storage_blobs",
+      "description": "Upload files and data to Azure Storage blob containers.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": true
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_storage_blob_upload"
+      ]
+    },
+    {
+      "name": "get_azure_cache_for_redis_details",
+      "description": "Get details about Azure Cache for Redis resources including cache instances, clusters, access policies, and database configurations. List and manage Redis caches and clusters.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_redis_cache_list",
+        "mcp_azure-mcp-ser_azmcp_redis_cluster_list",
+        "mcp_azure-mcp-ser_azmcp_redis_cache_accesspolicy_list",
+        "mcp_azure-mcp-ser_azmcp_redis_cluster_database_list"
+      ]
+    },
+    {
+      "name": "browse_azure_marketplace_products",
+      "description": "Browse products and offers in the Azure Marketplace",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_marketplace_product_list",
+        "mcp_azure-mcp-ser_azmcp_marketplace_product_get"
+      ]
+    },
+    {
+      "name": "get_azure_capacity",
+      "description": "Check Azure resource capacity, quotas, available regions, usage limits, and high-performance computing infrastructure",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_quota_region_availability_list",
+        "mcp_azure-mcp-ser_azmcp_quota_usage_check",
+        "mcp_azure-mcp-ser_azmcp_azuremanagedlustre_filesystem_required-subnet-size"
+      ]
+    },
+    {
+      "name": "get_azure_messaging_service_details",
+      "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, and Event Grid topics and subscriptions.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_eventgrid_topic_list",
+        "mcp_azure-mcp-ser_azmcp_eventgrid_subscription_list",
+        "mcp_azure-mcp-ser_azmcp_servicebus_queue_details",
+        "mcp_azure-mcp-ser_azmcp_servicebus_topic_details",
+        "mcp_azure-mcp-ser_azmcp_servicebus_topic_subscription_details"
+      ]
+    },
+    {
+      "name": "get_azure_data_explorer_kusto_details",
+      "description": "Get details about Azure Data Explorer (Kusto). List clusters, execute KQL queries, manage databases, explore table schemas, and get data samples.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_kusto_cluster_list",
+        "mcp_azure-mcp-ser_azmcp_kusto_cluster_get",
+        "mcp_azure-mcp-ser_azmcp_kusto_database_list",
+        "mcp_azure-mcp-ser_azmcp_kusto_query",
+        "mcp_azure-mcp-ser_azmcp_kusto_sample",
+        "mcp_azure-mcp-ser_azmcp_kusto_table_list",
+        "mcp_azure-mcp-ser_azmcp_kusto_table_schema"
+      ]
+    },
+    {
+      "name": "create_azure_database_admin_configurations",
+      "description": "Create Azure SQL Server firewall rules",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_sql_server_firewall-rule_create"
+      ]
+    },
+    {
+      "name": "delete_azure_database_admin_configurations",
+      "description": "Delete Azure SQL Server firewall rules",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_sql_server_firewall-rule_delete"
+      ]
+    },
+    {
+      "name": "get_azure_database_admin_configuration_details",
+      "description": "Get details about Azure SQL Server Administration configurations including elastic pools, Entra admin assignments, and firewall rules.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_sql_elastic-pool_list",
+        "mcp_azure-mcp-ser_azmcp_sql_server_entra-admin_list",
+        "mcp_azure-mcp-ser_azmcp_sql_server_firewall-rule_list"
+      ]
+    },
+    {
+      "name": "get_azure_container_details",
+      "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, cluster configurations, and individual nodepool details.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_acr_registry_list",
+        "mcp_azure-mcp-ser_azmcp_acr_registry_repository_list",
+        "mcp_azure-mcp-ser_azmcp_aks_cluster_list",
+        "mcp_azure-mcp-ser_azmcp_aks_cluster_get",
+        "mcp_azure-mcp-ser_azmcp_aks_nodepool_list",
+        "mcp_azure-mcp-ser_azmcp_aks_nodepool_get"
+      ]
+    },
+    {
+      "name": "get_azure_virtual_desktop_details",
+      "description": "Get details about Azure Virtual Desktop resources including host pools, session hosts, and user sessions.",
+      "parameters": {
+        "intent": {
+            "type": "string",
+            "description": "The intent of the azure operation to perform."
+        },
+        "command": {
+            "type": "string",
+            "description": "The command to execute against the specified tool."
+        },
+        "parameters": {
+            "type": "object",
+            "description": "The parameters to pass to the tool command."
+        },
+        "learn": {
+            "type": "boolean",
+            "description": "To learn about the tool and its supported child tools and parameters.",
+            "default": false
+        }
+      },
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "available_commands": [
+        "mcp_azure-mcp-ser_azmcp_virtualdesktop_hostpool_list",
+        "mcp_azure-mcp-ser_azmcp_virtualdesktop_hostpool_sessionhost_list",
+        "mcp_azure-mcp-ser_azmcp_virtualdesktop_hostpool_sessionhost_usersession-list"
+      ]
+    }
+  ]
+}

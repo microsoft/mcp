@@ -199,6 +199,15 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
                           [--publisher <publisher>] \
                           [--license <license>] \
                           [--model-name <model>]
+
+# Generate text completions using deployed Azure OpenAI models in AI Foundry
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
 ```
 
 ### Azure AI Search Operations
@@ -266,11 +275,13 @@ azmcp appconfig kv delete --subscription <subscription> \
                           --key <key> \
                           [--label <label>]
 
-# List all key-value settings in an App Configuration store
-azmcp appconfig kv list --subscription <subscription> \
-                        --account <account> \
-                        [--key <key>] \
-                        [--label <label>]
+# Get key-value settings in an App Configuration store
+azmcp appconfig kv get --subscription <subscription> \
+                       --account <account> \
+                       [--key <key>] \
+                       [--label <label>] \
+                       [--key-filter <key-filter>] \
+                       [--label-filter <label-filter>]
 
 # Lock (make it read-only) or unlock (remove read-only) a key-value setting 
 azmcp appconfig kv lock set --subscription <subscription> \
@@ -285,12 +296,6 @@ azmcp appconfig kv set --subscription <subscription> \
                        --key <key> \
                        --value <value> \
                        [--label <label>]
-
-# Show a specific key-value setting
-azmcp appconfig kv show --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -397,6 +402,59 @@ azmcp extension az --command "storage account show --name <account> --resource-g
 # List virtual machines
 azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
+
+### Azure Communication Services Operations
+
+```bash
+# Send SMS message using Azure Communication Services
+azmcp communication sms send \
+    --connection-string "<connection-string>" \
+    --from "<sender-phone-number>" \
+    --to "<recipient-phone-number>" \
+    --message "<message-text>" \
+    [--enable-delivery-report] \
+    [--tag "<custom-tag>"]
+
+# Examples:
+# Send SMS to single recipient
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124" \
+    --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124,+14255550125" \
+    --message "Broadcast message" \
+    --enable-delivery-report \
+    --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--connection-string`: Azure Communication Services connection string (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
 
 ### Azure Container Registry (ACR) Operations
 
@@ -669,6 +727,15 @@ azmcp eventgrid events publish --subscription <subscription> \
                                [--schema <schema-type>]
 ```
 
+### Azure Event Hubs
+
+```bash
+# Get detailed properties of an Event Hubs namespace
+azmcp eventhubs namespace get --subscription <subscription> \
+                              --namespace <namespace> \
+                              --resource-group <resource-group>
+```
+
 ### Azure Function App Operations
 
 ```bash
@@ -683,7 +750,7 @@ azmcp functionapp get --subscription <subscription> \
 #### Administration
 
 ```bash
-# Gets Key Vault administration settings
+# Gets Key Vault Managed HSM account settings
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
@@ -898,6 +965,9 @@ azmcp bestpractices get --resource <resource> --action <action>
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
+
+# List only the available top-level service namespaces
+azmcp tools list --namespaces
 ```
 
 ### Azure Monitor Operations
@@ -1001,15 +1071,22 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
-
-# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+                                         --resource-group <resource-group> 
 
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 ```
 
 ### Azure Native ISV Operations
@@ -1425,6 +1502,21 @@ All responses follow a consistent JSON format:
   "duration": 123
 }
 ```
+
+### Tool and Namespace Result Objects
+
+When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+
+This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 
 ## Error Handling
 

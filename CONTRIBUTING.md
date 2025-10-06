@@ -36,6 +36,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - [Running the Analysis](#running-the-analysis)
       - [Installing Git Hooks](#installing-git-hooks)
     - [Model Context Protocol (MCP)](#model-context-protocol-mcp)
+    - [Package README](#package-readme)
   - [Advanced Configuration](#advanced-configuration)
     - [Configuring External MCP Servers](#configuring-external-mcp-servers)
       - [Registry Configuration](#registry-configuration)
@@ -298,7 +299,7 @@ With the configuration in place, you can launch the MCP server directly from you
 
 To build a local image for testing purposes:
 
-1. Execute: `./eng/scripts/Build-Docker.ps1`.
+1. Execute: `./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"`.
 2. Update `mcp.json` to point to locally built Docker image:
 
     ```json
@@ -312,7 +313,7 @@ To build a local image for testing purposes:
             "--rm",
             "--env-file",
             "/full/path/to/.env"
-            "azure/azure-mcp:<insert-version-here>",
+            "azure-sdk/azure-mcp:<version-number-of-docker-image>",
           ]
         }
       }
@@ -486,6 +487,28 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 - Use standardized response formats
 - Handle errors according to MCP specifications
 - Provide proper argument suggestions
+
+### Package README
+
+A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion whem processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
+
+Supported comment annotations:
+
+- Section Removal
+  - **Purpose:** Remove one or more lines, or parts of a line of markdown for specified package types.
+  - **Example:**
+  ```
+  <!-- remove-section: start nuget;npm remove_various_lines -->
+  ......
+  various markdown lines to be removed for nuget and npm
+  ......
+  <!-- remove-section: end remove_various_lines -->
+  ```
+
+- Section Insert
+  - **Purpose:** Insert a chunk of text into a line for a specified package type. 
+  - **Example:**
+  `<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->`
 
 ## Advanced Configuration
 

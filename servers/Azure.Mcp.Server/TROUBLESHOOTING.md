@@ -17,6 +17,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
+    - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
   - [Remote MCP Server](#remote-mcp-server)
       - [SSE Transport](#sse-transport)
       - [Streamable HTTP Transport](#streamable-http-transport)
@@ -34,6 +35,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
     - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
     - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
+    - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
 
 ## Common Issues
 
@@ -210,6 +212,36 @@ If the issue persists, you can take a more aggressive approach by clearing the f
 Clear Node Modules Cache
 
 - npm cache clean --force
+
+### MCP Tools That Require Additional Input Fail Silently
+
+The **Elicitation** feature in VS Code lets MCP tools request user input through interactive prompts during execution. If elicitation is not supported, affected tools may fail without showing prompts or may return errors about client compatibility. Updating VS Code usually resolves the issue.
+
+#### Requirements
+Elicitation is supported starting with **VS Code version 1.102 or newer** (released June 2025).
+
+#### Symptoms
+When elicitation isn't supported, you may experience:
+- MCP tools that need user input fail without explanation
+- Missing interactive prompts when tools request additional information
+- Error messages indicating elicitation is unsupported by the client
+
+![Elicitation error message](elicitation_not_supported.png)
+
+#### Solution
+Update VS Code to version 1.102 or newer:
+
+1. Open VS Code
+2. Go to **Help** > **Check for Updates**
+3. Install the latest version if available
+4. Restart VS Code after updating
+
+To verify your VS Code version:
+- Go to **Help** > **About** (or **Code** > **About Visual Studio Code** on macOS)
+- Check that the version number is 1.102.0 or higher
+
+> [!NOTE]
+> If you're using VS Code Insiders, elicitation support is included in versions from June 2025 onwards.
 
 ## Authentication
 
@@ -639,6 +671,59 @@ If you're behind a corporate firewall, you may need to:
 - Configure npm proxy settings
 - Whitelist npm registry domains (`*.npmjs.org`, `registry.npmjs.org`)
 - Work with IT to ensure npm can download packages
+
+### Using Azure Entra ID with Docker
+
+To use Azure Entra ID with the Docker image update the MCP client configuration to use `--volume` rather than `--env-file`.  The value for `--volume` is a mapping from the host machine's `.azure` folder to the corresponding `.azure` directory in the container.
+
+1. On the host machine, log into Azure via Azure CLI.
+2. Update MCP client configuration to point to the user's `.azure` folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "~/.azure:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
+
+#### For Windows Users
+
+On Windows, Azure CLI stores credentials in an encrypted format that cannot be accessed from within Docker containers. On Linux and Mac, credentials are stored as plain JSON files that can be shared with containers. Consequently, mapping the `.azure` directory from the user profile to the container will not work on Windows. A workaround is to use WSL to log into the Azure CLI and then map that to the Docker container. There is an open issue to address this (https://github.com/Azure/azure-sdk-for-net/issues/19167).
+
+1. In a WSL console
+   ```bash
+   mkdir /mnt/c/users/<username>/.azure-wsl
+   AZURE_CONFIG_DIR=/mnt/c/users/<username>/.azure-wsl
+   az login
+   ```
+2. Update MCP client configuration to point that folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "C:\\users\\<username>\\.azure-wsl:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
 
 ## Remote MCP Server
 
