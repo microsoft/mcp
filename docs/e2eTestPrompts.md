@@ -120,6 +120,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
 | azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
 
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| azmcp_confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| azmcp_confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| azmcp_confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
