@@ -52,8 +52,22 @@ function Validate-Npm-Packages {
 
             $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' }
             $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$TargetOs-$TargetArch-*.tgz"
-            if ($mainPackage) { npm install $mainPackage.FullName }
-            if ($platformPackage) { npm install $platformPackage.FullName }
+            if ($mainPackage) { 
+                npm install $mainPackage.FullName
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "npm install of $($mainPackage.FullName) failed with exit code $LASTEXITCODE"
+                    $hasFailures = $true
+                    continue
+                }
+            }
+            if ($platformPackage) { 
+                npm install $platformPackage.FullName
+                if ($LASTEXITCODE -ne 0) {
+                    Write-Host "npm install of $($platformPackage.FullName) failed with exit code $LASTEXITCODE"
+                    $hasFailures = $true
+                    continue
+                }
+            }
             npx azmcp tools list
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully."
