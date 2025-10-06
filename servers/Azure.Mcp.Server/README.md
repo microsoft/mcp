@@ -378,7 +378,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
-- 📞  **Azure Communication Services** - SMS messaging and communication
+- 📞 **Azure Communication Services** - SMS messaging and communication
 - 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
