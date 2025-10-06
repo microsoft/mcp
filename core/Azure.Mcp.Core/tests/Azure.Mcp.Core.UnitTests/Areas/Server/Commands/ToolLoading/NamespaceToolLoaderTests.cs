@@ -469,28 +469,9 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         string toolName,
         Dictionary<string, object?> arguments)
     {
-        // Convert Dictionary<string, object?> to Dictionary<string, JsonElement>
-        var jsonArguments = new Dictionary<string, JsonElement>();
-        foreach (var kvp in arguments)
-        {
-            if (kvp.Value is bool b)
-            {
-                jsonArguments[kvp.Key] = JsonDocument.Parse(b.ToString().ToLower()).RootElement;
-            }
-            else if (kvp.Value is string s)
-            {
-                jsonArguments[kvp.Key] = JsonDocument.Parse($"\"{s}\"").RootElement;
-            }
-            else if (kvp.Value is Dictionary<string, object?> dict)
-            {
-                var json = JsonSerializer.Serialize(dict);
-                jsonArguments[kvp.Key] = JsonDocument.Parse(json).RootElement;
-            }
-            else if (kvp.Value == null)
-            {
-                jsonArguments[kvp.Key] = JsonDocument.Parse("null").RootElement;
-            }
-        }
+        var jsonArguments = arguments.ToDictionary(
+            kvp => kvp.Key,
+            kvp => JsonSerializer.SerializeToElement(kvp.Value));
 
         var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         return new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
