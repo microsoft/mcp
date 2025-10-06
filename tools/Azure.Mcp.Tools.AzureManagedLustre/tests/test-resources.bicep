@@ -14,6 +14,9 @@ param vnetAddressPrefix string = '10.20.0.0/16'
 @description('Subnet prefix for AMLFS (must be at least /24 per RP requirement)')
 param amlfsSubnetPrefix string = '10.20.1.0/24'
 
+@description('Subnet prefix for AMLFS small, for subnet validation live tests.')
+param amlfsSubnetSmallPrefix string = '10.20.2.0/28'
+
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = deployer().objectId
 
@@ -43,6 +46,17 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-05-01' = {
         name: 'amlfs'
         properties: {
           addressPrefix: amlfsSubnetPrefix
+          natGateway: {
+            id: natGateway.id
+          }
+          privateEndpointNetworkPolicies: 'Disabled'
+          privateLinkServiceNetworkPolicies: 'Disabled'
+        }
+      }
+      {
+        name: 'amlfs-small'
+        properties: {
+          addressPrefix: amlfsSubnetSmallPrefix
           natGateway: {
             id: natGateway.id
           }
@@ -82,6 +96,7 @@ resource natPublicIp 'Microsoft.Network/publicIPAddresses@2024-07-01' = {
 }
 
 var filesystemSubnetId = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'amlfs')
+var filesystemSmallSubnetId = resourceId('Microsoft.Network/virtualNetworks/subnets', vnet.name, 'amlfs-small')
 
 resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   name: baseName
@@ -99,5 +114,7 @@ resource amlfs 'Microsoft.StorageCache/amlFilesystems@2024-07-01' = {
   }
 }
 
-output amlfsId string = amlfs.id
-output amlfsSubnetId string = filesystemSubnetId
+output AMLFS_ID string = amlfs.id
+output AMLFS_SUBNET_ID string = filesystemSubnetId
+output AMLFS_SUBNET_SMALL_ID string = filesystemSmallSubnetId
+output LOCATION string = location
