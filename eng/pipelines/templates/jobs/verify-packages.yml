@@ -52,7 +52,7 @@ jobs:
       # Verify the packages created in the sign and pack stage
       . $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
       $hasFailures = Validate-Nuget-Packages -ServerName ${{ parameters.ServerName }} -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
-      $hasFailures = $hasFailures -or (Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs ${{ parameters.OSName }} -TargetArch $(Architecture) -WorkingDirectory $WorkingDirectory)
+      $hasFailures = $hasFailures -or (Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs ${{ parameters.OSName }} -TargetArch $(Architecture) -WorkingDirectory "$(Agent.TempDirectory)")
       if ($hasFailures) {
         exit 1
       }
