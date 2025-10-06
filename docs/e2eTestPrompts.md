@@ -112,6 +112,29 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | List repositories in the container registry <registry_name> |
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
 
+## Azure Communication Services
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
+| azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
+| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
+
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| azmcp_confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| azmcp_confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| azmcp_confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
+
 ## Azure Cosmos DB
 
 | Tool Name | Test Prompt |
@@ -332,8 +355,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 | azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace
 

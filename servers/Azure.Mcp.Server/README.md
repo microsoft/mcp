@@ -3,7 +3,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
-All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
+All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053)
 <!-- remove-section: end remove_install_links -->
@@ -34,7 +34,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 # Overview
 
-**Azure MCP Server** supercharges your agents with Azure context across **30+ different Azure services**.
+**Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
 # Installation
 
@@ -274,6 +274,13 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
 
+### 📞 Azure Communication Services
+
+* "Send an SMS message to +1234567890"
+* "Send SMS with delivery reporting enabled"
+* "Send a broadcast SMS to multiple recipients"
+* "Send SMS with custom tracking tag"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
@@ -323,6 +330,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
 
 ### 📊 Azure Monitor
 
@@ -362,7 +370,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
@@ -371,6 +379,8 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 📦 **Azure Container Apps** - Container hosting
+- 📞  **Azure Communication Services** - SMS messaging and communication
+- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
