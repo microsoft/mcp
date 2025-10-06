@@ -10,12 +10,12 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AzureManagedLustre.Commands.FileSystem;
 
-public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeCommand> logger)
-    : BaseAzureManagedLustreCommand<FileSystemSubnetSizeOptions>(logger)
+public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
+    : BaseAzureManagedLustreCommand<SubnetSizeAskOptions>(logger)
 {
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
-    public override string Name => "required-subnet-size";
+    public override string Name => "ask";
 
     public override string Description =>
         """
@@ -57,7 +57,7 @@ public sealed class FileSystemSubnetSizeCommand(ILogger<FileSystemSubnetSizeComm
         });
     }
 
-    protected override FileSystemSubnetSizeOptions BindOptions(ParseResult parseResult)
+    protected override SubnetSizeAskOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Sku = parseResult.GetValueOrDefault<string>(AzureManagedLustreOptionDefinitions.SkuOption.Name);
