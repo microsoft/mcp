@@ -379,7 +379,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
                     // Check boolean capability properties (only validate the ones that are present)
                     if (capabilities.TryGetProperty("completions", out var completions))
                     {
-                        Assert.True(completions.ValueKind == JsonValueKind.True || completions.ValueKind == JsonValueKind.False, 
+                        Assert.True(completions.ValueKind == JsonValueKind.True || completions.ValueKind == JsonValueKind.False,
                             "completions should be a boolean value");
                     }
 
@@ -625,7 +625,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // Verify first choice
         var firstChoice = choices.EnumerateArray().First();
-        
+
         var message = firstChoice.GetProperty("message");
         var role = message.GetProperty("role");
         Assert.Equal("assistant", role.GetString());
@@ -713,18 +713,18 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // Verify first choice
         var firstChoice = choices.EnumerateArray().First();
-        
+
         var message = firstChoice.GetProperty("message");
         var role = message.GetProperty("role");
         Assert.Equal("assistant", role.GetString());
 
         var content = message.GetProperty("content");
         Assert.Equal(JsonValueKind.String, content.ValueKind);
-        
+
         // Verify the response is relevant to the conversation context
         var responseText = content.GetString();
         Assert.False(string.IsNullOrEmpty(responseText));
-        
+
         // The response should be contextually relevant to chat applications
         // We don't check for specific words to avoid brittleness, just that we got a meaningful response
         Assert.True(responseText.Length > 10, "Response should be substantial");
