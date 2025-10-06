@@ -447,13 +447,13 @@ azmcp communication sms send \
 ```bash
 # Append a tamper-proof entry to a Confidential Ledger
 azmcp confidentialledger entries append --ledger <ledger-name> \
-                                        --entry-data <json-or-text-data> \
+                                        --content <json-or-text-data> \
                                         [--collection-id <collection-id>]
 ```
 
 **Options:**
 -   `--ledger`: Confidential Ledger name (required)
--   `--entry-data`: JSON or text data to insert into the ledger (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
 -   `--collection-id`: Collection ID to store the data with (optional)
 
 ### Azure Container Registry (ACR) Operations

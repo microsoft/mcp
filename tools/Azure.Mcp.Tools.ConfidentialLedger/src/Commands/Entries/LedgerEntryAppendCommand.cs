@@ -39,14 +39,14 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.EntryData);
+        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
     }
 
     protected override AppendEntryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.EntryData = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.EntryData.Name);
+        options.Content = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
         options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
         return options;
     }
@@ -61,16 +61,16 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         var options = BindOptions(parseResult);
 
         // Additional defensive validation (in case of external invocation bypassing parser requirements)
-        if (string.IsNullOrWhiteSpace(options.LedgerName) || string.IsNullOrWhiteSpace(options.EntryData))
+        if (string.IsNullOrWhiteSpace(options.LedgerName) || string.IsNullOrWhiteSpace(options.Content))
         {
             context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-            context.Response.Message = "Missing Required options: --ledger, --entry-data";
+            context.Response.Message = "Missing Required options: --ledger, --content";
             return context.Response;
         }
 
         try
         {
-            var result = await _service.AppendEntryAsync(options.LedgerName!, options.EntryData!, options.CollectionId);
+            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId);
             context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
         }
         catch (Exception ex)
