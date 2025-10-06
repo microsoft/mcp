@@ -283,6 +283,11 @@ public class CommandFactory
     {
         var split = fullCommandName.Split(Separator, 2);
 
+        if (split.Length < 2)
+        {
+            return fullCommandName;
+        }
+
         if (string.Equals(RootCommandGroupName, split[0]))
         {
             return split[1];
