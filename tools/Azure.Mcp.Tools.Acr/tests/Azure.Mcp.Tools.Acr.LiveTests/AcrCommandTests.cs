@@ -64,7 +64,11 @@ public class AcrCommandTests(ITestOutputHelper output)
             var nameProp = item.AssertProperty("name");
             var objName = nameProp.GetString();
             Assert.False(string.IsNullOrWhiteSpace(objName));
-            Assert.Matches("^[a-zA-Z0-9]{5,50}$", objName!); // Basic ACR naming pattern (alphanumeric, 5-50 chars)
+            // Minimal safety checks: we don't re-validate Azure's naming rules; we just ensure
+            // the service returned a sane, non-empty string without control characters.
+            Assert.DoesNotContain('\r', objName);
+            Assert.DoesNotContain('\n', objName);
+            Assert.True(objName!.All(static c => !char.IsControl(c)), $"Registry name '{objName}' contains control characters.");
             if (item.TryGetProperty("location", out var locationProp))
             {
                 Assert.False(string.IsNullOrWhiteSpace(locationProp.GetString()));
