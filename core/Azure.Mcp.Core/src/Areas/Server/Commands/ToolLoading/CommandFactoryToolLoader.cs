@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -26,6 +27,7 @@ public sealed class CommandFactoryToolLoader(
     ILogger<CommandFactoryToolLoader> logger) : IToolLoader
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
@@ -96,6 +98,13 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var toolName = request.Params.Name;
+        var activity = Activity.Current;
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(toolName));
+        }
+
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
@@ -110,7 +119,7 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+        var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive data
         var metadata = command.Metadata;
@@ -189,7 +198,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(toolName);
+            var serviceArea = _commandFactory.GetServiceArea(toolName);
             commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
         }
 
