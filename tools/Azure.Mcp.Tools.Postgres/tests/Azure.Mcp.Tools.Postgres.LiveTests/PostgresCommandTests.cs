@@ -149,7 +149,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 
         var schema = result.AssertProperty("schema");
         Assert.Equal(JsonValueKind.Array, schema.ValueKind);
-    var schemaEntries = schema.EnumerateArray().Select(element => element.GetString() ?? string.Empty).ToList();
+        var schemaEntries = schema.EnumerateArray().Select(element => element.GetString() ?? string.Empty).ToList();
         Assert.Contains(schemaEntries, entry => entry.Contains("name", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(schemaEntries, entry => entry.Contains("quantity", StringComparison.OrdinalIgnoreCase));
     }
@@ -169,14 +169,14 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "query", $"SELECT name, quantity FROM public.{TableName} ORDER BY name;" }
             });
 
-    var queryResult = result.AssertProperty("queryResult");
-    Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
-    using var enumerator = queryResult.EnumerateArray();
-    Assert.True(enumerator.MoveNext(), "Query results should include a header row.");
-    var header = enumerator.Current.GetString();
-    Assert.False(string.IsNullOrWhiteSpace(header));
-    Assert.Contains("name", header!, StringComparison.OrdinalIgnoreCase);
-    Assert.Contains("quantity", header!, StringComparison.OrdinalIgnoreCase);
-    Assert.True(enumerator.MoveNext(), "Query results should contain at least one data row.");
+        var queryResult = result.AssertProperty("queryResult");
+        Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
+        using var enumerator = queryResult.EnumerateArray();
+        Assert.True(enumerator.MoveNext(), "Query results should include a header row.");
+        var header = enumerator.Current.GetString();
+        Assert.False(string.IsNullOrWhiteSpace(header));
+        Assert.Contains("name", header!, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("quantity", header!, StringComparison.OrdinalIgnoreCase);
+        Assert.True(enumerator.MoveNext(), "Query results should contain at least one data row.");
     }
 }
