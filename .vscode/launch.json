@@ -96,7 +96,7 @@
             }
         },
                 {
-            "name": "Debug Azure Activty logs",
+            "name": "Debug Azure Activity logs",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
