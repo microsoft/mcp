@@ -59,8 +59,16 @@ jobs:
 
   - script: |
       echo "Running container tests..."
-      docker run --rm $(Build.Repository.Name)/server:$(Build.BuildId) --help
-      # Add real smoke/integration tests here
+      echo "Calling 'azmcp tools list'"
+      # Override entrypoint to call azmcp directly instead of starting the server
+      docker run --rm --entrypoint ./azmcp $(Build.Repository.Name)/server:$(Build.BuildId) tools list > tools.json
+      echo "tools list output (truncated):"
+      head -n 40 tools.json || true
+      if grep -q '"status"[[:space:]]*:[[:space:]]*200' tools.json; then
+        echo "Status 200 confirmed in tools list output.";
+      else
+        echo "ERROR: tools list output did not contain status 200" >&2; exit 1;
+      fi
     displayName: Run container smoke tests
   
   - script: |
