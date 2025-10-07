@@ -379,7 +379,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> using the health model <health_model_name> |
 | azmcp_monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | azmcp_monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | azmcp_monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
