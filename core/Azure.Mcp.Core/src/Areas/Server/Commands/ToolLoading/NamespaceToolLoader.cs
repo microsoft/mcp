@@ -251,7 +251,7 @@ public sealed class NamespaceToolLoader(
 
         try
         {
-            var availableTools = await GetChildToolListAsync(request, namespaceName);
+            var availableTools = GetChildToolList(request, namespaceName);
 
             // When the specified command is not available, we try to learn about the tool's capabilities
             // and infer the command and parameters from the users intent.
@@ -302,7 +302,7 @@ public sealed class NamespaceToolLoader(
 
             if (jsonResponse.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
             {
-                var childToolSpecJson = await GetChildToolJsonAsync(request, namespaceName, command);
+                var childToolSpecJson = GetChildToolJson(request, namespaceName, command);
 
                 _logger.LogWarning("Namespace {Namespace} command {Command} requires additional parameters.", namespaceName, command);
                 var finalResponse = new CallToolResult
@@ -361,7 +361,7 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
-        var toolsJson = await GetChildToolListJsonAsync(request, namespaceName);
+        var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult
         {
@@ -382,7 +382,7 @@ public sealed class NamespaceToolLoader(
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var availableTools = await GetChildToolListAsync(request, namespaceName);
+            var availableTools = GetChildToolList(request, namespaceName);
             (string? commandName, IReadOnlyDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
             if (commandName != null)
             {
@@ -395,7 +395,7 @@ public sealed class NamespaceToolLoader(
     /// <summary>
     /// Gets the available tools from the namespace commands and caches the result for subsequent requests.
     /// </summary>
-    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string namespaceName)
+    private List<Tool> GetChildToolList(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
         // Check cache first
         if (_cachedToolLists.TryGetValue(namespaceName, out var cachedList))
@@ -430,24 +430,19 @@ public sealed class NamespaceToolLoader(
         // Cache for subsequent requests
         _cachedToolLists[namespaceName] = list;
 
-        return await ValueTask.FromResult(list);
+        return list;
     }
 
-    private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string namespaceName)
+    private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
     {
-        var listTools = await GetChildToolListAsync(request, namespaceName);
+        var listTools = GetChildToolList(request, namespaceName);
         return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
     }
 
-    private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
+    private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
     {
-        var tools = await GetChildToolListAsync(request, namespaceName);
-        return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
-    }
-
-    private async Task<string> GetChildToolJsonAsync(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)
-    {
-        var tool = await GetChildToolAsync(request, namespaceName, commandName);
+        var tools = GetChildToolList(request, namespaceName);
+        var tool = tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
         return JsonSerializer.Serialize(tool, ServerJsonContext.Default.Tool);
     }
 
@@ -639,9 +634,9 @@ public sealed class NamespaceToolLoader(
     /// Disposes resources owned by this tool loader.
     /// Clears the cached tool lists dictionary.
     /// </summary>
-    protected override async ValueTask DisposeAsyncCore()
+    protected override ValueTask DisposeAsyncCore()
     {
         _cachedToolLists.Clear();
-        await ValueTask.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }
