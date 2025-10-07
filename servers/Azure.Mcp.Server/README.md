@@ -269,11 +269,6 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
-### 📦 Azure Container Apps
-
-* "List the container apps in my subscription"
-* "Show me the container apps in my 'my-resource-group' resource group"
-
 ### 📞 Azure Communication Services
 
 * "Send an SMS message to +1234567890"
@@ -281,18 +276,16 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Send a broadcast SMS to multiple recipients"
 * "Send SMS with custom tracking tag"
 
+### 📦 Azure Container Apps
+
+* "List the container apps in my subscription"
+* "Show me the container apps in my 'my-resource-group' resource group"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
 * "Show me my container registries in the 'my-resource-group' resource group"
 * "List all my Azure Container Registry repositories"
-
-### ☸️ Azure Kubernetes Service (AKS)
-
-* "List my AKS clusters in my subscription"
-* "Show me all my Azure Kubernetes Service clusters"
-* "List the node pools for my AKS cluster"
-* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
 ### 📊 Azure Cosmos DB
 
@@ -325,6 +318,13 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "List all certificates in key vault 'my-vault'"
 * "Import a certificate file into key vault 'my-vault' using the name 'tls-cert'"
 * "Get the account settings for my key vault 'my-vault'"
+
+### ☸️ Azure Kubernetes Service (AKS)
+
+* "List my AKS clusters in my subscription"
+* "Show me all my Azure Kubernetes Service clusters"
+* "List the node pools for my AKS cluster"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
 ### ⚡ Azure Managed Lustre
 
@@ -379,9 +379,9 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
-- 📦 **Azure Container Apps** - Container hosting
-- 📞  **Azure Communication Services** - SMS messaging and communication
+- 📞 **Azure Communication Services** - SMS messaging and communication
 - 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
+- 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
@@ -402,11 +402,11 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
+- 🚌 **Azure Service Bus** - Message queuing
+- 🏥 **Azure Service Health** - Resource health status and availability
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
-- 🚌 **Azure Service Bus** - Message queuing
-- 🏥 **Azure Service Health** - Resource health status and availability
 - 💾 **Azure Storage** - Blob storage
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
