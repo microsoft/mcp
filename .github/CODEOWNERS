@@ -223,6 +223,11 @@
 # ServiceLabel: %tools-Workbooks
 # ServiceOwners:                       @matteing
 
+# PRLabel: %tools-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @Azure/azure-mcp
+
+# ServiceLabel: %tools-SignalR
+# ServiceOwners:                       @kenchennt @JialinXin
 
 # PRLabel: %tools-ConfidentialLedger
 /tools/Azure.Mcp.Tools.ConfidentialLedger/          @taicchoumsft @ivarprudnikov @microsoft/azure-mcp
