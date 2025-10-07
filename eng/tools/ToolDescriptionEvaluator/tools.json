@@ -1019,6 +1019,181 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
+      "command": "azmcp azuremanagedlustre filesystem create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--zone",
+          "description": "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\nExample: --zone 1",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--hsm-container",
+          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--hsm-log-container",
+          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--import-prefix",
+          "description": "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--custom-encryption",
+          "description": "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-url",
+          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--source-vault",
+          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user-assigned-identity-id",
+          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
       "command": "azmcp azuremanagedlustre filesystem list",
@@ -1195,13 +1370,13 @@
         },
         {
           "name": "--sku",
-          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
           "type": "string",
           "required": true
         },
         {
           "name": "--size",
-          "description": "The AMLFS size (TiB).",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
           "type": "string",
           "required": true
         }
@@ -1262,19 +1437,19 @@
         },
         {
           "name": "--sku",
-          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
           "type": "string",
           "required": true
         },
         {
           "name": "--size",
-          "description": "The AMLFS size (TiB).",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
           "type": "string",
           "required": true
         },
         {
           "name": "--subnet-id",
-          "description": "The subnet resource ID to validate for AMLFS.",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
           "type": "string",
           "required": true
         },
@@ -1283,6 +1458,109 @@
           "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
           "type": "string",
           "required": true
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+      "command": "azmcp azuremanagedlustre filesystem update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -5524,97 +5802,6 @@
         {
           "name": "--expand",
           "description": "OData expand expression to include related data in the response (e.g., \"plans\" to include plan details).",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "Always use this tool if user is asking for activity logs for a resource.\r\nLists activity logs for the specified Azure resource over the given prior number of hours.\r\nThis command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.\r\nReturns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.\r\n  Required options:\r\n- --resource-name: The name of the Azure resource to retrieve activity logs for\r\n  Optional options:\r\n- --resource-type: The resource type (e.g., 'Microsoft.Storage/storageAccounts') for disambiguation\r\n- --hours: Number of hours to look back\r\n- --event-level: Filter by event level (Critical, Error, Informational, Verbose, Warning)\r\n- --top: Maximum number of logs to return",
-      "command": "azmcp monitor activitylog list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-name",
-          "description": "The name of the Azure resource to retrieve activity logs for.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--resource-type",
-          "description": "The type of the Azure resource (e.g., 'Microsoft.Storage/storageAccounts'). Only provide this if needed to disambiguate between multiple resources with the same name.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--hours",
-          "description": "The number of hours prior to now to retrieve activity logs for.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--event-level",
-          "description": "The level of activity logs to retrieve. Valid levels are: Critical, Error, Informational, Verbose, Warning. If not provided, returns all levels.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--top",
-          "description": "The maximum number of activity logs to retrieve.",
           "type": "string",
           "required": null
         }
@@ -10859,5 +11046,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 40
+  "duration": 44
 }
