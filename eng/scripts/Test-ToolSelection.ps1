@@ -17,7 +17,7 @@
     Use a JSON file containing tool data instead of dynamically loading it from the Azure MCP Server
 
 .PARAMETER PromptsFile
-    Use a JSON or markdown file containing prompts to test instead of the default ../../../docs/e2eTestPrompts.md
+    Use a JSON or markdown file containing prompts to test instead of the default e2eTestPrompts.md
 
 .PARAMETER OutputMarkdown
     Generate output in markdown format instead of plain text
@@ -67,7 +67,7 @@ Set-StrictMode -Version 3.0
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $toolSelectionPath = "$RepoRoot/eng/tools/ToolDescriptionEvaluator"
-$defaultMarkdownPrompts = "$RepoRoot/docs/e2eTestPrompts.md"
+$defaultMarkdownPrompts = "$RepoRoot/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md"
 
 if (-not (Test-Path $toolSelectionPath)) {
     Write-Host "⏭️  Tool Description Evaluator utility not found at $toolSelectionPath - skipping"
