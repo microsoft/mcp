@@ -92,8 +92,8 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
                 options.Cc,
                 options.Bcc,
                 options.ReplyTo,
-                null, // subscription - will be added later
-                null, // resourceGroup - will be added later
+                options.Subscription,
+                options.ResourceGroup,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(new EmailSendCommandResult(result), CommunicationJsonContext.Default.EmailSendCommandResult);
