@@ -95,7 +95,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        // Should return validation error response with no results
+        // Should validate missing or empty subscription parameter
         await AssertToolCallExceptionAsync(
             "azmcp_aks_cluster_list",
             new()
