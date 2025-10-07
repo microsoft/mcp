@@ -119,7 +119,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         RetryPolicyOptions? retryPolicy = null
         )
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
 
@@ -167,7 +167,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters([subscription, sku, subnetId, location]);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(sku), sku), (nameof(subnetId), subnetId), (nameof(location), location));
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent
