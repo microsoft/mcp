@@ -128,7 +128,7 @@ public sealed class CommandFactoryToolLoader(
                 };
             }
         }
-        
+
         var activity = Activity.Current;
 
         if (activity != null)
