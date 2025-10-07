@@ -23,6 +23,7 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     public override string Description =>
         $"""
         Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.
+        If health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.
         """;
 
     public override string Title => CommandTitle;
