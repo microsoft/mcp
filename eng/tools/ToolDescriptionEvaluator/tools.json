@@ -132,7 +132,7 @@
     },
     {
       "name": "get",
-      "description": "Get details for a specific Azure Kubernetes Service (AKS) cluster.\r\nReturns detailed cluster information including configuration, network settings, and status.",
+      "description": "Get or list Azure Kubernetes Service (AKS) clusters. If a specific cluster name is provided, that cluster will\r\nbe retrieved. Otherwise, all clusters will be listed in the specified subscription. Returns detailed cluster\r\ninformation including configuration, network settings, and status.",
       "command": "azmcp aks cluster get",
       "option": [
         {
@@ -187,66 +187,11 @@
           "name": "--resource-group",
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
-          "required": true
+          "required": null
         },
         {
           "name": "--cluster",
           "description": "AKS Cluster name.",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List all Azure Kubernetes Service (AKS) clusters in a subscription.\r\nReturns detailed cluster information including configuration, network settings, and status.",
-      "command": "azmcp aks cluster list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
           "type": "string",
           "required": null
         }
@@ -254,7 +199,7 @@
     },
     {
       "name": "get",
-      "description": "Get details for a specific node pool (agent pool) in an Azure Kubernetes Service (AKS) cluster.\r\nReturns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.",
+      "description": "Get or list Azure Kubernetes Service (AKS) node pools (agent pools) in a cluster. If a specific node pool name\r\nis provided, that node pool will be retrieved. Otherwise, all node pools will be listed in the specified cluster.\r\nReturns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.",
       "command": "azmcp aks nodepool get",
       "option": [
         {
@@ -321,74 +266,7 @@
           "name": "--nodepool",
           "description": "AKS node pool (agent pool) name.",
           "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List all node pools for a specific Azure Kubernetes Service (AKS) cluster.\r\nReturns key node pool details including sizing, count, OS type, mode, and autoscaling settings.",
-      "command": "azmcp aks nodepool list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
           "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--cluster",
-          "description": "AKS Cluster name.",
-          "type": "string",
-          "required": true
         }
       ]
     },
@@ -3423,6 +3301,139 @@
       ]
     },
     {
+      "name": "chat-completions-create",
+      "description": "Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational \r\ninputs with message history and system instructions to generate contextual responses. Returns chat \r\nresponse as JSON. Requires resource-name, deployment-name, and message-array.",
+      "command": "azmcp foundry openai chat-completions-create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--deployment",
+          "description": "The name of the deployment.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--message-array",
+          "description": "Array of messages in the conversation (JSON format). Each message should have 'role' and 'content' properties.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--max-tokens",
+          "description": "The maximum number of tokens to generate in the completion.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--temperature",
+          "description": "Controls randomness in the output. Lower values make it more deterministic.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--top-p",
+          "description": "Controls diversity via nucleus sampling (0.0 to 1.0). Default is 1.0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--frequency-penalty",
+          "description": "Penalizes new tokens based on their frequency (-2.0 to 2.0). Default is 0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--presence-penalty",
+          "description": "Penalizes new tokens based on presence (-2.0 to 2.0). Default is 0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--stop",
+          "description": "Up to 4 sequences where the API will stop generating further tokens.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--stream",
+          "description": "Whether to stream back partial progress. Default is false.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--seed",
+          "description": "If specified, the system will make a best effort to sample deterministically.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user",
+          "description": "Optional user identifier for tracking and abuse monitoring.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "create-completion",
       "description": "Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI \r\ncompletion models and returns generated text with configurable parameters like temperature and max tokens. \r\nReturns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.",
       "command": "azmcp foundry openai create-completion",
@@ -3510,6 +3521,170 @@
           "description": "Controls randomness in the output. Lower values make it more deterministic.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "embeddings-create",
+      "description": "Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into \r\nhigh-dimensional vector representations for similarity search and machine learning applications. \r\nReturns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.",
+      "command": "azmcp foundry openai embeddings-create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--deployment",
+          "description": "The name of the deployment.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--input-text",
+          "description": "The input text to generate embeddings for.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user",
+          "description": "Optional user identifier for tracking and abuse monitoring.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--encoding-format",
+          "description": "The format to return embeddings in (float or base64).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--dimensions",
+          "description": "The number of dimensions for the embedding output. Only supported in some models.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "models-list",
+      "description": "List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about \r\ndeployed models including model names, versions, capabilities, and deployment status. \r\nReturns model information as JSON array. Requires resource-name.",
+      "command": "azmcp foundry openai models-list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -8770,6 +8945,73 @@
       ]
     },
     {
+      "name": "get",
+      "description": "Gets or lists details of an Azure SignalR Runtimes. If a specific SignalR name is used, the details of that\r\nSignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource\r\ngroup will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.",
+      "command": "azmcp signalr runtime get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--signalr",
+          "description": "The name of the SignalR runtime",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "recognize",
       "description": "Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.\r\nSupported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.\r\nOptional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.",
       "command": "azmcp speech stt recognize",
@@ -11046,5 +11288,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 44
+  "duration": 100
 }

@@ -21,6 +21,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 - Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`. [[#111](https://github.com/microsoft/mcp/issues/111)]
+- Merged the following Azure Kubernetes Service (AKS) tools: [[#591](https://github.com/microsoft/mcp/issues/591)]
+  - Merged `azmcp_aks_cluster_list` into `azmcp_aks_cluster_get`, which can perform both operations based on whether `--cluster` is passed.
+  - Merged `azmcp_aks_nodepool_list` into `azmcp_aks_nodepool_get`, which can perform both operations based on whether `--nodepool` is passed.
 
 ### Bugs Fixed
 

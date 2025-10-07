@@ -19,6 +19,9 @@
 ### Changed
 
 - Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`. [[#111](https://github.com/microsoft/mcp/issues/111)]
+- Merged the following Azure Kubernetes Service (AKS) tools: [[#591](https://github.com/microsoft/mcp/issues/591)]
+  - Merged `azmcp_aks_cluster_list` into `azmcp_aks_cluster_get`, which can perform both operations based on whether `--cluster` is passed.
+  - Merged `azmcp_aks_nodepool_list` into `azmcp_aks_nodepool_get`, which can perform both operations based on whether `--nodepool` is passed.
 - Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
 - Update the `ToolName` telemetry field to use the normalized command name when the `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
 - Updated the default tool loading behavior to execute namespace tool calls directly instead of spawning separate child processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
