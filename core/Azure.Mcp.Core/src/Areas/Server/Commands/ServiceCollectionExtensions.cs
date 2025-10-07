@@ -75,6 +75,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
         services.AddSingleton<ServerToolLoader>();
+        services.AddSingleton<NamespaceToolLoader>();
 
         // Register server discovery strategies
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
@@ -85,7 +86,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
-        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy || serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
+        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
             {
@@ -98,6 +99,10 @@ public static class AzureMcpServiceCollectionExtensions
                 var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
                 return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
             });
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
+        {
+            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
         }
 
         // Configure tool loading based on mode
@@ -112,7 +117,14 @@ public static class AzureMcpServiceCollectionExtensions
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var toolLoaders = new List<IToolLoader>
                 {
-                    sp.GetRequiredService<ServerToolLoader>(),
+                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    new ServerToolLoader(
+                        sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()
+                    ),
+                    // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
+                    sp.GetRequiredService<NamespaceToolLoader>(),
                 };
 
                 // Always add utility commands (subscription, group) in namespace mode
