@@ -11,6 +11,8 @@ namespace Azure.Mcp.Tools.AzureManagedLustre.Commands;
 [JsonSerializable(typeof(SubnetSizeValidateCommand.FileSystemCheckSubnetResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
 [JsonSerializable(typeof(SkuGetCommand.SkuGetResult))]
+[JsonSerializable(typeof(FileSystemCreateCommand.FileSystemCreateResult))]
+[JsonSerializable(typeof(FileSystemUpdateCommand.FileSystemUpdateResult))]
 [JsonSerializable(typeof(LustreFileSystem))]
 [JsonSerializable(typeof(AzureManagedLustreSkuInfo))]
 [JsonSerializable(typeof(AzureManagedLustreSkuCapability))]

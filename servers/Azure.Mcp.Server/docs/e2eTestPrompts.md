@@ -18,7 +18,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
 | azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
+| azmcp_foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
+| azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
+| azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
+| azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
 
 ## Azure AI Search
 
@@ -474,6 +479,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_queue_details | Show me the details of service bus <service_bus_name> queue <queue_name> |
 | azmcp_servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
+
+## Azure SignalR
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_signalr_runtime_get | Show me the details of SignalR <signalr_name> |
+| azmcp_signalr_runtime_get | Show me the network information of SignalR runtime <signalr_name> |
+| azmcp_signalr_runtime_get | Describe the SignalR runtime <signalr_name> in resource group <resource_group_name> |
+| azmcp_signalr_runtime_get | Get information about my SignalR runtime <signalr_name> in <resource_group_name> |
+| azmcp_signalr_runtime_get | Show all the SignalRs information in <resource_group_name> |
+| azmcp_signalr_runtime_get | List all SignalRs in my subscription |
 
 ## Azure SQL Database
 

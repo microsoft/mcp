@@ -171,6 +171,32 @@ public class CommandFactoryTests
     }
 
     [Fact]
+    public void GetCommandName_WithOutRootGroup()
+    {
+        // Arrange
+        var commandName = "kusto_cluster_list";
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var area3 = CreateIAreaSetup("name3");
+
+        var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
+
+        // All commands in command factory are prefixed with the root command group.
+        var commandNameToTry = CommandFactory.RootCommandGroupName + CommandFactory.Separator + commandName;
+
+        // Act
+        var actual = factory.RemoveRootGroupFromCommandName(commandNameToTry);
+
+        // Try in the case that the root prefix is not used.
+        var actual2 = factory.RemoveRootGroupFromCommandName(commandName);
+
+        // Assert
+        Assert.Equal(commandName, actual);
+        Assert.Equal(commandName, actual2);
+    }
+
+    [Fact]
     public void GetServiceArea_DoesNotExist()
     {
         // Arrange
