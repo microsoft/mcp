@@ -6,23 +6,21 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ITenantService tenantService, IHttpClientService httpClientService)
+public class MonitorHealthModelService(ITenantService tenantService, ICacheService cacheService, IHttpClientService httpClientService)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const int TokenExpirationBuffer = 300;
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com";
     private const string ApiVersion = "2023-10-01-preview";
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly IHttpClientService _httpClientService = httpClientService;
 
-    private string? _cachedDataplaneAccessToken;
-    private string? _cachedControlPlaneAccessToken;
-    private DateTimeOffset _dataplaneTokenExpiryTime;
-    private DateTimeOffset _controlPlaneTokenExpiryTime;
+    private const string CacheGroup = "monitor-health";
 
     /// <summary>
     /// Retrieves the health information for a specific entity in a health model.
@@ -106,23 +104,21 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<string> GetControlPlaneTokenAsync()
     {
-        return await GetCachedTokenAsync(
-            ManagementApiBaseUrl,
-            () => _cachedControlPlaneAccessToken,
-            (token) => _cachedControlPlaneAccessToken = token,
-            () => _controlPlaneTokenExpiryTime,
-            (expiry) => _controlPlaneTokenExpiryTime = expiry,
-            tokenExpirationBufferSeconds: TokenExpirationBuffer);
+        return await GetEntraIdAccessTokenAsync(
+            _cacheService,
+            CacheGroup,
+            $"{ManagementApiBaseUrl}/.default",
+            tenant: null,
+            tokenCacheKeyPrefix: "entra-token-controlplane");
     }
 
     private async Task<string> GetDataplaneTokenAsync()
     {
-        return await GetCachedTokenAsync(
-            HealthModelsDataApiScope,
-            () => _cachedDataplaneAccessToken,
-            (token) => _cachedDataplaneAccessToken = token,
-            () => _dataplaneTokenExpiryTime,
-            (expiry) => _dataplaneTokenExpiryTime = expiry,
-            tokenExpirationBufferSeconds: TokenExpirationBuffer);
+        return await GetEntraIdAccessTokenAsync(
+            _cacheService,
+            CacheGroup,
+            $"{HealthModelsDataApiScope}/.default",
+            tenant: null,
+            tokenCacheKeyPrefix: "entra-token-dataplane");
     }
 }

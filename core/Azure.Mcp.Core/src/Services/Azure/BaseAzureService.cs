@@ -231,14 +231,16 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     /// <param name="cacheGroup">The cache group (e.g., "mysql", "postgres", "marketplace")</param>
     /// <param name="tokenScope">The token scope (e.g., "https://management.azure.com/.default")</param>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
+    /// <param name="tokenCacheKeyPrefix">Cache key prefix for the token. Use different prefixes when the same service needs to cache multiple tokens for different scopes to prevent cache key collisions. Default: "entra-token"</param>
     /// <returns>The cached or newly fetched token</returns>
     protected async Task<string> GetEntraIdAccessTokenAsync(
         ICacheService cacheService,
         string cacheGroup, 
         string tokenScope, 
-        string? tenant = null)
+        string? tenant = null,
+        string tokenCacheKeyPrefix = "entra-token")
     {
-        const string tokenCacheKeyPrefix = "entra-token";
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenCacheKeyPrefix, nameof(tokenCacheKeyPrefix));
         
         var cacheKey = string.IsNullOrEmpty(tenant) 
             ? tokenCacheKeyPrefix 
