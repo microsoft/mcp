@@ -50,8 +50,10 @@ jobs:
   - pwsh: |
       # Verify the packages created in the sign and pack stage
       . $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
-      $nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
-      $npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)"
+      $nugetHasFailures = [bool](Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed")
+      $npmHasFailures = [bool](Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)")
+      Write-Host "NuGet package validation: $nugetHasFailures"
+      Write-Host "NPM package validation: $npmHasFailures"
       if ($nugetHasFailures -or $npmHasFailures) {
         exit 1
       }

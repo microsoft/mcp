@@ -41,8 +41,8 @@ function Validate-Npm-Packages {
     )
 
     Push-Location $WorkingDirectory
+    $hasFailures = $false
     try {
-        $hasFailures = $false
         $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
         foreach ($wrapperDir in $wrapperDirs) {
             $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
@@ -63,8 +63,8 @@ function Validate-Npm-Packages {
                 }
             }
         }
-        return $hasFailures
     } finally {
         Pop-Location
     }
+    return $hasFailures
 }
