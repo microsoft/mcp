@@ -20,10 +20,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Improved error message for macOS users when interactive browser authentication fails due to broker threading requirements. The error now provides clear guidance to use Azure CLI, Azure PowerShell, or Azure Developer CLI for authentication instead.[[#684](https://github.com/microsoft/mcp/pull/684)]
 - Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`.[[#524](https://github.com/microsoft/mcp/pull/524)]
 - Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
+- Updated the description of the Monitor tool and corrected the prompt for command `monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]  
 
 ### Other Changes
 
 - Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
+- Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
+- Update `ToolName` telemetry field to use normalized command name when `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
 
 #### Dependency updates
 
@@ -98,9 +101,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
-  - Authorization [[#607](https://github.com/microsoft/mcp/pull/607)]
-  - AppConig [[#606](https://github.com/microsoft/mcp/pull/606)]
-  - ACR [[#622](https://github.com/microsoft/mcp/pull/622)]
+  - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
+  - AppConfig [[606](https://github.com/microsoft/mcp/pull/606)]
+  - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
   - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
@@ -946,4 +949,4 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - See https://github.com/Azure/azure-mcp/releases/tag/0.0.10
 
 ### Other Changes
-- See Blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/
+- See blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/

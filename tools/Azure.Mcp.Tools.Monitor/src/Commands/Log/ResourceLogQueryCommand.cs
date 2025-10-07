@@ -15,20 +15,18 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
 
     public override string Name => "query";
-
     public override string Description =>
-        $"""
-        Executes a Kusto Query Language (KQL) query to retrieve logs for any Azure resource that emits logs to Log Analytics.
+    $"""
+    Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). 
+    Use this tool when the user mentions a specific resource name or Resource ID in their request (e.g., "show logs for resource 'app-monitor'"). 
+    This tool filters logs to only show data from the specified resource.
+    
+    When to use: User asks for logs from a specific resource by name or ID.
+    When NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.
 
-        - Use the {ResourceLogQueryOptionDefinitions.ResourceIdName} parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).
-        - The {MonitorOptionDefinitions.TableNameName} parameter specifies the Log Analytics table to query.
-        - The {MonitorOptionDefinitions.QueryTextName} parameter accepts a KQL query or a predefined query name.
-        - Optional parameters: {MonitorOptionDefinitions.HoursName} (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) to set the time range, and {MonitorOptionDefinitions.LimitName} (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) to limit the number of results.
-
-        This tool is useful for:
-        - Querying logs for any Azure resource by resourceId
-        - Investigating diagnostics, errors, and activity logs
-        """;
+    Required arguments: resource ID or resource name, table name, KQL query
+    Optional: {MonitorOptionDefinitions.HoursName}, {MonitorOptionDefinitions.LimitName}
+    """;
 
     public override string Title => CommandTitle;
 
