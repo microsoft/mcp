@@ -7,7 +7,8 @@ parameters:
 - name: Matrix
   type: object
 - name: DependsOn
-  type: string
+  type: object
+  default: []
 - name: CloudConfig
   type: object
 - name: TestTimeoutInMinutes
@@ -18,8 +19,7 @@ parameters:
 jobs:
 - job: Verify_Packages_${{ parameters.OSName }}
   displayName: "Verify Packages"
-  dependsOn:
-  - ${{ parameters.DependsOn }}
+  dependsOn: ${{ parameters.DependsOn }}
   strategy:
     matrix: $[ ${{ parameters.Matrix }} ]
   pool:
@@ -50,17 +50,9 @@ jobs:
   - pwsh: |
       # Verify the packages created in the sign and pack stage
       . $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
-
-      Write-Host "${{ parameters.ServerName }}"
-      Write-Host "${{ parameters.OSName }}"
-      Write-Host "$(Architecture)"
-      Get-ChildItem "$(Pipeline.Workspace)"
-      Get-ChildItem "$(Pipeline.Workspace)/packages_nuget_signed" -Recurse
-      Get-ChildItem "$(Pipeline.Workspace)/packages_npm" -Recurse
-
-      $hasFailures = Validate-Nuget-Packages -ServerName ${{ parameters.ServerName }} -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
-      $hasFailures = $hasFailures -or (Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs ${{ parameters.OSName }} -TargetArch $(Architecture) -WorkingDirectory "$(Agent.TempDirectory)")
-      if ($hasFailures) {
+      $nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
+      $npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)"
+      if ($nugetHasFailures -or $npmHasFailures) {
         exit 1
       }
     displayName: 'Verify npm and nuget packages'

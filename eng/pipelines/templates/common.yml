@@ -117,6 +117,9 @@ extends:
             ServerName: ${{ parameters.ServerName }}
         - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
           parameters:
+            DependsOn:
+              - PackNpm
+              - PackNuget
             SparseCheckout: false
             JobTemplatePath: /eng/pipelines/templates/jobs/verify-packages.yml
             AdditionalParameters:
