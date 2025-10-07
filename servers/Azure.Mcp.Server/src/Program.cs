@@ -23,6 +23,7 @@ internal class Program
         try
         {
             Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
+            Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
             ConfigureServices(services);
@@ -35,12 +36,7 @@ internal class Program
             });
 
             var serviceProvider = services.BuildServiceProvider();
-
-            // Perform any initialization before starting the service.
-            // If the initialization operation fails, do not continue because we do not want
-            // invalid telemetry published.
-            var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
-            await telemetryService.InitializeAsync();
+            await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
@@ -145,5 +141,14 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+    }
+
+    internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
+    {
+        // Perform any initialization before starting the service.
+        // If the initialization operation fails, do not continue because we do not want
+        // invalid telemetry published.
+        var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
+        await telemetryService.InitializeAsync();
     }
 }
