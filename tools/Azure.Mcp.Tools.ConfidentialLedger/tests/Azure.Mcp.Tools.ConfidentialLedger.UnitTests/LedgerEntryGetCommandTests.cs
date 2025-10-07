@@ -46,6 +46,28 @@ public sealed class LedgerEntryGetCommandTests
         await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null);
     }
 
+    [Theory]
+    [InlineData("", "transactionId")]
+    [InlineData(" ", "transactionId")]
+    [InlineData("ledgerName", "")]
+    [InlineData("ledgerName", " ")]
+    public async Task GetLedgerEntryAsync_ThrowsArgumentException_WhenParametersInvalid(string? ledgerName, string? transactionId)
+    {
+        var service = new ConfidentialLedgerService();
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
+    }
+
+    [Theory]
+    [InlineData(null, "transactionId")]
+    [InlineData("ledgerName", null)]
+    public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
+    {
+        var service = new ConfidentialLedgerService();
+        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
+    }
+
     [Fact]
     public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
     {

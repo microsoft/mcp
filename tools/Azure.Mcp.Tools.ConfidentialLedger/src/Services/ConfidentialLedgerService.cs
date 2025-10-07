@@ -93,21 +93,35 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
 
         Response? getByCollectionResponse = null;
-        JsonElement rootElement = default;
         bool loaded = false;
-        while (!loaded)
-        {
-            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
-            rootElement = JsonDocument.Parse(getByCollectionResponse.Content).RootElement;
-            loaded = rootElement.GetProperty("state").GetString() != "Loading";
-        }
-
         string? contents = null;
         string? actualTransactionId = null;
-        if (rootElement.TryGetProperty("entry", out var entryElement))
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        while (!loaded)
         {
-            contents = entryElement.TryGetProperty("contents", out var contentsElement) ? contentsElement.GetString() : null;
-            actualTransactionId = entryElement.TryGetProperty("transactionId", out var txElement) ? txElement.GetString() : null;
+            if (cts.Token.IsCancellationRequested)
+            {
+                throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
+            }
+            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
+            {
+                loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
+                if (!loaded)
+                {
+                    // Add a small delay to avoid tight polling
+                    await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    if (jsonDoc.RootElement.TryGetProperty("entry", out var entryElement))
+                    {
+                        contents = entryElement.TryGetProperty("contents", out var contentsElement) ? contentsElement.GetString() : null;
+                        actualTransactionId = entryElement.TryGetProperty("transactionId", out var txElement) ? txElement.GetString() : null;
+                    }
+                }
+            }
         }
 
         return new LedgerEntryGetResult
