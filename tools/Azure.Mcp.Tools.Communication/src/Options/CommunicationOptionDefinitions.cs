@@ -91,7 +91,7 @@ public static class CommunicationOptionDefinitions
     )
     {
         Description = "The email subject",
-        Required = false
+        Required = true
     };
 
     /// <summary>
