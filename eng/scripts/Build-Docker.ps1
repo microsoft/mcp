@@ -4,6 +4,7 @@
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
     [string] $VersionSuffix,
+    [Parameter(Mandatory=$true)]
     [string] $ServerName,
     [switch] $Trimmed,
     [switch] $DebugBuild
@@ -26,7 +27,10 @@ $arch = "x64"
 $SingleFile = $Trimmed
 $tag = "$dockerImageName`:$Version$VersionSuffix";
 
-& "$root/eng/scripts/Build-Module.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
+& "$root/eng/scripts/Build-Code.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
 
 [string]$publishDirectory = $([System.IO.Path]::Combine($distPath, "build", $ServerName, "$os-$arch", "dist"))
 $relativeDirectory = $(Resolve-Path $publishDirectory -Relative).Replace('\', '/')

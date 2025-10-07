@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas
 {
@@ -20,8 +19,8 @@ namespace Azure.Mcp.Core.Areas
         void ConfigureServices(IServiceCollection services);
 
         /// <summary>
-        /// Register the area's commands to the root group.
+        /// Gets a tree whose root node represents the area.
         /// </summary>
-        void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory);
+        CommandGroup RegisterCommands(IServiceProvider serviceProvider);
     }
 }

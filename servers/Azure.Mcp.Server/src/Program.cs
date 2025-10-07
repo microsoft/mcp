@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
@@ -39,13 +40,13 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
-            return (status >= 200 && status < 300) ? 0 : 1;
+            return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
         {
             WriteResponse(new CommandResponse
             {
-                Status = 500,
+                Status = HttpStatusCode.InternalServerError,
                 Message = ex.Message,
                 Duration = 0
             });
@@ -67,6 +68,7 @@ internal class Program
             new Azure.Mcp.Tools.Aks.AksSetup(),
             new Azure.Mcp.Tools.AppConfig.AppConfigSetup(),
             new Azure.Mcp.Tools.AppLens.AppLensSetup(),
+            new Azure.Mcp.Tools.AppService.AppServiceSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
             new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
@@ -77,6 +79,8 @@ internal class Program
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
+            new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
+            new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
             new Azure.Mcp.Tools.Grafana.GrafanaSetup(),
@@ -86,11 +90,14 @@ internal class Program
             new Azure.Mcp.Tools.Marketplace.MarketplaceSetup(),
             new Azure.Mcp.Tools.Quota.QuotaSetup(),
             new Azure.Mcp.Tools.Monitor.MonitorSetup(),
+            new Azure.Mcp.Tools.ApplicationInsights.ApplicationInsightsSetup(),
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
+            new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),

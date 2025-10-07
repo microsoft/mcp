@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Group.Commands;
 using Azure.Mcp.Core.Models.Command;
@@ -20,7 +21,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Group.UnitTests;
 public class GroupListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IMcpServer _mcpServer;
+    private readonly McpServer _mcpServer;
     private readonly ILogger<GroupListCommand> _logger;
     private readonly IResourceGroupService _resourceGroupService;
     private readonly GroupListCommand _command;
@@ -29,7 +30,7 @@ public class GroupListCommandTests
 
     public GroupListCommandTests()
     {
-        _mcpServer = Substitute.For<IMcpServer>();
+        _mcpServer = Substitute.For<McpServer>();
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _logger = Substitute.For<ILogger<GroupListCommand>>();
         var collection = new ServiceCollection()
@@ -64,7 +65,7 @@ public class GroupListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
@@ -114,7 +115,7 @@ public class GroupListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         await _resourceGroupService.Received(1).GetResourceGroups(
             Arg.Is<string>(x => x == subscriptionId),
             Arg.Is<string>(x => x == tenantId),
@@ -137,7 +138,7 @@ public class GroupListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.Null(result.Results);
     }
 
@@ -158,7 +159,7 @@ public class GroupListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(500, result.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
         Assert.Contains(expectedError, result.Message);
     }
 }

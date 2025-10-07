@@ -16,11 +16,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     public override string Name => "list";
 
     public override string Description =>
-        """
-        List all databases in a Kusto cluster.
-        Requires `cluster-uri` ( or `subscription` and `cluster`).
-        Result is a list of database names, returned as a JSON array.
-        """;
+        "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).";
 
     public override string Title => CommandTitle;
 
@@ -28,7 +24,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -51,7 +47,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 
             if (UseClusterUri(options))
             {
-                databasesNames = await kusto.ListDatabases(
+                databasesNames = await kusto.ListDatabasesAsync(
                     options.ClusterUri!,
                     options.Tenant,
                     options.AuthMethod,
@@ -59,7 +55,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
             }
             else
             {
-                databasesNames = await kusto.ListDatabases(
+                databasesNames = await kusto.ListDatabasesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Tenant,
@@ -67,9 +63,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                     options.RetryPolicy);
             }
 
-            context.Response.Results = databasesNames?.Count > 0 ?
-                ResponseResult.Create(new DatabaseListCommandResult(databasesNames), KustoJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {

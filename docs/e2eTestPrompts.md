@@ -6,6 +6,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_foundry_agents_connect | Query an agent in my AI foundry project |
+| azmcp_foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| azmcp_foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
@@ -15,6 +18,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
 
 ## Azure AI Search
 
@@ -28,6 +32,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_search_service_list | Show me the Cognitive Search services in my subscription |
 | azmcp_search_service_list | Show me my Cognitive Search services |
 
+## Azure AI Services Speech
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_speech_stt_recognize | Convert this audio file to text using Azure Speech Services |
+| azmcp_speech_stt_recognize | Recognize speech from my audio file with language detection |
+| azmcp_speech_stt_recognize | Transcribe speech from audio file <file_path> with profanity filtering |
+| azmcp_speech_stt_recognize | Convert speech to text from audio file <file_path> using endpoint <endpoint> |
+| azmcp_speech_stt_recognize | Transcribe the audio file <file_path> in Spanish language |
+| azmcp_speech_stt_recognize | Convert speech to text with detailed output format from audio file <file_path> |
+| azmcp_speech_stt_recognize | Recognize speech from <file_path> with phrase hints for better accuracy |
+| azmcp_speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
+| azmcp_speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
+| azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+
 ## Azure App Configuration
 
 | Tool Name | Test Prompt |
@@ -36,12 +55,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_account_list | Show me the App Configuration stores in my subscription |
 | azmcp_appconfig_account_list | Show me my App Configuration stores |
 | azmcp_appconfig_kv_delete | Delete the key <key_name> in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | List all key-value settings in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_list | Show me the key-value settings in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_lock | Lock the key <key_name> in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show me the key-value settings in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_get | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_lock_set | Lock the key <key_name> in App Configuration store <app_config_store_name> |
+| azmcp_appconfig_kv_lock_set | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 | azmcp_appconfig_kv_set | Set the key <key_name> in App Configuration store <app_config_store_name> to \<value> |
-| azmcp_appconfig_kv_show | Show the content for the key <key_name> in App Configuration store <app_config_store_name> |
-| azmcp_appconfig_kv_unlock | Unlock the key <key_name> in App Configuration store <app_config_store_name> |
 
 ## Azure App Lens
 
@@ -50,14 +70,28 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
-
-## Azure CLI
+## Azure App Service
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_extension_az | Create a Storage account with name <storage_account_name> |
-| azmcp_extension_az | List all virtual machines in my subscription |
-| azmcp_extension_az | Show me the details of the storage account <account_name> |
+| azmcp_appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure a SQL Server database for app service <app_name> |
+| azmcp_appservice_database_add | Add a MySQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a PostgreSQL database to app service <app_name> |
+| azmcp_appservice_database_add | Add a CosmosDB database to app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
+| azmcp_appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
+| azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
+
+## Azure Application Insights
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_applicationinsights_recommendation_list | List code optimization recommendations across my Application Insights components |
+| azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
+| azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
+| azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
 ## Azure Container Registry (ACR)
 
@@ -72,6 +106,29 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | Show me my container registry repositories |
 | azmcp_acr_registry_repository_list | List repositories in the container registry <registry_name> |
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
+
+## Azure Communication Services
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
+| azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
+| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
+
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| azmcp_confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| azmcp_confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| azmcp_confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
 
 ## Azure Cosmos DB
 
@@ -130,18 +187,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_server_list | List all PostgreSQL servers in my subscription |
 | azmcp_postgres_server_list | Show me my PostgreSQL servers |
 | azmcp_postgres_server_list | Show me the PostgreSQL servers in my subscription |
-| azmcp_postgres_server_param | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
+| azmcp_postgres_server_param_get | Show me if the parameter my PostgreSQL server \<server> has replication enabled |
 | azmcp_postgres_server_param_set | Enable replication for my PostgreSQL server \<server> |
 | azmcp_postgres_table_list | List all tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_list | Show me the tables in the PostgreSQL database \<database> in server \<server> |
 | azmcp_postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
-
-## Azure Developer CLI
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_extension_azd | Create a To-Do list web application that uses NodeJS and MongoDB |
-| azmcp_extension_azd | Deploy my web application to Azure App Service |
 
 ## Azure Deploy
 
@@ -157,10 +207,27 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_eventgrid_events_publish | Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data> |
+| azmcp_eventgrid_events_publish | Publish event to my Event Grid topic <topic_name> with the following events <event_data> |
+| azmcp_eventgrid_events_publish | Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data> |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | Show me the Event Grid topics in my subscription |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in subscription <subscription> |
 | azmcp_eventgrid_topic_list | List all Event Grid topics in resource group <resource_group_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | Show me all Event Grid subscriptions for topic <topic_name> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for topic <topic_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name> |
+| azmcp_eventgrid_subscription_list | Show all Event Grid subscriptions in my subscription |
+| azmcp_eventgrid_subscription_list | List all Event Grid subscriptions in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription> |
+| azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
+
+## Azure Event Hubs
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
 
 ## Azure Function App
 
@@ -175,27 +242,70 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_functionapp_get | Show me the details for the function app <function_app_name> |
 | azmcp_functionapp_get | Show plan and region for function app <function_app_name> |
 | azmcp_functionapp_get | What is the status of function app <function_app_name>? |
-| azmcp_functionapp_list | List all function apps in my subscription |
-| azmcp_functionapp_list | Show me my Azure function apps |
-| azmcp_functionapp_list | What function apps do I have? |
+| azmcp_functionapp_get | List all function apps in my subscription |
+| azmcp_functionapp_get | Show me my Azure function apps |
+| azmcp_functionapp_get | What function apps do I have? |
 
 ## Azure Key Vault
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_keyvault_admin_settings_get | Get the account settings for my key vault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | Show me the account settings for managed HSM keyvault <key_vault_account_name> |
+| azmcp_keyvault_admin_settings_get | What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name> |
 | azmcp_keyvault_certificate_create | Create a new certificate called <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Generate a certificate named <certificate_name> in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Request creation of certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_create | Issue a certificate <certificate_name> in key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the certificate <certificate_name> in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_get | Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Get the certificate <certificate_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Display the certificate details for <certificate_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_get | Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import the certificate in file <file_path> into the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_import | Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name> |
+| azmcp_keyvault_certificate_import | Upload certificate file <file_path> to key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_import | Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name> |
 | azmcp_keyvault_certificate_list | List all certificates in the key vault <key_vault_account_name> |
 | azmcp_keyvault_certificate_list | Show me the certificates in the key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | What certificates are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_certificate_list | List certificate names in vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Enumerate certificates in key vault <key_vault_account_name> |
+| azmcp_keyvault_certificate_list | Show certificate names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_create | Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Generate a key <key_name> with type <key_type> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an oct key in the vault <key_vault_account_name> |
+| azmcp_keyvault_key_create | Create an RSA key in the vault <key_vault_account_name> with name <key_name> |
+| azmcp_keyvault_key_create | Create an EC key with name <key_name> in the vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Show me the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Show me the details of the key <key_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Get the key <key_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Display the key details for <key_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_key_get | Retrieve key metadata for <key_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | List all keys in the key vault <key_vault_account_name> |
 | azmcp_keyvault_key_list | Show me the keys in the key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | What keys are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_key_list | List key names in vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Enumerate keys in key vault <key_vault_account_name> |
+| azmcp_keyvault_key_list | Show key names in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_create | Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_create | Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Show me the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Show me the details of the secret <secret_name> in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Get the secret <secret_name> from vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Display the secret details for <secret_name> in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_get | Retrieve secret metadata for <secret_name> in vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | List all secrets in the key vault <key_vault_account_name> |
 | azmcp_keyvault_secret_list | Show me the secrets in the key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | What secrets are in the key vault <key_vault_account_name>? |
+| azmcp_keyvault_secret_list | List secrets names in vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Enumerate secrets in key vault <key_vault_account_name> |
+| azmcp_keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
 
@@ -208,12 +318,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_list | List all AKS clusters in my subscription |
 | azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
 | azmcp_aks_cluster_list | What AKS clusters do I have? |
-| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Get details for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Show me the configuration for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_nodepool_get | What is the setup of nodepool \<nodepool-name> for AKS cluster \<cluster-name> in \<resource-group>? |
+| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
@@ -240,8 +350,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 | azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace
 
@@ -255,23 +366,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_bestpractices_get | Get the latest Azure code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure deployment best practices |
-| azmcp_bestpractices_get | Get the latest Azure best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| azmcp_bestpractices_get | Get the latest Azure Functions deployment best practices|
-| azmcp_bestpractices_get | Get the latest Azure Functions best practices |
-| azmcp_bestpractices_get | Get the latest Azure Static Web Apps best practices |
-| azmcp_bestpractices_get | What are azure function best practices? |
-| azmcp_bestpractices_get | Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm. |
-| azmcp_bestpractices_get | Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm. |
+| azmcp_get_bestpractices_get | Get the latest Azure code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure deployment best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions code generation best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Functions deployment best practices|
+| azmcp_get_bestpractices_get | Get the latest Azure Functions best practices |
+| azmcp_get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
+| azmcp_get_bestpractices_get | What are azure function best practices? |
 
 ## Azure Monitor
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> using the health model <health_model_name> |
 | azmcp_monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | azmcp_monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | azmcp_monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
@@ -301,7 +410,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 ## Azure Quick Review CLI
 
 | Tool Name | Test Prompt |
-| --------- | ----------- |
+|:----------|:----------|
 | azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
 | azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |
@@ -371,10 +480,20 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_sql_db_create | Create a new SQL database named <database_name> in server <server_name> |
+| azmcp_sql_db_create | Create a SQL database <database_name> with Basic tier in server <server_name> |
+| azmcp_sql_db_create | Create a new database called <database_name> on SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_db_delete | Delete the SQL database <database_name> from server <server_name> |
+| azmcp_sql_db_delete | Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_db_delete | Delete the database called <database_name> on server <server_name> |
 | azmcp_sql_db_list | List all databases in the Azure SQL server <server_name> |
 | azmcp_sql_db_list | Show me all the databases configuration details in the Azure SQL server <server_name> |
+| azmcp_sql_db_rename | Rename the SQL database <database_name> on server <server_name> to <new_database_name> |
+| azmcp_sql_db_rename | Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name> |
 | azmcp_sql_db_show | Get the configuration details for the SQL database <database_name> on server <server_name> |
 | azmcp_sql_db_show | Show me the details of SQL database <database_name> in server <server_name> |
+| azmcp_sql_db_update | Update the performance tier of SQL database <database_name> on server <server_name> |
+| azmcp_sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
 ## Azure SQL Elastic Pool Operations
 
@@ -388,6 +507,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_sql_server_create | Create a new Azure SQL server named <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_create | Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user> |
+| azmcp_sql_server_create | Set up a new SQL server called <server_name> in my resource group <resource_group_name> |
+| azmcp_sql_server_delete | Delete the Azure SQL server <server_name> from resource group <resource_group_name> |
+| azmcp_sql_server_delete | Remove the SQL server <server_name> from my subscription |
+| azmcp_sql_server_delete | Delete SQL server <server_name> permanently |
 | azmcp_sql_server_entra-admin_list | List Microsoft Entra ID administrators for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | Show me the Entra ID administrators configured for SQL server <server_name> |
 | azmcp_sql_server_entra-admin_list | What Microsoft Entra ID administrators are set up for my SQL server <server_name>? |
@@ -400,6 +525,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_firewall-rule_list | List all firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | Show me the firewall rules for SQL server <server_name> |
 | azmcp_sql_server_firewall-rule_list | What firewall rules are configured for my SQL server <server_name>? |
+| azmcp_sql_server_list | List all Azure SQL servers in resource group <resource_group_name> |
+| azmcp_sql_server_list | Show me every SQL server available in resource group <resource_group_name> |
+| azmcp_sql_server_show | Show me the details of Azure SQL server <server_name> in resource group <resource_group_name> |
+| azmcp_sql_server_show | Get the configuration details for SQL server <server_name> |
+| azmcp_sql_server_show | Display the properties of SQL server <server_name> |
 
 ## Azure Storage
 
@@ -413,8 +543,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_account_get | List all storage accounts in my subscription including their location and SKU |
 | azmcp_storage_account_get | Show me my storage accounts with whether hierarchical namespace (HNS) is enabled |
 | azmcp_storage_account_get | Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings |
-| azmcp_storage_blob_batch_set-tier | Set access tier to Cool for multiple blobs in the container <container> in the storage account <account> |
-| azmcp_storage_blob_batch_set-tier | Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account> |
 | azmcp_storage_blob_container_create | Create the storage container mycontainer in storage account <account> |
 | azmcp_storage_blob_container_create | Create the container using blob public access in storage account <account> |
 | azmcp_storage_blob_container_create | Create a new blob container named documents with container public access in storage account <account> |
@@ -426,18 +554,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_get | List all blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_get | Show me the blobs in the blob container <container> in the storage account <account> |
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
-| azmcp_storage_datalake_directory_create | Create a new directory at the path <directory_path> in Data Lake in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | List all paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Show me the paths in the Data Lake file system <file_system> in the storage account <account> |
-| azmcp_storage_datalake_file-system_list-paths | Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path> |
-| azmcp_storage_queue_message_send | Send a message "Hello, World!" to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account> |
-| azmcp_storage_queue_message_send | Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds |
-| azmcp_storage_share_file_list | List all files and directories in the File Share <share> in the storage account <account> |
-| azmcp_storage_share_file_list | Show me the files in the File Share <share> directory <directory_path> in the storage account <account> |
-| azmcp_storage_share_file_list | List files with prefix 'report' in the File Share <share> in the storage account <account> |
-| azmcp_storage_table_list | List all tables in the storage account <account> |
-| azmcp_storage_table_list | Show me the tables in the storage account <account> |
 
 ## Azure Subscription Management
 

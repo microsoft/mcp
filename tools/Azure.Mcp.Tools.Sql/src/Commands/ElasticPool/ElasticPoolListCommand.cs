@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Options.ElasticPool;
@@ -32,7 +33,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -57,9 +58,7 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
                 options.Subscription!,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new ElasticPoolListResult(elasticPools),
-                SqlJsonContext.Default.ElasticPoolListResult);
+            context.Response.Results = ResponseResult.Create(new(elasticPools ?? []), SqlJsonContext.Default.ElasticPoolListResult);
         }
         catch (Exception ex)
         {
@@ -74,18 +73,12 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "SQL server not found. Verify the server name, resource group, and that you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the SQL server. Verify you have appropriate permissions. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
     };
 
     internal record ElasticPoolListResult(List<SqlElasticPool> ElasticPools);

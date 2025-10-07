@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
@@ -57,7 +59,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup(); // Resource group is optional for resource resolution
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
         command.Options.Add(_resourceNameOption);
         command.Options.Add(_resourceTypeOption);
         command.Options.Add(_hoursOption);
@@ -138,11 +140,11 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        Azure.RequestFailedException reqEx => reqEx.Status,
-        HttpRequestException httpEx when httpEx.Message.Contains("404") => 404,
-        HttpRequestException httpEx when httpEx.Message.Contains("403") => 403,
+        Azure.RequestFailedException reqEx => (HttpStatusCode)reqEx.Status,
+        HttpRequestException httpEx when httpEx.Message.Contains("404") => (HttpStatusCode)404,
+        HttpRequestException httpEx when httpEx.Message.Contains("403") => (HttpStatusCode)403,
         _ => base.GetStatusCode(ex)
     };
 

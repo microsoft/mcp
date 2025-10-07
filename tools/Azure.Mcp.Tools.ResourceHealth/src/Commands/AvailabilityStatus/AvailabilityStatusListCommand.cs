@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ResourceHealth.Options.AvailabilityStatus;
 using Azure.Mcp.Tools.ResourceHealth.Services;
 using Microsoft.Extensions.Logging;
@@ -33,7 +35,7 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -42,12 +44,13 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup(); // Optional filter for better performance
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override AvailabilityStatusListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
@@ -71,11 +74,7 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = statuses?.Count > 0
-                ? ResponseResult.Create(
-                    new AvailabilityStatusListCommandResult(statuses),
-                    ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(statuses ?? []), ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult);
         }
         catch (Exception ex)
         {

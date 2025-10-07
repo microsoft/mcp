@@ -2,8 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Acr.Commands;
 using Azure.Mcp.Tools.Acr.Commands.Registry;
 using Azure.Mcp.Tools.Acr.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -47,7 +50,7 @@ public class RegistryRepositoryListCommandTests
             _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
                 .Returns(new Dictionary<string, List<string>>
                 {
-                    ["myacr"] = new List<string> { "repo1", "repo2" }
+                    ["myacr"] = ["repo1", "repo2"]
                 });
         }
 
@@ -57,7 +60,7 @@ public class RegistryRepositoryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -81,17 +84,17 @@ public class RegistryRepositoryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Empty_ReturnsNullResults()
+    public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(new Dictionary<string, List<string>>());
+            .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
@@ -99,7 +102,13 @@ public class RegistryRepositoryListCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, AcrJsonContext.Default.RegistryRepositoryListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.RepositoriesByRegistry);
     }
 }

@@ -25,9 +25,9 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -52,8 +52,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(containerInfo),
-                StorageJsonContext.Default.ContainerCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }
         catch (Exception ex)
         {

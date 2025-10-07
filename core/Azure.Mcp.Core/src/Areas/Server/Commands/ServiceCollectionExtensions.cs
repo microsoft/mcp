@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,7 @@ public static class AzureMcpServiceCollectionExtensions
         {
             Namespace = serviceStartOptions.Namespace,
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
+            InsecureDisableElicitation = serviceStartOptions.InsecureDisableElicitation,
         };
 
         if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
@@ -78,10 +80,6 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
-
-        // Register server providers
-        services.AddSingleton<CommandGroupServerProvider>();
-        services.AddSingleton<RegistryServerProvider>();
 
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
@@ -116,6 +114,21 @@ public static class AzureMcpServiceCollectionExtensions
                 {
                     sp.GetRequiredService<ServerToolLoader>(),
                 };
+
+                // Always add utility commands (subscription, group) in namespace mode
+                // so they are available regardless of which namespaces are loaded
+                var utilityToolLoaderOptions = new ToolLoaderOptions(
+                    Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
+                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
+                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
+                );
+
+                toolLoaders.Add(new CommandFactoryToolLoader(
+                    sp,
+                    sp.GetRequiredService<CommandFactory>(),
+                    Options.Create(utilityToolLoaderOptions),
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
+                ));
 
                 // Append extension commands when no other namespaces are specified.
                 if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
@@ -158,13 +171,10 @@ public static class AzureMcpServiceCollectionExtensions
                     Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
                 };
 
-                mcpServerOptions.Capabilities = new ServerCapabilities
+                mcpServerOptions.Handlers = new()
                 {
-                    Tools = new ToolsCapability()
-                    {
-                        CallToolHandler = mcpRuntime.CallToolHandler,
-                        ListToolsHandler = mcpRuntime.ListToolsHandler,
-                    }
+                    CallToolHandler = mcpRuntime.CallToolHandler,
+                    ListToolsHandler = mcpRuntime.ListToolsHandler,
                 };
 
                 // Add instructions for the server

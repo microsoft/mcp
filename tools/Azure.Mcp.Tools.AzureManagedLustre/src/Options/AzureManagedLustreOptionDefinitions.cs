@@ -7,6 +7,7 @@ public static class AzureManagedLustreOptionDefinitions
 {
     public const string sku = "sku";
     public const string size = "size";
+    public const string subnetId = "subnet-id";
     public const string location = "location";
     public static readonly Option<string> SkuOption = new(
         $"--{sku}"
@@ -24,19 +25,19 @@ public static class AzureManagedLustreOptionDefinitions
         Required = true
     };
 
+    public static readonly Option<string> SubnetIdOption = new(
+        $"--{subnetId}"
+    )
+    {
+        Description = "The subnet resource ID to validate for AMLFS.",
+        Required = true
+    };
+
     public static readonly Option<string> LocationOption = new(
         $"--{location}"
     )
     {
         Description = "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
         Required = true
-    };
-
-    public static readonly Option<string> OptionalLocationOption = new(
-        $"--{location}"
-    )
-    {
-        Description = LocationOption.Description,
-        Required = false
     };
 }

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using System.Text;
 using System.Text.Json;
@@ -36,18 +37,17 @@ public class DesignCommandTests
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
 
-        // Check that the description contains the expected content
-        Assert.Contains("Azure architecture design tool that gathers requirements through guided questions and recommends optimal solutions.", command.Description);
-        Assert.Contains("Key parameters: question, questionNumber, confidenceScore (0.0-1.0, present architecture when ≥0.7), totalQuestions, answer, nextQuestionNeeded, architectureComponent, architectureTier, state.", command.Description);
-        Assert.Contains("Ask about user role, business goals (1-2 questions at a time)", command.Description);
-        Assert.Contains("Track confidence and update requirements (explicit/implicit/assumed)", command.Description);
-        Assert.Contains("When confident enough, present architecture with table format, visual organization, ASCII diagrams", command.Description);
+        // Check that the description contains the expected content from the actual implementation
+        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", command.Description);
+        Assert.Contains("file storage, banking, video streaming, e-commerce, SaaS", command.Description);
+        Assert.Contains("Ask about user role, business goals, etc (1-2 questions at a time)", command.Description);
+        Assert.Contains("Track confidence returned by service and update requirements", command.Description);
+        Assert.Contains("confidence >= 0.7", command.Description);
+        Assert.Contains("Present architecture with table format, visual organization, ASCII diagrams", command.Description);
         Assert.Contains("Follow Azure Well-Architected Framework principles", command.Description);
-        Assert.Contains("Cover all tiers: infrastructure, platform, application, data, security, operations", command.Description);
-        Assert.Contains("State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.", command.Description);
-        Assert.Contains("confidenceScore", command.Description);
-        Assert.Contains("nextQuestionNeeded", command.Description);
-        Assert.Contains("Azure Well-Architected Framework", command.Description);
+        Assert.Contains("infrastructure, platform, application, data, security, operations", command.Description);
+        Assert.Contains("State tracks components, requirements by category, and confidence factors", command.Description);
+        Assert.Contains("Be conservative with suggestions", command.Description);
     }
 
     [Fact]
@@ -86,7 +86,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -129,7 +129,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -159,7 +159,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -197,7 +197,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -232,7 +232,7 @@ public class DesignCommandTests
         Assert.Equal("design", name);
         Assert.Equal("Design Azure cloud architectures through guided questions", title);
         Assert.NotEmpty(description);
-        Assert.Contains("guided questions", description);
+        Assert.Contains("Recommends architecture design for cloud services/apps/solutions", description);
     }
 
     [Fact]
@@ -246,7 +246,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         string serializedResult = SerializeResponseResult(response.Results!);
         var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
@@ -269,7 +269,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -302,7 +302,7 @@ public class DesignCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
         Assert.Empty(response.Message);
 
@@ -561,7 +561,7 @@ public class DesignCommandTests
 
         // Assert
         Assert.Empty(parseResult.Errors);
-        Assert.Equal(200, _context.Response.Status);
+        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
 
         // Verify that the state was parsed correctly by checking the response
         string serializedResult = SerializeResponseResult(_context.Response.Results!);
@@ -588,7 +588,7 @@ public class DesignCommandTests
     //     var response = await _command.ExecuteAsync(_context, parseResult);
 
     //     // Assert - The command should handle the error gracefully and return an error response
-    //     Assert.NotEqual(200, response.Status);
+    //     Assert.NotEqual(HttpStatusCode.OK, response.Status);
     //     Assert.NotEmpty(response.Message);
     // }
 
@@ -603,7 +603,7 @@ public class DesignCommandTests
         var result = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, _context.Response.Status);
+        Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
 
         string serializedResult = SerializeResponseResult(_context.Response.Results!);
         var responseObject = JsonSerializer.Deserialize(serializedResult, CloudArchitectJsonContext.Default.CloudArchitectDesignResponse);
@@ -633,10 +633,10 @@ public class DesignCommandTests
 
             // Manually call the state deserialization that happens in BindOptions
             var deserializeMethod = typeof(DesignCommand).GetMethod("DeserializeState",
-                System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Static);
+                BindingFlags.NonPublic | BindingFlags.Static);
 
             Assert.NotNull(deserializeMethod);
-            deserializeMethod.Invoke(null, new object?[] { stateValue });
+            deserializeMethod.Invoke(null, [stateValue]);
         });
 
         // Verify the inner exception is the InvalidOperationException we expect

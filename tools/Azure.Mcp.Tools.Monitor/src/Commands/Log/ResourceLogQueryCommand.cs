@@ -13,27 +13,20 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
 {
     private const string CommandTitle = "Query Logs for Azure Resource";
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
-    private readonly Option<string> _tableNameOption = MonitorOptionDefinitions.TableName;
-    private readonly Option<string> _queryOption = MonitorOptionDefinitions.Query;
-    private readonly Option<int> _hoursOption = MonitorOptionDefinitions.Hours;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Limit;
-    private readonly Option<string> _resourceIdOption = ResourceLogQueryOptionDefinitions.ResourceId;
 
     public override string Name => "query";
-
     public override string Description =>
-        $"""
-        Executes a Kusto Query Language (KQL) query to retrieve logs for any Azure resource that emits logs to Log Analytics.
+    $"""
+    Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). 
+    Use this tool when the user mentions a specific resource name or Resource ID in their request (e.g., "show logs for resource 'app-monitor'"). 
+    This tool filters logs to only show data from the specified resource.
+    
+    When to use: User asks for logs from a specific resource by name or ID.
+    When NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.
 
-        - Use the {ResourceLogQueryOptionDefinitions.ResourceIdName} parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).
-        - The {MonitorOptionDefinitions.TableNameName} parameter specifies the Log Analytics table to query.
-        - The {MonitorOptionDefinitions.QueryTextName} parameter accepts a KQL query or a predefined query name.
-        - Optional parameters: {MonitorOptionDefinitions.HoursName} (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) to set the time range, and {MonitorOptionDefinitions.LimitName} (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) to limit the number of results.
-
-        This tool is useful for:
-        - Querying logs for any Azure resource by resourceId
-        - Investigating diagnostics, errors, and activity logs
-        """;
+    Required arguments: resource ID or resource name, table name, KQL query
+    Optional: {MonitorOptionDefinitions.HoursName}, {MonitorOptionDefinitions.LimitName}
+    """;
 
     public override string Title => CommandTitle;
 
@@ -41,7 +34,7 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -50,11 +43,22 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_resourceIdOption);
-        command.Options.Add(_tableNameOption);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_hoursOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(ResourceLogQueryOptionDefinitions.ResourceId);
+        command.Options.Add(MonitorOptionDefinitions.TableName);
+        command.Options.Add(MonitorOptionDefinitions.Query);
+        command.Options.Add(MonitorOptionDefinitions.Hours);
+        command.Options.Add(MonitorOptionDefinitions.Limit);
+    }
+
+    protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceId = parseResult.GetValueOrDefault<string>(ResourceLogQueryOptionDefinitions.ResourceId.Name);
+        options.TableName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Query.Name);
+        options.Hours = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Hours.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Limit.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -88,16 +92,5 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
         }
 
         return context.Response;
-    }
-
-    protected override ResourceLogQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.ResourceId = parseResult.GetValue(_resourceIdOption);
-        options.TableName = parseResult.GetValue(_tableNameOption);
-        options.Query = parseResult.GetValue(_queryOption);
-        options.Hours = parseResult.GetValue(_hoursOption);
-        options.Limit = parseResult.GetValue(_limitOption);
-        return options;
     }
 }

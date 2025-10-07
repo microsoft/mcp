@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Options;
@@ -20,22 +20,12 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
 
-    // Define options from OptionDefinitions
-    private readonly Option<string> _metricNamesOption = MonitorOptionDefinitions.Metrics.MetricNames;
-    private readonly Option<string> _startTimeOption = MonitorOptionDefinitions.Metrics.StartTime;
-    private readonly Option<string> _endTimeOption = MonitorOptionDefinitions.Metrics.EndTime;
-    private readonly Option<string> _intervalOption = MonitorOptionDefinitions.Metrics.Interval;
-    private readonly Option<string> _aggregationOption = MonitorOptionDefinitions.Metrics.Aggregation;
-    private readonly Option<string> _filterOption = MonitorOptionDefinitions.Metrics.Filter;
-    private readonly Option<string> _metricNamespaceOption = MonitorOptionDefinitions.Metrics.MetricNamespace;
-    private readonly Option<int> _maxBucketsOption = MonitorOptionDefinitions.Metrics.MaxBuckets;
-
     public override string Name => "query";
 
     public override string Description =>
-            $"""
-                Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
-                """;
+        $"""
+        Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.
+        """;
 
     public override string Title => CommandTitle;
 
@@ -43,7 +33,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -52,48 +42,21 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_metricNamesOption);
-        command.Options.Add(_startTimeOption);
-        command.Options.Add(_endTimeOption);
-        command.Options.Add(_intervalOption);
-        command.Options.Add(_aggregationOption);
-        command.Options.Add(_filterOption);
-        command.Options.Add(_metricNamespaceOption);
-        command.Options.Add(_maxBucketsOption);
-    }
-
-    protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.MetricNames = parseResult.GetValue(_metricNamesOption);
-        options.StartTime = parseResult.GetValue(_startTimeOption);
-        options.EndTime = parseResult.GetValue(_endTimeOption);
-        options.Interval = parseResult.GetValue(_intervalOption);
-        options.Aggregation = parseResult.GetValue(_aggregationOption);
-        options.Filter = parseResult.GetValue(_filterOption);
-        options.MetricNamespace = parseResult.GetValue(_metricNamespaceOption);
-        options.MaxBuckets = parseResult.GetValue(_maxBucketsOption);
-        return options;
-    }
-
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
-    {
-        var result = base.Validate(commandResult, commandResponse);
-
-        if (result.IsValid)
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNames);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.StartTime);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.EndTime);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Interval);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Aggregation);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.Filter);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MetricNamespace);
+        command.Options.Add(MonitorOptionDefinitions.Metrics.MaxBuckets);
+        command.Validators.Add(commandResult =>
         {
-            commandResult.TryGetValue(_metricNamesOption, out string? metricNamesValue);
+            commandResult.TryGetValue(MonitorOptionDefinitions.Metrics.MetricNames, out string? metricNamesValue);
 
             if (string.IsNullOrWhiteSpace(metricNamesValue))
             {
-                result.IsValid = false;
-                result.ErrorMessage = $"Invalid format for {_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
-
-                if (commandResponse != null)
-                {
-                    commandResponse.Status = 400;
-                    commandResponse.Message = result.ErrorMessage!;
-                }
+                commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
             }
             else
             {
@@ -102,18 +65,24 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
 
                 if (metricNames.Length == 0 || metricNames.Any(s => string.IsNullOrWhiteSpace(s)))
                 {
-                    result.IsValid = false;
-                    result.ErrorMessage = $"Invalid format for {_metricNamesOption.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).";
-
-                    if (commandResponse != null)
-                    {
-                        commandResponse.Status = 400;
-                        commandResponse.Message = result.ErrorMessage!;
-                    }
+                    commandResult.AddError($"Invalid format for {MonitorOptionDefinitions.Metrics.MetricNames.Name}. Provide a comma-separated list of metric names to query (e.g. CPU,memory).");
                 }
             }
-        }
-        return result;
+        });
+    }
+
+    protected override MetricsQueryOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.MetricNames = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNames.Name);
+        options.StartTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.StartTime.Name);
+        options.EndTime = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.EndTime.Name);
+        options.Interval = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Interval.Name);
+        options.Aggregation = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Aggregation.Name);
+        options.Filter = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.Filter.Name);
+        options.MetricNamespace = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Metrics.MetricNamespace.Name);
+        options.MaxBuckets = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Metrics.MaxBuckets.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -175,7 +144,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                                                  $"increase the interval size (e.g., use PT1H instead of PT5M), " +
                                                  $"or increase the --max-buckets parameter.";
 
-                            context.Response.Status = 400;
+                            context.Response.Status = HttpStatusCode.BadRequest;
                             context.Response.Message = errorMessage;
 
                             _logger.LogWarning("Bucket limit exceeded. Metric: {MetricName}, BucketCount: {BucketCount}, MaxBuckets: {MaxBuckets}",
@@ -188,11 +157,7 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
             }
 
             // Set results
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new MetricsQueryCommandResult(results),
-                    MonitorJsonContext.Default.MetricsQueryCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), MonitorJsonContext.Default.MetricsQueryCommandResult);
         }
         catch (Exception ex)
         {            // Log error with all relevant context

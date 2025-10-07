@@ -3,6 +3,7 @@
 
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -12,22 +13,12 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOptions>
 {
     private const string CommandTitle = "List Deployments from Azure AI Services";
-    private readonly Option<string> _endpointOption = FoundryOptionDefinitions.EndpointOption;
 
     public override string Name => "list";
 
     public override string Description =>
         """
-        Retrieves a list of deployments from Azure AI Services.
-
-        This function is used when a user requests information about the available deployments in Azure AI Services. It provides an overview of the models and services that are currently deployed and available for use.
-
-        Usage:
-            Use this function when a user wants to explore the available deployments in Azure AI Services. This can help users understand what models and services are currently operational and how they can be utilized.
-
-        Notes:
-            - The deployments listed may include various models and services that are part of Azure AI Services.
-            - The list may change frequently as new deployments are added or existing ones are updated.
+        Lists Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint and shows currently provisioned model deployments. Use to audit what is deployed before invoking or creating new deployments. Do not use this tool to discover undeployed catalog/base models — instead, use models_list tool.
         """;
 
     public override string Title => CommandTitle;
@@ -36,7 +27,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -45,13 +36,13 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_endpointOption);
+        command.Options.Add(FoundryOptionDefinitions.EndpointOption);
     }
 
     protected override DeploymentsListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValue(_endpointOption);
+        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption.Name);
 
         return options;
     }
@@ -74,11 +65,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = deployments?.Count > 0 ?
-                ResponseResult.Create(
-                    new DeploymentsListCommandResult(deployments),
-                    FoundryJsonContext.Default.DeploymentsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(deployments ?? []), FoundryJsonContext.Default.DeploymentsListCommandResult);
         }
         catch (Exception ex)
         {

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Http;
 using Fabric.Mcp.Tools.PublicApi.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -39,9 +38,12 @@ public class FabricPublicApiSetupTests
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var setup = new FabricPublicApiSetup();
         var rootGroup = new CommandGroup("root", "Root command group");
+        var services = Substitute.For<IServiceProvider>();
 
         // Act
-        setup.RegisterCommands(rootGroup, loggerFactory);
+
+        var commands = setup.RegisterCommands(services);
+        rootGroup.AddSubGroup(commands);
 
         // Assert
         var publicApisGroup = rootGroup.SubGroup.FirstOrDefault(g => g.Name == "publicapis");

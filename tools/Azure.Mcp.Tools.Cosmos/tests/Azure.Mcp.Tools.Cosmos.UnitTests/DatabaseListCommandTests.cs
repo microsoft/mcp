@@ -1,7 +1,8 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
@@ -13,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.Cosmos.Commands.DatabaseListCommand;
 
 namespace Azure.Mcp.Tools.Cosmos.UnitTests;
 
@@ -63,17 +63,14 @@ public class DatabaseListCommandTests
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNameCaseInsensitive = true
-        });
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases.Count, result.Databases.Count);
         Assert.Equal(expectedDatabases, result.Databases);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoDataBaseExists()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDataBaseExists()
     {
         // Arrange
         _cosmosService.ListDatabases(
@@ -82,7 +79,7 @@ public class DatabaseListCommandTests
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(new List<string>());
+            .Returns([]);
 
         var args = _commandDefinition.Parse([
             "--account", "account123",
@@ -94,7 +91,11 @@ public class DatabaseListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, CosmosJsonContext.Default.DatabaseListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]
@@ -116,12 +117,12 @@ public class DatabaseListCommandTests
             "--subscription", "sub123"
         ]);
 
-        // Act 
+        // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
     }
 
@@ -131,11 +132,11 @@ public class DatabaseListCommandTests
     [InlineData("--subscription", "sub123")]
     public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
     {
-        // Arrange & Act 
+        // Arrange & Act
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 }

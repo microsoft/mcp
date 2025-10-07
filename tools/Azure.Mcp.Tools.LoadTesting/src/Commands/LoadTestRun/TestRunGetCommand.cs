@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,13 +16,12 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
 {
     private const string _commandTitle = "Test Run Get";
     private readonly ILogger<TestRunGetCommand> _logger = logger;
-    private readonly Option<string> _testRunIdOption = OptionDefinitions.LoadTesting.TestRun;
     public override string Name => "get";
     public override string Description =>
         $"""
-        Retrieves comprehensive details and status information for a specific load test run execution.
-        This command provides real-time insights into test performance metrics, execution timeline,
-        and final results to help you analyze your application's behavior under load.
+        Get details for a specific test run by testrun ID.
+        Use this to retrieve a single run's execution details (not a list). Returns status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces). 
+        Does NOT return the test plan/configuration or the test resource. Only the test run details. Also it is used to get details of SINGLE testrun based on its id. For a list of runs use testrun list command instead.
         """;
     public override string Title => _commandTitle;
 
@@ -29,7 +29,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -38,13 +38,13 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_testRunIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
     }
 
     protected override TestRunGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValue(_testRunIdOption);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
         return options;
     }
 
@@ -71,7 +71,7 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunGetCommandResult(results), LoadTestJsonContext.Default.TestRunGetCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunGetCommandResult) :
                 null;
         }
         catch (Exception ex)

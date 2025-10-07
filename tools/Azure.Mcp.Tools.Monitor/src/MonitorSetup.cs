@@ -12,7 +12,6 @@ using Azure.Mcp.Tools.Monitor.Commands.TableType;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor;
 
@@ -28,13 +27,25 @@ public class MonitorSetup : IAreaSetup
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
         services.AddSingleton<IMetricsQueryClientService, MetricsQueryClientService>();
         services.AddSingleton<IMonitorMetricsService, MonitorMetricsService>();
+
+        services.AddSingleton<WorkspaceLogQueryCommand>();
+        services.AddSingleton<ResourceLogQueryCommand>();
+
+        services.AddSingleton<WorkspaceListCommand>();
+        services.AddSingleton<TableListCommand>();
+
+        services.AddSingleton<TableTypeListCommand>();
+
+        services.AddSingleton<EntityGetHealthCommand>();
+
+        services.AddSingleton<MetricsQueryCommand>();
+        services.AddSingleton<MetricsDefinitionsCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
         var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.");
-        rootGroup.AddSubGroup(monitor);
 
         // Create Monitor subgroups
         var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");
@@ -57,13 +68,18 @@ public class MonitorSetup : IAreaSetup
 
         // Register Monitor commands
 
-        workspaceLogs.AddCommand("query", new WorkspaceLogQueryCommand(loggerFactory.CreateLogger<WorkspaceLogQueryCommand>()));
-        resourceLogs.AddCommand("query", new ResourceLogQueryCommand(loggerFactory.CreateLogger<ResourceLogQueryCommand>()));
+        var workspaceLogQuery = serviceProvider.GetRequiredService<WorkspaceLogQueryCommand>();
+        workspaceLogs.AddCommand(workspaceLogQuery.Name, workspaceLogQuery);
+        var resourceLogQuery = serviceProvider.GetRequiredService<ResourceLogQueryCommand>();
+        resourceLogs.AddCommand(resourceLogQuery.Name, resourceLogQuery);
 
-        workspaces.AddCommand("list", new WorkspaceListCommand(loggerFactory.CreateLogger<WorkspaceListCommand>()));
-        monitorTable.AddCommand("list", new TableListCommand(loggerFactory.CreateLogger<TableListCommand>()));
+        var workspaceList = serviceProvider.GetRequiredService<WorkspaceListCommand>();
+        workspaces.AddCommand(workspaceList.Name, workspaceList);
+        var tableList = serviceProvider.GetRequiredService<TableListCommand>();
+        monitorTable.AddCommand(tableList.Name, tableList);
 
-        monitorTableType.AddCommand("list", new TableTypeListCommand(loggerFactory.CreateLogger<TableTypeListCommand>()));
+        var tableTypeList = serviceProvider.GetRequiredService<TableTypeListCommand>();
+        monitorTableType.AddCommand(tableTypeList.Name, tableTypeList);
 
         var health = new CommandGroup("healthmodels", "Azure Monitor Health Models operations - Commands for working with Azure Monitor Health Models.");
         monitor.AddSubGroup(health);
@@ -71,19 +87,24 @@ public class MonitorSetup : IAreaSetup
         var entity = new CommandGroup("entity", "Entity operations - Commands for working with entities in Azure Monitor Health Models.");
         health.AddSubGroup(entity);
 
-        entity.AddCommand("gethealth", new EntityGetHealthCommand(loggerFactory.CreateLogger<EntityGetHealthCommand>()));
+        var entityGetHealth = serviceProvider.GetRequiredService<EntityGetHealthCommand>();
+        entity.AddCommand(entityGetHealth.Name, entityGetHealth);
 
         // Create Metrics command group and register commands
         var metrics = new CommandGroup("metrics", "Azure Monitor metrics operations - Commands for querying and analyzing Azure Monitor metrics.");
         monitor.AddSubGroup(metrics);
 
-        metrics.AddCommand("query", new MetricsQueryCommand(loggerFactory.CreateLogger<MetricsQueryCommand>()));
-        metrics.AddCommand("definitions", new MetricsDefinitionsCommand(loggerFactory.CreateLogger<MetricsDefinitionsCommand>()));
+        var metricsQuery = serviceProvider.GetRequiredService<MetricsQueryCommand>();
+        metrics.AddCommand(metricsQuery.Name, metricsQuery);
+        var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
+        metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
 
-        // Create ActivityLog command group and register commands
         var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
         monitor.AddSubGroup(activityLog);
 
-        activityLog.AddCommand("list", new ActivityLogListCommand(loggerFactory.CreateLogger<ActivityLogListCommand>()));
+        var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
+        activityLog.AddCommand(activityLogList.Name, activityLogList);
+
+        return monitor;
     }
 }

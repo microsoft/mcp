@@ -1,0 +1,99 @@
+parameters:
+- name: ContainerRegistry
+  type: string
+- name: DeploymentEnvironment
+  type: string
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+
+jobs:
+- job: CreateDockerArtifact
+  displayName: 'Creating Docker artifact'
+  dependsOn: ${{ parameters.DependsOn }}
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+
+  steps:
+  - task: DownloadPipelineArtifact@2
+    displayName: 'Download signed packages'
+    inputs:
+      buildType: 'current'
+      artifactName: binaries_signed
+      targetPath: $(Build.ArtifactStagingDirectory)
+
+  - task: CopyFiles@2
+    displayName: 'Copy Dockerfile'
+    inputs:
+      Contents: 'Dockerfile'
+      TargetFolder: $(Build.ArtifactStagingDirectory)
+
+  - task: Powershell@2
+    displayName: 'Set Docker Variables'
+    name: SetVariables
+    inputs:
+      targetType: 'inline'
+      script: |
+        $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
+        $imageName = $properties.DockerImageName
+        $version = $properties.Version
+        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
+    env:
+      VERSION_SUFFIX: '$(VersionSuffix)'
+
+  - task: 1ES.PublishPipelineArtifact@1
+    inputs:
+      path: $(Build.ArtifactStagingDirectory)
+      artifact: docker_staged
+
+- job: PublishACR
+  displayName: "Publish to ACR"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  dependsOn: CreateDockerArtifact
+  variables:
+    DockerImageName:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
+    DockerImageVersion:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
+
+  templateContext:
+    inputs:
+    - input: pipelineArtifact
+      artifactName: docker_staged
+      targetPath: $(Pipeline.Workspace)/docker_staged
+
+    outputs:
+    - output: containerImage
+      image: image:tag
+      remoteImage:
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:$(DockerImageVersion)
+      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:latest
+
+  timeoutInMinutes: 120
+  pool:
+    name: azsdk-pool
+    image: ubuntu-24.04
+    os: linux
+
+  steps:
+  - task: AzureCLI@2
+    condition: succeeded()
+    displayName: Login to ${{ parameters.ContainerRegistry }}
+    inputs:
+      azureSubscription: "Azure SDK Engineering System"
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az acr login --name ${{ parameters.ContainerRegistry }}
+
+  - task: 1ES.BuildContainerImage@1
+    displayName: Build Docker Image
+    inputs:
+      path: '$(Pipeline.Workspace)/docker_staged'
+      image: image:tag
+      buildArguments: |
+        --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"
+      enableNetwork: true
+      useBuildKit: true

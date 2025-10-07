@@ -117,9 +117,59 @@ azmcp server start \
 > - Multiple `--namespace` parameters can be used together to expose tools for multiple specific namespaces.
 > - The `--namespace` and `--mode` parameters can also be combined to provide a unique running mode based on the desired scenario.
 
+#### Server Start Command Options
+
+The `azmcp server start` command supports the following options:
+
+| Option | Required | Default | Description |
+|--------|----------|---------|-------------|
+| `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
+| `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--read-only` | No | `false` | Only expose read-only operations |
+| `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
+
+> **⚠️ Security Warning for `--insecure-disable-elicitation`:**
+>
+> This option disables user confirmations (elicitations) before running tools that read sensitive data. When enabled:
+> - Tools that handle secrets, credentials, or sensitive data will execute without user confirmation
+> - This removes an important security layer designed to prevent unauthorized access to sensitive information
+> - Only use this option in trusted, automated environments where user interaction is not possible
+> - Never use this option in production environments or when handling untrusted input
+>
+> **Example usage (use with caution):**
+> ```bash
+> # For automated scenarios only - bypasses security prompts
+> azmcp server start --insecure-disable-elicitation
+> ```
+
 ### Azure AI Foundry Operations
 
 ```bash
+
+# Connect to an agent in an AI Foundry project and query it
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
+
+# Query and evaluate an agent in one command
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
 # List knowledge indexes in an AI Foundry project
 azmcp foundry knowledge index list --endpoint <endpoint>
 
@@ -149,6 +199,15 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
                           [--publisher <publisher>] \
                           [--license <license>] \
                           [--model-name <model>]
+
+# Generate text completions using deployed Azure OpenAI models in AI Foundry
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
 ```
 
 ### Azure AI Search Operations
@@ -168,6 +227,42 @@ azmcp search index query --subscription <subscription> \
 azmcp search list --subscription <subscription>
 ```
 
+### Azure AI Services Speech Operations
+
+```bash
+# Recognize speech from an audio file using Azure AI Services Speech
+azmcp speech stt recognize --endpoint <endpoint> \
+                           --file <file-path> \
+                           [--language <language>] \
+                           [--phrases <phrase-hints>] \
+                           [--format <simple|detailed>] \
+                           [--profanity <masked|removed|raw>]
+```
+
+#### Phrase Hints for Improved Accuracy
+
+The `--phrases` parameter supports multiple ways to specify phrase hints that improve speech recognition accuracy:
+
+**Multiple Arguments:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
+```
+
+**Comma-Separated Values:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services, machine learning"
+```
+
+**Mixed Syntax:**
+```bash
+azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
+    --phrases "Azure, cognitive services" --phrases "machine learning"
+```
+
+Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
+
 ### Azure App Configuration Operations
 
 ```bash
@@ -180,17 +275,20 @@ azmcp appconfig kv delete --subscription <subscription> \
                           --key <key> \
                           [--label <label>]
 
-# List all key-value settings in an App Configuration store
-azmcp appconfig kv list --subscription <subscription> \
-                        --account <account> \
-                        [--key <key>] \
-                        [--label <label>]
+# Get key-value settings in an App Configuration store
+azmcp appconfig kv get --subscription <subscription> \
+                       --account <account> \
+                       [--key <key>] \
+                       [--label <label>] \
+                       [--key-filter <key-filter>] \
+                       [--label-filter <label-filter>]
 
-# Lock a key-value setting (make it read-only)
-azmcp appconfig kv lock --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+azmcp appconfig kv lock set --subscription <subscription> \
+                            --account <account> \
+                            --key <key> \
+                            [--label <label>] \
+                            [--lock]
 
 # Set a key-value setting
 azmcp appconfig kv set --subscription <subscription> \
@@ -198,18 +296,6 @@ azmcp appconfig kv set --subscription <subscription> \
                        --key <key> \
                        --value <value> \
                        [--label <label>]
-
-# Show a specific key-value setting
-azmcp appconfig kv show --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
-
-# Unlock a key-value setting (make it editable)
-azmcp appconfig kv unlock --subscription <subscription> \
-                          --account <account> \
-                          --key <key> \
-                          [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -222,6 +308,153 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource-type <resource-type> \
                                 --resource <resource>
 ```
+
+### Azure Application Insights Operations
+
+#### Code Optimization Recommendations
+
+```bash
+# List code optimization recommendations across all Application Insights components in a subscription
+azmcp applicationinsights recommendation list --subscription <subscription>
+
+# Scope to a specific resource group
+azmcp applicationinsights recommendation list --subscription <subscription> \
+                                              --resource-group <resource-group>
+### Azure App Service Operations
+
+```bash
+# Add a database connection to an App Service
+azmcp appservice database add --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --app <app> \
+                              --database-type <database-type> \
+                              --database-server <database-server> \
+                              --database <database> \
+                              [--connection-string <connection-string>] \
+                              [--tenant <tenant-id>]
+
+# Examples:
+# Add a SQL Server database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "SqlServer" \
+                              --database-server "myserver.database.windows.net" \
+                              --database "mydb"
+
+# Add a MySQL database connection with custom connection string
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "MySQL" \
+                              --database-server "myserver.mysql.database.azure.com" \
+                              --database "mydb" \
+                              --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
+
+# Add a PostgreSQL database connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "PostgreSQL" \
+                              --database-server "myserver.postgres.database.azure.com" \
+                              --database "mydb"
+
+# Add a Cosmos DB connection
+azmcp appservice database add --subscription "my-subscription" \
+                              --resource-group "my-rg" \
+                              --app "my-webapp" \
+                              --database-type "CosmosDB" \
+                              --database-server "myaccount" \
+                              --database "mydb"
+```
+
+**Database Types Supported:**
+
+-   `SqlServer` - Azure SQL Database
+-   `MySQL` - Azure Database for MySQL
+-   `PostgreSQL` - Azure Database for PostgreSQL
+-   `CosmosDB` - Azure Cosmos DB
+
+**Parameters:**
+
+-   `--subscription`: Azure subscription ID (required)
+-   `--resource-group`: Resource group containing the App Service (required)
+-   `--app`: Name of the App Service web app (required)
+-   `--database-type`: Type of database - SqlServer, MySQL, PostgreSQL, or CosmosDB (required)
+-   `--database-server`: Database server name or endpoint (required)
+-   `--database`: Name of the database (required)
+-   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
+-   `--tenant`: Azure tenant ID for authentication (optional)
+
+### Azure CLI Operations
+
+```bash
+# Execute any Azure CLI command
+azmcp extension az --command "<command>"
+
+# Examples:
+# List resource groups
+azmcp extension az --command "group list"
+
+# Get storage account details
+azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
+
+# List virtual machines
+azmcp extension az --command "vm list --resource-group <resource-group>"
+```
+
+### Azure Communication Services Operations
+
+```bash
+# Send SMS message using Azure Communication Services
+azmcp communication sms send \
+    --connection-string "<connection-string>" \
+    --from "<sender-phone-number>" \
+    --to "<recipient-phone-number>" \
+    --message "<message-text>" \
+    [--enable-delivery-report] \
+    [--tag "<custom-tag>"]
+
+# Examples:
+# Send SMS to single recipient
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124" \
+    --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124,+14255550125" \
+    --message "Broadcast message" \
+    --enable-delivery-report \
+    --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--connection-string`: Azure Communication Services connection string (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
 
 ### Azure Container Registry (ACR) Operations
 
@@ -306,7 +539,7 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ### Azure Database for MySQL Operations
 
-#### Database commands
+#### Database
 
 ```bash
 # List all databases in a MySQL server
@@ -324,7 +557,7 @@ azmcp mysql database query --subscription <subscription> \
                            --query <query>
 ```
 
-#### Table Commands
+#### Table
 
 ```bash
 # List all tables in a MySQL database
@@ -343,7 +576,7 @@ azmcp mysql table schema get --subscription <subscription> \
                              --table <table>
 ```
 
-#### Server Commands
+#### Server
 
 ```bash
 # Retrieve the configuration of a MySQL server
@@ -375,7 +608,7 @@ azmcp mysql server param set --subscription <subscription> \
 
 ### Azure Database for PostgreSQL Operations
 
-#### Database commands
+#### Database
 
 ```bash
 # List all databases in a PostgreSQL server
@@ -393,7 +626,7 @@ azmcp postgres database query --subscription <subscription> \
                               --query <query>
 ```
 
-#### Table Commands
+#### Table
 
 ```bash
 # List all tables in a PostgreSQL database
@@ -412,7 +645,7 @@ azmcp postgres table schema get --subscription <subscription> \
                                 --table <table>
 ```
 
-#### Server Commands
+#### Server
 
 ```bash
 # Retrieve the configuration of a PostgreSQL server
@@ -478,21 +711,51 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
 # List all Event Grid topics in a subscription or resource group
 azmcp eventgrid topic list --subscription <subscription> \
                            [--resource-group <resource-group>]
+
+
+# List all Event Grid subscriptions in a subscription, resource group, or topic
+azmcp eventgrid subscription list --subscription <subscription> \
+                                  [--resource-group <resource-group>] \
+                                  [--topic <topic>]
+                                  [--location <location>]
+
+# Publish custom events to Event Grid topics
+azmcp eventgrid events publish --subscription <subscription> \
+                               --topic <topic> \
+                               --data <json-event-data> \
+                               [--resource-group <resource-group>] \
+                               [--schema <schema-type>]
+```
+
+### Azure Event Hubs
+
+```bash
+# Get detailed properties of an Event Hubs namespace
+azmcp eventhubs namespace get --subscription <subscription> \
+                              --namespace <namespace> \
+                              --resource-group <resource-group>
 ```
 
 ### Azure Function App Operations
 
 ```bash
-# Get details for a specific Function App
+# Get detailed properties of function apps
 azmcp functionapp get --subscription <subscription> \
-                      --resource-group <resource-group> \
-                      --function-app <function-app-name>
-
-# List function apps in a subscription
-azmcp functionapp list --subscription <subscription>
+                      [--resource-group <resource-group>] \
+                      [--function-app <function-app-name>]
 ```
 
 ### Azure Key Vault Operations
+
+#### Administration
+
+```bash
+# Gets Key Vault Managed HSM account settings
+azmcp keyvault admin settings get --subscription <subscription> \
+                                  --vault <vault-name>
+```
+
+#### Certificates
 
 ```bash
 # Creates a certificate in a key vault with the default policy
@@ -515,23 +778,53 @@ azmcp keyvault certificate import --subscription <subscription> \
 # Lists certificates in a key vault
 azmcp keyvault certificate list --subscription <subscription> \
                                 --vault <vault-name>
+```
 
+#### Keys
+
+```bash
 # Creates a key in a key vault
 azmcp keyvault key create --subscription <subscription> \
                           --vault <vault-name> \
                           --key <key-name> \
                           --key-type <key-type>
 
+# Get a key in a key vault
+azmcp keyvault key get --subscription <subscription> \
+                       --vault <vault-name> \
+                       --key <key-name>
+
 # Lists keys in a key vault
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
                         --include-managed <true/false>
+```
 
-# Creates a secret in a key vault
+#### Secrets
+
+Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
+
+> **🛡️ Elicitation (user confirmation) Security Feature:**
+> 
+> Elicitation prompts appear when tools may expose sensitive information like:
+> - Key Vault secrets
+> - Connection strings and passwords
+> - Certificate private keys
+> - Other confidential data
+>
+> These prompts protect against unauthorized access to sensitive information. You can bypass elicitation in automated scenarios using the `--insecure-disable-elicitation` server start option, but this should only be used in trusted environments.
+
+```bash
+# Creates a secret in a key vault (will prompt for user consent)
 azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
+
+# Get a secret in a key vault (will prompt for user consent)
+azmcp keyvault secret get --subscription <subscription> \
+                          --vault <vault-name> \
+                          --secret <secret-name>
 
 # Lists secrets in a key vault
 azmcp keyvault secret list --subscription <subscription> \
@@ -548,16 +841,16 @@ azmcp aks cluster get --subscription <subscription> \
 # List AKS clusters in a subscription
 azmcp aks cluster list --subscription <subscription>
 
-# List AKS cluster's nodepools
-azmcp aks nodepool list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --cluster <cluster>
-
 # Get details of a specific AKS nodepool
 azmcp aks nodepool get --subscription <subscription> \
                        --resource-group <resource-group> \
                        --cluster <cluster> \
                        --nodepool <nodepool>
+
+# List AKS cluster's nodepools
+azmcp aks nodepool list --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --cluster <cluster>
 ```
 
 ### Azure Load Testing Operations
@@ -679,6 +972,9 @@ azmcp bestpractices get --resource <resource> --action <action>
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
+
+# List only the available top-level service namespaces
+azmcp tools list --namespaces
 ```
 
 ### Azure Monitor Operations
@@ -795,15 +1091,23 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
+                                         --resource-group <resource-group> 
+
+azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
+                                            --location <location>
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 ```
-
-
 
 ### Azure Native ISV Operations
 
@@ -915,19 +1219,90 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
-### Azure SQL Database Operations
+### Azure SQL Operations
+
+#### Database
 
 ```bash
+# Create a SQL database (supports optional performance and configuration parameters)
+azmcp sql db create --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+
+# Delete a SQL database (idempotent – succeeds even if the database does not exist)
+azmcp sql db delete --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name>
+
 # Gets a list of all databases in a SQL server
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
+                  
+# Rename an existing SQL database to a new name within the same server
+azmcp sql db rename --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <current-database-name> \
+                    --new-database-name <new-database-name>
 
 # Show details of a specific SQL database
 azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
+
+# Update an existing SQL database (applies only the provided configuration changes)
+azmcp sql db update --subscription <subscription> \
+                    --resource-group <resource-group> \
+                    --server <server-name> \
+                    --database <database-name> \
+                    [--sku-name <sku-name>] \
+                    [--sku-tier <sku-tier>] \
+                    [--sku-capacity <capacity>] \
+                    [--collation <collation>] \
+                    [--max-size-bytes <bytes>] \
+                    [--elastic-pool-name <elastic-pool-name>] \
+                    [--zone-redundant <true/false>] \
+                    [--read-scale <Enabled|Disabled>]
+```
+
+#### Elastic Pool
+
+```bash
+# List all elastic pools in a SQL server
+azmcp sql elastic-pool list --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --server <server-name>
+```
+
+#### Server
+
+```bash
+# Create a new SQL server
+azmcp sql server create --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name> \
+                        --location <location> \
+                        --admin-user <admin-username> \
+                        --admin-password <admin-password> \
+                        [--version <server-version>] \
+                        [--public-network-access <enabled|disabled>]
+
+# List Microsoft Entra ID administrators for a SQL server
+azmcp sql server entra-admin list --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --server <server-name>
 
 # Create a firewall rule for a SQL server
 azmcp sql server firewall-rule create --subscription <subscription> \
@@ -947,27 +1322,25 @@ azmcp sql server firewall-rule delete --subscription <subscription> \
 azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
-```
 
-### Azure SQL Elastic Pool Operations
+# Delete a SQL server
+azmcp sql server delete --subscription <subscription> \
+                        --resource-group <resource-group> \
+                        --server <server-name>
 
-```bash
-# List all elastic pools in a SQL server
-azmcp sql elastic-pool list --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --server <server-name>
-```
+# List SQL servers in a resource group
+azmcp sql server list --subscription <subscription> \
+                      --resource-group <resource-group>
 
-### Azure SQL Server Operations
-
-```bash
-# List Microsoft Entra ID administrators for a SQL server
-azmcp sql server entra-admin list --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --server <server-name>
+# Show details of a specific SQL server
+azmcp sql server show --subscription <subscription> \
+                      --resource-group <resource-group> \
+                      --server <server-name>
 ```
 
 ### Azure Storage Operations
+
+#### Account
 
 ```bash
 # Create a new Storage account with custom configuration
@@ -983,14 +1356,11 @@ azmcp storage account create --subscription <subscription> \
 azmcp storage account get --subscription <subscription> \
                               [--account <account>] \
                               [--tenant <tenant>]
+```
 
-# Set access tier for multiple blobs in a batch operation
-azmcp storage blob batch set-tier --subscription <subscription> \
-                                  --account <account> \
-                                  --container <container> \
-                                  --tier <tier> \
-                                  --blobs <blob-name1> <blob-name2> ... <blob-nameN>
+#### Blob Storage
 
+```bash
 # Create a blob container with optional public access
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
@@ -1013,37 +1383,6 @@ azmcp storage blob upload --subscription <subscription> \
                           --container <container> \
                           --blob <blob> \
                           --local-file-path <path-to-local-file>
-
-# Create a directory in DataLake using a specific path
-azmcp storage datalake directory create --subscription <subscription> \
-                                        --account <account> \
-                                        --directory-path <directory-path>
-
-# List paths in a Data Lake file system
-azmcp storage datalake file-system list-paths --subscription <subscription> \
-                                              --account <account> \
-                                              --file-system <file-system> \
-                                              [--filter-path <filter-path>] \
-                                              [--recursive]
-
-# Send a message to a Storage queue
-azmcp storage queue message send --subscription <subscription> \
-                                 --account <account> \
-                                 --queue <queue> \
-                                 --message "<message>" \
-                                 [--time-to-live-in-seconds <seconds>] \
-                                 [--visibility-timeout-in-seconds <seconds>]
-
-# List files and directories in a File Share directory
-azmcp storage share file list --subscription <subscription> \
-                              --account <account> \
-                              --share <share> \
-                              --directory-path <directory-path> \
-                              [--prefix <prefix>]
-
-# List tables in a Storage account
-azmcp storage table list --subscription <subscription> \
-                         --account <account>
 ```
 
 ### Azure Subscription Management
@@ -1183,6 +1522,21 @@ All responses follow a consistent JSON format:
   "duration": 123
 }
 ```
+
+### Tool and Namespace Result Objects
+
+When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+
+| Field | Description |
+|-------|-------------|
+| `name` | Command or namespace name |
+| `description` | Human-readable description |
+| `command` | Fully qualified CLI invocation path |
+| `subcommands` | (Namespaces only) Array of leaf command objects |
+| `option` | (Leaf commands only) Array of options supported by the command |
+| `count` | Namespaces: number of subcommands; Leaf commands: always 0 (options not counted) |
+
+This quantitative field enables quick sizing of a namespace without traversing nested arrays. Leaf command complexity should be inferred from its option list, not the `count` field.
 
 ## Error Handling
 

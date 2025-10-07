@@ -225,10 +225,10 @@ public class McpServerElicitationExtensionsTests
             () => server.RequestElicitationAsync(request, CancellationToken.None));
     }
 
-    private static IMcpServer CreateMockServer()
+    private static McpServer CreateMockServer()
     {
         // Create a mock server that we can configure without constructor issues
-        var server = Substitute.For<IMcpServer>();
+        var server = Substitute.For<McpServer>();
 
         // Set up default client capabilities
         server.ClientCapabilities.Returns(new ClientCapabilities());

@@ -69,6 +69,54 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         {
             Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
         }
+
+        Assert.True(nodePool.TryGetProperty("orchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("currentOrchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("enableAutoScaling", out _));
+        Assert.True(nodePool.TryGetProperty("maxPods", out _));
+        Assert.True(nodePool.TryGetProperty("osSKU", out _));
+        Assert.True(nodePool.TryGetProperty("nodeImageVersion", out _));
+
+        // Enriched node pool fields (presence/type checks)
+        if (nodePool.TryGetProperty("tags", out var tags))
+        {
+            Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("spotMaxPrice", out var spot))
+        {
+            Assert.True(spot.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("workloadRuntime", out var wr))
+        {
+            Assert.True(wr.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("networkProfile", out var np))
+        {
+            Assert.True(np.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            if (np.ValueKind == JsonValueKind.Object)
+            {
+                if (np.TryGetProperty("allowedHostPorts", out var ahp))
+                {
+                    Assert.True(ahp.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("applicationSecurityGroups", out var asg))
+                {
+                    Assert.True(asg.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("nodePublicIPTags", out var ipt))
+                {
+                    Assert.True(ipt.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+            }
+        }
+        if (nodePool.TryGetProperty("podSubnetID", out var podSubnet))
+        {
+            Assert.True(podSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("vnetSubnetID", out var vnetSubnet))
+        {
+            Assert.True(vnetSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
     }
 
     [Fact]
@@ -87,8 +135,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         // Should return runtime error details in results
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -155,8 +203,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -177,4 +225,3 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.False(result.HasValue);
     }
 }
-

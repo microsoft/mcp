@@ -5,9 +5,9 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.Account;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
+using Azure.Mcp.Tools.AppConfig.Commands.KeyValue.Lock;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.AppConfig;
 
@@ -18,13 +18,20 @@ public class AppConfigSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppConfigService, AppConfigService>();
+
+        services.AddSingleton<AccountListCommand>();
+
+        services.AddSingleton<KeyValueDeleteCommand>();
+        services.AddSingleton<KeyValueGetCommand>();
+        services.AddSingleton<KeyValueSetCommand>();
+
+        services.AddSingleton<KeyValueLockSetCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AppConfig command group
         var appConfig = new CommandGroup(Name, "App Configuration operations - Commands for managing Azure App Configuration stores and key-value settings. Includes operations for listing configuration stores, managing key-value pairs, setting labels, locking/unlocking settings, and retrieving configuration data.");
-        rootGroup.AddSubGroup(appConfig);
 
         // Create AppConfig subgroups
         var accounts = new CommandGroup("account", "App Configuration store operations");
@@ -33,21 +40,24 @@ public class AppConfigSetup : IAreaSetup
         var keyValue = new CommandGroup("kv", "App Configuration key-value setting operations - Commands for managing complete configuration settings including values, labels, and metadata");
         appConfig.AddSubGroup(keyValue);
 
-        // Register AppConfig commands
-        accounts.AddCommand("list", new AccountListCommand(
-            loggerFactory.CreateLogger<AccountListCommand>()));
+        // Create Lock subgroup under KeyValue
+        var lockGroup = new CommandGroup("lock", "App Configuration key-value lock operations - Commands for locking and unlocking key-value settings to prevent or allow modifications");
+        keyValue.AddSubGroup(lockGroup);
 
-        keyValue.AddCommand("list", new KeyValueListCommand(
-            loggerFactory.CreateLogger<KeyValueListCommand>()));
-        keyValue.AddCommand("lock", new KeyValueLockCommand(
-            loggerFactory.CreateLogger<KeyValueLockCommand>()));
-        keyValue.AddCommand("unlock", new KeyValueUnlockCommand(
-            loggerFactory.CreateLogger<KeyValueUnlockCommand>()));
-        keyValue.AddCommand("set", new KeyValueSetCommand(
-            loggerFactory.CreateLogger<KeyValueSetCommand>()));
-        keyValue.AddCommand("show", new KeyValueShowCommand(
-            loggerFactory.CreateLogger<KeyValueShowCommand>()));
-        keyValue.AddCommand("delete", new KeyValueDeleteCommand(
-            loggerFactory.CreateLogger<KeyValueDeleteCommand>()));
+        // Register AppConfig commands
+        var accountList = serviceProvider.GetRequiredService<AccountListCommand>();
+        accounts.AddCommand(accountList.Name, accountList);
+
+        var keyValueDelete = serviceProvider.GetRequiredService<KeyValueDeleteCommand>();
+        keyValue.AddCommand(keyValueDelete.Name, keyValueDelete);
+        var keyValueGet = serviceProvider.GetRequiredService<KeyValueGetCommand>();
+        keyValue.AddCommand(keyValueGet.Name, keyValueGet);
+        var keyValueSet = serviceProvider.GetRequiredService<KeyValueSetCommand>();
+        keyValue.AddCommand(keyValueSet.Name, keyValueSet);
+
+        var keyValueLockSet = serviceProvider.GetRequiredService<KeyValueLockSetCommand>();
+        lockGroup.AddCommand(keyValueLockSet.Name, keyValueLockSet);
+
+        return appConfig;
     }
 }

@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.AppConfig.Commands;
 using Azure.Mcp.Tools.AppConfig.Commands.KeyValue;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -12,7 +14,6 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
-using static Azure.Mcp.Tools.AppConfig.Commands.KeyValue.KeyValueSetCommand;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue;
 
@@ -54,7 +55,7 @@ public class KeyValueSetCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _appConfigService.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -67,10 +68,7 @@ public class KeyValueSetCommandTests
             Arg.Any<string[]>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueSetCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -93,7 +91,7 @@ public class KeyValueSetCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _appConfigService.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -106,10 +104,7 @@ public class KeyValueSetCommandTests
             Arg.Any<string[]>());
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueSetCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -134,7 +129,7 @@ public class KeyValueSetCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         await _appConfigService.Received(1).SetKeyValue(
             "account1",
             "my-key",
@@ -147,10 +142,7 @@ public class KeyValueSetCommandTests
             Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")));
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<KeyValueSetCommandResult>(json, new JsonSerializerOptions
-        {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
+        var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal("my-key", result.Key);
@@ -188,7 +180,7 @@ public class KeyValueSetCommandTests
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Failed to set key-value", response.Message);
     }
 
@@ -206,7 +198,7 @@ public class KeyValueSetCommandTests
         var response = await _command.ExecuteAsync(_context, parsedArgs);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("required", response.Message.ToLower());
     }
 }

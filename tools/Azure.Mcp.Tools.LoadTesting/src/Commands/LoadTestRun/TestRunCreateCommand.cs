@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,17 +16,10 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
 {
     private const string _commandTitle = "Test Run Create";
     private readonly ILogger<TestRunCreateCommand> _logger = logger;
-    private readonly Option<string> _testRunIdOption = OptionDefinitions.LoadTesting.TestRun;
-    private readonly Option<string> _testIdOption = OptionDefinitions.LoadTesting.Test;
-    private readonly Option<string> _displayNameOption = OptionDefinitions.LoadTesting.DisplayName;
-    private readonly Option<string> _descriptionOption = OptionDefinitions.LoadTesting.Description;
-    private readonly Option<string> _oldTestRunIdOption = OptionDefinitions.LoadTesting.OldTestRunId;
     public override string Name => "create";
     public override string Description =>
         $"""
-        Executes a new load test run based on an existing test configuration under simulated user load. This command initiates the actual execution
-        of a previously created test definition and provides real-time monitoring capabilities. A test run represents a single execution instance of your load test configuration. You can run
-        the same test multiple times to validate performance improvements, compare results across different deployments, or establish performance baselines for your application.
+        Creates a test run for a specified test in the selected load testing resource. This command triggers a new test run and does not modify the test plan or create a new test or resource. Use this to execute performance or functional tests based on an existing test configuration.
         """;
     public override string Title => _commandTitle;
 
@@ -33,7 +27,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -42,21 +36,21 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_testRunIdOption);
-        command.Options.Add(_testIdOption);
-        command.Options.Add(_displayNameOption);
-        command.Options.Add(_descriptionOption);
-        command.Options.Add(_oldTestRunIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
+        command.Options.Add(OptionDefinitions.LoadTesting.Description);
+        command.Options.Add(OptionDefinitions.LoadTesting.OldTestRunId);
     }
 
     protected override TestRunCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValue(_testRunIdOption);
-        options.TestId = parseResult.GetValue(_testIdOption);
-        options.DisplayName = parseResult.GetValue(_displayNameOption);
-        options.Description = parseResult.GetValue(_descriptionOption);
-        options.OldTestRunId = parseResult.GetValue(_oldTestRunIdOption);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
+        options.OldTestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.OldTestRunId.Name);
         return options;
     }
 
@@ -88,7 +82,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunCreateCommandResult(results), LoadTestJsonContext.Default.TestRunCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

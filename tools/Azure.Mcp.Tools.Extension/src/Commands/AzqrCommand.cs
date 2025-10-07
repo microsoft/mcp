@@ -1,9 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Time;
@@ -31,12 +34,27 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
     public override string Title => CommandTitle;
 
-    public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
+    public override ToolMetadata Metadata => new()
+    {
+        Destructive = false,
+        Idempotent = true,
+        OpenWorld = false,
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
+    };
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+    }
+
+    protected override AzqrOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -88,20 +106,20 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
             if (result.ExitCode != 0)
             {
-                response.Status = 500;
+                response.Status = HttpStatusCode.InternalServerError;
                 response.Message = result.Error;
                 return response;
             }
 
             if (!File.Exists(xlsxReportFilePath) && !File.Exists(jsonReportFilePath))
             {
-                response.Status = 500;
+                response.Status = HttpStatusCode.InternalServerError;
                 response.Message = $"Report file '{xlsxReportFilePath}' and '{jsonReportFilePath}' were not found after azqr execution.";
                 return response;
             }
             var resultObj = new AzqrReportResult(xlsxReportFilePath, jsonReportFilePath, result.Output);
             response.Results = ResponseResult.Create(resultObj, ExtensionJsonContext.Default.AzqrReportResult);
-            response.Status = 200;
+            response.Status = HttpStatusCode.OK;
             response.Message = "azqr report generated successfully.";
             return response;
         }

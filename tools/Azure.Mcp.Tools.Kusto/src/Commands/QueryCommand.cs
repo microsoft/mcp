@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
 using Microsoft.Extensions.Logging;
@@ -12,29 +13,24 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 {
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
-    private readonly Option<string> _queryOption = KustoOptionDefinitions.Query;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_queryOption);
+        command.Options.Add(KustoOptionDefinitions.Query);
     }
 
     protected override QueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Query = parseResult.GetValue(_queryOption);
+        options.Query = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Query.Name);
         return options;
     }
 
     public override string Name => "query";
 
     public override string Description =>
-        """
-        Execute a KQL against items in a Kusto cluster.
-        Requires `cluster-uri` (or `cluster` and `subscription`), `database`, and `query`.
-        Results are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.
-        """;
+        "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.";
 
     public override string Title => CommandTitle;
 
@@ -42,7 +38,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -64,7 +60,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Query!,
@@ -74,7 +70,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
             }
             else
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,
@@ -84,9 +80,7 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
                     options.RetryPolicy);
             }
 
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(new QueryCommandResult(results), KustoJsonContext.Default.QueryCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.QueryCommandResult);
         }
         catch (Exception ex)
         {

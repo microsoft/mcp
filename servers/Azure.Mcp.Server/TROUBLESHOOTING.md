@@ -4,47 +4,23 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
 
 ## Table of Contents
 
-- [Troubleshooting](#troubleshooting)
-  - [Table of Contents](#table-of-contents)
   - [Common Issues](#common-issues)
+    - [Platform Package Installation Issues](#platform-package-installation-issues)
     - [Console window is empty when running Azure MCP Server](#console-window-is-empty-when-running-azure-mcp-server)
     - [Can I select what tools to load in the MCP server?](#can-i-select-what-tools-to-load-in-the-mcp-server)
+  - [Development in VS Code](#development-in-vs-code)
+    - [Bring your own language model key](#bring-your-own-language-model-key)
+    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
   - [VS Code Limitations](#tool-limitations)
     - [128-Tool Limit Issue](#128-tool-limit-issue)
-      - [Problem](#problem)
-      - [Root Cause](#root-cause)
-      - [Workarounds](#workarounds)
       - [How to Check Your Tool Count](#how-to-check-your-tool-count)
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
-  - [Authentication](#authentication)
-    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
-      - [Root Cause](#root-cause-1)
-      - [Working with Resource Administrators](#working-with-resource-administrators)
-    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
-      - [Possible Causes and Resolutions](#possible-causes-and-resolutions)
-    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
-      - [Why This Happens](#why-this-happens)
-      - [Resolution](#resolution)
-    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
-      - [Common Network Issues](#common-network-issues)
-      - [Working with Network Administrators](#working-with-network-administrators)
-      - [Troubleshooting Network Connectivity](#troubleshooting-network-connectivity)
-      - [Questions to Ask Your Network Administrator](#questions-to-ask-your-network-administrator)
-    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
-      - [Service Principal Authentication for Restricted Environments](#service-principal-authentication-for-restricted-environments)
-      - [Conditional Access Policy Compliance](#conditional-access-policy-compliance)
-      - [Resource Access in Locked-Down Environments](#resource-access-in-locked-down-environments)
-    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
-      - [Why This Happens](#why-this-happens-1)
-      - [Resolution Options](#resolution-options)
-      - [Next Steps](#next-steps)
-    - [Platform Package Installation Issues](#platform-package-installation-issues)
-      - [Error Examples:](#error-examples)
-      - [Resolution Steps:](#resolution-steps)
-      - [Common Causes of Auto-Installation Failure:](#common-causes-of-auto-installation-failure)
-      - [For Enterprise Users:](#for-enterprise-users)
+    - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
+  - [Remote MCP Server](#remote-mcp-server)
+      - [SSE Transport](#sse-transport)
+      - [Streamable HTTP Transport](#streamable-http-transport)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
@@ -52,10 +28,14 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
       - [Collecting logs with PerfView](#collecting-logs-with-perfview)
       - [Visualizing EventSource logs in PerfView](#visualizing-eventsource-logs-in-perfview)
     - [Observability with OpenTelemetry](#observability-with-opentelemetry)
-  - [Development Environment](#development-environment)
-    - [Development in VS Code](#development-in-vs-code)
-      - [Bring your own language model key](#bring-your-own-language-model-key)
-    - [Locating MCP Server Binaries in VS Code](#locating-mcp-server-binaries-in-vs-code)
+  - [Authentication](#authentication)
+    - [401 Unauthorized: Local authorization is disabled](#401-unauthorized-local-authorization-is-disabled)
+    - [403 Forbidden: Authorization Failure](#403-forbidden-authorization-failure)
+    - [Primary Access Token from Wrong Issuer](#primary-access-token-from-wrong-issuer)
+    - [Network and Firewall Restrictions](#network-and-firewall-restrictions)
+    - [Enterprise Environment Scenarios](#enterprise-environment-scenarios)
+    - [AADSTS500200 error: User account is a personal Microsoft account](#aadsts500200-error-user-account-is-a-personal-microsoft-account)
+    - [Using Azure Entra ID with Docker](#using-azure-entra-id-with-docker)
 
 ## Common Issues
 
@@ -233,6 +213,36 @@ Clear Node Modules Cache
 
 - npm cache clean --force
 
+### MCP Tools That Require Additional Input Fail Silently
+
+The **Elicitation** feature in VS Code lets MCP tools request user input through interactive prompts during execution. If elicitation is not supported, affected tools may fail without showing prompts or may return errors about client compatibility. Updating VS Code usually resolves the issue.
+
+#### Requirements
+Elicitation is supported starting with **VS Code version 1.102 or newer** (released June 2025).
+
+#### Symptoms
+When elicitation isn't supported, you may experience:
+- MCP tools that need user input fail without explanation
+- Missing interactive prompts when tools request additional information
+- Error messages indicating elicitation is unsupported by the client
+
+![Elicitation error message](elicitation_not_supported.png)
+
+#### Solution
+Update VS Code to version 1.102 or newer:
+
+1. Open VS Code
+2. Go to **Help** > **Check for Updates**
+3. Install the latest version if available
+4. Restart VS Code after updating
+
+To verify your VS Code version:
+- Go to **Help** > **About** (or **Code** > **About Visual Studio Code** on macOS)
+- Check that the version number is 1.102.0 or higher
+
+> [!NOTE]
+> If you're using VS Code Insiders, elicitation support is included in versions from June 2025 onwards.
+
 ## Authentication
 
 For comprehensive authentication guidance including advanced scenarios for protected resources, firewall restrictions, and enterprise environments, see our [detailed Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md).
@@ -295,6 +305,60 @@ This error indicates that the access token doesn't have sufficient permissions t
 
     This will prompt you to select your desired account for authentication.
 
+### Controlling Authentication Methods with AZURE_TOKEN_CREDENTIALS
+
+The Azure Identity SDK supports fine-grained control over which authentication methods are attempted through the `AZURE_TOKEN_CREDENTIALS` environment variable. This can help resolve authentication issues by excluding problematic credential types or focusing on specific authentication methods.
+
+#### Exclude Credential Categories
+
+To use only **production credentials** (Environment, Workload Identity, Managed Identity), set:
+```bash
+AZURE_TOKEN_CREDENTIALS=prod
+```
+
+To use only **development credentials** (Visual Studio, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI), set:
+```bash
+AZURE_TOKEN_CREDENTIALS=dev
+```
+
+When `prod` is used, the credential chain becomes:
+```
+Environment → Workload Identity → Managed Identity
+```
+
+When `dev` is used, the credential chain becomes:
+```
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+```
+
+#### Use Specific Credentials Only
+
+To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the name of a single credential:
+
+```bash
+# Use only Azure CLI credential
+AZURE_TOKEN_CREDENTIALS=AzureCliCredential
+
+# Use only Visual Studio Code credential  
+AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
+
+# Use only Environment credential (for CI/CD scenarios)
+AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
+
+# Use only Interactive Browser credential
+AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
+```
+
+**Available credential names:**
+- `AzureCliCredential`
+- `AzureDeveloperCliCredential` 
+- `AzurePowerShellCredential`
+- `EnvironmentCredential`
+- `InteractiveBrowserCredential`
+- `ManagedIdentityCredential`
+- `VisualStudioCodeCredential`
+- `VisualStudioCredential`
+- `WorkloadIdentityCredential`
 
 ### Primary Access Token from Wrong Issuer
 
@@ -607,6 +671,72 @@ If you're behind a corporate firewall, you may need to:
 - Configure npm proxy settings
 - Whitelist npm registry domains (`*.npmjs.org`, `registry.npmjs.org`)
 - Work with IT to ensure npm can download packages
+
+### Using Azure Entra ID with Docker
+
+To use Azure Entra ID with the Docker image update the MCP client configuration to use `--volume` rather than `--env-file`.  The value for `--volume` is a mapping from the host machine's `.azure` folder to the corresponding `.azure` directory in the container.
+
+1. On the host machine, log into Azure via Azure CLI.
+2. Update MCP client configuration to point to the user's `.azure` folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "~/.azure:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
+
+#### For Windows Users
+
+On Windows, Azure CLI stores credentials in an encrypted format that cannot be accessed from within Docker containers. On Linux and Mac, credentials are stored as plain JSON files that can be shared with containers. Consequently, mapping the `.azure` directory from the user profile to the container will not work on Windows. A workaround is to use WSL to log into the Azure CLI and then map that to the Docker container. There is an open issue to address this (https://github.com/Azure/azure-sdk-for-net/issues/19167).
+
+1. In a WSL console
+   ```bash
+   mkdir /mnt/c/users/<username>/.azure-wsl
+   AZURE_CONFIG_DIR=/mnt/c/users/<username>/.azure-wsl
+   az login
+   ```
+2. Update MCP client configuration to point that folder.
+   ```json
+      {
+         "mcpServers": {
+            "Azure MCP Server": {
+               "command": "docker",
+               "args": [
+                  "run",
+                  "-i",
+                  "--rm",
+                  "--volume",
+                  "C:\\users\\<username>\\.azure-wsl:/root/.azure",
+                  "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
+               ]
+            }
+         }
+      }
+   ```
+
+## Remote MCP Server
+
+### SSE Transport
+
+>[!WARNING]
+>**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
+>
+> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+
+### Streamable HTTP Transport
+
+The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
 
 ## Logging and Diagnostics
 

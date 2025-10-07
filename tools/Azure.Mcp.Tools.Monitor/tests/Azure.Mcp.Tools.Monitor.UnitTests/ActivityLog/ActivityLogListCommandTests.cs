@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -68,14 +69,14 @@ public sealed class ActivityLogListCommandTests
                 }
             };
             _monitorService.ListActivityLogs(
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
-                Arg.Any<string>(), 
-                Arg.Any<double>(), 
-                Arg.Any<ActivityLogEventLevel?>(), 
-                Arg.Any<int>(), 
-                Arg.Any<string>(), 
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<double>(),
+                Arg.Any<ActivityLogEventLevel?>(),
+                Arg.Any<int>(),
+                Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
                 .Returns(testActivityLogs);
         }
@@ -84,7 +85,7 @@ public sealed class ActivityLogListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);
         if (shouldSucceed)
         {
             Assert.NotNull(response.Results);
@@ -138,7 +139,7 @@ public sealed class ActivityLogListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal((HttpStatusCode)200, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
@@ -184,7 +185,7 @@ public sealed class ActivityLogListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal((HttpStatusCode)200, response.Status);
         Assert.Null(response.Results);
     }
 
@@ -208,7 +209,7 @@ public sealed class ActivityLogListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal((HttpStatusCode)500, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);
     }
@@ -222,7 +223,7 @@ public sealed class ActivityLogListCommandTests
     {
         // Arrange
         var args = $"--subscription {_knownSubscription} {partialArgs}";
-        
+
         _monitorService.ListActivityLogs(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -250,6 +251,6 @@ public sealed class ActivityLogListCommandTests
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
 
         // Assert
-        Assert.Equal(shouldSucceed ? 200 : 400, response.Status);
+        Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);
     }
 }
