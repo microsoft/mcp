@@ -17,7 +17,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
   - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
 - Added support for listing all Azure SignalR runtime instances or getting detailed information about a single one via the command `azmcp_signalr_runtime_get`. [[#83](https://github.com/microsoft/mcp/pull/83)]
-- Added a new tool loader for the default Azure MCP server start mode that executes Azure namespace commands directly in-process instead of spawning individual processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
 
 ### Breaking Changes
 
@@ -37,6 +36,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
 - Update the `ToolName` telemetry field to use the normalized command name when the `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
+- Updated the default tool loading behavior to execute namespace tool calls directly instead of spawning separate child processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
 
 #### Dependency updates
 
