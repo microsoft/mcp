@@ -90,7 +90,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
     public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
     {
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1 --messages badformat");
+        var args = command.GetCommand().Parse("--service svc --agent base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(400, response.Status);
