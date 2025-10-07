@@ -219,6 +219,7 @@ azmcp foundry openai create-completion --subscription <subscription> \
                                        [--temperature <temperature>]
 
 # Create interactive chat completions using Azure OpenAI chat models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --resource-name <resource-name> \
@@ -236,6 +237,7 @@ azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              [--auth-method <auth-method>]
 
 # Generate vector embeddings for text using Azure OpenAI embedding models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai embeddings-create --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-name <resource-name> \
@@ -247,6 +249,7 @@ azmcp foundry openai embeddings-create --subscription <subscription> \
                                        [--auth-method <auth-method>]
 
 # List all available OpenAI models and deployments in an Azure resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
@@ -455,22 +458,60 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
-### Azure CLI Operations
+### Azure Communication Services Operations
 
 ```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
+# Send SMS message using Azure Communication Services
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send \
+    --connection-string "<connection-string>" \
+    --from "<sender-phone-number>" \
+    --to "<recipient-phone-number>" \
+    --message "<message-text>" \
+    [--enable-delivery-report] \
+    [--tag "<custom-tag>"]
 # Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
+# Send SMS to single recipient
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124" \
+    --message "Hello from Azure Communication Services!"
+# Send SMS to multiple recipients with delivery reporting
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124,+14255550125" \
+    --message "Broadcast message" \
+    --enable-delivery-report \
+    --tag "marketing-campaign"
 ```
+
+**Options:**
+-   `--connection-string`: Azure Communication Services connection string (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
 
 ### Azure Container Registry (ACR) Operations
 
@@ -1177,6 +1218,7 @@ azmcp azuremanagedlustre filesystem list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
 # Create an Azure Managed Lustre filesystem
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem create --subscription <subscription> \
                                            --sku <sku> \
                                            --size <filesystem-size-in-tib> \
@@ -1197,6 +1239,7 @@ azmcp azuremanagedlustre filesystem create --subscription <subscription> \
                                            [--user-assigned-identity-id <user-assigned-identity-id>]
 
 # Update an existing Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem update --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --name <filesystem-name> \
@@ -1349,6 +1392,7 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 
 ```bash
 # Get detailed properties of SignalR Service runtimes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp signalr runtime get --subscription <subscription> \
                            [--resource-group <resource-group>] \
                            [--signalr <signalr-name>]
