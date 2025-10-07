@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents the SKU configuration for a SignalR service.
 /// </summary>
-public class Sku
+public sealed class Sku
 {
     /// <summary> The capacity (unit count) for the SKU. </summary>
     public int? Capacity { get; set; }

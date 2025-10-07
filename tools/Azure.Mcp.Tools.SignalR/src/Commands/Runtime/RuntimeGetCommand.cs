@@ -19,14 +19,13 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
     private const string CommandTitle = "Show Service Details";
     private readonly ILogger<RuntimeGetCommand> _logger = logger;
 
-    private static readonly Option<string> _signalRNameOption = SignalROptionDefinitions.SignalR;
-
     public override string Name => "get";
 
     public override string Description =>
         """
-        Show details of an Azure SignalR Runtime.
-        Returns runtime information including identity, network ACLs, upstream templates.
+        Gets or lists details of an Azure SignalR Runtimes. If a specific SignalR name is used, the details of that
+        SignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource
+        group will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.
         """;
 
     public override string Title => CommandTitle;
@@ -44,7 +43,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_signalRNameOption);
+        command.Options.Add(SignalROptionDefinitions.SignalR);
     }
 
     protected override RuntimeGetOptions BindOptions(ParseResult parseResult)
@@ -88,5 +87,5 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
         return context.Response;
     }
 
-    internal record RuntimeGetCommandResult(IEnumerable<Azure.Mcp.Tools.SignalR.Models.Runtime> Runtimes);
+    internal record RuntimeGetCommandResult(IEnumerable<Models.Runtime> Runtimes);
 }

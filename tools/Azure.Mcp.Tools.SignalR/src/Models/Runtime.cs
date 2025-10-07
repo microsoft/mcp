@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents a SignalR service runtime configuration.
 /// </summary>
-public class Runtime
+public sealed class Runtime
 {
     /// <summary> The resource id. </summary>
     public string? Id { get; set; }

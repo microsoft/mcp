@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents managed identity configuration of the SignalR resource.
 /// </summary>
-public class Identity
+public sealed class Identity
 {
     /// <summary> The identity type. </summary>
     public string? Type { get; set; }

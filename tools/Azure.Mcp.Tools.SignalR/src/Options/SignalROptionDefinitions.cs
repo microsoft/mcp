@@ -13,8 +13,7 @@ public static class SignalROptionDefinitions
     /// <summary>
     /// SignalR service name option.
     /// </summary>
-    public static readonly Option<string> SignalR = new(
-        $"--{SignalRName}")
+    public static readonly Option<string> SignalR = new($"--{SignalRName}")
     {
         Description = "The name of the SignalR runtime"
     };

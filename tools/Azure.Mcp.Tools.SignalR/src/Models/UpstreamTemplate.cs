@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents an upstream template definition for forwarding events.
 /// </summary>
-public class UpstreamTemplate
+public sealed class UpstreamTemplate
 {
     /// <summary> Authentication settings for the upstream call. </summary>
     public AuthSettings? Auth { get; set; }
@@ -25,7 +25,7 @@ public class UpstreamTemplate
 }
 
 /// <summary> Represents authentication configuration for an upstream template. </summary>
-public class AuthSettings
+public sealed class AuthSettings
 {
     /// <summary> The auth type (e.g. ManagedIdentity). </summary>
     public string? Type { get; set; }

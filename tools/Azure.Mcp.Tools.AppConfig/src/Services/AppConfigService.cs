@@ -168,7 +168,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
                         subscription,
                         retryPolicy,
                         ConvertToAppConfigurationAccountModel,
-                        $"name =~ '{EscapeKqlString(accountName)}'");
+                        additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'");
 
             if (account == null)
             {

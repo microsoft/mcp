@@ -14,6 +14,7 @@ using Azure.Mcp.Tools.SignalR.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.SignalR.UnitTests.Runtime;
@@ -78,11 +79,11 @@ public class RuntimeGetCommandTests
                             DefaultAction = "Allow",
                             PublicNetwork = new PublicNetwork
                             {
-                                Allow = new List<string> { "ClientConnection", "ServerConnection" }
+                                Allow = ["ClientConnection", "ServerConnection"]
                             }
                         },
-                        UpstreamTemplates = new List<UpstreamTemplate>
-                        {
+                        UpstreamTemplates =
+                        [
                             new()
                             {
                                 Auth = new AuthSettings
@@ -95,7 +96,7 @@ public class RuntimeGetCommandTests
                                 HubPattern = "hub",
                                 UrlTemplate = "https://example.com/{userId}",
                             }
-                        }
+                        ]
                     }
                 }
             };
@@ -150,7 +151,7 @@ public class RuntimeGetCommandTests
         // Arrange
         _signalRService.GetRuntimeAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(Task.FromException<IEnumerable<Models.Runtime>>(new Exception("Test error")));
+            .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
@@ -170,7 +171,7 @@ public class RuntimeGetCommandTests
         var notFoundException = new RequestFailedException(404, "Not Found");
         _signalRService.GetRuntimeAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
-            .Returns(Task.FromException<IEnumerable<Models.Runtime>>(notFoundException));
+            .ThrowsAsync(notFoundException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
@@ -188,7 +189,7 @@ public class RuntimeGetCommandTests
         var forbiddenException = new RequestFailedException(403, "Forbidden");
         _signalRService.GetRuntimeAsync(
             Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<IEnumerable<Models.Runtime>>(forbiddenException));
+            .ThrowsAsync(forbiddenException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 

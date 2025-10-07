@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents a SignalR network rule.
 /// </summary>
-public class NetworkAcls
+public sealed class NetworkAcls
 {
     /// <summary> Gets or sets the default action to take when no specific rule matches. </summary>
     public string? DefaultAction { get; set; }
@@ -21,7 +21,7 @@ public class NetworkAcls
 /// <summary>
 /// Represents a collection of allow/deny lists for a network scope.
 /// </summary>
-public class Network
+public abstract class Network
 {
     /// <summary> Gets or sets the collection of allowed request types for public network access. </summary>
     public IList<string>? Allow { get; set; }
@@ -31,12 +31,12 @@ public class Network
 }
 
 /// <summary> Represents public network access rules. </summary>
-public class PublicNetwork : Network;
+public sealed class PublicNetwork : Network;
 
 /// <summary>
 /// Represents a private endpoint network rule set.
 /// </summary>
-public class PrivateEndpoint : Network
+public sealed class PrivateEndpoint : Network
 {
     /// <summary> Gets or sets the name of the private endpoint. </summary>
     public string? Name { get; set; }

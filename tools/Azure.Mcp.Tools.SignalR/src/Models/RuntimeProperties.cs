@@ -6,7 +6,7 @@ namespace Azure.Mcp.Tools.SignalR.Models;
 /// <summary>
 /// Represents runtime-specific properties for a SignalR service.
 /// </summary>
-public class RuntimeProperties
+public sealed class RuntimeProperties
 {
     /// <summary> The public external IP address. </summary>
     public string? ExternalIP { get; set; }

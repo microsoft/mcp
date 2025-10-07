@@ -1,7 +1,7 @@
 parameters:
 - name: TimeoutInMinutes
   type: number
-  default: 60
+  default: 75
 
 jobs:
 - job: LiveTest

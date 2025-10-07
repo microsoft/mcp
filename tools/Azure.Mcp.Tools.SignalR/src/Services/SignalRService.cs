@@ -67,8 +67,7 @@ public sealed class SignalRService(
                     var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
                     if (!resourceGroupResource.HasValue)
                     {
-                        throw new Exception(
-                            $"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+                        throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                     }
 
                     var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync();
@@ -153,7 +152,7 @@ public sealed class SignalRService(
                 Size = resource.Data?.Sku?.Size,
                 Tier = resource.Data?.Sku?.Tier.ToString()
             },
-            Tags = resource.Data?.Tags.ToDictionary(kv => kv.Key, kv => kv.Value)
+            Tags = resource.Data?.Tags
         };
         return runtime ?? throw new InvalidOperationException("Failed to parse SignalR runtime data");
     }
@@ -210,11 +209,11 @@ public sealed class SignalRService(
         UserAssignedIdentityInfo[]? userAssigned =
             identity.ManagedServiceIdentityType == ManagedServiceIdentityType.UserAssigned
             && identity.UserAssignedIdentities is not null
-                ? identity.UserAssignedIdentities.Select(kv => new UserAssignedIdentityInfo
+                ? [.. identity.UserAssignedIdentities.Select(kv => new UserAssignedIdentityInfo
                 {
                     ClientId = kv.Key.ToString(),
                     PrincipalId = kv.Value.PrincipalId.ToString()
-                }).ToArray()
+                })]
                 : null;
 
         var managedIdentityInfo = new ManagedIdentityInfo

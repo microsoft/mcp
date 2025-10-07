@@ -403,6 +403,59 @@ azmcp extension az --command "storage account show --name <account> --resource-g
 azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
 
+### Azure Communication Services Operations
+
+```bash
+# Send SMS message using Azure Communication Services
+azmcp communication sms send \
+    --connection-string "<connection-string>" \
+    --from "<sender-phone-number>" \
+    --to "<recipient-phone-number>" \
+    --message "<message-text>" \
+    [--enable-delivery-report] \
+    [--tag "<custom-tag>"]
+
+# Examples:
+# Send SMS to single recipient
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124" \
+    --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124,+14255550125" \
+    --message "Broadcast message" \
+    --enable-delivery-report \
+    --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--connection-string`: Azure Communication Services connection string (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
+
 ### Azure Container Registry (ACR) Operations
 
 ```bash
@@ -1025,13 +1078,52 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
+                                         --resource-group <resource-group> 
+
+# Create an Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+                                           --sku <sku> \
+                                           --size <filesystem-size-in-tib> \
+                                           --subnet-id <subnet-id> \
+                                           --zone <zone> \
+                                           --maintenance-day <maintenance-day> \
+                                           --maintenance-time <maintenance-time> \
+                                           [--hsm-container <hsm-container>] \
+                                           [--hsm-log-container <hsm-log-container>] \
+                                           [--import-prefix <import-prefix>] \
+                                           [--root-squash-mode <root-squash-mode>] \
+                                           [--no-squash-nid-list <no-squash-nid-list>] \
+                                           [--squash-uid <squash-uid>] \
+                                           [--squash-gid <squash-gid>] \
+                                           [--custom-encryption] \
+                                           [--key-url <key-url>] \
+                                           [--source-vault <source-vault>] \
+                                           [--user-assigned-identity-id <user-assigned-identity-id>]
+
+# Update an existing Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --name <filesystem-name> \
+                                           [--maintenance-day <maintenance-day>] \
+                                           [--maintenance-time <HH:mm>] \
+                                           [--root-squash-mode <mode>] \
+                                           [--no-squash-nid-list <nid1,nid2,...>] \
+                                           [--squash-uid <uid>] \
+                                           [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
 
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
+
+# Lists the available Azure Managed Lustre SKUs in a specific location
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
 ```
