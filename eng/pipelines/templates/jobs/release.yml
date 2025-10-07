@@ -52,8 +52,6 @@ jobs:
 - ${{ if parameters.IncludeDockerRelease }}:
   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
     parameters:
-      ContainerRegistry: 'azuresdkimages'
-      DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 

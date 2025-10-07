@@ -118,3 +118,8 @@ jobs:
   parameters:
     DependsOn: Sign
     ServerName: ${{ parameters.ServerName }}
+
+- template: /eng/pipelines/templates/jobs/docker/pack-docker.yml
+  parameters:
+    DependsOn: Sign
+    ServerName: ${{ parameters.ServerName }}

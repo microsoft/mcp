@@ -130,6 +130,10 @@ extends:
           - template: /eng/pipelines/templates/variables/globals.yml
           - name: VersionSuffix
             value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
+          - name: DockerImageName
+            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
+          - name: DockerImageVersion
+            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
