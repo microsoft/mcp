@@ -470,6 +470,7 @@ azmcp communication sms send \
     --message "<message-text>" \
     [--enable-delivery-report] \
     [--tag "<custom-tag>"]
+
 # Examples:
 # Send SMS to single recipient
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -478,6 +479,7 @@ azmcp communication sms send \
     --from "+14255550123" \
     --to "+14255550124" \
     --message "Hello from Azure Communication Services!"
+
 # Send SMS to multiple recipients with delivery reporting
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send \
