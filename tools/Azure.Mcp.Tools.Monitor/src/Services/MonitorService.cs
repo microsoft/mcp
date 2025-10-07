@@ -476,9 +476,19 @@ public class MonitorService : BaseAzureService, IMonitorService
         }
         else
         {
-            string errorMessage = !string.IsNullOrEmpty(responseString) ? responseString :
-                (!string.IsNullOrEmpty(response.ReasonPhrase) ? response.ReasonPhrase :
-                "Unknown Error");
+            string errorMessage;
+            if (!string.IsNullOrEmpty(responseString))
+            {
+                errorMessage = responseString;
+            }
+            else if (!string.IsNullOrEmpty(response.ReasonPhrase))
+            {
+                errorMessage = response.ReasonPhrase;
+            }
+            else
+            {
+                errorMessage = "Unknown Error";
+            }
             throw new HttpRequestException($"Activity Log API returned error {response.StatusCode}: {errorMessage}");
         }
     }
