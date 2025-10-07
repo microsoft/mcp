@@ -11,8 +11,8 @@ param location string = 'westus3'
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
-@description('PostgreSQL administrator username for Entra ID authentication.')
-param adminUsername string = 'mcptestadmin'
+@description('The application (client) ID for the service principal')
+param testApplicationId string
 
 @description('PostgreSQL version.')
 param postgresqlVersion string = '16'
@@ -27,7 +27,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
   }
   properties: {
     version: postgresqlVersion
-    administratorLogin: adminUsername
+    administratorLogin: testApplicationId
     administratorLoginPassword: null // Use Entra ID authentication only
     storage: {
       storageSizeGB: 32
@@ -93,7 +93,7 @@ resource postgresAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators
   parent: postgresServer
   name: testApplicationOid
   properties: {
-    principalName: adminUsername
+    principalName: testApplicationId
     principalType: 'ServicePrincipal'
     tenantId: subscription().tenantId
   }
@@ -123,5 +123,5 @@ output postgresServerName string = postgresServer.name
 output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
 output testDatabaseName string = postgresServer::testDatabase.name
 output testDatabase2Name string = postgresServer::testDatabase2.name
-output adminUsername string = adminUsername
+output adminUsername string = testApplicationId
 output location string = location
