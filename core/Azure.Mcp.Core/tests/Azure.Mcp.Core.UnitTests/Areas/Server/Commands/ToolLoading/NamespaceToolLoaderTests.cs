@@ -448,7 +448,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
     private string GetFirstAvailableNamespace()
     {
         var namespaces = _commandFactory.RootGroup.SubGroup
-            .Where(g => g.Name != "extension" && g.Name != "server" && g.Name != "tools")
+            .Where(g => !Azure.Mcp.Core.Areas.Server.Commands.Discovery.DiscoveryConstants.IgnoredCommandGroups.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
             .Select(g => g.Name)
             .ToList();
 
