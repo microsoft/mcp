@@ -1,3 +1,4 @@
+
 param(
     [string] $TenantId,
     [string] $TestApplicationId,
@@ -13,58 +14,82 @@ $ErrorActionPreference = "Stop"
 
 $testSettings = New-TestSettings @PSBoundParameters -OutputPath $PSScriptRoot
 
-$postgresServerName = $testSettings.ResourceBaseName
-$postgresServerFqdn = $DeploymentOutputs['postgresServerFqdn']
-$testDatabaseName = $DeploymentOutputs['testDatabaseName']
-$adminUsername = $DeploymentOutputs['adminUsername']
+$postgresServerName = "$($testSettings.ResourceBaseName)-postgres"
 
-Write-Host "Verifying PostgreSQL Flexible Server deployment: $postgresServerName" -ForegroundColor Yellow
+Write-Host "Verifying PostgreSQL Server deployment: $postgresServerName" -ForegroundColor Yellow
 
+# Get the PostgreSQL server details to verify deployment
 try {
-    # Get the PostgreSQL server details to verify deployment
-    Write-Host "Getting PostgreSQL server details..." -ForegroundColor Gray
-    $context = Get-AzContext
-    if (-not $context) {
-        Write-Error "No Azure context found. Please run Connect-AzAccount first."
-        exit 1
+    $postgresServer = Get-AzPostgreSqlFlexibleServer -ResourceGroupName $ResourceGroupName -Name $postgresServerName
+
+    if ($postgresServer) {
+        Write-Host "PostgreSQL Server '$postgresServerName' deployed successfully" -ForegroundColor Green
+        Write-Host "  Server: $($postgresServer.Name)" -ForegroundColor Gray
+        Write-Host "  FQDN: $($postgresServer.FullyQualifiedDomainName)" -ForegroundColor Gray
+        Write-Host "  Location: $($postgresServer.Location)" -ForegroundColor Gray
+        Write-Host "  Version: $($postgresServer.Version)" -ForegroundColor Gray
+        Write-Host "  State: $($postgresServer.State)" -ForegroundColor Gray
+
+        # List databases
+        try {
+            $databases = Get-AzPostgreSqlFlexibleServerDatabase -ResourceGroupName $ResourceGroupName -ServerName $postgresServerName
+            Write-Host "  Databases:" -ForegroundColor Gray
+            foreach ($db in $databases) {
+                Write-Host "    - $($db.Name) (Charset: $($db.Charset), Collation: $($db.Collation))" -ForegroundColor Gray
+            }
+        }
+        catch {
+            Write-Warning "Could not list databases: $($_.Exception.Message)"
+        }
+
+        # List firewall rules
+        try {
+            $firewallRules = Get-AzPostgreSqlFlexibleServerFirewallRule -ResourceGroupName $ResourceGroupName -ServerName $postgresServerName
+            Write-Host "  Firewall Rules:" -ForegroundColor Gray
+            foreach ($rule in $firewallRules) {
+                Write-Host "    - $($rule.Name): $($rule.StartIpAddress) - $($rule.EndIpAddress)" -ForegroundColor Gray
+            }
+        }
+        catch {
+            Write-Warning "Could not list firewall rules: $($_.Exception.Message)"
+        }
+
+        # Wait for server to be ready
+        Write-Host "Waiting for PostgreSQL server to be ready..." -ForegroundColor Yellow
+        $maxWaitTime = 300 # 5 minutes
+        $waitInterval = 15 # 15 seconds
+        $elapsedTime = 0
+
+        do {
+            Start-Sleep -Seconds $waitInterval
+            $elapsedTime += $waitInterval
+            $currentServer = Get-AzPostgreSqlFlexibleServer -ResourceGroupName $ResourceGroupName -Name $postgresServerName
+            Write-Host "  Server state: $($currentServer.State)" -ForegroundColor Gray
+            
+            if ($currentServer.State -eq "Ready") {
+                Write-Host "PostgreSQL server is ready!" -ForegroundColor Green
+                break
+            }
+            
+            if ($elapsedTime -ge $maxWaitTime) {
+                Write-Warning "Timeout waiting for PostgreSQL server to be ready. Current state: $($currentServer.State)"
+                break
+            }
+        } while ($currentServer.State -ne "Ready")
+
+        # Prepare test data
+        Write-Host "Preparing test data..." -ForegroundColor Yellow
+        
+        # The connection string and data preparation would typically be done here
+        # However, since we're using MCP tools for testing, the actual data preparation
+        # will be done as part of the live tests themselves
+        
+        Write-Host "PostgreSQL test resources setup completed successfully!" -ForegroundColor Green
+    } else {
+        Write-Error "PostgreSQL Server '$postgresServerName' not found"
     }
-
-    Write-Host "PostgreSQL Server '$postgresServerName' deployed successfully" -ForegroundColor Green
-    Write-Host "  Server: $postgresServerName" -ForegroundColor Gray
-    Write-Host "  FQDN: $postgresServerFqdn" -ForegroundColor Gray
-    Write-Host "  Location: $($DeploymentOutputs['location'])" -ForegroundColor Gray
-    Write-Host "  Database: $testDatabaseName" -ForegroundColor Gray
-    Write-Host "  Admin: $adminUsername" -ForegroundColor Gray
-
-    Write-Host "`nSetting up test data..." -ForegroundColor Yellow
-
-    # Note: Test data creation is handled by the live tests themselves
-    # The PostgreSQL tools use Npgsql library directly and will create test data during test execution
-    # This post-deployment script only verifies the server is accessible
-    
-    # Get Entra ID access token for PostgreSQL
-    Write-Host "Getting Entra ID access token..." -ForegroundColor Gray
-    $accessToken = (Get-AzAccessToken -ResourceUrl "https://ossrdbms-aad.database.windows.net").Token
-
-    if (-not $accessToken) {
-        Write-Error "Failed to get Entra ID access token"
-        exit 1
-    }
-
-    Write-Host "Successfully obtained Entra ID access token" -ForegroundColor Green
-    Write-Host "PostgreSQL server is ready for live tests" -ForegroundColor Green
-
-    Write-Host "`nPostgreSQL server verification completed!" -ForegroundColor Green
-    Write-Host "Note: Test data (tables and rows) will be created by the live tests themselves." -ForegroundColor Yellow
 }
 catch {
-    Write-Error "PostgreSQL server setup verification failed: $_"
+    Write-Error "Error verifying PostgreSQL Server deployment: $($_.Exception.Message)"
     throw
 }
-
-Write-Host "`nPostgreSQL test resources are ready for live tests!" -ForegroundColor Green
-Write-Host "  Server: $postgresServerName" -ForegroundColor Cyan
-Write-Host "  FQDN: $postgresServerFqdn" -ForegroundColor Cyan
-Write-Host "  Database: $testDatabaseName" -ForegroundColor Cyan
-Write-Host "  Authentication: Entra ID (Azure AD)" -ForegroundColor Cyan
-Write-Host "  Note: Test tables will be created during test execution" -ForegroundColor Yellow
