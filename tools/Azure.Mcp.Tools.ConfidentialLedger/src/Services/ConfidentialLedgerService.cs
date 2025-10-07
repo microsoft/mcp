@@ -41,8 +41,9 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
 
     public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(ledgerName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(entryData);
+        ValidateRequiredParameters(
+            (nameof(ledgerName), ledgerName),
+            (nameof(entryData), entryData));
 
         var credential = await GetCredential();
 
@@ -86,8 +87,9 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
 
     public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(ledgerName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+        ValidateRequiredParameters(
+            (nameof(ledgerName), ledgerName),
+            (nameof(transactionId), transactionId));
 
         var credential = await GetCredential();
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);

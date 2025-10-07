@@ -18,6 +18,14 @@ public abstract class BaseConfidentialLedgerCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.LedgerName);
+        command.Validators.Add(commandResult =>
+        {
+            var ledgerName = commandResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.LedgerName.Name);
+            if (string.IsNullOrWhiteSpace(ledgerName))
+            {
+                commandResult.AddError("Missing Required options: --ledger");
+            }
+        });
     }
 
     protected override T BindOptions(ParseResult parseResult)

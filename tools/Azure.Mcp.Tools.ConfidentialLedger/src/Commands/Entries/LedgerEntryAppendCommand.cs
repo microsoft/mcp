@@ -41,6 +41,14 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         base.RegisterOptions(command);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.Content);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
+        command.Validators.Add(commandResult =>
+        {
+            var content = commandResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                commandResult.AddError("Missing Required options: --content");
+            }
+        });
     }
 
     protected override AppendEntryOptions BindOptions(ParseResult parseResult)
@@ -59,14 +67,6 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         }
 
         var options = BindOptions(parseResult);
-
-        // Additional defensive validation (in case of external invocation bypassing parser requirements)
-        if (string.IsNullOrWhiteSpace(options.LedgerName) || string.IsNullOrWhiteSpace(options.Content))
-        {
-            context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-            context.Response.Message = "Missing Required options: --ledger, --content";
-            return context.Response;
-        }
 
         try
         {

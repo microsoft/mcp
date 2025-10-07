@@ -509,7 +509,7 @@ azmcp confidentialledger entries get --ledger <ledger-name> \
 
 **Options:**
 -   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
 -   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 

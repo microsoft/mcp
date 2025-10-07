@@ -38,6 +38,14 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         base.RegisterOptions(command);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.TransactionId);
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
+        command.Validators.Add(commandResult =>
+        {
+            var transactionId = commandResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.TransactionId.Name);
+            if (string.IsNullOrWhiteSpace(transactionId))
+            {
+                commandResult.AddError("Missing Required options: --transaction-id");
+            }
+        });
     }
 
     protected override GetEntryOptions BindOptions(ParseResult parseResult)
@@ -56,13 +64,6 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         }
 
         var options = BindOptions(parseResult);
-
-        if (string.IsNullOrWhiteSpace(options.LedgerName) || string.IsNullOrWhiteSpace(options.TransactionId))
-        {
-            context.Response.Status = HttpStatusCode.BadRequest;
-            context.Response.Message = "Missing Required options: --ledger, --transaction-id";
-            return context.Response;
-        }
 
         try
         {
