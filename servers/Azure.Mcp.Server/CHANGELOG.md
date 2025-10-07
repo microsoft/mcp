@@ -947,4 +947,4 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - See https://github.com/Azure/azure-mcp/releases/tag/0.0.10
 
 ### Other Changes
-- See Blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/
+- See blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/
