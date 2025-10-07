@@ -24,7 +24,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
     private readonly ILogger<EmailSendCommand> _logger = logger;
 
     public override string Name => "send";
-    
+
     public override string Title => CommandTitle;
 
     public override string Description =>

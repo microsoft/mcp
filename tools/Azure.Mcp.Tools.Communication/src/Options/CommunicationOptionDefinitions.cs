@@ -61,80 +61,80 @@ public static class CommunicationOptionDefinitions
         Required = false
     };
 
-/// <summary>
-/// The email address to send from.
-/// </summary>
-public static readonly Option<string> Sender = new(
-    "--sender"
-)
-{
-    Description = "The email address to send from (must be from a verified domain)",
-    Required = true
-};
+    /// <summary>
+    /// The email address to send from.
+    /// </summary>
+    public static readonly Option<string> Sender = new(
+        "--sender"
+    )
+    {
+        Description = "The email address to send from (must be from a verified domain)",
+        Required = true
+    };
 
-/// <summary>
-/// The display name of the sender.
-/// </summary>
-public static readonly Option<string> SenderName = new(
-    "--sender-name"
-)
-{
-    Description = "The display name of the sender",
-    Required = false
-};
+    /// <summary>
+    /// The display name of the sender.
+    /// </summary>
+    public static readonly Option<string> SenderName = new(
+        "--sender-name"
+    )
+    {
+        Description = "The display name of the sender",
+        Required = false
+    };
 
-/// <summary>
-/// The email subject.
-/// </summary>
-public static readonly Option<string> Subject = new(
-    "--subject"
-)
-{
-    Description = "The email subject",
-    Required = false
-};
+    /// <summary>
+    /// The email subject.
+    /// </summary>
+    public static readonly Option<string> Subject = new(
+        "--subject"
+    )
+    {
+        Description = "The email subject",
+        Required = false
+    };
 
-/// <summary>
-/// Flag indicating whether the message content is HTML.
-/// </summary>
-public static readonly Option<bool> IsHtml = new(
-    "--is-html"
-)
-{
-    Description = "Flag indicating whether the message content is HTML",
-    Required = false
-};
+    /// <summary>
+    /// Flag indicating whether the message content is HTML.
+    /// </summary>
+    public static readonly Option<bool> IsHtml = new(
+        "--is-html"
+    )
+    {
+        Description = "Flag indicating whether the message content is HTML",
+        Required = false
+    };
 
-/// <summary>
-/// CC recipient email addresses.
-/// </summary>
-public static readonly Option<string[]> Cc = new(
-    "--cc"
-)
-{
-    Description = "CC recipient email addresses",
-    Required = false
-};
+    /// <summary>
+    /// CC recipient email addresses.
+    /// </summary>
+    public static readonly Option<string[]> Cc = new(
+        "--cc"
+    )
+    {
+        Description = "CC recipient email addresses",
+        Required = false
+    };
 
-/// <summary>
-/// BCC recipient email addresses.
-/// </summary>
-public static readonly Option<string[]> Bcc = new(
-    "--bcc"
-)
-{
-    Description = "BCC recipient email addresses",
-    Required = false
-};
+    /// <summary>
+    /// BCC recipient email addresses.
+    /// </summary>
+    public static readonly Option<string[]> Bcc = new(
+        "--bcc"
+    )
+    {
+        Description = "BCC recipient email addresses",
+        Required = false
+    };
 
-/// <summary>
-/// Reply-to email addresses.
-/// </summary>
-public static readonly Option<string[]> ReplyTo = new(
-    "--reply-to"
-)
-{
-    Description = "Reply-to email addresses",
-    Required = false
-};
+    /// <summary>
+    /// Reply-to email addresses.
+    /// </summary>
+    public static readonly Option<string[]> ReplyTo = new(
+        "--reply-to"
+    )
+    {
+        Description = "Reply-to email addresses",
+        Required = false
+    };
 }

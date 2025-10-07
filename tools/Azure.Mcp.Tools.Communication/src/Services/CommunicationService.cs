@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Communication.Sms;
+using System.Net.Sockets;
 using Azure.Communication.Email;
+using Azure.Communication.Sms;
 using Azure.Core;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Options;
@@ -11,7 +12,6 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
 using Microsoft.Extensions.Logging;
-using System.Net.Sockets;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
@@ -170,7 +170,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
                 }
             }
 
-            _logger.LogInformation("Sending email from {Sender} to {ToCount} recipient(s), CC: {CcCount}, BCC: {BccCount}", 
+            _logger.LogInformation("Sending email from {Sender} to {ToCount} recipient(s), CC: {CcCount}, BCC: {BccCount}",
                 sender, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
 
             // Send the email
@@ -182,7 +182,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             // Get the operation result
             var operationResult = response.Value;
 
-            _logger.LogInformation("Email sent successfully. MessageId={MessageId}, Status={Status}", 
+            _logger.LogInformation("Email sent successfully. MessageId={MessageId}, Status={Status}",
                 response.Id, operationResult.Status);
 
             return new Models.EmailSendResult
