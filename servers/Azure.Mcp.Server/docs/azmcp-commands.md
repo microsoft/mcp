@@ -353,13 +353,6 @@ azmcp appconfig kv set --subscription <subscription> \
                        --key <key> \
                        --value <value> \
                        [--label <label>]
-
-# Show a specific key-value setting
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp appconfig kv show --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -1245,9 +1238,17 @@ azmcp azuremanagedlustre filesystem update --subscription <subscription> \
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
