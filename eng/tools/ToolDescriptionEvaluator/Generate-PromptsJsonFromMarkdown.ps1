@@ -3,7 +3,7 @@
 Generates a prompts JSON from a markdown file.
 
 .DESCRIPTION
-Parses a prompts markdown file like docs/e2etestPrompts.md to produce a JSON file used by ToolDescriptionEvaluator and
+Parses a prompts markdown file like servers/Azure.Mcp.Server/docs/e2etestPrompts.md to produce a JSON file used by ToolDescriptionEvaluator and
 related tooling.
 
 .OUTPUTS

@@ -208,6 +208,40 @@ azmcp foundry openai create-completion --subscription <subscription> \
                                        --prompt-text <prompt-text> \
                                        [--max-tokens <max-tokens>] \
                                        [--temperature <temperature>]
+
+# Create interactive chat completions using Azure OpenAI chat models
+azmcp foundry openai chat-completions-create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --resource-name <resource-name> \
+                                             --deployment <deployment-name> \
+                                             --message-array <message-array> \
+                                             [--max-tokens <max-tokens>] \
+                                             [--temperature <temperature>] \
+                                             [--top-p <top-p>] \
+                                             [--frequency-penalty <frequency-penalty>] \
+                                             [--presence-penalty <presence-penalty>] \
+                                             [--stop <stop-sequences>] \
+                                             [--stream <stream>] \
+                                             [--seed <seed>] \
+                                             [--user <user>] \
+                                             [--auth-method <auth-method>]
+
+# Generate vector embeddings for text using Azure OpenAI embedding models
+azmcp foundry openai embeddings-create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --input-text <input-text> \
+                                       [--user <user>] \
+                                       [--encoding-format <encoding-format>] \
+                                       [--dimensions <dimensions>] \
+                                       [--auth-method <auth-method>]
+
+# List all available OpenAI models and deployments in an Azure resource
+azmcp foundry openai models-list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --resource-name <resource-name> \
+                                 [--auth-method <auth-method>]
 ```
 
 ### Azure AI Search Operations
@@ -283,7 +317,7 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--key-filter <key-filter>] \
                        [--label-filter <label-filter>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -805,7 +839,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -1238,6 +1272,15 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
+### Azure SignalR Service Operations
+
+```bash
+# Get detailed properties of SignalR Service runtimes
+azmcp signalr runtime get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--signalr <signalr-name>]
+```
+
 ### Azure SQL Operations
 
 #### Database
@@ -1267,7 +1310,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \
