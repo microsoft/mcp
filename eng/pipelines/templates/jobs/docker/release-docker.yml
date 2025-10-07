@@ -26,11 +26,11 @@ jobs:
     runOnce:
       deploy:
         steps:
-        # Download the pre-built image tgz artifact produced in the SignAndPack stage (pack-docker.yml)
-        # Assumes pack-docker.yml was updated to publish an artifact named 'docker_staged' containing 'image.tgz'.
+        # Download the pre-built image tar artifact produced in the SignAndPack stage (pack-docker.yml)
+        # Assumes pack-docker.yml was updated to publish an artifact named 'docker_staged' containing 'image.tar'.
         - download: current
           artifact: docker_staged
-          displayName: Download built image tgz
+          displayName: Download built image tar
 
         - task: AzureCLI@2
           displayName: Login to ${{ parameters.ContainerRegistry }}
@@ -43,7 +43,7 @@ jobs:
 
         - script: |
             echo "Loading image..."
-            docker load -i $(Pipeline.Workspace)/docker_staged/image.tgz
+            docker load -i $(Pipeline.Workspace)/docker_staged/image.tar
           displayName: Load image
 
         - script: |

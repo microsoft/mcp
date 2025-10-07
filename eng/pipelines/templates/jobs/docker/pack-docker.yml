@@ -42,11 +42,6 @@ jobs:
     env:
       VERSION_SUFFIX: '$(VersionSuffix)'
 
-  - task: 1ES.PublishPipelineArtifact@1
-    inputs:
-      path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_staged
-
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
@@ -78,14 +73,14 @@ jobs:
       digest=$(docker inspect --format='{{index .Id}}' "$IMAGE_TAG")
       echo "Image digest: $digest"
       echo "##vso[task.setvariable variable=DockerImageDigest;isOutput=true]$digest"
-      echo "Saving and compressing image to image.tgz"
-      docker save "$IMAGE_TAG" | gzip > image.tgz
-      ls -lh image.tgz
+      echo "Saving image"
+      docker save $IMAGE_TAG -o $(Build.ArtifactStagingDirectory)/image.tar
+      ls -lh $(Build.ArtifactStagingDirectory)/image.tar
     name: CaptureImage
-    displayName: Capture image digest and save tgz
+    displayName: Capture image digest and save tar
 
-  - task: PublishPipelineArtifact@1
-    displayName: Publish built image tgz
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: 'Publish docker staging artifact (includes image.tar)'
     inputs:
-      targetPath: image.tgz
+      path: $(Build.ArtifactStagingDirectory)
       artifact: docker_staged
