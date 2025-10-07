@@ -80,10 +80,29 @@ function Get-NpgsqlAssemblyPath {
         return $null
     }
 
-    return Get-ChildItem -Path $packageRoot -Filter 'Npgsql.dll' -Recurse |
-        Sort-Object FullName -Descending |
-        Select-Object -First 1 |
-        ForEach-Object { $_.FullName }
+    $tfmPreference = @('net9.0', 'net8.0', 'net7.0', 'net6.0', 'net5.0', 'netcoreapp3.1', 'netstandard2.1', 'netstandard2.0')
+
+    $versions = Get-ChildItem -Path $packageRoot -Directory | Sort-Object Name -Descending
+    foreach ($version in $versions) {
+        $libFolder = Join-Path $version.FullName 'lib'
+        if (-not (Test-Path $libFolder)) {
+            continue
+        }
+
+        foreach ($tfm in $tfmPreference) {
+            $candidatePath = Join-Path -Path $libFolder -ChildPath $tfm
+            if (-not (Test-Path $candidatePath)) {
+                continue
+            }
+
+            $assemblyCandidate = Join-Path -Path $candidatePath -ChildPath 'Npgsql.dll'
+            if (Test-Path $assemblyCandidate) {
+                return $assemblyCandidate
+            }
+        }
+    }
+
+    return $null
 }
 
 $assemblyPath = Get-NpgsqlAssemblyPath
