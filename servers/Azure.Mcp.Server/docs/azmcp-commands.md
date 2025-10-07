@@ -1250,6 +1250,7 @@ azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscrip
                                                         --size <filesystem-size-in-tib> \
                                                         --location <filesystem-location>
 
+# Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
