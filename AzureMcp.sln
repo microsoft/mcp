@@ -111,7 +111,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{7C4CD8CB-4CA
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.CloudArchitect", "tools\Azure.Mcp.Tools.CloudArchitect\src\Azure.Mcp.Tools.CloudArchitect.csproj", "{E77DA2D5-7AFD-43D6-B77A-C22A1167B856}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools", "Azure.Mcp.Tools", "{C512965D-7BB0-9820-B548-85E6E27E777F}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.Communication", "Azure.Mcp.Tools.Communication", "{C512965D-7BB0-9820-B548-85E6E27E777F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{63ADDEB0-FC34-0EAE-BA79-5E41D9CAA086}"
 EndProject
