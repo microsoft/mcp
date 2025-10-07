@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Npgsql;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Postgres.LiveTests;
@@ -16,6 +17,115 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     private const string TestDatabaseName = "testdb";
     private const string TestDatabase2Name = "testdb2";
     private const string AdminUsername = "mcptestadmin";
+    private static bool _testDataInitialized = false;
+    private static readonly SemaphoreSlim _initLock = new(1, 1);
+
+    public override async ValueTask InitializeAsync()
+    {
+        await base.InitializeAsync();
+
+        // Only initialize test data once for all tests
+        if (_testDataInitialized)
+        {
+            return;
+        }
+
+        await _initLock.WaitAsync();
+        try
+        {
+            if (_testDataInitialized)
+            {
+                return;
+            }
+
+            Output.WriteLine("Initializing test data...");
+            await CreateTestDataAsync();
+            _testDataInitialized = true;
+            Output.WriteLine("Test data initialized successfully");
+        }
+        finally
+        {
+            _initLock.Release();
+        }
+    }
+
+    private async Task CreateTestDataAsync()
+    {
+        // Get Entra ID access token for PostgreSQL
+        var tokenCredential = new Azure.Identity.DefaultAzureCredential();
+        var tokenRequestContext = new Azure.Core.TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
+        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+        var connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
+
+        await using var connection = new NpgsqlConnection(connectionString);
+        await connection.OpenAsync();
+
+        // Create employees table
+        var createEmployeesTable = @"
+CREATE TABLE IF NOT EXISTS employees (
+    id SERIAL PRIMARY KEY,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    email VARCHAR(100) UNIQUE NOT NULL,
+    department VARCHAR(50),
+    salary DECIMAL(10, 2),
+    hire_date DATE DEFAULT CURRENT_DATE,
+    is_active BOOLEAN DEFAULT true
+);";
+
+        await using (var cmd = new NpgsqlCommand(createEmployeesTable, connection))
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Insert employee data
+        var insertEmployees = @"
+INSERT INTO employees (first_name, last_name, email, department, salary, hire_date, is_active)
+VALUES 
+    ('John', 'Doe', 'john.doe@example.com', 'Engineering', 75000.00, '2023-01-15', true),
+    ('Jane', 'Smith', 'jane.smith@example.com', 'Marketing', 65000.00, '2023-02-20', true),
+    ('Bob', 'Johnson', 'bob.johnson@example.com', 'Sales', 70000.00, '2023-03-10', true),
+    ('Alice', 'Williams', 'alice.williams@example.com', 'Engineering', 80000.00, '2023-04-05', true),
+    ('Charlie', 'Brown', 'charlie.brown@example.com', 'HR', 60000.00, '2023-05-12', false)
+ON CONFLICT (email) DO NOTHING;";
+
+        await using (var cmd = new NpgsqlCommand(insertEmployees, connection))
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Create departments table
+        var createDepartmentsTable = @"
+CREATE TABLE IF NOT EXISTS departments (
+    dept_id SERIAL PRIMARY KEY,
+    dept_name VARCHAR(50) NOT NULL UNIQUE,
+    location VARCHAR(100),
+    budget DECIMAL(12, 2)
+);";
+
+        await using (var cmd = new NpgsqlCommand(createDepartmentsTable, connection))
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        // Insert department data
+        var insertDepartments = @"
+INSERT INTO departments (dept_name, location, budget)
+VALUES 
+    ('Engineering', 'Seattle', 1000000.00),
+    ('Marketing', 'New York', 500000.00),
+    ('Sales', 'San Francisco', 750000.00),
+    ('HR', 'Austin', 300000.00)
+ON CONFLICT (dept_name) DO NOTHING;";
+
+        await using (var cmd = new NpgsqlCommand(insertDepartments, connection))
+        {
+            await cmd.ExecuteNonQueryAsync();
+        }
+
+        Output.WriteLine("Test tables and data created successfully");
+    }
 
     [Fact]
     public async Task Should_ListDatabases_Successfully()

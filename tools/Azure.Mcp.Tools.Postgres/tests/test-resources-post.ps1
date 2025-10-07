@@ -38,14 +38,10 @@ try {
 
     Write-Host "`nSetting up test data..." -ForegroundColor Yellow
 
-    # Install Npgsql PowerShell module if not already installed
-    if (-not (Get-Module -ListAvailable -Name "Npgsql")) {
-        Write-Host "Installing Npgsql PowerShell module..." -ForegroundColor Gray
-        Install-Module -Name Npgsql -Force -Scope CurrentUser -AllowClobber
-    }
-
-    Import-Module Npgsql -ErrorAction SilentlyContinue
-
+    # Note: Test data creation is handled by the live tests themselves
+    # The PostgreSQL tools use Npgsql library directly and will create test data during test execution
+    # This post-deployment script only verifies the server is accessible
+    
     # Get Entra ID access token for PostgreSQL
     Write-Host "Getting Entra ID access token..." -ForegroundColor Gray
     $accessToken = (Get-AzAccessToken -ResourceUrl "https://ossrdbms-aad.database.windows.net").Token
@@ -55,109 +51,29 @@ try {
         exit 1
     }
 
-    # Build connection string with Entra ID token
-    $connectionString = "Host=$postgresServerFqdn;Database=$testDatabaseName;Username=$adminUsername;Password=$accessToken;SSL Mode=Require;Trust Server Certificate=true;"
-
-    Write-Host "Connecting to PostgreSQL database..." -ForegroundColor Gray
+    Write-Host "Successfully obtained Entra ID access token" -ForegroundColor Green
     
-    # Create connection
-    $connection = New-Object Npgsql.NpgsqlConnection($connectionString)
+    # Verify we can reach the server (basic connectivity check)
+    Write-Host "Verifying server connectivity..." -ForegroundColor Gray
     
-    try {
-        $connection.Open()
-        Write-Host "Successfully connected to PostgreSQL database" -ForegroundColor Green
-
-        # Create test table
-        Write-Host "Creating test table 'employees'..." -ForegroundColor Gray
-        $createTableSql = @"
-CREATE TABLE IF NOT EXISTS employees (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    department VARCHAR(50),
-    salary DECIMAL(10, 2),
-    hire_date DATE DEFAULT CURRENT_DATE,
-    is_active BOOLEAN DEFAULT true
-);
-"@
-
-        $command = New-Object Npgsql.NpgsqlCommand($createTableSql, $connection)
-        $command.ExecuteNonQuery() | Out-Null
-        Write-Host "  Table 'employees' created successfully" -ForegroundColor Green
-
-        # Insert test data
-        Write-Host "Inserting test data..." -ForegroundColor Gray
-        $insertDataSql = @"
-INSERT INTO employees (first_name, last_name, email, department, salary, hire_date, is_active)
-VALUES 
-    ('John', 'Doe', 'john.doe@example.com', 'Engineering', 75000.00, '2023-01-15', true),
-    ('Jane', 'Smith', 'jane.smith@example.com', 'Marketing', 65000.00, '2023-02-20', true),
-    ('Bob', 'Johnson', 'bob.johnson@example.com', 'Sales', 70000.00, '2023-03-10', true),
-    ('Alice', 'Williams', 'alice.williams@example.com', 'Engineering', 80000.00, '2023-04-05', true),
-    ('Charlie', 'Brown', 'charlie.brown@example.com', 'HR', 60000.00, '2023-05-12', false)
-ON CONFLICT (email) DO NOTHING;
-"@
-
-        $command = New-Object Npgsql.NpgsqlCommand($insertDataSql, $connection)
-        $rowsInserted = $command.ExecuteNonQuery()
-        Write-Host "  Inserted $rowsInserted rows into 'employees' table" -ForegroundColor Green
-
-        # Create another test table for table listing tests
-        Write-Host "Creating additional test table 'departments'..." -ForegroundColor Gray
-        $createDeptTableSql = @"
-CREATE TABLE IF NOT EXISTS departments (
-    dept_id SERIAL PRIMARY KEY,
-    dept_name VARCHAR(50) NOT NULL UNIQUE,
-    location VARCHAR(100),
-    budget DECIMAL(12, 2)
-);
-"@
-
-        $command = New-Object Npgsql.NpgsqlCommand($createDeptTableSql, $connection)
-        $command.ExecuteNonQuery() | Out-Null
-        Write-Host "  Table 'departments' created successfully" -ForegroundColor Green
-
-        # Insert department data
-        $insertDeptSql = @"
-INSERT INTO departments (dept_name, location, budget)
-VALUES 
-    ('Engineering', 'Seattle', 1000000.00),
-    ('Marketing', 'New York', 500000.00),
-    ('Sales', 'San Francisco', 750000.00),
-    ('HR', 'Austin', 300000.00)
-ON CONFLICT (dept_name) DO NOTHING;
-"@
-
-        $command = New-Object Npgsql.NpgsqlCommand($insertDeptSql, $connection)
-        $rowsInserted = $command.ExecuteNonQuery()
-        Write-Host "  Inserted $rowsInserted rows into 'departments' table" -ForegroundColor Green
-
-        # Verify data
-        Write-Host "`nVerifying test data..." -ForegroundColor Gray
-        $verifySql = "SELECT COUNT(*) FROM employees;"
-        $command = New-Object Npgsql.NpgsqlCommand($verifySql, $connection)
-        $count = $command.ExecuteScalar()
-        Write-Host "  Total employees: $count" -ForegroundColor Gray
-
-        $verifySql = "SELECT COUNT(*) FROM departments;"
-        $command = New-Object Npgsql.NpgsqlCommand($verifySql, $connection)
-        $count = $command.ExecuteScalar()
-        Write-Host "  Total departments: $count" -ForegroundColor Gray
-
-        Write-Host "`nTest data setup completed successfully!" -ForegroundColor Green
+    # Use Test-NetConnection to verify the server is reachable on port 5432
+    $connectionTest = Test-NetConnection -ComputerName $postgresServerFqdn -Port 5432 -WarningAction SilentlyContinue
+    
+    if ($connectionTest.TcpTestSucceeded) {
+        Write-Host "Successfully connected to PostgreSQL server on port 5432" -ForegroundColor Green
     }
-    catch {
-        Write-Error "Error setting up test data: $_"
-        Write-Host "Connection String (without token): Host=$postgresServerFqdn;Database=$testDatabaseName;Username=$adminUsername;SSL Mode=Require;" -ForegroundColor Gray
-        throw
+    else {
+        Write-Warning "Could not connect to PostgreSQL server on port 5432. The server may still be starting up."
     }
-    finally {
-        if ($connection.State -eq 'Open') {
-            $connection.Close()
-            Write-Host "Database connection closed" -ForegroundColor Gray
-        }
+    if ($connectionTest.TcpTestSucceeded) {
+        Write-Host "Successfully connected to PostgreSQL server on port 5432" -ForegroundColor Green
     }
+    else {
+        Write-Warning "Could not connect to PostgreSQL server on port 5432. The server may still be starting up."
+    }
+
+    Write-Host "`nPostgreSQL server verification completed!" -ForegroundColor Green
+    Write-Host "Note: Test data (tables and rows) will be created by the live tests themselves." -ForegroundColor Yellow
 }
 catch {
     Write-Error "PostgreSQL server setup verification failed: $_"
@@ -168,4 +84,5 @@ Write-Host "`nPostgreSQL test resources are ready for live tests!" -ForegroundCo
 Write-Host "  Server: $postgresServerName" -ForegroundColor Cyan
 Write-Host "  FQDN: $postgresServerFqdn" -ForegroundColor Cyan
 Write-Host "  Database: $testDatabaseName" -ForegroundColor Cyan
-Write-Host "  Tables: employees, departments" -ForegroundColor Cyan
+Write-Host "  Authentication: Entra ID (Azure AD)" -ForegroundColor Cyan
+Write-Host "  Note: Test tables will be created during test execution" -ForegroundColor Yellow
