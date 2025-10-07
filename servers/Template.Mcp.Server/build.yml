@@ -11,7 +11,7 @@ extends:
   template: /eng/pipelines/templates/common.yml
   parameters:
     ServerName: Template.Mcp.Server
-    PublishTarget: ${{ parameters.PublishTarget }}
+    PublishTarget: public
     RunLiveTests: true
     IncludeDockerRelease : false
     IncludeNative: true
