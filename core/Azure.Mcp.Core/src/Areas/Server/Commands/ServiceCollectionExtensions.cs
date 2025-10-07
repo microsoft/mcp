@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -113,6 +114,21 @@ public static class AzureMcpServiceCollectionExtensions
                 {
                     sp.GetRequiredService<ServerToolLoader>(),
                 };
+
+                // Always add utility commands (subscription, group) in namespace mode
+                // so they are available regardless of which namespaces are loaded
+                var utilityToolLoaderOptions = new ToolLoaderOptions(
+                    Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
+                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
+                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation
+                );
+
+                toolLoaders.Add(new CommandFactoryToolLoader(
+                    sp,
+                    sp.GetRequiredService<CommandFactory>(),
+                    Options.Create(utilityToolLoaderOptions),
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
+                ));
 
                 // Append extension commands when no other namespaces are specified.
                 if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)

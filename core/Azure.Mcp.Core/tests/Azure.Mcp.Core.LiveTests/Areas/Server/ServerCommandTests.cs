@@ -80,6 +80,78 @@ public class ServerCommandTests(ITestOutputHelper output)
         }
     }
 
+    [Fact]
+    public async Task DefaultMode_IncludesUtilityCommands()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // Should include subscription and group utility commands
+        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase) && name.Contains("list", StringComparison.OrdinalIgnoreCase));
+
+        // Log for debugging
+        Output.WriteLine($"Default mode loaded utility commands:");
+        foreach (var name in toolNames.Where(n => n.Contains("subscription", StringComparison.OrdinalIgnoreCase) || n.Contains("group", StringComparison.OrdinalIgnoreCase)))
+        {
+            Output.WriteLine($"  - {name}");
+        }
+    }
+
+    [Fact]
+    public async Task DefaultMode_CanCallSubscriptionList()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var result = await client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // The result should contain subscription data (even if empty list)
+        var firstContent = result.Content.FirstOrDefault();
+        Assert.NotNull(firstContent);
+
+        // Log for debugging
+        Output.WriteLine($"Subscription list result: {firstContent}");
+    }
+
+    [Fact]
+    public async Task DefaultMode_CanCallGroupList()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start");
+
+        // Act
+        var result = await client.CallToolAsync("azmcp_group_list", new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // The result should contain resource group data (even if empty list)
+        var firstContent = result.Content.FirstOrDefault();
+        Assert.NotNull(firstContent);
+
+        // Log for debugging
+        Output.WriteLine($"Group list result: {firstContent}");
+    }
+
     #endregion
 
     #region All Mode Tests
@@ -237,15 +309,17 @@ public class ServerCommandTests(ITestOutputHelper output)
         // Should not include documentation tool when explicit namespaces are specified
         Assert.DoesNotContain("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
-        // Should contain exactly 2 tools for the specified namespaces
-        Assert.Equal(2, toolNames.Count);
+        // Should contain exactly 4 tools: 2 specified namespaces + 2 utility tools (group_list, subscription_list)
+        Assert.Equal(4, toolNames.Count);
 
-        // Verify tools are exactly from storage and keyvault namespaces
+        // Verify tools are from storage, keyvault namespaces, or utility tools
         Assert.All(toolNames, toolName =>
         {
             var isStorageOrKeyVault = toolName.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
                                     toolName.Contains("keyvault", StringComparison.OrdinalIgnoreCase);
-            Assert.True(isStorageOrKeyVault, $"Tool '{toolName}' should be related to storage or keyvault namespaces");
+            var isUtilityTool = toolName.Contains("group", StringComparison.OrdinalIgnoreCase) ||
+                              toolName.Contains("subscription", StringComparison.OrdinalIgnoreCase);
+            Assert.True(isStorageOrKeyVault || isUtilityTool, $"Tool '{toolName}' should be related to storage, keyvault namespaces, or be a utility tool");
         });
 
         Output.WriteLine($"Namespace proxy mode with [storage, keyvault] loaded {toolNames.Count} tools");
@@ -265,12 +339,11 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         var toolNames = listResult.Select(t => t.Name).ToList();
 
-        // Should contain only the documentation tool
-        Assert.Single(listResult);
+        // Should contain the documentation tool plus utility tools
+        Assert.Equal(3, listResult.Count());
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
-
-        // Verify it's exactly the documentation tool
-        Assert.Equal("documentation", toolNames.First(), StringComparer.OrdinalIgnoreCase);
+        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
 
         Output.WriteLine($"Namespace proxy mode with [documentation] loaded {toolNames.Count} tools");
         Output.WriteLine($"Tool: {toolNames.First()}");
@@ -330,7 +403,7 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotEmpty(listResult);
-        Assert.Equal(2, listResult.Count());
+        Assert.Equal(4, listResult.Count()); // 2 specified namespaces + 2 utility tools
 
         var toolNames = listResult.Select(t => t.Name).ToList();
 
@@ -450,11 +523,14 @@ public class ServerCommandTests(ITestOutputHelper output)
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
-        // Should not crash, but may have fewer or no tools
+        // Should not crash, but may have fewer tools
         Assert.NotNull(listResult);
 
-        // Invalid namespaces should result in 0 tools
-        Assert.Empty(listResult);
+        // Invalid namespaces should result in only utility tools (group_list, subscription_list)
+        Assert.Equal(2, listResult.Count());
+        var toolNames = listResult.Select(t => t.Name).ToList();
+        Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
 
         Output.WriteLine($"Invalid namespaces loaded {listResult.Count()} tools");
     }

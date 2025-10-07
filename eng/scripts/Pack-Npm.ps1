@@ -9,9 +9,9 @@ param(
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
-. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
-
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"

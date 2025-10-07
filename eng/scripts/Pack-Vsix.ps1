@@ -7,9 +7,10 @@ param(
 
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
-. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
+
 $sourcePath = "$RepoRoot/eng/vscode"
 
 $buildId = $env:BUILD_BUILDID

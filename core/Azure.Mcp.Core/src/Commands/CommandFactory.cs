@@ -23,7 +23,6 @@ public class CommandFactory
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
 
-    private const string RootCommandGroupName = "azmcp";
     public const char Separator = '_';
 
     /// <summary>
@@ -47,6 +46,8 @@ public class CommandFactory
             writer.WriteStringValue(cleanValue);
         }
     }
+
+    internal const string RootCommandGroupName = "azmcp";
 
     public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
     {
@@ -273,6 +274,28 @@ public class CommandFactory
     public IBaseCommand? FindCommandByName(string fullCommandName)
     {
         return _commandMap.GetValueOrDefault(fullCommandName);
+    }
+
+    /// <summary>
+    /// Removes <see cref="RootCommandGroupName"/> from a command name.
+    /// </summary>
+    public string RemoveRootGroupFromCommandName(string fullCommandName)
+    {
+        var split = fullCommandName.Split(Separator, 2);
+
+        if (split.Length < 2)
+        {
+            return fullCommandName;
+        }
+
+        if (string.Equals(RootCommandGroupName, split[0]))
+        {
+            return split[1];
+        }
+        else
+        {
+            return fullCommandName;
+        }
     }
 
     /// <summary>

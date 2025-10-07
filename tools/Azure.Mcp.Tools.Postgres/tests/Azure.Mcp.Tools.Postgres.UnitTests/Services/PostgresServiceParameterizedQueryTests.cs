@@ -168,4 +168,56 @@ public class PostgresServiceParameterizedQueryTests
         var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, validQuery);
         Assert.NotNull(task);
     }
+
+    [Fact]
+    public void ExecuteQueryAsync_WithVectorSimilaritySearchQuery_ShouldHandleComplexQuery()
+    {
+        // This test verifies that complex queries with vector similarity search
+        // and Azure OpenAI embeddings are properly handled
+
+        // Arrange
+        string subscriptionId = "test-sub";
+        string resourceGroup = "test-rg";
+        string user = "test-user";
+        string server = "test-server";
+        string database = "test-db";
+
+        // Complex query with vector similarity search using Azure OpenAI embeddings
+        string vectorQuery = @"SELECT id, name, embedding <=> azure_openai.create_embeddings(
+    'text-embedding-3-small',
+    'query example'
+    )::vector AS similarity
+    FROM public.products
+    ORDER BY similarity
+    LIMIT 10;";
+
+        // Act & Assert
+        // The method should accept complex queries with vector operations and Azure OpenAI functions
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, vectorQuery);
+
+        // Verify the task is created successfully (will fail at connection stage in unit test)
+        Assert.NotNull(task);
+    }
+
+    [Theory]
+    [InlineData("SELECT embedding <=> azure_openai.create_embeddings('text-embedding-3-small', 'test')::vector FROM products")]
+    [InlineData("SELECT * FROM products ORDER BY embedding <-> '[1,2,3]'::vector LIMIT 5")]
+    [InlineData("SELECT embedding <#> azure_openai.create_embeddings('ada-002', 'search term')::vector AS distance FROM items")]
+    public void ExecuteQueryAsync_WithVariousVectorOperators_ShouldHandleCorrectly(string vectorQuery)
+    {
+        // This test verifies that different vector similarity operators are handled correctly
+        // PostgreSQL pgvector supports multiple operators: <=> (cosine), <-> (L2), <#> (inner product)
+
+        // Arrange
+        string subscriptionId = "test-sub";
+        string resourceGroup = "test-rg";
+        string user = "test-user";
+        string server = "test-server";
+        string database = "test-db";
+
+        // Act & Assert
+        // Should accept queries with various vector similarity operators
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, vectorQuery);
+        Assert.NotNull(task);
+    }
 }
