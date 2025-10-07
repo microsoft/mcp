@@ -1,8 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
@@ -76,6 +81,40 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         {
             TransactionId = transactionId,
             State = state
+        };
+    }
+
+    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(ledgerName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(transactionId);
+
+        var credential = await GetCredential();
+        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+
+        Response? getByCollectionResponse = null;
+        JsonElement rootElement = default;
+        bool loaded = false;
+        while (!loaded)
+        {
+            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            rootElement = JsonDocument.Parse(getByCollectionResponse.Content).RootElement;
+            loaded = rootElement.GetProperty("state").GetString() != "Loading";
+        }
+
+        string? contents = null;
+        string? actualTransactionId = null;
+        if (rootElement.TryGetProperty("entry", out var entryElement))
+        {
+            contents = entryElement.TryGetProperty("contents", out var contentsElement) ? contentsElement.GetString() : null;
+            actualTransactionId = entryElement.TryGetProperty("transactionId", out var txElement) ? txElement.GetString() : null;
+        }
+
+        return new LedgerEntryGetResult
+        {
+            LedgerName = ledgerName,
+            TransactionId = actualTransactionId ?? transactionId,
+            Contents = contents ?? string.Empty,
         };
     }
 }

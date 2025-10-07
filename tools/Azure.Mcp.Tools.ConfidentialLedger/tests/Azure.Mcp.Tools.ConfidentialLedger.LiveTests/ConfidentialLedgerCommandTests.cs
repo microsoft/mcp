@@ -87,4 +87,46 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         Output.WriteLine($"Successfully appended entry to collection '{collectionId}' with transaction ID: {transactionId.GetString()}");
     }
+
+    [Fact]
+    public async Task Should_get_entry()
+    {
+        var ledgerName = Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"];
+        var testContent = $$"""
+            {
+                "collectionTest": false,
+                "timestamp": "{{DateTime.UtcNow:o}}"
+            }
+            """;
+
+        var appendResult = await CallToolAsync(
+            "azmcp_confidentialledger_entries_append",
+            new()
+            {
+                { "ledger", ledgerName },
+                { "content", testContent }
+            });
+
+        Assert.NotNull(appendResult);
+        var transactionId = appendResult.Value.AssertProperty("transactionId");
+        Assert.False(string.IsNullOrWhiteSpace(transactionId));
+
+        var getResult = await CallToolAsync(
+            "azmcp_confidentialledger_entries_get",
+            new()
+            {
+                { "ledger", ledgerName },
+                { "transactionId", transactionId! }
+            });
+
+        Assert.NotNull(getResult);
+
+        var entryTransactionId = getResult.Value.AssertProperty("transactionId");
+        Assert.Equal(entryTransactionId, transactionId);
+        var contents = getResult.Value.AssertProperty("contents");
+        Assert.Equal(JsonValueKind.String, contents.ValueKind);
+        Assert.Equal(testContent.Replace(" ", "").Replace("\n", "").Replace("\r", ""), contents.GetString()!.Replace(" ", "").Replace("\n", "").Replace("\r", ""));
+
+        Output.WriteLine($"Ledger entry {transactionId} retrieved successfully.");
+    }
 }
