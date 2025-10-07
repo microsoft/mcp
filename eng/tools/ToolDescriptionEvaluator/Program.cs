@@ -272,7 +272,7 @@ class Program
             else
             {
                 // Use default fallback logic
-                var defaultPromptsPath = Path.Combine(repoRoot, "docs", "e2eTestPrompts.md");
+                var defaultPromptsPath = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
                 var promptsJsonPath = Path.Combine(toolDir, "prompts.json");
 
                 if (File.Exists(defaultPromptsPath))

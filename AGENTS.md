@@ -154,9 +154,9 @@ dotnet build
 ```
 
 ## API Docs and References
-- API documentation: `/docs/azmcp-commands.md` - Complete command reference
-- Implementation guide: `/docs/new-command.md` - Step-by-step command creation
-- Test prompts: `/docs/e2eTestPrompts.md` - Example prompts for testing
+- API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
+- Implementation guide: `/servers/Azure.Mcp.Server/docs/new-command.md` - Step-by-step command creation
+- Test prompts: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Contributing guide: `CONTRIBUTING.md` - Development workflow and standards
 - Code guidelines: `.github/copilot-instructions.md` - Specific coding standards
 
@@ -171,7 +171,7 @@ dotnet build
 - Format and type check: `dotnet format && dotnet build` - all green
 - Unit tests: Add comprehensive tests following existing patterns
 - Live test infrastructure: Include Bicep template and post-deployment script for Azure services
-- Documentation: Update `/docs/azmcp-commands.md` and add test prompts to `/docs/e2eTestPrompts.md`
+- Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
 - Changelog: Update `CHANGELOG.md` with your changes
@@ -609,8 +609,8 @@ The Azure MCP Server can proxy to external MCP servers via `registry.json`:
 
 ### Required Documentation Updates
 When adding new commands:
-1. **Update `/docs/azmcp-commands.md`** with new command details
-2. **Add test prompts to `/docs/e2eTestPrompts.md`** (maintain alphabetical order)
+1. **Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md`** with new command details
+2. **Add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** (maintain alphabetical order)
 3. **Update toolset README.md** with new functionality
 4. **Update CHANGELOG.md** with changes
 5. **Add CODEOWNERS entry** for new toolset
