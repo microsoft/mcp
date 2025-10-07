@@ -40,6 +40,8 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<MetricsQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
+
+        services.AddSingleton<ActivityLogListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)

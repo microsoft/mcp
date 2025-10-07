@@ -99,7 +99,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 options.ResourceName!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.Hours ?? 1.0,
+                options.Hours ?? 24.0,
                 options.EventLevel,
                 options.Top ?? 10,
                 options.Tenant,

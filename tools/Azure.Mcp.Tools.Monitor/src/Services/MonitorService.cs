@@ -375,7 +375,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string resourceName,
         string? resourceGroup = null,
         string? resourceType = null,
-        double hours = 1.0,
+        double hours = 24.0,
         ActivityLogEventLevel? eventLevel = null,
         int top = 10,
         string? tenant = null,
