@@ -95,15 +95,18 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var result = await CallToolAsync(
-            "azmcp_aks_cluster_list",
-            new()
-            {
-                { "subscription", "" }
-            });
-
         // Should return validation error response with no results
-        Assert.False(result.HasValue);
+        var exception = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+        {
+            await CallToolAsync(
+                "azmcp_aks_cluster_list",
+                new()
+                {
+                    { "subscription", "" }
+                });
+        });
+
+        Assert.Contains("An error occurred", exception.Message);
     }
 
     [Fact]
@@ -127,10 +130,13 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync("azmcp_aks_cluster_list", []);
+        var exception = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+        {
+            await CallToolAsync("azmcp_aks_cluster_list", new());
+        });
 
         // Should return error response for missing subscription (no results)
-        Assert.False(result.HasValue);
+        Assert.Contains("An error occurred", exception.Message);
     }
 
     [Fact]
@@ -221,33 +227,39 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_parameters_for_get_command()
     {
         // Test missing cluster
-        var result1 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", "test-rg" }
-            });
-        Assert.False(result1.HasValue);
+        await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+        {
+            await CallToolAsync(
+                "azmcp_aks_cluster_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "resource-group", "test-rg" }
+                });
+        });
 
         // Test missing resource-group
-        var result2 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "cluster", "test-cluster" }
-            });
-        Assert.False(result2.HasValue);
+        await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+        {
+            await CallToolAsync(
+                "azmcp_aks_cluster_get",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "cluster", "test-cluster" }
+                });
+        });
 
         // Test missing subscription
-        var result3 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
-            new()
-            {
-                { "resource-group", "test-rg" },
-                { "cluster", "test-cluster" }
-            });
-        Assert.False(result3.HasValue);
+        await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+        {
+            await CallToolAsync(
+                "azmcp_aks_cluster_get",
+                new()
+                {
+                    { "resource-group", "test-rg" },
+                    { "cluster", "test-cluster" }
+                });
+        });
     }
 }

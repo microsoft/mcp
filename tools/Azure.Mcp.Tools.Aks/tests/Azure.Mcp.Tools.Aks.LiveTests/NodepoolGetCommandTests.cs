@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using ModelContextProtocol;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
@@ -144,48 +146,52 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_parameters()
     {
         // Missing nodepool
-        var r1 = await CallToolAsync(
+        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
-            });
-        Assert.False(r1.HasValue);
+            }));
+
+        Assert.Contains("An error occurred", exception.Message);
 
         // Missing cluster
-        var r2 = await CallToolAsync(
+        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
                 { "nodepool", "np1" }
-            });
-        Assert.False(r2.HasValue);
+            }));
+
+        Assert.Contains("An error occurred", exception.Message);
 
         // Missing resource-group
-        var r3 = await CallToolAsync(
+        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            });
-        Assert.False(r3.HasValue);
+            }));
+
+        Assert.Contains("An error occurred", exception.Message);
 
         // Missing subscription
-        var r4 = await CallToolAsync(
+        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            });
-        Assert.False(r4.HasValue);
+            }));
+
+        Assert.Contains("An error occurred", exception.Message);
     }
 
     [Fact]
@@ -211,7 +217,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var result = await CallToolAsync(
+        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
@@ -219,9 +225,9 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            });
+            }));
 
         // Should return validation error response with no results
-        Assert.False(result.HasValue);
+        Assert.Contains("An error occurred", exception.Message);
     }
 }
