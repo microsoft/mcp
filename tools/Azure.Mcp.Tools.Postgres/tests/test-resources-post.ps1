@@ -69,20 +69,29 @@ function Get-GlobalPackagesPath {
     return Join-Path $profilePath '.nuget/packages'
 }
 
-function Get-NpgsqlAssemblyPath {
+function Get-NuGetAssemblyPath {
+    param(
+        [Parameter(Mandatory = $true)][string] $PackageName,
+        [string] $AssemblyFileName
+    )
+
     $packagesRoot = Get-GlobalPackagesPath
     if ([string]::IsNullOrWhiteSpace($packagesRoot)) {
         return $null
     }
 
-    $packageRoot = Join-Path $packagesRoot 'npgsql'
-    if (-not (Test-Path $packageRoot)) {
+    if ([string]::IsNullOrWhiteSpace($AssemblyFileName)) {
+        $AssemblyFileName = "${PackageName}.dll"
+    }
+
+    $packageFolder = Join-Path $packagesRoot ($PackageName.ToLowerInvariant())
+    if (-not (Test-Path $packageFolder)) {
         return $null
     }
 
     $tfmPreference = @('net9.0', 'net8.0', 'net7.0', 'net6.0', 'net5.0', 'netcoreapp3.1', 'netstandard2.1', 'netstandard2.0')
 
-    $versions = Get-ChildItem -Path $packageRoot -Directory | Sort-Object Name -Descending
+    $versions = Get-ChildItem -Path $packageFolder -Directory | Sort-Object Name -Descending
     foreach ($version in $versions) {
         $libFolder = Join-Path $version.FullName 'lib'
         if (-not (Test-Path $libFolder)) {
@@ -90,12 +99,12 @@ function Get-NpgsqlAssemblyPath {
         }
 
         foreach ($tfm in $tfmPreference) {
-            $candidatePath = Join-Path -Path $libFolder -ChildPath $tfm
+            $candidatePath = Join-Path $libFolder $tfm
             if (-not (Test-Path $candidatePath)) {
                 continue
             }
 
-            $assemblyCandidate = Join-Path -Path $candidatePath -ChildPath 'Npgsql.dll'
+            $assemblyCandidate = Join-Path $candidatePath $AssemblyFileName
             if (Test-Path $assemblyCandidate) {
                 return $assemblyCandidate
             }
@@ -104,6 +113,16 @@ function Get-NpgsqlAssemblyPath {
 
     return $null
 }
+
+function Get-NpgsqlAssemblyPath {
+    return Get-NuGetAssemblyPath -PackageName 'Npgsql' -AssemblyFileName 'Npgsql.dll'
+}
+
+$loggingAssemblyPath = Get-NuGetAssemblyPath -PackageName 'Microsoft.Extensions.Logging.Abstractions' -AssemblyFileName 'Microsoft.Extensions.Logging.Abstractions.dll'
+if (-not $loggingAssemblyPath) {
+    throw "Unable to locate Microsoft.Extensions.Logging.Abstractions.dll in the NuGet package cache. Run 'dotnet restore' to populate dependencies before invoking this script."
+}
+[System.Reflection.Assembly]::LoadFrom($loggingAssemblyPath) | Out-Null
 
 $assemblyPath = Get-NpgsqlAssemblyPath
 if (-not $assemblyPath) {
