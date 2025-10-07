@@ -1104,11 +1104,11 @@ azmcp monitor metrics query --subscription <subscription> \
 
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
-azmcp azuremanagedlustre filesystem list --subscription <subscription> \
+azmcp managedlustre filesystem list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
 # Create an Azure Managed Lustre filesystem
-azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+azmcp managedlustre filesystem create --subscription <subscription> \
                                            --sku <sku> \
                                            --size <filesystem-size-in-tib> \
                                            --subnet-id <subnet-id> \
@@ -1128,7 +1128,7 @@ azmcp azuremanagedlustre filesystem create --subscription <subscription> \
                                            [--user-assigned-identity-id <user-assigned-identity-id>]
 
 # Update an existing Azure Managed Lustre filesystem
-azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+azmcp managedlustre filesystem update --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --name <filesystem-name> \
                                            [--maintenance-day <maintenance-day>] \
@@ -1139,19 +1139,19 @@ azmcp azuremanagedlustre filesystem update --subscription <subscription> \
                                            [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+azmcp managedlustre filesystem subnetsize ask --subscription <subscription> \
                                                    --sku <azure-managed-lustre-sku> \
                                                    --size <filesystem-size-in-tib>
 
 # Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+azmcp managedlustre filesystem subnetsize validate --subscription <subscription> \
                                                         --subnet-id <subnet-resource-id> \
                                                         --sku <azure-managed-lustre-sku> \
                                                         --size <filesystem-size-in-tib> \
                                                         --location <filesystem-location>
 
 # Lists the available Azure Managed Lustre SKUs in a specific location
-azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
+azmcp managedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
 ```
 
