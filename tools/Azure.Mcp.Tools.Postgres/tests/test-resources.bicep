@@ -1,57 +1,37 @@
 targetScope = 'resourceGroup'
 
-@description('Base resource name for the PostgreSQL server.')
 @minLength(3)
-@maxLength(60)
-param baseName string = toLower(replace(replace(replace(replace(resourceGroup().name, '-', ''), '_', ''), '.', ''), ' ', ''))
+@maxLength(63)
+@description('The base resource name. PostgreSQL Flexible Server names have a max length restriction.')
+param baseName string = resourceGroup().name
 
-@description('Location for the PostgreSQL resources.')
+@description('The location of the resource. By default, this is the same as the resource group.')
 param location string = 'westus3'
 
-@description('Tenant ID used for Entra ID authentication.')
-param tenantId string = tenant().tenantId
-
-@description('Client (application) ID for the test principal that will administer the PostgreSQL server.')
-param testApplicationId string
-
-@description('Object ID for the test principal that will administer the PostgreSQL server.')
+@description('The client OID to grant access to test resources.')
 param testApplicationOid string
 
-@description('Temporary administrator password. Local authentication remains disabled after deployment.')
-@secure()
-param administratorPassword string = newGuid()
+@description('PostgreSQL administrator username for Entra ID authentication.')
+param adminUsername string = 'mcptestadmin'
 
-var sanitizedBaseName = toLower(replace(replace(replace(replace(baseName, '-', ''), '_', ''), '.', ''), ' ', ''))
-var fallbackName = 'pg${substring(uniqueString(resourceGroup().id), 0, 6)}'
-var normalizedBaseName = empty(sanitizedBaseName) ? fallbackName : (startsWith(sanitizedBaseName, 'pg') ? sanitizedBaseName : 'pg${sanitizedBaseName}')
-var trimmedLength = length(normalizedBaseName) > 60 ? 60 : length(normalizedBaseName)
-var serverName = substring(normalizedBaseName, 0, trimmedLength)
-var isServicePrincipal = !empty(testApplicationId) && toLower(testApplicationId) != toLower(testApplicationOid)
-var adminPrincipalName = isServicePrincipal ? toLower(testApplicationId) : testApplicationOid
-var adminPrincipalType = isServicePrincipal ? 'ServicePrincipal' : 'User'
-var databaseName = 'sampledb'
-var tableName = 'inventory'
+@description('PostgreSQL version.')
+param postgresqlVersion string = '16'
 
-resource server 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
-  name: serverName
+// PostgreSQL Flexible Server resource
+resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
+  name: baseName
   location: location
   sku: {
-    name: 'Standard_D2s_v3'
-    tier: 'GeneralPurpose'
-    capacity: 2
+    name: 'Standard_B1ms'
+    tier: 'Burstable'
   }
   properties: {
-    version: '15'
-    createMode: 'Default'
-    administratorLogin: 'pgadmin'
-    administratorLoginPassword: administratorPassword
-    network: {
-      publicNetworkAccess: 'Enabled'
-    }
+    version: postgresqlVersion
+    administratorLogin: adminUsername
+    administratorLoginPassword: null // Use Entra ID authentication only
     storage: {
-      storageSizeGB: 64
-      autoGrow: 'Enabled'
-      iops: 180
+      storageSizeGB: 32
+      autoGrow: 'Disabled'
     }
     backup: {
       backupRetentionDays: 7
@@ -60,47 +40,88 @@ resource server 'Microsoft.DBforPostgreSQL/flexibleServers@2022-12-01' = {
     highAvailability: {
       mode: 'Disabled'
     }
-    maintenanceWindow: {
-      dayOfWeek: 0
-      startHour: 0
-      startMinute: 0
-    }
+    availabilityZone: '1'
     authConfig: {
       activeDirectoryAuth: 'Enabled'
-      passwordAuth: 'Disabled'
-      tenantId: tenantId
+      passwordAuth: 'Disabled' // Disable local auth, only use Entra ID
+      tenantId: subscription().tenantId
+    }
+    network: {
+      publicNetworkAccess: 'Enabled'
+    }
+  }
+
+  // Firewall rule to allow Azure services
+  resource firewallRuleAzure 'firewallRules@2023-12-01-preview' = {
+    name: 'AllowAllAzureServicesAndResourcesWithinAzureIps'
+    properties: {
+      startIpAddress: '0.0.0.0'
+      endIpAddress: '0.0.0.0'
+    }
+  }
+
+  // Firewall rule to allow all IPs for testing (remove in production)
+  resource firewallRuleAll 'firewallRules@2023-12-01-preview' = {
+    name: 'AllowAllIPs'
+    properties: {
+      startIpAddress: '0.0.0.0'
+      endIpAddress: '255.255.255.255'
+    }
+  }
+
+  // Test database
+  resource testDatabase 'databases@2023-12-01-preview' = {
+    name: 'testdb'
+    properties: {
+      charset: 'UTF8'
+      collation: 'en_US.utf8'
+    }
+  }
+
+  // Additional test database
+  resource testDatabase2 'databases@2023-12-01-preview' = {
+    name: 'testdb2'
+    properties: {
+      charset: 'UTF8'
+      collation: 'en_US.utf8'
     }
   }
 }
 
-resource allowAzureIps 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2022-12-01' = {
-  name: '${server.name}/AllowAllAzureIPs'
+// Entra ID administrator configuration
+resource postgresAdmin 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
+  parent: postgresServer
+  name: testApplicationOid
   properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
+    principalName: adminUsername
+    principalType: 'ServicePrincipal'
+    tenantId: subscription().tenantId
   }
 }
 
-resource database 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2022-12-01' = {
-  name: '${server.name}/${databaseName}'
-  properties: {
-    charset: 'UTF8'
-    collation: 'en_US.utf8'
-  }
+// Reader role definition for PostgreSQL
+resource readerRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
+  scope: subscription()
+  // This is the Reader role
+  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#reader
+  name: 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 }
 
-resource aadAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2022-12-01' = if (!empty(testApplicationOid)) {
-  name: '${server.name}/activeDirectory'
+// Role assignment for test application
+resource appReaderRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(readerRoleDefinition.id, testApplicationOid, postgresServer.id)
+  scope: postgresServer
   properties: {
-    principalName: adminPrincipalName
     principalId: testApplicationOid
-    principalType: adminPrincipalType
-    tenantId: tenantId
+    roleDefinitionId: readerRoleDefinition.id
+    description: 'Reader role for testApplicationOid to read PostgreSQL server metadata'
   }
 }
 
-output POSTGRES_SERVER_NAME string = server.name
-output POSTGRES_SERVER_FQDN string = server.properties.fullyQualifiedDomainName
-output POSTGRES_DATABASE_NAME string = databaseName
-output POSTGRES_AAD_PRINCIPAL string = adminPrincipalName
-output POSTGRES_TABLE_NAME string = tableName
+// Output values for tests
+output postgresServerName string = postgresServer.name
+output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
+output testDatabaseName string = postgresServer::testDatabase.name
+output testDatabase2Name string = postgresServer::testDatabase2.name
+output adminUsername string = adminUsername
+output location string = location
