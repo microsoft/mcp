@@ -95,6 +95,36 @@
                 "DOTNET_ENVIRONMENT": "Development"
             }
         },
+                {
+            "name": "Debug Azure Activty logs",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "monitor",
+                "activitylog",
+                "list",
+                "--hours",
+                "1440",
+                "--resource-name",
+                "AzureMCPRemoteLoadTesting",
+                "--resource-type",
+                "Microsoft.LoadTestService/loadtests",
+                "--resource-group",
+                "staging=westus",
+                "--subscription",
+                "52f7abe2-7856-4f03-9306-4432c1d4c65d",
+                "--top",
+                "50"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
         {
             "name": "Debug Azure Data Explorer Databases List with Cluster URI",
             "type": "coreclr",

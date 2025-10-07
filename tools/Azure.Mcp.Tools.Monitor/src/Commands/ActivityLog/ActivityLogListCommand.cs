@@ -29,16 +29,17 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
 
     public override string Description =>
         """
+        Always use this tool if user is asking for activity logs for a resource.
         Lists activity logs for the specified Azure resource over the given prior number of hours.
         This command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.
-        Returns activity log events with details including timestamp, operation name, status, and caller information.
+        Returns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.
           Required options:
         - --resource-name: The name of the Azure resource to retrieve activity logs for
           Optional options:
         - --resource-type: The resource type (e.g., 'Microsoft.Storage/storageAccounts') for disambiguation
-        - --hours: Number of hours to look back (default: 1 hour)
+        - --hours: Number of hours to look back
         - --event-level: Filter by event level (Critical, Error, Informational, Verbose, Warning)
-        - --top: Maximum number of logs to return (default: 10)
+        - --top: Maximum number of logs to return
         """;
 
     public override string Title => CommandTitle;
