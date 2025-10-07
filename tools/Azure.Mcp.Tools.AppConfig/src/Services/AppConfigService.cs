@@ -165,10 +165,10 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
             var account = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.AppConfiguration/configurationStores",
                         resourceGroup: null, // all resource groups
-                        subscription,
-                        retryPolicy,
-                        ConvertToAppConfigurationAccountModel,
-                        $"name =~ '{EscapeKqlString(accountName)}'");
+                        subscription: subscription,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToAppConfigurationAccountModel,
+                        additionalFilter: $"name =~ '{EscapeKqlString(accountName)}'");
 
             if (account == null)
             {

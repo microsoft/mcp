@@ -18,7 +18,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
 | azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
+| azmcp_foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
+| azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
+| azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
+| azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
 
 ## Azure AI Search
 
@@ -106,6 +111,29 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | Show me my container registry repositories |
 | azmcp_acr_registry_repository_list | List repositories in the container registry <registry_name> |
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
+
+## Azure Communication Services
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
+| azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
+| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
+
+## Azure Confidential Ledger
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_confidentialledger_entries_append | Append an entry to my ledger <ledger_name> with data {"key": "value"} |
+| azmcp_confidentialledger_entries_append | Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"} |
+| azmcp_confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
+| azmcp_confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
+| azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
 
 ## Azure Cosmos DB
 
@@ -327,8 +355,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
 | azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_required-subnet-size | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
 | azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
+| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
 
 ## Azure Marketplace
 
@@ -355,7 +384,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> using the health model <health_model_name> |
 | azmcp_monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | azmcp_monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | azmcp_monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
@@ -385,7 +414,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 ## Azure Quick Review CLI
 
 | Tool Name | Test Prompt |
-| --------- | ----------- |
+|:----------|:----------|
 | azmcp_extension_azqr | Check my Azure subscription for any compliance issues or recommendations |
 | azmcp_extension_azqr | Provide compliance recommendations for my current Azure subscription |
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |
@@ -450,6 +479,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_queue_details | Show me the details of service bus <service_bus_name> queue <queue_name> |
 | azmcp_servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
+
+## Azure SignalR
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_signalr_runtime_get | Show me the details of SignalR <signalr_name> |
+| azmcp_signalr_runtime_get | Show me the network information of SignalR runtime <signalr_name> |
+| azmcp_signalr_runtime_get | Describe the SignalR runtime <signalr_name> in resource group <resource_group_name> |
+| azmcp_signalr_runtime_get | Get information about my SignalR runtime <signalr_name> in <resource_group_name> |
+| azmcp_signalr_runtime_get | Show all the SignalRs information in <resource_group_name> |
+| azmcp_signalr_runtime_get | List all SignalRs in my subscription |
 
 ## Azure SQL Database
 

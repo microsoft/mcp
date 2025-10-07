@@ -94,11 +94,11 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         {
             var namespaceDetails = await ExecuteSingleResourceQueryAsync(
                             "Microsoft.EventHub/namespaces",
-                            resourceGroup,
-                            subscription,
-                            retryPolicy,
-                            ConvertToNamespace,
-                            $"name =~ '{EscapeKqlString(namespaceName)}'");
+                            resourceGroup: resourceGroup,
+                            subscription: subscription,
+                            retryPolicy: retryPolicy,
+                            converter: ConvertToNamespace,
+                            additionalFilter: $"name =~ '{EscapeKqlString(namespaceName)}'");
 
             if (namespaceDetails == null)
             {

@@ -217,6 +217,40 @@ azmcp foundry openai create-completion --subscription <subscription> \
                                        --prompt-text <prompt-text> \
                                        [--max-tokens <max-tokens>] \
                                        [--temperature <temperature>]
+
+# Create interactive chat completions using Azure OpenAI chat models
+azmcp foundry openai chat-completions-create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --resource-name <resource-name> \
+                                             --deployment <deployment-name> \
+                                             --message-array <message-array> \
+                                             [--max-tokens <max-tokens>] \
+                                             [--temperature <temperature>] \
+                                             [--top-p <top-p>] \
+                                             [--frequency-penalty <frequency-penalty>] \
+                                             [--presence-penalty <presence-penalty>] \
+                                             [--stop <stop-sequences>] \
+                                             [--stream <stream>] \
+                                             [--seed <seed>] \
+                                             [--user <user>] \
+                                             [--auth-method <auth-method>]
+
+# Generate vector embeddings for text using Azure OpenAI embedding models
+azmcp foundry openai embeddings-create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --input-text <input-text> \
+                                       [--user <user>] \
+                                       [--encoding-format <encoding-format>] \
+                                       [--dimensions <dimensions>] \
+                                       [--auth-method <auth-method>]
+
+# List all available OpenAI models and deployments in an Azure resource
+azmcp foundry openai models-list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --resource-name <resource-name> \
+                                 [--auth-method <auth-method>]
 ```
 
 ### Azure AI Search Operations
@@ -301,8 +335,7 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--key-filter <key-filter>] \
                        [--label-filter <label-filter>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -420,6 +453,23 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--database`: Name of the database (required)
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
+
+### Azure CLI Operations
+
+```bash
+# Execute any Azure CLI command
+azmcp extension az --command "<command>"
+
+# Examples:
+# List resource groups
+azmcp extension az --command "group list"
+
+# Get storage account details
+azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
+
+# List virtual machines
+azmcp extension az --command "vm list --resource-group <resource-group>"
+```
 
 ### Azure Container Registry (ACR) Operations
 
@@ -820,7 +870,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -1123,15 +1173,44 @@ azmcp monitor metrics query --subscription <subscription> \
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
+                                         --resource-group <resource-group> 
+
+# Create an Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+                                           --sku <sku> \
+                                           --size <filesystem-size-in-tib> \
+                                           --subnet-id <subnet-id> \
+                                           --zone <zone> \
+                                           --maintenance-day <maintenance-day> \
+                                           --maintenance-time <maintenance-time> \
+                                           [--hsm-container <hsm-container>] \
+                                           [--hsm-log-container <hsm-log-container>] \
+                                           [--import-prefix <import-prefix>] \
+                                           [--root-squash-mode <root-squash-mode>] \
+                                           [--no-squash-nid-list <no-squash-nid-list>] \
+                                           [--squash-uid <squash-uid>] \
+                                           [--squash-gid <squash-gid>] \
+                                           [--custom-encryption] \
+                                           [--key-url <key-url>] \
+                                           [--source-vault <source-vault>] \
+                                           [--user-assigned-identity-id <user-assigned-identity-id>]
+
+# Update an existing Azure Managed Lustre filesystem
+azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --name <filesystem-name> \
+                                           [--maintenance-day <maintenance-day>] \
+                                           [--maintenance-time <HH:mm>] \
+                                           [--root-squash-mode <mode>] \
+                                           [--no-squash-nid-list <nid1,nid2,...>] \
+                                           [--squash-uid <uid>] \
+                                           [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
 
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
 ```
@@ -1263,6 +1342,15 @@ azmcp servicebus topic subscription details --subscription <subscription> \
                                             --subscription-name <subscription-name>
 ```
 
+### Azure SignalR Service Operations
+
+```bash
+# Get detailed properties of SignalR Service runtimes
+azmcp signalr runtime get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--signalr <signalr-name>]
+```
+
 ### Azure SQL Operations
 
 #### Database
@@ -1295,7 +1383,7 @@ azmcp sql db delete --subscription <subscription> \
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db rename --subscription <subscription> \
