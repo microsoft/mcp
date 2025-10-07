@@ -91,16 +91,8 @@ public class ResourceResolverServiceTests
 
     [Theory]
     [InlineData("", "")]
-    public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentException(string? subscription, string? resourceName)
-    {
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!));
-    }
-
-    [Theory]
     [InlineData(null, null)]
-    public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentNullException(string? subscription, string? resourceName)
+    public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentException(string? subscription, string? resourceName)
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
