@@ -57,10 +57,10 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         {
             var registrie = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.ContainerRegistry/registries",
-                        resourceGroup,
-                        subscription,
-                        retryPolicy,
-                        ConvertToAcrRegistryInfoModel,
+                        resourceGroup: resourceGroup,
+                        subscription: subscription,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToAcrRegistryInfoModel,
                         additionalFilter: $"name =~ '{EscapeKqlString(registry)}'");
             if (registrie == null)
             {
