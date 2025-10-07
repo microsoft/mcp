@@ -40,47 +40,47 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{- Install the [Azure MCP Server Visual Studio Code extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)}} -->
 <!-- insert-section: vsix {{- Start (or Auto-Start) the MCP Server}} -->
 <!-- insert-section: vsix {{   > **VS Code (version 1.103 or above):** You can now configure MCP servers to start automatically using the `chat.mcp.autostart` setting, instead of manually restarting them after configuration changes.}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   #### **Enable Autostart**}} -->
 <!-- insert-section: vsix {{   1. Open **Settings** in VS Code.}} -->
 <!-- insert-section: vsix {{   2. Search for `chat.mcp.autostart`.}} -->
 <!-- insert-section: vsix {{   3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.}} -->
 <!-- insert-section: vsix {{   4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.}} -->
 <!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png)}}-->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   #### **Manual Start (if autostart is off)**}} -->
 <!-- insert-section: vsix {{   1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).}} -->
 <!-- insert-section: vsix {{   2. Run `MCP: List Servers`.}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png)}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   3. Select `Azure MCP Server ext`, then click **Start Server**.}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)}} -->
 <!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png)}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   4. **Check That It's Running**}} -->
 <!-- insert-section: vsix {{      - Go to the **Output** tab in VS Code.}} -->
 <!-- insert-section: vsix {{      - Look for log messages confirming the server started successfully.}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       ```json}} -->
 <!-- insert-section: vsix {{      // Server Mode: collapse per service (default), single tool, or expose every tool}} -->
 <!-- insert-section: vsix {{      "azureMcp.serverMode": "namespace", // one of: "single" | "namespace" (default) | "all"}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Filter which namespaces to expose}} -->
 <!-- insert-section: vsix {{       "azureMcp.enabledServices": ["storage", "keyvault"],}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{       // Run the server in read-only mode (prevents write operations)}} -->
 <!-- insert-section: vsix {{       "azureMcp.readOnly": false}} -->
 <!-- insert-section: vsix {{       ```}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   - Changes take effect after restarting the Azure MCP server from the MCP: List Servers view. (Step 2)}} -->
-
+<!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{You’re all set! Azure MCP Server is now ready to help you work smarter with Azure resources in VS Code.}} -->
 <!-- remove-section: start vsix remove_entire_installation_sub_section -->
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
@@ -124,8 +124,8 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
 #### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
-To verify your .NET version, run the following command in your terminal: `dotnet --info`
--  Configure your `mcp.json` file with the following:
+To verify the .NET version, run the following command in the terminal: `dotnet --info`
+-  Configure the `mcp.json` file with the following:
 
     ```json
     {
@@ -152,7 +152,7 @@ To verify your .NET version, run the following command in your terminal: `dotnet
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
 - To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--  Configure your `mcp.json` file with the following:
+-  Configure the `mcp.json` file with the following:
 
     ```json
     {
@@ -170,33 +170,21 @@ To verify your .NET version, run the following command in your terminal: `dotnet
     }
     ```
 <!-- remove-section: end remove_node_config_sub_section -->
+<!-- remove-section: start nuget remove_custom_client_config_table -->
 **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 **Client-Specific Configuration**
-
-**Amazon Q Developer** - [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html)  
-*File Location* : `~/.aws/amazonq/mcp.json` (global), `.amazonq/mcp.json` (workspace)
-***
-**Claude Code** - [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code)  
-*File Location* : `~/.claude.json` or `.mcp.json` (project)
-***
-**Claude Desktop** - [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop)  
-*File Location* : `~/.claude/claude_desktop_config.json` (macOS), `%APPDATA%\Claude\claude_desktop_config.json` (Windows)
-***
-**Cursor** - [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol)  
-*File Location* : `~/.cursor/mcp.json` or `.cursor/mcp.json`
-***
-**IntelliJ IDEA** - [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html)  
-*File Location* : Built-in MCP server (2025.2+), Settings > Tools > MCP Server
-***
-**Visual Studio** - [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022)  
-*File Location* : `.mcp.json` (solution/workspace)
-***
-**VS Code** - [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers)  
-*File Location* : `.vscode/mcp.json` (workspace), `settings.json` (user)
-***
-**Windsurf** - [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp)  
-*File Location* : `~/.codeium/windsurf/mcp_config.json`
+| IDE | File Location | Documentation Link |
+|-----|---------------|-------------------|
+| **Amazon Q Developer** | `~/.aws/amazonq/mcp.json` (global)<br>`.amazonq/mcp.json` (workspace) | [AWS Q Developer MCP Guide](https://docs.aws.amazon.com/amazonq/latest/qdeveloper-ug/qdev-mcp.html) |
+| **Claude Code** | `~/.claude.json` or `.mcp.json` (project) | [Claude Code MCP Configuration](https://scottspence.com/posts/configuring-mcp-tools-in-claude-code) |
+| **Claude Desktop** | `~/.claude/claude_desktop_config.json` (macOS)<br>`%APPDATA%\Claude\claude_desktop_config.json` (Windows) | [Claude Desktop MCP Setup](https://support.claude.com/en/articles/10949351-getting-started-with-local-mcp-servers-on-claude-desktop) |
+| **Cursor** | `~/.cursor/mcp.json` or `.cursor/mcp.json` | [Cursor MCP Documentation](https://docs.cursor.com/context/model-context-protocol) |
+| **IntelliJ IDEA** | Built-in MCP server (2025.2+)<br>Settings > Tools > MCP Server | [IntelliJ MCP Documentation](https://www.jetbrains.com/help/ai-assistant/mcp.html) |
+| **Visual Studio** | `.mcp.json` (solution/workspace) | [Visual Studio MCP Setup](https://learn.microsoft.com/visualstudio/ide/mcp-servers?view=vs-2022) |
+| **VS Code** | `.vscode/mcp.json` (workspace)<br>`settings.json` (user) | [VS Code MCP Documentation](https://code.visualstudio.com/docs/copilot/chat/mcp-servers) |
+| **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | [Windsurf Cascade MCP Integration](https://docs.windsurf.com/windsurf/cascade/mcp) |
+<!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
 
