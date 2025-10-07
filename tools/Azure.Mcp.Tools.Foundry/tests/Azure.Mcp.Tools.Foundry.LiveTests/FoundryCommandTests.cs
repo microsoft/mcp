@@ -146,7 +146,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "deployment", deploymentName },
                 { "prompt-text", "What is Azure? Please provide a brief answer." },
                 { "max-tokens", "50" },
-                { "temperature", "0.7" }
+                { "temperature", "0.7" },
+                { "tenant", Settings.TenantId }
             });
 
         // Verify the response structure
@@ -171,6 +172,256 @@ public class FoundryCommandTests(ITestOutputHelper output)
             promptTokens.GetInt32() + completionTokens.GetInt32(),
             totalTokens.GetInt32()
         );
+    }
+
+    [Fact]
+    public async Task Should_create_openai_embeddings()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+        var inputText = "Generate embeddings for this test text using Azure OpenAI.";
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_embeddings-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "input-text", inputText },
+                { "user", "test-user" },
+                { "encoding-format", "float" },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var embeddingResult = result.AssertProperty("embeddingResult");
+        Assert.Equal(JsonValueKind.Object, embeddingResult.ValueKind);
+
+        // Verify embedding result properties
+        var objectType = embeddingResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("list", objectType.GetString());
+
+        var data = embeddingResult.AssertProperty("data");
+        Assert.Equal(JsonValueKind.Array, data.ValueKind);
+        Assert.NotEmpty(data.EnumerateArray());
+
+        // Verify first embedding data element
+        var firstEmbedding = data.EnumerateArray().First();
+        var embeddingObject = firstEmbedding.GetProperty("object");
+        Assert.Equal("embedding", embeddingObject.GetString());
+
+        var embeddingVector = firstEmbedding.GetProperty("embedding");
+        Assert.Equal(JsonValueKind.Array, embeddingVector.ValueKind);
+
+        // Verify embedding vector contains float values and has reasonable dimensions
+        var vectorArray = embeddingVector.EnumerateArray().ToArray();
+        Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
+        Assert.True(vectorArray.Length >= 1536, $"Embedding vector should have at least 1536 dimensions, got {vectorArray.Length}"); // Ada-002 has 1536 dimensions
+
+        // Verify all values are valid numbers
+        foreach (var value in vectorArray)
+        {
+            Assert.Equal(JsonValueKind.Number, value.ValueKind);
+            var floatValue = value.GetSingle();
+            Assert.True(!float.IsNaN(floatValue), "Embedding values should not be NaN");
+            Assert.True(!float.IsInfinity(floatValue), "Embedding values should not be infinity");
+        }
+
+        // Verify model name in response
+        var model = embeddingResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        // Verify usage information
+        var usage = embeddingResult.AssertProperty("usage");
+        Assert.Equal(JsonValueKind.Object, usage.ValueKind);
+
+        var promptTokens = usage.AssertProperty("prompt_tokens");
+        var totalTokens = usage.AssertProperty("total_tokens");
+
+        Assert.Equal(JsonValueKind.Number, promptTokens.ValueKind);
+        Assert.Equal(JsonValueKind.Number, totalTokens.ValueKind);
+
+        // For embeddings, prompt tokens should equal total tokens (no completion tokens)
+        Assert.Equal(promptTokens.GetInt32(), totalTokens.GetInt32());
+        Assert.True(promptTokens.GetInt32() > 0, "Should have used some tokens");
+
+        // Verify metadata properties are present
+        var resourceNameProperty = result.AssertProperty("resourceName");
+        var deploymentNameProperty = result.AssertProperty("deploymentName");
+        var inputTextProperty = result.AssertProperty("inputText");
+
+        Assert.Equal(JsonValueKind.String, resourceNameProperty.ValueKind);
+        Assert.Equal(JsonValueKind.String, deploymentNameProperty.ValueKind);
+        Assert.Equal(JsonValueKind.String, inputTextProperty.ValueKind);
+
+        Assert.Equal(resourceName, resourceNameProperty.GetString());
+        Assert.Equal(deploymentName, deploymentNameProperty.GetString());
+        Assert.Equal(inputText, inputTextProperty.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_openai_embeddings_with_optional_parameters()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("EMBEDDINGDEPLOYMENTNAME", "text-embedding-ada-002");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+        var inputText = "Test embeddings with optional parameters.";
+        var dimensions = 512; // Test with reduced dimensions if supported
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_embeddings-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "input-text", inputText },
+                { "user", "test-user-with-params" },
+                { "encoding-format", "float" },
+                { "dimensions", dimensions.ToString() },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure (same as basic test)
+        var embeddingResult = result.AssertProperty("embeddingResult");
+        var data = embeddingResult.AssertProperty("data");
+        var firstEmbedding = data.EnumerateArray().First();
+        var embeddingVector = firstEmbedding.GetProperty("embedding");
+
+        // Verify embedding vector dimensions match requested dimensions (if model supports it)
+        var vectorArray = embeddingVector.EnumerateArray().ToArray();
+        Assert.True(vectorArray.Length > 0, "Embedding vector should not be empty");
+
+        // Note: Some models may not support custom dimensions and will return default size
+        // So we just verify we got a reasonable response, not necessarily the exact dimensions requested
+        Assert.True(vectorArray.Length >= 512, $"Embedding vector should have reasonable dimensions, got {vectorArray.Length}");
+
+        // Verify all values are valid numbers
+        foreach (var value in vectorArray)
+        {
+            Assert.Equal(JsonValueKind.Number, value.ValueKind);
+            var floatValue = value.GetSingle();
+            Assert.True(!float.IsNaN(floatValue), "Embedding values should not be NaN");
+            Assert.True(!float.IsInfinity(floatValue), "Embedding values should not be infinity");
+        }
+
+        // Verify usage information shows token consumption
+        var usage = embeddingResult.AssertProperty("usage");
+        var totalTokens = usage.AssertProperty("total_tokens");
+        Assert.True(totalTokens.GetInt32() > 0, "Should have consumed tokens");
+    }
+
+    [Fact]
+    public async Task Should_list_openai_models()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_models-list",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var modelsListResult = result.AssertProperty("modelsListResult");
+        Assert.Equal(JsonValueKind.Object, modelsListResult.ValueKind);
+
+        // Verify resource name matches
+        var returnedResourceName = modelsListResult.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, returnedResourceName.ValueKind);
+        Assert.Equal(resourceName, returnedResourceName.GetString());
+
+        // Verify models array exists (may be empty if no models deployed)
+        var models = modelsListResult.AssertProperty("models");
+        Assert.Equal(JsonValueKind.Array, models.ValueKind);
+
+        // If models exist, verify their structure
+        var modelArray = models.EnumerateArray().ToArray();
+        if (modelArray.Length > 0)
+        {
+            foreach (var model in modelArray)
+            {
+                // Verify required properties exist
+                var deploymentName = model.GetProperty("deploymentName");
+                var modelName = model.GetProperty("modelName");
+
+                Assert.Equal(JsonValueKind.String, deploymentName.ValueKind);
+                Assert.Equal(JsonValueKind.String, modelName.ValueKind);
+                Assert.NotEmpty(deploymentName.GetString()!);
+                Assert.NotEmpty(modelName.GetString()!);
+
+                // Verify modelVersion if present
+                if (model.TryGetProperty("modelVersion", out var modelVersion))
+                {
+                    Assert.Equal(JsonValueKind.String, modelVersion.ValueKind);
+                    Assert.NotEmpty(modelVersion.GetString()!);
+                }
+
+                // Verify capabilities structure if present
+                if (model.TryGetProperty("capabilities", out var capabilities))
+                {
+                    Assert.Equal(JsonValueKind.Object, capabilities.ValueKind);
+
+                    // Check boolean capability properties (only validate the ones that are present)
+                    if (capabilities.TryGetProperty("completions", out var completions))
+                    {
+                        Assert.True(completions.ValueKind == JsonValueKind.True || completions.ValueKind == JsonValueKind.False,
+                            "completions should be a boolean value");
+                    }
+
+                    if (capabilities.TryGetProperty("embeddings", out var embeddings))
+                    {
+                        Assert.True(embeddings.ValueKind == JsonValueKind.True || embeddings.ValueKind == JsonValueKind.False,
+                            "embeddings should be a boolean value");
+                    }
+
+                    if (capabilities.TryGetProperty("chatCompletions", out var chatCompletions))
+                    {
+                        Assert.True(chatCompletions.ValueKind == JsonValueKind.True || chatCompletions.ValueKind == JsonValueKind.False,
+                            "chatCompletions should be a boolean value");
+                    }
+
+                    if (capabilities.TryGetProperty("fineTuning", out var fineTuning))
+                    {
+                        Assert.True(fineTuning.ValueKind == JsonValueKind.True || fineTuning.ValueKind == JsonValueKind.False,
+                            "fineTuning should be a boolean value");
+                    }
+                }
+
+                // Verify provisioningState if present
+                if (model.TryGetProperty("provisioningState", out var provisioningState))
+                {
+                    Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
+                    Assert.NotEmpty(provisioningState.GetString()!);
+                }
+
+                // Verify optional capacity property if present
+                if (model.TryGetProperty("capacity", out var capacity))
+                {
+                    Assert.Equal(JsonValueKind.Number, capacity.ValueKind);
+                    Assert.True(capacity.GetInt32() > 0);
+                }
+            }
+        }
+
+        // Verify command metadata (returned resource name should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
     }
 
     [Fact]
@@ -321,6 +572,186 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.Equal(JsonValueKind.Object, interpretation.ValueKind);
         var context = metric.AssertProperty("context");
         Assert.Equal(JsonValueKind.Object, context.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_create_openai_chat_completions()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+        var messages = JsonSerializer.Serialize(new[]
+        {
+            new { role = "system", content = "You are a helpful assistant." },
+            new { role = "user", content = "Hello, how are you today?" }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_chat-completions-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "message-array", messages },
+                { "max-tokens", "150" },
+                { "temperature", "0.7" },
+                { "user", "test-user" },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var chatResult = result.AssertProperty("result");
+        Assert.Equal(JsonValueKind.Object, chatResult.ValueKind);
+
+        // Verify chat completion result properties
+        var id = chatResult.AssertProperty("id");
+        Assert.Equal(JsonValueKind.String, id.ValueKind);
+        Assert.False(string.IsNullOrEmpty(id.GetString()));
+
+        var objectType = chatResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("chat.completion", objectType.GetString());
+
+        var model = chatResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        var choices = chatResult.AssertProperty("choices");
+        Assert.Equal(JsonValueKind.Array, choices.ValueKind);
+        Assert.NotEmpty(choices.EnumerateArray());
+
+        // Verify first choice
+        var firstChoice = choices.EnumerateArray().First();
+
+        var message = firstChoice.GetProperty("message");
+        var role = message.GetProperty("role");
+        Assert.Equal("assistant", role.GetString());
+
+        var content = message.GetProperty("content");
+        Assert.Equal(JsonValueKind.String, content.ValueKind);
+        Assert.False(string.IsNullOrEmpty(content.GetString()));
+
+        var finishReason = firstChoice.GetProperty("finish_reason");
+        Assert.Equal(JsonValueKind.String, finishReason.ValueKind);
+
+        // Verify usage information
+        var usage = chatResult.AssertProperty("usage");
+        var promptTokens = usage.AssertProperty("prompt_tokens");
+        Assert.True(promptTokens.GetInt32() > 0, "Should have consumed prompt tokens");
+
+        var completionTokens = usage.AssertProperty("completion_tokens");
+        Assert.True(completionTokens.GetInt32() > 0, "Should have generated completion tokens");
+
+        var totalTokens = usage.AssertProperty("total_tokens");
+        Assert.True(totalTokens.GetInt32() > 0, "Should have total token usage");
+        Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
+
+        // Verify command metadata (returned resource and deployment names should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
+
+        var commandDeploymentName = result.AssertProperty("deploymentName");
+        Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
+        Assert.Equal(deploymentName, commandDeploymentName.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_openai_chat_completions_with_conversation_history()
+    {
+        var resourceName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "dummy-test");
+        var deploymentName = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIDEPLOYMENTNAME", "gpt-4o-mini");
+        var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+        var messages = JsonSerializer.Serialize(new[]
+        {
+            new { role = "system", content = "You are a helpful assistant that answers questions about Azure." },
+            new { role = "user", content = "What is Azure OpenAI Service?" },
+            new { role = "assistant", content = "Azure OpenAI Service is a cloud service that provides REST API access to OpenAI's language models including GPT-4, GPT-3.5-turbo, and Embeddings model series." },
+            new { role = "user", content = "How can I use it for chat applications?" }
+        });
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_openai_chat-completions-create",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "deployment", deploymentName },
+                { "message-array", messages },
+                { "max-tokens", "200" },
+                { "temperature", "0.5" },
+                { "top-p", "0.9" },
+                { "user", "test-user-conversation" },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify response structure (same checks as basic test)
+        var chatResult = result.AssertProperty("result");
+        Assert.Equal(JsonValueKind.Object, chatResult.ValueKind);
+
+        // Verify chat completion result properties
+        var id = chatResult.AssertProperty("id");
+        Assert.Equal(JsonValueKind.String, id.ValueKind);
+        Assert.False(string.IsNullOrEmpty(id.GetString()));
+
+        var objectType = chatResult.AssertProperty("object");
+        Assert.Equal(JsonValueKind.String, objectType.ValueKind);
+        Assert.Equal("chat.completion", objectType.GetString());
+
+        var model = chatResult.AssertProperty("model");
+        Assert.Equal(JsonValueKind.String, model.ValueKind);
+        Assert.Equal(deploymentName, model.GetString());
+
+        var choices = chatResult.AssertProperty("choices");
+        Assert.Equal(JsonValueKind.Array, choices.ValueKind);
+        Assert.NotEmpty(choices.EnumerateArray());
+
+        // Verify first choice
+        var firstChoice = choices.EnumerateArray().First();
+
+        var message = firstChoice.GetProperty("message");
+        var role = message.GetProperty("role");
+        Assert.Equal("assistant", role.GetString());
+
+        var content = message.GetProperty("content");
+        Assert.Equal(JsonValueKind.String, content.ValueKind);
+
+        // Verify the response is relevant to the conversation context
+        var responseText = content.GetString();
+        Assert.False(string.IsNullOrEmpty(responseText));
+
+        // The response should be contextually relevant to chat applications
+        // We don't check for specific words to avoid brittleness, just that we got a meaningful response
+        Assert.True(responseText.Length > 10, "Response should be substantial");
+
+        var finishReason = firstChoice.GetProperty("finish_reason");
+        Assert.Equal(JsonValueKind.String, finishReason.ValueKind);
+
+        // Verify usage information
+        var usage = chatResult.AssertProperty("usage");
+        var promptTokens = usage.AssertProperty("prompt_tokens");
+        Assert.True(promptTokens.GetInt32() > 0, "Should have consumed prompt tokens");
+
+        var completionTokens = usage.AssertProperty("completion_tokens");
+        Assert.True(completionTokens.GetInt32() > 0, "Should have generated completion tokens");
+
+        var totalTokens = usage.AssertProperty("total_tokens");
+        Assert.True(totalTokens.GetInt32() > 50, "Conversation should consume reasonable tokens");
+        Assert.Equal(promptTokens.GetInt32() + completionTokens.GetInt32(), totalTokens.GetInt32());
+
+        // Verify command metadata (returned resource and deployment names should match input)
+        var commandResourceName = result.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
+        Assert.Equal(resourceName, commandResourceName.GetString());
+
+        var commandDeploymentName = result.AssertProperty("deploymentName");
+        Assert.Equal(JsonValueKind.String, commandDeploymentName.ValueKind);
+        Assert.Equal(deploymentName, commandDeploymentName.GetString());
     }
 
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)

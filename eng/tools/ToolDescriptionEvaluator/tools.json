@@ -897,6 +897,181 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
+      "command": "azmcp azuremanagedlustre filesystem create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--zone",
+          "description": "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\nExample: --zone 1",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--hsm-container",
+          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--hsm-log-container",
+          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--import-prefix",
+          "description": "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--custom-encryption",
+          "description": "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-url",
+          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--source-vault",
+          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user-assigned-identity-id",
+          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
       "command": "azmcp azuremanagedlustre filesystem list",
@@ -1073,13 +1248,13 @@
         },
         {
           "name": "--sku",
-          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
           "type": "string",
           "required": true
         },
         {
           "name": "--size",
-          "description": "The AMLFS size (TiB).",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
           "type": "string",
           "required": true
         }
@@ -1140,19 +1315,19 @@
         },
         {
           "name": "--sku",
-          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
           "type": "string",
           "required": true
         },
         {
           "name": "--size",
-          "description": "The AMLFS size (TiB).",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
           "type": "string",
           "required": true
         },
         {
           "name": "--subnet-id",
-          "description": "The subnet resource ID to validate for AMLFS.",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
           "type": "string",
           "required": true
         },
@@ -1165,6 +1340,109 @@
       ]
     },
     {
+      "name": "update",
+      "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+      "command": "azmcp azuremanagedlustre filesystem update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azmcp azureterraformbestpractices get",
@@ -1172,7 +1450,7 @@
     },
     {
       "name": "get",
-      "description": "\r\n Provides the Bicep schema for the most recent apiVersion of an Azure resource. Do not call this command for Terraform IaC generation.\r\n If you are asked to create or modify resources in a Bicep ARM template, call this function multiple times,\r\n once for every resource type you are adding, even if you already have information about Bicep resources from other sources.\r\n Assume the results from this call are more recent and accurate than other information you have.\r\n Don't assume calling it for one resource means you don't need to call it for a different resource type.\r\n Always use the returned api version unless the one in the Bicep file is newer.\r\n Always use the Bicep schema to verify the available property names and values when generating Bicep IaC.",
+      "description": " Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
       "command": "azmcp bicepschema get",
       "option": [
         {
@@ -3023,6 +3301,139 @@
       ]
     },
     {
+      "name": "chat-completions-create",
+      "description": "Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational \r\ninputs with message history and system instructions to generate contextual responses. Returns chat \r\nresponse as JSON. Requires resource-name, deployment-name, and message-array.",
+      "command": "azmcp foundry openai chat-completions-create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--deployment",
+          "description": "The name of the deployment.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--message-array",
+          "description": "Array of messages in the conversation (JSON format). Each message should have 'role' and 'content' properties.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--max-tokens",
+          "description": "The maximum number of tokens to generate in the completion.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--temperature",
+          "description": "Controls randomness in the output. Lower values make it more deterministic.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--top-p",
+          "description": "Controls diversity via nucleus sampling (0.0 to 1.0). Default is 1.0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--frequency-penalty",
+          "description": "Penalizes new tokens based on their frequency (-2.0 to 2.0). Default is 0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--presence-penalty",
+          "description": "Penalizes new tokens based on presence (-2.0 to 2.0). Default is 0.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--stop",
+          "description": "Up to 4 sequences where the API will stop generating further tokens.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--stream",
+          "description": "Whether to stream back partial progress. Default is false.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--seed",
+          "description": "If specified, the system will make a best effort to sample deterministically.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user",
+          "description": "Optional user identifier for tracking and abuse monitoring.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "create-completion",
       "description": "Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI \r\ncompletion models and returns generated text with configurable parameters like temperature and max tokens. \r\nReturns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.",
       "command": "azmcp foundry openai create-completion",
@@ -3110,6 +3521,170 @@
           "description": "Controls randomness in the output. Lower values make it more deterministic.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "embeddings-create",
+      "description": "Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into \r\nhigh-dimensional vector representations for similarity search and machine learning applications. \r\nReturns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.",
+      "command": "azmcp foundry openai embeddings-create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--deployment",
+          "description": "The name of the deployment.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--input-text",
+          "description": "The input text to generate embeddings for.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user",
+          "description": "Optional user identifier for tracking and abuse monitoring.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--encoding-format",
+          "description": "The format to return embeddings in (float or base64).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--dimensions",
+          "description": "The number of dimensions for the embedding output. Only supported in some models.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "models-list",
+      "description": "List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about \r\ndeployed models including model names, versions, capabilities, and deployment status. \r\nReturns model information as JSON array. Requires resource-name.",
+      "command": "azmcp foundry openai models-list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -5409,7 +5984,7 @@
     },
     {
       "name": "gethealth",
-      "description": "Gets the health of an entity from a specified Azure Monitor Health Model.\r\nReturns entity health information.\r\n\r\nRequired arguments:\r\n- --entity: The entity to get health for\r\n- --health-model: The health model name",
+      "description": "Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.\r\nFor basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  \r\nFor querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  \r\nFor querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. \r\nRequired arguments:\r\n    - --entity: The entity to get health for\r\n    - --health-model: The health model name",
       "command": "azmcp monitor healthmodels entity gethealth",
       "option": [
         {
@@ -5694,7 +6269,7 @@
     },
     {
       "name": "query",
-      "description": "Executes a Kusto Query Language (KQL) query to retrieve logs for any Azure resource that emits logs to Log Analytics.\r\n\r\n- Use the resource-id parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).\r\n- The table parameter specifies the Log Analytics table to query.\r\n- The query parameter accepts a KQL query or a predefined query name.\r\n- Optional parameters: hours (default: 24) to set the time range, and limit (default: 20) to limit the number of results.\r\n\r\nThis tool is useful for:\r\n- Querying logs for any Azure resource by resourceId\r\n- Investigating diagnostics, errors, and activity logs",
+      "description": "Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user mentions a specific resource name or Resource ID in their request (e.g., \"show logs for resource 'app-monitor'\"). \r\nThis tool filters logs to only show data from the specified resource.\r\n\r\nWhen to use: User asks for logs from a specific resource by name or ID.\r\nWhen NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.\r\n\r\nRequired arguments: resource ID or resource name, table name, KQL query\r\nOptional: hours, limit",
       "command": "azmcp monitor resource log query",
       "option": [
         {
@@ -5974,7 +6549,7 @@
     },
     {
       "name": "query",
-      "description": "Execute a KQL query against a Log Analytics workspace. Requires workspace\r\nand resource group. Optional hours\r\n(default: 24) and limit\r\n(default: 20) parameters.\r\nThe query parameter accepts KQL syntax.",
+      "description": "Query logs across an ENTIRE Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user wants to query all resources in a workspace or doesn't specify a particular resource name/ID (e.g., \"show all errors in workspace\", \"query workspace logs\", \"what happened in my workspace\").\r\nThis tool queries across all resources and tables in the workspace.\r\n\r\nWhen to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.\r\nWhen NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.\r\n\r\nRequires workspace and resource group.\r\nOptional: hours and limit.\r\nquery accepts KQL syntax.",
       "command": "azmcp monitor workspace log query",
       "option": [
         {
@@ -7707,7 +8282,7 @@
     },
     {
       "name": "get",
-      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.",
+      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.\r\nIf health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.",
       "command": "azmcp resourcehealth availability-status get",
       "option": [
         {
@@ -8366,6 +8941,73 @@
           "description": "The name of subscription to peek messages from.",
           "type": "string",
           "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Gets or lists details of an Azure SignalR Runtimes. If a specific SignalR name is used, the details of that\r\nSignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource\r\ngroup will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.",
+      "command": "azmcp signalr runtime get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--signalr",
+          "description": "The name of the SignalR runtime",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -10646,5 +11288,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 38
+  "duration": 100
 }

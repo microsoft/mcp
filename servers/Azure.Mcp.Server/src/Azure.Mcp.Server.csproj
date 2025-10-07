@@ -69,4 +69,10 @@
   <ItemGroup>
     <None Include="$(RepoRoot)\eng\images\azureicon.png" Pack="true" PackagePath="azureicon.png" />
   </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\docs\azmcp-commands.md" />
+    <None Include="..\docs\e2eTestPrompts.md" />
+    <None Include="..\docs\new-command.md" />
+  </ItemGroup>
 </Project>

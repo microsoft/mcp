@@ -27,8 +27,19 @@
     "List all AI Foundry models",
     "Show me the available AI Foundry models"
   ],
+  "azmcp_foundry_openai_chat-completions-create": [
+    "Create a chat completion with the message \"Hello, how are you today?\""
+  ],
   "azmcp_foundry_openai_create-completion": [
     "Create a completion with the prompt \"What is Azure?\""
+  ],
+  "azmcp_foundry_openai_embeddings-create": [
+    "Generate embeddings for the text \"Azure OpenAI Service\"",
+    "Create vector embeddings for my text using Azure OpenAI"
+  ],
+  "azmcp_foundry_openai_models-list": [
+    "List all available OpenAI models in my Azure resource",
+    "Show me the OpenAI model deployments"
   ],
   "azmcp_search_index_get": [
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
@@ -431,7 +442,7 @@
     "What are azure function best practices?"
   ],
   "azmcp_monitor_healthmodels_entity_gethealth": [
-    "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>"
+    "Show me the health status of entity <entity_id> using the health model <health_model_name>"
   ],
   "azmcp_monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
@@ -532,6 +543,14 @@
   ],
   "azmcp_servicebus_topic_subscription_details": [
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>"
+  ],
+  "azmcp_signalr_runtime_get": [
+    "Show me the details of SignalR <signalr_name>",
+    "Show me the network information of SignalR runtime <signalr_name>",
+    "Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>",
+    "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
+    "Show all the SignalRs information in <resource_group_name>",
+    "List all SignalRs in my subscription"
   ],
   "azmcp_sql_db_create": [
     "Create a new SQL database named <database_name> in server <server_name>",
