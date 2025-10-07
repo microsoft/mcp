@@ -87,11 +87,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{AABD2F22-45E
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureIsv", "tools\Azure.Mcp.Tools.AzureIsv\src\Azure.Mcp.Tools.AzureIsv.csproj", "{51FF959C-5452-4611-B3DF-671D5D2FEF1E}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureManagedLustre", "Azure.Mcp.Tools.AzureManagedLustre", "{9B70BA7E-5CCA-8859-C252-AF72C051F264}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.ManagedLustre", "Azure.Mcp.Tools.ManagedLustre", "{9B70BA7E-5CCA-8859-C252-AF72C051F264}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{72886DEE-EE65-CAB4-D88E-95639D81D7B4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre", "tools\Azure.Mcp.Tools.AzureManagedLustre\src\Azure.Mcp.Tools.AzureManagedLustre.csproj", "{38EF7AE0-C6B0-4809-85EE-27A2C4F8F83B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ManagedLustre", "tools\Azure.Mcp.Tools.ManagedLustre\src\Azure.Mcp.Tools.ManagedLustre.csproj", "{38EF7AE0-C6B0-4809-85EE-27A2C4F8F83B}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Azure.Mcp.Tools.AzureTerraformBestPractices", "Azure.Mcp.Tools.AzureTerraformBestPractices", "{3050869B-5B38-A2E1-E211-FDD96922C0D8}"
 EndProject
@@ -367,9 +367,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureIsv.Un
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{D80CC604-369B-AC81-8F7A-C731A7ABD68E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre.LiveTests", "tools\Azure.Mcp.Tools.AzureManagedLustre\tests\Azure.Mcp.Tools.AzureManagedLustre.LiveTests\Azure.Mcp.Tools.AzureManagedLustre.LiveTests.csproj", "{75A5A87C-BF04-4ABE-B466-874074D37C8D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ManagedLustre.LiveTests", "tools\Azure.Mcp.Tools.ManagedLustre\tests\Azure.Mcp.Tools.ManagedLustre.LiveTests\Azure.Mcp.Tools.ManagedLustre.LiveTests.csproj", "{75A5A87C-BF04-4ABE-B466-874074D37C8D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.AzureManagedLustre.UnitTests", "tools\Azure.Mcp.Tools.AzureManagedLustre\tests\Azure.Mcp.Tools.AzureManagedLustre.UnitTests\Azure.Mcp.Tools.AzureManagedLustre.UnitTests.csproj", "{D1BCD822-AC8A-408F-A71A-9205DB29A9D2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.ManagedLustre.UnitTests", "tools\Azure.Mcp.Tools.ManagedLustre\tests\Azure.Mcp.Tools.ManagedLustre.UnitTests\Azure.Mcp.Tools.ManagedLustre.UnitTests.csproj", "{D1BCD822-AC8A-408F-A71A-9205DB29A9D2}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{A8D0F127-6ACB-380E-8423-B6B6EA1AF2DC}"
 EndProject
