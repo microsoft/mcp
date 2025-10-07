@@ -6,6 +6,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added support for creating interactive chat completions using Azure OpenAI chat models in AI Foundry via the command `azmcp_foundry_openai_chat-completions-create`. [[#647](https://github.com/microsoft/mcp/pull/647)]
+- Added support for generating vector embeddings using Azure OpenAI embedding models in AI Foundry via the command `azmcp_foundry_openai_embeddings-create`. [[#647](https://github.com/microsoft/mcp/pull/647)]
+- Added support for listing all available OpenAI models and deployments in an Azure resource via the command `azmcp_foundry_openai_models-list`. [[#647](https://github.com/microsoft/mcp/pull/647)]
 - Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. Supports single and multiple recipients, delivery reporting, and custom message tracking tags. [[#473](https://github.com/microsoft/mcp/pull/473)]
 - Added support for Azure Confidential Ledger with the command `azmcp_confidentialledger_entries_append` for appending tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees.
 [[#705](https://github.com/microsoft/mcp/pull/705)]

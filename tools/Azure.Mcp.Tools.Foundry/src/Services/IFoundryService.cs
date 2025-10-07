@@ -66,6 +66,27 @@ public interface IFoundryService
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task<EmbeddingResult> CreateEmbeddingsAsync(
+        string resourceName,
+        string deploymentName,
+        string inputText,
+        string subscription,
+        string resourceGroup,
+        string? user = null,
+        string encodingFormat = "float",
+        int? dimensions = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
+        string resourceName,
+        string subscription,
+        string resourceGroup,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
@@ -94,5 +115,24 @@ public interface IFoundryService
         string azureOpenAIDeployment,
         string? toolDefinitions,
         string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<ChatCompletionResult> CreateChatCompletionsAsync(
+        string resourceName,
+        string deploymentName,
+        string subscription,
+        string resourceGroup,
+        List<object> messages,
+        int? maxTokens = null,
+        double? temperature = null,
+        double? topP = null,
+        double? frequencyPenalty = null,
+        double? presencePenalty = null,
+        string? stop = null,
+        bool? stream = null,
+        int? seed = null,
+        string? user = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 }

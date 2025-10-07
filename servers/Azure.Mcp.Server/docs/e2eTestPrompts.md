@@ -18,7 +18,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
 | azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
+| azmcp_foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
+| azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
+| azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
+| azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
 
 ## Azure AI Search
 
