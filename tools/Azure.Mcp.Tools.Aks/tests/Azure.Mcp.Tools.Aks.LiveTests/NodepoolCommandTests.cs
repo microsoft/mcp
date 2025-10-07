@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using ModelContextProtocol;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Aks.LiveTests;
@@ -187,34 +189,31 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_parameters()
     {
         // Missing cluster
-        var r1 = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" }
             });
-        Assert.False(r1.HasValue);
 
         // Missing resource-group
-        var r2 = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "cluster", "cluster" }
             });
-        Assert.False(r2.HasValue);
 
         // Missing subscription
-        var r3 = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_list",
             new()
             {
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
             });
-        Assert.False(r3.HasValue);
     }
 
     [Fact]
@@ -240,7 +239,7 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var result = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_list",
             new()
             {
@@ -248,8 +247,5 @@ public sealed class NodepoolCommandTests(ITestOutputHelper output)
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
             });
-
-        // Should return validation error response with no results
-        Assert.False(result.HasValue);
     }
 }

@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using ModelContextProtocol;
 using Xunit;
 
 namespace Azure.Mcp.Tools.FunctionApp.LiveTests;
@@ -54,14 +56,12 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var result = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "subscription", "" }
             });
-
-        Assert.False(result.HasValue);
     }
 
     [Fact]
@@ -84,9 +84,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync("azmcp_functionapp_get", []);
-
-        Assert.False(result.HasValue);
+        await AssertToolCallExceptionAsync(
+            "azmcp_functionapp_get",
+            []);
     }
 
     [Fact]
@@ -155,23 +155,21 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_validate_required_parameters_for_get_command()
     {
         // Missing resource-group
-        var missingRg = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "function-app", "name-test" }
             });
-        Assert.False(missingRg.HasValue);
 
         // Missing subscription
-        var missingSub = await CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
             });
-        Assert.False(missingSub.HasValue);
     }
 }
