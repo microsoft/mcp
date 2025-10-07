@@ -208,14 +208,14 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
             var clientOptions = AddDefaultPolicies(new SearchClientOptions());
             ConfigureRetryPolicy(clientOptions, retryPolicy);
 
-            var knowledgeAgentClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(), clientOptions);
+            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(), clientOptions);
 
             var request = new KnowledgeAgentRetrievalRequest(
                 messages != null ?
                     messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
                     [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
 
-            var response = await knowledgeAgentClient.RetrieveAsync(request);
+            var response = await knowledgeBaseClient.RetrieveAsync(request);
 
             return response.GetRawResponse().Content.ToString();
         }

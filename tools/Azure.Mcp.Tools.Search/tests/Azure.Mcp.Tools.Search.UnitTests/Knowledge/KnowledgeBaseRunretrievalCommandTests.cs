@@ -43,7 +43,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             .Returns(json);
 
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1 --query life");
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -65,7 +65,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             .Returns(json);
 
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1 --messages user:Hello");
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -78,7 +78,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
     public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages()
     {
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1");
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
@@ -90,7 +90,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
     public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
     {
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1 --messages bad-format");
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(400, response.Status);
@@ -109,7 +109,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             .ThrowsAsync(new Exception("Test failure"));
 
         var command = new KnowledgeBaseRunRetrievalCommand(_logger);
-        var args = command.GetCommand().Parse("--service svc --agent base1 --query hi");
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
         Assert.Equal(500, response.Status);

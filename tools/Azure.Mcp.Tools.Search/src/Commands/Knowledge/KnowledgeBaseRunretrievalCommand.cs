@@ -14,7 +14,7 @@ public sealed class KnowledgeBaseRunRetrievalCommand(ILogger<KnowledgeBaseRunRet
 {
     private readonly ILogger<KnowledgeBaseRunRetrievalCommand> _logger = logger;
     private readonly Option<string> _serviceOption = SearchOptionDefinitions.Service;
-    private readonly Option<string> _baseOption = SearchOptionDefinitions.Agent;
+    private readonly Option<string> _baseOption = SearchOptionDefinitions.KnowledgeBase;
     private readonly Option<string> _queryOption = SearchOptionDefinitions.OptionalQuery;
     private readonly Option<string[]> _messagesOption = SearchOptionDefinitions.Messages;
 
@@ -30,7 +30,7 @@ public sealed class KnowledgeBaseRunRetrievalCommand(ILogger<KnowledgeBaseRunRet
 
         Required arguments:
         - service
-        - agent
+        - knowledge-base
         """;
 
     public override ToolMetadata Metadata => new()

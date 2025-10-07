@@ -8,7 +8,7 @@ public static class SearchOptionDefinitions
     public const string ServiceName = "service";
     public const string IndexName = "index";
     public const string QueryName = "query";
-    public const string AgentName = "agent";
+    public const string KnowledgeBaseName = "knowledge-base";
     public const string MessagesName = "messages";
 
     public static readonly Option<string> Service = new(
@@ -35,8 +35,8 @@ public static class SearchOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> Agent = new(
-        $"--{AgentName}"
+    public static readonly Option<string> KnowledgeBase = new(
+        $"--{KnowledgeBaseName}"
     )
     {
         Description = "The name of the knowledge base within the Azure AI Search service.",
