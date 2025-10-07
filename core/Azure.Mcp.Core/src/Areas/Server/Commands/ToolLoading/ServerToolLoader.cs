@@ -70,7 +70,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         foreach (var server in serverList)
         {
             var metadata = server.CreateMetadata();
-            
+
             // Filter by specific tools if provided
             if (options.Value.Tool != null && options.Value.Tool.Length > 0)
             {
@@ -79,7 +79,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                     continue;
                 }
             }
-            
+
             var tool = new Tool
             {
                 Name = metadata.Name,
@@ -106,7 +106,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         string tool = request.Params.Name;
-        
+
         // Check if tool filtering is enabled and validate the requested tool
         if (options.Value.Tool != null && options.Value.Tool.Length > 0)
         {
@@ -124,7 +124,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 };
             }
         }
-        
+
         var args = request.Params?.Arguments;
         string? intent = null;
         string? command = null;
