@@ -132,11 +132,11 @@ If you are contributing significant changes, or if the issue is already assigned
    "create [namespace] [resource] [operation] command using #new-command.md as a reference"
    ```
 
-4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 
 5. **Update documentation**:
-   - Add the new command to [/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md)
-   - Add test prompts for the new command in [/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/docs/e2eTestPrompts.md)
+   - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+   - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
 6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
@@ -175,7 +175,7 @@ Requirements:
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
 
 ### Testing Local Build with VS Code
 
@@ -634,7 +634,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 

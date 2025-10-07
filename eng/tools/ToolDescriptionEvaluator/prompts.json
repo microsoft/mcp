@@ -63,9 +63,11 @@
   "azmcp_appconfig_kv_delete": [
     "Delete the key <key_name> in App Configuration store <app_config_store_name>"
   ],
-  "azmcp_appconfig_kv_list": [
+  "azmcp_appconfig_kv_get": [
     "List all key-value settings in App Configuration store <app_config_store_name>",
-    "Show me the key-value settings in App Configuration store <app_config_store_name>"
+    "Show me the key-value settings in App Configuration store <app_config_store_name>",
+    "List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name>",
+    "Show the content for the key <key_name> in App Configuration store <app_config_store_name>"
   ],
   "azmcp_appconfig_kv_lock_set": [
     "Lock the key <key_name> in App Configuration store <app_config_store_name>",
@@ -73,9 +75,6 @@
   ],
   "azmcp_appconfig_kv_set": [
     "Set the key <key_name> in App Configuration store <app_config_store_name> to <value>"
-  ],
-  "azmcp_appconfig_kv_show": [
-    "Show the content for the key <key_name> in App Configuration store <app_config_store_name>"
   ],
   "azmcp_applens_resource_diagnose": [
     "Please help me diagnose issues with my app using app lens",
@@ -111,6 +110,23 @@
     "Show me my container registry repositories",
     "List repositories in the container registry <registry_name>",
     "Show me the repositories in the container registry <registry_name>"
+  ],
+  "azmcp_communication_sms_send": [
+    "Send an SMS message to +1234567890 saying \"Hello\"",
+    "Send SMS to +1234567890 from +1234567891 with message \"Test message\"",
+    "Send SMS to multiple recipients: +1234567890, +1234567891",
+    "Send SMS with delivery reporting enabled",
+    "Send SMS message with custom tracking tag \"campaign1\"",
+    "Send broadcast SMS to +1234567890 and +1234567891 saying \"Urgent notification\"",
+    "Send SMS from my communication service to +1234567890",
+    "Send an SMS with delivery receipt tracking"
+  ],
+  "azmcp_confidentialledger_entries_append": [
+    "Append an entry to my ledger <ledger_name> with data {\"key\": \"value\"}",
+    "Write a tamper-proof entry to ledger <ledger_name> containing {\"transaction\": \"data\"}",
+    "Append {\"hello\": \"from mcp\"} to my confidential ledger <ledger_name> in collection <collection_id>",
+    "Create an immutable ledger entry in <ledger_name> with content {\"audit\": \"log\"}",
+    "Write an entry to confidential ledger <ledger_name>"
   ],
   "azmcp_cosmos_account_list": [
     "List all cosmosdb accounts in my subscription",
@@ -392,11 +408,14 @@
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_required-subnet-size": [
-    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
-  ],
   "azmcp_azuremanagedlustre_filesystem_sku_get": [
     "List the Azure Managed Lustre SKUs available in <location>"
+  ],
+  "azmcp_azuremanagedlustre_filesystem_subnetsize_ask": [
+    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
+  ],
+  "azmcp_azuremanagedlustre_filesystem_subnetsize_validate": [
+    "Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku>"
   ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
@@ -416,7 +435,7 @@
     "What are azure function best practices?"
   ],
   "azmcp_monitor_healthmodels_entity_gethealth": [
-    "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>"
+    "Show me the health status of entity <entity_id> using the health model <health_model_name>"
   ],
   "azmcp_monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",

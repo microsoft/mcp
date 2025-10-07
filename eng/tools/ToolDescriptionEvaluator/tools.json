@@ -527,9 +527,9 @@
       ]
     },
     {
-      "name": "list",
-      "description": "List all key-values in an App Configuration store. This command retrieves and displays all key-value pairs\r\nfrom the specified store. Each key-value includes its key, value, label, content type, ETag, last modified\r\ntime, and lock status.",
-      "command": "azmcp appconfig kv list",
+      "name": "get",
+      "description": "Gets key-values in an App Configuration store. This command can either retrieve a specific key-value by its key\r\nand optional label, or list key-values if no key is provided. Listing key-values can optionally be filtered by a\r\nkey filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,\r\nand lock status.",
+      "command": "azmcp appconfig kv get",
       "option": [
         {
           "name": "--tenant",
@@ -587,12 +587,24 @@
         },
         {
           "name": "--key",
-          "description": "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+          "description": "The name of the key to access within the App Configuration store.",
           "type": "string",
           "required": null
         },
         {
           "name": "--label",
+          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-filter",
+          "description": "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--label-filter",
           "description": "Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
           "type": "string",
           "required": null
@@ -770,85 +782,6 @@
         {
           "name": "--tags",
           "description": "The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "show",
-      "description": "Show a specific key-value setting in an App Configuration store. This command retrieves and displays the value,\r\nlabel, content type, ETag, last modified time, and lock status for a specific setting. You must specify an\r\naccount name and key. Optionally, you can specify a label otherwise the setting with default label will be retrieved.\r\nYou can also specify a content type to indicate how the value should be interpreted.",
-      "command": "azmcp appconfig kv show",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the App Configuration store (e.g., my-appconfig).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--key",
-          "description": "The name of the key to access within the App Configuration store.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--label",
-          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--content-type",
-          "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
           "type": "string",
           "required": null
         }
@@ -1086,6 +1019,181 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
+      "command": "azmcp azuremanagedlustre filesystem create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--zone",
+          "description": "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\nExample: --zone 1",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--hsm-container",
+          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--hsm-log-container",
+          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--import-prefix",
+          "description": "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--custom-encryption",
+          "description": "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-url",
+          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--source-vault",
+          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user-assigned-identity-id",
+          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
       "command": "azmcp azuremanagedlustre filesystem list",
@@ -1143,73 +1251,6 @@
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": null
-        }
-      ]
-    },
-    {
-      "name": "required-subnet-size",
-      "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
-      "command": "azmcp azuremanagedlustre filesystem required-subnet-size",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--sku",
-          "description": "The AMLFS SKU. Allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--size",
-          "description": "The AMLFS size (TiB).",
-          "type": "string",
-          "required": true
         }
       ]
     },
@@ -1275,6 +1316,255 @@
       ]
     },
     {
+      "name": "ask",
+      "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+      "command": "azmcp azuremanagedlustre filesystem subnetsize ask",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "description": "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
+      "command": "azmcp azuremanagedlustre filesystem subnetsize validate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+      "command": "azmcp azuremanagedlustre filesystem update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azmcp azureterraformbestpractices get",
@@ -1282,7 +1572,7 @@
     },
     {
       "name": "get",
-      "description": "\r\n Provides the Bicep schema for the most recent apiVersion of an Azure resource. Do not call this command for Terraform IaC generation.\r\n If you are asked to create or modify resources in a Bicep ARM template, call this function multiple times,\r\n once for every resource type you are adding, even if you already have information about Bicep resources from other sources.\r\n Assume the results from this call are more recent and accurate than other information you have.\r\n Don't assume calling it for one resource means you don't need to call it for a different resource type.\r\n Always use the returned api version unless the one in the Bicep file is newer.\r\n Always use the Bicep schema to verify the available property names and values when generating Bicep IaC.",
+      "description": " Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
       "command": "azmcp bicepschema get",
       "option": [
         {
@@ -1421,6 +1711,158 @@
         {
           "name": "--state",
           "description": "The complete architecture state from the previous request as JSON, State input schema:\n{\n\"state\":{\n\"type\":\"object\",\n\"description\":\"The complete architecture state from the previous request\",\n\"properties\":{\n\"architectureComponents\":{\n\"type\":\"array\",\n\"description\":\"All architecture components suggested so far\",\n\"items\":{\n\"type\":\"string\"\n}\n},\n\"architectureTiers\":{\n\"type\":\"object\",\n\"description\":\"Components organized by architecture tier\",\n\"additionalProperties\":{\n\"type\":\"array\",\n\"items\":{\n\"type\":\"string\"\n}\n}\n},\n\"thought\":{\n\"type\":\"string\",\n\"description\":\"The calling agent's thoughts on the next question or reasoning process. The calling agent should use the requirements it has gathered to reason about the next question.\"\n},\n\"suggestedHint\":{\n\"type\":\"string\",\n\"description\":\"A suggested interaction hint to show the user, such as 'Ask me to create an ASCII art diagram of this architecture' or 'Ask about how this design handles disaster recovery'.\"\n},\n\"requirements\":{\n\"type\":\"object\",\n\"description\":\"Tracked requirements organized by type\",\n\"properties\":{\n\"explicit\":{\n\"type\":\"array\",\n\"description\":\"Requirements explicitly stated by the user\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n},\n\"implicit\":{\n\"type\":\"array\",\n\"description\":\"Requirements implied by user responses\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n},\n\"assumed\":{\n\"type\":\"array\",\n\"description\":\"Requirements assumed based on context/best practices\",\n\"items\":{\n\"type\":\"object\",\n\"properties\":{\n\"category\":{\n\"type\":\"string\"\n},\n\"description\":{\n\"type\":\"string\"\n},\n\"source\":{\n\"type\":\"string\"\n},\n\"importance\":{\n\"type\":\"string\",\n\"enum\":[\n\"high\",\n\"medium\",\n\"low\"\n]\n},\n\"confidence\":{\n\"type\":\"number\"\n}\n}\n}\n}\n}\n},\n\"confidenceFactors\":{\n\"type\":\"object\",\n\"description\":\"Factors that contribute to the overall confidence score\",\n\"properties\":{\n\"explicitRequirementsCoverage\":{\n\"type\":\"number\"\n},\n\"implicitRequirementsCertainty\":{\n\"type\":\"number\"\n},\n\"assumptionRisk\":{\n\"type\":\"number\"\n}\n}\n}\n}\n}\n}",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "description": "Sends SMS messages to one or more recipients using Azure Communication Services.\r\nReturns message IDs and delivery status for each sent message.",
+      "command": "azmcp communication sms send",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Communication Services URI endpoint (e.g., https://myservice.communication.azure.com). Required for credential authentication.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--from",
+          "description": "The SMS-enabled phone number associated with your Communication Services resource (in E.164 format, e.g., +14255550123). Can also be a short code or alphanumeric sender ID.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--to",
+          "description": "The recipient phone number(s) in E.164 international standard format (e.g., +14255550123). Multiple numbers can be provided.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--message",
+          "description": "The SMS message content to send to the recipient(s).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--enable-delivery-report",
+          "description": "Whether to enable delivery reporting for the SMS message. When enabled, events are emitted when delivery is successful.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--tag",
+          "description": "Optional custom tag to apply to the SMS message for tracking purposes.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "append",
+      "description": "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.",
+      "command": "azmcp confidentialledger entries append",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ledger",
+          "description": "The name of the Confidential Ledger instance (e.g., 'myledger').",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--content",
+          "description": "The JSON or text payload to append as a tamper-proof ledger entry.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--collection-id",
+          "description": "Optional ledger collection identifier. If omitted the default collection is used.",
           "type": "string",
           "required": null
         }
@@ -4511,7 +4953,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a new Azure Load Testing test configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance\r\nand scalability of web applications and APIs. The test configuration defines the target endpoint, load parameters, and test duration. Once we create a test configuration plan, we can use that to trigger test runs to test the endpoints set.",
+      "description": "Creates a new load test plan or configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance\r\nand scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.\r\nThis is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. \r\nIt will only create a test in an already existing load test resource.",
       "command": "azmcp loadtesting test create",
       "option": [
         {
@@ -4620,7 +5062,7 @@
     },
     {
       "name": "get",
-      "description": "Get the Azure Load Testing test configuration for the specified load test id in the specified load test resource.\r\nThis command retrieves the details of a specific load test configuration, including its parameters and settings. Based on this we can see what all parameters were set for the test configuration.",
+      "description": "Get the configuration and setup details for a load test by its test ID in a Load Testing resource.\r\nReturns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.",
       "command": "azmcp loadtesting test get",
       "option": [
         {
@@ -4693,7 +5135,7 @@
     },
     {
       "name": "create",
-      "description": "Creates a new Azure Load Testing resource in the currently selected subscription and resource group for the logged-in tenant.\r\nReturns the created Load Testing resource.",
+      "description": "Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. \r\nOnce the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.",
       "command": "azmcp loadtesting testresource create",
       "option": [
         {
@@ -4760,7 +5202,7 @@
     },
     {
       "name": "list",
-      "description": "Fetches the Load Testing resources for the current selected subscription, resource group in the logged in tenant.\r\nReturns a list of Load Testing resources.",
+      "description": "Lists all Azure Load Testing resources available in the selected subscription and resource group.\r\nReturns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.",
       "command": "azmcp loadtesting testresource list",
       "option": [
         {
@@ -4827,7 +5269,7 @@
     },
     {
       "name": "create",
-      "description": "Executes a new load test run based on an existing test configuration under simulated user load. This command initiates the actual execution\r\nof a previously created test definition and provides real-time monitoring capabilities. A test run represents a single execution instance of your load test configuration. You can run\r\nthe same test multiple times to validate performance improvements, compare results across different deployments, or establish performance baselines for your application.",
+      "description": "Creates a test run for a specified test in the selected load testing resource. This command triggers a new test run and does not modify the test plan or create a new test or resource. Use this to execute performance or functional tests based on an existing test configuration.",
       "command": "azmcp loadtesting testrun create",
       "option": [
         {
@@ -4924,7 +5366,7 @@
     },
     {
       "name": "get",
-      "description": "Retrieves comprehensive details and status information for a specific load test run execution.\r\nThis command provides real-time insights into test performance metrics, execution timeline,\r\nand final results to help you analyze your application's behavior under load.",
+      "description": "Get details for a specific test run by testrun ID.\r\nUse this to retrieve a single run's execution details (not a list). Returns status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces). \r\nDoes NOT return the test plan/configuration or the test resource. Only the test run details. Also it is used to get details of SINGLE testrun based on its id. For a list of runs use testrun list command instead.",
       "command": "azmcp loadtesting testrun get",
       "option": [
         {
@@ -4997,7 +5439,7 @@
     },
     {
       "name": "list",
-      "description": "Retrieves a comprehensive list of all test run executions for a specific load test configuration.\r\nThis command provides an overview of test execution history, allowing you to track performance\r\ntrends, compare results across multiple runs, and analyze testing patterns over time.",
+      "description": "Retrieves a comprehensive list of all test run executions for a specific load test. We get the test ID from the user and all the associated test runs are fetched. It is a one to many relationship.\r\nEach test run only stores data corresponding to that particular run associated for that test. This does NOT return the test configuration or plan. For that use the test command. This is only for testruns.",
       "command": "azmcp loadtesting testrun list",
       "option": [
         {
@@ -5070,7 +5512,7 @@
     },
     {
       "name": "update",
-      "description": "Updates the metadata and display properties of a completed or in-progress load test run execution.\r\nThis command allows you to modify descriptive information for better organization, documentation,\r\nand identification of test runs without affecting the actual test execution or results.",
+      "description": "Updates the metadata and display properties of a completed or in-progress load test run execution.\r\nThis command allows you to modify descriptive information for better organization, documentation, and identification of test runs without affecting the actual test execution or results. \r\nThis will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. \r\nThis will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.",
       "command": "azmcp loadtesting testrun update",
       "option": [
         {
@@ -5367,7 +5809,7 @@
     },
     {
       "name": "gethealth",
-      "description": "Gets the health of an entity from a specified Azure Monitor Health Model.\r\nReturns entity health information.\r\n\r\nRequired arguments:\r\n- --entity: The entity to get health for\r\n- --health-model: The health model name",
+      "description": "Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.\r\nFor basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  \r\nFor querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  \r\nFor querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. \r\nRequired arguments:\r\n    - --entity: The entity to get health for\r\n    - --health-model: The health model name",
       "command": "azmcp monitor healthmodels entity gethealth",
       "option": [
         {
@@ -5652,7 +6094,7 @@
     },
     {
       "name": "query",
-      "description": "Executes a Kusto Query Language (KQL) query to retrieve logs for any Azure resource that emits logs to Log Analytics.\r\n\r\n- Use the resource-id parameter to specify the full Azure Resource ID (/subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount).\r\n- The table parameter specifies the Log Analytics table to query.\r\n- The query parameter accepts a KQL query or a predefined query name.\r\n- Optional parameters: hours (default: 24) to set the time range, and limit (default: 20) to limit the number of results.\r\n\r\nThis tool is useful for:\r\n- Querying logs for any Azure resource by resourceId\r\n- Investigating diagnostics, errors, and activity logs",
+      "description": "Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user mentions a specific resource name or Resource ID in their request (e.g., \"show logs for resource 'app-monitor'\"). \r\nThis tool filters logs to only show data from the specified resource.\r\n\r\nWhen to use: User asks for logs from a specific resource by name or ID.\r\nWhen NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.\r\n\r\nRequired arguments: resource ID or resource name, table name, KQL query\r\nOptional: hours, limit",
       "command": "azmcp monitor resource log query",
       "option": [
         {
@@ -5932,7 +6374,7 @@
     },
     {
       "name": "query",
-      "description": "Execute a KQL query against a Log Analytics workspace. Requires workspace\r\nand resource group. Optional hours\r\n(default: 24) and limit\r\n(default: 20) parameters.\r\nThe query parameter accepts KQL syntax.",
+      "description": "Query logs across an ENTIRE Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user wants to query all resources in a workspace or doesn't specify a particular resource name/ID (e.g., \"show all errors in workspace\", \"query workspace logs\", \"what happened in my workspace\").\r\nThis tool queries across all resources and tables in the workspace.\r\n\r\nWhen to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.\r\nWhen NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.\r\n\r\nRequires workspace and resource group.\r\nOptional: hours and limit.\r\nquery accepts KQL syntax.",
       "command": "azmcp monitor workspace log query",
       "option": [
         {
@@ -7488,7 +7930,7 @@
     },
     {
       "name": "list",
-      "description": "List all Redis Cache resources in a specified subscription. Returns an array of Redis Cache details.\r\nUse this command to explore which Redis Cache resources are available in your subscription.",
+      "description": "List/show all Redis Caches in a subscription. Returns Redis Cache details including Azure Cache for Redis resources (Basic, Standard, and Premium tier caches). Use this command to explore and view which Redis Cache resources are available in your subscription.",
       "command": "azmcp redis cache list",
       "option": [
         {
@@ -7610,7 +8052,7 @@
     },
     {
       "name": "list",
-      "description": "List all Redis Cluster resources in a specified subscription. Returns an array of Redis Cluster details.\r\nUse this command to explore which Redis Cluster resources are available in your subscription.",
+      "description": "List/show all Redis Clusters in a subscription. Returns Redis Cluster details including Azure Managed Redis clusters and Azure Redis Enterprise clusters. Use this command to explore and view which Redis Cluster resources are available in your subscription.",
       "command": "azmcp redis cluster list",
       "option": [
         {
@@ -7665,7 +8107,7 @@
     },
     {
       "name": "get",
-      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.",
+      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.\r\nIf health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.",
       "command": "azmcp resourcehealth availability-status get",
       "option": [
         {
@@ -10604,5 +11046,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 25
+  "duration": 44
 }

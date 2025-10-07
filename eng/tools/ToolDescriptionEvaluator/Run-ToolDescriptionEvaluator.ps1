@@ -9,7 +9,7 @@
 .DESCRIPTION
     This script performs the following steps:
     - Dynamically load tools from an Azure MCP Server Debug or Release build, preferring the former
-    - Load prompts from the file located at ../../../docs/e2eTestPrompts.md
+    - Load prompts from the file located at servers/Azure.Mcp.Server/docs/e2eTestPrompts.md
     - Build the Tool Description Evaluator application in Debug configuration and run it
 
 .PARAMETER BuildAzureMcp
