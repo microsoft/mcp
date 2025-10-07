@@ -21,6 +21,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 - Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` for only the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
+- Merged the following Azure Kubernetes Service (AKS) tools:
+  - Merged `azmcp_aks_cluster_list` into `azmcp_aks_cluster_get`, which can perform both operations based on whether `--cluster` is passed.
+  - Merged `azmcp_aks_nodepool_list` into `azmcp_aks_nodepool_get`, which can perform both operations based on whether `--nodepool` is passed.
 
 ### Bugs Fixed
 

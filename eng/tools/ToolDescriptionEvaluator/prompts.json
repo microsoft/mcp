@@ -27,8 +27,19 @@
     "List all AI Foundry models",
     "Show me the available AI Foundry models"
   ],
+  "azmcp_foundry_openai_chat-completions-create": [
+    "Create a chat completion with the message \"Hello, how are you today?\""
+  ],
   "azmcp_foundry_openai_create-completion": [
     "Create a completion with the prompt \"What is Azure?\""
+  ],
+  "azmcp_foundry_openai_embeddings-create": [
+    "Generate embeddings for the text \"Azure OpenAI Service\"",
+    "Create vector embeddings for my text using Azure OpenAI"
+  ],
+  "azmcp_foundry_openai_models-list": [
+    "List all available OpenAI models in my Azure resource",
+    "Show me the OpenAI model deployments"
   ],
   "azmcp_search_index_get": [
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
@@ -360,9 +371,7 @@
     "Get the configuration of AKS cluster <cluster-name>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
     "Show me the network configuration for AKS cluster <cluster-name>",
-    "What are the details of my AKS cluster <cluster-name> in <resource-group>?"
-  ],
-  "azmcp_aks_cluster_list": [
+    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
     "List all AKS clusters in my subscription",
     "Show me my Azure Kubernetes Service clusters",
     "What AKS clusters do I have?"
@@ -370,9 +379,7 @@
   "azmcp_aks_nodepool_get": [
     "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
-    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?"
-  ],
-  "azmcp_aks_nodepool_list": [
+    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
     "List nodepools for AKS cluster <cluster-name> in <resource-group>",
     "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
@@ -536,6 +543,14 @@
   ],
   "azmcp_servicebus_topic_subscription_details": [
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>"
+  ],
+  "azmcp_signalr_runtime_get": [
+    "Show me the details of SignalR <signalr_name>",
+    "Show me the network information of SignalR runtime <signalr_name>",
+    "Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>",
+    "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
+    "Show all the SignalRs information in <resource_group_name>",
+    "List all SignalRs in my subscription"
   ],
   "azmcp_sql_db_create": [
     "Create a new SQL database named <database_name> in server <server_name>",
