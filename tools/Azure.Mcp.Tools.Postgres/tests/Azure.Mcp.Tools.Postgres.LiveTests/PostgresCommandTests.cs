@@ -42,7 +42,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         var testDbNames = databaseArray.Select(db => db.GetString()).ToList();
         Assert.Contains("testdb", testDbNames);
         Assert.Contains("testdb2", testDbNames);
-        
+
         // PostgreSQL system databases should also be present
         Assert.Contains("postgres", testDbNames);
     }
