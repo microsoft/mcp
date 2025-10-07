@@ -69,10 +69,10 @@ public class StorageService(
             {
                 var storageAccount = await ExecuteSingleResourceQueryAsync(
                     "Microsoft.Storage/storageAccounts",
-                    null,
-                    subscription,
-                    retryPolicy,
-                    ConvertToAccountInfoModel,
+                    resourceGroup: null,
+                    subscription: subscription,
+                    retryPolicy: retryPolicy,
+                    converter: ConvertToAccountInfoModel,
                     additionalFilter: $"name =~ '{EscapeKqlString(account)}'");
 
                 if (storageAccount == null)

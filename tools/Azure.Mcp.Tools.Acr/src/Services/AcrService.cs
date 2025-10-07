@@ -57,11 +57,11 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         {
             var registrie = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.ContainerRegistry/registries",
-                        resourceGroup,
-                        subscription,
-                        retryPolicy,
-                        ConvertToAcrRegistryInfoModel,
-                        $"name =~ '{EscapeKqlString(registry)}'");
+                        resourceGroup: resourceGroup,
+                        subscription: subscription,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToAcrRegistryInfoModel,
+                        additionalFilter: $"name =~ '{EscapeKqlString(registry)}'");
             if (registrie == null)
             {
                 throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");

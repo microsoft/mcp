@@ -25,7 +25,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Improved error message for macOS users when interactive browser authentication fails due to broker threading requirements. The error now provides clear guidance to use Azure CLI, Azure PowerShell, or Azure Developer CLI for authentication instead.[[#684](https://github.com/microsoft/mcp/pull/684)]
 - Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`.[[#524](https://github.com/microsoft/mcp/pull/524)]
 - Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
-- Updated the description of the Monitor tool and corrected the prompt for command `monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]  
+- Updated the description of the Monitor tool and corrected the prompt for command `monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]
+- Fixed BadRequest error in Azure Container Registry to get a registry, and in EventHubs to get a namespace. [[#729](https://github.com/microsoft/mcp/pull/729)]
 
 ### Other Changes
 

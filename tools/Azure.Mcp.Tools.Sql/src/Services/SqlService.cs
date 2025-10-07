@@ -43,10 +43,10 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var result = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.Sql/servers/databases",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlDatabaseModel,
+                resourceGroup: resourceGroup,
+                subscription: subscription,
+                retryPolicy: retryPolicy,
+                converter: ConvertToSqlDatabaseModel,
                 additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
                 cancellationToken: cancellationToken);
 

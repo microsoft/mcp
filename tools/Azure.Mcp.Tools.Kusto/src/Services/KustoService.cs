@@ -73,9 +73,9 @@ public sealed class KustoService(
             var cluster = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.Kusto/clusters",
                         resourceGroup: null, // all resource groups
-                        subscriptionId,
-                        retryPolicy,
-                        ConvertToClusterModel,
+                        subscription: subscriptionId,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToClusterModel,
                         additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'");
 
             if (cluster == null)
