@@ -16,7 +16,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
   - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
   - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
-- Added support for listing all Azure SignalR runtime instances or getting detailed information about a siongle one via the command `azmcp_signalr_runtime_get`. [[#83](https://github.com/microsoft/mcp/pull/83)]
+- Added support for listing all Azure SignalR runtime instances or getting detailed information about a single one via the command `azmcp_signalr_runtime_get`. [[#83](https://github.com/microsoft/mcp/pull/83)]
 - Added a new tool loader for the default Azure MCP server start mode that executes Azure namespace commands directly in-process instead of spawning individual processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
 
 ### Breaking Changes
