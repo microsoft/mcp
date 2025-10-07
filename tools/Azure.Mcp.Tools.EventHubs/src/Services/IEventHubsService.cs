@@ -43,4 +43,38 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<EventHubInfo>> ListEventHubsAsync(
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<EventHubInfo?> GetEventHubAsync(
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<EventHubInfo> CreateOrUpdateEventHubAsync(
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        int? partitionCount = null,
+        long? messageRetentionInHours = null,
+        string? status = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<bool> DeleteEventHubAsync(
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
