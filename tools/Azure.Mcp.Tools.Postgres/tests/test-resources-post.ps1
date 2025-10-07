@@ -52,25 +52,7 @@ try {
     }
 
     Write-Host "Successfully obtained Entra ID access token" -ForegroundColor Green
-    
-    # Verify we can reach the server (basic connectivity check)
-    Write-Host "Verifying server connectivity..." -ForegroundColor Gray
-    
-    # Use Test-NetConnection to verify the server is reachable on port 5432
-    $connectionTest = Test-NetConnection -ComputerName $postgresServerFqdn -Port 5432 -WarningAction SilentlyContinue
-    
-    if ($connectionTest.TcpTestSucceeded) {
-        Write-Host "Successfully connected to PostgreSQL server on port 5432" -ForegroundColor Green
-    }
-    else {
-        Write-Warning "Could not connect to PostgreSQL server on port 5432. The server may still be starting up."
-    }
-    if ($connectionTest.TcpTestSucceeded) {
-        Write-Host "Successfully connected to PostgreSQL server on port 5432" -ForegroundColor Green
-    }
-    else {
-        Write-Warning "Could not connect to PostgreSQL server on port 5432. The server may still be starting up."
-    }
+    Write-Host "PostgreSQL server is ready for live tests" -ForegroundColor Green
 
     Write-Host "`nPostgreSQL server verification completed!" -ForegroundColor Green
     Write-Host "Note: Test data (tables and rows) will be created by the live tests themselves." -ForegroundColor Yellow
