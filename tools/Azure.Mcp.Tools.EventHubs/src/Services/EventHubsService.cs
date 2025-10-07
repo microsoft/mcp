@@ -98,7 +98,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                             subscription,
                             retryPolicy,
                             ConvertToNamespace,
-                            $"name =~ '{EscapeKqlString(namespaceName)}'");
+                            additionalFilter: $"name =~ '{EscapeKqlString(namespaceName)}'");
 
             if (namespaceDetails == null)
             {

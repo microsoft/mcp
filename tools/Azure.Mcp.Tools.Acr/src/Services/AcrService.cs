@@ -61,7 +61,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
                         subscription,
                         retryPolicy,
                         ConvertToAcrRegistryInfoModel,
-                        $"name =~ '{EscapeKqlString(registry)}'");
+                        additionalFilter: $"name =~ '{EscapeKqlString(registry)}'");
             if (registrie == null)
             {
                 throw new KeyNotFoundException($"Container registry '{registry}' not found for subscription '{subscription}'.");
