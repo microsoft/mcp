@@ -27,7 +27,7 @@ The following options are available when starting the Azure MCP Server:
 | `--transport` | No | 'stdio' | Transport mechanism ('stdio' or 'sse') |
 | `--namespace` | No | All namespaces | Filter to specific Azure service namespaces (e.g., 'storage', 'keyvault') |
 | `--mode` | No | 'namespace' | Server mode ('namespace', 'single', or 'all') |
-| `--tool` | No | All tools | Filter to specific tools by name (e.g., 'azmcp_storage_account_get') |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get') |
 | `--read-only` | No | false | Enable read-only mode (only read operations allowed) |
 | `--debug` | No | false | Enable debug mode with verbose logging |
 | `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
