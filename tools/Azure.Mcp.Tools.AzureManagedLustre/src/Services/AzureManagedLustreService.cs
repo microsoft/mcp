@@ -24,7 +24,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
 
     public async Task<List<LustreFileSystem>> ListFileSystemsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var results = new List<LustreFileSystem>();
 
@@ -283,7 +283,13 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         RetryPolicyOptions? retryPolicy = null
     )
     {
-        ValidateRequiredParameters(subscription, resourceGroup, name, location, sku, subnetId);
+        ValidateRequiredParameters((nameof(subscription), subscription),
+        (nameof(resourceGroup), resourceGroup),
+        (nameof(name), name),
+        (nameof(location), location),
+        (nameof(sku), sku),
+        (nameof(subnetId), subnetId)
+        );
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
@@ -387,7 +393,7 @@ public sealed class AzureManagedLustreService(ISubscriptionService subscriptionS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, name);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(name), name));
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");

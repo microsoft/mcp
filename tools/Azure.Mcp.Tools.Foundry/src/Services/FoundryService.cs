@@ -448,7 +448,13 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, inputText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(inputText), inputText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -506,7 +512,7 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, subscription, resourceGroup);
+        ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -587,7 +593,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         if (messages == null || messages.Count == 0)
         {
