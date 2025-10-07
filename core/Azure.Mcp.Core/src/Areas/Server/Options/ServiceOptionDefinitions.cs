@@ -46,7 +46,7 @@ public static class ServiceOptionDefinitions
         $"--{ToolName}"
     )
     {
-        Description = "Filter to expose only specific tools by name (e.g., 'azmcp storage account list'). Can be specified multiple times.",
+        Description = "Expose only specific tools by name (e.g., 'azmcp storage account list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp storage account list\" --tool \"azmcp network vnet list\".",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,
