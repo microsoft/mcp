@@ -241,8 +241,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var usage = embeddingResult.AssertProperty("usage");
         Assert.Equal(JsonValueKind.Object, usage.ValueKind);
 
-        var promptTokens = usage.AssertProperty("promptTokens");
-        var totalTokens = usage.AssertProperty("totalTokens");
+        var promptTokens = usage.AssertProperty("prompt_tokens");
+        var totalTokens = usage.AssertProperty("total_tokens");
 
         Assert.Equal(JsonValueKind.Number, promptTokens.ValueKind);
         Assert.Equal(JsonValueKind.Number, totalTokens.ValueKind);
