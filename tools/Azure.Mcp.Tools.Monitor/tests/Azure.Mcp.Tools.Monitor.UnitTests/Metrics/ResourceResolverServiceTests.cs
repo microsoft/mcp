@@ -103,7 +103,7 @@ public class ResourceResolverServiceTests
     public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentNullException(string? subscription, string? resourceName)
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!));
     }
 
