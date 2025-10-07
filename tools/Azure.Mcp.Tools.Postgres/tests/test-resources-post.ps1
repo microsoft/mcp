@@ -48,8 +48,34 @@ if (-not $accessToken) {
     throw "Failed to acquire access token for PostgreSQL."
 }
 
+function Get-GlobalPackagesPath {
+    if ($env:NUGET_PACKAGES) {
+        return $env:NUGET_PACKAGES
+    }
+
+    $profilePath = $env:USERPROFILE
+    if ([string]::IsNullOrWhiteSpace($profilePath)) {
+        $profilePath = $env:HOME
+    }
+
+    if ([string]::IsNullOrWhiteSpace($profilePath)) {
+        $profilePath = [Environment]::GetFolderPath([Environment+SpecialFolder]::UserProfile)
+    }
+
+    if ([string]::IsNullOrWhiteSpace($profilePath)) {
+        return $null
+    }
+
+    return Join-Path $profilePath '.nuget/packages'
+}
+
 function Get-NpgsqlAssemblyPath {
-    $packageRoot = Join-Path $env:USERPROFILE '.nuget/packages/npgsql'
+    $packagesRoot = Get-GlobalPackagesPath
+    if ([string]::IsNullOrWhiteSpace($packagesRoot)) {
+        return $null
+    }
+
+    $packageRoot = Join-Path $packagesRoot 'npgsql'
     if (-not (Test-Path $packageRoot)) {
         return $null
     }
