@@ -37,6 +37,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
 - Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
 - Update `ToolName` telemetry field to use normalized command name when `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
+- Renamed `azmcp_azuremanagedlustre` to `azmcp_managedlustre` [[#345](https://github.com/microsoft/mcp/issues/345)]
 
 #### Dependency updates
 

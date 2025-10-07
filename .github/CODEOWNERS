@@ -135,9 +135,9 @@
 # ServiceLabel: %tools-Monitor
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
-# PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
-# ServiceLabel: %tools-AzureManagedLustre
+# PRLabel: %tools-ManagedLustre
+/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+# ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
 # PRLabel: %tools-MySQL
