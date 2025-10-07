@@ -11,6 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 [[#705](https://github.com/microsoft/mcp/pull/705)]
 - Added the following Azure Managed Lustre commands:
   - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
+- Added support for listing Azure Resource activity logs `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
 
 ### Breaking Changes
 
@@ -19,7 +20,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Improved error message for macOS users when interactive browser authentication fails due to broker threading requirements. The error now provides clear guidance to use Azure CLI, Azure PowerShell, or Azure Developer CLI for authentication instead.[[#684](https://github.com/microsoft/mcp/pull/684)]
 - Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`.[[#524](https://github.com/microsoft/mcp/pull/524)]
 - Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
-- Updated the description of the Monitor tool and corrected the prompt for command `monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]  
+- Updated the description of the Monitor tool and corrected the prompt for command `monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]
 
 ### Other Changes
 
@@ -117,7 +118,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - App Lens: `azmcp_applens_resource_diagnose` [[#556](https://github.com/microsoft/mcp/pull/556)]
   - Cloud Architect: `azmcp_cloudarchitect_design` [[#587](https://github.com/microsoft/mcp/pull/587)]
   - Cosmos DB: `azmcp_cosmos_database_container_item_query` [[#625](https://github.com/microsoft/mcp/pull/625)]
-  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)] 
+  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)]
     - `azmcp_eventgrid_subscription_list`
     - `azmcp_eventgrid_topic_list`
   - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]

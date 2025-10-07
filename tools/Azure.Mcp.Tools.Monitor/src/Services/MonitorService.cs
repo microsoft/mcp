@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json.Nodes;
-using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Text.Json;
+using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -31,8 +31,8 @@ public class MonitorService : BaseAzureService, IMonitorService
     private readonly HttpClient _httpClient;
 
     public MonitorService(
-        ISubscriptionService subscriptionService, 
-        ITenantService tenantService, 
+        ISubscriptionService subscriptionService,
+        ITenantService tenantService,
         IResourceGroupService resourceGroupService,
         IResourceResolverService resourceResolverService,
         HttpClient httpClient)
@@ -395,7 +395,7 @@ public class MonitorService : BaseAzureService, IMonitorService
                 subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
 
             string resourceId = resourceIdentifier.ToString();
-            string subscriptionId = resourceIdentifier.SubscriptionId 
+            string subscriptionId = resourceIdentifier.SubscriptionId
                 ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
             // Get the activity logs from the Azure Management API

@@ -461,7 +461,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
         var activityLogsArray = result.AssertProperty("activityLogs");
         Assert.Equal(JsonValueKind.Array, activityLogsArray.ValueKind);
-        
+
         // Activity logs should exist for the storage account, even if it's just creation/update events
         // Note: This test may pass with 0 results if the storage account has had no activity in the last 24 hours
         Output.WriteLine($"Retrieved {activityLogsArray.EnumerateArray().Count()} activity log events");
@@ -484,7 +484,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
             { "subscription", Settings.SubscriptionId },
             { "resource-name", "nonexistentresource" }
         });
-        
+
         // For now, just verify the result is not null (activity log errors may vary)
         Assert.NotNull(result);
     }
