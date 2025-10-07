@@ -2195,10 +2195,10 @@ Before submitting:
 **REQUIRED**: All new commands must update the following documentation files:
 
 - [ ] **CHANGELOG.md**: Add entry under "Unreleased" section describing the new command(s)
-- [ ] **docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
+- [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section
 - [ ] **eng/vscode/README.md**: Update the VSIX README with new service toolset (if applicable) and add sample prompts to showcase new command capabilities
-- [ ] **docs/e2eTestPrompts.md**: Add test prompts for end-to-end validation of the new command(s)
+- [ ] **servers/Azure.Mcp.Server/docs/e2eTestPrompts.md**: Add test prompts for end-to-end validation of the new command(s)
 - [ ] **.github/CODEOWNERS**: Add new toolset to CODEOWNERS file for proper ownership and review assignments
 
 **Documentation Standards**:

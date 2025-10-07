@@ -135,8 +135,8 @@ If you are contributing significant changes, or if the issue is already assigned
 4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
 
 5. **Update documentation**:
-   - Add the new command to [/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md)
-   - Add test prompts for the new command in [/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/docs/e2eTestPrompts.md)
+   - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+   - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
 6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)

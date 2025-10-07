@@ -154,9 +154,9 @@ dotnet build
 ```
 
 ## API Docs and References
-- API documentation: `/docs/azmcp-commands.md` - Complete command reference
-- Implementation guide: `/docs/new-command.md` - Step-by-step command creation
-- Test prompts: `/docs/e2eTestPrompts.md` - Example prompts for testing
+- API documentation: `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` - Complete command reference
+- Implementation guide: `/servers/Azure.Mcp.Server/docs/new-command.md` - Step-by-step command creation
+- Test prompts: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` - Example prompts for testing
 - Contributing guide: `CONTRIBUTING.md` - Development workflow and standards
 - Code guidelines: `.github/copilot-instructions.md` - Specific coding standards
 
