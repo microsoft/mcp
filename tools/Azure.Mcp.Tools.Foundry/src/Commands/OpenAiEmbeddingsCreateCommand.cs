@@ -57,7 +57,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
         options.DeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.DeploymentNameOption.Name);
         options.InputText = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.InputTextOption.Name);
         options.User = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.UserOption.Name);
-        options.EncodingFormat = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EncodingFormatOption.Name) ?? "float";
+        options.EncodingFormat = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EncodingFormatOption.Name);
         options.Dimensions = parseResult.GetValueOrDefault<int?>(FoundryOptionDefinitions.DimensionsOption.Name);
         return options;
     }

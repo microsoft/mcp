@@ -273,7 +273,8 @@ public static class FoundryOptionDefinitions
         $"--{EncodingFormat}"
     )
     {
-        Description = "The format to return embeddings in (float or base64). Default is float."
+        Description = "The format to return embeddings in (float or base64).",
+        DefaultValueFactory = _ => "float"
     };
 
     public static readonly Option<int> DimensionsOption = new(
