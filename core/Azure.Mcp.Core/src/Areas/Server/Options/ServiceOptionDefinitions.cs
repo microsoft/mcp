@@ -46,7 +46,7 @@ public static class ServiceOptionDefinitions
         $"--{ToolName}"
     )
     {
-        Description = "Expose only specific tools by name (e.g., 'azmcp storage account list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp storage account list\" --tool \"azmcp network vnet list\".",
+        Description = "Expose only specific tools by name (e.g., 'azmcp_acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp_acr_registry_list\" --tool \"azmcp_group_list\".",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,

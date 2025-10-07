@@ -890,7 +890,7 @@ public class CommandFactoryToolLoaderTests
     public void ToolLoaderOptions_WithMultipleTools_IsSetCorrectly()
     {
         // Arrange & Act
-        var expectedTools = new[] { "azmcp storage account list", "azmcp keyvault secret get" };
+        var expectedTools = new[] { "azmcp_acr_registry_list", "azmcp_group_list" };
         var options = new ToolLoaderOptions(Tool: expectedTools);
 
         // Assert
