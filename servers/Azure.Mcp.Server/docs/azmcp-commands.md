@@ -336,6 +336,7 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--label-filter <label-filter>]
 
 # Lock (make it read-only) or unlock (remove read-only) a key-value setting
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -1207,10 +1208,12 @@ azmcp azuremanagedlustre filesystem update --subscription <subscription> \
                                            [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
                                       --sku <azure-managed-lustre-sku> \
                                       --size <filesystem-size-in-tib>
 
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
 ```

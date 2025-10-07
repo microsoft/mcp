@@ -11,19 +11,19 @@
     Path to the azmcp.exe executable. Default: ..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe
     
 .PARAMETER DocsPath
-    Path to the azmcp-commands.md file. Default: ..\..\docs\azmcp-commands.md
+    Path to the azmcp-commands.md file. Default: ..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md
     
 .EXAMPLE
-    .\Update-AzCommands.ps1
+    .\Update-AzCommandsMetadata.ps1
     
 .EXAMPLE
-    .\Update-AzCommands.ps1 -AzmcpPath "C:\path\to\azmcp.exe" -DocsPath "C:\path\to\azmcp-commands.md"
+    .\Update-AzCommandsMetadata.ps1 -AzmcpPath "C:\path\to\azmcp.exe" -DocsPath "C:\path\to\azmcp-commands.md"
 #>
 
 [CmdletBinding()]
 param(
     [string]$AzmcpPath = "..\..\servers\Azure.Mcp.Server\src\bin\Debug\net9.0\azmcp.exe",
-    [string]$DocsPath = "..\..\docs\azmcp-commands.md"
+    [string]$DocsPath = "..\..\servers\Azure.Mcp.Server\docs\azmcp-commands.md"
 )
 
 $ErrorActionPreference = "Stop"
