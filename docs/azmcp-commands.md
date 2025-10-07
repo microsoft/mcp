@@ -275,11 +275,13 @@ azmcp appconfig kv delete --subscription <subscription> \
                           --key <key> \
                           [--label <label>]
 
-# List all key-value settings in an App Configuration store
-azmcp appconfig kv list --subscription <subscription> \
-                        --account <account> \
-                        [--key <key>] \
-                        [--label <label>]
+# Get key-value settings in an App Configuration store
+azmcp appconfig kv get --subscription <subscription> \
+                       --account <account> \
+                       [--key <key>] \
+                       [--label <label>] \
+                       [--key-filter <key-filter>] \
+                       [--label-filter <label-filter>]
 
 # Lock (make it read-only) or unlock (remove read-only) a key-value setting 
 azmcp appconfig kv lock set --subscription <subscription> \
@@ -294,12 +296,6 @@ azmcp appconfig kv set --subscription <subscription> \
                        --key <key> \
                        --value <value> \
                        [--label <label>]
-
-# Show a specific key-value setting
-azmcp appconfig kv show --subscription <subscription> \
-                        --account <account> \
-                        --key <key> \
-                        [--label <label>]
 ```
 
 ### Azure App Lens Operations
@@ -406,6 +402,59 @@ azmcp extension az --command "storage account show --name <account> --resource-g
 # List virtual machines
 azmcp extension az --command "vm list --resource-group <resource-group>"
 ```
+
+### Azure Communication Services Operations
+
+```bash
+# Send SMS message using Azure Communication Services
+azmcp communication sms send \
+    --connection-string "<connection-string>" \
+    --from "<sender-phone-number>" \
+    --to "<recipient-phone-number>" \
+    --message "<message-text>" \
+    [--enable-delivery-report] \
+    [--tag "<custom-tag>"]
+
+# Examples:
+# Send SMS to single recipient
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124" \
+    --message "Hello from Azure Communication Services!"
+
+# Send SMS to multiple recipients with delivery reporting
+azmcp communication sms send \
+    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+    --from "+14255550123" \
+    --to "+14255550124,+14255550125" \
+    --message "Broadcast message" \
+    --enable-delivery-report \
+    --tag "marketing-campaign"
+```
+
+**Options:**
+-   `--connection-string`: Azure Communication Services connection string (required)
+-   `--from`: SMS-enabled phone number in E.164 format (required)
+-   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
+-   `--message`: SMS message content (required)
+-   `--enable-delivery-report`: Enable delivery reporting for the SMS message (optional)
+-   `--tag`: Custom tag for message tracking (optional)
+
+
+### Azure Confidential Ledger Operations
+
+```bash
+# Append a tamper-proof entry to a Confidential Ledger
+azmcp confidentialledger entries append --ledger <ledger-name> \
+                                        --content <json-or-text-data> \
+                                        [--collection-id <collection-id>]
+```
+
+**Options:**
+-   `--ledger`: Confidential Ledger name (required)
+-   `--content`: JSON or text data to insert into the ledger (required)
+-   `--collection-id`: Collection ID to store the data with (optional)
 
 ### Azure Container Registry (ACR) Operations
 
@@ -1029,15 +1078,22 @@ azmcp monitor metrics query --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 azmcp azuremanagedlustre filesystem list --subscription <subscription> \
-                                      --resource-group <resource-group>
-
-# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem required-subnet-size --subscription <subscription> \
-                                      --sku <azure-managed-lustre-sku> \
-                                      --size <filesystem-size-in-tib>
+                                         --resource-group <resource-group> 
 
 azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
+
+# Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+                                                   --sku <azure-managed-lustre-sku> \
+                                                   --size <filesystem-size-in-tib>
+
+# Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
+azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+                                                        --subnet-id <subnet-resource-id> \
+                                                        --sku <azure-managed-lustre-sku> \
+                                                        --size <filesystem-size-in-tib> \
+                                                        --location <filesystem-location>
 ```
 
 ### Azure Native ISV Operations
