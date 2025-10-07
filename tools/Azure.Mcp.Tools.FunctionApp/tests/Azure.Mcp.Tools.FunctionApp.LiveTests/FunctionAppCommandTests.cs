@@ -56,14 +56,12 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "subscription", "" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
     }
 
     [Fact]
@@ -86,11 +84,9 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
-            []));
-
-        Assert.Contains("An error occurred", exception.Message);
+            []);
     }
 
     [Fact]
@@ -159,25 +155,21 @@ public sealed class FunctionAppCommandTests(ITestOutputHelper output) : CommandT
     public async Task Should_validate_required_parameters_for_get_command()
     {
         // Missing resource-group
-        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "function-app", "name-test" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
 
         // Missing subscription
-        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_functionapp_get",
             new()
             {
                 { "resource-group", "rg-test" },
                 { "function-app", "name-test" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
     }
 }

@@ -146,52 +146,44 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_parameters()
     {
         // Missing nodepool
-        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
                 { "cluster", "cluster" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
 
         // Missing cluster
-        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
                 { "nodepool", "np1" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
 
         // Missing resource-group
-        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
 
         // Missing subscription
-        exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            }));
-
-        Assert.Contains("An error occurred", exception.Message);
+            });
     }
 
     [Fact]
@@ -217,7 +209,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_handle_empty_subscription_gracefully()
     {
-        var exception = await Assert.ThrowsAsync<McpException>(() => CallToolAsync(
+        await AssertToolCallExceptionAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
@@ -225,9 +217,6 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "resource-group", "rg" },
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
-            }));
-
-        // Should return validation error response with no results
-        Assert.Contains("An error occurred", exception.Message);
+            });
     }
 }

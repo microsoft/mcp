@@ -96,17 +96,12 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_handle_empty_subscription_gracefully()
     {
         // Should return validation error response with no results
-        var exception = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
-        {
-            await CallToolAsync(
-                "azmcp_aks_cluster_list",
-                new()
-                {
-                    { "subscription", "" }
-                });
-        });
-
-        Assert.Contains("An error occurred", exception.Message);
+        await AssertToolCallExceptionAsync(
+            "azmcp_aks_cluster_list",
+            new()
+            {
+                { "subscription", "" }
+            });
     }
 
     [Fact]
@@ -130,13 +125,8 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var exception = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
-        {
-            await CallToolAsync("azmcp_aks_cluster_list", new());
-        });
-
         // Should return error response for missing subscription (no results)
-        Assert.Contains("An error occurred", exception.Message);
+        await AssertToolCallExceptionAsync("azmcp_aks_cluster_list", []);
     }
 
     [Fact]

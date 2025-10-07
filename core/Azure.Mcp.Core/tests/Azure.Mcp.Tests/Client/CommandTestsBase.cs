@@ -131,6 +131,16 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         return root.TryGetProperty("results", out var property) ? property : null;
     }
 
+    protected async Task<ModelContextProtocol.McpException> AssertToolCallExceptionAsync(string command, Dictionary<string, object?> parameters)
+    {
+        var exception = await Assert.ThrowsAsync<ModelContextProtocol.McpException>(async () =>
+            await CallToolAsync(command, parameters, Client));
+
+        Assert.Contains("An error occurred", exception.Message);
+
+        return exception;
+    }
+
     public void Dispose()
     {
         Dispose(disposing: true);
