@@ -132,7 +132,7 @@ If you are contributing significant changes, or if the issue is already assigned
    "create [namespace] [resource] [operation] command using #new-command.md as a reference"
    ```
 
-4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
@@ -634,7 +634,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 
