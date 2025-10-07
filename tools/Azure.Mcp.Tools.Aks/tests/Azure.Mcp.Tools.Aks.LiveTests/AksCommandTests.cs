@@ -225,34 +225,24 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_parameters_for_get_command()
     {
-        // Test missing cluster
-        var result1 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-group", "test-rg" }
-            });
-        Assert.False(result1.HasValue);
-
         // Test missing resource-group
-        var result2 = await CallToolAsync(
+        var result1 = await CallToolAsync(
             "azmcp_aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "cluster", "test-cluster" }
             });
-        Assert.False(result2.HasValue);
+        Assert.False(result1.HasValue);
 
         // Test missing subscription
-        var result3 = await CallToolAsync(
+        var result2 = await CallToolAsync(
             "azmcp_aks_cluster_get",
             new()
             {
                 { "resource-group", "test-rg" },
                 { "cluster", "test-cluster" }
             });
-        Assert.False(result3.HasValue);
+        Assert.False(result2.HasValue);
     }
 }

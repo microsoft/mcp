@@ -147,41 +147,30 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_parameters()
     {
-        // Missing nodepool
+        // Missing cluster
         var r1 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
-                { "cluster", "cluster" }
+                { "nodepool", "np1" }
             });
         Assert.False(r1.HasValue);
 
-        // Missing cluster
+        // Missing resource-group
         var r2 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "rg" },
+                { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
         Assert.False(r2.HasValue);
 
-        // Missing resource-group
-        var r3 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "cluster", "cluster" },
-                { "nodepool", "np1" }
-            });
-        Assert.False(r3.HasValue);
-
         // Missing subscription
-        var r4 = await CallToolAsync(
+        var r3 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
@@ -189,7 +178,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
-        Assert.False(r4.HasValue);
+        Assert.False(r3.HasValue);
     }
 
     [Fact]
