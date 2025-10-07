@@ -16,13 +16,15 @@ function Validate-Nuget-Packages {
     $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$ServerName.csproj"
     foreach ($wrapperDir in $wrapperDirs) {
         $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
+        Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
         if (Test-Path $platformDir) {
             Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
+            Write-Host "Validating NuGet package for server $ServerName"
 
             dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
             if ($LASTEXITCODE -eq 0) {
-                Write-Host "Server tools list command completed successfully."
+                Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
                 Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
                 $hasFailures = $true
@@ -46,6 +48,7 @@ function Validate-Npm-Packages {
         $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
         foreach ($wrapperDir in $wrapperDirs) {
             $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
+             Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
             if (Test-Path $platformDir) {
                 Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
                 Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
@@ -56,7 +59,7 @@ function Validate-Npm-Packages {
                 if ($mainPackage) { npm install $mainPackage.FullName }
                 npx azmcp tools list
                 if ($LASTEXITCODE -eq 0) {
-                    Write-Host "Server tools list command completed successfully."
+                    Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                 } else {
                     Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
                     $hasFailures = $true
@@ -67,4 +70,14 @@ function Validate-Npm-Packages {
         Pop-Location
     }
     return $hasFailures
+}
+
+$nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed")
+$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)")
+
+Write-Host "NuGet package validation has Failures: $nugetHasFailures"
+Write-Host "NPM package validation has Failures : $npmHasFailures"
+
+if ($nugetHasFailures -or $npmHasFailures) {
+    exit 1
 }
