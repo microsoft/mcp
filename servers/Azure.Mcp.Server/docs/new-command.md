@@ -1827,7 +1827,7 @@ catch (Exception ex)
 
         ```bash
         # Prompts:
-        # Use markdown format (same as docs/e2eTestPrompts.md):
+        # Use markdown format (same as servers/Azure.Mcp.Server/docs/e2eTestPrompts.md):
         dotnet run -- --prompts-file my-prompts.md
 
         # Use JSON format:
@@ -1850,7 +1850,7 @@ catch (Exception ex)
       - If validation shows POOR results or a confidence score of < 0.4, refine your description and test again
 
     - Custom prompts file formats:
-      - **Markdown format**: Use same table format as `docs/e2eTestPrompts.md`:
+      - **Markdown format**: Use same table format as `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`:
 
         ```markdown
         | Tool Name | Test Prompt |

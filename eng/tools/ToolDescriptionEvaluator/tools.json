@@ -527,9 +527,9 @@
       ]
     },
     {
-      "name": "list",
-      "description": "List all key-values in an App Configuration store. This command retrieves and displays all key-value pairs\r\nfrom the specified store. Each key-value includes its key, value, label, content type, ETag, last modified\r\ntime, and lock status.",
-      "command": "azmcp appconfig kv list",
+      "name": "get",
+      "description": "Gets key-values in an App Configuration store. This command can either retrieve a specific key-value by its key\r\nand optional label, or list key-values if no key is provided. Listing key-values can optionally be filtered by a\r\nkey filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,\r\nand lock status.",
+      "command": "azmcp appconfig kv get",
       "option": [
         {
           "name": "--tenant",
@@ -587,12 +587,24 @@
         },
         {
           "name": "--key",
-          "description": "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+          "description": "The name of the key to access within the App Configuration store.",
           "type": "string",
           "required": null
         },
         {
           "name": "--label",
+          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-filter",
+          "description": "Specifies the key filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a key of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'App*'). If omitted all keys will be retrieved.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--label-filter",
           "description": "Specifies the label filter, if any, to be used when retrieving key-values. The filter can be an exact match, for example a filter of 'foo' would get all key-values with a label of 'foo', or the filter can include a '*' character at the end of the string for wildcard searches (e.g., 'Prod*'). This filter is case-sensitive. If omitted, all labels will be retrieved.",
           "type": "string",
           "required": null
@@ -770,85 +782,6 @@
         {
           "name": "--tags",
           "description": "The tags to associate with the configuration key. Tags should be in the format 'key=value'. Multiple tags can be specified.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "show",
-      "description": "Show a specific key-value setting in an App Configuration store. This command retrieves and displays the value,\r\nlabel, content type, ETag, last modified time, and lock status for a specific setting. You must specify an\r\naccount name and key. Optionally, you can specify a label otherwise the setting with default label will be retrieved.\r\nYou can also specify a content type to indicate how the value should be interpreted.",
-      "command": "azmcp appconfig kv show",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--account",
-          "description": "The name of the App Configuration store (e.g., my-appconfig).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--key",
-          "description": "The name of the key to access within the App Configuration store.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--label",
-          "description": "The label to apply to the configuration key. Labels are used to group and organize settings.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--content-type",
-          "description": "The content type of the configuration value. This is used to indicate how the value should be interpreted or parsed.",
           "type": "string",
           "required": null
         }
@@ -2320,6 +2253,67 @@
           "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "generate",
+      "description": "This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.",
+      "command": "azmcp extension cli generate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--intent",
+          "description": "The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--cli-type",
+          "description": "The type of CLI tool to use. Supported values are 'az' for Azure CLI.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -4012,7 +4006,7 @@
     },
     {
       "name": "get",
-      "description": "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
+      "description": "Get details for a specific Kusto cluster. Requires `subscription` and `cluster`.\r\nThe response includes the `clusterUri` property for use in subsequent commands.",
       "command": "azmcp kusto cluster get",
       "option": [
         {
@@ -4073,7 +4067,7 @@
     },
     {
       "name": "list",
-      "description": "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
+      "description": "List all Kusto clusters in a subscription. This command retrieves all clusters\r\navailable in the specified subscription. Requires `subscription`.\r\nResult is a list of cluster names as a JSON array.",
       "command": "azmcp kusto cluster list",
       "option": [
         {
@@ -4128,7 +4122,7 @@
     },
     {
       "name": "list",
-      "description": "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).",
+      "description": "List all databases in a Kusto cluster.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`).\r\nResult is a list of database names, returned as a JSON array.",
       "command": "azmcp kusto database list",
       "option": [
         {
@@ -4195,7 +4189,7 @@
     },
     {
       "name": "query",
-      "description": "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
+      "description": "Execute a KQL against items in a Kusto cluster.\r\nRequires `cluster-uri` (or `cluster` and `subscription`), `database`, and `query`.\r\nResults are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.",
       "command": "azmcp kusto query",
       "option": [
         {
@@ -4274,7 +4268,7 @@
     },
     {
       "name": "sample",
-      "description": "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+      "description": "Return a sample of rows from the specified table in an Kusto table.\r\nRequires `cluster-uri` (or `cluster`), `database`, and `table`.\r\nResults are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.",
       "command": "azmcp kusto sample",
       "option": [
         {
@@ -4359,7 +4353,7 @@
     },
     {
       "name": "list",
-      "description": "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
+      "description": "List all tables in a specific Kusto database.\r\nRequired `cluster-uri` (or `subscription` and `cluster`) and `database`.\r\nReturns table names as a JSON array.",
       "command": "azmcp kusto table list",
       "option": [
         {
@@ -4432,7 +4426,7 @@
     },
     {
       "name": "schema",
-      "description": "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
+      "description": "Get the schema of a specific table in an Kusto database.\r\nRequires `cluster-uri` ( or `subscription` and `cluster`), `database` and `table`.",
       "command": "azmcp kusto table schema",
       "option": [
         {
@@ -7488,7 +7482,7 @@
     },
     {
       "name": "list",
-      "description": "List all Redis Cache resources in a specified subscription. Returns an array of Redis Cache details.\r\nUse this command to explore which Redis Cache resources are available in your subscription.",
+      "description": "List/show all Redis Caches in a subscription. Returns Redis Cache details including Azure Cache for Redis resources (Basic, Standard, and Premium tier caches). Use this command to explore and view which Redis Cache resources are available in your subscription.",
       "command": "azmcp redis cache list",
       "option": [
         {
@@ -7610,7 +7604,7 @@
     },
     {
       "name": "list",
-      "description": "List all Redis Cluster resources in a specified subscription. Returns an array of Redis Cluster details.\r\nUse this command to explore which Redis Cluster resources are available in your subscription.",
+      "description": "List/show all Redis Clusters in a subscription. Returns Redis Cluster details including Azure Managed Redis clusters and Azure Redis Enterprise clusters. Use this command to explore and view which Redis Cluster resources are available in your subscription.",
       "command": "azmcp redis cluster list",
       "option": [
         {
@@ -10604,5 +10598,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 25
+  "duration": 52
 }
