@@ -21,7 +21,7 @@ public class LoadTestingService(ISubscriptionService subscriptionService) : Base
     ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(string subscription, string? resourceGroup = null, string? testResourceName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
         var subscriptionId = (await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)).Data.SubscriptionId;
 
         var credential = await GetCredential(tenant);

@@ -37,7 +37,7 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         string? profanity = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
         if (!File.Exists(filePath))
         {

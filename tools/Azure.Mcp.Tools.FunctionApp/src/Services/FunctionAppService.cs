@@ -28,7 +28,7 @@ public sealed class FunctionAppService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var functionApps = new List<FunctionAppInfo>();

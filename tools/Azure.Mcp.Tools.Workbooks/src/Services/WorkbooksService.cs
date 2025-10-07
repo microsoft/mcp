@@ -23,7 +23,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
     public async Task<List<WorkbookInfo>> ListWorkbooks(string subscription, string resourceGroupName, WorkbookFilters? filters = null, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         try
         {
@@ -269,7 +269,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
     public async Task<bool> DeleteWorkbook(string workbookId, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
     {
-    ValidateRequiredParameters((nameof(workbookId), workbookId));
+        ValidateRequiredParameters((nameof(workbookId), workbookId));
 
         try
         {

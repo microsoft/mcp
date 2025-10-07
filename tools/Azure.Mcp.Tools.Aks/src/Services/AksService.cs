@@ -31,7 +31,7 @@ public sealed class AksService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         // Create cache key
         var cacheKey = string.IsNullOrEmpty(tenant)

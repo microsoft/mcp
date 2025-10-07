@@ -40,7 +40,7 @@ public class StorageService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var accounts = new List<StorageAccountInfo>();
 
@@ -269,7 +269,7 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containers = new List<ContainerInfo>();

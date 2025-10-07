@@ -24,7 +24,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     public async Task<List<AppConfigurationAccount>> GetAppConfigAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -54,7 +54,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
         var settings = new List<KeyValueSetting>();
@@ -138,7 +138,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     }
     public async Task DeleteKeyValue(string accountName, string key, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
     {
-    ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
         await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: default);
     }

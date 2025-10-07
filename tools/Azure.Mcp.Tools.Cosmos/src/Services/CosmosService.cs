@@ -31,7 +31,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 

@@ -170,7 +170,7 @@ public class FoundryService(
 
     public async Task<List<Deployment>> ListDeployments(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -273,7 +273,7 @@ public class FoundryService(
 
     public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -469,7 +469,7 @@ public class FoundryService(
 
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(endpoint), endpoint));
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {

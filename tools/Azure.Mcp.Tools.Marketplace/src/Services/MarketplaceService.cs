@@ -92,7 +92,7 @@ public class MarketplaceService(ITenantService tenantService)
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-    ValidateRequiredParameters((nameof(subscription), subscription));
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
@@ -253,7 +253,7 @@ public class MarketplaceService(ITenantService tenantService)
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
         string accessToken = await GetAccessTokenAsync(tenant);
-    ValidateRequiredParameters((nameof(accessToken), accessToken));
+        ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;
