@@ -125,7 +125,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        // Should return error response for missing subscription (no results)
+        // Should throw McpException with standardized error message for missing subscription
         await AssertToolCallExceptionAsync("azmcp_aks_cluster_list", []);
     }
 
