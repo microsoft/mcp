@@ -43,7 +43,7 @@ jobs:
 
         - script: |
             echo "Loading image..."
-            docker load -i $(Pipeline.Workspace)/built_image/image.tgz
+            docker load -i $(Pipeline.Workspace)/docker_staged/image.tgz
           displayName: Load image
 
         - script: |

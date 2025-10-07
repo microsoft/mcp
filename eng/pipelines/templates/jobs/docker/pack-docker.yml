@@ -72,9 +72,15 @@ jobs:
     displayName: Run container smoke tests
   
   - script: |
-      $digest = docker inspect --format='{{index .Id}}' $(Build.Repository.Name)/server:$(Build.BuildId)
+      set -euo pipefail
+      IMAGE_TAG="$(Build.Repository.Name)/server:$(Build.BuildId)"
+      echo "Capturing image digest for $IMAGE_TAG"
+      digest=$(docker inspect --format='{{index .Id}}' "$IMAGE_TAG")
+      echo "Image digest: $digest"
       echo "##vso[task.setvariable variable=DockerImageDigest;isOutput=true]$digest"
-      docker save $(Build.Repository.Name)/server:$(Build.BuildId) -o image.tgz
+      echo "Saving and compressing image to image.tgz"
+      docker save "$IMAGE_TAG" | gzip > image.tgz
+      ls -lh image.tgz
     name: CaptureImage
     displayName: Capture image digest and save tgz
 
