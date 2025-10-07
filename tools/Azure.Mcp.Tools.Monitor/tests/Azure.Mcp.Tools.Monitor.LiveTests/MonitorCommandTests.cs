@@ -36,7 +36,9 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
-        return new MonitorService(subscriptionService, tenantService, resourceGroupService);
+        var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
+        var httpClient = new HttpClient();
+        return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClient);
     }
 
     [Fact]
