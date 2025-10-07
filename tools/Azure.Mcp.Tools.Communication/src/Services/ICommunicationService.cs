@@ -46,6 +46,7 @@ public interface ICommunicationService
         string[]? cc = null,
         string[]? bcc = null,
         string[]? replyTo = null,
+        string? tenantId = null,
         string? subscription = null,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null);

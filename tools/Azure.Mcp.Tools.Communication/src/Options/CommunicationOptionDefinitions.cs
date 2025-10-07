@@ -137,4 +137,11 @@ public static class CommunicationOptionDefinitions
         Description = "Reply-to email addresses",
         Required = false
     };
+
+    /// <summary>
+    /// Connection string for Communication Services authentication.
+    /// </summary>
+    public static readonly Option<string> ConnectionString = new(
+        name: "--connection-string",
+        description: "Connection string for authentication with Communication Services");
 }

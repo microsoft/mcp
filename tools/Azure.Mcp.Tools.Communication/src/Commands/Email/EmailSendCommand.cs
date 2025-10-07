@@ -76,6 +76,10 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
+        {
+            return context.Response;
+        }
         var options = BindOptions(parseResult);
         var communicationService = context.GetService<ICommunicationService>();
 
@@ -92,6 +96,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
                 options.Cc,
                 options.Bcc,
                 options.ReplyTo,
+                options.Tenant,
                 options.Subscription,
                 options.ResourceGroup,
                 options.RetryPolicy);

@@ -100,43 +100,29 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         string[]? cc = null,
         string[]? bcc = null,
         string[]? replyTo = null,
+        string? tenantId = null,
         string? subscription = null,
         string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null)
     {
+        // Validate required parameters using base class method
+        ValidateRequiredParameters(
+            (nameof(endpoint), endpoint),
+            (nameof(sender), sender),
+            (nameof(subject), subject),
+            (nameof(message), message));
+
+        // Validate to array separately since it has special requirements
+        if (to == null || to.Length == 0)
+            throw new ArgumentException("At least one 'to' email address must be provided", nameof(to));
+
+        if (to.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Recipient email addresses cannot be empty.", nameof(to));
+
         try
         {
-            // Validate required parameters
-            if (string.IsNullOrWhiteSpace(endpoint))
-            {
-                throw new CommandValidationException("Endpoint is required and cannot be empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(sender))
-            {
-                throw new CommandValidationException("Sender email address is required and cannot be empty.");
-            }
-
-            if (to == null || to.Length == 0 || to.Any(string.IsNullOrWhiteSpace))
-            {
-                throw new CommandValidationException("At least one valid recipient email address is required.");
-            }
-
-            if (string.IsNullOrWhiteSpace(subject))
-            {
-                throw new CommandValidationException("Subject is required and cannot be empty.");
-            }
-
-            if (string.IsNullOrWhiteSpace(message))
-            {
-                throw new CommandValidationException("Message content is required and cannot be empty.");
-            }
-
-            _logger.LogInformation("Sending email from {Sender} to {Recipients} with subject '{Subject}'",
-                sender, string.Join(", ", to), subject);
-
             // Create email client with credential from base class
-            var credential = await GetCredential(null);
+            var credential = await GetCredential(tenantId);
             var emailClient = new EmailClient(new Uri(endpoint), credential);
 
             // Create the email content

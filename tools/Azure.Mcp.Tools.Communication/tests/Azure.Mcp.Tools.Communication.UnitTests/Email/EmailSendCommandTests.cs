@@ -69,24 +69,24 @@ public class EmailSendCommandTests
 
         // Assert all expected options are registered
         var allOptions = command.Options.ToList();
-        
+
         // Check required Communication options (from base class)
         Assert.Contains(command.Options, o => o.Name == "--endpoint");
         Assert.Contains(command.Options, o => o.Name == "--subscription");
-        
+
         // Check required Email options
         Assert.Contains(command.Options, o => o.Name == "--sender");
         Assert.Contains(command.Options, o => o.Name == "--to");
         Assert.Contains(command.Options, o => o.Name == "--subject");
         Assert.Contains(command.Options, o => o.Name == "--message");
-        
+
         // Check optional Email options
         Assert.Contains(command.Options, o => o.Name == "--sender-name");
         Assert.Contains(command.Options, o => o.Name == "--cc");
         Assert.Contains(command.Options, o => o.Name == "--bcc");
         Assert.Contains(command.Options, o => o.Name == "--is-html");
         Assert.Contains(command.Options, o => o.Name == "--reply-to");
-        
+
         // Check global options (from GlobalCommand)
         Assert.Contains(command.Options, o => o.Name == "--tenant");
         Assert.Contains(command.Options, o => o.Name == "--auth-method");
@@ -163,7 +163,7 @@ public class EmailSendCommandTests
     {
         // Arrange
         string[] args = ["--sender", "sender@example.com", "--to", "recipient@example.com", "--subject", "Test Subject", "--message", "Test Message"];
-        
+
         if (!string.IsNullOrEmpty(endpoint))
         {
             args = ["--endpoint", endpoint, "--sender", "sender@example.com", "--to", "recipient@example.com", "--subject", "Test Subject", "--message", "Test Message"];
@@ -200,7 +200,7 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         ];
-        
+
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedResult = new EmailSendResult
@@ -259,7 +259,7 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         ];
-        
+
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedException = new RequestFailedException("Test error message");
@@ -308,7 +308,7 @@ public class EmailSendCommandTests
             "--subscription", "test-subscription",
             "--resource-group", "test-rg"
         ];
-        
+
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedResult = new EmailSendResult
@@ -350,6 +350,7 @@ public class EmailSendCommandTests
             Arg.Any<string[]>(), // CC recipients
             Arg.Any<string[]>(), // BCC recipients
             Arg.Any<string[]>(), // Reply-to addresses
+            "test-tenant-id",
             "test-subscription",
             "test-rg",
             null
@@ -367,7 +368,7 @@ public class EmailSendCommandTests
             "--subject", "Test Subject",
             "--message", "Test Message"
         ];
-        
+
         var parseResult = _commandDefinition.Parse(args);
 
         var expectedResult = new EmailSendResult
@@ -385,6 +386,7 @@ public class EmailSendCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<bool>(),
+                Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
