@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -37,9 +36,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
-        var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
-        var httpClient = new HttpClient();
-        return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClient);
+        return new MonitorService(subscriptionService, tenantService, resourceGroupService);
     }
 
     [Fact]
@@ -444,49 +441,6 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
             Output.WriteLine($"Note: Storage activity generation encountered an issue: {ex.Message}");
             // Don't fail the test if storage activity generation fails
         }
-    }
-
-    [Fact]
-    public async Task Should_list_activity_logs_for_storage_account()
-    {
-        var result = await CallToolAsync(
-            "azmcp_monitor_activitylog_list",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "resource-name", _storageAccountName },
-                { "hours", "24" },
-                { "top", "5" }
-            });
-
-        var activityLogsArray = result.AssertProperty("activityLogs");
-        Assert.Equal(JsonValueKind.Array, activityLogsArray.ValueKind);
-
-        // Activity logs should exist for the storage account, even if it's just creation/update events
-        // Note: This test may pass with 0 results if the storage account has had no activity in the last 24 hours
-        Output.WriteLine($"Retrieved {activityLogsArray.EnumerateArray().Count()} activity log events");
-
-        foreach (var log in activityLogsArray.EnumerateArray())
-        {
-            Assert.True(log.TryGetProperty("description", out _));
-            Assert.True(log.TryGetProperty("resourceId", out _));
-            Assert.True(log.TryGetProperty("operationName", out _));
-            Assert.True(log.TryGetProperty("level", out _));
-            Assert.True(log.TryGetProperty("eventTimestamp", out _));
-        }
-    }
-
-    [Fact]
-    public async Task Should_handle_activity_log_errors()
-    {
-        var result = await CallToolAsync("azmcp_monitor_activitylog_list", new()
-        {
-            { "subscription", Settings.SubscriptionId },
-            { "resource-name", "nonexistentresource" }
-        });
-
-        // For now, just verify the result is not null (activity log errors may vary)
-        Assert.NotNull(result);
     }
 }
 
