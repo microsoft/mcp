@@ -958,6 +958,7 @@ azmcp aks nodepool get --subscription <subscription> \
                        --resource-group <resource-group> \
                        --cluster <cluster> \
                        [--nodepool <nodepool>]
+```
 
 ### Azure Load Testing Operations
 
