@@ -477,6 +477,62 @@ azmcp appservice database add --subscription "my-subscription" \
 ### Azure Communication Services Operations
 
 ```bash
+# Send email using Azure Communication Services
+azmcp communication email send \
+    --endpoint "<endpoint>" \
+    --sender "<sender-email>" \
+    --to "<recipient-email>" \
+    --subject "<email-subject>" \
+    --message "<email-content>" \
+    [--is-html] \
+    [--sender-name "<sender-display-name>"] \
+    [--cc "<cc-recipient-email>"] \
+    [--bcc "<bcc-recipient-email>"] \
+    [--reply-to "<reply-to-email>"]
+
+# Examples:
+# Send plain text email
+azmcp communication email send \
+    --endpoint "https://mycomms.communication.azure.com" \
+    --sender "sender@verified-domain.com" \
+    --to "recipient@example.com" \
+    --subject "Important message" \
+    --message "Hello from Azure Communication Services!"
+
+# Send HTML-formatted email with CC and sender name
+azmcp communication email send \
+    --endpoint "https://mycomms.communication.azure.com" \
+    --sender "sender@verified-domain.com" \
+    --sender-name "Support Team" \
+    --to "recipient@example.com" \
+    --cc "manager@example.com" \
+    --subject "Monthly Report" \
+    --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+    --is-html
+
+# Send to multiple recipients with BCC and reply-to
+azmcp communication email send \
+    --endpoint "https://mycomms.communication.azure.com" \
+    --sender "notifications@verified-domain.com" \
+    --to "recipient1@example.com,recipient2@example.com" \
+    --bcc "archive@example.com" \
+    --reply-to "support@example.com" \
+    --subject "System Notification" \
+    --message "This is an automated notification."
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
 # Send SMS message using Azure Communication Services
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send \
