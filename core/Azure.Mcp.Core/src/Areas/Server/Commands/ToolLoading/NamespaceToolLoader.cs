@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Net;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
@@ -33,7 +34,7 @@ public sealed class NamespaceToolLoader(
     private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new Lazy<IReadOnlyList<string>>(() =>
     {
         return commandFactory.RootGroup.SubGroup
-            .Where(group => !IgnoreCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+            .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
             .Where(group => options.Value.Namespace == null ||
                            options.Value.Namespace.Length == 0 ||
                            options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
@@ -41,7 +42,6 @@ public sealed class NamespaceToolLoader(
             .ToList();
     });
 
-    private static readonly List<string> IgnoreCommandGroups = ["extension", "server", "tools"];
     private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
     private ListToolsResult? _cachedListToolsResult;
 
@@ -408,10 +408,10 @@ public sealed class NamespaceToolLoader(
             throw new ArgumentNullException(nameof(request.Params.Name), "Tool name cannot be null or empty.");
         }
 
-        var availableNamespaces = _availableNamespaces.Value;
-        if (!availableNamespaces.Any(ns => string.Equals(ns, namespaceName, StringComparison.OrdinalIgnoreCase)))
+        var namespaces = _availableNamespaces.Value;
+        if (!namespaces.Any(ns => string.Equals(ns, namespaceName, StringComparison.OrdinalIgnoreCase)))
         {
-            var availableList = string.Join(", ", availableNamespaces);
+            var availableList = string.Join(", ", namespaces);
             throw new KeyNotFoundException($"The namespace '{namespaceName}' was not found. Available namespaces: {availableList}");
         }
 
