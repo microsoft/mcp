@@ -109,20 +109,20 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         Assert.NotNull(appendResult);
         var transactionId = appendResult.Value.AssertProperty("transactionId");
-        Assert.False(string.IsNullOrWhiteSpace(transactionId));
+        Assert.False(string.IsNullOrWhiteSpace(transactionId.GetString()));
 
         var getResult = await CallToolAsync(
             "azmcp_confidentialledger_entries_get",
             new()
             {
                 { "ledger", ledgerName },
-                { "transactionId", transactionId! }
+                { "transactionId", transactionId.GetString()! }
             });
 
         Assert.NotNull(getResult);
 
         var entryTransactionId = getResult.Value.AssertProperty("transactionId");
-        Assert.Equal(entryTransactionId, transactionId);
+        Assert.Equal(entryTransactionId.GetString(), transactionId.GetString());
         var contents = getResult.Value.AssertProperty("contents");
         Assert.Equal(JsonValueKind.String, contents.ValueKind);
         Assert.Equal(testContent.Replace(" ", "").Replace("\n", "").Replace("\r", ""), contents.GetString()!.Replace(" ", "").Replace("\n", "").Replace("\r", ""));

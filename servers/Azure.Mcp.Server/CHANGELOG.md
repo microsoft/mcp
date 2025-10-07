@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
+- Added support for Azure Confidential Ledger with the command `azmcp_confidentialledger_entries_get` for getting ledger entries identified by their ID. [[#705](https://github.com/microsoft/mcp/pull/723)]
 
 ### Breaking Changes
 
