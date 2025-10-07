@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option works in all server modes (namespace, single, all) and can be combined with `--namespace` filtering for maximum flexibility. [[#685](https://github.com/microsoft/mcp/issues/685)]
+- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to all automatically and can be combined with `--namespace` filtering for maximum flexibility. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. Supports single and multiple recipients, delivery reporting, and custom message tracking tags. [[#473](https://github.com/microsoft/mcp/pull/473)]
 - Added support for Azure Confidential Ledger with the command `azmcp_confidentialledger_entries_append` for appending tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees.
 [[#705](https://github.com/microsoft/mcp/pull/705)]

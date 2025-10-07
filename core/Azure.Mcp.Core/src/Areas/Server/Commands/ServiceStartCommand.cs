@@ -78,12 +78,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>A configured ServiceStartOptions instance.</returns>
     protected override ServiceStartOptions BindOptions(ParseResult parseResult)
     {
+        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+        
+        // When --tool switch is used, automatically change the mode to "all"
+        if (tools != null && tools.Length > 0)
+        {
+            mode = ModeTypes.All;
+        }
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
-            Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
-            Tool = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+            Mode = mode,
+            Tool = tools,
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),

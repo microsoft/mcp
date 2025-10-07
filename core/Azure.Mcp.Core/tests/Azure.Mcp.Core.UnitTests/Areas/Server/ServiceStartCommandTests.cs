@@ -101,7 +101,7 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData("azmcp_storage_account_list")]
+    [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
     [InlineData(null)]
     public void ToolOption_ParsesCorrectly(string? expectedTool)
@@ -129,7 +129,7 @@ public class ServiceStartCommandTests
     public void ToolOption_ParsesMultipleToolsCorrectly()
     {
         // Arrange
-        var expectedTools = new[] { "azmcp_storage_account_list", "azmcp_keyvault_secret_get" };
+        var expectedTools = new[] { "azmcp_storage_account_get", "azmcp_keyvault_secret_get" };
         var parseResult = CreateParseResultWithTool(expectedTools);
 
         // Act
@@ -227,7 +227,7 @@ public class ServiceStartCommandTests
     public void BindOptions_WithTool_ReturnsCorrectlyConfiguredOptions()
     {
         // Arrange
-        var expectedTool = "azmcp_storage_account_list";
+        var expectedTool = "azmcp_group_list";
         var parseResult = CreateParseResultWithTool([expectedTool]);
 
         // Act
@@ -238,6 +238,23 @@ public class ServiceStartCommandTests
         Assert.Single(options.Tool);
         Assert.Equal(expectedTool, options.Tool[0]);
         Assert.Equal("stdio", options.Transport);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
+    public void BindOptions_WithMultipleToolsAndExplicitMode_OverridesToAllMode()
+    {
+        // Arrange - Explicitly set mode to single but also provide multiple tools
+        var tools = new[] { "azmcp_group_list", "azmcp_subscription_list" };
+        var parseResult = CreateParseResultWithToolsAndMode(tools, "single");
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Equal(2, options.Tool.Length);
+        Assert.Equal(tools, options.Tool);
         Assert.Equal("all", options.Mode);
     }
 
@@ -533,8 +550,7 @@ public class ServiceStartCommandTests
     {
         var args = new List<string>
         {
-            "--transport", "stdio",
-            "--mode", "all"
+            "--transport", "stdio"
         };
 
         if (tools is not null)
@@ -552,6 +568,23 @@ public class ServiceStartCommandTests
     private ParseResult CreateParseResultWithMinimalOptions()
     {
         return _command.GetCommand().Parse([]);
+    }
+
+    private ParseResult CreateParseResultWithToolsAndMode(string[] tools, string mode)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--mode", mode
+        };
+
+        foreach (var tool in tools)
+        {
+            args.Add("--tool");
+            args.Add(tool);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
     }
 
     private ServiceStartOptions GetBoundOptions(ParseResult parseResult)

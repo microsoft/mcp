@@ -299,7 +299,7 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_get' would return 'storage').
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     public string? GetServiceArea(string fullCommandName)

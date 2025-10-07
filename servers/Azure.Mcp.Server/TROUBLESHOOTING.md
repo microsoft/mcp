@@ -78,7 +78,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
 ```
 
 #### Option 2: Filter by Specific Tools
-Use the `--tool` option to expose only specific tools by name. This provides the most granular control:
+Use the `--tool` option to expose only specific tools by name. This provides the most granular control. It automatically switches to `all` mode:
 
 ```json
 {
@@ -89,8 +89,6 @@ Use the `--tool` option to expose only specific tools by name. This provides the
       "args": [
         "server",
         "start",
-        "--mode",
-        "all",
         "--tool",
         "azmcp_storage_account_get",
         "--tool",
@@ -103,8 +101,6 @@ Use the `--tool` option to expose only specific tools by name. This provides the
       "args": [
         "server",
         "start",
-        "--mode",
-        "all",
         "--tool",
         "azmcp_subscription_list",
         "--tool",
