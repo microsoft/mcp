@@ -11,6 +11,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 [[#705](https://github.com/microsoft/mcp/pull/705)]
 - Added the following Azure Managed Lustre commands:
   - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
+- Added the following Azure Managed Lustre commands: [[#50](https://github.com/microsoft/mcp/issues/50)]
+  - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystems.
+  - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystems.
 - Added support for listing Azure Resource activity logs `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
 
 ### Breaking Changes
@@ -26,6 +29,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Renamed `azmcp_azuremanagedlustre_filesystem_required-subnet-size` to `azmcp_azuremanagedlustre_filesystem_subnetsize_ask`
 - Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
+- Update `ToolName` telemetry field to use normalized command name when `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
 
 #### Dependency updates
 
@@ -100,9 +104,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
-  - Authorization [[#607](https://github.com/microsoft/mcp/pull/607)]
-  - AppConig [[#606](https://github.com/microsoft/mcp/pull/606)]
-  - ACR [[#622](https://github.com/microsoft/mcp/pull/622)]
+  - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
+  - AppConfig [[606](https://github.com/microsoft/mcp/pull/606)]
+  - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
   - `azmcp_mysql_server_param_param`      → `azmcp_mysql_server_param_get`
