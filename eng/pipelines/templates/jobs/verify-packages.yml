@@ -42,13 +42,6 @@ jobs:
     inputs:
       useGlobalJson: true
 
-  - task: UseDotNet@2
-    displayName: "Use .NET SDK 9.0.x"
-    retryCountOnTaskFailure: 3
-    inputs:
-      packageType: sdk
-      version: 9.0.x
-
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"
     inputs:
@@ -57,10 +50,17 @@ jobs:
   - pwsh: |
       # Verify the packages created in the sign and pack stage
       . $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
+
+      Write-Host "${{ parameters.ServerName }}"
+      Write-Host "${{ parameters.OSName }}"
+      Write-Host "$(Architecture)"
+      Get-ChildItem "$(Pipeline.Workspace)"
+      Get-ChildItem "$(Pipeline.Workspace)/packages_nuget_signed" -Recurse
+      Get-ChildItem "$(Pipeline.Workspace)/packages_npm" -Recurse
+
       $hasFailures = Validate-Nuget-Packages -ServerName ${{ parameters.ServerName }} -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
       $hasFailures = $hasFailures -or (Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs ${{ parameters.OSName }} -TargetArch $(Architecture) -WorkingDirectory "$(Agent.TempDirectory)")
       if ($hasFailures) {
         exit 1
       }
     displayName: 'Verify npm and nuget packages'
-    condition: succeededOrFailed()
