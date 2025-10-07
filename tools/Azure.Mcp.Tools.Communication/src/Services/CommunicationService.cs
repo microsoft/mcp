@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net.Sockets;
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
 using Azure.Core;
