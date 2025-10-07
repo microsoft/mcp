@@ -200,15 +200,6 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
                           [--license <license>] \
                           [--model-name <model>]
 
-# Generate text completions using deployed Azure OpenAI models in AI Foundry
-azmcp foundry openai create-completion --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --prompt-text <prompt-text> \
-                                       [--max-tokens <max-tokens>] \
-                                       [--temperature <temperature>]
-
 # Create interactive chat completions using Azure OpenAI chat models
 azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              --resource-group <resource-group> \
@@ -225,6 +216,15 @@ azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              [--seed <seed>] \
                                              [--user <user>] \
                                              [--auth-method <auth-method>]
+
+# Generate text completions using deployed Azure OpenAI models in AI Foundry
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
 
 # Generate vector embeddings for text using Azure OpenAI embedding models
 azmcp foundry openai embeddings-create --subscription <subscription> \
