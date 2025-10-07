@@ -6,7 +6,7 @@ parameters:
 
 jobs:
 - job: CreateDockerArtifact
-  displayName: 'Creating Docker artifact'
+  displayName: 'Build Docker image'
   dependsOn: ${{ parameters.DependsOn }}
   pool:
     name: $(LINUXPOOL)
@@ -25,7 +25,7 @@ jobs:
     displayName: 'Copy Dockerfile'
     inputs:
       Contents: 'Dockerfile'
-      TargetFolder: $(Build.ArtifactStagingDirectory)
+      TargetFolder: $(Build.ArtifactStagingDirectory)/docker_staged
 
   - task: Powershell@2
     displayName: 'Set Docker Variables'
@@ -45,7 +45,7 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
-      path: '$(Pipeline.Workspace)/docker_staged'
+      path: '$(Build.ArtifactStagingDirectory)/docker_staged'
       image: $(Build.Repository.Name)/server:$(Build.BuildId)
       buildArguments: |
         --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"
