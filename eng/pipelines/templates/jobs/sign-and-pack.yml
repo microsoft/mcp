@@ -110,11 +110,11 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/nuget/pack-and-sign-nuget.yml
+- template: /eng/pipelines/templates/jobs/nuget/sign-and-pack-nuget.yml
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+- template: /eng/pipelines/templates/jobs/vsix/sign-and-pack-vsix.yml
   parameters:
     DependsOn: Sign
     ServerName: ${{ parameters.ServerName }}
