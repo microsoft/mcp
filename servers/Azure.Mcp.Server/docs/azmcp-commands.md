@@ -946,28 +946,16 @@ azmcp keyvault secret list --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 ```bash
-# Get details of a specific AKS cluster
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Gets Azure Kubernetes Service (AKS) cluster details
 azmcp aks cluster get --subscription <subscription> \
-                      --name <cluster>
+                      --resource-group <resource-group> \
+                      [--cluster <cluster>]
 
-# List AKS clusters in a subscription
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp aks cluster list --subscription <subscription>
-
-# Get details of a specific AKS nodepool
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# Gets Azure Kubernetes Service (AKS) nodepool details
 azmcp aks nodepool get --subscription <subscription> \
                        --resource-group <resource-group> \
                        --cluster <cluster> \
-                       --nodepool <nodepool>
-
-# List AKS cluster's nodepools
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp aks nodepool list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --cluster <cluster>
-```
+                       [--nodepool <nodepool>]
 
 ### Azure Load Testing Operations
 

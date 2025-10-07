@@ -320,15 +320,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_get | Show me the details of AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> |
 | azmcp_aks_cluster_get | What are the details of my AKS cluster \<cluster-name> in \<resource-group>? |
-| azmcp_aks_cluster_list | List all AKS clusters in my subscription |
-| azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
-| azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_cluster_get | List all AKS clusters in my subscription |
+| azmcp_aks_cluster_get | Show me my Azure Kubernetes Service clusters |
+| azmcp_aks_cluster_get | What AKS clusters do I have? |
 | azmcp_aks_nodepool_get | Get details for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Show me the configuration for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_nodepool_get | What is the setup of nodepool \<nodepool-name> for AKS cluster \<cluster-name> in \<resource-group>? |
-| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
