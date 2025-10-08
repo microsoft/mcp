@@ -39,6 +39,7 @@ class Program
             string? customToolsFile = null; // Optional custom tools file
             string? customPromptsFile = null; // Optional custom prompts file
             string? customOutputFileName = null; // Optional custom output file name
+            string? areaFilter = null; // Optional area filter for prompts
 
             for (int i = 0; i < args.Length; i++)
             {
@@ -64,6 +65,10 @@ class Program
                 else if (args[i] == "--output-file-name" && i + 1 < args.Length)
                 {
                     customOutputFileName = args[i + 1];
+                }
+                else if (args[i] == "--area" && i + 1 < args.Length)
+                {
+                    areaFilter = args[i + 1];
                 }
             }
 
@@ -229,6 +234,11 @@ class Program
                 Console.WriteLine("📝 Using default prompts (e2eTestPrompts.md)");
             }
 
+            if (!string.IsNullOrEmpty(areaFilter))
+            {
+                Console.WriteLine($"🎯 Filtering prompts to area: {areaFilter}");
+            }
+
             // Create or overwrite the output file
             using var writer = new StreamWriter(outputFilePath, false);
 
@@ -256,7 +266,7 @@ class Program
                 // User specified a custom prompts file
                 if (customPromptsFileResolved.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
                 {
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode);
+                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode, areaFilter);
                 }
                 else if (customPromptsFileResolved.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 {
@@ -265,7 +275,7 @@ class Program
                 else
                 {
                     // Try to infer format or default to markdown
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode) ??
+                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode, areaFilter) ??
                                         await LoadPromptsFromJsonAsync(customPromptsFileResolved, isCiMode);
                 }
             }
@@ -278,7 +288,7 @@ class Program
                 if (File.Exists(defaultPromptsPath))
                 {
                     // Load from markdown and save a normalized JSON copy for future runs
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(defaultPromptsPath, isCiMode);
+                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(defaultPromptsPath, isCiMode, areaFilter);
 
                     if (toolNameAndPrompts != null)
                     {
@@ -654,7 +664,7 @@ class Program
         }
     }
 
-    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromMarkdownAsync(string filePath, bool isCiMode = false)
+    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromMarkdownAsync(string filePath, bool isCiMode = false, string? areaFilter = null)
     {
         try
         {
@@ -673,15 +683,61 @@ class Program
 
             // Parse markdown tables to extract tool names and prompts
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+            
+            string? currentArea = null;
+            string? currentAreaIdentifier = null;
+            bool inTargetArea = string.IsNullOrEmpty(areaFilter); // If no filter, include all areas
 
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
 
+                // Check for area headers (## Azure ...)
+                if (trimmedLine.StartsWith("## "))
+                {
+                    currentArea = trimmedLine.Substring(3).Trim(); // Remove "## " prefix
+                    currentAreaIdentifier = null; // Reset area identifier
+                    
+                    if (!string.IsNullOrEmpty(areaFilter))
+                    {
+                        // Check if current area matches the filter (case-insensitive)
+                        inTargetArea = currentArea.Equals(areaFilter, StringComparison.OrdinalIgnoreCase) ||
+                                      currentArea.Contains(areaFilter, StringComparison.OrdinalIgnoreCase);
+                    }
+                    
+                    continue;
+                }
+
+                // Check for area identifier (**Area:** `identifier`)
+                if (trimmedLine.StartsWith("**Area:**"))
+                {
+                    // Extract area identifier from format: **Area:** `identifier`
+                    var match = System.Text.RegularExpressions.Regex.Match(trimmedLine, @"\*\*Area:\*\*\s*`([^`]+)`");
+                    if (match.Success)
+                    {
+                        currentAreaIdentifier = match.Groups[1].Value;
+                        
+                        if (!string.IsNullOrEmpty(areaFilter))
+                        {
+                            // Also check if area identifier matches the filter (case-insensitive)
+                            if (currentAreaIdentifier.Equals(areaFilter, StringComparison.OrdinalIgnoreCase))
+                            {
+                                inTargetArea = true;
+                            }
+                        }
+                    }
+                    continue;
+                }
+
+                // Skip if we're not in the target area
+                if (!inTargetArea)
+                {
+                    continue;
+                }
+
                 // Skip table headers and separators
                 if (trimmedLine.StartsWith("| Tool Name") ||
                     trimmedLine.StartsWith("|:-------") ||
-                    trimmedLine.StartsWith("##") ||
                     trimmedLine.StartsWith("#") ||
                     string.IsNullOrWhiteSpace(trimmedLine))
                 {
@@ -709,6 +765,12 @@ class Program
                         prompts[toolName].Add(prompt.Replace("\\<", "<"));
                     }
                 }
+            }
+
+            // If area filter was specified but no prompts found, provide feedback
+            if (!string.IsNullOrEmpty(areaFilter) && prompts.Count == 0 && !isCiMode)
+            {
+                Console.WriteLine($"⚠️  No prompts found for area '{areaFilter}'. Available areas can be found as ## headers or **Area:** `identifier` values in the markdown file.");
             }
 
             return prompts.Count > 0 ? prompts : null;
@@ -1156,6 +1218,7 @@ class Program
         Console.WriteLine("  --ci                          Run in CI mode (graceful failures)");
         Console.WriteLine("  --tools-file <path>           Use a custom JSON file for tools instead of dynamic loading from docs .md");
         Console.WriteLine("  --prompts-file <path>         Use custom prompts file (supported formats: .md or .json)");
+        Console.WriteLine("  --area <area>                 Filter prompts to specific area (e.g., \"Azure Key Vault\", \"Storage\")");
         Console.WriteLine("  --output-file-name <name>     Custom output file name (no extension)");
         Console.WriteLine("  --text-results                Output results in .txt format");
         Console.WriteLine("  --top <N>                     Number of results to display per test (default 5)");
@@ -1170,6 +1233,8 @@ class Program
         Console.WriteLine("  ToolDescriptionEvaluator                                          # Use dynamic tool loading (default)");
         Console.WriteLine("  ToolDescriptionEvaluator --tools-file my-tools.json               # Use custom tools file");
         Console.WriteLine("  ToolDescriptionEvaluator --prompts-file my-prompts.md             # Use custom prompts file");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"Azure Key Vault\"                # Test only Key Vault prompts");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"Storage\"                        # Test only Storage-related prompts");
         Console.WriteLine("  ToolDescriptionEvaluator --output-file-name my-results            # Use custom output file name (don't include extension)");
         Console.WriteLine("  ToolDescriptionEvaluator --text-results                           # Output in text format");
         Console.WriteLine("  ToolDescriptionEvaluator --ci --tools-file tools.json             # CI mode with JSON file");

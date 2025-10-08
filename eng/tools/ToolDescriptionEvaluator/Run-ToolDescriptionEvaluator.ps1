@@ -15,6 +15,9 @@
 .PARAMETER BuildAzureMcp
     Optionally build the root project in Debug mode to ensure tools can be loaded dynamically
 
+.PARAMETER Area
+    Filter prompts to a specific area (e.g., "storage", "keyvault", "Azure Storage", "Azure Key Vault")
+
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1
     Builds and runs the Tool Description Evaluator application with default settings
@@ -23,11 +26,20 @@
     ./Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp
     Builds the Azure MCP Server project in Debug mode, then builds and runs the Tool Description Evaluator application
     with default settings
+
+.EXAMPLE
+    ./Run-ToolDescriptionEvaluator.ps1 -Area "storage"
+    Runs the Tool Description Evaluator filtering prompts to only the storage area
+
+.EXAMPLE
+    ./Run-ToolDescriptionEvaluator.ps1 -Area "Azure Key Vault" -BuildAzureMcp
+    Builds the Azure MCP Server project, then runs the Tool Description Evaluator filtering prompts to only the Key Vault area
 #>
 
 [CmdletBinding()]
 param(
-    [switch]$BuildAzureMcp
+    [switch]$BuildAzureMcp,
+    [string]$Area
 )
 
 Set-StrictMode -Version 3.0
@@ -104,10 +116,29 @@ try {
     }
 
     Write-Host "Build completed successfully!" -ForegroundColor Green
-    Write-Host "Running with: dotnet run" -ForegroundColor Cyan
+    
+    # Build the command arguments
+    $runArgs = @()
+    
+    if ($Area) {
+        $runArgs += "--area"
+        $runArgs += $Area
+        Write-Host "Running with area filter: $Area" -ForegroundColor Cyan
+    }
+    
+    $runCommand = "dotnet run"
+    if ($runArgs.Count -gt 0) {
+        $runCommand += " -- " + ($runArgs -join " ")
+    }
+    
+    Write-Host "Running with: $runCommand" -ForegroundColor Cyan
     Push-Location $toolDir
 
-    & dotnet run
+    if ($runArgs.Count -gt 0) {
+        & dotnet run -- @runArgs
+    } else {
+        & dotnet run
+    }
 
     Pop-Location
 }

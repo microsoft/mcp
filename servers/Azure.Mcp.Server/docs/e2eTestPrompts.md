@@ -2,7 +2,10 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
+Each section includes a shorter "area" identifier that can be used for filtering (e.g., `--area "foundry"` or `--area "keyvault"`).
+
 ## Azure AI Foundry
+**Area:** `foundry`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -26,6 +29,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
 
 ## Azure AI Search
+**Area:** `search`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -38,6 +42,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_search_service_list | Show me my Cognitive Search services |
 
 ## Azure AI Services Speech
+**Area:** `speech`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -53,6 +58,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
 
 ## Azure App Configuration
+**Area:** `appconfig`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -69,6 +75,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appconfig_kv_set | Set the key <key_name> in App Configuration store <app_config_store_name> to \<value> |
 
 ## Azure App Lens
+**Area:** `applens`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -76,6 +83,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
 ## Azure App Service
+**Area:** `appservice`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -90,6 +98,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
 
 ## Azure Application Insights
+**Area:** `applicationinsights`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -99,6 +108,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
 ## Azure Container Registry (ACR)
+**Area:** `acr`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -113,6 +123,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_acr_registry_repository_list | Show me the repositories in the container registry <registry_name> |
 
 ## Azure Communication Services
+**Area:** `communication`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -126,6 +137,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
 
 ## Azure Confidential Ledger
+**Area:** `confidentialledger`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -136,6 +148,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
 
 ## Azure Cosmos DB
+**Area:** `cosmos`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -149,6 +162,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_cosmos_database_list | Show me the databases in the cosmosdb account <account_name> |
 
 ## Azure Data Explorer
+**Area:** `kusto`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -165,6 +179,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_kusto_table_schema | Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name> |
 
 ## Azure Database for MySQL
+**Area:** `mysql`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -182,6 +197,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_mysql_table_schema_get | Show me the schema of table \<table> in the MySQL database \<database> in server \<server> |
 
 ## Azure Database for PostgreSQL
+**Area:** `postgres`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -199,6 +215,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_postgres_table_schema_get | Show me the schema of table \<table> in the PostgreSQL database \<database> in server \<server> |
 
 ## Azure Deploy
+**Area:** `deploy`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -209,6 +226,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_deploy_plan_get | Create a plan to deploy this application to azure |
 
 ## Azure Event Grid
+**Area:** `eventgrid`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -228,6 +246,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventgrid_subscription_list | List Event Grid subscriptions for subscription <subscription> in location <location> |
 
 ## Azure Event Hubs
+**Area:** `eventhubs`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -235,6 +254,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
 
 ## Azure Function App
+**Area:** `functionapp`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -252,6 +272,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_functionapp_get | What function apps do I have? |
 
 ## Azure Key Vault
+**Area:** `keyvault`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -313,6 +334,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_keyvault_secret_list | Show secrets names in the key vault <key_vault_account_name> |
 
 ## Azure Kubernetes Service (AKS)
+**Area:** `aks`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -331,6 +353,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_nodepool_get | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
+**Area:** `loadtesting`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -344,12 +367,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_loadtesting_testrun_update | Update a test run display name as \<display-name> for the id \<testrun-id> for test \<test-id> in the load testing resource \<load-testing-resource> in resource group \<resource-group>.|
 
 ## Azure Managed Grafana
+**Area:** `grafana`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_grafana_list | List all Azure Managed Grafana in one subscription |
 
 ## Azure Managed Lustre
+**Area:** `azuremanagedlustre`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -362,6 +387,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_managedlustre_filesystem_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
 ## Azure Marketplace
+**Area:** `marketplace`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -370,6 +396,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
 
 ## Azure MCP Best Practices
+**Area:** `bestpractices`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -383,6 +410,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_get_bestpractices_get | What are azure function best practices? |
 
 ## Azure Monitor
+**Area:** `monitor`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -407,6 +435,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_monitor_workspace_log_query | Show me the logs for the past hour in the Log Analytics workspace <workspace_name> |
 
 ## Azure Native ISV
+**Area:** `azureisv`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -414,6 +443,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_datadog_monitoredresources_list | Show me the monitored resources in the Datadog resource <resource_name> |
 
 ## Azure Quick Review CLI
+**Area:** `quickreview`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -422,6 +452,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_extension_azqr | Scan my Azure subscription for compliance recommendations |
 
 ## Azure Quota
+**Area:** `quota`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -429,6 +460,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_quota_usage_check | Check usage information for <resource_type> in region <region> |
 
 ## Azure RBAC
+**Area:** `authorization`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -436,6 +468,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_role_assignment_list | Show me the available role assignments in my subscription |
 
 ## Azure Redis
+**Area:** `redis`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -451,6 +484,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_redis_cluster_list | Show me the Redis Clusters in my subscription |
 
 ## Azure Resource Group
+**Area:** `resourcegroup`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -459,6 +493,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_group_list | Show me the resource groups in my subscription |
 
 ## Azure Resource Health
+**Area:** `resourcehealth`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -475,6 +510,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
+**Area:** `servicebus`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -483,6 +519,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
 
 ## Azure SignalR
+**Area:** `signalr`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -494,6 +531,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_signalr_runtime_get | List all SignalRs in my subscription |
 
 ## Azure SQL Database
+**Area:** `sql`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -513,6 +551,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_db_update | Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU |
 
 ## Azure SQL Elastic Pool Operations
+**Area:** `sql`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -521,6 +560,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_elastic-pool_list | What elastic pools are available in my SQL server <server_name>? |
 
 ## Azure SQL Server Operations
+**Area:** `sql`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -549,6 +589,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_sql_server_show | Display the properties of SQL server <server_name> |
 
 ## Azure Storage
+**Area:** `storage`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -573,6 +614,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_storage_blob_upload | Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account> |
 
 ## Azure Subscription Management
+**Area:** `subscription`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -582,6 +624,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_subscription_list | What subscriptions do I have? |
 
 ## Azure Terraform Best Practices
+**Area:** `terraformbestpractices`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -589,6 +632,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_azureterraformbestpractices_get | Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault |
 
 ## Azure Virtual Desktop
+**Area:** `virtualdesktop`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -597,6 +641,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_virtualdesktop_hostpool_sessionhost_usersession-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
 ## Azure Workbooks
+**Area:** `workbooks`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
@@ -609,12 +654,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_workbooks_update | Update the workbook <workbook_resource_id> with a new text step |
 
 ## Bicep
+**Area:** `bicep`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_bicepschema_get | How can I use Bicep to create an Azure OpenAI service? |
 
 ## Cloud Architect
+**Area:** `cloudarchitect`
 
 | Tool Name | Test Prompt |
 |:----------|:----------|

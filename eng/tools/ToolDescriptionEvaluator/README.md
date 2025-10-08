@@ -56,7 +56,22 @@ dotnet run -- --validate \
   --prompt "what storage accounts do I have"
 ```
 
-### 3. Custom Files Mode
+### 3. Area Filtering Mode
+
+Filter prompts to a specific Azure service area:
+
+```bash
+# Filter by area identifier (recommended)
+dotnet run -- --area "storage"
+dotnet run -- --area "keyvault"
+dotnet run -- --area "functionapp"
+
+# Filter by full area name
+dotnet run -- --area "Azure Storage"
+dotnet run -- --area "Azure Key Vault"
+```
+
+### 4. Custom Files Mode
 
 Use custom tools or prompts files:
 
@@ -67,8 +82,8 @@ dotnet run -- --tools-file my-tools.json
 # Use custom prompts file (supports .md or .json)
 dotnet run -- --prompts-file my-prompts.md
 
-# Use both custom files
-dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.json
+# Use both custom files with area filtering
+dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.json --area "storage"
 ```
 
 ## Input Data Sources
@@ -91,7 +106,15 @@ The tool can load data from multiple sources:
 You can call the build script in this directory:
 
 ```bash
+# Run with all areas
 ./Run-ToolDescriptionEvaluator.ps1
+
+# Run with specific area filtering
+./Run-ToolDescriptionEvaluator.ps1 -Area "storage"
+./Run-ToolDescriptionEvaluator.ps1 -Area "keyvault"
+
+# Build Azure MCP Server first, then run with area filtering
+./Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp -Area "functionapp"
 ```
 
 or run the following commands directly:
@@ -99,6 +122,9 @@ or run the following commands directly:
 ```bash
 dotnet build
 dotnet run
+
+# With area filtering
+dotnet run -- --area "storage"
 ```
 
 ## Setup
@@ -168,12 +194,31 @@ dotnet run -- --text
 - Includes confidence scores and success rates
 - Shows top matching tools for each prompt
 
-### Custom output file name
+### Command Line Options
 
-You can use a custom file name by using the option `--output-file-name`
+The tool supports several command line options for customization:
 
 ```bash
-dotnet run -- --output-file-name my-tests
+# Area filtering
+dotnet run -- --area "storage"                    # Filter to storage area only
+dotnet run -- --area "Azure Key Vault"            # Filter by full area name
+
+# File options
+dotnet run -- --tools-file my-tools.json          # Use custom tools file
+dotnet run -- --prompts-file my-prompts.md        # Use custom prompts file
+dotnet run -- --output-file-name my-tests         # Custom output filename
+
+# Output format
+dotnet run -- --text-results                      # Output in plain text format
+
+# Result limits
+dotnet run -- --top 10                           # Show top 10 results per test
+
+# CI mode
+dotnet run -- --ci                               # Run in CI mode (graceful failures)
+
+# Combined options
+dotnet run -- --area "keyvault" --text-results --top 3
 ```
 
 ### Analysis Metrics
@@ -202,17 +247,45 @@ The tool provides several key metrics:
 
 #### Markdown Format (Default)
 
-The tool reads from `../../../docs/e2eTestPrompts.md` which contains tables like:
+The tool reads from `../../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` which contains tables organized by area:
 
 ```markdown
 ## Azure Storage
+**Area:** `storage`
 
 | Tool Name | Test Prompt |
 |:----------|:------------|
 | azmcp-storage-account-get | List all storage accounts in my subscription |
 | azmcp-storage-account-get | Show me my storage accounts |
 | azmcp-storage-container-get | List containers in storage account <account-name> |
+
+## Azure Key Vault
+**Area:** `keyvault`
+
+| Tool Name | Test Prompt |
+|:----------|:------------|
+| azmcp-keyvault-secret-get | Get my secret from Key Vault |
+| azmcp-keyvault-key-list | List all keys in my Key Vault |
 ```
+
+#### Area Filtering
+
+Each section includes an area identifier that can be used for filtering:
+
+- **Area Header**: `## Azure Storage` (matches full name)
+- **Area Identifier**: `**Area:** `storage`` (matches short identifier)
+
+Both formats can be used with the `--area` parameter:
+
+```bash
+# Using area identifier (recommended)
+dotnet run -- --area "storage"
+
+# Using full area name
+dotnet run -- --area "Azure Storage"
+```
+
+Available area identifiers include: `foundry`, `search`, `speech`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `communication`, `confidentialledger`, `cosmos`, `kusto`, `mysql`, `postgres`, `deploy`, `eventgrid`, `eventhubs`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `marketplace`, `monitor`, `quota`, `redis`, `resourcehealth`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
 
 #### JSON Format (Alternative)
 
