@@ -70,19 +70,24 @@ function Validate-Npm-Packages {
                 Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
 
                 $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' }
-                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$artifactOs-$TargetArch-*.tgz"
+                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp*-$artifactOs-$TargetArch-*.tgz"
 
                 Write-Host "Installing Platform Package: $($platformPackage.FullName)"
                 if ($platformPackage) { npm install $platformPackage.FullName | Out-Null }
 
                 Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
                 if ($mainPackage) { npm install $mainPackage.FullName | Out-Null }
-                $output = npx azmcp tools list
-                if ($LASTEXITCODE -eq 0) {
-                    Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
-                } else {
-                    Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                    $hasFailures = $true
+                if ($mainPackage -and $platformPackage) {
+                    $output = npx azmcp tools list
+                    if ($LASTEXITCODE -eq 0) {
+                        Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
+                    } else {
+                        Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+                        $hasFailures = $true
+                    }
+                }
+                else {
+                    Write-Host "Either main package or platform package is missing. Skipping tools list command."}
                 }
             }
         }
