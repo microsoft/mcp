@@ -183,4 +183,54 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     {
         await Client.DisposeAsync().ConfigureAwait(false);
     }
+
+    // Hook into per-test execution boundaries: call start/stop around test body.
+    // Consumers should call these manually if they override test invocation pattern. Otherwise utilize xUnit lifecycle via BeforeAfter (future) or direct base usage in test methods.
+    protected void BeginTest() => StartRecordPlaybackSessionIfNeeded();
+    protected Task BeginTestAsync()
+    {
+        StartRecordPlaybackSessionIfNeeded();
+        return Task.CompletedTask;
+    }
+    protected Task EndTestAsync() => StopRecordPlaybackSessionAsync();
+    protected void EndTest() => EndTestAsync().GetAwaiter().GetResult();
+
+    // Simple placeholders for future record/playback support. Currently no-op to satisfy build.
+    private bool _recordPlaybackSessionStarted;
+    private void StartRecordPlaybackSessionIfNeeded()
+    {
+        if (_recordPlaybackSessionStarted) return;
+        // In the future: inspect environment variables to decide whether to record or playback.
+        // e.g. AZURE_MCP_TEST_RECORD or AZURE_MCP_TEST_PLAYBACK, integrate with a proxy.
+        _recordPlaybackSessionStarted = true;
+    }
+
+    private Task StopRecordPlaybackSessionAsync()
+    {
+        if (!_recordPlaybackSessionStarted) return Task.CompletedTask;
+        _recordPlaybackSessionStarted = false;
+        // In the future: flush recordings / dispose proxy.
+        return Task.CompletedTask;
+    }
+
+    private (Type? DeclaringType, string? MethodName) GetCurrentMethod()
+    {
+        // Fallback: unable to access richer xUnit v3 metadata in current reference set.
+        // We can attempt to read the current stack and locate the first test method in this assembly.
+        try
+        {
+            var stack = new System.Diagnostics.StackTrace();
+            var thisAsm = typeof(CommandTestsBase).Assembly;
+            for (int i = 0; i < stack.FrameCount; i++)
+            {
+                var m = stack.GetFrame(i)?.GetMethod();
+                if (m?.DeclaringType?.Assembly == thisAsm && m.GetCustomAttributes(typeof(FactAttribute), inherit: true).Length > 0)
+                {
+                    return (m.DeclaringType, m.Name);
+                }
+            }
+        }
+        catch { }
+        return (null, null);        
+    }
 }
