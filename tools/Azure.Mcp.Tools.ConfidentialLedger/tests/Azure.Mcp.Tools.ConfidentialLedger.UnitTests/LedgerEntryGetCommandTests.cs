@@ -47,24 +47,16 @@ public sealed class LedgerEntryGetCommandTests
     }
 
     [Theory]
+    [InlineData(null, "transactionId")]
     [InlineData("", "transactionId")]
     [InlineData(" ", "transactionId")]
+    [InlineData("ledgerName", null)]
     [InlineData("ledgerName", "")]
     [InlineData("ledgerName", " ")]
-    public async Task GetLedgerEntryAsync_ThrowsArgumentException_WhenParametersInvalid(string? ledgerName, string? transactionId)
-    {
-        var service = new ConfidentialLedgerService();
-        await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
-    }
-
-    [Theory]
-    [InlineData(null, "transactionId")]
-    [InlineData("ledgerName", null)]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
         var service = new ConfidentialLedgerService();
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
     }
 

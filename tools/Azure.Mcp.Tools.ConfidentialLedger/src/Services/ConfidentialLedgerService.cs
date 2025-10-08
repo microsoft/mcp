@@ -90,6 +90,16 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
             (nameof(transactionId), transactionId));
+        
+        // throw if strings are blank (whitespace)
+        if (string.IsNullOrWhiteSpace(ledgerName))
+        {
+            throw new ArgumentException("Ledger name cannot be empty or whitespace.");
+        }
+        if (string.IsNullOrWhiteSpace(transactionId))
+        {
+            throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
+        }
 
         var credential = await GetCredential();
         ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
