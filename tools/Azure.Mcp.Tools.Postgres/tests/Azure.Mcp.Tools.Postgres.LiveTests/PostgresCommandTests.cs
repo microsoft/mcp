@@ -17,7 +17,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         ?? $"{ServerName}.postgres.database.azure.com";
     private const string TestDatabaseName = "testdb";
     private const string TestDatabase2Name = "testdb2";
-    private string AdminUsername => Settings.DeploymentOutputs.GetValueOrDefault("adminLogin") ?? string.Empty;
+    private string AdminUsername => Settings.PrincipalName ?? string.Empty;
     private static bool _testDataInitialized = false;
     private static readonly SemaphoreSlim _initLock = new(1, 1);
 
