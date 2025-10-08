@@ -2,6 +2,18 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 0.8.7 (Unreleased)
+
+### Features Added
+
+- Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
 ## 0.8.6 (2025-10-09)
 
 ### Features Added
