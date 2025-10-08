@@ -18,7 +18,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | azmcp_foundry_models_list | List all AI Foundry models |
 | azmcp_foundry_models_list | Show me the available AI Foundry models |
+| azmcp_foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
 | azmcp_foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
+| azmcp_foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
+| azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
+| azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
+| azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
 
 ## Azure AI Search
 
@@ -315,15 +320,15 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_aks_cluster_get | Show me the details of AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_cluster_get | Show me the network configuration for AKS cluster \<cluster-name> |
 | azmcp_aks_cluster_get | What are the details of my AKS cluster \<cluster-name> in \<resource-group>? |
-| azmcp_aks_cluster_list | List all AKS clusters in my subscription |
-| azmcp_aks_cluster_list | Show me my Azure Kubernetes Service clusters |
-| azmcp_aks_cluster_list | What AKS clusters do I have? |
+| azmcp_aks_cluster_get | List all AKS clusters in my subscription |
+| azmcp_aks_cluster_get | Show me my Azure Kubernetes Service clusters |
+| azmcp_aks_cluster_get | What AKS clusters do I have? |
 | azmcp_aks_nodepool_get | Get details for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in \<resource-group> |
 | azmcp_aks_nodepool_get | Show me the configuration for nodepool \<nodepool-name> in AKS cluster \<cluster-name> in resource group \<resource-group> |
 | azmcp_aks_nodepool_get | What is the setup of nodepool \<nodepool-name> for AKS cluster \<cluster-name> in \<resource-group>? |
-| azmcp_aks_nodepool_list | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
-| azmcp_aks_nodepool_list | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | List nodepools for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | Show me the nodepool list for AKS cluster \<cluster-name> in \<resource-group> |
+| azmcp_aks_nodepool_get | What nodepools do I have for AKS cluster \<cluster-name> in \<resource-group> |
 
 ## Azure Load Testing
 
@@ -348,11 +353,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
-| azmcp_azuremanagedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_azuremanagedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in <location> |
-| azmcp_azuremanagedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku> |
-| azmcp_azuremanagedlustre_filesystem_subnetsize_validate | Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku> |
+| azmcp_managedlustre_filesystem_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
+| azmcp_managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
+| azmcp_managedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
+| azmcp_managedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_filesystem_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_filesystem_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
 ## Azure Marketplace
 
@@ -475,6 +482,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_servicebus_queue_details | Show me the details of service bus <service_bus_name> queue <queue_name> |
 | azmcp_servicebus_topic_details | Show me the details of service bus <service_bus_name> topic <topic_name> |
 | azmcp_servicebus_topic_subscription_details | Show me the details of service bus <service_bus_name> subscription <subscription_name> |
+
+## Azure SignalR
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_signalr_runtime_get | Show me the details of SignalR <signalr_name> |
+| azmcp_signalr_runtime_get | Show me the network information of SignalR runtime <signalr_name> |
+| azmcp_signalr_runtime_get | Describe the SignalR runtime <signalr_name> in resource group <resource_group_name> |
+| azmcp_signalr_runtime_get | Get information about my SignalR runtime <signalr_name> in <resource_group_name> |
+| azmcp_signalr_runtime_get | Show all the SignalRs information in <resource_group_name> |
+| azmcp_signalr_runtime_get | List all SignalRs in my subscription |
 
 ## Azure SQL Database
 

@@ -135,9 +135,9 @@
 # ServiceLabel: %tools-Monitor
 # ServiceOwners:                       @smritiy @srnagar @jongio
 
-# PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
-# ServiceLabel: %tools-AzureManagedLustre
+# PRLabel: %tools-ManagedLustre
+/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+# ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
 # PRLabel: %tools-MySQL
@@ -223,6 +223,11 @@
 # ServiceLabel: %tools-Workbooks
 # ServiceOwners:                       @matteing
 
+# PRLabel: %tools-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @Azure/azure-mcp
+
+# ServiceLabel: %tools-SignalR
+# ServiceOwners:                       @kenchennt @JialinXin
 
 # PRLabel: %tools-ConfidentialLedger
 /tools/Azure.Mcp.Tools.ConfidentialLedger/          @taicchoumsft @ivarprudnikov @microsoft/azure-mcp
