@@ -86,6 +86,28 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Specific Tool Filtering
+
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+
+```bash
+# Start MCP Server with default mode and only subscription and resource group tools
+azmcp server start \
+    --tool azmcp_subscription_list \
+    --tool azmcp_group_list \
+    [--transport <transport>] \
+    [--read-only]
+
+# Start MCP Server with all mode and essential storage management tools
+azmcp server start \
+    --mode all \
+    --tool azmcp_storage_account_get \
+    --tool azmcp_storage_account_create \
+    --tool azmcp_storage_blob_get \
+    [--transport <transport>] \
+    [--read-only]
+```
+
 #### Namespace Mode (Default)
 
 Collapses all tools within each namespace into a single tool (e.g., all storage operations become one "storage" tool with internal routing). This mode is particularly useful when working with MCP clients that have tool limits - for example, VS Code only supports a maximum of 128 tools across all registered MCP servers.
@@ -126,8 +148,10 @@ The `azmcp server start` command supports the following options:
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**
@@ -147,13 +171,14 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
-
 # Connect to an agent in an AI Foundry project and query it
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents connect --agent-id <agent-id> \
                              --query <query> \
                              --endpoint <endpoint>
 
 # Evaluate a response from an agent by passing query and response inline
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents evaluate --agent-id <agent-id> \
                               --query <query> \
                               --response <response> \
@@ -163,6 +188,7 @@ azmcp foundry agents evaluate --agent-id <agent-id> \
                               [--tool-definitions <tool-definitions>]
 
 # Query and evaluate an agent in one command
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         --query <query> \
                                         --endpoint <endpoint> \
@@ -171,13 +197,16 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         [--evaluators <evaluators>]
 
 # List knowledge indexes in an AI Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry knowledge index list --endpoint <endpoint>
 
 # Get knowledge index schema information
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry knowledge index schema --endpoint <endpoint> \
                                      --index <index>
 
 # Deploy an AI Foundry model
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry models deploy --subscription <subscription> \
                             --resource-group <resource-group> \
                             --deployment <deployment> \
@@ -192,15 +221,36 @@ azmcp foundry models deploy --subscription <subscription> \
                             [--scale-capacity <scale-capacity>]
 
 # List AI Foundry model deployments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry models deployments list --endpoint <endpoint>
 
 # List AI Foundry models
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
                           [--publisher <publisher>] \
                           [--license <license>] \
                           [--model-name <model>]
 
+# Create interactive chat completions using Azure OpenAI chat models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai chat-completions-create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --resource-name <resource-name> \
+                                             --deployment <deployment-name> \
+                                             --message-array <message-array> \
+                                             [--max-tokens <max-tokens>] \
+                                             [--temperature <temperature>] \
+                                             [--top-p <top-p>] \
+                                             [--frequency-penalty <frequency-penalty>] \
+                                             [--presence-penalty <presence-penalty>] \
+                                             [--stop <stop-sequences>] \
+                                             [--stream <stream>] \
+                                             [--seed <seed>] \
+                                             [--user <user>] \
+                                             [--auth-method <auth-method>]
+
 # Generate text completions using deployed Azure OpenAI models in AI Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai create-completion --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-name <resource-name> \
@@ -208,16 +258,37 @@ azmcp foundry openai create-completion --subscription <subscription> \
                                        --prompt-text <prompt-text> \
                                        [--max-tokens <max-tokens>] \
                                        [--temperature <temperature>]
+
+# Generate vector embeddings for text using Azure OpenAI embedding models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai embeddings-create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --input-text <input-text> \
+                                       [--user <user>] \
+                                       [--encoding-format <encoding-format>] \
+                                       [--dimensions <dimensions>] \
+                                       [--auth-method <auth-method>]
+
+# List all available OpenAI models and deployments in an Azure resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai models-list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --resource-name <resource-name> \
+                                 [--auth-method <auth-method>]
 ```
 
 ### Azure AI Search Operations
 
 ```bash
 # Get detailed properties of AI Search indexes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search index get --service <service> \
                        [--index <index>]
 
 # Query AI Search index
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search index query --subscription <subscription> \
                          --service <service> \
                          --index <index> \
@@ -231,6 +302,7 @@ azmcp search list --subscription <subscription>
 
 ```bash
 # Recognize speech from an audio file using Azure AI Services Speech
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> \
                            --file <file-path> \
                            [--language <language>] \
@@ -245,18 +317,21 @@ The `--phrases` parameter supports multiple ways to specify phrase hints that im
 
 **Multiple Arguments:**
 ```bash
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
     --phrases "Azure" --phrases "cognitive services" --phrases "machine learning"
 ```
 
 **Comma-Separated Values:**
 ```bash
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
     --phrases "Azure, cognitive services, machine learning"
 ```
 
 **Mixed Syntax:**
 ```bash
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
     --phrases "Azure, cognitive services" --phrases "machine learning"
 ```
@@ -267,15 +342,18 @@ Use phrase hints when you expect specific terminology, technical terms, or domai
 
 ```bash
 # List App Configuration stores in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig account list --subscription <subscription>
 
 # Delete a key-value setting
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv delete --subscription <subscription> \
                           --account <account> \
                           --key <key> \
                           [--label <label>]
 
 # Get key-value settings in an App Configuration store
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv get --subscription <subscription> \
                        --account <account> \
                        [--key <key>] \
@@ -283,7 +361,8 @@ azmcp appconfig kv get --subscription <subscription> \
                        [--key-filter <key-filter>] \
                        [--label-filter <label-filter>]
 
-# Lock (make it read-only) or unlock (remove read-only) a key-value setting 
+# Lock (make it read-only) or unlock (remove read-only) a key-value setting
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv lock set --subscription <subscription> \
                             --account <account> \
                             --key <key> \
@@ -291,6 +370,7 @@ azmcp appconfig kv lock set --subscription <subscription> \
                             [--lock]
 
 # Set a key-value setting
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \
                        --key <key> \
@@ -302,6 +382,7 @@ azmcp appconfig kv set --subscription <subscription> \
 
 ```bash
 # Diagnose resource using Azure App Lens
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applens resource diagnose --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --question <question> \
@@ -315,15 +396,18 @@ azmcp applens resource diagnose --subscription <subscription> \
 
 ```bash
 # List code optimization recommendations across all Application Insights components in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applicationinsights recommendation list --subscription <subscription>
 
 # Scope to a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
 ### Azure App Service Operations
 
 ```bash
 # Add a database connection to an App Service
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription <subscription> \
                               --resource-group <resource-group> \
                               --app <app> \
@@ -335,6 +419,7 @@ azmcp appservice database add --subscription <subscription> \
 
 # Examples:
 # Add a SQL Server database connection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -343,6 +428,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --database "mydb"
 
 # Add a MySQL database connection with custom connection string
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -352,6 +438,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --connection-string "Server=myserver.mysql.database.azure.com;Database=mydb;Uid=myuser;Pwd=mypass;"
 
 # Add a PostgreSQL database connection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -360,6 +447,7 @@ azmcp appservice database add --subscription "my-subscription" \
                               --database "mydb"
 
 # Add a Cosmos DB connection
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp appservice database add --subscription "my-subscription" \
                               --resource-group "my-rg" \
                               --app "my-webapp" \
@@ -386,27 +474,11 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
-### Azure CLI Operations
-
-```bash
-# Execute any Azure CLI command
-azmcp extension az --command "<command>"
-
-# Examples:
-# List resource groups
-azmcp extension az --command "group list"
-
-# Get storage account details
-azmcp extension az --command "storage account show --name <account> --resource-group <resource-group>"
-
-# List virtual machines
-azmcp extension az --command "vm list --resource-group <resource-group>"
-```
-
 ### Azure Communication Services Operations
 
 ```bash
 # Send SMS message using Azure Communication Services
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send \
     --connection-string "<connection-string>" \
     --from "<sender-phone-number>" \
@@ -417,6 +489,7 @@ azmcp communication sms send \
 
 # Examples:
 # Send SMS to single recipient
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send \
     --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
     --from "+14255550123" \
@@ -424,6 +497,7 @@ azmcp communication sms send \
     --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send \
     --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
     --from "+14255550123" \
@@ -446,6 +520,7 @@ azmcp communication sms send \
 
 ```bash
 # Append a tamper-proof entry to a Confidential Ledger
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp confidentialledger entries append --ledger <ledger-name> \
                                         --content <json-or-text-data> \
                                         [--collection-id <collection-id>]
@@ -460,20 +535,25 @@ azmcp confidentialledger entries append --ledger <ledger-name> \
 
 ```bash
 # List Azure Container Registries in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp acr registry list --subscription <subscription>
 
 # List Azure Container Registries in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp acr registry list --subscription <subscription> \
                         --resource-group <resource-group>
 
 # List repositories across all registries in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp acr registry repository list --subscription <subscription>
 
 # List repositories across all registries in a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp acr registry repository list --subscription <subscription> \
                                    --resource-group <resource-group>
 
 # List repositories in a specific registry
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp acr registry repository list --subscription <subscription> \
                                    --resource-group <resource-group> \
                                    --registry <registry>
@@ -483,9 +563,11 @@ azmcp acr registry repository list --subscription <subscription> \
 
 ```bash
 # List Cosmos DB accounts in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos account list --subscription <subscription>
 
 # Query items in a Cosmos DB container
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container item query --subscription <subscription> \
                                            --account <account> \
                                            --database <database> \
@@ -493,11 +575,13 @@ azmcp cosmos database container item query --subscription <subscription> \
                                            [--query "SELECT * FROM c"]
 
 # List containers in a Cosmos DB database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database container list --subscription <subscription> \
                                      --account <account> \
                                      --database <database>
 
 # List databases in a Cosmos DB account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cosmos database list --subscription <subscription> \
                            --account <account>
 ```
@@ -506,31 +590,38 @@ azmcp cosmos database list --subscription <subscription> \
 
 ```bash
 # Get details for a Azure Data Explorer cluster
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto cluster get --subscription <subscription> \
                         --cluster <cluster>
 
 # List Azure Data Explorer clusters in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto cluster list --subscription <subscription>
 
 # List databases in a Azure Data Explorer cluster
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto database list [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>]
 
 # Retrieves a sample of data from a specified Azure Data Explorer table.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto sample [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>]
                    --database <database> \
                    --table <table> \
                    [--limit <limit>]
 
 # List tables in a Azure Data Explorer database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto table list [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                        --database <database>
 
 # Retrieves the schema of a specified Azure Data Explorer table.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                          --database <database> \
                          --table <table>
 
 # Query Azure Data Explorer database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
                   --query "<kql-query>"
@@ -543,12 +634,14 @@ azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> -
 
 ```bash
 # List all databases in a MySQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql database list --subscription <subscription> \
                           --resource-group <resource-group> \
                           --user <user> \
                           --server <server>
 
 # Executes a SELECT query on a MySQL Database. The query must start with SELECT and cannot contain any destructive SQL operations for security reasons.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql database query --subscription <subscription> \
                            --resource-group <resource-group> \
                            --user <user> \
@@ -561,6 +654,7 @@ azmcp mysql database query --subscription <subscription> \
 
 ```bash
 # List all tables in a MySQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql table list --subscription <subscription> \
                        --resource-group <resource-group> \
                        --user <user> \
@@ -568,6 +662,7 @@ azmcp mysql table list --subscription <subscription> \
                        --database <database>
 
 # Get the schema of a specific table in a MySQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql table schema get --subscription <subscription> \
                              --resource-group <resource-group> \
                              --user <user> \
@@ -580,17 +675,20 @@ azmcp mysql table schema get --subscription <subscription> \
 
 ```bash
 # Retrieve the configuration of a MySQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server config get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --user <user> \
                               --server <server>
 
 # List all MySQL servers in a subscription & resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server list --subscription <subscription> \
                         --resource-group <resource-group> \
                         --user <user>
 
 # Retrieve a specific parameter of a MySQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param get --subscription <subscription> \
                              --resource-group <resource-group> \
                              --user <user> \
@@ -598,6 +696,7 @@ azmcp mysql server param get --subscription <subscription> \
                              --param <parameter>
 
 # Set a specific parameter of a MySQL server to a specific value
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp mysql server param set --subscription <subscription> \
                              --resource-group <resource-group> \
                              --user <user> \
@@ -612,12 +711,14 @@ azmcp mysql server param set --subscription <subscription> \
 
 ```bash
 # List all databases in a PostgreSQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres database list --subscription <subscription> \
                              --resource-group <resource-group> \
                              --user <user> \
                              --server <server>
 
 # Execute a query on a PostgreSQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres database query --subscription <subscription> \
                               --resource-group <resource-group> \
                               --user <user> \
@@ -630,6 +731,7 @@ azmcp postgres database query --subscription <subscription> \
 
 ```bash
 # List all tables in a PostgreSQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres table list --subscription <subscription> \
                           --resource-group <resource-group> \
                           --user <user> \
@@ -637,6 +739,7 @@ azmcp postgres table list --subscription <subscription> \
                           --database <database>
 
 # Get the schema of a specific table in a PostgreSQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres table schema get --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --user <user> \
@@ -649,17 +752,20 @@ azmcp postgres table schema get --subscription <subscription> \
 
 ```bash
 # Retrieve the configuration of a PostgreSQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server config get --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --user <user> \
                                  --server <server>
 
 # List all PostgreSQL servers in a subscription & resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server list --subscription <subscription> \
                            --resource-group <resource-group> \
                            --user <user>
 
 # Retrieve a specific parameter of a PostgreSQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param get --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --user <user> \
@@ -667,6 +773,7 @@ azmcp postgres server param get --subscription <subscription> \
                                 --param <parameter>
 
 # Set a specific parameter of a PostgreSQL server to a specific value
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp postgres server param set --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --user <user> \
@@ -679,25 +786,30 @@ azmcp postgres server param set --subscription <subscription> \
 
 ```bash
 # Get the application service log for a specific azd environment
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
                           --azd-env-name <azd-env-name> \
                           [--limit <limit>]
 
 # Generate a mermaid architecture diagram for the application topology follow the schema defined in [deploy-app-topology-schema.json](../areas/deploy/src/AzureMcp.Deploy/Schemas/deploy-app-topology-schema.json)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy architecture diagram generate --raw-mcp-tool-input <app-topology>
 
 # Get the iac generation rules for the resource types
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy iac rules get --deployment-tool <deployment-tool> \
                            --iac-type <iac-type> \
                            --resource-types <resource-types>
 
 # Get the ci/cd pipeline guidance
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy pipeline guidance get [--use-azd-pipeline-config <use-azd-pipeline-config>] \
                                    [--organization-name <organization-name>] \
                                    [--repository-name <repository-name>] \
                                    [--github-environment-name <github-environment-name>]
 
 # Get a deployment plan for a specific project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy plan get --workspace-folder <workspace-folder> \
                       --project-name <project-name> \
                       --target-app-service <target-app-service> \
@@ -709,17 +821,20 @@ azmcp deploy plan get --workspace-folder <workspace-folder> \
 
 ```bash
 # List all Event Grid topics in a subscription or resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventgrid topic list --subscription <subscription> \
                            [--resource-group <resource-group>]
 
 
 # List all Event Grid subscriptions in a subscription, resource group, or topic
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventgrid subscription list --subscription <subscription> \
                                   [--resource-group <resource-group>] \
                                   [--topic <topic>]
                                   [--location <location>]
 
 # Publish custom events to Event Grid topics
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventgrid events publish --subscription <subscription> \
                                --topic <topic> \
                                --data <json-event-data> \
@@ -731,6 +846,7 @@ azmcp eventgrid events publish --subscription <subscription> \
 
 ```bash
 # Get detailed properties of an Event Hubs namespace
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace get --subscription <subscription> \
                               --namespace <namespace> \
                               --resource-group <resource-group>
@@ -740,6 +856,7 @@ azmcp eventhubs namespace get --subscription <subscription> \
 
 ```bash
 # Get detailed properties of function apps
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp functionapp get --subscription <subscription> \
                       [--resource-group <resource-group>] \
                       [--function-app <function-app-name>]
@@ -751,6 +868,7 @@ azmcp functionapp get --subscription <subscription> \
 
 ```bash
 # Gets Key Vault Managed HSM account settings
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
@@ -759,16 +877,19 @@ azmcp keyvault admin settings get --subscription <subscription> \
 
 ```bash
 # Creates a certificate in a key vault with the default policy
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate create --subscription <subscription> \
                                   --vault <vault-name> \
                                   --name <certificate-name>
 
 # Gets a certificate in a key vault
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate get --subscription <subscription> \
                                --vault <vault-name> \
                                --name <certificate-name>
 
 # Imports an existing certificate (PFX or PEM) into a key vault
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp keyvault certificate import --subscription <subscription> \
                                   --vault <vault-name> \
                                   --certificate <certificate-name> \
@@ -776,6 +897,7 @@ azmcp keyvault certificate import --subscription <subscription> \
                                   [--password <pfx-password>]
 
 # Lists certificates in a key vault
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault certificate list --subscription <subscription> \
                                 --vault <vault-name>
 ```
@@ -784,17 +906,20 @@ azmcp keyvault certificate list --subscription <subscription> \
 
 ```bash
 # Creates a key in a key vault
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key create --subscription <subscription> \
                           --vault <vault-name> \
                           --key <key-name> \
                           --key-type <key-type>
 
 # Get a key in a key vault
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key get --subscription <subscription> \
                        --vault <vault-name> \
                        --key <key-name>
 
 # Lists keys in a key vault
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault key list --subscription <subscription> \
                         --vault <vault-name> \
                         --include-managed <true/false>
@@ -805,7 +930,7 @@ azmcp keyvault key list --subscription <subscription> \
 Tools that handle sensitive data such as secrets require user consent before execution through a security mechanism called **elicitation**. When you run commands that access sensitive information, the MCP client will prompt you to confirm the operation before proceeding.
 
 > **🛡️ Elicitation (user confirmation) Security Feature:**
-> 
+>
 > Elicitation prompts appear when tools may expose sensitive information like:
 > - Key Vault secrets
 > - Connection strings and passwords
@@ -816,17 +941,20 @@ Tools that handle sensitive data such as secrets require user consent before exe
 
 ```bash
 # Creates a secret in a key vault (will prompt for user consent)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp keyvault secret create --subscription <subscription> \
                              --vault <vault-name> \
                              --name <secret-name> \
                              --value <secret-value>
 
 # Get a secret in a key vault (will prompt for user consent)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp keyvault secret get --subscription <subscription> \
                           --vault <vault-name> \
                           --secret <secret-name>
 
 # Lists secrets in a key vault
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault secret list --subscription <subscription> \
                            --vault <vault-name>
 ```
@@ -834,29 +962,25 @@ azmcp keyvault secret list --subscription <subscription> \
 ### Azure Kubernetes Service (AKS) Operations
 
 ```bash
-# Get details of a specific AKS cluster
+# Gets Azure Kubernetes Service (AKS) cluster details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks cluster get --subscription <subscription> \
-                      --name <cluster>
+                      --resource-group <resource-group> \
+                      [--cluster <cluster>]
 
-# List AKS clusters in a subscription
-azmcp aks cluster list --subscription <subscription>
-
-# Get details of a specific AKS nodepool
+# Gets Azure Kubernetes Service (AKS) nodepool details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp aks nodepool get --subscription <subscription> \
                        --resource-group <resource-group> \
                        --cluster <cluster> \
-                       --nodepool <nodepool>
-
-# List AKS cluster's nodepools
-azmcp aks nodepool list --subscription <subscription> \
-                        --resource-group <resource-group> \
-                        --cluster <cluster>
+                       [--nodepool <nodepool>]
 ```
 
 ### Azure Load Testing Operations
 
 ```bash
 # Create load test
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
@@ -869,22 +993,26 @@ azmcp loadtesting test create --subscription <subscription> \
                               --ramp-up-time <ramp-up-time>
 
 # Get load test
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting test get --subscription <subscription> \
                            --resource-group <resource-group> \
                            --test-resource-name <test-resource-name> \
                            --test-id <test-id>
 
 # Create load test resources
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource create --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --test-resource-name <test-resource-name>
 
 # List load test resources
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testresource list --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --test-resource-name <test-resource-name>
 
 # Create load test run
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun create --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --test-resource-name <test-resource-name> \
@@ -895,18 +1023,21 @@ azmcp loadtesting testrun create --subscription <subscription> \
                                  --old-testrun-id <old-testrun-id>
 
 # Get load test run
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun get --subscription <subscription> \
                               --resource-group <resource-group> \
                               --test-resource-name <test-resource-name> \
                               --testrun-id <testrun-id>
 
 # List load test run
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --test-resource-name <test-resource-name> \
                                --test-id <test-id>
 
 # Update load test run
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp loadtesting testrun update --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --test-resource-name <test-resource-name> \
@@ -920,6 +1051,7 @@ azmcp loadtesting testrun update --subscription <subscription> \
 
 ```bash
 # List Azure Managed Grafana
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp grafana list --subscription <subscription>
 ```
 
@@ -927,6 +1059,7 @@ azmcp grafana list --subscription <subscription>
 
 ```bash
 # List marketplace products available to a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp marketplace product list --subscription <subscription> \
                                [--language <language-code>] \
                                [--search <terms>] \
@@ -937,6 +1070,7 @@ azmcp marketplace product list --subscription <subscription> \
                                [--next-cursor <pagination-cursor>]
 
 # Get details about an Azure Marketplace product
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp marketplace product get --subscription <subscription> \
                               --product-id <product-id> \
                               [--include-stop-sold-plans <true/false>] \
@@ -996,14 +1130,17 @@ azmcp monitor activitylog list --subscription <subscription> \
 
 ```bash
 # List tables in a Log Analytics workspace
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor table list --subscription <subscription> \
                          --workspace <workspace> \
                          --resource-group <resource-group>
 
 # List Log Analytics workspaces in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace list --subscription <subscription>
 
 # Query logs from Azure Monitor using KQL
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
                                  --table <table> \
@@ -1011,6 +1148,7 @@ azmcp monitor resource log query --subscription <subscription> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table <table> \
@@ -1020,6 +1158,7 @@ azmcp monitor workspace log query --subscription <subscription> \
 
 # Examples:
 # Query logs from a specific table
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table "AppEvents_CL" \
@@ -1030,6 +1169,7 @@ azmcp monitor workspace log query --subscription <subscription> \
 
 ```bash
 # Get the health of an entity
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor healthmodels entity gethealth --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --health-model <health-model-name> \
@@ -1040,6 +1180,7 @@ azmcp monitor healthmodels entity gethealth --subscription <subscription> \
 
 ```bash
 # List available metric definitions for a resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics definitions --subscription <subscription> \
                                   --resource <resource> \
                                   [--resource-group <resource-group>] \
@@ -1049,6 +1190,7 @@ azmcp monitor metrics definitions --subscription <subscription> \
                                   [--limit <limit>]
 
 # Query Azure Monitor metrics for a resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics query --subscription <subscription> \
                             --resource <resource> \
                             --metric-namespace <metric-namespace> \
@@ -1064,16 +1206,19 @@ azmcp monitor metrics query --subscription <subscription> \
 
 # Examples:
 # List all available metrics for a storage account
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics definitions --subscription <subscription> \
                                   --resource <resource> \
                                   --resource-type "Microsoft.Storage/storageAccounts"
 
 # Find metrics related to transactions
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics definitions --subscription <subscription> \
                                   --resource <resource> \
                                   --search-string "transaction"
 
 # Query CPU and memory metrics for a virtual machine
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor metrics query --subscription <subscription> \
                             --resource <resource> \
                             --resource-group <resource-group> \
@@ -1090,11 +1235,13 @@ azmcp monitor metrics query --subscription <subscription> \
 
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
-azmcp azuremanagedlustre filesystem list --subscription <subscription> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
 # Create an Azure Managed Lustre filesystem
-azmcp azuremanagedlustre filesystem create --subscription <subscription> \
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem create --subscription <subscription> \
                                            --sku <sku> \
                                            --size <filesystem-size-in-tib> \
                                            --subnet-id <subnet-id> \
@@ -1114,7 +1261,8 @@ azmcp azuremanagedlustre filesystem create --subscription <subscription> \
                                            [--user-assigned-identity-id <user-assigned-identity-id>]
 
 # Update an existing Azure Managed Lustre filesystem
-azmcp azuremanagedlustre filesystem update --subscription <subscription> \
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem update --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --name <filesystem-name> \
                                            [--maintenance-day <maintenance-day>] \
@@ -1125,19 +1273,22 @@ azmcp azuremanagedlustre filesystem update --subscription <subscription> \
                                            [--squash-gid <gid>]
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem subnetsize ask --subscription <subscription> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem subnetsize ask --subscription <subscription> \
                                                    --sku <azure-managed-lustre-sku> \
                                                    --size <filesystem-size-in-tib>
 
 # Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
-azmcp azuremanagedlustre filesystem subnetsize validate --subscription <subscription> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem subnetsize validate --subscription <subscription> \
                                                         --subnet-id <subnet-resource-id> \
                                                         --sku <azure-managed-lustre-sku> \
                                                         --size <filesystem-size-in-tib> \
                                                         --location <filesystem-location>
 
 # Lists the available Azure Managed Lustre SKUs in a specific location
-azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre filesystem sku get --subscription <subscription> \
                                             --location <location>
 ```
 
@@ -1145,6 +1296,7 @@ azmcp azuremanagedlustre filesystem sku get --subscription <subscription> \
 
 ```bash
 # List monitored resources in Datadog
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp datadog monitoredresources list --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --datadog-resource <datadog-resource>
@@ -1154,9 +1306,11 @@ azmcp datadog monitoredresources list --subscription <subscription> \
 
 ```bash
 # Scan a subscription for recommendations
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription>
 
 # Scan a subscription and scope to a specific resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension azqr --subscription <subscription> \
                      --resource-group <resource-group-name>
 ```
@@ -1165,6 +1319,7 @@ azmcp extension azqr --subscription <subscription> \
 
 ```bash
 # Get the available regions for the resources types
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp quota region availability list --subscription <subscription> \
                                      --resource-types <resource-types> \
                                      [--cognitive-service-model-name <cognitive-service-model-name>] \
@@ -1172,6 +1327,7 @@ azmcp quota region availability list --subscription <subscription> \
                                      [--cognitive-service-deployment-sku-name <cognitive-service-deployment-sku-name>]
 
 # Check the usage for Azure resources type
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp quota usage check --subscription <subscription> \
                         --region <region> \
                         --resource-types <resource-types>
@@ -1181,6 +1337,7 @@ azmcp quota usage check --subscription <subscription> \
 
 ```bash
 # List Azure RBAC role assignments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp role assignment list --subscription <subscription> \
                            --scope <scope>
 ```
@@ -1190,17 +1347,21 @@ azmcp role assignment list --subscription <subscription> \
 ```bash
 
 # Lists Databases in an Azure Redis Cluster
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis cluster database list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --cluster <cluster>
 
 # Lists Redis Clusters in the Azure Managed Redis or Azure Redis Enterprise services
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis cluster list --subscription <subscription>
 
 # Lists Redis Caches in the Azure Cache for Redis service
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis cache list --subscription <subscription>
 
 # Lists Access Policy Assignments in an Azure Redis Cache
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis cache list accesspolicy --subscription <subscription> \
                                     --resource-group <resource-group> \
                                     --cache <cache-name>
@@ -1210,6 +1371,7 @@ azmcp redis cache list accesspolicy --subscription <subscription> \
 
 ```bash
 # List resource groups in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp group list --subscription <subscription>
 ```
 
@@ -1217,13 +1379,16 @@ azmcp group list --subscription <subscription>
 
 ```bash
 # Get availability status for a specific resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resourcehealth availability-status get --resourceId <resource-id>
 
 # List availability statuses for all resources in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resourcehealth availability-status list --subscription <subscription> \
                                               [--resource-group <resource-group>]
 
 # List service health events in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp resourcehealth service-health-events list --subscription <subscription> \
                                                 [--event-type <event-type>] \
                                                 [--status <status>] \
@@ -1235,20 +1400,33 @@ azmcp resourcehealth service-health-events list --subscription <subscription> \
 
 ```bash
 # Returns runtime and details about the Service Bus queue
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp servicebus queue details --subscription <subscription> \
                                --namespace <service-bus-namespace> \
                                --queue <queue>
 
 # Gets runtime details a Service Bus topic
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp servicebus topic details --subscription <subscription> \
                                --namespace <service-bus-namespace> \
                                --topic <topic>
 
 # Gets runtime details and message counts for a Service Bus subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp servicebus topic subscription details --subscription <subscription> \
                                             --namespace <service-bus-namespace> \
                                             --topic <topic> \
                                             --subscription-name <subscription-name>
+```
+
+### Azure SignalR Service Operations
+
+```bash
+# Get detailed properties of SignalR Service runtimes
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp signalr runtime get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--signalr <signalr-name>]
 ```
 
 ### Azure SQL Operations
@@ -1257,6 +1435,7 @@ azmcp servicebus topic subscription details --subscription <subscription> \
 
 ```bash
 # Create a SQL database (supports optional performance and configuration parameters)
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db create --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
@@ -1271,17 +1450,20 @@ azmcp sql db create --subscription <subscription> \
                     [--read-scale <Enabled|Disabled>]
 
 # Delete a SQL database (idempotent – succeeds even if the database does not exist)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db delete --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
                     --database <database-name>
 
 # Gets a list of all databases in a SQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db list --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name>
-                  
+
 # Rename an existing SQL database to a new name within the same server
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db rename --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
@@ -1289,12 +1471,14 @@ azmcp sql db rename --subscription <subscription> \
                     --new-database-name <new-database-name>
 
 # Show details of a specific SQL database
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db show --subscription <subscription> \
                   --resource-group <resource-group> \
                   --server <server-name> \
                   --database <database>
 
 # Update an existing SQL database (applies only the provided configuration changes)
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql db update --subscription <subscription> \
                     --resource-group <resource-group> \
                     --server <server-name> \
@@ -1313,6 +1497,7 @@ azmcp sql db update --subscription <subscription> \
 
 ```bash
 # List all elastic pools in a SQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql elastic-pool list --subscription <subscription> \
                             --resource-group <resource-group> \
                             --server <server-name>
@@ -1322,6 +1507,7 @@ azmcp sql elastic-pool list --subscription <subscription> \
 
 ```bash
 # Create a new SQL server
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server create --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name> \
@@ -1332,11 +1518,13 @@ azmcp sql server create --subscription <subscription> \
                         [--public-network-access <enabled|disabled>]
 
 # List Microsoft Entra ID administrators for a SQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server entra-admin list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
 # Create a firewall rule for a SQL server
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server firewall-rule create --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --server <server-name> \
@@ -1345,26 +1533,31 @@ azmcp sql server firewall-rule create --subscription <subscription> \
                                       --end-ip-address <end-ip>
 
 # Delete a firewall rule from a SQL server
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server firewall-rule delete --subscription <subscription> \
                                       --resource-group <resource-group> \
                                       --server <server-name> \
                                       --firewall-rule-name <rule-name>
 
 # Gets a list of firewall rules for a SQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server firewall-rule list --subscription <subscription> \
                                   --resource-group <resource-group> \
                                   --server <server-name>
 
 # Delete a SQL server
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server delete --subscription <subscription> \
                         --resource-group <resource-group> \
                         --server <server-name>
 
 # List SQL servers in a resource group
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server list --subscription <subscription> \
                       --resource-group <resource-group>
 
 # Show details of a specific SQL server
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server show --subscription <subscription> \
                       --resource-group <resource-group> \
                       --server <server-name>
@@ -1376,6 +1569,7 @@ azmcp sql server show --subscription <subscription> \
 
 ```bash
 # Create a new Storage account with custom configuration
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account create --subscription <subscription> \
                              --account <unique-account-name> \
                              --resource-group <resource-group> \
@@ -1385,6 +1579,7 @@ azmcp storage account create --subscription <subscription> \
                              --enable-hierarchical-namespace false
 
 # Get detailed properties of Storage accounts
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage account get --subscription <subscription> \
                               [--account <account>] \
                               [--tenant <tenant>]
@@ -1394,22 +1589,26 @@ azmcp storage account get --subscription <subscription> \
 
 ```bash
 # Create a blob container with optional public access
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container create --subscription <subscription> \
                                     --account <account> \
                                     --container <container>
 
 # Get detailed properties of Storage containers
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob container get --subscription <subscription> \
                                      --account <account> \
                                      [--container <container>]
 
 # Get detailed properties of Storage blobs
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp storage blob get --subscription <subscription> \
                            --account <account> \
                            --container <container> \
                            [--blob <blob>]
 
 # Upload a file to a Storage blob
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp storage blob upload --subscription <subscription> \
                           --account <account> \
                           --container <container> \
@@ -1421,6 +1620,7 @@ azmcp storage blob upload --subscription <subscription> \
 
 ```bash
 # List available Azure subscriptions
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp subscription list [--tenant-id <tenant-id>]
 ```
 
@@ -1428,6 +1628,7 @@ azmcp subscription list [--tenant-id <tenant-id>]
 
 ```bash
 # Get secure, production-grade Azure Terraform best practices for effective code generation and command execution.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp azureterraformbestpractices get
 ```
 
@@ -1435,15 +1636,18 @@ azmcp azureterraformbestpractices get
 
 ```bash
 # List Azure Virtual Desktop host pools in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool list --subscription <subscription> \
                                    [--resource-group <resource-group>]
 
 # List session hosts in a host pool
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
                                                [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                [--resource-group <resource-group>]
 
 # List user sessions on a session host
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool sessionhost usersession-list --subscription <subscription> \
                                                            [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                            --sessionhost <sessionhost-name> \
@@ -1461,9 +1665,11 @@ The Virtual Desktop commands support an optional `--resource-group` parameter th
 
 ```bash
 # Standard usage - enumerates all host pools in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool list --subscription <subscription>
 
 # Optimized usage - lists host pools in specific resource group only
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool list --subscription <subscription> \
                                    --resource-group <resource-group>
 ```
@@ -1472,15 +1678,18 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 
 ```bash
 # Standard usage - enumerates all host pools in subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
                                                 --hostpool <hostpool-name>
 
 # Optimized usage - direct resource group access
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
                                                 --hostpool <hostpool-name> \
                                                 --resource-group <resource-group>
 
 # Alternative with resource ID (no resource group needed)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
 ```
@@ -1489,6 +1698,7 @@ azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
 
 ```bash
 # Create a new workbook
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp workbooks create --subscription <subscription> \
                        --resource-group <resource-group> \
                        --display-name <display-name> \
@@ -1496,9 +1706,11 @@ azmcp workbooks create --subscription <subscription> \
                        [--source-id <source-id>]
 
 # Delete a workbook
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp workbooks delete --workbook-id <workbook-resource-id>
 
 # List Azure Monitor workbooks in a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp workbooks list --subscription <subscription> \
                      --resource-group <resource-group> \
                      [--category <category>] \
@@ -1506,9 +1718,11 @@ azmcp workbooks list --subscription <subscription> \
                      [--source-id <source-id>]
 
 # Show details of a specific workbook by resource ID
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp workbooks show --workbook-id <workbook-resource-id>
 
 # Update an existing workbook
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp workbooks update --workbook-id <workbook-resource-id> \
                        [--display-name <display-name>] \
                        [--serialized-content <json-content>]
@@ -1518,6 +1732,7 @@ azmcp workbooks update --workbook-id <workbook-resource-id> \
 
 ```bash
 # Get Bicep schema for a specific Azure resource type
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp bicepschema get --resource-type <resource-type> \
 ```
 
@@ -1525,6 +1740,7 @@ azmcp bicepschema get --resource-type <resource-type> \
 
 ```bash
 # Design Azure cloud architectures through guided questions
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cloudarchitect design [--question <question>] \
                             [--question-number <question-number>] \
                             [--total-questions <total-questions>] \
@@ -1535,6 +1751,7 @@ azmcp cloudarchitect design [--question <question>] \
 
 # Example:
 # Start an interactive architecture design session
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp cloudarchitect design --question "What type of application are you building?" \
                             --question-number 1 \
                             --total-questions 5 \

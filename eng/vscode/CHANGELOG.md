@@ -1,5 +1,43 @@
 # Release History
 
+## 0.8.5 (2025-10-07)
+
+### Added
+
+- Added the following OpenAI commands: [[#647](https://github.com/microsoft/mcp/pull/647)]
+  - `azmcp_foundry_openai_chat-completions-create`: Create interactive chat completions using Azure OpenAI chat models in AI Foundry.
+  - `azmcp_foundry_openai_embeddings-create`: Generate vector embeddings using Azure OpenAI embedding models in AI Foundry
+  - `azmcp_foundry_openai_models-list`: List all available OpenAI models and deployments in an Azure resource.
+- Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. [[#473](https://github.com/microsoft/mcp/pull/473)]
+- Added support for for appending tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees in Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_append`. [[#705](https://github.com/microsoft/mcp/pull/705)]
+- Added the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
+  - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
+  - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
+- Added support for listing all Azure SignalR runtime instances or getting detailed information about a single one via the command `azmcp_signalr_runtime_get`. [[#83](https://github.com/microsoft/mcp/pull/83)]
+
+### Changed
+
+- Renamed `azmcp_azuremanagedlustre` commands to `azmcp_managedlustre`. [[#345](https://github.com/microsoft/mcp/issues/345)]
+  - Renamed `azmcp_managedlustre_filesystem_required-subnet-size` to `azmcp_managedlustre_filesystem_subnetsize_ask`. [[#111](https://github.com/microsoft/mcp/issues/111)]
+- Merged the following Azure Kubernetes Service (AKS) tools: [[#591](https://github.com/microsoft/mcp/issues/591)]
+  - Merged `azmcp_aks_cluster_list` into `azmcp_aks_cluster_get`, which can perform both operations based on whether `--cluster` is passed.
+  - Merged `azmcp_aks_nodepool_list` into `azmcp_aks_nodepool_get`, which can perform both operations based on whether `--nodepool` is passed.
+- Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
+- Update the `ToolName` telemetry field to use the normalized command name when the `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
+- Updated the default tool loading behavior to execute namespace tool calls directly instead of spawning separate child processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
+
+### Fixed
+
+- Improved description of Load Test commands. [[#92](https://github.com/microsoft/mcp/pull/92)]
+- Fixed an issue where Azure Subscription tools were not available in the default (namespace) server mode. [[#634](https://github.com/microsoft/mcp/pull/634)]
+- Improved error message for macOS users when interactive browser authentication fails due to broker threading requirements. The error now provides clear guidance to use Azure CLI, Azure PowerShell, or Azure Developer CLI for authentication instead. [[#684](https://github.com/microsoft/mcp/pull/684)]
+- Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`. [[#524](https://github.com/microsoft/mcp/pull/524)]
+- Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
+- Updated the description of the Monitor tool and corrected the prompt for command `azmcp_monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]
+- Fixed "BadRequest" error in Azure Container Registry to get a registry, and in EventHubs to get a namespace. [[#729](https://github.com/microsoft/mcp/pull/729)]
+- Added redundancy in Dockerfile to ensure the azmcp in the Docker image is actually executable. [[#732](https://github.com/microsoft/mcp/pull/732)]
+
 ## 0.8.4 (2025-10-02)
 
 ### Added
@@ -119,7 +157,6 @@
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
-- Improved description of Load Test commands [[#92](https://github.com/microsoft/mcp/pull/92)] 
 - Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Changed
@@ -135,6 +172,8 @@
   - `azmcp_storage_share_file_list`
   - `azmcp_storage_table_list`
 - **Breaking:** Updated the `OpenWorld` and `Destructive` hints for all tools. [[#510](https://github.com/microsoft/mcp/pull/510)]
+
+### Fixed
 
 - Fixed MCP server hanging on invalid transport arguments. Server now exits gracefully with clear error messages instead of hanging indefinitely. [[#511](https://github.com/microsoft/mcp/pull/511)]
 
