@@ -55,33 +55,10 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
         var response = operation.GetRawResponse();
 
-        string transactionId = string.Empty;
-        if (response.Headers.TryGetValue("x-ms-ccf-transaction-id", out var headerValue))
-        {
-            transactionId = headerValue ?? string.Empty;
-        }
-
-        string state = string.Empty;
-        try
-        {
-            if (response.ContentStream is not null)
-            {
-                using var doc = JsonDocument.Parse(response.ContentStream);
-                if (doc.RootElement.TryGetProperty("state", out var stateProp))
-                {
-                    state = stateProp.GetString() ?? string.Empty;
-                }
-            }
-        }
-        catch
-        {
-            throw new RequestFailedException(response.Status, "Failed to parse response content.");
-        }
-
         return new AppendEntryResult
         {
-            TransactionId = transactionId,
-            State = state
+            TransactionId = operation.Id,
+            State = operation.HasCompleted ? "Committed" : "Pending"
         };
     }
 

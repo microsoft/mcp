@@ -116,16 +116,24 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
             new()
             {
                 { "ledger", ledgerName },
-                { "transactionId", transactionId.GetString()! }
+                { "transaction-id", transactionId.GetString()! }
             });
 
         Assert.NotNull(getResult);
 
         var entryTransactionId = getResult.Value.AssertProperty("transactionId");
         Assert.Equal(entryTransactionId.GetString(), transactionId.GetString());
+        
         var contents = getResult.Value.AssertProperty("contents");
         Assert.Equal(JsonValueKind.String, contents.ValueKind);
-        Assert.Equal(testContent.Replace(" ", "").Replace("\n", "").Replace("\r", ""), contents.GetString()!.Replace(" ", "").Replace("\n", "").Replace("\r", ""));
+        
+        // Parse both JSON strings to compare them structurally rather than as strings
+        var expectedJson = JsonDocument.Parse(testContent);
+        var actualJson = JsonDocument.Parse(contents.GetString()!);
+        
+        // Compare the JSON documents structurally
+        Assert.True(JsonElement.DeepEquals(expectedJson.RootElement, actualJson.RootElement), 
+            "The retrieved content does not match the appended content structurally");
 
         Output.WriteLine($"Ledger entry {transactionId} retrieved successfully.");
     }
