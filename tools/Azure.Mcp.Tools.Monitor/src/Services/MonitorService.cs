@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
@@ -28,20 +29,20 @@ public class MonitorService : BaseAzureService, IMonitorService
     private readonly ISubscriptionService _subscriptionService;
     private readonly IResourceGroupService _resourceGroupService;
     private readonly IResourceResolverService _resourceResolverService;
-    private readonly HttpClient _httpClient;
+    private readonly IHttpClientService _httpClientService;
 
     public MonitorService(
         ISubscriptionService subscriptionService,
         ITenantService tenantService,
         IResourceGroupService resourceGroupService,
         IResourceResolverService resourceResolverService,
-        HttpClient httpClient)
+        IHttpClientService httpClientService)
         : base(tenantService)
     {
         _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
         _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
-        _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+        _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     }
 
     public async Task<List<JsonNode>> QueryResourceLogs(
@@ -463,7 +464,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
-        using HttpResponseMessage response = await _httpClient.SendAsync(httpRequest);
+        using HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(httpRequest);
         string responseString = await response.Content.ReadAsStringAsync();
 
         if (response.IsSuccessStatusCode)
