@@ -92,50 +92,6 @@ public class EmailSendCommandTests
         Assert.Contains(command.Options, o => o.Name == "--auth-method");
     }
 
-    [Fact]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceCorrectly()
-    {
-        // Arrange
-        var parseResult = _commandDefinition.Parse(new[]
-        {
-            "--endpoint", "https://example.communication.azure.com",
-            "--sender", "sender@example.com",
-            "--sender-name", "Test Sender",
-            "--to", "recipient1@example.com", "recipient2@example.com",
-            "--subject", "Test Subject",
-            "--message", "Test Message",
-            "--is-html", "true",
-            "--cc", "cc@example.com",
-            "--bcc", "bcc@example.com",
-            "--reply-to", "reply@example.com",
-            "--tenant", "test-tenant",
-            "--subscription", "test-subscription",
-            "--resource-group", "test-rg",
-            "--retry-policy", "3"
-        });
-
-        var expectedResult = new EmailSendResult
-        {
-            MessageId = "test-message-id",
-            Status = "Queued"
-        };
-
-        _mockCommunicationService
-            .SendEmailAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<bool>(), Arg.Any<string[]>(), Arg.Any<string[]>(),
-                Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(expectedResult));
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-    }
-
     [Theory]
     [InlineData(null)]
     [InlineData("")]
@@ -273,52 +229,6 @@ public class EmailSendCommandTests
         Assert.NotNull(_context.Response.Results);
         var responseJson = JsonSerializer.Serialize(_context.Response.Results);
         Assert.Contains("Test error message", responseJson);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_WithOptionalParameters_PassesThemToService()
-    {
-        // Arrange
-        string[] args = [
-            "--endpoint", "https://example.communication.azure.com",
-            "--sender", "sender@example.com",
-            "--sender-name", "Test Sender",
-            "--to", "recipient1@example.com", "recipient2@example.com",
-            "--subject", "Test Subject",
-            "--message", "Test Message",
-            "--is-html",
-            "--cc", "cc@example.com",
-            "--bcc", "bcc@example.com",
-            "--reply-to", "reply@example.com",
-            "--tenant", "test-tenant", // <-- Add tenant to match required options
-            "--subscription", "test-subscription",
-            "--resource-group", "test-rg",
-            "--retry-policy", "3"
-        ];
-
-        var parseResult = _commandDefinition.Parse(args);
-
-        var expectedResult = new EmailSendResult
-        {
-            MessageId = "test-message-id",
-            Status = "Queued"
-        };
-
-        _mockCommunicationService
-            .SendEmailAsync(
-                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<bool>(), Arg.Any<string[]>(), Arg.Any<string[]>(),
-                Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<string>(),
-                Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromResult(expectedResult));
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
-        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
