@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Options.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -18,14 +17,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     : SubscriptionCommand<ActivityLogListOptions>
 {
     private const string CommandTitle = "List Activity Logs";
-    private readonly ILogger<ActivityLogListCommand> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _resourceNameOption = ActivityLogOptionDefinitions.ResourceName;
-    private readonly Option<string> _resourceTypeOption = ActivityLogOptionDefinitions.ResourceType;
-    private readonly Option<double> _hoursOption = ActivityLogOptionDefinitions.Hours;
-    private readonly Option<ActivityLogEventLevel?> _eventLevelOption = ActivityLogOptionDefinitions.EventLevel;
-    private readonly Option<int> _topOption = ActivityLogOptionDefinitions.Top;
+    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 
     public override string Name => "list";
 
@@ -35,13 +27,6 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         Lists activity logs for the specified Azure resource over the given prior number of hours.
         This command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.
         Returns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.
-          Required options:
-        - --resource-name: The name of the Azure resource to retrieve activity logs for
-          Optional options:
-        - --resource-type: The resource type (e.g., 'Microsoft.Storage/storageAccounts') for disambiguation
-        - --hours: Number of hours to look back
-        - --event-level: Filter by event level (Critical, Error, Informational, Verbose, Warning)
-        - --top: Maximum number of logs to return
         """;
 
     public override string Title => CommandTitle;
@@ -60,21 +45,22 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(_resourceNameOption);
-        command.Options.Add(_resourceTypeOption);
-        command.Options.Add(_hoursOption);
-        command.Options.Add(_eventLevelOption);
-        command.Options.Add(_topOption);
+        command.Options.Add(ActivityLogOptionDefinitions.ResourceName);
+        command.Options.Add(ActivityLogOptionDefinitions.ResourceType);
+        command.Options.Add(ActivityLogOptionDefinitions.Hours);
+        command.Options.Add(ActivityLogOptionDefinitions.EventLevel);
+        command.Options.Add(ActivityLogOptionDefinitions.Top);
     }
 
     protected override ActivityLogListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceName = parseResult.GetValueOrDefault(_resourceNameOption);
-        options.ResourceType = parseResult.GetValueOrDefault(_resourceTypeOption);
-        options.Hours = parseResult.GetValueOrDefault(_hoursOption);
-        options.EventLevel = parseResult.GetValueOrDefault(_eventLevelOption);
-        options.Top = parseResult.GetValueOrDefault(_topOption);
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.ResourceName = parseResult.GetValueOrDefault<string>(ActivityLogOptionDefinitions.ResourceName.Name);
+        options.ResourceType = parseResult.GetValueOrDefault<string>(ActivityLogOptionDefinitions.ResourceType.Name);
+        options.Hours = parseResult.GetValueOrDefault<double>(ActivityLogOptionDefinitions.Hours.Name);
+        options.EventLevel = parseResult.GetValueOrDefault<ActivityLogEventLevel?>(ActivityLogOptionDefinitions.EventLevel.Name);
+        options.Top = parseResult.GetValueOrDefault<int>(ActivityLogOptionDefinitions.Top.Name);
         return options;
     }
 
@@ -105,17 +91,16 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            // Set results if any were returned
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(
-                    new ActivityLogListCommandResult(results),
-                    MonitorJsonContext.Default.ActivityLogListCommandResult) :
-                null;
+            // Return empty array if no results
+            var activityLogs = results ?? [];
+            context.Response.Results = ResponseResult.Create(
+                new ActivityLogListCommandResult(activityLogs),
+                MonitorJsonContext.Default.ActivityLogListCommandResult);
         }
         catch (Exception ex)
         {
             // Log error with all relevant context
-            _logger.LogError(ex,
+            logger.LogError(ex,
                 "Error listing activity logs. ResourceName: {ResourceName}, ResourceType: {ResourceType}, Hours: {Hours}, Options: {@Options}",
                 options.ResourceName, options.ResourceType, options.Hours, options);
             HandleException(context, ex);
@@ -148,6 +133,4 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         _ => base.GetStatusCode(ex)
     };
 
-    // Strongly-typed result record
-    internal record ActivityLogListCommandResult(List<ActivityLogEventData> ActivityLogs);
 }

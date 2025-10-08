@@ -34,7 +34,7 @@ public static class ActivityLogOptionDefinitions
     )
     {
         Description = "The number of hours prior to now to retrieve activity logs for.",
-        DefaultValueFactory = _ => 1.0,
+        DefaultValueFactory = _ => 24.0,
         Required = false
     };
 
