@@ -81,7 +81,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
         Assert.Equal(JsonValueKind.Object, emailResult.ValueKind);
 
         // Verify expected properties
-        Assert.True(emailResult.TryGetProperty("messageId", out var messageIdElement));
+        var messageIdElement = emailResult.AssertProperty("messageId");
         var messageId = messageIdElement.GetString();
 
         Assert.True(emailResult.TryGetProperty("status", out var messageStatusElement));
