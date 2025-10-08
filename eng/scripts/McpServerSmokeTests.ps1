@@ -71,7 +71,11 @@ function Validate-Npm-Packages {
 
                 $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' }
                 $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$artifactOs-$TargetArch-*.tgz"
+
+                Write-Host "Installing Platform Package: $($platformPackage.FullName)"
                 if ($platformPackage) { npm install $platformPackage.FullName | Out-Null }
+
+                Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
                 if ($mainPackage) { npm install $mainPackage.FullName | Out-Null }
                 $output = npx azmcp tools list
                 if ($LASTEXITCODE -eq 0) {
