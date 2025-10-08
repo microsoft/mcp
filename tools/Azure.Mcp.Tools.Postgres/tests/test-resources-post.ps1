@@ -217,8 +217,9 @@ try {
 
     Write-Host "Ensuring database '$databaseName' exists." -ForegroundColor Yellow
     try {
+        $createDatabaseStatement = [string]::Format('CREATE DATABASE "{0}";', $databaseName)
         Invoke-PostgresNonQuery -Host $serverFqdn -Database 'postgres' -Username $userPrincipal -AccessToken $accessToken -Statements @(
-            "CREATE DATABASE \"$databaseName\";"
+            $createDatabaseStatement
         )
         Write-Host "Database '$databaseName' created." -ForegroundColor Green
     }
@@ -235,7 +236,7 @@ try {
     }
 
     Write-Host "Seeding table '$tableName' in database '$databaseName'." -ForegroundColor Yellow
-    $qualifiedTableName = "public.\"$tableName\""
+    $qualifiedTableName = [string]::Format('public."{0}"', $tableName)
     Invoke-PostgresNonQuery -Host $serverFqdn -Database $databaseName -Username $userPrincipal -AccessToken $accessToken -Statements @(
         "CREATE TABLE IF NOT EXISTS $qualifiedTableName (id SERIAL PRIMARY KEY, name TEXT NOT NULL, quantity INTEGER NOT NULL, last_updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);",
         "TRUNCATE TABLE $qualifiedTableName;",
