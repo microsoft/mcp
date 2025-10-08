@@ -26,7 +26,7 @@ public class TableSetup : IAreaSetup
             """
             Table operations - Commands for managing and accessing Azure Table. Use this tool when you need to list or
             get an Azure Table. Note that this tool requires appropriate Table account permissions and will only access
-            tableresources accessible to the authenticated user.
+            table resources accessible to the authenticated user.
             """);
 
         var tableList = serviceProvider.GetRequiredService<TableListCommand>();
