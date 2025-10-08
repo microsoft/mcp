@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. Use multiple `--tool` parameters to include multiple tools. It automatically switches to `all` mode. When used together with `--namespace`, only tools within the specified namespaces are considered.
+Exposes only specific tools by name, providing the finest level of granularity. Use multiple `--tool` parameters to include multiple tools. It automatically switches to `all` mode. The --namespace and --tool options cannot be used together..
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -103,14 +103,6 @@ azmcp server start \
     --mode all \
     --tool azmcp_storage_account_get \
     --tool azmcp_storage_account_create \
-    --tool azmcp_storage_blob_get \
-    [--transport <transport>] \
-    [--read-only]
-
-# Combine namespace and tool filtering
-azmcp server start \
-    --namespace storage \
-    --tool azmcp_storage_account_get \
     --tool azmcp_storage_blob_get \
     [--transport <transport>] \
     [--read-only]

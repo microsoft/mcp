@@ -45,7 +45,7 @@ By default, Azure MCP Server communicates with MCP Clients via standard I/O. Any
 
 ### Can I select what tools to load in the MCP server?
 
-Yes, you can control which tools are exposed using several approaches:
+Yes, you can control which tools are exposed using several approaches. The --namespace and --tool options cannot be used together.
 
 #### Option 1: Filter by Service Namespace
 Use the `--namespace` option to expose only tools for specific Azure services:
@@ -107,30 +107,6 @@ Use the `--tool` option to expose only specific tools by name. This provides the
         "azmcp_group_list",
         "--tool",
         "azmcp_storage_account_get"
-      ]
-    }
-  }
-}
-```
-
-#### Option 3: Combine Namespace and Tool Filtering
-You can combine both approaches - namespace filtering works first, then tool filtering is applied to the remaining tools:
-
-```json
-{
-  "servers": {
-    "Limited Storage Tools": {
-      "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
-      "args": [
-        "server",
-        "start",
-        "--namespace",
-        "storage",
-        "--tool",
-        "azmcp_storage_account_get",
-        "--tool",
-        "azmcp_storage_blob_get"
       ]
     }
   }

@@ -323,6 +323,37 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
+    public void Validate_WithNamespaceAndTool_ReturnsInvalidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--namespace and --tool options cannot be used together", response.Message);
+    }
+
+    [Fact]
     public void GetErrorMessage_WithTransportArgumentException_ReturnsCustomMessage()
     {
         // Arrange
@@ -362,6 +393,20 @@ public class ServiceStartCommandTests
         // Assert
         Assert.Contains("Insecure transport configuration error", message);
         Assert.Contains("proper authentication configured", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithNamespaceAndToolException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("--namespace and --tool options cannot be used together");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Configuration error", message);
+        Assert.Contains("mutually exclusive", message);
     }
 
     [Fact]
@@ -583,6 +628,18 @@ public class ServiceStartCommandTests
             args.Add("--tool");
             args.Add(tool);
         }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithNamespaceAndTool()
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--namespace", "storage",
+            "--tool", "azmcp_storage_account_get"
+        };
 
         return _command.GetCommand().Parse([.. args]);
     }
