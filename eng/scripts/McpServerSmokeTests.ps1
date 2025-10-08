@@ -77,6 +77,7 @@ function Validate-Npm-Packages {
 
                 Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
                 if ($mainPackage) { npm install $mainPackage.FullName | Out-Null }
+
                 if ($mainPackage -and $platformPackage) {
                     $output = npx azmcp tools list
                     if ($LASTEXITCODE -eq 0) {
@@ -87,7 +88,7 @@ function Validate-Npm-Packages {
                     }
                 }
                 else {
-                    Write-Host "Either main package or platform package is missing. Skipping tools list command."}
+                    Write-Host "Either main package or platform package is missing. Skipping tools list command."
                 }
             }
         }
