@@ -16,7 +16,13 @@ public sealed record LustreFileSystem(
     [property: JsonPropertyName("mgsAddress")] string? MgsAddress,
     [property: JsonPropertyName("skuTier")] string? SkuTier,
     [property: JsonPropertyName("storageCapacityTiB")] long? StorageCapacityTiB,
-    [property: JsonPropertyName("blobContainerId")] string? BlobContainerId,
     [property: JsonPropertyName("maintenanceDay")] string? MaintenanceDay,
-    [property: JsonPropertyName("maintenanceTime")] string? MaintenanceTime
+    [property: JsonPropertyName("maintenanceTime")] string? MaintenanceTime,
+    [property: JsonPropertyName("subnetId")] string? SubnetId,
+    [property: JsonPropertyName("hsmDataContainer")] string? HsmDataContainer,
+    [property: JsonPropertyName("hsmLogContainer")] string? HsmLogContainer,
+    [property: JsonPropertyName("rootSquashMode")] string? RootSquashMode,
+    [property: JsonPropertyName("noSquashNidList")] string? NoSquashNidList,
+    [property: JsonPropertyName("squashUid")] long? SquashUid,
+    [property: JsonPropertyName("squashGid")] long? SquashGid
 );

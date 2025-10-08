@@ -79,6 +79,7 @@ public class FileSystemSubnetSizeCommandTests
     }
 
     [Theory]
+    [InlineData("AMLFS-Durable-Premium-40")]
     [InlineData("AMLFS-Durable-Premium-125")]
     [InlineData("AMLFS-Durable-Premium-250")]
     [InlineData("AMLFS-Durable-Premium-500")]
@@ -86,14 +87,33 @@ public class FileSystemSubnetSizeCommandTests
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
-        var args = _commandDefinition.Parse(["--sku", sku, "--size", "32", "--subscription", _knownSubscriptionId]);
+        var args = _commandDefinition.Parse(["--sku", sku, "--size", "48", "--subscription", _knownSubscriptionId]);
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
         Assert.NotNull(response);
-        Assert.True(response.Status == HttpStatusCode.OK || response.Results != null);
+        Assert.True(response.Status == HttpStatusCode.OK);
+    }
+
+    [Theory]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --subscription sub123", true)]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --subscription sub123", false)]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48", false)]
+    [InlineData("--size 48 --subscription sub123", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        // Arrange
+        _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
+        var parsedArgs = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parsedArgs);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
@@ -119,7 +139,7 @@ public class FileSystemSubnetSizeCommandTests
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Exception("boom"));
+            .ThrowsAsync(new Exception("error"));
 
         var args = _commandDefinition.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
 
@@ -128,6 +148,6 @@ public class FileSystemSubnetSizeCommandTests
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.InternalServerError);
-        Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
