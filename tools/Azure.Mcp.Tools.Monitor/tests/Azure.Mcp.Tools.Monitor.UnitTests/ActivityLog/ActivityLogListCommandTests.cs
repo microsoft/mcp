@@ -166,7 +166,7 @@ public sealed class ActivityLogListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNullWhenNoActivityLogs()
+    public async Task ExecuteAsync_ReturnsEmptyListWhenNoActivityLogs()
     {
         // Arrange
         _monitorService.ListActivityLogs(
@@ -186,7 +186,13 @@ public sealed class ActivityLogListCommandTests
 
         // Assert
         Assert.Equal((HttpStatusCode)200, response.Status);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.ActivityLogListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.ActivityLogs);
     }
 
     [Fact]
