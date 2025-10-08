@@ -122,6 +122,25 @@ public class FileSystemCheckSubnetCommandTests
         Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
+    [Theory]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --location eastus --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1 --subscription sub123", true)]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --location eastus --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1", false)]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1 --subscription sub123", false)]
+    [InlineData(" --size 48 --location eastus --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1 --subscription sub123", false)]
+    [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --location eastus --subscription sub123", false)]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    {
+        // Arrange
+        var parsedArgs = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parsedArgs);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+    }
+
     private class ResultJson
     {
         [JsonPropertyName("valid")]

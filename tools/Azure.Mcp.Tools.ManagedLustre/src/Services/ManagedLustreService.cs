@@ -70,9 +70,15 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             data.ClientInfo?.MgsAddress,
             data.SkuName,
             data.StorageCapacityTiB.HasValue ? Convert.ToInt64(Math.Round(data.StorageCapacityTiB.Value)) : null,
-            data.Hsm?.Settings?.Container,
             data.MaintenanceWindow?.DayOfWeek?.ToString(),
-            data.MaintenanceWindow?.TimeOfDayUTC?.ToString()
+            data.MaintenanceWindow?.TimeOfDayUTC?.ToString(),
+            data.FilesystemSubnet,
+            data.Hsm?.Settings?.Container,
+            data.Hsm?.Settings?.LoggingContainer,
+            data.RootSquashSettings?.Mode?.ToString(),
+            data.RootSquashSettings?.NoSquashNidLists,
+            data.RootSquashSettings?.SquashUID,
+            data.RootSquashSettings?.SquashGID
         );
     }
 
