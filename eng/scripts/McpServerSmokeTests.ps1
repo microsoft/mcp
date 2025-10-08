@@ -22,11 +22,12 @@ function Validate-Nuget-Packages {
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
             Write-Host "Validating NuGet package for server $ServerName"
 
-            dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
+            $dnxOutput = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
                 Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+                Write-Host $dnxOutput
                 $hasFailures = $true
             }
         }
@@ -57,11 +58,12 @@ function Validate-Npm-Packages {
                 $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$TargetOs-$TargetArch-*.tgz"
                 if ($platformPackage) { npm install $platformPackage.FullName }
                 if ($mainPackage) { npm install $mainPackage.FullName }
-                npx azmcp tools list
+                $npmOutput = npx azmcp tools list
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                 } else {
                     Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+                    Write-Host $npmOutput
                     $hasFailures = $true
                 }
             }
