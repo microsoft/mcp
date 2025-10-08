@@ -90,7 +90,7 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         ValidateRequiredParameters(
             (nameof(ledgerName), ledgerName),
             (nameof(transactionId), transactionId));
-        
+
         // throw if strings are blank (whitespace)
         if (string.IsNullOrWhiteSpace(ledgerName))
         {
