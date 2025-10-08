@@ -102,16 +102,16 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
     protected override AppTraceListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string?>(OptionDefinitions.Common.ResourceGroup.Name);
 
-        options.ResourceName ??= parseResult.GetValueOrDefault(ResourceName);
-        options.ResourceId ??= parseResult.GetValueOrDefault(ResourceId);
+        options.ResourceName ??= parseResult.GetValueOrDefault<string?>(ResourceName.Name);
+        options.ResourceId ??= parseResult.GetValueOrDefault<string?>(ResourceId.Name);
 
-        options.Table = parseResult.GetValue(Table);
-        options.Filters = parseResult.GetValueOrDefault(Filters) ?? [];
+        options.Table = parseResult.GetValueOrDefault<string>(Table.Name);
+        options.Filters = parseResult.GetValueOrDefault<string[]>(Filters.Name) ?? [];
 
-        string? startRaw = parseResult.GetValueOrDefault(StartTime);
-        string? endRaw = parseResult.GetValueOrDefault(EndTime);
+        string? startRaw = parseResult.GetValueOrDefault<string?>(StartTime.Name);
+        string? endRaw = parseResult.GetValueOrDefault<string?>(EndTime.Name);
 
         if (DateTime.TryParse(startRaw, out DateTime startUtc))
         {
@@ -129,8 +129,8 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
     private void ResourceNameOrIdRequired(CommandResult result)
     {
         // Either resourceName or resourceId must be provided
-        string? resourceName = result.GetValueOrDefault(ResourceName);
-        string? resourceId = result.GetValueOrDefault(ResourceId);
+        string? resourceName = result.GetValueOrDefault<string?>(ResourceName.Name);
+        string? resourceId = result.GetValueOrDefault<string?>(ResourceId.Name);
 
         if (string.IsNullOrEmpty(resourceName) && string.IsNullOrEmpty(resourceId))
         {
@@ -140,8 +140,8 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
 
     private void TimeRangeValid(CommandResult result)
     {
-        if (!DateTime.TryParse(result.GetValueOrDefault(StartTime), out DateTime startTime) ||
-            !DateTime.TryParse(result.GetValueOrDefault(EndTime), out DateTime endTime) ||
+        if (!DateTime.TryParse(result.GetValueOrDefault<string?>(StartTime.Name), out DateTime startTime) ||
+            !DateTime.TryParse(result.GetValueOrDefault<string?>(EndTime.Name), out DateTime endTime) ||
             startTime >= endTime)
         {
             result.AddError($"Invalid time range specified. Ensure that --{StartTimeName} is before --{EndTimeName} and that both are valid dates in ISO format.");
@@ -150,7 +150,7 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
 
     private void TableNameValid(CommandResult result)
     {
-        string? table = result.GetValueOrDefault(Table);
+        string? table = result.GetValueOrDefault<string?>(Table.Name);
 
         if (!string.Equals(table, "exceptions", StringComparison.OrdinalIgnoreCase) &&
             !string.Equals(table, "dependencies", StringComparison.OrdinalIgnoreCase) &&

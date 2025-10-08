@@ -106,6 +106,9 @@ public static class CommandResultExtensions
         return TryGetValue(commandResult, option, out value);
     }
 
+    /// <summary>
+    /// Gets the value of the specified option, returning default if not found or not set.
+    /// </summary>
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, Option<T> option)
     {
         ArgumentNullException.ThrowIfNull(commandResult);
@@ -140,6 +143,9 @@ public static class CommandResultExtensions
         return optionResult.GetValueOrDefault<T>();
     }
 
+    /// <summary>
+    /// Gets the value of the option with the first matched option name, returning default if not found or not set.
+    /// </summary>
     public static T? GetValueOrDefault<T>(this CommandResult commandResult, string optionName)
     {
         // Find the option by name in the command
