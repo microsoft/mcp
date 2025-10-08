@@ -1440,6 +1440,14 @@ azmcp storage blob upload --subscription <subscription> \
                           --local-file-path <path-to-local-file>
 ```
 
+### Azure Table Operations
+
+```bash
+# List tables in a Storage account
+azmcp table list --subscription <subscription> \
+                 --account <account>
+```
+
 ### Azure Subscription Management
 
 ```bash

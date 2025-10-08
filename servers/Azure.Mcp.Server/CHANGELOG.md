@@ -17,6 +17,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added the following Azure Managed Lustre commands: [[#50](https://github.com/microsoft/mcp/issues/50)]
   - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystems.
   - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystems.
+- Added the following Azure Table commands:
+  - `azmcp_table_list`: List Azure Tables.
 
 ### Breaking Changes
 

@@ -184,6 +184,12 @@
 # ServiceLabel: %tools-Storage
 # ServiceOwners:                       @alzimmermsft  @jongio
 
+# PRLabel: %tools-Table
+/tools/Azure.Mcp.Tools.Table/          @alzimmermsft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Table
+# ServiceOwners:                       @alzimmermsft
+
 # PRLabel: %tools-Authorization
 /tools/Azure.Mcp.Tools.Authorization/  @vurhanau @jongio @xiangyan99 @microsoft/azure-mcp
 
