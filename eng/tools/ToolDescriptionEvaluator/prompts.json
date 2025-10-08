@@ -659,6 +659,10 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
+  "azmcp_table_list": [
+    "List all tables in the storage account <account>",
+    "Show me the tables in the storage account <account>"
+  ],
   "azmcp_azureterraformbestpractices_get": [
     "Fetch the Azure Terraform best practices",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
