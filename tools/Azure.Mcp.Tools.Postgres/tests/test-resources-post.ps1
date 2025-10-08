@@ -155,14 +155,14 @@ function Wait-ForPostgresReady {
 
 function New-PostgresConnection {
     param(
-        [string] $Host,
+        [string] $HostName,
         [string] $Database,
         [string] $Username,
         [string] $AccessToken
     )
 
     $builder = [Npgsql.NpgsqlConnectionStringBuilder]::new()
-    $builder.Host = $Host
+    $builder.Host = $HostName
     $builder.Database = $Database
     $builder.Username = $Username
     $builder.Password = $AccessToken
@@ -176,7 +176,7 @@ function New-PostgresConnection {
 
 function Invoke-PostgresNonQuery {
     param(
-        [string] $Host,
+        [string] $HostName,
         [string] $Database,
         [string] $Username,
         [string] $AccessToken,
@@ -187,7 +187,7 @@ function Invoke-PostgresNonQuery {
         return
     }
 
-    $connection = New-PostgresConnection -Host $Host -Database $Database -Username $Username -AccessToken $AccessToken
+    $connection = New-PostgresConnection -HostName $HostName -Database $Database -Username $Username -AccessToken $AccessToken
     try {
         $connection.Open()
         foreach ($statement in $Statements) {
@@ -226,7 +226,7 @@ try {
     Write-Host "Ensuring database '$databaseName' exists." -ForegroundColor Yellow
     try {
         $createDatabaseStatement = [string]::Format('CREATE DATABASE "{0}";', $databaseName)
-        Invoke-PostgresNonQuery -Host $serverFqdn -Database 'postgres' -Username $userPrincipal -AccessToken $accessToken -Statements @(
+        Invoke-PostgresNonQuery -HostName $serverFqdn -Database 'postgres' -Username $userPrincipal -AccessToken $accessToken -Statements @(
             $createDatabaseStatement
         )
         Write-Host "Database '$databaseName' created." -ForegroundColor Green
@@ -245,7 +245,7 @@ try {
 
     Write-Host "Seeding table '$tableName' in database '$databaseName'." -ForegroundColor Yellow
     $qualifiedTableName = [string]::Format('public."{0}"', $tableName)
-    Invoke-PostgresNonQuery -Host $serverFqdn -Database $databaseName -Username $userPrincipal -AccessToken $accessToken -Statements @(
+    Invoke-PostgresNonQuery -HostName $serverFqdn -Database $databaseName -Username $userPrincipal -AccessToken $accessToken -Statements @(
         "CREATE TABLE IF NOT EXISTS $qualifiedTableName (id SERIAL PRIMARY KEY, name TEXT NOT NULL, quantity INTEGER NOT NULL, last_updated TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP);",
         "TRUNCATE TABLE $qualifiedTableName;",
         "INSERT INTO $qualifiedTableName (name, quantity) VALUES ('alpha', 5), ('beta', 12), ('gamma', 27);"
