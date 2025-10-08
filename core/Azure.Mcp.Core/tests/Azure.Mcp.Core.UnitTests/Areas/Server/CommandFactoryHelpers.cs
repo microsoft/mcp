@@ -16,7 +16,7 @@ using Azure.Mcp.Tools.AppLens;
 using Azure.Mcp.Tools.Authorization;
 using Azure.Mcp.Tools.AzureBestPractices;
 using Azure.Mcp.Tools.AzureIsv;
-using Azure.Mcp.Tools.AzureManagedLustre;
+using Azure.Mcp.Tools.ManagedLustre;
 using Azure.Mcp.Tools.AzureTerraformBestPractices;
 using Azure.Mcp.Tools.BicepSchema;
 using Azure.Mcp.Tools.CloudArchitect;
@@ -66,7 +66,7 @@ internal class CommandFactoryHelpers
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
             new AzureIsvSetup(),
-            new AzureManagedLustreSetup(),
+            new ManagedLustreSetup(),
             new AzureTerraformBestPracticesSetup(),
             new BicepSchemaSetup(),
             new CloudArchitectSetup(),
@@ -123,7 +123,7 @@ internal class CommandFactoryHelpers
             new AuthorizationSetup(),
             new AzureBestPracticesSetup(),
             new AzureIsvSetup(),
-            new AzureManagedLustreSetup(),
+            new ManagedLustreSetup(),
             new AzureTerraformBestPracticesSetup(),
             new BicepSchemaSetup(),
             new CloudArchitectSetup(),
