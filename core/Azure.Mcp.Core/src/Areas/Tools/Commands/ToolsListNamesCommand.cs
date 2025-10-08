@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.Logging;
-using System.CommandLine.Parsing;
 
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
 

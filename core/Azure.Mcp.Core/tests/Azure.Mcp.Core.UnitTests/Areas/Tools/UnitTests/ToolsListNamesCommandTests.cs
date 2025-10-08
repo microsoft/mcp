@@ -68,7 +68,7 @@ public class ToolsListNamesCommandTests
         // Assert
         Assert.NotNull(parseResult);
         Assert.False(parseResult.Errors.Any(), $"Parse errors: {string.Join(", ", parseResult.Errors)}");
-        
+
         var namespaceValue = parseResult.GetValueOrDefault<string>(ToolsListOptionDefinitions.Namespace.Name);
         Assert.Equal("storage", namespaceValue);
     }
