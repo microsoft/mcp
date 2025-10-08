@@ -24,7 +24,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
     public async Task<List<LustreFileSystem>> ListFileSystemsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var results = new List<LustreFileSystem>();
 
@@ -223,7 +223,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null
         )
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
 
@@ -289,7 +289,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         RetryPolicyOptions? retryPolicy = null
     )
     {
-        ValidateRequiredParameters(subscription, resourceGroup, name, location, sku, subnetId);
+        ValidateRequiredParameters((nameof(subscription), subscription),
+        (nameof(resourceGroup), resourceGroup),
+        (nameof(name), name),
+        (nameof(location), location),
+        (nameof(sku), sku),
+        (nameof(subnetId), subnetId)
+        );
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
@@ -393,7 +399,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, name);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(name), name));
 
         var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
@@ -444,7 +450,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters([subscription, sku, subnetId, location]);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(sku), sku), (nameof(subnetId), subnetId), (nameof(location), location));
 
         var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent

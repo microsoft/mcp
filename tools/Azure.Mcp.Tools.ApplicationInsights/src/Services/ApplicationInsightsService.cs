@@ -28,14 +28,14 @@ public class ApplicationInsightsService(
 
     public async Task<IEnumerable<JsonNode>> GetProfilerInsightsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
         IEnumerable<JsonNode> results = await GetProfilerInsightsImpAsync(subscription, resourceGroup, tenant, retryPolicy).ConfigureAwait(false);
         return results.Take(MaxRecommendations);
     }
 
     private async Task<IEnumerable<JsonNode>> GetProfilerInsightsImpAsync(string subscription, string? resourceGroup, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
         List<JsonNode> results = [];
 
         try

@@ -26,7 +26,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         string resourceId,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceId);
+        ValidateRequiredParameters((nameof(resourceId), resourceId));
 
         try
         {
@@ -69,7 +69,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -122,7 +122,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {

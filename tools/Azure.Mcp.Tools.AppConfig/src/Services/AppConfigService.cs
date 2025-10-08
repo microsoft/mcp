@@ -24,7 +24,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     public async Task<List<AppConfigurationAccount>> GetAppConfigAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -54,7 +54,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(accountName, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
         var settings = new List<KeyValueSetting>();
@@ -96,14 +96,14 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
 
     public async Task SetKeyValueLockState(string accountName, string key, bool locked, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
     {
-        ValidateRequiredParameters(accountName, key, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
         await client.SetReadOnlyAsync(key, label, locked, cancellationToken: default);
     }
 
     public async Task SetKeyValue(string accountName, string key, string value, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null, string? contentType = null, string[]? tags = null)
     {
-        ValidateRequiredParameters(accountName, key, value, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(value), value), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
 
         // Create a ConfigurationSetting object to include contentType if provided
@@ -138,7 +138,7 @@ public sealed class AppConfigService(ISubscriptionService subscriptionService, I
     }
     public async Task DeleteKeyValue(string accountName, string key, string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, string? label = null)
     {
-        ValidateRequiredParameters(accountName, key, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(key), key), (nameof(subscription), subscription));
         var client = await GetConfigurationClient(accountName, subscription, tenant, retryPolicy);
         await client.DeleteConfigurationSettingAsync(key, label, cancellationToken: default);
     }
