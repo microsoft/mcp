@@ -13,6 +13,7 @@ public static class ServiceOptionDefinitions
     public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
+    public const string ConfigFilePathName = "config-file-path";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -82,5 +83,13 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<string> ConfigFilePath = new($"--{ConfigFilePathName}")
+    {
+        Description = "Path to the authentication configuration file (JSON).",
+        Required = false,
+        Arity = ArgumentArity.ZeroOrOne,
+        DefaultValueFactory = _ => ""
     };
 }

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Areas.Server.Configuration;
 
 namespace Azure.Mcp.Core.Areas.Server.Options;
 
@@ -64,4 +65,10 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("insecureDisableElicitation")]
     public bool InsecureDisableElicitation { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the server authentication configuration.
+    /// </summary>
+    [JsonPropertyName("serverConfiguration")]
+    public ServerConfiguration? ServerConfiguration { get; set; } = null;
 }

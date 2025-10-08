@@ -235,15 +235,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     /// <returns>The cached or newly fetched token</returns>
     protected async Task<string> GetEntraIdAccessTokenAsync(
         ICacheService cacheService,
-        string cacheGroup, 
-        string tokenScope, 
+        string cacheGroup,
+        string tokenScope,
         string? tenant = null,
         string tokenCacheKeyPrefix = "entra-token")
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(tokenCacheKeyPrefix, nameof(tokenCacheKeyPrefix));
-        
-        var cacheKey = string.IsNullOrEmpty(tenant) 
-            ? tokenCacheKeyPrefix 
+
+        var cacheKey = string.IsNullOrEmpty(tenant)
+            ? tokenCacheKeyPrefix
             : $"{tokenCacheKeyPrefix}_{tenant}";
 
         // Try to get from cache first
@@ -263,7 +263,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
         // Calculate cache duration with 60-second safety buffer
         var expiryTime = accessToken.ExpiresOn.AddSeconds(-60);
         var cacheDuration = expiryTime - DateTimeOffset.UtcNow;
-        
+
         // Only cache if there's meaningful time left
         if (cacheDuration > TimeSpan.Zero)
         {
