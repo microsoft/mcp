@@ -1,6 +1,15 @@
 #!/bin/env pwsh
 #Requires -Version 7
 
+[CmdletBinding()]
+param(
+    [string] $ServerName,
+    [string] $ArtifactsDirectory,
+    [string] $TargetOs,
+    [string] $TargetArch,
+    [string] $WorkingDirectory
+)
+
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
@@ -22,12 +31,11 @@ function Validate-Nuget-Packages {
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
             Write-Host "Validating NuGet package for server $ServerName"
 
-            $dnxOutput = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
+            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
                 Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                Write-Host $dnxOutput
                 $hasFailures = $true
             }
         }
@@ -58,12 +66,11 @@ function Validate-Npm-Packages {
                 $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$TargetOs-$TargetArch-*.tgz"
                 if ($platformPackage) { npm install $platformPackage.FullName }
                 if ($mainPackage) { npm install $mainPackage.FullName }
-                $npmOutput = npx azmcp tools list
+                $output = npx azmcp tools list
                 if ($LASTEXITCODE -eq 0) {
                     Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                 } else {
                     Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                    Write-Host $npmOutput
                     $hasFailures = $true
                 }
             }
@@ -74,8 +81,8 @@ function Validate-Npm-Packages {
     return $hasFailures
 }
 
-$nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
-$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)"
+$nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed"
+$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory
 
 Write-Host "NuGet package validation has Failures: $nugetHasFailures"
 Write-Host "NPM package validation has Failures : $npmHasFailures"
