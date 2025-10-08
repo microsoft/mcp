@@ -226,6 +226,7 @@ azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              [--auth-method <auth-method>]
 
 # Generate text completions using deployed Azure OpenAI models in AI Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai create-completion --subscription <subscription> \
                                        --resource-group <resource-group> \
                                        --resource-name <resource-name> \
