@@ -13,10 +13,11 @@ namespace Azure.Mcp.Tools.Postgres.LiveTests;
 public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     private string ServerName => Settings.ResourceBaseName;
-    private string ServerFqdn => $"{ServerName}.postgres.database.azure.com";
+    private string ServerFqdn => Settings.DeploymentOutputs.GetValueOrDefault("postgresServerFqdn") 
+        ?? $"{ServerName}.postgres.database.azure.com";
     private const string TestDatabaseName = "testdb";
     private const string TestDatabase2Name = "testdb2";
-    private string AdminUsername => Settings.DeploymentOutputs.GetValueOrDefault("adminUsername") ?? string.Empty;
+    private string AdminUsername => Settings.DeploymentOutputs.GetValueOrDefault("adminLogin") ?? string.Empty;
     private static bool _testDataInitialized = false;
     private static readonly SemaphoreSlim _initLock = new(1, 1);
 
@@ -51,15 +52,21 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 
     private async Task CreateTestDataAsync()
     {
+        Output.WriteLine($"ServerFqdn: {ServerFqdn}");
+        Output.WriteLine($"AdminUsername: {AdminUsername}");
+        Output.WriteLine($"TestDatabaseName: {TestDatabaseName}");
+        
         // Get Entra ID access token for PostgreSQL
         var tokenCredential = new Azure.Identity.DefaultAzureCredential();
         var tokenRequestContext = new Azure.Core.TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
         var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
 
         var connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
-
+        
+        Output.WriteLine($"Connecting to PostgreSQL...");
         await using var connection = new NpgsqlConnection(connectionString);
         await connection.OpenAsync();
+        Output.WriteLine($"Connected successfully!");
 
         // Create employees table
         var createEmployeesTable = @"
