@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Microsoft.Extensions.Logging;
@@ -35,9 +36,17 @@ public sealed class ToolsListNamesCommand(ILogger<ToolsListNamesCommand> logger)
         Secret = false
     };
 
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(ToolsListOptionDefinitions.Namespace);
+    }
+
     protected override ToolsListNamesOptions BindOptions(ParseResult parseResult)
     {
-        return new ToolsListNamesOptions();
+        var options = new ToolsListNamesOptions();
+        options.Namespace = parseResult.GetValueOrDefault<string>(ToolsListOptionDefinitions.Namespace.Name);
+        return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
@@ -48,9 +57,18 @@ public sealed class ToolsListNamesCommand(ILogger<ToolsListNamesCommand> logger)
             var options = BindOptions(parseResult);
 
             // Get all visible commands and extract their tokenized names (full command paths)
-            var toolNames = await Task.Run(() => CommandFactory.GetVisibleCommands(factory.AllCommands)
+            var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
                 .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
-                .Where(name => !string.IsNullOrEmpty(name))
+                .Where(name => !string.IsNullOrEmpty(name));
+
+            // Apply namespace filtering if specified
+            if (!string.IsNullOrEmpty(options.Namespace))
+            {
+                var namespacePrefix = $"azmcp_{options.Namespace}_";
+                allToolNames = allToolNames.Where(name => name.StartsWith(namespacePrefix, StringComparison.OrdinalIgnoreCase));
+            }
+
+            var toolNames = await Task.Run(() => allToolNames
                 .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
                 .ToList());
 
