@@ -382,7 +382,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant,
         RetryPolicyOptions? retryPolicy)
     {
-        ValidateRequiredParameters(subscription, resourceName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         if (top < 1)
         {
