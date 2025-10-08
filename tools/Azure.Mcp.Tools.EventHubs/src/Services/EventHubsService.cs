@@ -550,4 +550,123 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
+    public async Task<List<ConsumerGroup>> ListConsumerGroupsAsync(
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(eventHubName, namespaceName, resourceGroup, subscription);
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            if (resourceGroupResource?.Value == null)
+            {
+                throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
+            }
+
+            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+
+            if (namespaceResource?.Value == null)
+            {
+                throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'");
+            }
+
+            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName);
+
+            if (eventHubResource?.Value == null)
+            {
+                throw new KeyNotFoundException($"Event Hub '{eventHubName}' not found in namespace '{namespaceName}'");
+            }
+
+            var consumerGroups = new List<ConsumerGroup>();
+
+            await foreach (var consumerGroup in eventHubResource.Value.GetEventHubsConsumerGroups())
+            {
+                consumerGroups.Add(ConvertToConsumerGroup(consumerGroup.Data, resourceGroup, namespaceName, eventHubName));
+            }
+
+            return consumerGroups;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error listing consumer groups in Event Hub '{EventHubName}' of namespace '{NamespaceName}' for subscription '{Subscription}'",
+                eventHubName, namespaceName, subscription);
+            throw;
+        }
+    }
+
+    public async Task<ConsumerGroup?> GetConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            if (resourceGroupResource?.Value == null)
+            {
+                throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
+            }
+
+            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+
+            if (namespaceResource?.Value == null)
+            {
+                throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'");
+            }
+
+            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName);
+
+            if (eventHubResource?.Value == null)
+            {
+                throw new KeyNotFoundException($"Event Hub '{eventHubName}' not found in namespace '{namespaceName}'");
+            }
+
+            var consumerGroupResource = await eventHubResource.Value.GetEventHubsConsumerGroups().GetIfExistsAsync(consumerGroupName);
+
+            if (consumerGroupResource?.Value == null)
+            {
+                return null;
+            }
+
+            return ConvertToConsumerGroup(consumerGroupResource.Value.Data, resourceGroup, namespaceName, eventHubName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error retrieving consumer group '{ConsumerGroupName}' in Event Hub '{EventHubName}' of namespace '{NamespaceName}' for subscription '{Subscription}'",
+                consumerGroupName, eventHubName, namespaceName, subscription);
+            throw;
+        }
+    }
+
+    private static ConsumerGroup ConvertToConsumerGroup(EventHubsConsumerGroupData consumerGroupData, string resourceGroup, string namespaceName, string eventHubName)
+    {
+        return new ConsumerGroup(
+            Name: consumerGroupData.Name,
+            Id: consumerGroupData.Id?.ToString() ?? string.Empty,
+            ResourceGroup: resourceGroup,
+            Namespace: namespaceName,
+            EventHub: eventHubName,
+            Location: consumerGroupData.Location?.ToString(),
+            UserMetadata: consumerGroupData.UserMetadata,
+            CreationTime: consumerGroupData.CreatedOn,
+            UpdatedTime: consumerGroupData.UpdatedOn);
+    }
+
 }

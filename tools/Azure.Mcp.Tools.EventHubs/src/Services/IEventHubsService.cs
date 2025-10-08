@@ -96,4 +96,21 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<ConsumerGroup>> ListConsumerGroupsAsync(
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<ConsumerGroup?> GetConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

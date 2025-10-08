@@ -5,7 +5,7 @@ namespace Azure.Mcp.Tools.EventHubs.Options;
 
 public static class EventHubsOptionDefinitions
 {
-    public const string ConsumerGroupName = "consumer-group";
+    public const string ConsumerGroup = "consumer-group";
     public const string EventHub = "eventhub";
     public const string EventHubName = "eventhub";
     public const string EventHubStatus = "status";
@@ -23,8 +23,8 @@ public static class EventHubsOptionDefinitions
     public const string UserMetadata = "user-metadata";
     public const string ZoneRedundant = "zone-redundant";
 
-    public static readonly Option<string> ConsumerGroupNameOption = new(
-        $"--{ConsumerGroupName}"
+    public static readonly Option<string> ConsumerGroupOption = new(
+        $"--{ConsumerGroup}"
     )
     {
         Description = "The name of the consumer group within the Event Hub.",

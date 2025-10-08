@@ -50,7 +50,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains(EventHubsOptionDefinitions.NamespaceName.Name) && args.Contains(OptionDefinitions.Common.ResourceGroup.Name))
+            if (args.Contains(EventHubsOptionDefinitions.Namespace) && args.Contains(OptionDefinitions.Common.ResourceGroup.Name))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(

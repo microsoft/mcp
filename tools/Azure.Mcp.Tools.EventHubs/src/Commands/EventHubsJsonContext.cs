@@ -11,6 +11,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands;
 
 [JsonSerializable(typeof(Models.ConsumerGroup))]
 [JsonSerializable(typeof(ConsumerGroupDeleteCommand.ConsumerGroupDeleteCommandResult))]
+[JsonSerializable(typeof(ConsumerGroupGetCommand.ConsumerGroupGetCommandResult))]
 [JsonSerializable(typeof(ConsumerGroupUpdateCommand.ConsumerGroupUpdateCommandResult))]
 [JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSerializable(typeof(EventHubDeleteCommand.EventHubDeleteCommandResult))]

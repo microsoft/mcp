@@ -62,8 +62,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.PartitionCountOption);
         command.Options.Add(EventHubsOptionDefinitions.MessageRetentionInHoursOption);
         command.Options.Add(EventHubsOptionDefinitions.StatusOption);
@@ -73,8 +73,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
-        options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName) ?? string.Empty;
         options.PartitionCount = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.PartitionCount);
         options.MessageRetentionInHours = parseResult.GetValueOrDefault<long?>(EventHubsOptionDefinitions.MessageRetentionInHours);
         options.Status = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubStatus);
@@ -93,8 +93,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         try
         {
             var eventHub = await _service.CreateOrUpdateEventHubAsync(
-                options.EventHubName!,
-                options.NamespaceName!,
+                options.EventHub!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.PartitionCount,
@@ -111,7 +111,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         {
             _logger.LogError(ex,
                 "Error creating or updating event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.EventHubName, options.NamespaceName, options.ResourceGroup, options.Subscription, options);
+                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
             HandleException(context, ex);
         }
 

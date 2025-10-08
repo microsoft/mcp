@@ -24,8 +24,9 @@ public class EventHubsSetup : IAreaSetup
         services.AddSingleton<NamespaceGetCommand>();
         services.AddSingleton<NamespaceUpdateCommand>();
         services.AddSingleton<NamespaceDeleteCommand>();
-        services.AddSingleton<ConsumerGroupUpdateCommand>();
         services.AddSingleton<ConsumerGroupDeleteCommand>();
+        services.AddSingleton<ConsumerGroupGetCommand>();
+        services.AddSingleton<ConsumerGroupUpdateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -58,11 +59,14 @@ public class EventHubsSetup : IAreaSetup
         var consumerGroupGroup = new CommandGroup("consumergroup", "Event Hubs consumer group operations");
         eventHubs.AddSubGroup(consumerGroupGroup);
 
-        var consumerGroupUpdateCommand = serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>();
-        consumerGroupGroup.AddCommand(consumerGroupUpdateCommand.Name, consumerGroupUpdateCommand);
-
         var consumerGroupDeleteCommand = serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>();
         consumerGroupGroup.AddCommand(consumerGroupDeleteCommand.Name, consumerGroupDeleteCommand);
+
+        var consumerGroupGetCommand = serviceProvider.GetRequiredService<ConsumerGroupGetCommand>();
+        consumerGroupGroup.AddCommand(consumerGroupGetCommand.Name, consumerGroupGetCommand);
+
+        var consumerGroupUpdateCommand = serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>();
+        consumerGroupGroup.AddCommand(consumerGroupUpdateCommand.Name, consumerGroupUpdateCommand);
 
         return eventHubs;
     }

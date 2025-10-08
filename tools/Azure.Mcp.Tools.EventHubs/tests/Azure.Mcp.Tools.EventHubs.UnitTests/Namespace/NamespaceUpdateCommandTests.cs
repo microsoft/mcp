@@ -483,7 +483,7 @@ public class NamespaceUpdateCommandTests
         Assert.NotNull(options);
         Assert.Equal("test-sub", options.Subscription);
         Assert.Equal("test-rg", options.ResourceGroup);
-        Assert.Equal("test-namespace", options.NamespaceName);
+        Assert.Equal("test-namespace", options.Namespace);
         Assert.Equal("eastus", options.Location);
         Assert.Equal("Standard", options.SkuName);
         Assert.Equal("Standard", options.SkuTier);

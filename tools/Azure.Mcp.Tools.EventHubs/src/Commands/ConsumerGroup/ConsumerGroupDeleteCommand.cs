@@ -46,18 +46,18 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupNameOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsRequired());
     }
 
     protected override ConsumerGroupDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name) ?? string.Empty;
-        options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name) ?? string.Empty;
-        options.ConsumerGroupName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupNameOption.Name) ?? string.Empty;
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name);
+        options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
         return options;
     }
 

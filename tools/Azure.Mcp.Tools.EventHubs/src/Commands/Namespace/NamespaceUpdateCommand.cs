@@ -55,7 +55,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.LocationOption);
         command.Options.Add(EventHubsOptionDefinitions.SkuNameOption);
         command.Options.Add(EventHubsOptionDefinitions.SkuTierOption);
@@ -104,7 +104,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace);
         options.Location = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
         options.SkuName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
         options.SkuTier = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);
@@ -145,7 +145,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
             }
 
             var updatedNamespace = await eventHubsService.UpdateNamespaceAsync(
-                options.NamespaceName!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Location,
@@ -168,7 +168,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error updating Event Hubs namespace '{NamespaceName}' in resource group '{ResourceGroup}'",
-                options.NamespaceName, options.ResourceGroup);
+                options.Namespace, options.ResourceGroup);
             HandleException(context, ex);
         }
 

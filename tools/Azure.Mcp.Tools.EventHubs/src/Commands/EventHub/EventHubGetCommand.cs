@@ -53,16 +53,16 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubName.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsOptional());
 
         command.Validators.Add(result =>
         {
-            if (result.HasOptionResult(EventHubsOptionDefinitions.EventHubName.Name) &&
-                (!result.HasOptionResult(EventHubsOptionDefinitions.NamespaceName.Name) ||
+            if (result.HasOptionResult(EventHubsOptionDefinitions.EventHubName) &&
+                (!result.HasOptionResult(EventHubsOptionDefinitions.Namespace) ||
                  !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name)))
             {
-                result.AddError($"--{EventHubsOptionDefinitions.EventHubName.Name} option requires both --{EventHubsOptionDefinitions.NamespaceName.Name} and --{OptionDefinitions.Common.ResourceGroup.Name} options to be specified.");
+                result.AddError($"--{EventHubsOptionDefinitions.EventHubName} option requires both --{EventHubsOptionDefinitions.Namespace} and --{OptionDefinitions.Common.ResourceGroup.Name} options.");
             }
         });
     }
@@ -71,8 +71,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
-        options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName);
         return options;
     }
 
@@ -87,13 +87,13 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
 
         try
         {
-            bool isSingleEventHubRequest = !string.IsNullOrEmpty(options.EventHubName);
+            bool isSingleEventHubRequest = !string.IsNullOrEmpty(options.EventHub);
 
             if (isSingleEventHubRequest)
             {
                 var eventHub = await _service.GetEventHubAsync(
-                    options.EventHubName!,
-                    options.NamespaceName!,
+                    options.EventHub!,
+                    options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
@@ -105,7 +105,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
             else
             {
                 var eventHubs = await _service.ListEventHubsAsync(
-                    options.NamespaceName!,
+                    options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
@@ -116,17 +116,17 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         }
         catch (Exception ex)
         {
-            if (string.IsNullOrEmpty(options.EventHubName))
+            if (!string.IsNullOrEmpty(options.EventHub))
             {
                 _logger.LogError(ex,
                     "Error listing event hubs. Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.NamespaceName, options.ResourceGroup, options.Subscription, options);
+                    options.Namespace, options.ResourceGroup, options.Subscription, options);
             }
             else
             {
                 _logger.LogError(ex,
                     "Error getting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                    options.EventHubName, options.NamespaceName, options.ResourceGroup, options.Subscription, options);
+                    options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
             }
             HandleException(context, ex);
         }

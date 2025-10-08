@@ -48,9 +48,9 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupNameOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.UserMetadataOption.AsOptional());
     }
 
@@ -58,9 +58,9 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name) ?? string.Empty;
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
         options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name) ?? string.Empty;
-        options.ConsumerGroupName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupNameOption.Name) ?? string.Empty;
+        options.ConsumerGroupName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name) ?? string.Empty;
         options.UserMetadata = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.UserMetadataOption.Name);
         return options;
     }

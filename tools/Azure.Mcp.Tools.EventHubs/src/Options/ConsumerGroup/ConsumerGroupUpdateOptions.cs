@@ -14,7 +14,7 @@ public class ConsumerGroupUpdateOptions : BaseEventHubsOptions
     [JsonPropertyName(EventHubsOptionDefinitions.Namespace)]
     public string NamespaceName { get; set; } = string.Empty;
 
-    [JsonPropertyName(EventHubsOptionDefinitions.ConsumerGroupName)]
+    [JsonPropertyName(EventHubsOptionDefinitions.ConsumerGroup)]
     public string ConsumerGroupName { get; set; } = string.Empty;
 
     [JsonPropertyName(EventHubsOptionDefinitions.UserMetadata)]

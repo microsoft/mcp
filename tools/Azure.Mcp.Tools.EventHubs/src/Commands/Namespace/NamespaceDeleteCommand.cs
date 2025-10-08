@@ -50,14 +50,14 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
     }
 
     protected override NamespaceDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace);
         return options;
     }
 
@@ -75,21 +75,21 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
             var eventHubsService = context.GetService<IEventHubsService>();
 
             var success = await eventHubsService.DeleteNamespaceAsync(
-                options.NamespaceName!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new NamespaceDeleteCommandResult(success, $"Namespace '{options.NamespaceName}' deleted successfully"),
+                new NamespaceDeleteCommandResult(success, $"Namespace '{options.Namespace}' deleted successfully"),
                 EventHubsJsonContext.Default.NamespaceDeleteCommandResult);
             context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error deleting Event Hubs namespace '{NamespaceName}' from resource group '{ResourceGroup}'",
-                options.NamespaceName, options.ResourceGroup);
+                options.Namespace, options.ResourceGroup);
             HandleException(context, ex);
         }
 

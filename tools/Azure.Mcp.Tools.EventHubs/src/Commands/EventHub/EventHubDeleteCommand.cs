@@ -55,16 +55,16 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubName.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
     }
 
     protected override EventHubDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
-        options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName) ?? string.Empty;
         return options;
     }
 
@@ -80,22 +80,22 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         try
         {
             var deleted = await _service.DeleteEventHubAsync(
-                options.EventHubName!,
-                options.NamespaceName!,
+                options.EventHub!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new EventHubDeleteCommandResult(deleted, options.EventHubName!),
+                new EventHubDeleteCommandResult(deleted, options.EventHub!),
                 EventHubsJsonContext.Default.EventHubDeleteCommandResult);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
                 "Error deleting event hub. EventHub: {EventHub}, Namespace: {Namespace}, ResourceGroup: {ResourceGroup}, Subscription: {Subscription}, Options: {@Options}",
-                options.EventHubName, options.NamespaceName, options.ResourceGroup, options.Subscription, options);
+                options.EventHub, options.Namespace, options.ResourceGroup, options.Subscription, options);
             HandleException(context, ex);
         }
 
