@@ -86,6 +86,28 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Specific Tool Filtering
+
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+
+```bash
+# Start MCP Server with default mode and only subscription and resource group tools
+azmcp server start \
+    --tool azmcp_subscription_list \
+    --tool azmcp_group_list \
+    [--transport <transport>] \
+    [--read-only]
+
+# Start MCP Server with all mode and essential storage management tools
+azmcp server start \
+    --mode all \
+    --tool azmcp_storage_account_get \
+    --tool azmcp_storage_account_create \
+    --tool azmcp_storage_blob_get \
+    [--transport <transport>] \
+    [--read-only]
+```
+
 #### Namespace Mode (Default)
 
 Collapses all tools within each namespace into a single tool (e.g., all storage operations become one "storage" tool with internal routing). This mode is particularly useful when working with MCP clients that have tool limits - for example, VS Code only supports a maximum of 128 tools across all registered MCP servers.
@@ -126,8 +148,10 @@ The `azmcp server start` command supports the following options:
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**

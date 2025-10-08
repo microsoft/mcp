@@ -576,4 +576,47 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     #endregion
+
+    #region Tool Mode Tests
+
+    [Fact]
+    public async Task ToolMode_AutomaticallyChangesToAllMode()
+    {
+        // Arrange - Test that --tool switch automatically changes mode to "all"
+        await using var client = await CreateClientAsync("server", "start", "--tool", "azmcp_group_list", "--tool", "azmcp_subscription_list");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // Should only include the specified tools
+        Assert.Equal(2, toolNames.Count);
+        Assert.Contains("azmcp_group_list", toolNames);
+        Assert.Contains("azmcp_subscription_list", toolNames);
+    }
+
+    [Fact]
+    public async Task ToolMode_OverridesExplicitNamespaceMode()
+    {
+        // Arrange - Test that --tool switch overrides --mode namespace
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "azmcp_group_list");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // Should only include the specified tool, mode should be automatically changed to "all"
+        Assert.Single(toolNames);
+        Assert.Contains("azmcp_group_list", toolNames);
+    }
+
+    #endregion
 }
