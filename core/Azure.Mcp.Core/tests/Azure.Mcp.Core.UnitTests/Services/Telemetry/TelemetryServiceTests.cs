@@ -15,13 +15,12 @@ public class TelemetryServiceTests
 {
     private const string TestDeviceId = "test-device-id";
     private const string TestMacAddressHash = "test-hash";
-    private static readonly AzureMcpServerConfiguration TestConfiguration = new()
+    private readonly AzureMcpServerConfiguration _testConfiguration = new()
     {
         Name = "TestService",
         Version = "1.0.0",
         IsTelemetryEnabled = true
     };
-
     private readonly IOptions<AzureMcpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
     private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
@@ -29,7 +28,7 @@ public class TelemetryServiceTests
     public TelemetryServiceTests()
     {
         _mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
-        _mockOptions.Value.Returns(TestConfiguration);
+        _mockOptions.Value.Returns(_testConfiguration);
 
         _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
 
@@ -42,7 +41,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_WhenTelemetryDisabled_ShouldReturnNull()
     {
         // Arrange
-        TestConfiguration.IsTelemetryEnabled = false;
+        _testConfiguration.IsTelemetryEnabled = false;
         using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
         const string activityId = "test-activity";
 
@@ -60,7 +59,7 @@ public class TelemetryServiceTests
     public async Task StartActivity_WithClientInfo_WhenTelemetryDisabled_ShouldReturnNull()
     {
         // Arrange
-        TestConfiguration.IsTelemetryEnabled = false;
+        _testConfiguration.IsTelemetryEnabled = false;
         using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions);
         const string activityId = "test-activity";
         var clientInfo = new Implementation
