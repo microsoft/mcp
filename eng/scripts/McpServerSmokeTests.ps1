@@ -51,6 +51,13 @@ function Validate-Npm-Packages {
         [string] $WorkingDirectory
     )
 
+    switch ($TargetOs) {
+        "linux" { $artifactOs = "linux" }
+        "osx"   { $artifactOs = "darwin" }
+        "win"   { $artifactOs = "win32" }
+        default { throw "Unknown TargetOs: $TargetOs" }
+    }
+
     Push-Location $WorkingDirectory
     $hasFailures = $false
     try {
@@ -63,7 +70,7 @@ function Validate-Npm-Packages {
                 Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
 
                 $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' }
-                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$TargetOs-$TargetArch-*.tgz"
+                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-$artifactOs-$TargetArch-*.tgz"
                 if ($platformPackage) { npm install $platformPackage.FullName | Out-Null }
                 if ($mainPackage) { npm install $mainPackage.FullName | Out-Null }
                 $output = npx azmcp tools list
