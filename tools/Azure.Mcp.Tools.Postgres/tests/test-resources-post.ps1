@@ -113,13 +113,21 @@ function Load-NpgsqlDependencies {
     if (-not $loggingAssemblyPath) {
         throw "Unable to locate Microsoft.Extensions.Logging.Abstractions.dll in the NuGet package cache. Run 'dotnet restore' to populate dependencies before invoking this script."
     }
-    [System.Reflection.Assembly]::LoadFrom($loggingAssemblyPath) | Out-Null
+    
+    $loadedLogging = [System.AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'Microsoft.Extensions.Logging.Abstractions' }
+    if (-not $loadedLogging) {
+        [System.Reflection.Assembly]::LoadFrom($loggingAssemblyPath) | Out-Null
+    }
 
     $npgsqlAssemblyPath = Get-NuGetAssemblyPath -PackageName 'Npgsql' -AssemblyFileName 'Npgsql.dll'
     if (-not $npgsqlAssemblyPath) {
         throw "Unable to locate Npgsql.dll in the NuGet package cache. Run 'dotnet restore' to populate dependencies before invoking this script."
     }
-    [System.Reflection.Assembly]::LoadFrom($npgsqlAssemblyPath) | Out-Null
+    
+    $loadedNpgsql = [System.AppDomain]::CurrentDomain.GetAssemblies() | Where-Object { $_.GetName().Name -eq 'Npgsql' }
+    if (-not $loadedNpgsql) {
+        [System.Reflection.Assembly]::LoadFrom($npgsqlAssemblyPath) | Out-Null
+    }
 }
 
 function Wait-ForPostgresReady {
