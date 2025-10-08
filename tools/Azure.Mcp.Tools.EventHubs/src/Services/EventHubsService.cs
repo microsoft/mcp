@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Commands;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
+using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
@@ -20,67 +21,76 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<Namespace>> GetNamespacesAsync(
+    public async Task<List<Namespace>> ListNamespacesAsync(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        var namespaces = await ExecuteResourceQueryAsync(
-                "Microsoft.EventHub/namespaces",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToNamespace);
-        return namespaces ?? [];
+        ValidateRequiredParameters((nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var namespaces = new List<Namespace>();
+
+            if (!string.IsNullOrEmpty(resourceGroup))
+            {
+                // Get namespaces from specific resource group
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                
+                if (resourceGroupResource?.Value == null)
+                {
+                    throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
+                }
+
+                await foreach (var namespaceResource in resourceGroupResource.Value.GetEventHubsNamespaces())
+                {
+                    namespaces.Add(ConvertToNamespace(namespaceResource.Data, resourceGroup));
+                }
+            }
+            else
+            {
+                // Get namespaces from all resource groups in subscription
+                await foreach (var rg in subscriptionResource.GetResourceGroups())
+                {
+                    await foreach (var namespaceResource in rg.GetEventHubsNamespaces())
+                    {
+                        namespaces.Add(ConvertToNamespace(namespaceResource.Data, rg.Data.Name));
+                    }
+                }
+            }
+
+            return namespaces;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error retrieving Event Hubs namespaces for subscription '{Subscription}' and resource group '{ResourceGroup}'",
+                subscription, resourceGroup);
+            throw;
+        }
     }
 
-    private static Namespace ConvertToNamespace(JsonElement item)
+    private static Namespace ConvertToNamespace(EventHubsNamespaceData namespaceData, string resourceGroup)
     {
-        Models.EventHubsNamespaceData? eventHubsNamespace = Models.EventHubsNamespaceData.FromJson(item);
-        if (eventHubsNamespace == null)
-        {
-            throw new InvalidOperationException("Failed to parse EventHubs namespace data");
-        }
-
-
-        if (string.IsNullOrEmpty(eventHubsNamespace.ResourceId))
-        {
-            throw new InvalidOperationException("Resource ID is missing");
-        }
-
-        var id = new ResourceIdentifier(eventHubsNamespace.ResourceId)!;
-
-        if (string.IsNullOrEmpty(id.ResourceGroupName))
-        {
-            throw new InvalidOperationException("Resource ID is missing resource group");
-        }
-
-        if (string.IsNullOrEmpty(eventHubsNamespace.ResourceName))
-        {
-            throw new InvalidOperationException("Resource Name is missing");
-        }
-
         return new Namespace(
-            Name: eventHubsNamespace.ResourceName,
-            Id: eventHubsNamespace.ResourceId,
-            ResourceGroup: id.ResourceGroupName,
-            Location: eventHubsNamespace.Location,
-            Sku: new EventHubsNamespaceSku(
-                Name: eventHubsNamespace.Sku.Name,
-                Tier: eventHubsNamespace.Sku.Tier,
-                Capacity: eventHubsNamespace.Sku.Capacity),
-            Status: eventHubsNamespace.Properties?.Status,
-            ProvisioningState: eventHubsNamespace.Properties?.ProvisioningState,
-            CreationTime: eventHubsNamespace.Properties?.CreatedOn,
-            UpdatedTime: eventHubsNamespace.Properties?.UpdatedOn,
-            ServiceBusEndpoint: eventHubsNamespace.Properties?.ServiceBusEndpoint,
-            MetricId: eventHubsNamespace.Properties?.MetricId,
-            IsAutoInflateEnabled: eventHubsNamespace.Properties?.IsAutoInflateEnabled,
-            MaximumThroughputUnits: eventHubsNamespace.Properties?.MaximumThroughputUnits,
-            KafkaEnabled: eventHubsNamespace.Properties?.KafkaEnabled,
-            ZoneRedundant: eventHubsNamespace.Properties?.ZoneRedundant,
-            Tags: eventHubsNamespace.Tags != null ? new Dictionary<string, string>(eventHubsNamespace.Tags) : null);
+            Name: namespaceData.Name,
+            Id: namespaceData.Id?.ToString() ?? string.Empty,
+            ResourceGroup: resourceGroup,
+            Location: namespaceData.Location.ToString(),
+            Sku: namespaceData.Sku!,
+            Status: namespaceData.Status?.ToString(),
+            ProvisioningState: namespaceData.ProvisioningState?.ToString(),
+            CreationTime: namespaceData.CreatedOn,
+            UpdatedTime: namespaceData.UpdatedOn,
+            ServiceBusEndpoint: namespaceData.ServiceBusEndpoint,
+            MetricId: namespaceData.MetricId,
+            IsAutoInflateEnabled: namespaceData.IsAutoInflateEnabled,
+            MaximumThroughputUnits: namespaceData.MaximumThroughputUnits,
+            KafkaEnabled: namespaceData.KafkaEnabled,
+            ZoneRedundant: namespaceData.ZoneRedundant,
+            Tags: namespaceData.Tags != null ? new Dictionary<string, string>(namespaceData.Tags) : null);
     }
 
     public async Task<Namespace> GetNamespaceAsync(
@@ -94,19 +104,22 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
         try
         {
-            var namespaceDetails = await ExecuteSingleResourceQueryAsync(
-                            "Microsoft.EventHub/namespaces",
-                            resourceGroup: resourceGroup,
-                            subscription: subscription,
-                            retryPolicy: retryPolicy,
-                            converter: ConvertToNamespace,
-                            additionalFilter: $"name =~ '{EscapeKqlString(namespaceName)}'");
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
-            if (namespaceDetails == null)
+            if (resourceGroupResource?.Value == null)
             {
-                throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found for subscription '{subscription}'.");
+                throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
             }
-            return namespaceDetails;
+
+            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+
+            if (namespaceResource?.Value == null)
+            {
+                throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'");
+            }
+
+            return ConvertToNamespace(namespaceResource.Value.Data, resourceGroup);
         }
         catch (Exception ex)
         {
@@ -117,7 +130,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<Namespace> UpdateNamespaceAsync(
+    public async Task<Namespace> CreateOrUpdateNamespaceAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
@@ -133,68 +146,89 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            var subscriptionId = subscriptionResource.Data.SubscriptionId;
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
 
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
-            var namespaceId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.EventHub/namespaces/{namespaceName}");
-
-            // Get existing namespace to retrieve current values
-            var existingNamespace = await GetGenericResourceAsync(armClient, namespaceId);
-
-            // Determine location - use provided or existing
-            var actualLocation = !string.IsNullOrEmpty(location) 
-                ? new AzureLocation(location) 
-                : existingNamespace.Data.Location;
-
-            // Build update content
-            var updateContent = new Models.EventHubsNamespaceData
+            if (resourceGroupResource?.Value == null)
             {
-                ResourceId = namespaceId.ToString(),
-                ResourceType = "Microsoft.EventHub/namespaces",
-                ResourceName = namespaceName,
-                Location = actualLocation.ToString(),
-                Sku = new Azure.Mcp.Core.Services.Azure.Models.ResourceSku
-                {
-                    Name = skuName ?? existingNamespace.Data.Sku?.Name ?? "Standard",
-                    Tier = skuTier ?? existingNamespace.Data.Sku?.Tier ?? "Standard",
-                    Capacity = skuCapacity ?? existingNamespace.Data.Sku?.Capacity
-                },
-                Tags = tags ?? (existingNamespace.Data.Tags != null ? new Dictionary<string, string>(existingNamespace.Data.Tags) : null),
-                Properties = new EventHubsNamespaceProperties
-                {
-                    IsAutoInflateEnabled = isAutoInflateEnabled,
-                    MaximumThroughputUnits = maximumThroughputUnits,
-                    KafkaEnabled = kafkaEnabled,
-                    ZoneRedundant = zoneRedundant
-                }
-            };
-
-            var result = await CreateOrUpdateGenericResourceAsync(
-                armClient,
-                namespaceId,
-                actualLocation,
-                updateContent,
-                EventHubsJsonContext.Default.EventHubsNamespaceData);
-
-            if (!result.HasData)
-            {
-                throw new InvalidOperationException($"Failed to update Event Hubs namespace '{namespaceName}'");
+                throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
             }
 
-            // Retrieve the updated namespace using Resource Graph to get the complete state
-            var updatedNamespace = await GetNamespaceAsync(namespaceName, resourceGroup, subscription, tenant, retryPolicy);
-            return updatedNamespace;
+            // Use resource group location if no location is provided
+            var namespaceLocation = location ?? resourceGroupResource.Value.Data.Location.ToString();
+
+            // Create namespace data with required properties
+            var namespaceData = new EventHubsNamespaceData(namespaceLocation);
+
+            // Set SKU if provided
+            if (!string.IsNullOrEmpty(skuName))
+            {
+                namespaceData.Sku = new EventHubsSku(skuName)
+                {
+                    Tier = skuTier switch
+                    {
+                        "Basic" => EventHubsSkuTier.Basic,
+                        "Standard" => EventHubsSkuTier.Standard,
+                        "Premium" => EventHubsSkuTier.Premium,
+                        _ => EventHubsSkuTier.Standard
+                    },
+                    Capacity = skuCapacity
+                };
+            }
+
+            // Set optional properties
+            if (isAutoInflateEnabled.HasValue)
+            {
+                namespaceData.IsAutoInflateEnabled = isAutoInflateEnabled.Value;
+            }
+
+            if (maximumThroughputUnits.HasValue)
+            {
+                namespaceData.MaximumThroughputUnits = maximumThroughputUnits.Value;
+            }
+
+            if (kafkaEnabled.HasValue)
+            {
+                namespaceData.KafkaEnabled = kafkaEnabled.Value;
+            }
+
+            if (zoneRedundant.HasValue)
+            {
+                namespaceData.ZoneRedundant = zoneRedundant.Value;
+            }
+
+            if (tags != null && tags.Count > 0)
+            {
+                foreach (var tag in tags)
+                {
+                    namespaceData.Tags.Add(tag.Key, tag.Value);
+                }
+            }
+
+            // Create or update the namespace
+            var operation = await resourceGroupResource.Value.GetEventHubsNamespaces()
+                .CreateOrUpdateAsync(WaitUntil.Completed, namespaceName, namespaceData);
+
+            if (operation?.Value == null)
+            {
+                throw new InvalidOperationException($"Failed to create or update Event Hubs namespace '{namespaceName}'");
+            }
+
+            _logger.LogInformation(
+                "Successfully created or updated Event Hubs namespace '{NamespaceName}' in resource group '{ResourceGroup}'",
+                namespaceName, resourceGroup);
+
+            return ConvertToNamespace(operation.Value.Data, resourceGroup);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex,
-                "Error updating Event Hubs namespace '{NamespaceName}' in resource group '{ResourceGroup}'",
-                namespaceName, resourceGroup);
+                "Error creating or updating Event Hubs namespace '{NamespaceName}' in resource group '{ResourceGroup}' for subscription '{Subscription}'",
+                namespaceName, resourceGroup, subscription);
             throw;
         }
     }
@@ -206,7 +240,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
@@ -214,7 +248,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
             var armClient = await CreateArmClientAsync(tenant, retryPolicy);
-            var namespaceId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.EventHub/namespaces/{namespaceName}");
+            var namespaceId = EventHubsNamespaceResource.CreateResourceIdentifier(subscriptionId, resourceGroup, namespaceName);
 
             // Get the namespace resource
             var namespaceResource = await GetGenericResourceAsync(armClient, namespaceId);
@@ -237,14 +271,14 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<List<EventHubInfo>> ListEventHubsAsync(
+    public async Task<List<EventHub>> ListEventHubsAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName));
 
         try
         {
@@ -263,11 +297,11 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'");
             }
 
-            var eventHubList = new List<EventHubInfo>();
+            var eventHubList = new List<EventHub>();
 
             await foreach (var eventHub in namespaceResource.Value.GetEventHubs())
             {
-                eventHubList.Add(ConvertToEventHubInfo(eventHub.Data, resourceGroup));
+                eventHubList.Add(ConvertToEventHub(eventHub.Data, resourceGroup));
             }
 
             return eventHubList;
@@ -281,7 +315,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<EventHubInfo?> GetEventHubAsync(
+    public async Task<EventHub?> GetEventHubAsync(
         string eventHubName,
         string namespaceName,
         string resourceGroup,
@@ -289,7 +323,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName), (nameof(eventHubName), eventHubName));
 
         try
         {
@@ -315,7 +349,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 return null;
             }
 
-            return ConvertToEventHubInfo(eventHubResource.Value.Data, resourceGroup);
+            return ConvertToEventHub(eventHubResource.Value.Data, resourceGroup);
         }
         catch (Exception ex)
         {
@@ -326,9 +360,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    private static EventHubInfo ConvertToEventHubInfo(EventHubData eventHub, string resourceGroup)
+    private static EventHub ConvertToEventHub(EventHubData eventHub, string resourceGroup)
     {
-        return new EventHubInfo(
+        return new EventHub(
             Name: eventHub.Name,
             Id: eventHub.Id.ToString(),
             ResourceGroup: resourceGroup,
@@ -343,18 +377,17 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             PartitionIds: eventHub.PartitionIds?.ToList());
     }
 
-    public async Task<EventHubInfo> CreateOrUpdateEventHubAsync(
+    public async Task<EventHub> CreateOrUpdateEventHubAsync(
         string eventHubName,
         string namespaceName,
         string resourceGroup,
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
-        string? status = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(namespaceName), namespaceName));
 
         try
         {
@@ -380,15 +413,9 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 eventHubData.PartitionCount = partitionCount.Value;
             }
 
-            if (messageRetentionInHours.HasValue && eventHubData.RetentionDescription != null)
+            if (messageRetentionInHours.HasValue)
             {
                 eventHubData.RetentionDescription.RetentionTimeInHours = messageRetentionInHours.Value;
-            }
-
-            if (!string.IsNullOrEmpty(status) && eventHubData.Status.HasValue)
-            {
-                // Status is typically read-only, so we'll log a warning if attempted
-                _logger.LogWarning("Status cannot be directly set on EventHub creation/update. Current status: {Status}", eventHubData.Status);
             }
 
             var operation = await namespaceResource.Value.GetEventHubs()
@@ -399,7 +426,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 throw new InvalidOperationException($"Failed to create or update event hub '{eventHubName}'");
             }
 
-            return ConvertToEventHubInfo(operation.Value.Data, resourceGroup);
+            return ConvertToEventHub(operation.Value.Data, resourceGroup);
         }
         catch (Exception ex)
         {
@@ -418,7 +445,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
@@ -457,7 +484,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<ConsumerGroup> UpdateConsumerGroupAsync(
+    public async Task<ConsumerGroup> CreateOrUpdateConsumerGroupAsync(
         string consumerGroupName,
         string eventHubName,
         string namespaceName,
@@ -467,7 +494,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
@@ -525,7 +552,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
@@ -558,7 +585,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(eventHubName, namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {
@@ -611,7 +638,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+        ValidateRequiredParameters((nameof(consumerGroupName), consumerGroupName), (nameof(eventHubName), eventHubName), (nameof(namespaceName), namespaceName), (nameof(resourceGroup), resourceGroup), (nameof(subscription), subscription));
 
         try
         {

@@ -48,7 +48,7 @@ public class EventHubUpdateCommandTests
         var parseResult = _command.GetCommand().Parse(args);
         if (shouldSucceed)
         {
-            var eventHub = new EventHubInfo(
+            var eventHub = new Models.EventHub(
                 "test-hub",
                 "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/test-hub",
                 "test-rg",
@@ -67,7 +67,6 @@ public class EventHubUpdateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<int?>(),
                 Arg.Any<long?>(),
-                Arg.Any<string?>(),
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions?>())
                 .Returns(eventHub);
@@ -104,7 +103,6 @@ public class EventHubUpdateCommandTests
             Arg.Any<int?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
@@ -131,7 +129,6 @@ public class EventHubUpdateCommandTests
             Arg.Any<int?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
@@ -150,7 +147,7 @@ public class EventHubUpdateCommandTests
         var parseResult = _command.GetCommand().Parse(
             "--subscription test-subscription --eventhub new-hub --namespace test-namespace --resource-group test-rg --partition-count 8 --message-retention-in-hours 336");
 
-        var eventHub = new EventHubInfo(
+        var eventHub = new Models.EventHub(
             "new-hub",
             "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace/eventhubs/new-hub",
             "test-rg",
@@ -169,7 +166,6 @@ public class EventHubUpdateCommandTests
             Arg.Is("test-subscription"),
             Arg.Is(8),
             Arg.Is(336L),
-            Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>())
             .Returns(eventHub);

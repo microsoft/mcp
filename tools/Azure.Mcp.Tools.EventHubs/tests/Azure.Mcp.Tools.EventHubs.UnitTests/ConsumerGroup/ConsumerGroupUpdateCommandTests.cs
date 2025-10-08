@@ -60,7 +60,7 @@ public class ConsumerGroupUpdateCommandTests
                 DateTimeOffset.UtcNow.AddDays(-1),
                 DateTimeOffset.UtcNow);
 
-            _eventHubsService.UpdateConsumerGroupAsync(
+            _eventHubsService.CreateOrUpdateConsumerGroupAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -105,7 +105,7 @@ public class ConsumerGroupUpdateCommandTests
             DateTimeOffset.UtcNow.AddDays(-1),
             DateTimeOffset.UtcNow);
 
-        _eventHubsService.UpdateConsumerGroupAsync(
+        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -123,7 +123,7 @@ public class ConsumerGroupUpdateCommandTests
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
         
-        await _eventHubsService.Received(1).UpdateConsumerGroupAsync(
+        await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -151,7 +151,7 @@ public class ConsumerGroupUpdateCommandTests
             DateTimeOffset.UtcNow.AddDays(-1),
             DateTimeOffset.UtcNow);
 
-        _eventHubsService.UpdateConsumerGroupAsync(
+        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -169,7 +169,7 @@ public class ConsumerGroupUpdateCommandTests
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
         
-        await _eventHubsService.Received(1).UpdateConsumerGroupAsync(
+        await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
             "test-namespace",
@@ -186,7 +186,7 @@ public class ConsumerGroupUpdateCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
 
-        _eventHubsService.UpdateConsumerGroupAsync(
+        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -211,7 +211,7 @@ public class ConsumerGroupUpdateCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
         
-        _eventHubsService.UpdateConsumerGroupAsync(
+        _eventHubsService.CreateOrUpdateConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),

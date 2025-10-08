@@ -99,7 +99,6 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.Subscription!,
                 options.PartitionCount,
                 options.MessageRetentionInHours,
-                options.Status,
                 options.Tenant,
                 options.RetryPolicy);
 
@@ -149,5 +148,5 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EventHubUpdateCommandResult(EventHubInfo EventHub);
+    internal record EventHubUpdateCommandResult(Models.EventHub EventHub);
 }

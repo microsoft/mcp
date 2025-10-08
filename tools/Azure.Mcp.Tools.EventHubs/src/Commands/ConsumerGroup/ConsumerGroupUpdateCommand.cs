@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.EventHubs.Commands;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -78,7 +77,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         {
             var eventHubsService = context.GetService<IEventHubsService>();
 
-            var consumerGroup = await eventHubsService.UpdateConsumerGroupAsync(
+            var consumerGroup = await eventHubsService.CreateOrUpdateConsumerGroupAsync(
                 options.ConsumerGroupName,
                 options.EventHubName,
                 options.NamespaceName,

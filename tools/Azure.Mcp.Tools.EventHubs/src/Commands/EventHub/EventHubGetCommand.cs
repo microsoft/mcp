@@ -99,7 +99,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.Tenant,
                     options.RetryPolicy);
 
-                var results = eventHub != null ? new List<EventHubInfo> { eventHub } : new List<EventHubInfo>();
+                var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
                 context.Response.Results = ResponseResult.Create(new EventHubGetCommandResult(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }
             else
@@ -161,5 +161,5 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         _ => base.GetErrorMessage(ex)
     };
 
-    internal record EventHubGetCommandResult(List<EventHubInfo> EventHubs);
+    internal record EventHubGetCommandResult(List<Models.EventHub> EventHubs);
 }

@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tools.EventHubs.Services;
 
 public interface IEventHubsService
 {
-    Task<List<Namespace>> GetNamespacesAsync(
+    Task<List<Namespace>> ListNamespacesAsync(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
@@ -21,7 +21,7 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Namespace> UpdateNamespaceAsync(
+    Task<Namespace> CreateOrUpdateNamespaceAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
@@ -44,14 +44,14 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<EventHubInfo>> ListEventHubsAsync(
+    Task<List<EventHub>> ListEventHubsAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<EventHubInfo?> GetEventHubAsync(
+    Task<EventHub?> GetEventHubAsync(
         string eventHubName,
         string namespaceName,
         string resourceGroup,
@@ -59,14 +59,13 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<EventHubInfo> CreateOrUpdateEventHubAsync(
+    Task<EventHub> CreateOrUpdateEventHubAsync(
         string eventHubName,
         string namespaceName,
         string resourceGroup,
         string subscription,
         int? partitionCount = null,
         long? messageRetentionInHours = null,
-        string? status = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
@@ -78,7 +77,7 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<ConsumerGroup> UpdateConsumerGroupAsync(
+    Task<ConsumerGroup> CreateOrUpdateConsumerGroupAsync(
         string consumerGroupName,
         string eventHubName,
         string namespaceName,

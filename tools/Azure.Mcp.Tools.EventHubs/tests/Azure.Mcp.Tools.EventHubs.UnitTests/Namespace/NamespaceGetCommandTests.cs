@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -58,7 +59,7 @@ public class NamespaceGetCommandTests
                     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
                     "rg-eventhubs-prod",
                     "East US",
-                    new EventHubsNamespaceSku("Standard", "Standard", 1),
+                    new EventHubsSku("Standard"),
                     "Active",
                     "Succeeded",
                     DateTimeOffset.UtcNow.AddDays(-30),
@@ -90,7 +91,7 @@ public class NamespaceGetCommandTests
                         "rg-eventhubs-prod")
                 };
 
-                _eventHubsService.GetNamespacesAsync(
+                _eventHubsService.ListNamespacesAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
@@ -121,7 +122,7 @@ public class NamespaceGetCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-eventhubs-test");
 
-        _eventHubsService.GetNamespacesAsync(
+        _eventHubsService.ListNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -141,7 +142,7 @@ public class NamespaceGetCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group rg-eventhubs-prod");
-        _eventHubsService.GetNamespacesAsync(
+        _eventHubsService.ListNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),

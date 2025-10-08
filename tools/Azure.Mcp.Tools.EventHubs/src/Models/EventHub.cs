@@ -5,7 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.EventHubs.Models;
 
-public record EventHubInfo(
+public record EventHub(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("id")] string Id,
     [property: JsonPropertyName("resourceGroup")] string ResourceGroup,

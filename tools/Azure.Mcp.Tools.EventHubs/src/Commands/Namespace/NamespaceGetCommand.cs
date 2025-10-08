@@ -104,7 +104,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             }
             else
             {
-                var namespaces = await eventHubsService.GetNamespacesAsync(
+                var namespaces = await eventHubsService.ListNamespacesAsync(
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,

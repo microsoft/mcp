@@ -144,7 +144,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 }
             }
 
-            var updatedNamespace = await eventHubsService.UpdateNamespaceAsync(
+            var updatedNamespace = await eventHubsService.CreateOrUpdateNamespaceAsync(
                 options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,

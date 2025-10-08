@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
+using Azure.ResourceManager.EventHubs.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -73,7 +74,7 @@ public class NamespaceUpdateCommandTests
         if (shouldSucceed)
         {
             var updatedNamespace = CreateSampleNamespace();
-            _eventHubsService.UpdateNamespaceAsync(
+            _eventHubsService.CreateOrUpdateNamespaceAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -125,7 +126,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -148,7 +149,7 @@ public class NamespaceUpdateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).UpdateNamespaceAsync(
+        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg", 
             "test-sub",
@@ -178,7 +179,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -221,7 +222,7 @@ public class NamespaceUpdateCommandTests
         };
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -289,7 +290,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -312,7 +313,7 @@ public class NamespaceUpdateCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
-        await _eventHubsService.Received(1).UpdateNamespaceAsync(
+        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -340,7 +341,7 @@ public class NamespaceUpdateCommandTests
             "--sku-name", "Premium"
         ]);
 
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -376,7 +377,7 @@ public class NamespaceUpdateCommandTests
             "--sku-name", "Premium"
         ]);
 
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -415,7 +416,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         var updatedNamespace = CreateSampleNamespace();
-        _eventHubsService.UpdateNamespaceAsync(
+        _eventHubsService.CreateOrUpdateNamespaceAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -437,7 +438,7 @@ public class NamespaceUpdateCommandTests
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _eventHubsService.Received(1).UpdateNamespaceAsync(
+        await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
             "test-rg",
             "test-sub",
@@ -503,7 +504,7 @@ public class NamespaceUpdateCommandTests
             "/subscriptions/test-sub/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace",
             "test-rg",
             "East US",
-            new EventHubsNamespaceSku("Standard", "Standard", 1),
+            new EventHubsSku("Standard"),
             "Active",
             "Succeeded",
             DateTimeOffset.UtcNow.AddDays(-1),
