@@ -171,7 +171,7 @@ public class FoundryService(
 
     public async Task<List<Deployment>> ListDeployments(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -196,7 +196,13 @@ public class FoundryService(
         string azureAiServicesName, string resourceGroup, string subscriptionId, string? modelVersion = null, string? modelSource = null,
         string? skuName = null, int? skuCapacity = null, string? scaleType = null, int? scaleCapacity = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(deploymentName, modelName, modelFormat, azureAiServicesName, resourceGroup, subscriptionId);
+        ValidateRequiredParameters(
+            (nameof(deploymentName), deploymentName),
+            (nameof(modelName), modelName),
+            (nameof(modelFormat), modelFormat),
+            (nameof(azureAiServicesName), azureAiServicesName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscriptionId), subscriptionId));
 
         try
         {
@@ -268,7 +274,7 @@ public class FoundryService(
 
     public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -310,7 +316,9 @@ public class FoundryService(
 
     public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint, indexName);
+        ValidateRequiredParameters(
+            (nameof(endpoint), endpoint),
+            (nameof(indexName), indexName));
 
         try
         {
@@ -364,7 +372,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(promptText), promptText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -435,7 +448,13 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, inputText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(inputText), inputText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -493,7 +512,7 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, subscription, resourceGroup);
+        ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -574,7 +593,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         if (messages == null || messages.Count == 0)
         {
@@ -743,7 +767,7 @@ public class FoundryService(
 
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -776,7 +800,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var credential = await GetCredential(tenantId);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
@@ -859,7 +886,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy);
 
@@ -918,7 +948,10 @@ public class FoundryService(
 
     public async Task<AgentsEvaluateResult> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(evaluatorName, query, agentResponse);
+        ValidateRequiredParameters(
+            (nameof(evaluatorName), evaluatorName),
+            (nameof(query), query),
+            (nameof(agentResponse), agentResponse));
         try
         {
             if (!AgentEvaluatorDictionary.ContainsKey(evaluatorName.ToLowerInvariant()))

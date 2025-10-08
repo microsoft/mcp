@@ -31,7 +31,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, accountName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(accountName), accountName));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
@@ -115,7 +115,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(accountName, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var key = CosmosClientsCacheKeyPrefix + accountName;
         var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationResources);
@@ -156,7 +156,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
 
     public async Task<List<string>> GetCosmosAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var accounts = new List<string>();
@@ -185,7 +185,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(accountName, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var cacheKey = CosmosDatabasesCacheKeyPrefix + accountName;
 
@@ -239,7 +239,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(accountName, databaseName, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(subscription), subscription));
 
         var cacheKey = CosmosContainersCacheKeyPrefix + accountName + "_" + databaseName;
 
@@ -296,7 +296,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(accountName, databaseName, containerName, subscription);
+        ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(containerName), containerName), (nameof(subscription), subscription));
 
         var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy);
 

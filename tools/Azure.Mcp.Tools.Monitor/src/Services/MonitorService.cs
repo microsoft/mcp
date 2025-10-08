@@ -37,7 +37,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceId, table);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
         query = BuildQuery(query, table, limit);
 
         var credential = await GetCredential(tenant);
@@ -97,7 +97,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, workspace, query);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(query), query));
 
         var credential = await GetCredential(tenant);
         var options = AddDefaultPolicies(new LogsQueryClientOptions());
@@ -157,7 +157,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, workspace);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
         try
         {
@@ -196,7 +196,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -229,11 +229,11 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, workspace, table);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(table), table));
 
         var (workspaceId, _) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
         query = BuildQuery(query, table, limit);
-        ValidateRequiredParameters(query);
+        ValidateRequiredParameters((nameof(query), query));
 
         try
         {
@@ -319,7 +319,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         string? tenant,
         RetryPolicyOptions? retryPolicy)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, workspace);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
         try
         {
             var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);

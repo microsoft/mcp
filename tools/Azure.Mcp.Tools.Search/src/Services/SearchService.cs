@@ -29,7 +29,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var cacheKey = string.IsNullOrEmpty(tenantId)
             ? $"{SearchServicesCacheKey}_{subscription}"
@@ -68,7 +68,7 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         string? indexName,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(serviceName);
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
 
         var indexes = new List<IndexInfo>();
 
@@ -112,7 +112,10 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         string searchText,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(serviceName, indexName, searchText);
+        ValidateRequiredParameters(
+            (nameof(serviceName), serviceName),
+            (nameof(indexName), indexName),
+            (nameof(searchText), searchText));
 
         try
         {

@@ -40,7 +40,7 @@ public class StorageService(
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var accounts = new List<StorageAccountInfo>();
 
@@ -102,7 +102,11 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, resourceGroup, location, subscription);
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(location), location),
+            (nameof(subscription), subscription));
 
         try
         {
@@ -176,7 +180,10 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, container, subscription);
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container),
+            (nameof(subscription), subscription));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
@@ -262,7 +269,7 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, subscription);
+        ValidateRequiredParameters((nameof(account), account), (nameof(subscription), subscription));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containers = new List<ContainerInfo>();
@@ -334,7 +341,10 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, container, subscription);
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container),
+            (nameof(subscription), subscription));
 
         var blobServiceClient = await CreateBlobServiceClient(account, tenant, retryPolicy);
         var containerClient = blobServiceClient.GetBlobContainerClient(container);
@@ -418,7 +428,12 @@ public class StorageService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(account, container, blob, localFilePath, subscription);
+        ValidateRequiredParameters(
+            (nameof(account), account),
+            (nameof(container), container),
+            (nameof(blob), blob),
+            (nameof(localFilePath), localFilePath),
+            (nameof(subscription), subscription));
 
         if (!File.Exists(localFilePath))
         {

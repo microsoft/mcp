@@ -20,7 +20,7 @@ public class ResourceGroupService(ICacheService cacheService, ISubscriptionServi
 
     public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
@@ -57,7 +57,7 @@ public class ResourceGroupService(ICacheService cacheService, ISubscriptionServi
 
     public async Task<ResourceGroupInfo?> GetResourceGroup(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroupName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
@@ -91,7 +91,7 @@ public class ResourceGroupService(ICacheService cacheService, ISubscriptionServi
 
     public async Task<ResourceGroupResource?> GetResourceGroupResource(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroupName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         try
         {

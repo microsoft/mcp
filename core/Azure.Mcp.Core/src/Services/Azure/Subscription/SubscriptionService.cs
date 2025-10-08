@@ -45,7 +45,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
 
     public async Task<SubscriptionResource> GetSubscription(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         // Get the subscription ID first, whether the input is a name or ID
         var subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy);

@@ -32,7 +32,7 @@ public sealed class AksService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         if (string.IsNullOrEmpty(clusterName))
         {
@@ -101,7 +101,7 @@ public sealed class AksService(
         }
         else
         {
-            ValidateRequiredParameters(resourceGroup, clusterName);
+            ValidateRequiredParameters((nameof(resourceGroup), resourceGroup), (nameof(clusterName), clusterName));
 
             // Create cache key
             var cacheKey = string.IsNullOrEmpty(tenant)
@@ -158,7 +158,10 @@ public sealed class AksService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceGroup, clusterName);
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(clusterName), clusterName));
 
         if (string.IsNullOrEmpty(nodePoolName))
         {

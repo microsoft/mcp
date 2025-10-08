@@ -46,7 +46,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(entity, healthModelName, resourceGroupName, subscription);
+        ValidateRequiredParameters((nameof(entity), entity), (nameof(healthModelName), healthModelName), (nameof(resourceGroupName), resourceGroupName), (nameof(subscription), subscription));
 
         string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName);
         string entityHealthUrl = $"{dataplaneEndpoint}api/entities/{entity}/history";
