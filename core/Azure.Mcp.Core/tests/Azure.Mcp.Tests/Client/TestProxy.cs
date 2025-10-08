@@ -2,8 +2,10 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using Azure.Mcp.Tests.Generated;
 
 namespace Azure.Mcp.Tests.Client;
@@ -76,7 +78,7 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
         psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
 
         _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
-        _cts = new CancellationTokenSource();
+        _cts = new CancellationTokenSource(); //todo: put this in as filler, I feel like I should be pulling a cancellation token from somewhere else
         _ = Task.Run(() => PumpAsync(_process.StandardError, _stderr, _cts.Token));
         _ = Task.Run(() => PumpAsync(_process.StandardOutput, _stdout, _cts.Token));
 
@@ -89,6 +91,9 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
 
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
     }
+
+    // NOTE: Previous static singleton implementation removed due to undefined state fields.
+    // If needed, reintroduce with explicit private static fields and thread-safe disposal.
 
     private static async Task PumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
     {
@@ -141,11 +146,15 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
 
     private static string? ResolveProxyExecutable()
     {
-        // Prefer explicit env var
+        // 1. Assembly metadata attribute (preferred explicit test assembly provisioning)
+        var fromMetadata = GetExecutableFromAssemblyMetadata();
+        if (fromMetadata != null) return fromMetadata;
+
+        // 2. Explicit environment variable overrides
         var explicitPath = Environment.GetEnvironmentVariable("PROXY_EXE") ?? Environment.GetEnvironmentVariable("TEST_PROXY_EXE");
         if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath)) return explicitPath;
 
-        // Search PATH for test-proxy variants
+        // 3. Search PATH for known executable names
         var names = new[] { "test-proxy", "test-proxy.exe", "Azure.Sdk.Tools.TestProxy", "Azure.Sdk.Tools.TestProxy.exe" };
         var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
         foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
@@ -157,6 +166,37 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
             }
         }
         return null;
+    }
+
+    private static string? GetExecutableFromAssemblyMetadata()
+    {
+        try
+        {
+            var assembly = typeof(TestProxy).Assembly;
+            var value = assembly
+                .GetCustomAttributes<AssemblyMetadataAttribute>()
+                .FirstOrDefault(a => string.Equals(a.Key, "TestProxyPath", StringComparison.OrdinalIgnoreCase))?
+                .Value;
+            if (string.IsNullOrWhiteSpace(value)) return null;
+
+            // If value points to a directory, attempt to locate a dll or exe within.
+            if (Directory.Exists(value))
+            {
+                // Prefer dll
+                var dll = Directory.EnumerateFiles(value, "Azure.Sdk.Tools.TestProxy*.dll").FirstOrDefault();
+                if (dll != null) return dll;
+                var exe = Directory.EnumerateFiles(value, "test-proxy*.exe").FirstOrDefault();
+                if (exe != null) return exe;
+                return null;
+            }
+
+            if (File.Exists(value)) return value;
+            return null;
+        }
+        catch
+        {
+            return null;
+        }
     }
 
     private static string GetDotNetHost()

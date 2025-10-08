@@ -8,6 +8,8 @@ using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -19,8 +21,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
+    protected TestProxy? Proxy { get; private set; }
 
     private string[]? _customArguments;
+    private TestMode _testMode = TestMode.Live;
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -37,6 +41,18 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         var settingsFixture = new LiveTestSettingsFixture();
         await settingsFixture.InitializeAsync();
         Settings = settingsFixture.Settings;
+
+        _testMode = GetTestMode();
+
+        // If record/playback requested, start the test proxy BEFORE launching components that may capture env vars
+        if (ShouldUseProxy())
+        {
+            Proxy = new TestProxy(DetermineRepositoryRoot(), debug: Settings.DebugOutput);
+            Proxy.Start();
+            Output.WriteLine($"Test proxy started at {Proxy.BaseUri} (mode: {_testMode})");
+            // Export a conventional environment variable for downstream HTTP clients if they honor it.
+            Environment.SetEnvironmentVariable("TEST_PROXY_HTTP_URI", Proxy.BaseUri);
+        }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
@@ -168,6 +184,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             {
                 disposable.Dispose();
             }
+
+            // Dispose proxy at end of test class lifetime
+            Proxy?.Dispose();
         }
 
         // Failure output may contain request and response details that should be output for failed tests.
@@ -182,6 +201,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected virtual async ValueTask DisposeAsyncCore()
     {
         await Client.DisposeAsync().ConfigureAwait(false);
+        Proxy?.Dispose();
     }
 
     // Hook into per-test execution boundaries: call start/stop around test body.
@@ -203,6 +223,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         // In the future: inspect environment variables to decide whether to record or playback.
         // e.g. AZURE_MCP_TEST_RECORD or AZURE_MCP_TEST_PLAYBACK, integrate with a proxy.
         _recordPlaybackSessionStarted = true;
+        if (ShouldUseProxy())
+        {
+            Output.WriteLine($"Begin test session with proxy ({_testMode})");
+        }
     }
 
     private Task StopRecordPlaybackSessionAsync()
@@ -210,6 +234,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         if (!_recordPlaybackSessionStarted) return Task.CompletedTask;
         _recordPlaybackSessionStarted = false;
         // In the future: flush recordings / dispose proxy.
+        if (ShouldUseProxy())
+        {
+            Output.WriteLine("End test session (proxy active)");
+        }
         return Task.CompletedTask;
     }
 
@@ -232,5 +260,29 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
         catch { }
         return (null, null);        
+    }
+
+    private TestMode GetTestMode()
+    {
+        var mode = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_MODE");
+        if (string.IsNullOrWhiteSpace(mode)) return TestMode.Live;
+        return Enum.TryParse<TestMode>(mode, ignoreCase: true, out var parsed) ? parsed : TestMode.Live;
+    }
+
+    private bool ShouldUseProxy() => _testMode is TestMode.Record or TestMode.Playback ||
+        string.Equals(Environment.GetEnvironmentVariable("USE_TEST_PROXY"), "true", StringComparison.OrdinalIgnoreCase);
+
+    private string DetermineRepositoryRoot()
+    {
+        // Heuristic: walk up from assembly location until we find a .git folder or reach root.
+        var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
+        while (!string.IsNullOrEmpty(path))
+        {
+            if (Directory.Exists(Path.Combine(path, ".git"))) return path;
+            var parent = Path.GetDirectoryName(path);
+            if (string.IsNullOrEmpty(parent) || parent == path) break;
+            path = parent;
+        }
+        return Environment.CurrentDirectory;
     }
 }
