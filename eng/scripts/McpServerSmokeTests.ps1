@@ -74,8 +74,8 @@ function Validate-Npm-Packages {
     return $hasFailures
 }
 
-$nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed")
-$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)")
+$nugetHasFailures = Validate-Nuget-Packages -ServerName "${{ parameters.ServerName }}" -ArtifactsPath "$(Pipeline.Workspace)/packages_nuget_signed"
+$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$(Pipeline.Workspace)/packages_npm" -TargetOs "${{ parameters.OSName }}" -TargetArch "$(Architecture)" -WorkingDirectory "$(Agent.TempDirectory)"
 
 Write-Host "NuGet package validation has Failures: $nugetHasFailures"
 Write-Host "NPM package validation has Failures : $npmHasFailures"
