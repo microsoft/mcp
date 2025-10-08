@@ -147,7 +147,6 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
-
 # Connect to an agent in an AI Foundry project and query it
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents connect --agent-id <agent-id> \
@@ -208,16 +207,6 @@ azmcp foundry models list [--search-for-free-playground <search-for-free-playgro
                           [--license <license>] \
                           [--model-name <model>]
 
-# Generate text completions using deployed Azure OpenAI models in AI Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai create-completion --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --prompt-text <prompt-text> \
-                                       [--max-tokens <max-tokens>] \
-                                       [--temperature <temperature>]
-
 # Create interactive chat completions using Azure OpenAI chat models
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry openai chat-completions-create --subscription <subscription> \
@@ -235,6 +224,15 @@ azmcp foundry openai chat-completions-create --subscription <subscription> \
                                              [--seed <seed>] \
                                              [--user <user>] \
                                              [--auth-method <auth-method>]
+
+# Generate text completions using deployed Azure OpenAI models in AI Foundry
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
 
 # Generate vector embeddings for text using Azure OpenAI embedding models
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
