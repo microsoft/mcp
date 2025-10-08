@@ -80,7 +80,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
         var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
-        
+
         // When --tool switch is used, automatically change the mode to "all"
         if (tools != null && tools.Length > 0)
         {

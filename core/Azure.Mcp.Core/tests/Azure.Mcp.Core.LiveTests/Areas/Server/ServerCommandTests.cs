@@ -590,9 +590,9 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotEmpty(listResult);
-        
+
         var toolNames = listResult.Select(t => t.Name).ToList();
-        
+
         // Should only include the specified tools
         Assert.Equal(2, toolNames.Count);
         Assert.Contains("azmcp_group_list", toolNames);
@@ -610,9 +610,9 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Assert
         Assert.NotEmpty(listResult);
-        
+
         var toolNames = listResult.Select(t => t.Name).ToList();
-        
+
         // Should only include the specified tool, mode should be automatically changed to "all"
         Assert.Single(toolNames);
         Assert.Contains("azmcp_group_list", toolNames);
