@@ -85,9 +85,9 @@ resource allowAllIpsRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRule
 }
 
 // Test database
-resource testDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
+resource sampleDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
   parent: postgresServer
-  name: 'testdb'
+  name: 'sampledb'
   properties: {
     charset: 'utf8'
     collation: 'en_US.utf8'
@@ -115,8 +115,8 @@ resource appPostgresRoleAssignment 'Microsoft.Authorization/roleAssignments@2022
 }
 
 // Output values for tests
-output postgresServerName string = postgresServer.name
-output postgresServerFqdn string = postgresServer.properties.fullyQualifiedDomainName
-output testDatabaseName string = testDatabase.name
-output adminLogin string = postgresAdminLogin
-output entraIdAdminObjectId string = testApplicationOid
+output POSTGRES_SERVER_NAME string = postgresServer.name
+output POSTGRES_SERVER_FQDN string = postgresServer.properties.fullyQualifiedDomainName
+output POSTGRES_DATABASE_NAME string = sampleDatabase.name
+output POSTGRES_TABLE_NAME string = 'inventory'
+output POSTGRES_AAD_PRINCIPAL string = testApplicationOid
