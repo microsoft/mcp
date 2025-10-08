@@ -457,4 +457,97 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
+    public async Task<ConsumerGroup> UpdateConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? userMetadata = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName);
+
+            var consumerGroupData = new EventHubsConsumerGroupData();
+            if (!string.IsNullOrEmpty(userMetadata))
+            {
+                consumerGroupData.UserMetadata = userMetadata;
+            }
+
+            var operation = await eventHubResource.Value.GetEventHubsConsumerGroups().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                consumerGroupName,
+                consumerGroupData);
+
+            var consumerGroupResource = operation.Value;
+            if (string.IsNullOrEmpty(consumerGroupResource.Id))
+            {
+                throw new InvalidOperationException("Consumer group resource ID is missing");
+            }
+
+            var resourceId = new ResourceIdentifier(consumerGroupResource.Id!);
+
+            return new ConsumerGroup(
+                Name: consumerGroupResource.Data.Name,
+                Id: consumerGroupResource.Id!,
+                ResourceGroup: resourceId.ResourceGroupName ?? resourceGroup,
+                Namespace: namespaceName,
+                EventHub: eventHubName,
+                Location: consumerGroupResource.Data.Location?.ToString(),
+                UserMetadata: consumerGroupResource.Data.UserMetadata,
+                CreationTime: consumerGroupResource.Data.CreatedOn,
+                UpdatedTime: consumerGroupResource.Data.UpdatedOn);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error creating/updating consumer group '{ConsumerGroupName}' in Event Hub '{EventHubName}' of namespace '{NamespaceName}'",
+                consumerGroupName, eventHubName, namespaceName);
+            throw;
+        }
+    }
+
+    public async Task<bool> DeleteConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(consumerGroupName, eventHubName, namespaceName, resourceGroup, subscription);
+
+        try
+        {
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
+            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName);
+
+            var consumerGroupResource = await eventHubResource.Value.GetEventHubsConsumerGroups().GetAsync(consumerGroupName);
+
+            await consumerGroupResource.Value.DeleteAsync(WaitUntil.Completed);
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,
+                "Error deleting consumer group '{ConsumerGroupName}' from Event Hub '{EventHubName}' of namespace '{NamespaceName}'",
+                consumerGroupName, eventHubName, namespaceName);
+            throw;
+        }
+    }
+
 }

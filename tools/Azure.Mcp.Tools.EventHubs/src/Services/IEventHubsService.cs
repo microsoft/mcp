@@ -77,4 +77,23 @@ public interface IEventHubsService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<ConsumerGroup> UpdateConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? userMetadata = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<bool> DeleteConsumerGroupAsync(
+        string consumerGroupName,
+        string eventHubName,
+        string namespaceName,
+        string resourceGroup,
+        string subscription,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

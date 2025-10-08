@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -23,6 +24,8 @@ public class EventHubsSetup : IAreaSetup
         services.AddSingleton<NamespaceGetCommand>();
         services.AddSingleton<NamespaceUpdateCommand>();
         services.AddSingleton<NamespaceDeleteCommand>();
+        services.AddSingleton<ConsumerGroupUpdateCommand>();
+        services.AddSingleton<ConsumerGroupDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -52,6 +55,14 @@ public class EventHubsSetup : IAreaSetup
 
         var namespaceDeleteCommand = serviceProvider.GetRequiredService<NamespaceDeleteCommand>();
         namespaceGroup.AddCommand(namespaceDeleteCommand.Name, namespaceDeleteCommand);
+        var consumerGroupGroup = new CommandGroup("consumergroup", "Event Hubs consumer group operations");
+        eventHubs.AddSubGroup(consumerGroupGroup);
+
+        var consumerGroupUpdateCommand = serviceProvider.GetRequiredService<ConsumerGroupUpdateCommand>();
+        consumerGroupGroup.AddCommand(consumerGroupUpdateCommand.Name, consumerGroupUpdateCommand);
+
+        var consumerGroupDeleteCommand = serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>();
+        consumerGroupGroup.AddCommand(consumerGroupDeleteCommand.Name, consumerGroupDeleteCommand);
 
         return eventHubs;
     }
