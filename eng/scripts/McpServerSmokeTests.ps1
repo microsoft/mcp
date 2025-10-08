@@ -53,8 +53,8 @@ function Validate-Npm-Packages {
 
     switch ($TargetOs) {
         "linux" { $artifactOs = "linux" }
-        "osx"   { $artifactOs = "darwin" }
-        "win"   { $artifactOs = "win32" }
+        "macOs"   { $artifactOs = "darwin" }
+        "windows"   { $artifactOs = "win32" }
         default { throw "Unknown TargetOs: $TargetOs" }
     }
 
