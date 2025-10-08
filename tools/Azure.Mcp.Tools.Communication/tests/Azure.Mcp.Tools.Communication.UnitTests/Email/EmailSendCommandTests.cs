@@ -96,23 +96,23 @@ public class EmailSendCommandTests
     public async Task ExecuteAsync_WithValidParameters_CallsServiceCorrectly()
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse([
+        var parseResult = _commandDefinition.Parse(new[]
+        {
             "--endpoint", "https://example.communication.azure.com",
             "--sender", "sender@example.com",
             "--sender-name", "Test Sender",
             "--to", "recipient1@example.com", "recipient2@example.com",
-            "--cc", "cc@example.com",
-            "--bcc", "bcc@example.com",
             "--subject", "Test Subject",
             "--message", "Test Message",
-            "--is-html",
+            "--is-html", "true",
+            "--cc", "cc@example.com",
+            "--bcc", "bcc@example.com",
             "--reply-to", "reply@example.com",
             "--tenant", "test-tenant",
             "--subscription", "test-subscription",
             "--resource-group", "test-rg",
-            "--auth-method", "Default",
-            "--output", "json" // Add output option
-        ]);
+            "--retry-policy", "3"
+        });
 
         var expectedResult = new EmailSendResult
         {
@@ -209,6 +209,7 @@ public class EmailSendCommandTests
 
         // Act
         await _command.ExecuteAsync(_context, parseResult);
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(_context.Response)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
@@ -265,6 +266,7 @@ public class EmailSendCommandTests
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -282,17 +284,16 @@ public class EmailSendCommandTests
             "--sender", "sender@example.com",
             "--sender-name", "Test Sender",
             "--to", "recipient1@example.com", "recipient2@example.com",
-            "--cc", "cc@example.com",
-            "--bcc", "bcc@example.com",
             "--subject", "Test Subject",
             "--message", "Test Message",
             "--is-html",
+            "--cc", "cc@example.com",
+            "--bcc", "bcc@example.com",
             "--reply-to", "reply@example.com",
             "--tenant", "test-tenant", // <-- Add tenant to match required options
             "--subscription", "test-subscription",
             "--resource-group", "test-rg",
-            "--auth-method", "Default",
-            "--output", "json" // Add output option
+            "--retry-policy", "3"
         ];
 
         var parseResult = _commandDefinition.Parse(args);
@@ -314,6 +315,7 @@ public class EmailSendCommandTests
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -359,6 +361,7 @@ public class EmailSendCommandTests
 
         // Act
         var response = await _command.ExecuteAsync(_context, parseResult);
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
