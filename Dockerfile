@@ -19,8 +19,11 @@ WORKDIR /azuremcpserver
 # List the contents of the current directory
 RUN ls -la
 
+# Ensure the main binary exists and is executable
 RUN if [ ! -f "azmcp" ]; then \
     echo "ERROR: azmcp executable does not exist" && exit 1; \
-    fi
+    fi \
+    && chmod +x azmcp \
+    && test -x azmcp
 
 ENTRYPOINT ["./azmcp", "server", "start"]
