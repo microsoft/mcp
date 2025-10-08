@@ -50,10 +50,10 @@ public class MonitorService : BaseAzureService, IMonitorService
         string resourceId,
         string query,
         string table,
-        int? hours = 24,
-        int? limit = 20,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        int? hours,
+        int? limit,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters(subscription, resourceId, table);
         query = BuildQuery(query, table, limit);
@@ -171,9 +171,9 @@ public class MonitorService : BaseAzureService, IMonitorService
         string subscription,
         string resourceGroup,
         string workspace,
-        string? tableType = "CustomLog",
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? tableType,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters(subscription, resourceGroup, workspace);
 
@@ -211,8 +211,8 @@ public class MonitorService : BaseAzureService, IMonitorService
 
     public async Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters(subscription);
 
@@ -242,10 +242,10 @@ public class MonitorService : BaseAzureService, IMonitorService
         string workspace,
         string query,
         string table,
-        int? hours = 24,
-        int? limit = 20,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        int? hours,
+        int? limit,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters(subscription, workspace, table);
 
@@ -374,13 +374,13 @@ public class MonitorService : BaseAzureService, IMonitorService
     public async Task<List<ActivityLogEventData>> ListActivityLogs(
         string subscription,
         string resourceName,
-        string? resourceGroup = null,
-        string? resourceType = null,
-        double hours = 24.0,
-        ActivityLogEventLevel? eventLevel = null,
-        int top = 10,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? resourceGroup,
+        string? resourceType,
+        double hours,
+        ActivityLogEventLevel? eventLevel,
+        int top,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters(subscription, resourceName);
 
@@ -465,7 +465,6 @@ public class MonitorService : BaseAzureService, IMonitorService
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
 
         using HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(httpRequest);
-        string responseString = await response.Content.ReadAsStringAsync();
 
         if (response.IsSuccessStatusCode)
         {
@@ -477,6 +476,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         }
         else
         {
+            string responseString = await response.Content.ReadAsStringAsync();
             string errorMessage;
             if (!string.IsNullOrEmpty(responseString))
             {
