@@ -98,6 +98,8 @@ public class SkuGetCommandTests
     [Theory]
     [InlineData("", false)]
     [InlineData("--subscription sub123", true)]
+    [InlineData("--subscription sub123 --location eastus", true)]
+    [InlineData(" --location eastus", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
