@@ -46,16 +46,18 @@ public class CommunicationServiceTests
     public async Task SendEmailAsync_WithEmptyEndpoint_ThrowsValidationException()
     {
         // Arrange
-        string? endpoint = null;
+        string endpoint = string.Empty;
         string sender = "sender@example.com";
+        string? senderName = string.Empty;
         string[] to = new[] { "recipient@example.com" };
         string subject = "Test Subject";
         string message = "Test Message";
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<CommandValidationException>(
-            () => _service.SendEmailAsync(endpoint!, sender, null, to, subject, message));
-        
+        // Updated to use Assert.ThrowsAsync for async methods
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
+            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, null, null, null));
+
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
 
