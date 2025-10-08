@@ -70,7 +70,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         foreach (var server in serverList)
         {
             var metadata = server.CreateMetadata();
-
             var tool = new Tool
             {
                 Name = metadata.Name,
@@ -97,7 +96,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         string tool = request.Params.Name;
-
         var args = request.Params?.Arguments;
         string? intent = null;
         string? command = null;

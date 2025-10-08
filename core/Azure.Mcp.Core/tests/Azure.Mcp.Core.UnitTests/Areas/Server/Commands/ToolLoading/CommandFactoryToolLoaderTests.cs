@@ -879,7 +879,7 @@ public class CommandFactoryToolLoaderTests
     public void ToolLoaderOptions_WithTool_IsSetCorrectly()
     {
         // Arrange & Act
-        var expectedTools = new[] { "azmcp storage account list" };
+        var expectedTools = new[] { "azmcp_group_list" };
         var options = new ToolLoaderOptions(Tool: expectedTools);
 
         // Assert

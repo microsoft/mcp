@@ -46,7 +46,7 @@ public static class ServiceOptionDefinitions
         $"--{ToolName}"
     )
     {
-        Description = "Expose only specific tools by name (e.g., 'azmcp_acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp_acr_registry_list\" --tool \"azmcp_group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. When used together with \"--namespace\", only tools within the specified namespaces are considered.",
+        Description = "Expose only specific tools by name (e.g., 'azmcp_acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp_acr_registry_list\" --tool \"azmcp_group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,

@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. Use multiple `--tool` parameters to include multiple tools. It automatically switches to `all` mode. The --namespace and --tool options cannot be used together..
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -148,7 +148,7 @@ The `azmcp server start` command supports the following options:
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
-| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. When used together with `--namespace`, only tools within the specified namespaces are considered. |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
 | `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |

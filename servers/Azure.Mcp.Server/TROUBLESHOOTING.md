@@ -45,7 +45,7 @@ By default, Azure MCP Server communicates with MCP Clients via standard I/O. Any
 
 ### Can I select what tools to load in the MCP server?
 
-Yes, you can control which tools are exposed using several approaches. The --namespace and --tool options cannot be used together.
+Yes, you can control which tools are exposed using several approaches. The `--namespace` and `--tool` options cannot be used together.
 
 #### Option 1: Filter by Service Namespace
 Use the `--namespace` option to expose only tools for specific Azure services:
@@ -78,7 +78,7 @@ Use the `--namespace` option to expose only tools for specific Azure services:
 ```
 
 #### Option 2: Filter by Specific Tools
-Use the `--tool` option to expose only specific tools by name. This provides the most granular control. It automatically switches to `all` mode. When used together with `--namespace`, only tools within the specified namespaces are considered.:
+Use the `--tool` option to expose only specific tools by name. This provides the most granular control. It automatically switches to `all` mode:
 
 ```json
 {
