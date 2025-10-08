@@ -12,6 +12,9 @@ namespace Azure.Mcp.Tools.EventHubs.Commands;
 [JsonSerializable(typeof(Models.Namespace))]
 [JsonSerializable(typeof(NamespaceGetCommand.NamespaceGetCommandResult))]
 [JsonSerializable(typeof(NamespaceGetCommand.NamespacesGetCommandResult))]
+[JsonSerializable(typeof(NamespaceUpdateCommand.NamespaceUpdateCommandResult))]
+[JsonSerializable(typeof(NamespaceDeleteCommand.NamespaceDeleteCommandResult))]
+[JsonSerializable(typeof(Dictionary<string, string>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     WriteIndented = true,
