@@ -114,7 +114,7 @@ public sealed class CommandFactoryToolLoader(
         // Check if tool filtering is enabled and validate the requested tool
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
         {
-            if (!_options.Value.Tool.Contains(toolName, StringComparer.OrdinalIgnoreCase))
+            if (!_options.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
             {
                 var content = new TextContentBlock
                 {

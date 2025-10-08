@@ -57,7 +57,7 @@ public sealed class RegistryToolLoader(
             // Filter by specific tools if provided
             if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
             {
-                filteredTools = filteredTools.Where(t => _options.Value.Tool.Contains(t.Name, StringComparer.OrdinalIgnoreCase));
+                filteredTools = filteredTools.Where(t => _options.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
             }
 
             foreach (var tool in filteredTools)
@@ -99,7 +99,7 @@ public sealed class RegistryToolLoader(
         // Check if tool filtering is enabled and validate the requested tool
         if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
         {
-            if (!_options.Value.Tool.Contains(request.Params.Name, StringComparer.OrdinalIgnoreCase))
+            if (!_options.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
             {
                 var content = new TextContentBlock
                 {
