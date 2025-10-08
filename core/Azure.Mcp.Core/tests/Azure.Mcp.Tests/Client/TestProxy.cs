@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using Azure.Mcp.Tests.Generated;
+using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -26,7 +27,7 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
     private int? _httpPort;
     private bool _disposed;
 
-    public string? ExecutablePath { get; init; } = ResolveProxyExecutable();
+    public string? ExecutablePath { get; init; } = GetExecutableFromAssemblyMetadata();
     public string BaseUri => _httpPort is int p ? $"http://127.0.0.1:{p}/" : throw new InvalidOperationException("Proxy not started");
 
     public TestProxyClient Client { get; private set; } = default!;
@@ -92,9 +93,6 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
     }
 
-    // NOTE: Previous static singleton implementation removed due to undefined state fields.
-    // If needed, reintroduce with explicit private static fields and thread-safe disposal.
-
     private static async Task PumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
     {
         try
@@ -144,59 +142,24 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
         return int.TryParse(remainder, out port);
     }
 
-    private static string? ResolveProxyExecutable()
+    private static string GetExecutableFromAssemblyMetadata()
     {
-        // 1. Assembly metadata attribute (preferred explicit test assembly provisioning)
-        var fromMetadata = GetExecutableFromAssemblyMetadata();
-        if (fromMetadata != null) return fromMetadata;
+        var assembly = typeof(TestProxy).Assembly;
+        var value = assembly
+            .GetCustomAttributes<AssemblyMetadataAttribute>()
+            .FirstOrDefault(a => string.Equals(a.Key, "TestProxyPath", StringComparison.OrdinalIgnoreCase))?
+            .Value;
+        if (string.IsNullOrWhiteSpace(value)) throw new InvalidOperationException("Unable to get the custom attribute with TestProxyPath");
 
-        // 2. Explicit environment variable overrides
-        var explicitPath = Environment.GetEnvironmentVariable("PROXY_EXE") ?? Environment.GetEnvironmentVariable("TEST_PROXY_EXE");
-        if (!string.IsNullOrWhiteSpace(explicitPath) && File.Exists(explicitPath)) return explicitPath;
-
-        // 3. Search PATH for known executable names
-        var names = new[] { "test-proxy", "test-proxy.exe", "Azure.Sdk.Tools.TestProxy", "Azure.Sdk.Tools.TestProxy.exe" };
-        var path = Environment.GetEnvironmentVariable("PATH") ?? string.Empty;
-        foreach (var dir in path.Split(Path.PathSeparator, StringSplitOptions.RemoveEmptyEntries))
+        // If value points to a directory, attempt to locate a dll or exe within.
+        if (Directory.Exists(value))
         {
-            foreach (var name in names)
-            {
-                var full = Path.Combine(dir, name);
-                if (File.Exists(full)) return full;
-            }
+            // Prefer dll
+            var dll = Directory.EnumerateFiles(value, "Azure.Sdk.Tools.TestProxy*.dll").FirstOrDefault();
+            if (dll != null) return dll;
         }
-        return null;
-    }
 
-    private static string? GetExecutableFromAssemblyMetadata()
-    {
-        try
-        {
-            var assembly = typeof(TestProxy).Assembly;
-            var value = assembly
-                .GetCustomAttributes<AssemblyMetadataAttribute>()
-                .FirstOrDefault(a => string.Equals(a.Key, "TestProxyPath", StringComparison.OrdinalIgnoreCase))?
-                .Value;
-            if (string.IsNullOrWhiteSpace(value)) return null;
-
-            // If value points to a directory, attempt to locate a dll or exe within.
-            if (Directory.Exists(value))
-            {
-                // Prefer dll
-                var dll = Directory.EnumerateFiles(value, "Azure.Sdk.Tools.TestProxy*.dll").FirstOrDefault();
-                if (dll != null) return dll;
-                var exe = Directory.EnumerateFiles(value, "test-proxy*.exe").FirstOrDefault();
-                if (exe != null) return exe;
-                return null;
-            }
-
-            if (File.Exists(value)) return value;
-            return null;
-        }
-        catch
-        {
-            return null;
-        }
+        throw new InvalidOperationException("Unable to locate test-proxy dll within the specified directory: " + value);        
     }
 
     private static string GetDotNetHost()
