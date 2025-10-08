@@ -478,6 +478,7 @@ azmcp appservice database add --subscription "my-subscription" \
 
 ```bash
 # Send email using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send \
     --endpoint "<endpoint>" \
     --sender "<sender-email>" \
@@ -492,6 +493,7 @@ azmcp communication email send \
 
 # Examples:
 # Send plain text email
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send \
     --endpoint "https://mycomms.communication.azure.com" \
     --sender "sender@verified-domain.com" \
@@ -500,6 +502,7 @@ azmcp communication email send \
     --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC and sender name
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send \
     --endpoint "https://mycomms.communication.azure.com" \
     --sender "sender@verified-domain.com" \
@@ -511,6 +514,7 @@ azmcp communication email send \
     --is-html
 
 # Send to multiple recipients with BCC and reply-to
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send \
     --endpoint "https://mycomms.communication.azure.com" \
     --sender "notifications@verified-domain.com" \
