@@ -65,12 +65,17 @@ public class EmailSendCommandTests
     {
         // Arrange
         var args = new List<string>();
-        
-        if (endpoint != null) { args.AddRange(["--endpoint", endpoint]); }
-        if (sender != null) { args.AddRange(["--sender", sender]); }
-        if (to != null) { args.AddRange(["--to", to]); }
-        if (subject != null) { args.AddRange(["--subject", subject]); }
-        if (message != null) { args.AddRange(["--message", message]); }
+
+        if (endpoint != null)
+        { args.AddRange(["--endpoint", endpoint]); }
+        if (sender != null)
+        { args.AddRange(["--sender", sender]); }
+        if (to != null)
+        { args.AddRange(["--to", to]); }
+        if (subject != null)
+        { args.AddRange(["--subject", subject]); }
+        if (message != null)
+        { args.AddRange(["--message", message]); }
 
         var parseResult = _commandDefinition.Parse(args.ToArray());
 
@@ -119,7 +124,7 @@ public class EmailSendCommandTests
                 try
                 {
                     var response = await _command.ExecuteAsync(_context, parseResult);
-                    
+
                     // If we reach here without exception, check if it's a validation error response
                     if (response.Status == HttpStatusCode.BadRequest)
                     {
@@ -183,7 +188,7 @@ public class EmailSendCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
-        
+
         // Verify service was called with correct parameters
         await _mockCommunicationService.Received(1).SendEmailAsync(
             "https://example.communication.azure.com",
@@ -205,7 +210,7 @@ public class EmailSendCommandTests
         var responseJson = JsonSerializer.Serialize(_context.Response.Results);
         Assert.Contains(expectedResult.MessageId, responseJson);
         Assert.Contains(expectedResult.Status, responseJson);
-        
+
         // Verify the JSON can be properly deserialized (contains expected values)
         Assert.Contains("test-message-id", responseJson);
         Assert.Contains("Queued", responseJson);

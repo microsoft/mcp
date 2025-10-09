@@ -57,24 +57,25 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         command.Options.Add(CommunicationOptionDefinitions.EmailMessage);
         command.Options.Add(CommunicationOptionDefinitions.IsHtml);
         command.Options.Add(CommunicationOptionDefinitions.ReplyTo);
-        command.Validators.Add(commandResult => {
-        var to = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
-        if (to == null || to.Length == 0)
-            commandResult.AddError("At least one 'to' email address must be provided");
-        else if (to.Any(string.IsNullOrWhiteSpace))
-            commandResult.AddError("to email addresses cannot be empty.");
+        command.Validators.Add(commandResult =>
+        {
+            var to = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
+            if (to == null || to.Length == 0)
+                commandResult.AddError("At least one 'to' email address must be provided");
+            else if (to.Any(string.IsNullOrWhiteSpace))
+                commandResult.AddError("to email addresses cannot be empty.");
 
-        var cc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
-        if (cc != null && cc.Any(string.IsNullOrWhiteSpace))
-            commandResult.AddError("CC email addresses should not be empty if provided by user.");
+            var cc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
+            if (cc != null && cc.Any(string.IsNullOrWhiteSpace))
+                commandResult.AddError("CC email addresses should not be empty if provided by user.");
 
-        var bcc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
-        if (bcc != null && bcc.Any(string.IsNullOrWhiteSpace))
-            commandResult.AddError("BCC email addresses should not be empty if provided by user.");
+            var bcc = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
+            if (bcc != null && bcc.Any(string.IsNullOrWhiteSpace))
+                commandResult.AddError("BCC email addresses should not be empty if provided by user.");
 
-        var replyTo = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
-        if (replyTo != null && replyTo.Any(string.IsNullOrWhiteSpace))
-            commandResult.AddError("Reply-To email addresses should not be empty if provided by user.");
+            var replyTo = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
+            if (replyTo != null && replyTo.Any(string.IsNullOrWhiteSpace))
+                commandResult.AddError("Reply-To email addresses should not be empty if provided by user.");
         });
     }
 

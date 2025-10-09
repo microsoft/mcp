@@ -73,7 +73,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
             Assert.NotEmpty(messageId);
             Assert.NotNull(messageStatus);
             Assert.NotEmpty(messageStatus);
-            
+
             Output.WriteLine($"Email successfully sent with message ID {messageId} and status {messageStatus}");
         }
         else if (result.Value.TryGetProperty("status", out var statusElement))

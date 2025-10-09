@@ -1,9 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Options;
 using System.Text.Json.Serialization;
 using Azure.Core.Serialization;
+using Azure.Mcp.Core.Options;
 
 namespace Azure.Mcp.Tools.Communication.Options;
 
@@ -28,7 +28,7 @@ public class EmailSendOptions : BaseCommunicationOptions
     /// The recipient email addresses.
     /// </summary>
     [JsonPropertyName(CommunicationOptionDefinitions.ToEmailName)]
-    public  string[]? To { get; set; }
+    public string[]? To { get; set; }
 
     /// <summary>
     /// Optional CC recipient email addresses.
