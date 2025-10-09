@@ -115,6 +115,21 @@ extends:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
             ServerName: ${{ parameters.ServerName }}
+        - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
+          parameters:
+            DependsOn:
+              - PackNpm
+              - PackNuget
+            SparseCheckout: false
+            JobTemplatePath: /eng/pipelines/templates/jobs/verify-packages.yml
+            AdditionalParameters:
+              TestTimeoutInMinutes: 10
+              ServerName: ${{ parameters.ServerName }}
+            MatrixConfigs:
+              - Name: build_matrix
+                Path: eng/pipelines/build-matrix.json
+                Selection: all
+                GenerateVMJobs: true
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
