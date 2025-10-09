@@ -121,7 +121,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
         }
 
         // Check if status property exists
-        Assert.True(result.Value.TryGetProperty("status", out var statusElement));
+        var statusElement = result.Value.AssertProperty("status");
         var status = statusElement.GetInt32();
         Output.WriteLine($"Status code: {status}");
 
@@ -129,7 +129,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
         Assert.Equal((int)HttpStatusCode.BadRequest, status);
 
         // Verify the error message exists
-        Assert.True(result.Value.TryGetProperty("message", out var messageElement));
+        var messageElement = result.Value.AssertProperty("message");
         var message = messageElement.GetString();
 
         // Make sure message is not null

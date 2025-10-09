@@ -118,7 +118,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new EmailSendCommandResult(result), CommunicationJsonContext.Default.EmailSendCommandResult);
+            context.Response.Results = ResponseResult.Create(new(result), CommunicationJsonContext.Default.EmailSendCommandResult);
         }
         catch (Exception ex)
         {
