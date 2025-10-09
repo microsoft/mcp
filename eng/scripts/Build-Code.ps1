@@ -43,7 +43,7 @@ if($OperatingSystem) {
     switch($OperatingSystem) {
         'windows' { 
             $operatingSystems = @('win')
-            $postinstall = "set PACKAGE_BASE_NAME=$packageName&& node ./scripts/post-install-script.js"
+            $postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
         }
         'linux' { 
             $operatingSystems = @('linux')
