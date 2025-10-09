@@ -512,18 +512,16 @@ Supported comment annotations:
 
 You can verify that your README.md was annotated correctly using the `Validate-PackageReadme` function:
 ```
-. eng\scripts\Process-PackageReadMe.ps1
-Validate-PackageReadme -InputReadMePath <README.md Path>
+& "eng\scripts\Process-PackageReadMe.ps1" -Command "validate" -InputReadMePath "<README.md Path>"
 ```
 
 To extract README.md for a specific package, run the `Extract-PackageSpecificReadMe` function:
 ```
-. eng\scripts\Process-PackageReadMe.ps1
-Extract-PackageSpecificReadMe `
-    -InputReadMePath <README.md Path> `
-    -OutputDirectory <Output Directory for the package specific README.md> `
-    -PackageType <npm, nuget, or vsix> `
-    -InsertPayload <Package specific content to be inserted>
+& "eng\scripts\Process-PackageReadMe.ps1" -Command "extract" `
+    -InputReadMePath "<README.md Path>" `
+    -OutputDirectory "<Output Directory for the package specific README.md>" `
+    -PackageType "<npm, nuget, or vsix>" `
+    -InsertPayload "<Package specific content to be inserted>"
 ```
 
 ## Advanced Configuration
