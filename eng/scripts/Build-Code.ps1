@@ -40,10 +40,7 @@ if($AllPlatforms -and $BuildNative) {
 $runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
 if($OperatingSystem) {
     switch($OperatingSystem) {
-        'windows' { 
-            $operatingSystems = @('win')
-            $postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
-        }
+        'windows' { $operatingSystems = @('win')}
         'linux' { $operatingSystems = @('linux') }
         'macos' { $operatingSystems = @('osx') }
         default { Write-Error "Unsupported operating system: $OperatingSystem"; return }
@@ -91,27 +88,6 @@ function BuildServer($serverName) {
 
     $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
     
-    $wrapperPackage = [ordered]@{
-        name = $packageName
-        version = $version
-        description = $description
-        author = 'Microsoft'
-        homepage = $readmeUrl
-        license = 'MIT'
-        keywords = $keywords
-        bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
-        repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-        engines = @{ node = '>=20.0.0' }
-        bin = @{ $cliName = './index.js' }
-        os = @()
-        cpu = @()
-        optionalDependencies = @{}
-        scripts = @{ postinstall = $postinstall }
-    }
-
-    $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8
-    Write-Host "Created wrapper.json in $serverOutputDirectory" -ForegroundColor Yellow
-
     Copy-Item "$serverDirectory/README.md" -Destination $serverOutputDirectory -Force
     Write-Host "Copied README.md to $serverOutputDirectory" -ForegroundColor Yellow
 
@@ -120,11 +96,32 @@ function BuildServer($serverName) {
             switch($os) {
                 'win' { 
                     $node_os = 'win32'; $extension = '.exe'
-                    $wrapperPackage.scripts.postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
+                    $postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
                 }
                 'osx' { $node_os = 'darwin'; $extension = '' }
                 default { $node_os = $os; $extension = '' }
             }
+
+            $wrapperPackage = [ordered]@{
+                name = $packageName
+                version = $version
+                description = $description
+                author = 'Microsoft'
+                homepage = $readmeUrl
+                license = 'MIT'
+                keywords = $keywords
+                bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
+                repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
+                engines = @{ node = '>=20.0.0' }
+                bin = @{ $cliName = './index.js' }
+                os = @()
+                cpu = @()
+                optionalDependencies = @{}
+                scripts = @{ postinstall = $postinstall }
+            }
+
+            $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8 -Force
+            Write-Host "Created wrapper.json in $serverOutputDirectory" -ForegroundColor Yellow
 
             $outputDir = "$serverOutputDirectory/$os-$arch"
             Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
