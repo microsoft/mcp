@@ -177,11 +177,14 @@ public class EmailSendCommandTests
             .Returns(expectedResult);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
-        Console.WriteLine($"Response: {JsonSerializer.Serialize(_context.Response)}");
+        var response = await _command.ExecuteAsync(_context, parseResult);
+        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal(HttpStatusCode.OK, _context.Response.Status);
+        
+        // Verify service was called with correct parameters
         await _mockCommunicationService.Received(1).SendEmailAsync(
             "https://example.communication.azure.com",
             "sender@example.com",
@@ -197,11 +200,15 @@ public class EmailSendCommandTests
             null
         );
 
-        // Verify the result matches the expected result
+        // Verify the response contains the expected result
         Assert.NotNull(_context.Response.Results);
         var responseJson = JsonSerializer.Serialize(_context.Response.Results);
         Assert.Contains(expectedResult.MessageId, responseJson);
         Assert.Contains(expectedResult.Status, responseJson);
+        
+        // Verify the JSON can be properly deserialized (contains expected values)
+        Assert.Contains("test-message-id", responseJson);
+        Assert.Contains("Queued", responseJson);
     }
 
     [Fact]
@@ -244,55 +251,5 @@ public class EmailSendCommandTests
         Assert.NotNull(_context.Response.Results);
         var responseJson = JsonSerializer.Serialize(_context.Response.Results);
         Assert.Contains("Test error message", responseJson);
-    }
-
-    [Fact]
-    public async Task ExecuteAsync_DeserializationValidation()
-    {
-        // Arrange
-        string[] args = [
-            "--endpoint", "https://example.communication.azure.com",
-            "--sender", "sender@example.com",
-            "--to", "recipient@example.com",
-            "--subject", "Test Subject",
-            "--message", "Test Message"
-        ];
-
-        var parseResult = _commandDefinition.Parse(args);
-
-        var expectedResult = new EmailSendResult
-        {
-            MessageId = "test-message-id",
-            Status = "Queued"
-        };
-
-        _mockCommunicationService
-            .SendEmailAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<bool>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
-
-        // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
-        Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
-
-        // Assert
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        Assert.NotNull(_context.Response.Results);
-
-        // Verify the JSON can be properly deserialized
-        var json = JsonSerializer.Serialize(_context.Response.Results);
-        Assert.Contains("test-message-id", json);
-        Assert.Contains("Queued", json);
     }
 }
