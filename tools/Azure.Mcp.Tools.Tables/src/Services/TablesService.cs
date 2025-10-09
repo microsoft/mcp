@@ -10,18 +10,20 @@ namespace Azure.Mcp.Tools.Tables.Services;
 public class TablesService() : BaseAzureService, ITablesService
 {
     protected async Task<TableServiceClient> CreateTableServiceClient(
-        string account,
+        string? account,
+        bool isCosmosDb,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         var options = ConfigureRetryPolicy(AddDefaultPolicies(new TableClientOptions()), retryPolicy);
-        var defaultUri = $"https://{account}.table.core.windows.net";
+        var defaultUri = isCosmosDb ? $"https://{account}.table.cosmos.azure.com" : $"https://{account}.table.core.windows.net";
         return new TableServiceClient(new Uri(defaultUri), await GetCredential(tenant), options);
     }
 
     public async Task<List<string>> ListTables(
         string account,
+        bool isCosmosDb,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
@@ -35,6 +37,7 @@ public class TablesService() : BaseAzureService, ITablesService
             // First attempt with requested auth method
             var tableServiceClient = await CreateTableServiceClient(
                 account,
+                isCosmosDb,
                 subscription,
                 tenant,
                 retryPolicy);

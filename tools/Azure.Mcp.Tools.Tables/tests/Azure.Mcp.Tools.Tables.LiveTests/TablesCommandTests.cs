@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.Tables.LiveTests
     public class TablesCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
     {
         [Fact]
-        public async Task Should_list_tables_with_tenant_id()
+        public async Task Should_list_storage_tables_with_tenant_id()
         {
             var result = await CallToolAsync(
                 "azmcp_tables_list",
@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.Tables.LiveTests
                 {
                 { "subscription", Settings.SubscriptionName },
                 { "tenant", Settings.TenantId },
-                { "account", Settings.ResourceBaseName },
+                { "storage-account", Settings.ResourceBaseName },
                 });
 
             var actual = result.AssertProperty("tables");
@@ -28,7 +28,7 @@ namespace Azure.Mcp.Tools.Tables.LiveTests
         }
 
         [Fact()]
-        public async Task Should_list_tables_with_tenant_name()
+        public async Task Should_list_storage_tables_with_tenant_name()
         {
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
@@ -38,7 +38,7 @@ namespace Azure.Mcp.Tools.Tables.LiveTests
                 {
                 { "subscription", Settings.SubscriptionName },
                 { "tenant", Settings.TenantName },
-                { "account", Settings.ResourceBaseName },
+                { "storage-account", Settings.ResourceBaseName },
                 });
 
             var actual = result.AssertProperty("tables");

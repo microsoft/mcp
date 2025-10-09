@@ -1,7 +1,7 @@
 # Azure MCP CLI Command Reference
 
 > [!IMPORTANT]
-> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the Tools via a command line interface, i.e. `azmcp subscription list`.  Since `azmcp` is built on a CLI infrastructure, you'll see the word "Command" be used interchangeably with "Tool".
+> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
 ## Global Options
 
@@ -86,6 +86,28 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Specific Tool Filtering
+
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+
+```bash
+# Start MCP Server with default mode and only subscription and resource group tools
+azmcp server start \
+    --tool azmcp_subscription_list \
+    --tool azmcp_group_list \
+    [--transport <transport>] \
+    [--read-only]
+
+# Start MCP Server with all mode and essential storage management tools
+azmcp server start \
+    --mode all \
+    --tool azmcp_storage_account_get \
+    --tool azmcp_storage_account_create \
+    --tool azmcp_storage_blob_get \
+    [--transport <transport>] \
+    [--read-only]
+```
+
 #### Namespace Mode (Default)
 
 Collapses all tools within each namespace into a single tool (e.g., all storage operations become one "storage" tool with internal routing). This mode is particularly useful when working with MCP clients that have tool limits - for example, VS Code only supports a maximum of 128 tools across all registered MCP servers.
@@ -126,8 +148,10 @@ The `azmcp server start` command supports the following options:
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
 | `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**
@@ -500,12 +524,18 @@ azmcp communication sms send \
 azmcp confidentialledger entries append --ledger <ledger-name> \
                                         --content <json-or-text-data> \
                                         [--collection-id <collection-id>]
+
+# Retrieve a Confidential Ledger entry with verification proof
+azmcp confidentialledger entries get --ledger <ledger-name> \
+                                     --transaction-id <transaction-id> \
+                                     [--collection-id <collection-id>]
 ```
 
 **Options:**
 -   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
+-   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Registry (ACR) Operations
 
@@ -1582,10 +1612,11 @@ azmcp storage blob upload --subscription <subscription> \
 ### Azure Tables Operations
 
 ```bash
-# List tables in a Storage account
+# List tables in a Storage or Cosmos DB account
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp tables list --subscription <subscription> \
-                  --account <account>
+                  [--storage-account <storage-account>] \
+                  [--cosmosdb-account <cosmosdb-account>]
 ```
 
 ### Azure Subscription Management

@@ -7,5 +7,6 @@ namespace Azure.Mcp.Tools.Tables.Options;
 
 public class BaseTablesOptions : SubscriptionOptions
 {
-    public string? Account { get; set; }
+    public string? StorageAccount { get; set; }
+    public string? CosmosDbAccount { get; set; }
 }

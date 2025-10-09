@@ -139,6 +139,10 @@
     "Create an immutable ledger entry in <ledger_name> with content {\"audit\": \"log\"}",
     "Write an entry to confidential ledger <ledger_name>"
   ],
+  "azmcp_confidentialledger_entries_get": [
+    "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
+    "Get transaction <transaction_id> from ledger <ledger_name>"
+  ],
   "azmcp_cosmos_account_list": [
     "List all cosmosdb accounts in my subscription",
     "Show me my cosmosdb accounts",
@@ -411,18 +415,24 @@
   "azmcp_grafana_list": [
     "List all Azure Managed Grafana in one subscription"
   ],
-  "azmcp_azuremanagedlustre_filesystem_list": [
+  "azmcp_managedlustre_filesystem_create": [
+    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
+  ],
+  "azmcp_managedlustre_filesystem_list": [
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_sku_get": [
-    "List the Azure Managed Lustre SKUs available in <location>"
+  "azmcp_managedlustre_filesystem_sku_get": [
+    "List the Azure Managed Lustre SKUs available in location <location>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_subnetsize_ask": [
-    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
+  "azmcp_managedlustre_filesystem_subnetsize_ask": [
+    "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_subnetsize_validate": [
-    "Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku>"
+  "azmcp_managedlustre_filesystem_subnetsize_validate": [
+    "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
+  ],
+  "azmcp_managedlustre_filesystem_update": [
+    "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
@@ -659,9 +669,11 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "azmcp_table_list": [
-    "List all tables in the storage account <account>",
-    "Show me the tables in the storage account <account>"
+  "azmcp_tables_list": [
+    "List all tables in the storage account <storage-account>",
+    "Show me the tables in the storage account <storage-account>",
+    "List all tables in the Cosmos DB account <cosmosdb-account>",
+    "Show me the tables in the Cosmos DB account <cosmosdb-account>"
   ],
   "azmcp_azureterraformbestpractices_get": [
     "Fetch the Azure Terraform best practices",

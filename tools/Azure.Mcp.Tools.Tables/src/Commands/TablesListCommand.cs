@@ -15,7 +15,7 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
 
     public override string Name => "list";
 
-    public override string Description => "List all tables in a Storage account.";
+    public override string Description => "List all tables in a Storage or Cosmos DB account.";
 
     public override string Title => CommandTitle;
 
@@ -40,9 +40,11 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
 
         try
         {
+            var account = options.StorageAccount ?? options.CosmosDbAccount;
             var tablesService = context.GetService<ITablesService>();
             var tables = await tablesService.ListTables(
-                options.Account!,
+                account!,
+                !string.IsNullOrWhiteSpace(options.CosmosDbAccount),
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
@@ -51,7 +53,8 @@ public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseT
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing tables. Account: {Account}.", options.Account);
+            _logger.LogError(ex, "Error listing tables. StorageAccount: {StorageAccount}, CosmosDbAccount: {CosmosDbAccount}.",
+                options.StorageAccount, options.CosmosDbAccount);
             HandleException(context, ex);
         }
 
