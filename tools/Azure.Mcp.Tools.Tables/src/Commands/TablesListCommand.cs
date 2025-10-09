@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Tables.Commands;
 
 public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseTablesCommand<TablesListOptions>()
 {
-    private const string CommandTitle = "List Azure Table storage tables";
+    private const string CommandTitle = "List Tables on Azure Storage or Cosmos DB";
     private readonly ILogger<TablesListCommand> _logger = logger;
 
     public override string Name => "list";

@@ -25,9 +25,9 @@ public class TablesSetup : IAreaSetup
         var tables = new CommandGroup(Name,
             """
             Azure Table storage operations - Commands for managing and accessing Azure Table storage. Use this tool
-            when you need to list Azure Table storage tables. Note that this tool requires appropriate Azure Table
-            storage account permissions and will only access table storage resources accessible to the authenticated
-            user.
+            when you need to list Azure Table storage tables in either a Storage or Cosmos DB account. Note that this
+            tool requires appropriate Azure Table storage account permissions and will only access table storage
+            resources accessible to the authenticated user.
             """);
 
         var tablesList = serviceProvider.GetRequiredService<TablesListCommand>();
