@@ -65,7 +65,7 @@ function Validate-Npm-Packages {
         $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
         foreach ($wrapperDir in $wrapperDirs) {
             $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
-             Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
+            Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
             if (Test-Path $platformDir) {
                 Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
                 Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
@@ -102,9 +102,6 @@ function Validate-Npm-Packages {
 
 $nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed"
 $npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory
-
-Write-Host "NuGet package validation has Failures: $nugetHasFailures"
-Write-Host "NPM package validation has Failures : $npmHasFailures"
 
 if ($nugetHasFailures -or $npmHasFailures) {
     exit 1
