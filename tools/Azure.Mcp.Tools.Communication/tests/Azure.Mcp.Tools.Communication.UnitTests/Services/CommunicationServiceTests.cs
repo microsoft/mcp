@@ -56,7 +56,7 @@ public class CommunicationServiceTests
         // Act & Assert
         // Updated to use Assert.ThrowsAsync for async methods
         var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, null, null, null));
+            () => _service.SendEmailAsync(endpoint, sender, senderName, to, subject, message, false, null, null, null, null, null));
 
         Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
     }

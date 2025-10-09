@@ -20,16 +20,12 @@ TOptions> : GlobalCommand<TOptions>
     {
         base.RegisterOptions(command);
         command.Options.Add(CommunicationOptionDefinitions.Endpoint);
-        command.Options.Add(OptionDefinitions.Common.Subscription);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Endpoint = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Endpoint.Name);
-        options.Subscription = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
-        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 }

@@ -100,8 +100,6 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        string? subscription = null,
-        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         // Validate required parameters using base class method

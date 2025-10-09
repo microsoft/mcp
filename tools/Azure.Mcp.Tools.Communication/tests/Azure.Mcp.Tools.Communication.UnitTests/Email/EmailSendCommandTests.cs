@@ -158,8 +158,6 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
             .Returns(expectedResult);
 
@@ -177,8 +175,6 @@ public class EmailSendCommandTests
             "Test Subject",
             "Test Message",
             false,
-            null,
-            null,
             null,
             null,
             null,
@@ -214,8 +210,6 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>()))
             .Do(x => throw expectedException);
@@ -263,8 +257,6 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>())
             .Returns(expectedResult);

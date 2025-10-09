@@ -31,8 +31,6 @@ public interface ICommunicationService
     /// <param name="cc">Optional CC recipient email addresses.</param>
     /// <param name="bcc">Optional BCC recipient email addresses.</param>
     /// <param name="replyTo">Optional reply-to addresses.</param>
-    /// <param name="subscription">Optional subscription ID or name.</param>
-    /// <param name="resourceGroup">Optional resource group name.</param>
     /// <param name="retryPolicy">Optional retry policy options.</param>
     /// <returns>The result of the email send operation.</returns>
     Task<EmailSendResult> SendEmailAsync(
@@ -47,7 +45,5 @@ public interface ICommunicationService
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        string? subscription = null,
-        string? resourceGroup = null,
         RetryPolicyOptions? retryPolicy = null);
 }
