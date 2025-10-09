@@ -18,14 +18,14 @@ jobs:
     displayName: 'Download signed packages'
     inputs:
       buildType: 'current'
-      artifactName: binaries_signed
+      artifactName: docker_staged
       targetPath: $(Build.ArtifactStagingDirectory)
 
   - task: CopyFiles@2
     displayName: 'Copy Dockerfile'
     inputs:
       Contents: 'Dockerfile'
-      TargetFolder: $(Build.ArtifactStagingDirectory)/docker_staged
+      TargetFolder: $(Build.ArtifactStagingDirectory)
 
   - task: Powershell@2
     displayName: 'Set Docker Variables'
@@ -45,10 +45,10 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
-      path: '$(Build.ArtifactStagingDirectory)/docker_staged'
+      path: '$(Build.ArtifactStagingDirectory)'
       image: $(Build.Repository.Name)/server:$(Build.BuildId)
       buildArguments: |
-        --build-arg PUBLISH_DIR="$(Build.ArtifactStagingDirectory)/binaries_signed/Azure.Mcp.Server/linux-x64/dist"
+        --build-arg PUBLISH_DIR="docker_staged/Azure.Mcp.Server/linux-x64/dist"
       enableNetwork: true
       useBuildKit: true
 
@@ -74,8 +74,8 @@ jobs:
       echo "Image digest: $digest"
       echo "##vso[task.setvariable variable=DockerImageDigest;isOutput=true]$digest"
       echo "Saving image"
-      docker save $IMAGE_TAG -o $(Build.ArtifactStagingDirectory)/image.tar
-      ls -lh $(Build.ArtifactStagingDirectory)/image.tar
+      docker save $IMAGE_TAG -o $(Build.ArtifactStagingDirectory)/docker_staged/image.tar
+      ls -lh $(Build.ArtifactStagingDirectory)/docker_staged/image.tar
     name: CaptureImage
     displayName: Capture image digest and save tar
 

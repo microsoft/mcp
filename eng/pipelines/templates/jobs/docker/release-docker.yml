@@ -26,8 +26,6 @@ jobs:
     runOnce:
       deploy:
         steps:
-        # Download the pre-built image tar artifact produced in the SignAndPack stage (pack-docker.yml)
-        # Assumes pack-docker.yml was updated to publish an artifact named 'docker_staged' containing 'image.tar'.
         - download: current
           artifact: docker_staged
           displayName: Download built image tar
