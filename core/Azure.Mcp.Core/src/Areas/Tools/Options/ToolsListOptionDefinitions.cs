@@ -21,7 +21,7 @@ public static class ToolsListOptionDefinitions
         Required = false,
         AllowMultipleArgumentsPerToken = true
     };
-    
+
     public static readonly Option<bool> Name = new($"--{NameOptionName}")
     {
         Description = "If specified, returns only tool names without descriptions or metadata.",

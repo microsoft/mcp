@@ -159,7 +159,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         }
 
         var namespacePrefixes = namespaces.Select(ns => $"azmcp{separator}{ns}{separator}").ToList();
-        return names.Where(name => 
+        return names.Where(name =>
             namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
     }
 

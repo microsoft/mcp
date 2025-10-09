@@ -464,7 +464,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithNameOption_ReturnsOnlyToolNames()
     {
         // Arrange
-    var args = _commandDefinition.Parse(new[] { "--name" });
+        var args = _commandDefinition.Parse(new[] { "--name" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -482,14 +482,14 @@ public class ToolsListCommandTests
         // Validate that the response only contains Names field and no other fields
         var json = JsonSerializer.Serialize(response.Results);
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
-        
+
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
-        
+
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();
         Assert.Equal(1, propertyCount);
-        
+
         // Explicitly verify that description and command fields are not present
         Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name option");
         Assert.False(jsonElement.TryGetProperty("command", out _), "Response should not contain 'command' property when using --name option");
@@ -517,7 +517,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithSingleNamespaceOption_FiltersCorrectly()
     {
         // Arrange
-    var args = _commandDefinition.Parse(new[] { "--namespace", "storage" });
+        var args = _commandDefinition.Parse(new[] { "--namespace", "storage" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -548,7 +548,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithMultipleNamespaceOptions_FiltersCorrectly()
     {
         // Arrange
-    var args = _commandDefinition.Parse(new[] { "--namespace", "storage", "--namespace", "keyvault" });
+        var args = _commandDefinition.Parse(new[] { "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -567,7 +567,7 @@ public class ToolsListCommandTests
         {
             var isStorageCommand = command.Command.StartsWith("azmcp storage");
             var isKeyvaultCommand = command.Command.StartsWith("azmcp keyvault");
-            Assert.True(isStorageCommand || isKeyvaultCommand, 
+            Assert.True(isStorageCommand || isKeyvaultCommand,
                 $"Command '{command.Command}' should be from storage or keyvault namespace");
         }
 
@@ -583,7 +583,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithNameAndNamespaceOptions_FiltersAndReturnsNamesOnly()
     {
         // Arrange
-    var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage" });
+        var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -601,10 +601,10 @@ public class ToolsListCommandTests
         // Validate that the response only contains Names field and no other fields
         var json = JsonSerializer.Serialize(response.Results);
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
-        
+
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
-        
+
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();
         Assert.Equal(1, propertyCount);
@@ -626,7 +626,7 @@ public class ToolsListCommandTests
     public async Task ExecuteAsync_WithNameAndMultipleNamespaceOptions_FiltersAndReturnsNamesOnly()
     {
         // Arrange
-    var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
+        var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -644,10 +644,10 @@ public class ToolsListCommandTests
         // Validate that the response only contains Names field and no other fields
         var json = JsonSerializer.Serialize(response.Results);
         var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
-        
+
         // Verify that only the "names" property exists
         Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
-        
+
         // Count the number of properties - should only be 1 (names)
         var propertyCount = jsonElement.EnumerateObject().Count();
         Assert.Equal(1, propertyCount);
@@ -657,7 +657,7 @@ public class ToolsListCommandTests
         {
             var isStorageName = name.StartsWith("azmcp_storage_");
             var isKeyvaultName = name.StartsWith("azmcp_keyvault_");
-            Assert.True(isStorageName || isKeyvaultName, 
+            Assert.True(isStorageName || isKeyvaultName,
                 $"Tool name '{name}' should be from storage or keyvault namespace");
         }
 
@@ -673,15 +673,15 @@ public class ToolsListCommandTests
     public void BindOptions_WithNewOptions_BindsCorrectly()
     {
         // Arrange
-    var parseResult = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
+        var parseResult = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Use reflection to call the protected BindOptions method
-        var bindOptionsMethod = typeof(ToolsListCommand).GetMethod("BindOptions", 
+        var bindOptionsMethod = typeof(ToolsListCommand).GetMethod("BindOptions",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         Assert.NotNull(bindOptionsMethod);
 
         // Act
-    var options = bindOptionsMethod.Invoke(_command, new object?[] { parseResult }) as ToolsListOptions;
+        var options = bindOptionsMethod.Invoke(_command, new object?[] { parseResult }) as ToolsListOptions;
 
         // Assert
         Assert.NotNull(options);
@@ -710,7 +710,7 @@ public class ToolsListCommandTests
 
         // Verify values
         Assert.True(parseResult1.GetValueOrDefault<bool>(ToolsListOptionDefinitions.Name.Name));
-        
+
         var namespaces2 = parseResult2.GetValueOrDefault<string[]>(ToolsListOptionDefinitions.Namespace.Name);
         Assert.NotNull(namespaces2);
         Assert.Single(namespaces2);
