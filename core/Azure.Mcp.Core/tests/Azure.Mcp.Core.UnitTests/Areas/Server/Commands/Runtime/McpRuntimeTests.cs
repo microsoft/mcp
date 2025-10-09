@@ -65,12 +65,11 @@ public class McpRuntimeTests
         };
     }
 
-    private static string GetAndAssertTagKeyValue(Activity activity, string tagName)
+    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
     {
-        var matching = activity.Tags.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
 
         Assert.NotNull(matching.Value);
-        Assert.NotEmpty(matching.Value);
 
         return matching.Value;
     }
@@ -258,6 +257,13 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
+        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsCommandInvoked);
+        var isCommandInvokedBool = bool.Parse(isCommandInvoked.ToString() ?? string.Empty);
+        Assert.True(isCommandInvokedBool);
+
+        var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
+        Assert.Equal(toolName, actualToolName);
+
         // The runtime may or may not surface telemetry tags on the Activity depending on the
         // telemetry implementation. Assert the request and response contents instead.
         Assert.NotNull(request.Params);
@@ -368,12 +374,13 @@ public class McpRuntimeTests
         var options = CreateOptions();
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
-        var request = CreateCallToolRequest();
+        var toolName = "test-tool";
+        var request = CreateCallToolRequest(toolName);
         var expectedException = new InvalidOperationException("Tool loader failed");
 
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
             .Returns<ValueTask<CallToolResult>>(x => throw expectedException);
-
+        
         // Act & Assert
         Assert.NotNull(request.Params);
 
@@ -384,12 +391,16 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
+        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsCommandInvoked);
+        var isCommandInvokedBool = bool.Parse(isCommandInvoked.ToString() ?? string.Empty);
+        Assert.True(isCommandInvokedBool);
+
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
-        Assert.Equal(request.Params.Name, actualToolName);
+        Assert.Equal(toolName, actualToolName);
 
         GetAndAssertTagKeyValue(activity, TagName.ErrorDetails);
 
-        Assert.DoesNotContain(activity.Tags,
+        Assert.DoesNotContain(activity.TagObjects,
             x => string.Equals(x.Key, TagName.SubscriptionGuid, StringComparison.OrdinalIgnoreCase));
     }
 
