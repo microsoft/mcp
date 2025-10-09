@@ -524,12 +524,18 @@ azmcp communication sms send \
 azmcp confidentialledger entries append --ledger <ledger-name> \
                                         --content <json-or-text-data> \
                                         [--collection-id <collection-id>]
+
+# Retrieve a Confidential Ledger entry with verification proof
+azmcp confidentialledger entries get --ledger <ledger-name> \
+                                     --transaction-id <transaction-id> \
+                                     [--collection-id <collection-id>]
 ```
 
 **Options:**
 -   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
+-   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Registry (ACR) Operations
 
