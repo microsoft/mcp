@@ -54,8 +54,29 @@ public class EmailSendCommandLiveTests : CommandTestsBase
         // Assert that we have a result
         Assert.NotNull(result);
 
-        // Check if we got a success or error response
-        if (result.Value.TryGetProperty("status", out var statusElement))
+        // Check if we got a success response (has 'result' property) or error response
+        if (result.Value.TryGetProperty("result", out var resultProperty))
+        {
+            // Success response - get the result property
+            var emailResult = resultProperty;
+            Assert.Equal(JsonValueKind.Object, emailResult.ValueKind);
+
+            // Verify expected properties
+            var messageIdElement = emailResult.AssertProperty("messageId");
+            var messageId = messageIdElement.GetString();
+
+            Assert.True(emailResult.TryGetProperty("status", out var messageStatusElement));
+            var messageStatus = messageStatusElement.GetString();
+
+            // Verify values
+            Assert.NotNull(messageId);
+            Assert.NotEmpty(messageId);
+            Assert.NotNull(messageStatus);
+            Assert.NotEmpty(messageStatus);
+            
+            Output.WriteLine($"Email successfully sent with message ID {messageId} and status {messageStatus}");
+        }
+        else if (result.Value.TryGetProperty("status", out var statusElement))
         {
             // This is an error response
             var status = statusElement.GetInt32();
@@ -72,30 +93,14 @@ public class EmailSendCommandLiveTests : CommandTestsBase
             {
                 Output.WriteLine("Skipping test due to authentication error. Make sure Azure Managed Identity is configured properly.");
                 Output.WriteLine("To run this test, ensure your Azure environment has the proper RBAC permissions set up for Communication Services.");
-                Assert.Skip("Authentication error occurred. Azure authentication not properly configured.");
             }
 
             Assert.Fail($"Email sending failed with status code {status}");
         }
-
-        // Success response - get the result property
-        var emailResult = result.Value.GetProperty("result");
-        Assert.Equal(JsonValueKind.Object, emailResult.ValueKind);
-
-        // Verify expected properties
-        var messageIdElement = emailResult.AssertProperty("messageId");
-        var messageId = messageIdElement.GetString();
-
-        Assert.True(emailResult.TryGetProperty("status", out var messageStatusElement));
-        var messageStatus = messageStatusElement.GetString();
-
-        // Verify values
-        Assert.NotNull(messageId);
-        Assert.NotEmpty(messageId);
-        Assert.NotNull(messageStatus);
-        Assert.NotEmpty(messageStatus);
-
-        Output.WriteLine($"Email successfully sent with message ID {messageId} and status {messageStatus}");
+        else
+        {
+            Assert.Fail("Unexpected response format - no 'result' or 'status' property found");
+        }
     }
 
     [Theory]

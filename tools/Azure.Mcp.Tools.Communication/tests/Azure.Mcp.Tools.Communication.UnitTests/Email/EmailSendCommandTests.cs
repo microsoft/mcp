@@ -138,6 +138,12 @@ public class EmailSendCommandTests
             null,
             null
         );
+
+        // Verify the result matches the expected result
+        Assert.NotNull(_context.Response.Results);
+        var responseJson = JsonSerializer.Serialize(_context.Response.Results);
+        Assert.Contains(expectedResult.MessageId, responseJson);
+        Assert.Contains(expectedResult.Status, responseJson);
     }
 
     [Fact]
