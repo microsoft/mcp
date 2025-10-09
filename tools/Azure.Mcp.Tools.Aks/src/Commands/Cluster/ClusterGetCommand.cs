@@ -20,11 +20,12 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
 
     public override string Description =>
         """
-        Discover Azure Kubernetes Service (AKS) clusters within a subscription. Provide a cluster name (with its
-        resource group) to fetch a single cluster, or omit it to list every cluster visible to the subscription filter.
-        The response includes cluster configuration, control plane settings, node pool summaries, networking details,
-        and current provisioning status. This command surfaces Azure resource metadata only; it doesn't execute
-        kubectl actions or inspect in-cluster workloads.
+        Discover Azure Kubernetes Service (AKS) clusters within a subscription. Use when you need a subscription-wide
+        inventory or detailed metadata for a specific cluster to feed automation, governance, or auditing workflows.
+        Requires `--subscription`; include `--cluster` with `--resource-group` to target a single cluster. Returns
+        `Cluster[]` metadata covering control plane configuration, node pool summaries, networking endpoints, identity
+        settings, and provisioning state. Not for kubectl execution, workload inspection, or application deployment—use
+        Kubernetes-native tooling for in-cluster tasks.
         """;
 
     public override string Title => CommandTitle;
