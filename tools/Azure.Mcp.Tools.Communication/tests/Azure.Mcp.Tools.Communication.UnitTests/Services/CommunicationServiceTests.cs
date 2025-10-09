@@ -34,15 +34,6 @@ public class CommunicationServiceTests
     }
 
     [Fact]
-    public void SendEmailAsync_CreatesEmailClientAndSendsEmail()
-    {
-        // This test can't use Moq to mock the Email client directly since it's not using interfaces
-        // We'd need to use a wrapper or dependency injection. For now, we'll test the other functionalities
-        // Skip this test as it requires a refactoring of the service to be testable
-        Assert.True(true);
-    }
-
-    [Fact]
     public async Task SendEmailAsync_WithEmptyEndpoint_ThrowsValidationException()
     {
         // Arrange

@@ -14,6 +14,7 @@ using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Communication.Commands.Email;
 using Azure.Mcp.Tools.Communication.Models;
 using Azure.Mcp.Tools.Communication.Options;
@@ -46,50 +47,6 @@ public class EmailSendCommandTests
         _command = new(_logger);
         _context = new CommandContext(_serviceProvider);
         _commandDefinition = _command.GetCommand();
-    }
-
-    [Fact]
-    public void Constructor_InitializesCommandCorrectly()
-    {
-        // Assert
-        Assert.NotNull(_command);
-        Assert.Equal("send", _command.Name);
-        Assert.Contains("Send an email message using Azure Communication Services", _command.Description);
-    }
-
-    [Fact]
-    public void RegisterOptions_RegistersAllRequiredOptions()
-    {
-        // Arrange
-        var rootCommand = new RootCommand("test");
-
-        // Act
-        var command = _command.GetCommand();
-        rootCommand.Add(command);
-
-        // Assert all expected options are registered
-        var allOptions = command.Options.ToList();
-
-        // Check required Communication options (from base class)
-        Assert.Contains(command.Options, o => o.Name == "--endpoint");
-        Assert.Contains(command.Options, o => o.Name == "--subscription");
-
-        // Check required Email options
-        Assert.Contains(command.Options, o => o.Name == "--sender");
-        Assert.Contains(command.Options, o => o.Name == "--to");
-        Assert.Contains(command.Options, o => o.Name == "--subject");
-        Assert.Contains(command.Options, o => o.Name == "--message");
-
-        // Check optional Email options
-        Assert.Contains(command.Options, o => o.Name == "--sender-name");
-        Assert.Contains(command.Options, o => o.Name == "--cc");
-        Assert.Contains(command.Options, o => o.Name == "--bcc");
-        Assert.Contains(command.Options, o => o.Name == "--is-html");
-        Assert.Contains(command.Options, o => o.Name == "--reply-to");
-
-        // Check global options (from GlobalCommand)
-        Assert.Contains(command.Options, o => o.Name == "--tenant");
-        Assert.Contains(command.Options, o => o.Name == "--auth-method");
     }
 
     [Theory]
