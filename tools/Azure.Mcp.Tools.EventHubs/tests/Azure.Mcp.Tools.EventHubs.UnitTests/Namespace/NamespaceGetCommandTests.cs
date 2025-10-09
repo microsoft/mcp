@@ -51,7 +51,7 @@ public class NamespaceGetCommandTests
         if (shouldSucceed)
         {
             // Set up appropriate service method based on arguments
-            if (args.Contains(EventHubsOptionDefinitions.Namespace) && args.Contains(OptionDefinitions.Common.ResourceGroup.Name))
+            if (args.Contains($"{EventHubsOptionDefinitions.NamespaceOption.Name}") && args.Contains($"{OptionDefinitions.Common.ResourceGroup.Name}"))
             {
                 // Single namespace request
                 var namespaceDetails = new Models.Namespace(
@@ -59,7 +59,7 @@ public class NamespaceGetCommandTests
                     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
                     "rg-eventhubs-prod",
                     "East US",
-                    new ResourceManager.EventHubs.Models.EventHubsSku("Standard"),
+                    new Models.EventHubsSku("Standard", "Standard", null),
                     "Active",
                     "Succeeded",
                     DateTimeOffset.UtcNow.AddDays(-30),
@@ -82,13 +82,19 @@ public class NamespaceGetCommandTests
                 {
                     new("eh-namespace-prod-001",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
-                        "rg-eventhubs-prod"),
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                     new("eh-namespace-prod-002",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-002",
-                        "rg-eventhubs-prod"),
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                     new("eh-shared-services",
                         "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-shared-services",
-                        "rg-eventhubs-prod")
+                        "rg-eventhubs-prod",
+                        "East US",
+                        new Models.EventHubsSku("Standard", "Standard", null)),
                 };
 
                 _eventHubsService.ListNamespacesAsync(

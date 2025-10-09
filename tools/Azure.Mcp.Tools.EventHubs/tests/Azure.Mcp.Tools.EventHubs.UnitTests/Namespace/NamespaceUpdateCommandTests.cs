@@ -504,7 +504,7 @@ public class NamespaceUpdateCommandTests
             "/subscriptions/test-sub/resourceGroups/test-rg/providers/Microsoft.EventHub/namespaces/test-namespace",
             "test-rg",
             "East US",
-            new ResourceManager.EventHubs.Models.EventHubsSku("Standard"),
+            new Models.EventHubsSku("Standard", "Standard", null),
             "Active",
             "Succeeded",
             DateTimeOffset.UtcNow.AddDays(-1),
