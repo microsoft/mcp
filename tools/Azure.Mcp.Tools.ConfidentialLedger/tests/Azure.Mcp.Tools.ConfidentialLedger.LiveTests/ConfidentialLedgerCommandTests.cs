@@ -87,4 +87,54 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         Output.WriteLine($"Successfully appended entry to collection '{collectionId}' with transaction ID: {transactionId.GetString()}");
     }
+
+    [Fact]
+    public async Task Should_get_entry()
+    {
+        var ledgerName = Settings.DeploymentOutputs["CONFIDENTIAL_LEDGER_NAME"];
+        var testContent = $$"""
+            {
+                "collectionTest": false,
+                "timestamp": "{{DateTime.UtcNow:o}}"
+            }
+            """;
+
+        var appendResult = await CallToolAsync(
+            "azmcp_confidentialledger_entries_append",
+            new()
+            {
+                { "ledger", ledgerName },
+                { "content", testContent }
+            });
+
+        Assert.NotNull(appendResult);
+        var transactionId = appendResult.Value.AssertProperty("transactionId");
+        Assert.False(string.IsNullOrWhiteSpace(transactionId.GetString()));
+
+        var getResult = await CallToolAsync(
+            "azmcp_confidentialledger_entries_get",
+            new()
+            {
+                { "ledger", ledgerName },
+                { "transaction-id", transactionId.GetString()! }
+            });
+
+        Assert.NotNull(getResult);
+
+        var entryTransactionId = getResult.Value.AssertProperty("transactionId");
+        Assert.Equal(entryTransactionId.GetString(), transactionId.GetString());
+
+        var contents = getResult.Value.AssertProperty("contents");
+        Assert.Equal(JsonValueKind.String, contents.ValueKind);
+
+        // Parse both JSON strings to compare them structurally rather than as strings
+        var expectedJson = JsonDocument.Parse(testContent);
+        var actualJson = JsonDocument.Parse(contents.GetString()!);
+
+        // Compare the JSON documents structurally
+        Assert.True(JsonElement.DeepEquals(expectedJson.RootElement, actualJson.RootElement),
+            "The retrieved content does not match the appended content structurally");
+
+        Output.WriteLine($"Ledger entry {transactionId} retrieved successfully.");
+    }
 }

@@ -286,6 +286,11 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
 
+### 🔐 Azure Confidential Ledger
+
+* "Append entry {"foo":"bar"} to ledger contoso"
+* "Get entry with id 2.40 from ledger contoso"
+
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"

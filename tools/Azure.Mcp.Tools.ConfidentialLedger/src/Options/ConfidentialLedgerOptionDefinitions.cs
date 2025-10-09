@@ -10,6 +10,7 @@ public static class ConfidentialLedgerOptionDefinitions
     public const string LedgerNameName = "ledger";
     public const string ContentName = "content";
     public const string CollectionIdName = "collection-id";
+    public const string TransactionIdName = "transaction-id";
 
     public static readonly Option<string> LedgerName = new($"--{LedgerNameName}")
     {
@@ -27,5 +28,11 @@ public static class ConfidentialLedgerOptionDefinitions
     {
         Description = "Optional ledger collection identifier. If omitted the default collection is used.",
         Required = false
+    };
+
+    public static readonly Option<string> TransactionId = new($"--{TransactionIdName}")
+    {
+        Description = "The Confidential Ledger transaction identifier (for example: '2.199').",
+        Required = true
     };
 }

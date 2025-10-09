@@ -1,7 +1,5 @@
-// Copyright (c) Microsoft Corporation.
-// Licensed under the MIT License.
-
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
@@ -12,27 +10,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 
-public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service, ILogger<LedgerEntryAppendCommand> logger)
-    : BaseConfidentialLedgerCommand<AppendEntryOptions>
+public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, ILogger<LedgerEntryGetCommand> logger)
+    : BaseConfidentialLedgerCommand<GetEntryOptions>
 {
-    private const string CommandTitle = "Append Confidential Ledger Entry";
+    private const string CommandTitle = "Retrieve Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
-    private readonly ILogger<LedgerEntryAppendCommand> _logger = logger;
+    private readonly ILogger<LedgerEntryGetCommand> _logger = logger;
 
-    public override string Name => "append";
+    public override string Name => "get";
 
     public override string Description =>
-        "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.";
+        "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.";
 
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
-        // Appending creates immutable data - not destructive but not idempotent.
         OpenWorld = false,
         Destructive = false,
-        Idempotent = false,
-        ReadOnly = false,
+        Idempotent = true,
+        ReadOnly = true,
         Secret = false,
         LocalRequired = false
     };
@@ -40,14 +37,14 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content.AsRequired());
+        command.Options.Add(ConfidentialLedgerOptionDefinitions.TransactionId.AsRequired());
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
     }
 
-    protected override AppendEntryOptions BindOptions(ParseResult parseResult)
+    protected override GetEntryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Content = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
+        options.TransactionId = parseResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.TransactionId.Name);
         options.CollectionId = parseResult.GetValueOrDefault<string?>(ConfidentialLedgerOptionDefinitions.CollectionId.Name);
         return options;
     }
@@ -63,12 +60,18 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
 
         try
         {
-            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId);
-            context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
+            var result = await _service.GetLedgerEntryAsync(
+                options.LedgerName!,
+                options.TransactionId!,
+                options.CollectionId).ConfigureAwait(false);
+
+            context.Response.Results = ResponseResult.Create(
+                result,
+                ConfidentialLedgerJsonContext.Default.LedgerEntryGetResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error appending ledger entry. Ledger: {Ledger}", options.LedgerName);
+            _logger.LogError(ex, "Error retrieving ledger entry. Ledger: {Ledger} Transaction: {TransactionId}", options.LedgerName, options.TransactionId);
             HandleException(context, ex);
         }
 
