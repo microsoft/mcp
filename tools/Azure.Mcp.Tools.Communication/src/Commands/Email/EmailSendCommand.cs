@@ -50,11 +50,11 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         base.RegisterOptions(command);
         command.Options.Add(CommunicationOptionDefinitions.Sender);
         command.Options.Add(CommunicationOptionDefinitions.SenderName);
-        command.Options.Add(CommunicationOptionDefinitions.To);
+        command.Options.Add(CommunicationOptionDefinitions.ToEmail);
         command.Options.Add(CommunicationOptionDefinitions.Cc);
         command.Options.Add(CommunicationOptionDefinitions.Bcc);
         command.Options.Add(CommunicationOptionDefinitions.Subject);
-        command.Options.Add(CommunicationOptionDefinitions.Message);
+        command.Options.Add(CommunicationOptionDefinitions.EmailMessage);
         command.Options.Add(CommunicationOptionDefinitions.IsHtml);
         command.Options.Add(CommunicationOptionDefinitions.ReplyTo);
     }
@@ -64,11 +64,11 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         var options = base.BindOptions(parseResult);
         options.Sender = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Sender.Name);
         options.SenderName = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.SenderName.Name);
-        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.To.Name);
+        options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
         options.Cc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
         options.Bcc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Bcc.Name);
         options.Subject = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Subject.Name);
-        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Message.Name);
+        options.Message = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.EmailMessage.Name);
         options.IsHtml = parseResult.GetValueOrDefault<bool>(CommunicationOptionDefinitions.IsHtml.Name);
         options.ReplyTo = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ReplyTo.Name);
         return options;
