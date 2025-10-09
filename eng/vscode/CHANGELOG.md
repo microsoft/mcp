@@ -1,5 +1,19 @@
 # Release History
 
+## 0.8.6 (2025-10-09)
+
+### Added
+
+- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
+- Added support for for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
+
+### Changed
+
+- Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` only for the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
+- Telemetry:
+  - Added `ServerMode` telemetry tag to distinguish start-up modes for the MCP server. [[#738](https://github.com/microsoft/mcp/pull/738)]
+  - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
+
 ## 0.8.5 (2025-10-07)
 
 ### Added

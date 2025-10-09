@@ -2,23 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.6 (Unreleased)
+## 0.8.6 (2025-10-09)
 
 ### Features Added
 
-- Added `ServerMode` telemetry tag to distinguish start-up modes for the MCP server. [[#738](https://github.com/microsoft/mcp/pull/738)]
-- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to all automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
-- Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
-- Added support for Azure Confidential Ledger with the command `azmcp_confidentialledger_entries_get` for getting ledger entries identified by their ID. [[#705](https://github.com/microsoft/mcp/pull/723)]
-- Added support for listing Azure Resource activity logs `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
+- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
+- Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
+- Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
 
 ### Breaking Changes
 
-- Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` for only the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
-
-### Bugs Fixed
+- Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` only for the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
 
 ### Other Changes
+
+- Telemetry:
+  - Added `ServerMode` telemetry tag to distinguish start-up modes for the MCP server. [[#738](https://github.com/microsoft/mcp/pull/738)]
+  - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
 
 ## 0.8.5 (2025-10-07)
 
