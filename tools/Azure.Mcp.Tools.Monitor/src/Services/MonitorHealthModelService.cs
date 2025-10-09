@@ -111,7 +111,8 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
             () => _cachedControlPlaneAccessToken,
             (token) => _cachedControlPlaneAccessToken = token,
             () => _controlPlaneTokenExpiryTime,
-            (expiry) => _controlPlaneTokenExpiryTime = expiry);
+            (expiry) => _controlPlaneTokenExpiryTime = expiry,
+            tokenExpirationBufferSeconds: TokenExpirationBuffer);
     }
 
     private async Task<string> GetDataplaneTokenAsync()
@@ -121,35 +122,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
             () => _cachedDataplaneAccessToken,
             (token) => _cachedDataplaneAccessToken = token,
             () => _dataplaneTokenExpiryTime,
-            (expiry) => _dataplaneTokenExpiryTime = expiry);
-    }
-
-    private async Task<string> GetCachedTokenAsync(
-        string resource,
-        Func<string?> getCachedToken,
-        Action<string> setCachedToken,
-        Func<DateTimeOffset> getExpiryTime,
-        Action<DateTimeOffset> setExpiryTime)
-    {
-        var cachedToken = getCachedToken();
-        if (cachedToken != null && DateTimeOffset.UtcNow < getExpiryTime())
-        {
-            return cachedToken;
-        }
-
-        AccessToken accessToken = await GetEntraIdAccessTokenAsync(resource);
-        setCachedToken(accessToken.Token);
-        setExpiryTime(accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer));
-
-        return getCachedToken()!;
-    }
-
-    private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource)
-    {
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var tokenCredential = await GetCredential();
-        return await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
+            (expiry) => _dataplaneTokenExpiryTime = expiry,
+            tokenExpirationBufferSeconds: TokenExpirationBuffer);
     }
 }

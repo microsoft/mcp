@@ -441,6 +441,9 @@
     "Get the latest Azure Static Web Apps best practices",
     "What are azure function best practices?"
   ],
+  "azmcp_monitor_activitylog_list": [
+    "List the activity logs of the last month for <resource_name>"
+  ],
   "azmcp_monitor_healthmodels_entity_gethealth": [
     "Show me the health status of entity <entity_id> using the health model <health_model_name>"
   ],
