@@ -31,6 +31,10 @@ public class FileSystemUpdateCommandTests
     private const string Sub = "sub123";
     private const string Rg = "rg1";
     private const string Name = "amlfs-01";
+    private const string Location = "eastus";
+    private const string Sku = "AMLFS-Durable-Premium-125";
+    private const int Size = 4;
+    private const string SubnetId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1";
 
     public FileSystemUpdateCommandTests()
     {
@@ -166,6 +170,10 @@ public class FileSystemUpdateCommandTests
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode All --squash-uid 1000", false)] // missing gid
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode All --squash-gid 1000", false)] // missing uid
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None", true)] // None doesn't require uid/gid
+    [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode All  --squash-uid 1000 --squash-gid 1000 --no-squash-nid-list 10.0.0.10", true)] // Should succeed
+    [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-day Monday --maintenance-time 00:00", true)] // None doesn't require uid/gid
+    [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-time 00:00", false)] // Missing time
+    [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-day Monday", false)] // Missing day
     public async Task ExecuteAsync_RootSquashMode_Validation_Works(string args, bool shouldSucceed)
     {
         if (shouldSucceed)
@@ -183,7 +191,11 @@ public class FileSystemUpdateCommandTests
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (!shouldSucceed)
         {
-            Assert.Contains("squash", response.Message, StringComparison.OrdinalIgnoreCase);
+            Assert.False(string.IsNullOrWhiteSpace(response.Message));
+            Assert.True(
+                response.Message.Contains("squash", StringComparison.OrdinalIgnoreCase) ||
+                response.Message.Contains("maintenance", StringComparison.OrdinalIgnoreCase),
+                $"Expected error message to mention 'squash' or 'maintenance' but was: {response.Message}");
         }
     }
 
@@ -232,14 +244,19 @@ public class FileSystemUpdateCommandTests
         $"/subs/{Sub}/rg/{Rg}/providers/Microsoft.StorageCache/amlfs/{Name}",
         Rg,
         Sub,
-        "eastus",
+        Location,
         "Succeeded",
         "Healthy",
         "10.0.0.4",
-        "AMLFS-Durable-Premium-125",
-        4,
-        null,
+        Sku,
+        Size,
+        SubnetId,          // Added: subnet ID
         "Monday",
-        "00:00");
-
+        "00:00",
+        "None",            // rootSquashMode
+        null,              // noSquashNidList
+        null,              // squashUid
+        null,              // squashGid
+        null,              // HSM data container
+        null);             // HSM Log container
 }

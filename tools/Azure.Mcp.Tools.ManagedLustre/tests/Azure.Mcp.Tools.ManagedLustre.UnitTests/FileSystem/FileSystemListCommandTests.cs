@@ -28,6 +28,7 @@ public class FileSystemListCommandTests
     private readonly string _knownSubscriptionId = "sub123";
     private readonly string _knownResourceIdRg1 = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Lustre/amlfs/fs1";
     private readonly string _knownResourceIdRg2 = "/subscriptions/sub123/resourceGroups/rg2/providers/Microsoft.Lustre/amlfs/fs2";
+    private const string SubnetId = "/subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1";
 
     public FileSystemListCommandTests()
     {
@@ -68,9 +69,15 @@ public class FileSystemListCommandTests
                 "10.0.0.5",
                 "AMLFS-Durable-Premium-40",
                 48,
-                null,
                 "Monday",
-                "01:00"
+                "01:00",
+                SubnetId,
+                null,
+                null,
+                "None",
+                null,
+                null,
+                null
             ),
             new(
                 "fs2",
@@ -83,9 +90,15 @@ public class FileSystemListCommandTests
                 "10.0.0.20",
                 "AMLFS-Durable-Premium-40",
                 48,
-                null,
                 "Monday",
-                "01:00"
+                "01:00",
+                SubnetId,
+                null,
+                null,
+                "None",
+                null,
+                null,
+                null
             ),
         };
 
@@ -139,9 +152,15 @@ public class FileSystemListCommandTests
                     "10.0.0.5",
                     "AMLFS-Durable-Premium-40",
                     48,
-                    null,
                     "Monday",
-                    "01:00"
+                    "01:00",
+                    SubnetId,
+                    null,
+                    null,
+                    "None",
+                    null,
+                    null,
+                    null
                 ),
             };
 

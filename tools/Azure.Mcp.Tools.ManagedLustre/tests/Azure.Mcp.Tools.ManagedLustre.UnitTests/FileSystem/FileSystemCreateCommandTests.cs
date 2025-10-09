@@ -264,7 +264,7 @@ public class FileSystemCreateCommandTests
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
             Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("boom"));
+            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception("error"));
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -281,7 +281,7 @@ public class FileSystemCreateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
-        Assert.Contains("boom", response.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -352,7 +352,13 @@ public class FileSystemCreateCommandTests
         "10.0.0.4",
         Sku,
         Size,
-        null,
+        SubnetId,          // Added: subnet ID
         "Monday",
-        "00:00");
+        "00:00",
+        "None",            // rootSquashMode
+        null,              // noSquashNidList
+        null,              // squashUid
+        null,              // squashGid
+        null,              // HSM data container
+        null);             // HSM Log container
 }

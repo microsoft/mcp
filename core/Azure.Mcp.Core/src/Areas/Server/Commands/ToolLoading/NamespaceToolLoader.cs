@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -139,6 +140,9 @@ public sealed class NamespaceToolLoader(
         string? intent = null;
         string? command = null;
         bool learn = false;
+
+        // In namespace mode, the name of the tool is also its IAreaSetup name.
+        Activity.Current?.AddTag(TagName.ToolArea, tool);
 
         if (args != null)
         {

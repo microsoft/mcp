@@ -88,7 +88,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {

@@ -23,7 +23,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
@@ -111,7 +111,7 @@ public sealed class AcrService(ISubscriptionService subscriptionService, ITenant
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var result = new Dictionary<string, List<string>>(StringComparer.OrdinalIgnoreCase);
