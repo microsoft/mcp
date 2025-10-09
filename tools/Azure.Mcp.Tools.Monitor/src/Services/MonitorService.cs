@@ -20,35 +20,21 @@ using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorService : BaseAzureService, IMonitorService
+public class MonitorService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    IResourceGroupService resourceGroupService,
+    IResourceResolverService resourceResolverService,
+    IHttpClientService httpClientService) : BaseAzureService(tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat
         = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
 
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly IResourceResolverService _resourceResolverService;
-    private readonly IHttpClientService _httpClientService;
-
     // Token caching fields
     private string? _cachedManagementToken;
     private DateTimeOffset _managementTokenExpiryTime;
     private const int TokenExpirationBufferSeconds = 300; // 5 minutes buffer
-
-    public MonitorService(
-        ISubscriptionService subscriptionService,
-        ITenantService tenantService,
-        IResourceGroupService resourceGroupService,
-        IResourceResolverService resourceResolverService,
-        IHttpClientService httpClientService)
-        : base(tenantService)
-    {
-        _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-        _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-        _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
-        _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
-    }
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -186,7 +172,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         {
             var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
 
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
             var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
                 .ConfigureAwait(false);
@@ -223,7 +209,7 @@ public class MonitorService : BaseAzureService, IMonitorService
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
             var workspaces = await subscriptionResource
                 .GetOperationalInsightsWorkspacesAsync()
@@ -347,7 +333,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         {
             var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
 
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
                 ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
             var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
                 .ConfigureAwait(false);
@@ -397,7 +383,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         try
         {
             // Resolve the resource ID from the resource name
-            var resourceIdentifier = await _resourceResolverService.ResolveResourceIdAsync(
+            var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
                 subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
 
             string resourceId = resourceIdentifier.ToString();
@@ -467,7 +453,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
         httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
-        using HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(httpRequest);
+        using HttpResponseMessage response = await httpClientService.DefaultClient.SendAsync(httpRequest);
 
         if (response.IsSuccessStatusCode)
         {

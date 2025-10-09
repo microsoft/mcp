@@ -95,7 +95,7 @@
                 "DOTNET_ENVIRONMENT": "Development"
             }
         },
-                {
+        {
             "name": "Debug Azure Activity logs",
             "type": "coreclr",
             "request": "launch",
