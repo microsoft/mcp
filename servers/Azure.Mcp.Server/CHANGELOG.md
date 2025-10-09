@@ -11,6 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
 - Added support for Azure Confidential Ledger with the command `azmcp_confidentialledger_entries_get` for getting ledger entries identified by their ID. [[#705](https://github.com/microsoft/mcp/pull/723)]
 - Added support for listing Azure Resource activity logs `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
+- Added support for listing tables in Azure Storage and CosmosDB via command `azmcp_tables_list`. [[#743](https://github.com/microsoft/mcp/pull/743)]
 
 ### Breaking Changes
 
