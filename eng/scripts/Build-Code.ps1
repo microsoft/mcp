@@ -38,21 +38,14 @@ if($AllPlatforms -and $BuildNative) {
 
 #normalize OperatingSystem and Architecture
 $runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
-$postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
 if($OperatingSystem) {
     switch($OperatingSystem) {
         'windows' { 
             $operatingSystems = @('win')
             $postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
         }
-        'linux' { 
-            $operatingSystems = @('linux')
-            $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
-        }
-        'macos' { 
-            $operatingSystems = @('osx')
-            $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
-        }
+        'linux' { $operatingSystems = @('linux') }
+        'macos' { $operatingSystems = @('osx') }
         default { Write-Error "Unsupported operating system: $OperatingSystem"; return }
     }
 } else {
@@ -95,6 +88,8 @@ function BuildServer($serverName) {
     }
 
     New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
+
+    $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
     
     $wrapperPackage = [ordered]@{
         name = $packageName
@@ -123,7 +118,10 @@ function BuildServer($serverName) {
     foreach ($os in $operatingSystems) {
         foreach ($arch in $architectures) {
             switch($os) {
-                'win' { $node_os = 'win32'; $extension = '.exe' }
+                'win' { 
+                    $node_os = 'win32'; $extension = '.exe'
+                    $wrapperPackage.scripts.postinstall = "set PACKAGE_BASE_NAME=$packageName && node ./scripts/post-install-script.js"
+                }
                 'osx' { $node_os = 'darwin'; $extension = '' }
                 default { $node_os = $os; $extension = '' }
             }
