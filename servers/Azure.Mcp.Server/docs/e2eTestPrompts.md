@@ -116,13 +116,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_communication_email_send | Send an email to example@example.com with subject "Test Email" |
-| azmcp_communication_email_send | Send an email from my communication service to recipient@example.com |
-| azmcp_communication_email_send | Send HTML-formatted email to recipient@example.com with subject "Important Notice" |
-| azmcp_communication_email_send | Send email with CC to recipient@example.com and cc@example.com |
-| azmcp_communication_email_send | Send email to multiple recipients: user1@example.com, user2@example.com |
-| azmcp_communication_email_send | Send email with reply-to address set to support@example.com |
-| azmcp_communication_email_send | Send email with custom sender name "Support Team" |
+| azmcp_communication_email_send | Send an email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send an email from my communication service to <email-address> |
+| azmcp_communication_email_send | Send HTML-formatted email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send email with CC to <email-address-1> and <email-address-2> |
+| azmcp_communication_email_send | Send email to multiple recipients: <email-address-1>, <email-address-2> |
+| azmcp_communication_email_send | Send email with reply-to address set to <email-address> |
+| azmcp_communication_email_send | Send email with custom sender name <sender-name> |
 | azmcp_communication_email_send | Send an email with BCC recipients |
 | azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
 | azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
