@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -20,10 +21,11 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Storage.Services;
 
 public class StorageService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ICacheService cacheService,
-    ILogger<StorageService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+    ILogger<StorageService> logger) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IStorageService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

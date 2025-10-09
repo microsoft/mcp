@@ -14,6 +14,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
@@ -35,9 +36,10 @@ using OpenAI.Embeddings;
 namespace Azure.Mcp.Tools.Foundry.Services;
 
 public class FoundryService(
+    ITokenCredentialFactory tokenCredentialFactory,
     IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService) : BaseAzureResourceService(subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
+    ITenantService tenantService) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
 {
     private static readonly Dictionary<string, Func<IEvaluator>> AgentEvaluatorDictionary = new()
     {

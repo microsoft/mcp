@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -13,9 +14,10 @@ using Azure.ResourceManager.ContainerService.Models;
 namespace Azure.Mcp.Tools.Aks.Services;
 
 public sealed class AksService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), IAksService
+    ICacheService cacheService) : BaseAzureService(tokenCredentialFactory, tenantService), IAksService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

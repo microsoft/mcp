@@ -3,14 +3,15 @@
 
 using Azure.Mcp.Core.Models.ResourceGroup;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 
-public class ResourceGroupService(ICacheService cacheService, ISubscriptionService subscriptionService)
-    : BaseAzureService, IResourceGroupService
+public class ResourceGroupService(ITokenCredentialFactory tokenCredentialFactory, ICacheService cacheService, ISubscriptionService subscriptionService)
+    : BaseAzureService(tokenCredentialFactory), IResourceGroupService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));

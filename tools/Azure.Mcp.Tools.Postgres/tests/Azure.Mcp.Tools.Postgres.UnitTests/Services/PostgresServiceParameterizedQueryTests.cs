@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -23,7 +24,7 @@ public class PostgresServiceParameterizedQueryTests
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _cacheService = Substitute.For<ICacheService>();
-        _postgresService = new PostgresService(_resourceGroupService, _cacheService);
+        _postgresService = new PostgresService(ITokenCredentialFactory.Default, _resourceGroupService, _cacheService);
     }
 
     [Theory]

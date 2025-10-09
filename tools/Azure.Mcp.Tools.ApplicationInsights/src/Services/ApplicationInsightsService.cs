@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -14,11 +15,12 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
 public class ApplicationInsightsService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IProfilerDataService profilerDataClient,
-    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tenantService), IApplicationInsightsService
+    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IApplicationInsightsService
 {
     private const int MaxRecommendations = 20;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;

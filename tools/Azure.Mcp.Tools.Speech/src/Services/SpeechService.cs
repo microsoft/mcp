@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models;
 using Microsoft.CognitiveServices.Speech;
@@ -13,7 +14,7 @@ using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechReco
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
-public class SpeechService(ITenantService tenantService, ILogger<SpeechService> logger) : BaseAzureService(tenantService), ISpeechService
+public class SpeechService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ILogger<SpeechService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), ISpeechService
 {
     private readonly ILogger<SpeechService> _logger = logger;
     /// <summary>

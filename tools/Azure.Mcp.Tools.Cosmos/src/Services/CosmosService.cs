@@ -4,6 +4,7 @@
 using System.Net;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -12,8 +13,8 @@ using Microsoft.Azure.Cosmos;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public class CosmosService(ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tenantService), ICosmosService, IDisposable
+public class CosmosService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialFactory, tenantService), ICosmosService, IDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

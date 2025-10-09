@@ -12,12 +12,13 @@ using Azure;
 using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Security.ConfidentialLedger;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
-public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerService
+public class ConfidentialLedgerService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
     private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");

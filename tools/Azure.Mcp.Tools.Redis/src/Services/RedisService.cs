@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Redis.Models;
@@ -16,8 +17,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(ISubscriptionService _subscriptionService, ITenantService _tenantService)
-    : BaseAzureService(_tenantService), IRedisService
+public class RedisService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService _subscriptionService, ITenantService _tenantService)
+    : BaseAzureService(tokenCredentialFactory, _tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
         string subscription,

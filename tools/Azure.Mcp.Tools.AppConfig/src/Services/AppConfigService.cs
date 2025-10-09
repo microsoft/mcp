@@ -7,6 +7,7 @@ using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppConfig.Models;
@@ -16,8 +17,8 @@ namespace Azure.Mcp.Tools.AppConfig.Services;
 
 using ETag = Core.Models.ETag;
 
-public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
+public sealed class AppConfigService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger)
+    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAppConfigService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

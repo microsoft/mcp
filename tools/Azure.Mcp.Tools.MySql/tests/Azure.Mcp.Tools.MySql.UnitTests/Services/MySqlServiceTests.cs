@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -27,19 +28,19 @@ public class MySqlServiceTests
         _cacheService = Substitute.For<ICacheService>();
         _logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(_resourceGroupService, _tenantService, _cacheService, _logger);
+        _mysqlService = new MySqlService(ITokenCredentialFactory.Default, _resourceGroupService, _tenantService, _cacheService, _logger);
     }
 
     [Fact]
     public void Constructor_WithNullResourceGroupService_ThrowsArgumentNullException()
     {
-        Assert.Throws<ArgumentNullException>(() => new MySqlService(null!, _tenantService, _cacheService, _logger));
+        Assert.Throws<ArgumentNullException>(() => new MySqlService(ITokenCredentialFactory.Default, null!, _tenantService, _cacheService, _logger));
     }
 
     [Fact]
     public void Constructor_WithValidDependencies_CreatesInstance()
     {
-        var service = new MySqlService(_resourceGroupService, _tenantService, _cacheService, _logger);
+        var service = new MySqlService(ITokenCredentialFactory.Default, _resourceGroupService, _tenantService, _cacheService, _logger);
         Assert.NotNull(service);
     }
 

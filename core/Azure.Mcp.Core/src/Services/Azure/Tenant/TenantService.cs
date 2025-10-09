@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
-public class TenantService(ICacheService cacheService)
-    : BaseAzureService, ITenantService
+public class TenantService(ITokenCredentialFactory tokenCredentialFactory, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialFactory), ITenantService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "tenant";

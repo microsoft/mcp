@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Marketplace.Commands;
@@ -13,11 +14,11 @@ using Azure.Mcp.Tools.Marketplace.Models;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
-public class MarketplaceService(ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tenantService), IMarketplaceService
+public class MarketplaceService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialFactory, tenantService), IMarketplaceService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
-    
+
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string ApiVersion = "2023-01-01-preview";
 
@@ -211,9 +212,9 @@ public class MarketplaceService(ITenantService tenantService, ICacheService cach
     private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
         return await GetEntraIdAccessTokenAsync(
-            _cacheService, 
-            CacheGroup, 
-            "https://management.azure.com/.default", 
+            _cacheService,
+            CacheGroup,
+            "https://management.azure.com/.default",
             tenant);
     }
 

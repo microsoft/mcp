@@ -13,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
-public abstract class BaseAzureService(ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
+public abstract class BaseAzureService(ITokenCredentialFactory tokenCredentialFactory, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
 {
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
@@ -23,6 +23,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     private ArmClient? _armClient;
     private string? _lastArmClientTenantId;
     private RetryPolicyOptions? _lastRetryPolicy;
+    private readonly ITokenCredentialFactory _tokenCredentialFactory = tokenCredentialFactory;
     private readonly ITenantService? _tenantService = tenantService;
     private readonly ILoggerFactory? _loggerFactory = loggerFactory;
 
@@ -66,6 +67,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     protected async Task<TokenCredential> GetCredential(string? tenant = null)
+    {
+        if (_tokenCredentialFactory == ITokenCredentialFactory.Default)
+        {
+            return await GetDefaultCredential(tenant);
+        }
+        return await _tokenCredentialFactory.CreateAsync(tenant);
+    }
+
+    private async Task<TokenCredential> GetDefaultCredential(string? tenant = null)
     {
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
 

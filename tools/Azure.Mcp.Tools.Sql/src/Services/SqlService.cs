@@ -5,6 +5,7 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Sql.Models;
@@ -15,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(subscriptionService, tenantService), ISqlService
+public class SqlService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), ISqlService
 {
     private readonly ILogger<SqlService> _logger = logger;
 

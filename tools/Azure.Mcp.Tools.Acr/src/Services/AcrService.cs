@@ -4,6 +4,7 @@
 using System.Text.Json;
 using Azure.Containers.ContainerRegistry;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Acr.Models;
@@ -11,8 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
-public sealed class AcrService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAcrService
+public sealed class AcrService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
+    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAcrService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AcrService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
@@ -11,7 +12,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientService? httpClientService = null) : BaseAzureService(loggerFactory: loggerFactory), IQuotaService
+public class QuotaService(ITokenCredentialFactory tokenCredentialFactory, ILoggerFactory? loggerFactory = null, IHttpClientService? httpClientService = null) : BaseAzureService(tokenCredentialFactory, loggerFactory: loggerFactory), IQuotaService
 {
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
 

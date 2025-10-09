@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.EventHubs.Models;
@@ -13,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public class EventHubsService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
+public class EventHubsService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
+    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IEventHubsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ITenantService _tenantService = tenantService;

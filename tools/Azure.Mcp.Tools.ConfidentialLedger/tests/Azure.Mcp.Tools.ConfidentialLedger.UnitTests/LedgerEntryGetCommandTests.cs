@@ -1,6 +1,7 @@
 using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -55,7 +56,7 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService();
+        var service = new ConfidentialLedgerService(ITokenCredentialFactory.Default);
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
     }

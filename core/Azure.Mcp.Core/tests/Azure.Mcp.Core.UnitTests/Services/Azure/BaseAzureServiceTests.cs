@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using NSubstitute;
@@ -132,7 +133,7 @@ public class BaseAzureServiceTests
         Assert.Equal(input, result);
     }
 
-    private sealed class TestAzureService(ITenantService? tenantService = null) : BaseAzureService(tenantService)
+    private sealed class TestAzureService(ITenantService? tenantService = null) : BaseAzureService(ITokenCredentialFactory.Default, tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
             CreateArmClientAsync(tenant, retryPolicy);

@@ -3,13 +3,14 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.ServiceBus.Models;
 using Azure.Messaging.ServiceBus;
 using Azure.Messaging.ServiceBus.Administration;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public class ServiceBusService : BaseAzureService, IServiceBusService
+public class ServiceBusService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IServiceBusService
 {
     public async Task<QueueDetails> GetQueueDetails(
         string namespaceName,

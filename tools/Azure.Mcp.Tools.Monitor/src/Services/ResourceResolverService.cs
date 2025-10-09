@@ -4,13 +4,14 @@
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class ResourceResolverService(ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tenantService), IResourceResolverService
+public class ResourceResolverService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService)
+    : BaseAzureService(tokenCredentialFactory, tenantService), IResourceResolverService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 

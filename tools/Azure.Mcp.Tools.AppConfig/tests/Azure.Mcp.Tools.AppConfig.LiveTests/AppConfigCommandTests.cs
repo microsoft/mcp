@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -27,9 +28,9 @@ public class AppConfigCommandTests : CommandTestsBase
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
-        var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger);
+        var tenantService = new TenantService(ITokenCredentialFactory.Default, cacheService);
+        var subscriptionService = new SubscriptionService(ITokenCredentialFactory.Default, cacheService, tenantService);
+        _appConfigService = new AppConfigService(ITokenCredentialFactory.Default, subscriptionService, tenantService, _logger);
     }
 
     [Fact]

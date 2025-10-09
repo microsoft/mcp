@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -17,7 +18,7 @@ public class PostgresService : BaseAzureService, IPostgresService
 
     private const string CacheGroup = "postgres";
 
-    public PostgresService(IResourceGroupService resourceGroupService, ICacheService cacheService) 
+    public PostgresService(ITokenCredentialFactory tokenCredentialFactory, IResourceGroupService resourceGroupService, ICacheService cacheService) : base(tokenCredentialFactory)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -26,9 +27,9 @@ public class PostgresService : BaseAzureService, IPostgresService
     private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
         return await GetEntraIdAccessTokenAsync(
-            _cacheService, 
-            CacheGroup, 
-            "https://ossrdbms-aad.database.windows.net/.default", 
+            _cacheService,
+            CacheGroup,
+            "https://ossrdbms-aad.database.windows.net/.default",
             tenant);
     }
 

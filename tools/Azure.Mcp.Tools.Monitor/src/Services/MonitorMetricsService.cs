@@ -4,6 +4,7 @@
 using System.Xml;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
@@ -13,8 +14,8 @@ using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
-    : BaseAzureService(), IMonitorMetricsService
+public class MonitorMetricsService(ITokenCredentialFactory tokenCredentialFactory, IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
+    : BaseAzureService(tokenCredentialFactory), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
     private readonly IMetricsQueryClientService _metricsQueryClientService = metricsQueryClientService ?? throw new ArgumentNullException(nameof(metricsQueryClientService));

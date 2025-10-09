@@ -3,11 +3,12 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
-public class DeployService() : BaseAzureService, IDeployService
+public class DeployService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IDeployService
 {
 
     public async Task<string> GetAzdResourceLogsAsync(

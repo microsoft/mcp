@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Services;
 using Microsoft.Extensions.Logging;
@@ -20,14 +21,14 @@ public class SpeechServiceTests
         _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SpeechService>>();
 
-        _speechService = new SpeechService(_tenantService, _logger);
+        _speechService = new SpeechService(ITokenCredentialFactory.Default, _tenantService, _logger);
     }
 
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
     {
         // Arrange & Act
-        var service = new SpeechService(_tenantService, _logger);
+        var service = new SpeechService(ITokenCredentialFactory.Default, _tenantService, _logger);
 
         // Assert
         Assert.NotNull(service);

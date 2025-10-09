@@ -8,6 +8,7 @@ using System.Web;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.ApplicationInsights.Commands;
@@ -23,10 +24,11 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
 public class ProfilerDataService(
+    ITokenCredentialFactory tokenCredentialFactory,
     IHttpClientService httpClientService,
     ILogger<ProfilerDataService> logger,
     ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
-    : BaseAzureService(tenantService, loggerFactory), IProfilerDataService
+    : BaseAzureService(tokenCredentialFactory, tenantService, loggerFactory), IProfilerDataService
 {
     private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
     private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";

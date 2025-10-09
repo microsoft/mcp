@@ -7,6 +7,7 @@ using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -21,11 +22,12 @@ using Azure.ResourceManager.OperationalInsights;
 namespace Azure.Mcp.Tools.Monitor.Services;
 
 public class MonitorService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientService httpClientService) : BaseAzureService(tenantService), IMonitorService
+    IHttpClientService httpClientService) : BaseAzureService(tokenCredentialFactory, tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat

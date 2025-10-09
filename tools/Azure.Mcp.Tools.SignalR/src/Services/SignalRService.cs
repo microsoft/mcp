@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -18,9 +19,10 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 /// Service for Azure SignalR operations using Resource Graph API.
 /// </summary>
 public sealed class SignalRService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tenantService), ISignalRService
+    ICacheService cacheService) : BaseAzureService(tokenCredentialFactory, tenantService), ISignalRService
 {
     private readonly ISubscriptionService _subscriptionService =
         subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));

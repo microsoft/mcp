@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
@@ -12,7 +13,7 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService) : BaseAzureService(tokenCredentialFactory, tenantService), IKeyVaultService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     public async Task<List<string>> ListKeys(

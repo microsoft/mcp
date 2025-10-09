@@ -5,6 +5,7 @@ using System.ClientModel.Primitives;
 using System.Text.Json.Serialization.Metadata;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
@@ -20,9 +21,10 @@ namespace Azure.Mcp.Core.Services.Azure;
 /// Provides common methods for executing resource queries against Azure Resource Manager resources.
 /// </summary>
 public abstract class BaseAzureResourceService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILoggerFactory? loggerFactory = null) : BaseAzureService(tenantService, loggerFactory)
+    ILoggerFactory? loggerFactory = null) : BaseAzureService(tokenCredentialFactory, tenantService, loggerFactory)
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));

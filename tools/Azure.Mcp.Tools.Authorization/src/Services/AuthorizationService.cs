@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Authorization.Models;
@@ -13,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
+public class AuthorizationService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
+    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAuthorizationService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

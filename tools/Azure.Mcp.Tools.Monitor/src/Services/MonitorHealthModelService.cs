@@ -5,14 +5,15 @@ using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ITenantService tenantService, ICacheService cacheService, IHttpClientService httpClientService)
-    : BaseAzureService(tenantService), IMonitorHealthModelService
+public class MonitorHealthModelService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ICacheService cacheService, IHttpClientService httpClientService)
+    : BaseAzureService(tokenCredentialFactory, tenantService), IMonitorHealthModelService
 {
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com";

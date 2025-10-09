@@ -5,6 +5,7 @@ using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
@@ -13,8 +14,8 @@ using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public class ResourceHealthService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService)
-    : BaseAzureService(tenantService), IResourceHealthService
+public class ResourceHealthService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService)
+    : BaseAzureService(tokenCredentialFactory, tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));

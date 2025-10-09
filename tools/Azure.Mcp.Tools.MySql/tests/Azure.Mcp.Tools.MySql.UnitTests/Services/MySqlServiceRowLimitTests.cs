@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -26,7 +27,7 @@ public class MySqlServiceRowLimitTests
         _cacheService = Substitute.For<ICacheService>();
         _logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(_resourceGroupService, _tenantService, _cacheService, _logger);
+        _mysqlService = new MySqlService(ITokenCredentialFactory.Default, _resourceGroupService, _tenantService, _cacheService, _logger);
     }
 
     [Fact]

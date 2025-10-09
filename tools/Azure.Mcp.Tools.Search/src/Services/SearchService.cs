@@ -4,6 +4,7 @@
 using System.Text;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Search.Commands;
@@ -18,7 +19,7 @@ using Azure.Search.Documents.Models;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
-public sealed class SearchService(ISubscriptionService subscriptionService, ICacheService cacheService) : BaseAzureService, ISearchService
+public sealed class SearchService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ICacheService cacheService) : BaseAzureService(tokenCredentialFactory), ISearchService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

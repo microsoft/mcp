@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
@@ -23,8 +24,8 @@ public class ProductListCommandTests : CommandTestsBase
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
-        _marketplaceService = new MarketplaceService(tenantService, cacheService);
+        var tenantService = new TenantService(ITokenCredentialFactory.Default, cacheService);
+        _marketplaceService = new MarketplaceService(ITokenCredentialFactory.Default, tenantService, cacheService);
     }
 
     [Fact]

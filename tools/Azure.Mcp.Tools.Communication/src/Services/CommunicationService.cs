@@ -7,6 +7,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
@@ -14,8 +15,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
-    : BaseAzureService(tenantService), ICommunicationService
+public class CommunicationService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
+    : BaseAzureService(tokenCredentialFactory, tenantService), ICommunicationService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

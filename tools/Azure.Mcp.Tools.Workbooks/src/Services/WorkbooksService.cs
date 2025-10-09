@@ -9,6 +9,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.Workbooks.Services;
 
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.ApplicationInsights;
@@ -16,7 +17,7 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 
-public class WorkbooksService(ISubscriptionService _subscriptionService, ITenantService tenantService, ILogger<WorkbooksService> logger) : BaseAzureService(tenantService), IWorkbooksService
+public class WorkbooksService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService _subscriptionService, ITenantService tenantService, ILogger<WorkbooksService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IWorkbooksService
 {
     private readonly ILogger<WorkbooksService> _logger = logger;
     private readonly ITenantService _tenantService = tenantService;

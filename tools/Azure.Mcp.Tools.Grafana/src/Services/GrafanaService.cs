@@ -7,6 +7,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Grafana.Models;
@@ -15,8 +16,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
-public class GrafanaService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<GrafanaService> logger)
-    : BaseAzureResourceService(subscriptionService, tenantService), IGrafanaService
+public class GrafanaService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<GrafanaService> logger)
+    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IGrafanaService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<GrafanaService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

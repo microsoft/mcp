@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -27,7 +28,7 @@ public class ResourceResolverServiceTests
     {
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _tenantService = Substitute.For<ITenantService>();
-        _service = new ResourceResolverService(_subscriptionService, _tenantService);
+        _service = new ResourceResolverService(ITokenCredentialFactory.Default, _subscriptionService, _tenantService);
 
         _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(_subscriptionResource);
@@ -39,7 +40,7 @@ public class ResourceResolverServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new ResourceResolverService(_subscriptionService, _tenantService);
+        var service = new ResourceResolverService(ITokenCredentialFactory.Default, _subscriptionService, _tenantService);
         Assert.NotNull(service);
     }
 
@@ -47,7 +48,7 @@ public class ResourceResolverServiceTests
     public void Constructor_WithNullSubscriptionService_ThrowsArgumentNullException()
     {
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new ResourceResolverService(null!, _tenantService));
+        Assert.Throws<ArgumentNullException>(() => new ResourceResolverService(ITokenCredentialFactory.Default, null!, _tenantService));
     }
 
     #endregion

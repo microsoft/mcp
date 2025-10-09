@@ -6,6 +6,7 @@ using System.Runtime.CompilerServices;
 using System.Threading.Channels;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
@@ -18,7 +19,7 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService(IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tenantService), IAppLensService
+public class AppLensService(ITokenCredentialFactory tokenCredentialFactory, IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tokenCredentialFactory, tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));

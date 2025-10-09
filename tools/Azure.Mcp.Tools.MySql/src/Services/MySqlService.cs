@@ -4,6 +4,7 @@
 using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
@@ -14,7 +15,7 @@ using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public class MySqlService(IResourceGroupService resourceGroupService, ITenantService tenantService, ICacheService cacheService, ILogger<MySqlService> logger) : BaseAzureService(tenantService), IMySqlService
+public class MySqlService(ITokenCredentialFactory tokenCredentialFactory, IResourceGroupService resourceGroupService, ITenantService tenantService, ICacheService cacheService, ILogger<MySqlService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IMySqlService
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -71,9 +72,9 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
     private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
         return await GetEntraIdAccessTokenAsync(
-            _cacheService, 
-            CacheGroup, 
-            "https://ossrdbms-aad.database.windows.net/.default", 
+            _cacheService,
+            CacheGroup,
+            "https://ossrdbms-aad.database.windows.net/.default",
             tenant);
     }
 

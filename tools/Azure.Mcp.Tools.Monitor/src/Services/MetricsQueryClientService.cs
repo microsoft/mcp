@@ -3,12 +3,13 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Monitor.Query;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MetricsQueryClientService(ITenantService tenantService) : BaseAzureService(tenantService), IMetricsQueryClientService
+public class MetricsQueryClientService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService) : BaseAzureService(tokenCredentialFactory, tenantService), IMetricsQueryClientService
 {
     public async Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {

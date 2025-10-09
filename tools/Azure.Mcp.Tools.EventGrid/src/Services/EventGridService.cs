@@ -4,6 +4,7 @@
 using System.Net.Mime;
 using System.Text.Json;
 using System.Text.Json.Nodes;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.EventGrid.Commands;
 using Azure.ResourceManager.EventGrid;
 using Azure.ResourceManager.EventGrid.Models;
@@ -11,8 +12,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
-    : BaseAzureService(tenantService), IEventGridService
+public class EventGridService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
+    : BaseAzureService(tokenCredentialFactory, tenantService), IEventGridService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

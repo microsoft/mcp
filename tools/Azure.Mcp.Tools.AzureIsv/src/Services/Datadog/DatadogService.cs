@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.Datadog;
 
@@ -10,7 +11,7 @@ namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 
 public partial class DatadogService : BaseAzureService, IDatadogService
 {
-    public DatadogService(ITenantService? tenantService = null) : base(tenantService)
+    public DatadogService(ITokenCredentialFactory tokenCredentialFactory, ITenantService? tenantService = null) : base(tokenCredentialFactory, tenantService)
     {
     }
 

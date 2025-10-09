@@ -5,6 +5,7 @@ using System.Net;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -17,7 +18,7 @@ using Azure.ResourceManager.StorageCache.Models;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
-public sealed class ManagedLustreService(ISubscriptionService subscriptionService, IResourceGroupService resourceGroupService, ITenantService tenantService) : BaseAzureService(tenantService), IManagedLustreService
+public sealed class ManagedLustreService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, IResourceGroupService resourceGroupService, ITenantService tenantService) : BaseAzureService(tokenCredentialFactory, tenantService), IManagedLustreService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;

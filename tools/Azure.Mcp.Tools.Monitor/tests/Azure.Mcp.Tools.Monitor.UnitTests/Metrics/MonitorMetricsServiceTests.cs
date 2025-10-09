@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
@@ -31,7 +32,7 @@ public class MonitorMetricsServiceTests
         _resourceResolverService = Substitute.For<IResourceResolverService>();
         _metricsQueryClientService = Substitute.For<IMetricsQueryClientService>();
         _metricsQueryClient = Substitute.For<MetricsQueryClient>();
-        _service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        _service = new MonitorMetricsService(ITokenCredentialFactory.Default, _resourceResolverService, _metricsQueryClientService);
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
@@ -55,7 +56,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        var service = new MonitorMetricsService(ITokenCredentialFactory.Default, _resourceResolverService, _metricsQueryClientService);
         Assert.NotNull(service);
     }
 
@@ -64,7 +65,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(null!, _metricsQueryClientService));
+            new MonitorMetricsService(ITokenCredentialFactory.Default, null!, _metricsQueryClientService));
     }
 
     [Fact]
@@ -72,7 +73,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(_resourceResolverService, null!));
+            new MonitorMetricsService(ITokenCredentialFactory.Default, _resourceResolverService, null!));
     }
 
     #endregion

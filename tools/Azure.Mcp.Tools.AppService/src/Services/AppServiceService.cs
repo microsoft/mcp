@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.AppService.Models;
@@ -13,9 +14,10 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.AppService.Services;
 
 public class AppServiceService(
+    ITokenCredentialFactory tokenCredentialFactory,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILogger<AppServiceService> logger) : BaseAzureService(tenantService), IAppServiceService
+    ILogger<AppServiceService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IAppServiceService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;
