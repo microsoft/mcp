@@ -479,17 +479,16 @@ azmcp appservice database add --subscription "my-subscription" \
 ```bash
 # Send email using Azure Communication Services
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send \
-    --endpoint "<endpoint>" \
-    --sender "<sender-email>" \
-    --to "<recipient-email>" \
-    --subject "<email-subject>" \
-    --message "<email-content>" \
-    [--is-html] \
-    [--sender-name "<sender-display-name>"] \
-    [--cc "<cc-recipient-email>"] \
-    [--bcc "<bcc-recipient-email>"] \
-    [--reply-to "<reply-to-email>"]
+azmcp communication email send --endpoint "<endpoint>" \
+                               --sender "<sender-email>" \
+                               --to "<recipient-email>" \
+                               --subject "<email-subject>" \
+                               --message "<email-content>" \
+                               [--is-html] \
+                               [--sender-name "<sender-display-name>"] \
+                               [--cc "<cc-recipient-email>"] \
+                               [--bcc "<bcc-recipient-email>"] \
+                               [--reply-to "<reply-to-email>"]
 
 # Examples:
 # Send plain text email
