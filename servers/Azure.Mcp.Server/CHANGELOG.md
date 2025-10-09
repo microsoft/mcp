@@ -6,8 +6,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Enhanced `azmcp tools list` command with new filtering and output options:
+  - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
+  - Added `--name` option to return only tool names without descriptions or metadata
+  - Renamed `--namespaces` to `--namespace-mode` for better clarity when listing top-level service namespaces
 - Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to all automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
+
 
 ### Breaking Changes
 
