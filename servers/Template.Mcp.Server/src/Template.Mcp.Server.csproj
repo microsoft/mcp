@@ -5,10 +5,25 @@
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
+    <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>
+    <!-- <PackageIcon></PackageIcon> Defaults to the microsoft logo if not specified. -->
+
+    <!-- npm settings -->
     <NpmPackageName>@azure/mcp-template</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
-    <PackageId>Microsoft.Template.Mcp</PackageId>
-    <ToolCommandName>$(CliName)</ToolCommandName>
+
+    <!-- docker settings -->
+    <DockerImageName>azure-sdk/template-mcp</DockerImageName>
+
+    <!-- dnx/nuget settings -->
+    <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
+    <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <DnxPackageTags>template,mcp</DnxPackageTags>
+
+    <!-- vsix settings -->
+    <VsixPackagePrefix>vscode-template-mcp</VsixPackagePrefix>
+    <VsixDescription>Template project for validating the microsoft/mcp engineering system</VsixDescription>
+    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -39,20 +54,6 @@
     <!-- AOT native build flags -->
     <PublishTrimmed>true</PublishTrimmed>
     <SelfContained>true</SelfContained>
-  </PropertyGroup>
-
-  <!-- Properties for the root (RID-less) .NET Tool package -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation</PackageDescription>
-    <PackageTags>template;mcp;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
-  </ItemGroup>
-  <!-- Properties for the RID-specific .NET Tool packages -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <PackageDescription>Template MCP Server - Basic Model Context Protocol implementation. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>

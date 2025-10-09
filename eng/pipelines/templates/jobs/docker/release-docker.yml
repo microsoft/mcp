@@ -9,57 +9,16 @@ parameters:
   type: object
 
 jobs:
-- job: CreateDockerArtifact
-  displayName: 'Creating Docker artifact'
-  dependsOn: ${{ parameters.DependsOn }}
-  pool:
-    name: $(LINUXPOOL)
-    image: $(LINUXVMIMAGE)
-    os: linux
-
-  steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: 'Download signed packages'
-    inputs:
-      buildType: 'current'
-      artifactName: binaries_signed
-      targetPath: $(Build.ArtifactStagingDirectory)
-
-  - task: CopyFiles@2
-    displayName: 'Copy Dockerfile'
-    inputs:
-      Contents: 'Dockerfile'
-      TargetFolder: $(Build.ArtifactStagingDirectory)
-
-  - task: Powershell@2
-    displayName: 'Set Docker Variables'
-    name: SetVariables
-    inputs:
-      targetType: 'inline'
-      script: |
-        $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName '${{parameters.ServerName}}.csproj'
-        $imageName = $properties.DockerImageName
-        $version = $properties.Version
-        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-    env:
-      VERSION_SUFFIX: '$(VersionSuffix)'
-
-  - task: 1ES.PublishPipelineArtifact@1
-    inputs:
-      path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_staged
-
 - job: PublishACR
   displayName: "Publish to ACR"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
-  dependsOn: CreateDockerArtifact
-  variables:
-    DockerImageName:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
-    DockerImageVersion:  $[ dependencies.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
+  dependsOn: ${{ parameters.DependsOn }}
 
   templateContext:
     inputs:
+    - input: pipelineArtifact
+      artifactName: build_info
+      targetPath: $(Pipeline.Workspace)/build_info
     - input: pipelineArtifact
       artifactName: docker_staged
       targetPath: $(Pipeline.Workspace)/docker_staged
@@ -78,6 +37,36 @@ jobs:
     os: linux
 
   steps:
+  - task: Powershell@2
+    displayName: 'Set Docker Variables'
+    name: SetVariables
+    inputs:
+      targetType: 'inline'
+      script: |
+        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/build_info.json" | ConvertFrom-Json
+        $serverInfo = $buildInfo.servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
+
+        if (-not $serverInfo) {
+            Write-Error "Server with name '$env:SERVER_NAME' not found in buildInfo.json"
+            exit 1
+        }
+
+        $imageName = $serverInfo.dockerImageName
+        Write-Host "Setting variable DockerImageName to $imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+
+        $version = $serverInfo.version
+        Write-Host "Setting variable DockerImageVersion to $version"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+
+        $cliName = $serverInfo.cliName
+        $extension = $serverInfo.extension
+        $executableName = "$cliName$extension"
+        Write-Host "Setting variable DockerExecutableName to $executableName"
+        Write-Host "##vso[task.setvariable variable=DockerExecutableName]$executableName"
+    env:
+      SERVER_NAME: ${{ parameters.ServerName }}
+
   - task: AzureCLI@2
     condition: succeeded()
     displayName: Login to ${{ parameters.ContainerRegistry }}
@@ -91,9 +80,9 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
     inputs:
-      path: '$(Pipeline.Workspace)/docker_staged'
+      path: '$(Pipeline.Workspace)/docker_staged/${{ parameters.ServerName }}/linux-x64'
       image: image:tag
-      buildArguments: |
-        --build-arg PUBLISH_DIR="Azure.Mcp.Server/linux-x64/dist"
+      buildArguments: >
+        --build-arg PUBLISH_DIR="dist"
       enableNetwork: true
       useBuildKit: true
