@@ -3,6 +3,7 @@ using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
@@ -36,16 +37,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.TransactionId);
+        command.Options.Add(ConfidentialLedgerOptionDefinitions.TransactionId.AsRequired());
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
-        command.Validators.Add(commandResult =>
-        {
-            var transactionId = commandResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.TransactionId.Name);
-            if (string.IsNullOrWhiteSpace(transactionId))
-            {
-                commandResult.AddError("Missing Required options: --transaction-id");
-            }
-        });
     }
 
     protected override GetEntryOptions BindOptions(ParseResult parseResult)

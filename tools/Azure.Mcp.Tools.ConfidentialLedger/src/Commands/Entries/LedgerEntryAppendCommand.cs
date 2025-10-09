@@ -5,6 +5,7 @@ using System.CommandLine;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
@@ -39,16 +40,8 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content);
+        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content.AsRequired());
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
-        command.Validators.Add(commandResult =>
-        {
-            var content = commandResult.GetValueOrDefault<string>(ConfidentialLedgerOptionDefinitions.Content.Name);
-            if (string.IsNullOrWhiteSpace(content))
-            {
-                commandResult.AddError("Missing Required options: --content");
-            }
-        });
     }
 
     protected override AppendEntryOptions BindOptions(ParseResult parseResult)
