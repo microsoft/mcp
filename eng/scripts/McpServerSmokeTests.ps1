@@ -31,7 +31,7 @@ function Validate-Nuget-Packages {
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
             Write-Host "Validating NuGet package for server $ServerName"
 
-            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
+            dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list | Out-Null
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
@@ -69,17 +69,17 @@ function Validate-Npm-Packages {
                 Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
                 Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
 
-                $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' }
-                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp*-$artifactOs-$TargetArch-*.tgz"
+                $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
+                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
 
-                Write-Host "Installing Platform Package: $($platformPackage.FullName)"
-                if ($platformPackage) { npm install $platformPackage.FullName | Out-Null }
+                if ($mainPackage -and $platformPackage -and (Test-Path $mainPackage.FullName) -and (Test-Path $platformPackage.FullName)) {
+                    Write-Host "Installing Platform Package: $($platformPackage.FullName)"
+                    npm install $platformPackage.FullName | Out-Null
+                    
+                    Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
+                    npm install $mainPackage.FullName | Out-Null
 
-                Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
-                if ($mainPackage) { npm install $mainPackage.FullName | Out-Null }
-
-                if ($mainPackage -and $platformPackage) {
-                    $output = npx azmcp tools list
+                    npx azmcp tools list | Out-Null
                     if ($LASTEXITCODE -eq 0) {
                         Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                     } else {

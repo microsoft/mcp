@@ -38,11 +38,21 @@ if($AllPlatforms -and $BuildNative) {
 
 #normalize OperatingSystem and Architecture
 $runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
+$postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
 if($OperatingSystem) {
     switch($OperatingSystem) {
-        'windows' { $operatingSystems = @('win') }
-        'linux' { $operatingSystems = @('linux') }
-        'macos' { $operatingSystems = @('osx') }
+        'windows' { 
+            $operatingSystems = @('win')
+            $postinstall = "set PACKAGE_BASE_NAME=$packageName&& node ./scripts/post-install-script.js"
+        }
+        'linux' { 
+            $operatingSystems = @('linux')
+            $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
+        }
+        'macos' { 
+            $operatingSystems = @('osx')
+            $postinstall = "PACKAGE_BASE_NAME=$packageName node ./scripts/post-install-script.js"
+        }
         default { Write-Error "Unsupported operating system: $OperatingSystem"; return }
     }
 } else {
@@ -85,7 +95,7 @@ function BuildServer($serverName) {
     }
 
     New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
-
+    
     $wrapperPackage = [ordered]@{
         name = $packageName
         version = $version
@@ -101,7 +111,7 @@ function BuildServer($serverName) {
         os = @()
         cpu = @()
         optionalDependencies = @{}
-        scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
+        scripts = @{ postinstall = $postinstall }
     }
 
     $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8

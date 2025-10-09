@@ -3,7 +3,8 @@ const os = require('os');
 const platform = os.platform();
 const arch = os.arch();
 
-const requiredPackage = `@azure/mcp-${platform}-${arch}`;
+const baseName = process.env.PACKAGE_BASE_NAME || '@azure/mcp';
+const requiredPackage = `${baseName}-${platform}-${arch}`;
 
 try {
   require.resolve(requiredPackage);

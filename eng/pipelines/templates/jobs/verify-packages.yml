@@ -58,4 +58,4 @@ jobs:
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
         -WorkingDirectory $(Agent.TempDirectory)
-    condition: succeededOrFailed()
+    condition: and(succeeded(), eq(variables['RunTests'], 'true'))
