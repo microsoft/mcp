@@ -96,7 +96,7 @@ public class ApplicationInsightsService(
         DateTime? startDateTimeUtc = null,
         DateTime? endDateTimeUtc = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
         List<JsonNode> results = [];
 
         try
