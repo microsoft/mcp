@@ -23,7 +23,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
 [Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
 [Azure MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server
-[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-0
+[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-
 [Azure MCP Documentation]: https://learn.microsoft.com/azure/developer/azure-mcp-server/
 [Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
 [Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
@@ -31,7 +31,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Fabric MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/README.md
 [Fabric MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/CHANGELOG.md
 [Fabric MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server
-[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-0
+[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-
 [Fabric Documentation]: https://learn.microsoft.com/fabric/
 [Fabric MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md
 [Fabric MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md
