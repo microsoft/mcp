@@ -695,7 +695,6 @@ class Program
                 if (trimmedLine.StartsWith("| Tool Name") ||
                     trimmedLine.StartsWith("|:-------") ||
                     trimmedLine.StartsWith("#") ||
-                    trimmedLine.StartsWith("**Area:**") ||
                     string.IsNullOrWhiteSpace(trimmedLine))
                 {
                     continue;

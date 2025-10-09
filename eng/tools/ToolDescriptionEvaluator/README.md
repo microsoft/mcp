@@ -281,7 +281,14 @@ The tool reads from `../../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` w
 
 #### Tool Prefix Filtering
 
-The tool supports filtering by tool name prefixes using the `--area` parameter. Service names are automatically prefixed with `azmcp_`:
+The tool supports filtering by tool name prefixes using the `--area` parameter. This allows you to test all tools for a specific Azure service by matching the tool name prefix.
+
+For example, `--area "keyvault"` (auto-prefixed to `azmcp_keyvault`) will match all tools starting with `azmcp_keyvault` including:
+- `azmcp_keyvault_certificate_create`
+- `azmcp_keyvault_certificate_get`  
+- `azmcp_keyvault_secret_get`
+- `azmcp_keyvault_key_list`
+- And all other Key Vault tools
 
 ```bash
 # Filter by service name (automatically prefixed with azmcp_)
@@ -296,17 +303,6 @@ dotnet run -- --area "sql,cosmos,functionapp"  # Matches SQL, Cosmos, and Functi
 # Or use explicit prefix (same result)
 dotnet run -- --area "azmcp_keyvault"
 ```
-
-#### Tool Prefix Filtering
-
-The tool supports filtering by tool name prefixes using the `--area` parameter. This allows you to test all tools for a specific Azure service by matching the tool name prefix.
-
-For example, `--area "keyvault"` (auto-prefixed to `azmcp_keyvault`) will match all tools starting with `azmcp_keyvault` including:
-- `azmcp_keyvault_certificate_create`
-- `azmcp_keyvault_certificate_get`  
-- `azmcp_keyvault_secret_get`
-- `azmcp_keyvault_key_list`
-- And all other Key Vault tools
 
 Common service names (automatically prefixed with `azmcp_`) include: `foundry`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
 
