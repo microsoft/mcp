@@ -9,6 +9,8 @@ public static class CommunicationOptionDefinitions
     public const string EndpointName = "endpoint";
     public const string FromName = "from";
     public const string ToName = "to";
+    public const string ToEmailName = "to";
+    public const string EmailMessageName = "message";
     public const string MessageName = "message";
     public const string EnableDeliveryReportName = "enable-delivery-report";
     public const string TagName = "tag";
@@ -61,6 +63,22 @@ public static class CommunicationOptionDefinitions
         Required = false
     };
 
+    public static readonly Option<string[]> ToEmail = new(
+        $"--{ToEmailName}"
+    )
+    {
+        Description = "The recipient email address(es) to send the email to.",
+        Required = true,
+        Arity = ArgumentArity.OneOrMore
+    };
+
+    public static readonly Option<string> EmailMessage = new(
+        $"--{EmailMessageName}"
+    )
+    {
+        Description = "The email message content to send to the recipient(s).",
+        Required = true,
+    };
     /// <summary>
     /// The email address to send from.
     /// </summary>
@@ -113,7 +131,8 @@ public static class CommunicationOptionDefinitions
     )
     {
         Description = "CC recipient email addresses",
-        Required = false
+        Required = false,
+        Arity = ArgumentArity.ZeroOrMore
     };
 
     /// <summary>
@@ -124,7 +143,8 @@ public static class CommunicationOptionDefinitions
     )
     {
         Description = "BCC recipient email addresses",
-        Required = false
+        Required = false,
+        Arity = ArgumentArity.ZeroOrMore
     };
 
     /// <summary>
@@ -135,6 +155,7 @@ public static class CommunicationOptionDefinitions
     )
     {
         Description = "Reply-to email addresses",
-        Required = false
+        Required = false,
+        Arity = ArgumentArity.ZeroOrMore
     };
 }
