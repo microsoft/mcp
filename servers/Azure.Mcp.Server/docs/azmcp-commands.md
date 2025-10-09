@@ -1119,6 +1119,19 @@ azmcp tools list --namespaces
 
 ### Azure Monitor Operations
 
+#### Activity Logs
+
+```bash
+# List the activity logs of an Azure Resource
+azmcp monitor activitylog list --subscription <subscription> \
+                               --resource-group <resource-group> \
+                               --resource-type <resource-type> \
+                               --resource-name <resource-name> \
+                               --hours: <hours> \
+                               --event-level: <event-level> \
+                               --top: <top>
+```
+
 #### Log Analytics
 
 ```bash

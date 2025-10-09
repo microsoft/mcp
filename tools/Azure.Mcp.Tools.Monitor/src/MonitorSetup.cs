@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Commands.Log;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
@@ -20,6 +21,7 @@ public class MonitorSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddHttpClient<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorService, MonitorService>();
         services.AddSingleton<IMonitorHealthModelService, MonitorHealthModelService>();
         services.AddSingleton<IResourceResolverService, ResourceResolverService>();
@@ -38,6 +40,8 @@ public class MonitorSetup : IAreaSetup
 
         services.AddSingleton<MetricsQueryCommand>();
         services.AddSingleton<MetricsDefinitionsCommand>();
+
+        services.AddSingleton<ActivityLogListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -96,6 +100,12 @@ public class MonitorSetup : IAreaSetup
         metrics.AddCommand(metricsQuery.Name, metricsQuery);
         var metricsDefinitions = serviceProvider.GetRequiredService<MetricsDefinitionsCommand>();
         metrics.AddCommand(metricsDefinitions.Name, metricsDefinitions);
+
+        var activityLog = new CommandGroup("activitylog", "Azure Monitor activity log operations - Commands for querying and analyzing activity logs for Azure resources.");
+        monitor.AddSubGroup(activityLog);
+
+        var activityLogList = serviceProvider.GetRequiredService<ActivityLogListCommand>();
+        activityLog.AddCommand(activityLogList.Name, activityLogList);
 
         return monitor;
     }

@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http.Headers;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
@@ -8,34 +10,41 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
+using Azure.Mcp.Tools.Monitor.Commands;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
 using Azure.ResourceManager.OperationalInsights;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorService : BaseAzureService, IMonitorService
+public class MonitorService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService,
+    IResourceGroupService resourceGroupService,
+    IResourceResolverService resourceResolverService,
+    IHttpClientService httpClientService) : BaseAzureService(tenantService), IMonitorService
 {
-    private readonly ISubscriptionService _subscriptionService;
-    private readonly IResourceGroupService _resourceGroupService;
+    private const string ActivityLogApiVersion = "2017-03-01-preview";
+    private const string ActivityLogEndpointFormat
+        = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
 
-    public MonitorService(ISubscriptionService subscriptionService, ITenantService tenantService, IResourceGroupService resourceGroupService)
-        : base(tenantService)
-    {
-        _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-        _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
-    }
+    // Token caching fields
+    private string? _cachedManagementToken;
+    private DateTimeOffset _managementTokenExpiryTime;
+    private const int TokenExpirationBufferSeconds = 300; // 5 minutes buffer
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
         string resourceId,
         string query,
         string table,
-        int? hours = 24,
-        int? limit = 20,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        int? hours,
+        int? limit,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceId), resourceId), (nameof(table), table));
         query = BuildQuery(query, table, limit);
@@ -153,9 +162,9 @@ public class MonitorService : BaseAzureService, IMonitorService
         string subscription,
         string resourceGroup,
         string workspace,
-        string? tableType = "CustomLog",
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? tableType,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(workspace), workspace));
 
@@ -163,7 +172,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         {
             var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
 
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
             var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
                 .ConfigureAwait(false);
@@ -193,14 +202,14 @@ public class MonitorService : BaseAzureService, IMonitorService
 
     public async Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
             var workspaces = await subscriptionResource
                 .GetOperationalInsightsWorkspacesAsync()
@@ -224,10 +233,10 @@ public class MonitorService : BaseAzureService, IMonitorService
         string workspace,
         string query,
         string table,
-        int? hours = 24,
-        int? limit = 20,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        int? hours,
+        int? limit,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(workspace), workspace), (nameof(table), table));
 
@@ -324,7 +333,7 @@ public class MonitorService : BaseAzureService, IMonitorService
         {
             var (_, resolvedWorkspaceName) = await GetWorkspaceInfo(workspace, subscription, tenant, retryPolicy);
 
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            var resourceGroupResource = await resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
                 ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
             var workspaceResponse = await resourceGroupResource.GetOperationalInsightsWorkspaceAsync(resolvedWorkspaceName)
                 .ConfigureAwait(false);
@@ -350,6 +359,127 @@ public class MonitorService : BaseAzureService, IMonitorService
         catch (Exception ex)
         {
             throw new Exception($"Error listing table types for workspace {workspace}: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<ActivityLogEventData>> ListActivityLogs(
+        string subscription,
+        string resourceName,
+        string? resourceGroup,
+        string? resourceType,
+        double hours,
+        ActivityLogEventLevel? eventLevel,
+        int top,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
+
+        if (top < 1)
+        {
+            top = 10;
+        }
+
+        try
+        {
+            // Resolve the resource ID from the resource name
+            var resourceIdentifier = await resourceResolverService.ResolveResourceIdAsync(
+                subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
+
+            string resourceId = resourceIdentifier.ToString();
+            string subscriptionId = resourceIdentifier.SubscriptionId
+                ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
+
+            // Get the activity logs from the Azure Management API
+            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy);
+
+            // Take only the requested number of logs
+            return activityLogs.Take(top).ToList();
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving activity logs for resource '{resourceName}': {ex.Message}", ex);
+        }
+    }
+
+    private async Task<List<ActivityLogEventData>> CallActivityLogApiAsync(
+        string subscriptionId,
+        string resourceId,
+        double hours,
+        ActivityLogEventLevel? eventLevel,
+        string? tenant,
+        RetryPolicyOptions? retryPolicy)
+    {
+        var returnValue = new List<ActivityLogEventData>();
+
+        string endpoint = string.Format(ActivityLogEndpointFormat, subscriptionId);
+        var uriBuilder = new UriBuilder(endpoint);
+
+        // Build the query parameters
+        string query = $"api-version={ActivityLogApiVersion}";
+
+        // Create the time filter
+        DateTimeOffset startDate = DateTimeOffset.UtcNow.AddHours(-hours).ToUniversalTime();
+        DateTimeOffset endDate = DateTimeOffset.UtcNow;
+        string filter = $"eventTimestamp ge '{startDate:yyyy-MM-ddTHH:mm:ss.fffZ}' " +
+                       $"and eventTimestamp le '{endDate:yyyy-MM-ddTHH:mm:ss.fffZ}' " +
+                       $"and resourceId eq '{resourceId}'";
+
+        if (eventLevel != null)
+        {
+            filter += $" and levels eq '{eventLevel}'";
+        }
+
+        query += $"&$filter={Uri.EscapeDataString(filter)}";
+        uriBuilder.Query = query;
+
+        // Get cached access token
+        var tokenString = await GetCachedManagementTokenAsync(tenant);
+
+        // Make paginated requests
+        string? nextRequestUrl = uriBuilder.Uri.ToString();
+        do
+        {
+            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, tokenString);
+            returnValue.AddRange(listResponse.Value);
+            nextRequestUrl = listResponse.NextLink;
+        } while (!string.IsNullOrEmpty(nextRequestUrl));
+
+        return returnValue;
+    }
+
+    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token)
+    {
+        using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        using HttpResponseMessage response = await httpClientService.DefaultClient.SendAsync(httpRequest);
+
+        if (response.IsSuccessStatusCode)
+        {
+            using Stream responseStream = await response.Content.ReadAsStreamAsync();
+            ActivityLogListResponse? responseObject = await JsonSerializer.DeserializeAsync(
+                responseStream,
+                MonitorJsonContext.Default.ActivityLogListResponse);
+            return responseObject ?? new ActivityLogListResponse();
+        }
+        else
+        {
+            string responseString = await response.Content.ReadAsStringAsync();
+            string errorMessage;
+            if (!string.IsNullOrEmpty(responseString))
+            {
+                errorMessage = responseString;
+            }
+            else if (!string.IsNullOrEmpty(response.ReasonPhrase))
+            {
+                errorMessage = response.ReasonPhrase;
+            }
+            else
+            {
+                errorMessage = "Unknown Error";
+            }
+            throw new HttpRequestException($"Activity Log API returned error {response.StatusCode}: {errorMessage}");
         }
     }
 
@@ -380,5 +510,17 @@ public class MonitorService : BaseAzureService, IMonitorService
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
+    }
+
+    private async Task<string> GetCachedManagementTokenAsync(string? tenant)
+    {
+        return await GetCachedTokenAsync(
+            "https://management.azure.com",
+            () => _cachedManagementToken,
+            token => _cachedManagementToken = token,
+            () => _managementTokenExpiryTime,
+            expiry => _managementTokenExpiryTime = expiry,
+            tenant,
+            TokenExpirationBufferSeconds);
     }
 }
