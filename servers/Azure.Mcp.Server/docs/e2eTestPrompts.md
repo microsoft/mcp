@@ -581,12 +581,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_subscription_list | What is my current subscription? |
 | azmcp_subscription_list | What subscriptions do I have? |
 
-## Azure Table
+## Azure Tables
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_table_list | List all tables in the storage account <account> |
-| azmcp_table_list | Show me the tables in the storage account <account> |
+| azmcp_tables_list | List all tables in the storage account <account> |
+| azmcp_tables_list | Show me the tables in the storage account <account> |
 
 ## Azure Terraform Best Practices
 

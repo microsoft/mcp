@@ -5,9 +5,9 @@ using Azure.Data.Tables;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 
-namespace Azure.Mcp.Tools.Table.Services;
+namespace Azure.Mcp.Tools.Tables.Services;
 
-public class TableService() : BaseAzureService, ITableService
+public class TablesService() : BaseAzureService, ITablesService
 {
     protected async Task<TableServiceClient> CreateTableServiceClient(
         string account,

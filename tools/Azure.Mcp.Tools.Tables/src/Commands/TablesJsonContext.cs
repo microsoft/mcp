@@ -3,10 +3,10 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Table.Commands;
+namespace Azure.Mcp.Tools.Tables.Commands;
 
-[JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
+[JsonSerializable(typeof(TablesListCommand.TablesListCommandResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
-internal sealed partial class TableJsonContext : JsonSerializerContext
+internal sealed partial class TablesJsonContext : JsonSerializerContext
 {
 }

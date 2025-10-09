@@ -3,9 +3,9 @@
 
 using Azure.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.Table.Services;
+namespace Azure.Mcp.Tools.Tables.Services;
 
-public interface ITableService
+public interface ITablesService
 {
     Task<List<string>> ListTables(
         string account,

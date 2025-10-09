@@ -3,9 +3,9 @@
 
 using Azure.Mcp.Core.Options;
 
-namespace Azure.Mcp.Tools.Table.Options;
+namespace Azure.Mcp.Tools.Tables.Options;
 
-public class BaseTableOptions : SubscriptionOptions
+public class BaseTablesOptions : SubscriptionOptions
 {
     public string? Account { get; set; }
 }

@@ -6,33 +6,33 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Table.Commands;
-using Azure.Mcp.Tools.Table.Services;
+using Azure.Mcp.Tools.Tables.Commands;
+using Azure.Mcp.Tools.Tables.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Xunit;
 
-namespace Azure.Mcp.Tools.Table.UnitTests;
+namespace Azure.Mcp.Tools.Tables.UnitTests;
 
-public class TableListCommandTests
+public class TablesListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly ITableService _tableService;
-    private readonly ILogger<TableListCommand> _logger;
-    private readonly TableListCommand _command;
+    private readonly ITablesService _tablesService;
+    private readonly ILogger<TablesListCommand> _logger;
+    private readonly TablesListCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownAccount = "account123";
     private readonly string _knownSubscription = "sub123";
 
-    public TableListCommandTests()
+    public TablesListCommandTests()
     {
-        _tableService = Substitute.For<ITableService>();
-        _logger = Substitute.For<ILogger<TableListCommand>>();
+        _tablesService = Substitute.For<ITablesService>();
+        _logger = Substitute.For<ILogger<TablesListCommand>>();
 
-        var collection = new ServiceCollection().AddSingleton(_tableService);
+        var collection = new ServiceCollection().AddSingleton(_tablesService);
 
         _serviceProvider = collection.BuildServiceProvider();
         _command = new(_logger);
@@ -46,7 +46,7 @@ public class TableListCommandTests
         // Arrange
         var expectedTables = new List<string> { "table1", "table2" };
 
-        _tableService.ListTables(
+        _tablesService.ListTables(
             Arg.Is(_knownAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -66,7 +66,7 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, TableJsonContext.Default.TableListCommandResult);
+        var result = JsonSerializer.Deserialize(json, TablesJsonContext.Default.TablesListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedTables, result.Tables);
@@ -76,7 +76,7 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables()
     {
         // Arrange
-        _tableService.ListTables(
+        _tablesService.ListTables(
             Arg.Is(_knownAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
@@ -96,10 +96,25 @@ public class TableListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize(json, TableJsonContext.Default.TableListCommandResult);
+        var result = JsonSerializer.Deserialize(json, TablesJsonContext.Default.TablesListCommandResult);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tables);
+    }
+
+    [Theory]
+    [InlineData("--subscription sub123")] // Missing account
+    [InlineData("--account mystorageaccount")] // Missing subscription
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args)
+    {
+        // Arrange
+        var parseResult = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -108,7 +123,7 @@ public class TableListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _tableService.ListTables(
+        _tablesService.ListTables(
             Arg.Is(_knownAccount),
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),

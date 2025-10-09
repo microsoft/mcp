@@ -2,16 +2,16 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.Table.Options;
-using Azure.Mcp.Tools.Table.Services;
+using Azure.Mcp.Tools.Tables.Options;
+using Azure.Mcp.Tools.Tables.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.Table.Commands;
+namespace Azure.Mcp.Tools.Tables.Commands;
 
-public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseTableCommand<TableListOptions>()
+public sealed class TablesListCommand(ILogger<TablesListCommand> logger) : BaseTablesCommand<TablesListOptions>()
 {
-    private const string CommandTitle = "List Tables";
-    private readonly ILogger<TableListCommand> _logger = logger;
+    private const string CommandTitle = "List Azure Table storage tables";
+    private readonly ILogger<TablesListCommand> _logger = logger;
 
     public override string Name => "list";
 
@@ -40,14 +40,14 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseTab
 
         try
         {
-            var tableService = context.GetService<ITableService>();
-            var tables = await tableService.ListTables(
+            var tablesService = context.GetService<ITablesService>();
+            var tables = await tablesService.ListTables(
                 options.Account!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(tables ?? []), TableJsonContext.Default.TableListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(tables ?? []), TablesJsonContext.Default.TablesListCommandResult);
         }
         catch (Exception ex)
         {
@@ -58,5 +58,5 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseTab
         return context.Response;
     }
 
-    internal record TableListCommandResult(List<string> Tables);
+    internal record TablesListCommandResult(List<string> Tables);
 }
