@@ -27,7 +27,7 @@ jobs:
       deploy:
         steps:
         - download: current
-          artifact: docker_staged
+          artifact: docker_output
           displayName: Download built image tar
 
         - task: AzureCLI@2
@@ -41,7 +41,7 @@ jobs:
 
         - script: |
             echo "Loading image..."
-            docker load -i $(Pipeline.Workspace)/docker_staged/image.tar
+            docker load -i $(Pipeline.Workspace)/docker_output/image.tar
           displayName: Load image
 
         - script: |
