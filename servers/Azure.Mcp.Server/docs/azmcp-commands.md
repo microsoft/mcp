@@ -535,32 +535,29 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 # Send SMS message using Azure Communication Services
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "<connection-string>" \
-    --from "<sender-phone-number>" \
-    --to "<recipient-phone-number>" \
-    --message "<message-text>" \
-    [--enable-delivery-report] \
-    [--tag "<custom-tag>"]
+azmcp communication sms send --connection-string "<connection-string>" \
+                             --from "<sender-phone-number>" \
+                             --to "<recipient-phone-number>" \
+                             --message "<message-text>" \
+                             [--enable-delivery-report] \
+                             [--tag "<custom-tag>"]
 
 # Examples:
 # Send SMS to single recipient
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124" \
-    --message "Hello from Azure Communication Services!"
+azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+                             --from "+14255550123" \
+                             --to "+14255550124" \
+                             --message "Hello from Azure Communication Services!"~
 
 # Send SMS to multiple recipients with delivery reporting
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124,+14255550125" \
-    --message "Broadcast message" \
-    --enable-delivery-report \
-    --tag "marketing-campaign"
+azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..."
+                             --from "+14255550123" \
+                             --to "+14255550124,+14255550125" \
+                             --message "Broadcast message" \
+                             --enable-delivery-report \
+                             --tag "marketing-campaign"
 ```
 
 **Options:**
