@@ -514,21 +514,13 @@ public class MonitorService(
 
     private async Task<string> GetCachedManagementTokenAsync(string? tenant)
     {
-        // Check if we have a cached token that's still valid
-        if (_cachedManagementToken != null && DateTimeOffset.UtcNow < _managementTokenExpiryTime)
-        {
-            return _cachedManagementToken;
-        }
-
-        // Get a new token
-        var credential = await GetCredential(tenant);
-        var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
-        var token = await credential.GetTokenAsync(tokenRequestContext, default);
-
-        // Cache the token with a buffer before expiration
-        _cachedManagementToken = token.Token;
-        _managementTokenExpiryTime = token.ExpiresOn.AddSeconds(-TokenExpirationBufferSeconds);
-
-        return _cachedManagementToken;
+        return await GetCachedTokenAsync(
+            "https://management.azure.com",
+            () => _cachedManagementToken,
+            token => _cachedManagementToken = token,
+            () => _managementTokenExpiryTime,
+            expiry => _managementTokenExpiryTime = expiry,
+            tenant,
+            TokenExpirationBufferSeconds);
     }
 }
