@@ -1,7 +1,7 @@
 # Azure MCP CLI Command Reference
 
 > [!IMPORTANT]
-> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the Tools via a command line interface, i.e. `azmcp subscription list`.  Since `azmcp` is built on a CLI infrastructure, you'll see the word "Command" be used interchangeably with "Tool".
+> The Azure MCP Server has two modes: MCP Server mode and CLI mode.  When you start the MCP Server with `azmcp server start` that will expose an endpoint for MCP Client communication. The `azmcp` CLI also exposes all of the tools via a command line interface, i.e. `azmcp subscription list`.  In this document, "command" refers to CLI commands (e.g., `azmcp storage account list`), while "tool" refers to MCP server tools that can be invoked by MCP clients.
 
 ## Global Options
 
@@ -524,12 +524,18 @@ azmcp communication sms send \
 azmcp confidentialledger entries append --ledger <ledger-name> \
                                         --content <json-or-text-data> \
                                         [--collection-id <collection-id>]
+
+# Retrieve a Confidential Ledger entry with verification proof
+azmcp confidentialledger entries get --ledger <ledger-name> \
+                                     --transaction-id <transaction-id> \
+                                     [--collection-id <collection-id>]
 ```
 
 **Options:**
 -   `--ledger`: Confidential Ledger name (required)
--   `--content`: JSON or text data to insert into the ledger (required)
+-   `--content`: JSON or text data to insert into the ledger (required for the append command)
 -   `--collection-id`: Collection ID to store the data with (optional)
+-   `--transaction-id`: Ledger transaction identifier to retrieve (required for the get command)
 
 ### Azure Container Registry (ACR) Operations
 
