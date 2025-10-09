@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Linq;
 using System.Text.Json;
 using ToolSelection.Models;
 using ToolSelection.Services;
@@ -236,7 +237,9 @@ class Program
 
             if (!string.IsNullOrEmpty(areaFilter))
             {
-                Console.WriteLine($"🎯 Filtering prompts to area: {areaFilter}");
+                var areaCount = areaFilter.Split(',', StringSplitOptions.RemoveEmptyEntries).Length;
+                var areaLabel = areaCount > 1 ? "areas" : "area";
+                Console.WriteLine($"🎯 Filtering prompts to {areaLabel}: {areaFilter}");
             }
 
             // Create or overwrite the output file
@@ -683,68 +686,20 @@ class Program
 
             // Parse markdown tables to extract tool names and prompts
             var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-            
-            string? currentArea = null;
-            string? currentAreaIdentifier = null;
-            bool inTargetArea = string.IsNullOrEmpty(areaFilter); // If no filter, include all areas
 
             foreach (var line in lines)
             {
                 var trimmedLine = line.Trim();
 
-                // Check for area headers (## Azure ...)
-                if (trimmedLine.StartsWith("## "))
-                {
-                    currentArea = trimmedLine.Substring(3).Trim(); // Remove "## " prefix
-                    currentAreaIdentifier = null; // Reset area identifier
-                    
-                    if (!string.IsNullOrEmpty(areaFilter))
-                    {
-                        // Check if current area matches the filter (case-insensitive)
-                        inTargetArea = currentArea.Equals(areaFilter, StringComparison.OrdinalIgnoreCase) ||
-                                      currentArea.Contains(areaFilter, StringComparison.OrdinalIgnoreCase);
-                    }
-                    
-                    continue;
-                }
-
-                // Check for area identifier (**Area:** `identifier`)
-                if (trimmedLine.StartsWith("**Area:**"))
-                {
-                    // Extract area identifier from format: **Area:** `identifier`
-                    var match = System.Text.RegularExpressions.Regex.Match(trimmedLine, @"\*\*Area:\*\*\s*`([^`]+)`");
-                    if (match.Success)
-                    {
-                        currentAreaIdentifier = match.Groups[1].Value;
-                        
-                        if (!string.IsNullOrEmpty(areaFilter))
-                        {
-                            // Also check if area identifier matches the filter (case-insensitive)
-                            if (currentAreaIdentifier.Equals(areaFilter, StringComparison.OrdinalIgnoreCase))
-                            {
-                                inTargetArea = true;
-                            }
-                        }
-                    }
-                    continue;
-                }
-
-                // Skip if we're not in the target area
-                if (!inTargetArea)
-                {
-                    continue;
-                }
-
-                // Skip table headers and separators
+                // Skip headers, separators, and non-table content
                 if (trimmedLine.StartsWith("| Tool Name") ||
                     trimmedLine.StartsWith("|:-------") ||
                     trimmedLine.StartsWith("#") ||
+                    trimmedLine.StartsWith("**Area:**") ||
                     string.IsNullOrWhiteSpace(trimmedLine))
                 {
                     continue;
-                }
-
-                // Parse table rows. For example: | tool_name | Test prompt |
+                }                // Parse table rows. For example: | tool_name | Test prompt |
                 if (trimmedLine.StartsWith("|") && trimmedLine.Contains("|"))
                 {
                     var parts = trimmedLine.Split('|', StringSplitOptions.RemoveEmptyEntries);
@@ -756,6 +711,30 @@ class Program
                         // Skip empty entries
                         if (string.IsNullOrWhiteSpace(toolName) || string.IsNullOrWhiteSpace(prompt))
                             continue;
+
+                        // Filter by tool name prefix(es) (e.g., azmcp_keyvault, azmcp_storage)
+                        if (!string.IsNullOrEmpty(areaFilter))
+                        {
+                            // Support multiple areas separated by commas
+                            var areas = areaFilter.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                   .Select(a => a.Trim())
+                                                   .Where(a => !string.IsNullOrEmpty(a))
+                                                   .ToList();
+
+                            // Auto-add azmcp_ prefix if not already present for each area
+                            var prefixesToMatch = areas.Select(area =>
+                                area.StartsWith("azmcp_", StringComparison.OrdinalIgnoreCase)
+                                    ? area
+                                    : $"azmcp_{area}"
+                            ).ToList();
+
+                            // Check if tool name starts with any of the area filters
+                            if (!prefixesToMatch.Any(prefix => toolName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                            {
+                                // Skip this tool as it doesn't match any prefix
+                                continue;
+                            }
+                        }
 
                         if (!prompts.ContainsKey(toolName))
                         {
@@ -770,7 +749,10 @@ class Program
             // If area filter was specified but no prompts found, provide feedback
             if (!string.IsNullOrEmpty(areaFilter) && prompts.Count == 0 && !isCiMode)
             {
-                Console.WriteLine($"⚠️  No prompts found for area '{areaFilter}'. Available areas can be found as ## headers or **Area:** `identifier` values in the markdown file.");
+                var actualPrefix = areaFilter.StartsWith("azmcp_", StringComparison.OrdinalIgnoreCase)
+                    ? areaFilter
+                    : $"azmcp_{areaFilter}";
+                Console.WriteLine($"⚠️  No prompts found for prefix '{actualPrefix}'. Use service names like 'keyvault', 'storage', 'functionapp', etc.");
             }
 
             return prompts.Count > 0 ? prompts : null;
@@ -1218,7 +1200,7 @@ class Program
         Console.WriteLine("  --ci                          Run in CI mode (graceful failures)");
         Console.WriteLine("  --tools-file <path>           Use a custom JSON file for tools instead of dynamic loading from docs .md");
         Console.WriteLine("  --prompts-file <path>         Use custom prompts file (supported formats: .md or .json)");
-        Console.WriteLine("  --area <area>                 Filter prompts to specific area (e.g., \"Azure Key Vault\", \"Storage\")");
+        Console.WriteLine("  --area <area>                 Filter prompts by tool name prefix(es) (e.g., \"keyvault\", \"storage,functionapp\", \"azmcp_keyvault\")");
         Console.WriteLine("  --output-file-name <name>     Custom output file name (no extension)");
         Console.WriteLine("  --text-results                Output results in .txt format");
         Console.WriteLine("  --top <N>                     Number of results to display per test (default 5)");
@@ -1233,8 +1215,10 @@ class Program
         Console.WriteLine("  ToolDescriptionEvaluator                                          # Use dynamic tool loading (default)");
         Console.WriteLine("  ToolDescriptionEvaluator --tools-file my-tools.json               # Use custom tools file");
         Console.WriteLine("  ToolDescriptionEvaluator --prompts-file my-prompts.md             # Use custom prompts file");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"Azure Key Vault\"                # Test only Key Vault prompts");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"Storage\"                        # Test only Storage-related prompts");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault\"                       # Test only Key Vault prompts (auto-prefixed to azmcp_keyvault)");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"storage\"                        # Test only Storage prompts (auto-prefixed to azmcp_storage)");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault,storage\"               # Test Key Vault and Storage prompts (multiple areas)");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"azmcp_functionapp\"              # Test only Function App prompts (explicit prefix)");
         Console.WriteLine("  ToolDescriptionEvaluator --output-file-name my-results            # Use custom output file name (don't include extension)");
         Console.WriteLine("  ToolDescriptionEvaluator --text-results                           # Output in text format");
         Console.WriteLine("  ToolDescriptionEvaluator --ci --tools-file tools.json             # CI mode with JSON file");

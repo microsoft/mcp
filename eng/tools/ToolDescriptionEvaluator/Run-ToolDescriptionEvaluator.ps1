@@ -16,7 +16,7 @@
     Optionally build the root project in Debug mode to ensure tools can be loaded dynamically
 
 .PARAMETER Area
-    Filter prompts to a specific area (e.g., "storage", "keyvault", "Azure Storage", "Azure Key Vault")
+    Filter prompts by tool name prefix. Service names are auto-prefixed with "azmcp_" (e.g., "keyvault" becomes "azmcp_keyvault")
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1
@@ -29,11 +29,15 @@
 
 .EXAMPLE
     ./Run-ToolDescriptionEvaluator.ps1 -Area "storage"
-    Runs the Tool Description Evaluator filtering prompts to only the storage area
+    Runs the Tool Description Evaluator filtering prompts to only tools with the azmcp_storage prefix
 
 .EXAMPLE
-    ./Run-ToolDescriptionEvaluator.ps1 -Area "Azure Key Vault" -BuildAzureMcp
-    Builds the Azure MCP Server project, then runs the Tool Description Evaluator filtering prompts to only the Key Vault area
+    ./Run-ToolDescriptionEvaluator.ps1 -Area "keyvault"
+    Runs the Tool Description Evaluator filtering prompts to only tools with the azmcp_keyvault prefix
+
+.EXAMPLE
+    ./Run-ToolDescriptionEvaluator.ps1 -Area "functionapp" -BuildAzureMcp
+    Builds the Azure MCP Server project, then runs the Tool Description Evaluator filtering prompts to only Function App tools
 #>
 
 [CmdletBinding()]
