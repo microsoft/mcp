@@ -78,6 +78,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
+        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register server providers
         services.AddSingleton<CommandGroupServerProvider>();
@@ -95,6 +96,20 @@ public static class AzureMcpServiceCollectionExtensions
                 {
                     sp.GetRequiredService<RegistryDiscoveryStrategy>(),
                     sp.GetRequiredService<CommandGroupDiscoveryStrategy>(),
+                };
+
+                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
+                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
+            });
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
+            {
+                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
+                {
+                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                    sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>(),
                 };
 
                 var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
@@ -125,6 +140,10 @@ public static class AzureMcpServiceCollectionExtensions
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IToolLoader, ServerToolLoader>();
         }
         else if (serviceStartOptions.Mode == ModeTypes.All)
         {

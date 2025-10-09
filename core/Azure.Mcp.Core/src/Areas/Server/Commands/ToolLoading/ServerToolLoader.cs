@@ -82,6 +82,18 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 InputSchema = ToolSchema,
             };
 
+            if (metadata.ToolMetadata != null)
+            {
+                tool.Annotations = new ToolAnnotations
+                {
+                    DestructiveHint = metadata.ToolMetadata.Destructive,
+                    IdempotentHint = metadata.ToolMetadata.Idempotent,
+                    OpenWorldHint = metadata.ToolMetadata.OpenWorld,
+                    ReadOnlyHint = metadata.ToolMetadata.ReadOnly,
+                    // Secret and LocalRequired are not annotated as hints
+                };
+            }
+
             allToolsResponse.Tools.Add(tool);
         }
 
@@ -342,10 +354,10 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <returns></returns>
     private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool)
     {
-        if (_cachedToolLists.TryGetValue(tool, out var cachedList))
-        {
-            return cachedList;
-        }
+        // if (_cachedToolLists.TryGetValue(tool, out var cachedList))
+        // {
+        //     return cachedList;
+        // }
 
         if (string.IsNullOrWhiteSpace(request.Params?.Name))
         {
@@ -369,6 +381,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         var list = listTools
             .Select(t => t.ProtocolTool)
             .Where(t => !(options?.Value?.ReadOnly ?? false) || (t.Annotations?.ReadOnlyHint == true))
+            // SecretHint doesn't exist yet
+            // .Where(t => !(options?.Value?.Secret ?? false) || (t.Annotations?.SecretHint == true))
             .ToList();
 
         _cachedToolLists[tool] = list;

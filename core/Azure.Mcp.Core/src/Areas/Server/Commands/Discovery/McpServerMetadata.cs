@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using ModelContextProtocol.Client;
+using Azure.Mcp.Core.Commands;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 
@@ -27,6 +28,8 @@ public sealed class McpServerMetadata(string id = "", string name = "", string d
     /// Gets or sets a description of the server's purpose or capabilities.
     /// </summary>
     public string Description { get; set; } = description;
+
+    public ToolMetadata? ToolMetadata { get; set; }
 }
 
 /// <summary>

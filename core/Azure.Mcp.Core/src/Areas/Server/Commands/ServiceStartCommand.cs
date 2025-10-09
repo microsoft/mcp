@@ -85,7 +85,7 @@ public sealed class ServiceStartCommand : BaseCommand
 
         if (!IsValidMode(mode))
         {
-            throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+            throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
         }
 
         var enableInsecureTransports = parseResult.GetValueOrDefault(_enableInsecureTransportsOption);
@@ -125,7 +125,8 @@ public sealed class ServiceStartCommand : BaseCommand
     {
         return mode == ModeTypes.SingleToolProxy ||
                mode == ModeTypes.NamespaceProxy ||
-               mode == ModeTypes.All;
+               mode == ModeTypes.All ||
+               mode == ModeTypes.ConsolidatedProxy;
     }
 
     /// <summary>

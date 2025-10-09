@@ -72,13 +72,13 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
             throw new ArgumentNullException(nameof(name), "Server name cannot be null or empty.");
         }
 
-        if (_clientCache.TryGetValue(name, out var client))
-        {
-            return client;
-        }
+        // if (_clientCache.TryGetValue(name, out var client))
+        // {
+        //     return client;
+        // }
 
         var serverProvider = await FindServerProviderAsync(name);
-        client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions());
+        var client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions());
         _clientCache[name] = client;
 
         return client;

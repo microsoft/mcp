@@ -124,7 +124,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task SingleProxyMode_LoadsSingleAzureTool()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "single");
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
 
         // Act
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);

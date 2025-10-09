@@ -41,6 +41,8 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
             Secret = false
         };
 
+        public override string CompositeToolMapped => "get_azure_best_practices";
+
         private static readonly Lazy<IServiceProvider> s_serviceProvider;
 
         static BicepSchemaGetCommand()
