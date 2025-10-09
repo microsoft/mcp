@@ -224,7 +224,7 @@
 # ServiceOwners:                       @matteing
 
 # PRLabel: %tools-SignalR
-/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @Azure/azure-mcp
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @microsoft/azure-mcp
 
 # ServiceLabel: %tools-SignalR
 # ServiceOwners:                       @kenchennt @JialinXin

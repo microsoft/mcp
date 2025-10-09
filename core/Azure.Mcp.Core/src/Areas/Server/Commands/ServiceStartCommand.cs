@@ -58,6 +58,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Transport);
         command.Options.Add(ServiceOptionDefinitions.Namespace);
         command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.Tool);
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
@@ -67,6 +68,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
             ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
             ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+            ValidateNamespaceAndToolMutualExclusion(
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult);
         });
     }
 
@@ -77,11 +82,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>A configured ServiceStartOptions instance.</returns>
     protected override ServiceStartOptions BindOptions(ParseResult parseResult)
     {
+        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+
+        // When --tool switch is used, automatically change the mode to "all"
+        if (tools != null && tools.Length > 0)
+        {
+            mode = ModeTypes.All;
+        }
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
-            Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
+            Mode = mode,
+            Tool = tools,
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
@@ -176,6 +191,23 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
+    /// Validates that --namespace and --tool options are not used together.
+    /// </summary>
+    /// <param name="namespaces">The namespace values.</param>
+    /// <param name="tools">The tool values.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(string[]? namespaces, string[]? tools, CommandResult commandResult)
+    {
+        bool hasNamespace = namespaces != null && namespaces.Length > 0;
+        bool hasTool = tools != null && tools.Length > 0;
+
+        if (hasNamespace && hasTool)
+        {
+            commandResult.AddError("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+        }
+    }
+
+    /// <summary>
     /// Provides custom error messages for specific exception types to improve user experience.
     /// </summary>
     /// <param name="ex">The exception to format an error message for.</param>
@@ -186,6 +218,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
         ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
             "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
+            "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
