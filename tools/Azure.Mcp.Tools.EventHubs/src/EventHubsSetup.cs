@@ -56,8 +56,9 @@ public class EventHubsSetup : IAreaSetup
 
         var namespaceDeleteCommand = serviceProvider.GetRequiredService<NamespaceDeleteCommand>();
         namespaceGroup.AddCommand(namespaceDeleteCommand.Name, namespaceDeleteCommand);
+
         var consumerGroupGroup = new CommandGroup("consumergroup", "Event Hubs consumer group operations");
-        eventHubs.AddSubGroup(consumerGroupGroup);
+        eventHubGroup.AddSubGroup(consumerGroupGroup);
 
         var consumerGroupDeleteCommand = serviceProvider.GetRequiredService<ConsumerGroupDeleteCommand>();
         consumerGroupGroup.AddCommand(consumerGroupDeleteCommand.Name, consumerGroupDeleteCommand);

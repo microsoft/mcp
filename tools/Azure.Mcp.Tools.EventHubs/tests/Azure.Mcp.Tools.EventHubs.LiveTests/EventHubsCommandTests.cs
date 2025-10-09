@@ -463,7 +463,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             var result = await CallToolAsync(
-                "azmcp_eventhubs_consumergroup_get",
+                "azmcp_eventhubs_eventhub_consumergroup_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -550,7 +550,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_consumergroup_delete",
+                    "azmcp_eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -567,7 +567,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
             // Create the consumer group
             var result = await CallToolAsync(
-                "azmcp_eventhubs_consumergroup_update",
+                "azmcp_eventhubs_eventhub_consumergroup_update",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -592,7 +592,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_consumergroup_delete",
+                    "azmcp_eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -652,7 +652,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         {
             // Create a consumer group to get
             await CallToolAsync(
-                "azmcp_eventhubs_consumergroup_update",
+                "azmcp_eventhubs_eventhub_consumergroup_update",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -665,7 +665,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
             // Get the specific consumer group
             var result = await CallToolAsync(
-                "azmcp_eventhubs_consumergroup_get",
+                "azmcp_eventhubs_eventhub_consumergroup_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -712,7 +712,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_consumergroup_delete",
+                    "azmcp_eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -772,7 +772,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         {
             // Try to delete a non-existent consumer group - should succeed gracefully
             var result = await CallToolAsync(
-                "azmcp_eventhubs_consumergroup_delete",
+                "azmcp_eventhubs_eventhub_consumergroup_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
