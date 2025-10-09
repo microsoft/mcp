@@ -1,4 +1,7 @@
-// Copyright (c) Microsoft Corporation
+// Copyright (c) Microsoft Corporation.
+// Licensed under the MIT License.
+
+using Azure.Mcp.Core.Options;
 using System.Text.Json.Serialization;
 using Azure.Core.Serialization;
 using Azure.Mcp.Core.Options;
