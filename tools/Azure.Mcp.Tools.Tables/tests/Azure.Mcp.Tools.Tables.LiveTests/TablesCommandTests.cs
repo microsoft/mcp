@@ -27,7 +27,7 @@ namespace Azure.Mcp.Tools.Tables.LiveTests
             Assert.NotEmpty(actual.EnumerateArray());
         }
 
-        [Fact()]
+        [Fact]
         public async Task Should_list_storage_tables_with_tenant_name()
         {
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
