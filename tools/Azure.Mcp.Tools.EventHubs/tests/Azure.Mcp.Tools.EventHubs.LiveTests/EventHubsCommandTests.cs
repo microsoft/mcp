@@ -86,10 +86,10 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         var location = namespaceData.AssertProperty("location");
         Assert.False(string.IsNullOrEmpty(location.GetString()));
 
-        Assert.True(namespaceData.TryGetProperty("status", out var status));
+        var status = namespaceData.AssertProperty("status");
         Assert.False(string.IsNullOrEmpty(status.GetString()));
 
-        Assert.True(namespaceData.TryGetProperty("provisioningState", out var provisioningState));
+        var provisioningState = namespaceData.AssertProperty("provisioningState");
         Assert.False(string.IsNullOrEmpty(provisioningState.GetString()));
 
         // Verify SKU information is present and detailed
@@ -118,9 +118,9 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         Assert.Contains(Settings.ResourceBaseName, metricId.GetString());
 
         // Verify feature flags are present (even if false/null)
-        Assert.True(namespaceData.TryGetProperty("isAutoInflateEnabled", out _));
-        Assert.True(namespaceData.TryGetProperty("kafkaEnabled", out _));
-        Assert.True(namespaceData.TryGetProperty("zoneRedundant", out _));
+        namespaceData.AssertProperty("isAutoInflateEnabled");
+        namespaceData.AssertProperty("kafkaEnabled");
+        namespaceData.AssertProperty("zoneRedundant");
     }
 
     [Fact]
@@ -158,12 +158,14 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             });
 
         // Verify creation response
-        var operation = result.AssertProperty("operation");
-        Assert.Equal(JsonValueKind.Object, operation.ValueKind);
+        var namespaceData = result.AssertProperty("namespace");
+        Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
 
-        var operationStatus = operation.GetProperty("status").GetString();
-        Assert.True(operationStatus == "Succeeded" || operationStatus == "InProgress", 
-            $"Operation status should be Succeeded or InProgress, but was {operationStatus}");
+        var namespaceName = namespaceData.GetProperty("name").GetString();
+        Assert.Equal(testNamespaceName, namespaceName);
+
+        var namespaceLocation = namespaceData.GetProperty("location").GetString();
+        Assert.Contains("eastus", namespaceLocation, StringComparison.OrdinalIgnoreCase);
 
         // Cleanup - delete the test namespace
         try
@@ -194,17 +196,15 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "namespace", Settings.ResourceBaseName },
-                { "location", "East US" },
-                { "sku-name", "Standard" }
+                { "tags", "{\"environment\":\"test\",\"updated\":\"true\"}" }
             });
 
         // Verify update response
-        var operation = result.AssertProperty("operation");
-        Assert.Equal(JsonValueKind.Object, operation.ValueKind);
+        var namespaceData = result.AssertProperty("namespace");
+        Assert.Equal(JsonValueKind.Object, namespaceData.ValueKind);
 
-        var operationStatus = operation.GetProperty("status").GetString();
-        Assert.True(operationStatus == "Succeeded" || operationStatus == "InProgress", 
-            $"Operation status should be Succeeded or InProgress, but was {operationStatus}");
+        var namespaceName = namespaceData.GetProperty("name").GetString();
+        Assert.Equal(Settings.ResourceBaseName, namespaceName);
     }
 
     [Fact]
@@ -223,12 +223,11 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             });
 
         // Verify deletion response for non-existent resource
-        var operation = result.AssertProperty("operation");
-        Assert.Equal(JsonValueKind.Object, operation.ValueKind);
+        var deleteResult = result.AssertProperty("success");
+        Assert.True(deleteResult.GetBoolean(), "Delete operation should succeed even for non-existent resources");
 
-        var operationStatus = operation.GetProperty("status").GetString();
-        Assert.True(operationStatus == "Succeeded" || operationStatus == "NotFound", 
-            $"Operation status should be Succeeded or NotFound for non-existent resource, but was {operationStatus}");
+        var message = result.AssertProperty("message");
+        Assert.False(string.IsNullOrEmpty(message.GetString()));
     }
 
     [Fact]
@@ -304,7 +303,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "2" },
-                { "message-retention", "1" }
+                { "message-retention-in-hours", "1" }
             });
 
         // Verify creation response
@@ -351,7 +350,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "4" },
-                { "message-retention", "2" }
+                { "message-retention-in-hours", "48" }
             });
 
         try
@@ -368,8 +367,13 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 });
 
             // Verify single event hub response
-            var eventHub = result.AssertProperty("eventHub");
-            Assert.Equal(JsonValueKind.Object, eventHub.ValueKind);
+            var eventHubs = result.AssertProperty("eventHubs");
+            Assert.Equal(JsonValueKind.Array, eventHubs.ValueKind);
+            
+            var eventHubArray = eventHubs.EnumerateArray().ToList();
+            Assert.Single(eventHubArray);
+            
+            var eventHub = eventHubArray[0];
 
             var name = eventHub.GetProperty("name").GetString();
             Assert.Equal(testEventHubName, name);
@@ -431,12 +435,11 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             });
 
         // Verify deletion response for non-existent resource
-        var operation = result.AssertProperty("operation");
-        Assert.Equal(JsonValueKind.Object, operation.ValueKind);
-
-        var operationStatus = operation.GetProperty("status").GetString();
-        Assert.True(operationStatus == "Succeeded" || operationStatus == "NotFound", 
-            $"Operation status should be Succeeded or NotFound for non-existent resource, but was {operationStatus}");
+        var deleted = result.AssertProperty("deleted");
+        // Should return false since the event hub doesn't exist, but that's still a successful outcome
+        
+        var eventHubName = result.AssertProperty("eventHubName");
+        Assert.Equal(nonExistentEventHub, eventHubName.GetString());
     }
 
     [Fact]
@@ -454,7 +457,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "2" },
-                { "message-retention", "1" }
+                { "message-retention-in-hours", "1" }
             });
 
         try
@@ -470,7 +473,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 });
 
             // Should successfully retrieve the list of consumer groups
-            var consumerGroups = result.AssertProperty("consumerGroups");
+            var consumerGroups = result.AssertProperty("results");
             Assert.Equal(JsonValueKind.Array, consumerGroups.ValueKind);
 
             // Should contain at least the default $Default consumer group
@@ -538,7 +541,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "2" },
-                { "message-retention", "1" }
+                { "message-retention-in-hours", "1" }
             });
 
         try
@@ -642,7 +645,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "2" },
-                { "message-retention", "1" }
+                { "message-retention-in-hours", "1" }
             });
 
         try
@@ -673,8 +676,13 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 });
 
             // Verify single consumer group response
-            var consumerGroup = result.AssertProperty("consumerGroup");
-            Assert.Equal(JsonValueKind.Object, consumerGroup.ValueKind);
+            var consumerGroups = result.AssertProperty("results");
+            Assert.Equal(JsonValueKind.Array, consumerGroups.ValueKind);
+            
+            var consumerGroupArray = consumerGroups.EnumerateArray().ToList();
+            Assert.Single(consumerGroupArray);
+            
+            var consumerGroup = consumerGroupArray[0];
 
             var name = consumerGroup.GetProperty("name").GetString();
             Assert.Equal(testConsumerGroupName, name);
@@ -697,8 +705,8 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             var creationTime = consumerGroup.AssertProperty("creationTime");
             Assert.NotEqual(JsonValueKind.Null, creationTime.ValueKind);
 
-            var updatedAt = consumerGroup.AssertProperty("updatedAt");
-            Assert.NotEqual(JsonValueKind.Null, updatedAt.ValueKind);
+            var updatedTime = consumerGroup.AssertProperty("updatedTime");
+            Assert.NotEqual(JsonValueKind.Null, updatedTime.ValueKind);
 
             // Cleanup - delete the test consumer group
             try
@@ -757,7 +765,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                 { "namespace", Settings.ResourceBaseName },
                 { "eventhub", testEventHubName },
                 { "partition-count", "2" },
-                { "message-retention", "1" }
+                { "message-retention-in-hours", "1" }
             });
 
         try
@@ -774,13 +782,15 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                     { "consumer-group", nonExistentConsumerGroup }
                 });
 
-            // Verify deletion response for non-existent resource
-            var operation = result.AssertProperty("operation");
-            Assert.Equal(JsonValueKind.Object, operation.ValueKind);
-
-            var operationStatus = operation.GetProperty("status").GetString();
-            Assert.True(operationStatus == "Succeeded" || operationStatus == "NotFound", 
-                $"Operation status should be Succeeded or NotFound for non-existent resource, but was {operationStatus}");
+        // Verify deletion response for non-existent resource
+        var deleted = result.AssertProperty("deleted");
+        // Should return false since the consumer group doesn't exist, but that's still a successful outcome
+        
+        var consumerGroupName = result.AssertProperty("consumerGroupName");
+        Assert.Equal(nonExistentConsumerGroup, consumerGroupName.GetString());
+        
+        var eventHubName = result.AssertProperty("eventHubName");
+        Assert.Equal(testEventHubName, eventHubName.GetString());
         }
         finally
         {

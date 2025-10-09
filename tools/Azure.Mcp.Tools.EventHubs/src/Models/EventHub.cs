@@ -6,13 +6,13 @@ using System.Text.Json.Serialization;
 namespace Azure.Mcp.Tools.EventHubs.Models;
 
 public record EventHub(
-    [property: JsonPropertyName("name")] string Name,
-    [property: JsonPropertyName("id")] string Id,
-    [property: JsonPropertyName("resourceGroup")] string ResourceGroup,
-    [property: JsonPropertyName("location")] string? Location,
-    [property: JsonPropertyName("partitionCount")] int? PartitionCount,
-    [property: JsonPropertyName("messageRetentionInDays")] int? MessageRetentionInDays,
-    [property: JsonPropertyName("status")] string? Status,
-    [property: JsonPropertyName("createdOn")] DateTimeOffset? CreatedOn,
-    [property: JsonPropertyName("updatedOn")] DateTimeOffset? UpdatedOn,
-    [property: JsonPropertyName("partitionIds")] IReadOnlyList<string>? PartitionIds);
+    [property: JsonPropertyName(EventHubsModelDefinitions.ResourceName)] string Name,
+    [property: JsonPropertyName(EventHubsModelDefinitions.ResourceId)] string Id,
+    [property: JsonPropertyName(EventHubsModelDefinitions.ResourceGroup)] string ResourceGroup,
+    [property: JsonPropertyName(EventHubsModelDefinitions.Location)] string? Location,
+    [property: JsonPropertyName(EventHubsModelDefinitions.PartitionCount)] int? PartitionCount,
+    [property: JsonPropertyName(EventHubsModelDefinitions.MessageRetentionInDays)] int? MessageRetentionInDays,
+    [property: JsonPropertyName(EventHubsModelDefinitions.Status)] string? Status,
+    [property: JsonPropertyName(EventHubsModelDefinitions.CreatedOn)] DateTimeOffset? CreatedOn,
+    [property: JsonPropertyName(EventHubsModelDefinitions.UpdatedOn)] DateTimeOffset? UpdatedOn,
+    [property: JsonPropertyName(EventHubsModelDefinitions.PartitionIds)] IReadOnlyList<string>? PartitionIds);

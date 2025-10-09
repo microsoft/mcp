@@ -74,15 +74,15 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
             var eventHubsService = context.GetService<IEventHubsService>();
 
             var deleted = await eventHubsService.DeleteConsumerGroupAsync(
-                options.ConsumerGroupName,
-                options.EventHubName,
-                options.NamespaceName,
+                options.ConsumerGroup!,
+                options.EventHub!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroupName, options.EventHubName, options.NamespaceName, options.ResourceGroup!), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);
+            context.Response.Results = ResponseResult.Create(new(deleted, options.ConsumerGroup!, options.EventHub!, options.Namespace!, options.ResourceGroup!), EventHubsJsonContext.Default.ConsumerGroupDeleteCommandResult);
         }
         catch (Exception ex)
         {

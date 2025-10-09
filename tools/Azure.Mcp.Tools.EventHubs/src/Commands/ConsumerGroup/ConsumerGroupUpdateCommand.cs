@@ -57,9 +57,9 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
-        options.EventHubName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name) ?? string.Empty;
-        options.ConsumerGroupName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name) ?? string.Empty;
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name);
+        options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
         options.UserMetadata = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.UserMetadataOption.Name);
         return options;
     }
@@ -78,9 +78,9 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
             var eventHubsService = context.GetService<IEventHubsService>();
 
             var consumerGroup = await eventHubsService.CreateOrUpdateConsumerGroupAsync(
-                options.ConsumerGroupName,
-                options.EventHubName,
-                options.NamespaceName,
+                options.ConsumerGroup!,
+                options.EventHub!,
+                options.Namespace!,
                 options.ResourceGroup!,
                 options.Subscription!,
                 options.UserMetadata,

@@ -104,7 +104,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
         options.Location = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.LocationOption.Name);
         options.SkuName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuNameOption.Name);
         options.SkuTier = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.SkuTierOption.Name);

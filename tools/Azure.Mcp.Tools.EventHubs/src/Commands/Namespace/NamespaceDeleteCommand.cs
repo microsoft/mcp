@@ -57,7 +57,7 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
         return options;
     }
 

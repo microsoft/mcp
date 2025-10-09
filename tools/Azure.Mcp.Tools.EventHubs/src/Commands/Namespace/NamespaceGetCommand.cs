@@ -68,7 +68,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace);
+        options.Namespace ??= parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
         return options;
     }
 
@@ -86,13 +86,13 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             var eventHubsService = context.GetService<IEventHubsService>();
 
             // Determine if this is a single namespace request or list request
-            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.NamespaceName);
+            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.Namespace);
 
             if (isSingleNamespaceRequest)
             {
                 // Get single namespace with detailed information
                 var namespaceDetails = await eventHubsService.GetNamespaceAsync(
-                    options.NamespaceName!,
+                    options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,

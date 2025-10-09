@@ -59,7 +59,7 @@ public class NamespaceGetCommandTests
                     "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg-eventhubs-prod/providers/Microsoft.EventHub/namespaces/eh-namespace-prod-001",
                     "rg-eventhubs-prod",
                     "East US",
-                    new EventHubsSku("Standard"),
+                    new ResourceManager.EventHubs.Models.EventHubsSku("Standard"),
                     "Active",
                     "Succeeded",
                     DateTimeOffset.UtcNow.AddDays(-30),

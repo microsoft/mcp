@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Tools.EventHubs.Commands;
 using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.ResourceManager.EventHubs;
 using Azure.ResourceManager.EventHubs.Models;
@@ -74,12 +73,16 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static Namespace ConvertToNamespace(EventHubsNamespaceData namespaceData, string resourceGroup)
     {
-        return new Namespace(
+            return new Namespace(
             Name: namespaceData.Name,
-            Id: namespaceData.Id?.ToString() ?? string.Empty,
+            Id: namespaceData.Id.ToString(),
             ResourceGroup: resourceGroup,
             Location: namespaceData.Location.ToString(),
-            Sku: namespaceData.Sku!,
+            Sku: new(
+                Name: namespaceData.Sku.Name.ToString(),
+                Tier: namespaceData.Sku.Tier.ToString(),
+                Capacity: namespaceData.Sku.Capacity
+            ),
             Status: namespaceData.Status?.ToString(),
             ProvisioningState: namespaceData.ProvisioningState?.ToString(),
             CreationTime: namespaceData.CreatedOn,
@@ -167,7 +170,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             // Set SKU if provided
             if (!string.IsNullOrEmpty(skuName))
             {
-                namespaceData.Sku = new EventHubsSku(skuName)
+                namespaceData.Sku = new ResourceManager.EventHubs.Models.EventHubsSku(skuName)
                 {
                     Tier = skuTier switch
                     {
@@ -260,6 +263,13 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
                 "Successfully deleted Event Hubs namespace '{NamespaceName}' from resource group '{ResourceGroup}'",
                 namespaceName, resourceGroup);
 
+            return true;
+        }
+        catch (RequestFailedException ex) when (ex.Status == 404)
+        {
+            _logger.LogInformation(
+                "Event Hubs namespace '{NamespaceName}' not found in resource group '{ResourceGroup}'",
+                namespaceName, resourceGroup);
             return true;
         }
         catch (Exception ex)
@@ -415,7 +425,11 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
             if (messageRetentionInHours.HasValue)
             {
-                eventHubData.RetentionDescription.RetentionTimeInHours = messageRetentionInHours.Value;
+                eventHubData.RetentionDescription = new Azure.ResourceManager.EventHubs.Models.RetentionDescription
+                {
+                    RetentionTimeInHours = messageRetentionInHours.Value,
+                    CleanupPolicy = Azure.ResourceManager.EventHubs.Models.CleanupPolicyRetentionDescription.Delete
+                };
             }
 
             var operation = await namespaceResource.Value.GetEventHubs()
@@ -450,30 +464,46 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-
-            if (resourceGroupResource?.Value == null)
+            
+            try
             {
-                throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+                if (resourceGroupResource?.Value == null)
+                {
+                    _logger.LogInformation("Resource group '{ResourceGroup}' not found, event hub '{EventHubName}' cannot exist", resourceGroup, eventHubName);
+                    return false;
+                }
+
+                var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetIfExistsAsync(namespaceName);
+
+                if (namespaceResource?.Value == null)
+                {
+                    _logger.LogInformation("Event Hubs namespace '{NamespaceName}' not found in resource group '{ResourceGroup}', event hub '{EventHubName}' cannot exist", namespaceName, resourceGroup, eventHubName);
+                    return false;
+                }
+
+                var eventHubResource = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName);
+
+                if (eventHubResource?.Value == null)
+                {
+                    _logger.LogInformation("Event hub '{EventHubName}' not found in namespace '{NamespaceName}', nothing to delete", eventHubName, namespaceName);
+                    return false;
+                }
+
+                await eventHubResource.Value.DeleteAsync(WaitUntil.Completed);
+                return true;
             }
-
-            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
-
-            if (namespaceResource?.Value == null)
+            catch (RequestFailedException ex) when (ex.Status == 404)
             {
-                throw new KeyNotFoundException($"Event Hubs namespace '{namespaceName}' not found in resource group '{resourceGroup}'");
-            }
-
-            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName);
-
-            if (eventHubResource?.Value == null)
-            {
-                _logger.LogInformation("Event hub '{EventHubName}' not found in namespace '{NamespaceName}', nothing to delete", eventHubName, namespaceName);
+                _logger.LogInformation("Resource not found during event hub delete operation - considering successful. Event hub: '{EventHubName}'", eventHubName);
                 return false;
             }
-
-            await eventHubResource.Value.DeleteAsync(WaitUntil.Completed);
-            return true;
+            catch (InvalidOperationException ex) when (ex.Message.Contains("404"))
+            {
+                _logger.LogInformation("Resource not found during event hub delete operation - considering successful. Event hub: '{EventHubName}', Error: {ErrorMessage}", eventHubName, ex.Message);
+                return false;
+            }
         }
         catch (Exception ex)
         {
@@ -558,15 +588,53 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetAsync(namespaceName);
-            var eventHubResource = await namespaceResource.Value.GetEventHubs().GetAsync(eventHubName);
+            
+            try
+            {
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                if (resourceGroupResource?.Value == null)
+                {
+                    _logger.LogInformation("Resource group '{ResourceGroup}' not found, consumer group '{ConsumerGroupName}' cannot exist", resourceGroup, consumerGroupName);
+                    return false;
+                }
 
-            var consumerGroupResource = await eventHubResource.Value.GetEventHubsConsumerGroups().GetAsync(consumerGroupName);
+                var namespaceResource = await resourceGroupResource.Value.GetEventHubsNamespaces().GetIfExistsAsync(namespaceName);
 
-            await consumerGroupResource.Value.DeleteAsync(WaitUntil.Completed);
+                if (namespaceResource?.Value == null)
+                {
+                    _logger.LogInformation("Event Hubs namespace '{NamespaceName}' not found in resource group '{ResourceGroup}', consumer group '{ConsumerGroupName}' cannot exist", namespaceName, resourceGroup, consumerGroupName);
+                    return false;
+                }
 
-            return true;
+                var eventHubResource = await namespaceResource.Value.GetEventHubs().GetIfExistsAsync(eventHubName);
+
+                if (eventHubResource?.Value == null)
+                {
+                    _logger.LogInformation("Event hub '{EventHubName}' not found in namespace '{NamespaceName}', consumer group '{ConsumerGroupName}' cannot exist", eventHubName, namespaceName, consumerGroupName);
+                    return false;
+                }
+
+                var consumerGroupResource = await eventHubResource.Value.GetEventHubsConsumerGroups().GetIfExistsAsync(consumerGroupName);
+
+                if (consumerGroupResource?.Value == null)
+                {
+                    _logger.LogInformation("Consumer group '{ConsumerGroupName}' not found in event hub '{EventHubName}', nothing to delete", consumerGroupName, eventHubName);
+                    return false;
+                }
+
+                await consumerGroupResource.Value.DeleteAsync(WaitUntil.Completed);
+                return true;
+            }
+            catch (RequestFailedException ex) when (ex.Status == 404)
+            {
+                _logger.LogInformation("Resource not found during consumer group delete operation - considering successful. Consumer group: '{ConsumerGroupName}'", consumerGroupName);
+                return false;
+            }
+            catch (InvalidOperationException ex) when (ex.Message.Contains("404"))
+            {
+                _logger.LogInformation("Resource not found during consumer group delete operation - considering successful. Consumer group: '{ConsumerGroupName}', Error: {ErrorMessage}", consumerGroupName, ex.Message);
+                return false;
+            }
         }
         catch (Exception ex)
         {

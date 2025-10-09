@@ -71,8 +71,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
         return options;
     }
 

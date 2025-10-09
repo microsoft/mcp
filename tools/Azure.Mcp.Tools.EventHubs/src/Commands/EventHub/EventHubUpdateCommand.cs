@@ -6,7 +6,6 @@ using Azure.Identity;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
-using Azure.Mcp.Tools.EventHubs.Models;
 using Azure.Mcp.Tools.EventHubs.Options;
 using Azure.Mcp.Tools.EventHubs.Options.EventHub;
 using Azure.Mcp.Tools.EventHubs.Services;
@@ -73,11 +72,11 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.Namespace) ?? string.Empty;
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubName) ?? string.Empty;
-        options.PartitionCount = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.PartitionCount);
-        options.MessageRetentionInHours = parseResult.GetValueOrDefault<long?>(EventHubsOptionDefinitions.MessageRetentionInHours);
-        options.Status = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubStatus);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name) ?? string.Empty;
+        options.PartitionCount = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.PartitionCountOption.Name);
+        options.MessageRetentionInHours = parseResult.GetValueOrDefault<long?>(EventHubsOptionDefinitions.MessageRetentionInHoursOption.Name);
+        options.Status = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.StatusOption.Name);
         return options;
     }
 

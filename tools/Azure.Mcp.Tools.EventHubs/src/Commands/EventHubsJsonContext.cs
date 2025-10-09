@@ -6,6 +6,7 @@ using Azure.Mcp.Tools.EventHubs.Commands.EventHub;
 using Azure.Mcp.Tools.EventHubs.Commands.ConsumerGroup;
 using Azure.Mcp.Tools.EventHubs.Commands.Namespace;
 using Azure.Mcp.Tools.EventHubs.Models;
+using Azure.ResourceManager.EventHubs.Models;
 
 namespace Azure.Mcp.Tools.EventHubs.Commands;
 
@@ -19,6 +20,7 @@ namespace Azure.Mcp.Tools.EventHubs.Commands;
 [JsonSerializable(typeof(Models.EventHub))]
 [JsonSerializable(typeof(EventHubUpdateCommand.EventHubUpdateCommandResult))]
 [JsonSerializable(typeof(Models.Namespace))]
+[JsonSerializable(typeof(Models.EventHubsSku))]
 [JsonSerializable(typeof(NamespaceDeleteCommand.NamespaceDeleteCommandResult))]
 [JsonSerializable(typeof(NamespaceGetCommand.NamespaceGetCommandResult))]
 [JsonSerializable(typeof(NamespaceGetCommand.NamespacesGetCommandResult))]
