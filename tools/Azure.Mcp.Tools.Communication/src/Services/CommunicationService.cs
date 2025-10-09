@@ -115,7 +115,12 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
 
         if (to.Any(string.IsNullOrWhiteSpace))
             throw new ArgumentException("Recipient email addresses cannot be empty.", nameof(to));
-
+        if(cc != null && cc.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("CC email addresses should not be empty if provided by user.", nameof(cc));
+        if(bcc != null && bcc.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("BCC email addresses should not be empty if provided by user.", nameof(bcc));
+        if(replyTo != null && replyTo.Any(string.IsNullOrWhiteSpace))
+            throw new ArgumentException("Reply-To email addresses should not be empty if provided by user.", nameof(replyTo));
         try
         {
             // Create email client with credential from base class
