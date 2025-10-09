@@ -515,14 +515,13 @@ azmcp communication email send \
 
 # Send to multiple recipients with BCC and reply-to
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send \
-    --endpoint "https://mycomms.communication.azure.com" \
-    --sender "notifications@verified-domain.com" \
-    --to "recipient1@example.com,recipient2@example.com" \
-    --bcc "archive@example.com" \
-    --reply-to "support@example.com" \
-    --subject "System Notification" \
-    --message "This is an automated notification."
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --sender "notifications@verified-domain.com" \
+                               --to "recipient1@example.com,recipient2@example.com" \
+                               --bcc "archive@example.com" \
+                               --reply-to "support@example.com" \
+                               --subject "System Notification" \
+                               --message "This is an automated notification."
 ```
 
 **Options:**
