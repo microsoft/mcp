@@ -24,7 +24,8 @@ public abstract class BaseTablesCommand<[DynamicallyAccessedMembers(TrimAnnotati
             if (string.IsNullOrWhiteSpace(storageAccount) && string.IsNullOrWhiteSpace(cosmosDbAccount))
             {
                 commandResult.AddError($"One of --{TablesOptionDefinitions.StorageAccountName} or --{TablesOptionDefinitions.CosmosDbAccountName} must be provided.");
-            } else if (!string.IsNullOrWhiteSpace(storageAccount) && !string.IsNullOrWhiteSpace(cosmosDbAccount))
+            }
+            else if (!string.IsNullOrWhiteSpace(storageAccount) && !string.IsNullOrWhiteSpace(cosmosDbAccount))
             {
                 commandResult.AddError($"Only one of --{TablesOptionDefinitions.StorageAccountName} or --{TablesOptionDefinitions.CosmosDbAccountName} can be provided.");
             }

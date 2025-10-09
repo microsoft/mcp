@@ -144,7 +144,7 @@ public class TablesListCommandTests
         // Arrange
         _tablesService.ListTables(
             Arg.Is(_knownCosmosDbAccount),
-            false,
+            true,
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>())
@@ -237,7 +237,7 @@ public class TablesListCommandTests
 
         _tablesService.ListTables(
             Arg.Is(_knownCosmosDbAccount),
-            false,
+            true,
             Arg.Is(_knownSubscription),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>())
