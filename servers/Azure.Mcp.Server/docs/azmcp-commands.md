@@ -494,12 +494,11 @@ azmcp communication email send \
 # Examples:
 # Send plain text email
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send \
-    --endpoint "https://mycomms.communication.azure.com" \
-    --sender "sender@verified-domain.com" \
-    --to "recipient@example.com" \
-    --subject "Important message" \
-    --message "Hello from Azure Communication Services!"
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --sender "sender@verified-domain.com" \
+                               --to "recipient@example.com" \
+                               --subject "Important message" \
+                               --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC and sender name
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
