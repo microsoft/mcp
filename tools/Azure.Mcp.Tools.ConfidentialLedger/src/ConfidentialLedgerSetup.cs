@@ -17,6 +17,7 @@ public class ConfidentialLedgerSetup : IAreaSetup
     {
         services.AddSingleton<IConfidentialLedgerService, ConfidentialLedgerService>();
         services.AddSingleton<LedgerEntryAppendCommand>();
+        services.AddSingleton<LedgerEntryGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -29,6 +30,9 @@ public class ConfidentialLedgerSetup : IAreaSetup
 
         var append = serviceProvider.GetRequiredService<LedgerEntryAppendCommand>();
         entries.AddCommand(append.Name, append);
+
+        var get = serviceProvider.GetRequiredService<LedgerEntryGetCommand>();
+        entries.AddCommand(get.Name, get);
 
         return root;
     }

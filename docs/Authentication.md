@@ -26,13 +26,13 @@ Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity lib
 
 ### Production Environments
 
-For Kubernetes workloads or Azure-hosted apps, set the following environment variable to `true`:
+For Kubernetes workloads or Azure-hosted apps, set the following environment variable:
 
 ```bash
-export AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS=true
+export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-This configuration modifies the credential chain to enable authentication via workload identity and managed identity, in that order.
+This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order.
 
 ### Development Environments
 

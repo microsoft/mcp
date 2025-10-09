@@ -134,6 +134,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_confidentialledger_entries_append | Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id> |
 | azmcp_confidentialledger_entries_append | Create an immutable ledger entry in <ledger_name> with content {"audit": "log"} |
 | azmcp_confidentialledger_entries_append | Write an entry to confidential ledger <ledger_name> |
+| azmcp_confidentialledger_entries_get | Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name> |
+| azmcp_confidentialledger_entries_get | Get transaction <transaction_id> from ledger <ledger_name> |
 
 ## Azure Cosmos DB
 
