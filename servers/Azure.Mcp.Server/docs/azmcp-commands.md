@@ -503,15 +503,14 @@ azmcp communication email send \
 
 # Send HTML-formatted email with CC and sender name
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send \
-    --endpoint "https://mycomms.communication.azure.com" \
-    --sender "sender@verified-domain.com" \
-    --sender-name "Support Team" \
-    --to "recipient@example.com" \
-    --cc "manager@example.com" \
-    --subject "Monthly Report" \
-    --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
-    --is-html
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --sender "sender@verified-domain.com" \
+                               --sender-name "Support Team" \
+                               --to "recipient@example.com" \
+                               --cc "manager@example.com" \
+                               --subject "Monthly Report" \
+                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+                               --is-html
 
 # Send to multiple recipients with BCC and reply-to
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
