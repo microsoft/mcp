@@ -31,11 +31,12 @@ function Validate-Nuget-Packages {
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
             Write-Host "Validating NuGet package for server $ServerName"
 
-            dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list | Out-Null
+            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
                 Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+                Write-Host $output
                 $hasFailures = $true
             }
         }
@@ -79,11 +80,12 @@ function Validate-Npm-Packages {
                     Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
                     npm install $mainPackage.FullName | Out-Null
 
-                    npx azmcp tools list | Out-Null
+                    $output = npx azmcp tools list
                     if ($LASTEXITCODE -eq 0) {
                         Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                     } else {
                         Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+                        Write-Host $output
                         $hasFailures = $true
                     }
                 }
