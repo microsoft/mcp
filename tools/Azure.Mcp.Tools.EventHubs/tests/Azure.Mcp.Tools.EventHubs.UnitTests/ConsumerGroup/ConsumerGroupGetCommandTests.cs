@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.EventHubs.Commands;
@@ -11,7 +12,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.Text.Json;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.ConsumerGroup;
@@ -135,10 +135,10 @@ public class ConsumerGroupGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
 
         var expectedConsumerGroup = new Models.ConsumerGroup(
-            "test-consumer-group", 
-            "test-id", 
-            "test-rg", 
-            "test-namespace", 
+            "test-consumer-group",
+            "test-id",
+            "test-rg",
+            "test-namespace",
             "test-eventhub",
             "East US",
             "test metadata",
@@ -225,7 +225,7 @@ public class ConsumerGroupGetCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub");
-        
+
         _eventHubsService.ListConsumerGroupsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

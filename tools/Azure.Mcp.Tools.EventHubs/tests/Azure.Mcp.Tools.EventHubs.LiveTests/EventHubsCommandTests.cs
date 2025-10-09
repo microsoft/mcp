@@ -127,7 +127,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_CreateNamespace_Successfully()
     {
         var testNamespaceName = $"{Settings.ResourceBaseName}-test-create";
-        
+
         // First, ensure the namespace doesn't exist by trying to delete it (ignore failures)
         try
         {
@@ -211,7 +211,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_DeleteNamespace_HandleNonExistentNamespace()
     {
         var nonExistentNamespace = $"{Settings.ResourceBaseName}-nonexistent-{Guid.NewGuid():N}";
-        
+
         // Try to delete a non-existent namespace - should succeed gracefully
         var result = await CallToolAsync(
             "azmcp_eventhubs_namespace_delete",
@@ -248,12 +248,12 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Event hubs array might be empty in a new namespace, which is valid
         var eventHubArray = eventHubs.EnumerateArray().ToList();
-        
+
         // If event hubs exist, verify their structure
         if (eventHubArray.Count > 0)
         {
             var firstEventHub = eventHubArray[0];
-            
+
             // Verify basic properties
             var name = firstEventHub.AssertProperty("name");
             Assert.False(string.IsNullOrEmpty(name.GetString()));
@@ -274,7 +274,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_CreateEventHub_Successfully()
     {
         var testEventHubName = $"test-eventhub-{Guid.NewGuid():N}";
-        
+
         // First, ensure the event hub doesn't exist by trying to delete it (ignore failures)
         try
         {
@@ -339,7 +339,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_GetSingleEventHub_Successfully()
     {
         var testEventHubName = $"test-get-eventhub-{Guid.NewGuid():N}";
-        
+
         // First create an event hub to get
         await CallToolAsync(
             "azmcp_eventhubs_eventhub_update",
@@ -369,10 +369,10 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             // Verify single event hub response
             var eventHubs = result.AssertProperty("eventHubs");
             Assert.Equal(JsonValueKind.Array, eventHubs.ValueKind);
-            
+
             var eventHubArray = eventHubs.EnumerateArray().ToList();
             Assert.Single(eventHubArray);
-            
+
             var eventHub = eventHubArray[0];
 
             var name = eventHub.GetProperty("name").GetString();
@@ -422,7 +422,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_DeleteEventHub_HandleNonExistentEventHub()
     {
         var nonExistentEventHub = $"nonexistent-eventhub-{Guid.NewGuid():N}";
-        
+
         // Try to delete a non-existent event hub - should succeed gracefully
         var result = await CallToolAsync(
             "azmcp_eventhubs_eventhub_delete",
@@ -437,7 +437,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         // Verify deletion response for non-existent resource
         var deleted = result.AssertProperty("deleted");
         // Should return false since the event hub doesn't exist, but that's still a successful outcome
-        
+
         var eventHubName = result.AssertProperty("eventHubName");
         Assert.Equal(nonExistentEventHub, eventHubName.GetString());
     }
@@ -446,7 +446,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_ListConsumerGroups_Successfully()
     {
         var testEventHubName = $"test-cg-list-eventhub-{Guid.NewGuid():N}";
-        
+
         // First create an event hub for consumer groups
         await CallToolAsync(
             "azmcp_eventhubs_eventhub_update",
@@ -530,7 +530,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     {
         var testEventHubName = $"test-cg-create-eventhub-{Guid.NewGuid():N}";
         var testConsumerGroupName = $"test-cg-{Guid.NewGuid():N}";
-        
+
         // First create an event hub for the consumer group
         await CallToolAsync(
             "azmcp_eventhubs_eventhub_update",
@@ -634,7 +634,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     {
         var testEventHubName = $"test-cg-get-eventhub-{Guid.NewGuid():N}";
         var testConsumerGroupName = $"test-get-cg-{Guid.NewGuid():N}";
-        
+
         // First create an event hub for the consumer group
         await CallToolAsync(
             "azmcp_eventhubs_eventhub_update",
@@ -678,10 +678,10 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             // Verify single consumer group response
             var consumerGroups = result.AssertProperty("results");
             Assert.Equal(JsonValueKind.Array, consumerGroups.ValueKind);
-            
+
             var consumerGroupArray = consumerGroups.EnumerateArray().ToList();
             Assert.Single(consumerGroupArray);
-            
+
             var consumerGroup = consumerGroupArray[0];
 
             var name = consumerGroup.GetProperty("name").GetString();
@@ -754,7 +754,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     {
         var testEventHubName = $"test-cg-delete-eventhub-{Guid.NewGuid():N}";
         var nonExistentConsumerGroup = $"nonexistent-cg-{Guid.NewGuid():N}";
-        
+
         // First create an event hub for the consumer group test
         await CallToolAsync(
             "azmcp_eventhubs_eventhub_update",
@@ -782,15 +782,15 @@ public class EventHubsCommandTests(ITestOutputHelper output)
                     { "consumer-group", nonExistentConsumerGroup }
                 });
 
-        // Verify deletion response for non-existent resource
-        var deleted = result.AssertProperty("deleted");
-        // Should return false since the consumer group doesn't exist, but that's still a successful outcome
-        
-        var consumerGroupName = result.AssertProperty("consumerGroupName");
-        Assert.Equal(nonExistentConsumerGroup, consumerGroupName.GetString());
-        
-        var eventHubName = result.AssertProperty("eventHubName");
-        Assert.Equal(testEventHubName, eventHubName.GetString());
+            // Verify deletion response for non-existent resource
+            var deleted = result.AssertProperty("deleted");
+            // Should return false since the consumer group doesn't exist, but that's still a successful outcome
+
+            var consumerGroupName = result.AssertProperty("consumerGroupName");
+            Assert.Equal(nonExistentConsumerGroup, consumerGroupName.GetString());
+
+            var eventHubName = result.AssertProperty("eventHubName");
+            Assert.Equal(testEventHubName, eventHubName.GetString());
         }
         finally
         {

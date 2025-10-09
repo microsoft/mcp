@@ -122,7 +122,7 @@ public class ConsumerGroupUpdateCommandTests
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
-        
+
         await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
@@ -168,7 +168,7 @@ public class ConsumerGroupUpdateCommandTests
         // Assert
         Assert.Equal(200, (int)response.Status);
         Assert.NotNull(response.Results);
-        
+
         await _eventHubsService.Received(1).CreateOrUpdateConsumerGroupAsync(
             "test-consumer-group",
             "test-eventhub",
@@ -210,7 +210,7 @@ public class ConsumerGroupUpdateCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
-        
+
         _eventHubsService.CreateOrUpdateConsumerGroupAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),

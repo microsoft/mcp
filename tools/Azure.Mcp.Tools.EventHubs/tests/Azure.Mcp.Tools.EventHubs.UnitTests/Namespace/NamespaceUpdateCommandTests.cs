@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Core.Options;
@@ -14,7 +15,6 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-using System.Net;
 using Xunit;
 
 namespace Azure.Mcp.Tools.EventHubs.UnitTests.Namespace;
@@ -118,7 +118,7 @@ public class NamespaceUpdateCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse([
             "--subscription", "test-sub",
-            "--resource-group", "test-rg", 
+            "--resource-group", "test-rg",
             "--namespace", "test-namespace",
             "--sku-name", "Premium",
             "--sku-tier", "Premium",
@@ -132,7 +132,7 @@ public class NamespaceUpdateCommandTests
             "test-sub",
             null, // location
             "Premium",
-            "Premium", 
+            "Premium",
             4,
             null, // isAutoInflateEnabled
             null, // maximumThroughputUnits
@@ -151,7 +151,7 @@ public class NamespaceUpdateCommandTests
         Assert.NotNull(response.Results);
         await _eventHubsService.Received(1).CreateOrUpdateNamespaceAsync(
             "test-namespace",
-            "test-rg", 
+            "test-rg",
             "test-sub",
             null,
             "Premium",
@@ -173,7 +173,7 @@ public class NamespaceUpdateCommandTests
         var parseResult = _command.GetCommand().Parse([
             "--subscription", "test-sub",
             "--resource-group", "test-rg",
-            "--namespace", "test-namespace", 
+            "--namespace", "test-namespace",
             "--is-auto-inflate-enabled", "true",
             "--maximum-throughput-units", "20"
         ]);
@@ -215,10 +215,10 @@ public class NamespaceUpdateCommandTests
             "--tags", "{\"environment\":\"production\",\"team\":\"platform\"}"
         ]);
 
-        var expectedTags = new Dictionary<string, string> 
-        { 
-            { "environment", "production" }, 
-            { "team", "platform" } 
+        var expectedTags = new Dictionary<string, string>
+        {
+            { "environment", "production" },
+            { "team", "platform" }
         };
 
         var updatedNamespace = CreateSampleNamespace();
@@ -234,9 +234,9 @@ public class NamespaceUpdateCommandTests
             Arg.Any<int?>(),
             Arg.Any<bool?>(),
             Arg.Any<bool?>(),
-            Arg.Is<Dictionary<string, string>?>(tags => 
-                tags != null && 
-                tags.ContainsKey("environment") && 
+            Arg.Is<Dictionary<string, string>?>(tags =>
+                tags != null &&
+                tags.ContainsKey("environment") &&
                 tags["environment"] == "production" &&
                 tags.ContainsKey("team") &&
                 tags["team"] == "platform"),

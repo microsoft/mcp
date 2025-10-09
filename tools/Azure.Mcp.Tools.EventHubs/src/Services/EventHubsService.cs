@@ -37,7 +37,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
             {
                 // Get namespaces from specific resource group
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-                
+
                 if (resourceGroupResource?.Value == null)
                 {
                     throw new InvalidOperationException($"Resource group '{resourceGroup}' not found");
@@ -73,27 +73,27 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
 
     private static Namespace ConvertToNamespace(EventHubsNamespaceData namespaceData, string resourceGroup)
     {
-            return new Namespace(
-            Name: namespaceData.Name,
-            Id: namespaceData.Id.ToString(),
-            ResourceGroup: resourceGroup,
-            Location: namespaceData.Location.ToString(),
-            Sku: new(
-                Name: namespaceData.Sku.Name.ToString(),
-                Tier: namespaceData.Sku.Tier.ToString(),
-                Capacity: namespaceData.Sku.Capacity
-            ),
-            Status: namespaceData.Status?.ToString(),
-            ProvisioningState: namespaceData.ProvisioningState?.ToString(),
-            CreationTime: namespaceData.CreatedOn,
-            UpdatedTime: namespaceData.UpdatedOn,
-            ServiceBusEndpoint: namespaceData.ServiceBusEndpoint,
-            MetricId: namespaceData.MetricId,
-            IsAutoInflateEnabled: namespaceData.IsAutoInflateEnabled,
-            MaximumThroughputUnits: namespaceData.MaximumThroughputUnits,
-            KafkaEnabled: namespaceData.KafkaEnabled,
-            ZoneRedundant: namespaceData.ZoneRedundant,
-            Tags: namespaceData.Tags != null ? new Dictionary<string, string>(namespaceData.Tags) : null);
+        return new Namespace(
+        Name: namespaceData.Name,
+        Id: namespaceData.Id.ToString(),
+        ResourceGroup: resourceGroup,
+        Location: namespaceData.Location.ToString(),
+        Sku: new(
+            Name: namespaceData.Sku.Name.ToString(),
+            Tier: namespaceData.Sku.Tier.ToString(),
+            Capacity: namespaceData.Sku.Capacity
+        ),
+        Status: namespaceData.Status?.ToString(),
+        ProvisioningState: namespaceData.ProvisioningState?.ToString(),
+        CreationTime: namespaceData.CreatedOn,
+        UpdatedTime: namespaceData.UpdatedOn,
+        ServiceBusEndpoint: namespaceData.ServiceBusEndpoint,
+        MetricId: namespaceData.MetricId,
+        IsAutoInflateEnabled: namespaceData.IsAutoInflateEnabled,
+        MaximumThroughputUnits: namespaceData.MaximumThroughputUnits,
+        KafkaEnabled: namespaceData.KafkaEnabled,
+        ZoneRedundant: namespaceData.ZoneRedundant,
+        Tags: namespaceData.Tags != null ? new Dictionary<string, string>(namespaceData.Tags) : null);
     }
 
     public async Task<Namespace> GetNamespaceAsync(
@@ -464,7 +464,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         try
         {
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            
+
             try
             {
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -588,7 +588,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         {
             var armClient = await CreateArmClientAsync(tenant, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            
+
             try
             {
                 var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
