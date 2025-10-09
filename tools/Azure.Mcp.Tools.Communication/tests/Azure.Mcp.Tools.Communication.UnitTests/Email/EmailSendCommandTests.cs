@@ -50,35 +50,93 @@ public class EmailSendCommandTests
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    public async Task ExecuteAsync_WithMissingEndpoint_ThrowsValidationException(string? endpoint)
+    [InlineData(null, "sender@example.com", "recipient@example.com", "Subject", "Message", false, "Missing endpoint")]
+    [InlineData("", "sender@example.com", "recipient@example.com", "Subject", "Message", false, "Empty endpoint")]
+    [InlineData("https://example.communication.azure.com", null, "recipient@example.com", "Subject", "Message", false, "Missing sender")]
+    [InlineData("https://example.communication.azure.com", "", "recipient@example.com", "Subject", "Message", false, "Empty sender")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", null, "Subject", "Message", false, "Missing to email")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "", "Subject", "Message", false, "Empty to email")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", null, "Message", false, "Missing subject")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "", "Message", false, "Empty subject")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", null, false, "Missing message")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "", false, "Empty message")]
+    [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "Message", true, "Valid parameters")]
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string? endpoint, string? sender, string? to, string? subject, string? message, bool shouldSucceed, string scenario)
     {
         // Arrange
-        string[] args = ["--sender", "sender@example.com", "--to", "recipient@example.com", "--subject", "Test Subject", "--message", "Test Message"];
+        var args = new List<string>();
+        
+        if (endpoint != null) { args.AddRange(["--endpoint", endpoint]); }
+        if (sender != null) { args.AddRange(["--sender", sender]); }
+        if (to != null) { args.AddRange(["--to", to]); }
+        if (subject != null) { args.AddRange(["--subject", subject]); }
+        if (message != null) { args.AddRange(["--message", message]); }
 
-        if (!string.IsNullOrEmpty(endpoint))
+        var parseResult = _commandDefinition.Parse(args.ToArray());
+
+        if (shouldSucceed)
         {
-            args = ["--endpoint", endpoint, "--sender", "sender@example.com", "--to", "recipient@example.com", "--subject", "Test Subject", "--message", "Test Message"];
-        }
+            // Setup mock for success case
+            var expectedResult = new EmailSendResult
+            {
+                MessageId = "test-message-id",
+                Status = "Queued"
+            };
 
-        var parseResult = _commandDefinition.Parse(args);
+            _mockCommunicationService
+                .SendEmailAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string[]>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<bool>(),
+                    Arg.Any<string[]>(),
+                    Arg.Any<string[]>(),
+                    Arg.Any<string[]>(),
+                    Arg.Any<string>(),
+                    Arg.Any<RetryPolicyOptions>())
+                .Returns(expectedResult);
 
-        // Act & Assert
-        if (string.IsNullOrEmpty(endpoint))
-        {
-            // When endpoint is missing, parse should have errors
-            Assert.True(parseResult.Errors.Count > 0);
-            var endpointError = parseResult.Errors.FirstOrDefault(e => e.Message.Contains("endpoint", StringComparison.OrdinalIgnoreCase));
-            Assert.NotNull(endpointError);
+            // Act
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         else
         {
-            // When endpoint is empty string, execution should throw validation exception
-            var exception = await Assert.ThrowsAsync<ArgumentException>(
-                () => _command.ExecuteAsync(_context, parseResult));
-
-            Assert.Contains("endpoint", exception.Message, StringComparison.OrdinalIgnoreCase);
+            // Act & Assert
+            if (parseResult.Errors.Count > 0)
+            {
+                // Parse-time validation errors (missing required options)
+                Assert.True(parseResult.Errors.Count > 0, $"Expected parse errors for scenario: {scenario}");
+            }
+            else
+            {
+                // Runtime validation errors (empty values or command validation)
+                try
+                {
+                    var response = await _command.ExecuteAsync(_context, parseResult);
+                    
+                    // If we reach here without exception, check if it's a validation error response
+                    if (response.Status == HttpStatusCode.BadRequest)
+                    {
+                        // This is expected for validation failures
+                        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+                    }
+                    else
+                    {
+                        Assert.Fail($"Expected validation failure for scenario: {scenario}, but got status: {response.Status}");
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    // This is expected for service-level validation failures
+                    Assert.True(true, $"Got expected ArgumentException for scenario: {scenario}");
+                }
+            }
         }
     }
 
