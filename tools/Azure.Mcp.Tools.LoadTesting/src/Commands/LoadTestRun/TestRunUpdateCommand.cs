@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,16 +16,13 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
 {
     private const string _commandTitle = "Test Run Update";
     private readonly ILogger<TestRunUpdateCommand> _logger = logger;
-    private readonly Option<string> _testRunIdOption = OptionDefinitions.LoadTesting.TestRun;
-    private readonly Option<string> _testIdOption = OptionDefinitions.LoadTesting.Test;
-    private readonly Option<string> _displayNameOption = OptionDefinitions.LoadTesting.DisplayName;
-    private readonly Option<string> _descriptionOption = OptionDefinitions.LoadTesting.Description;
     public override string Name => "update";
     public override string Description =>
         $"""
         Updates the metadata and display properties of a completed or in-progress load test run execution.
-        This command allows you to modify descriptive information for better organization, documentation,
-        and identification of test runs without affecting the actual test execution or results.
+        This command allows you to modify descriptive information for better organization, documentation, and identification of test runs without affecting the actual test execution or results. 
+        This will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. 
+        This will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.
         """;
     public override string Title => _commandTitle;
 
@@ -32,7 +30,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -41,19 +39,19 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_testRunIdOption);
-        command.Options.Add(_testIdOption);
-        command.Options.Add(_displayNameOption);
-        command.Options.Add(_descriptionOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.TestRun);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
+        command.Options.Add(OptionDefinitions.LoadTesting.DisplayName);
+        command.Options.Add(OptionDefinitions.LoadTesting.Description);
     }
 
     protected override TestRunUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestRunId = parseResult.GetValue(_testRunIdOption);
-        options.TestId = parseResult.GetValue(_testIdOption);
-        options.DisplayName = parseResult.GetValue(_displayNameOption);
-        options.Description = parseResult.GetValue(_descriptionOption);
+        options.TestRunId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.TestRun.Name);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
+        options.DisplayName = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.DisplayName.Name);
+        options.Description = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Description.Name);
         return options;
     }
 
@@ -85,7 +83,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunUpdateCommandResult(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :
                 null;
         }
         catch (Exception ex)

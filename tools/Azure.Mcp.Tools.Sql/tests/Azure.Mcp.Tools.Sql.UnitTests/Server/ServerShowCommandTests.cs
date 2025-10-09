@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
-using System.CommandLine.Parsing;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Server;
 using Azure.Mcp.Tools.Sql.Models;
 using Azure.Mcp.Tools.Sql.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Sql.UnitTests.Server;
@@ -60,11 +60,11 @@ public class ServerShowCommandTests
 
         if (shouldSucceed)
         {
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
             Assert.Contains("required", response.Message.ToLower());
         }
     }
@@ -90,7 +90,7 @@ public class ServerShowCommandTests
             "test-server",
             "test-rg",
             "test-sub",
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(expectedServer);
 
@@ -99,7 +99,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -111,7 +111,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new KeyNotFoundException("SQL server not found")));
 
@@ -120,7 +120,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message.ToLower());
     }
 
@@ -128,12 +128,12 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_WhenAzureRequestFails404_ReturnsNotFound()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(404, "Resource not found");
+        var requestFailedException = new RequestFailedException((int)HttpStatusCode.NotFound, "Resource not found");
         _service.GetServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
@@ -142,7 +142,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(404, response.Status);
+        Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message.ToLower());
     }
 
@@ -150,12 +150,12 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_WhenAzureRequestFails403_ReturnsAuthorizationError()
     {
         // Arrange
-        var requestFailedException = new Azure.RequestFailedException(403, "Authorization failed");
+        var requestFailedException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
         _service.GetServerAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(requestFailedException));
 
@@ -164,7 +164,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(403, response.Status);
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("authorization failed", response.Message.ToLower());
     }
 
@@ -176,7 +176,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new ArgumentException("Invalid server name")));
 
@@ -185,7 +185,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("invalid parameter", response.Message.ToLower());
     }
 
@@ -197,7 +197,7 @@ public class ServerShowCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(),
+            Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.FromException<SqlServer>(new InvalidOperationException("Unexpected error")));
 
@@ -206,7 +206,7 @@ public class ServerShowCommandTests
         var response = await _command.ExecuteAsync(_context, parseResult);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Unexpected error", response.Message);
     }
 

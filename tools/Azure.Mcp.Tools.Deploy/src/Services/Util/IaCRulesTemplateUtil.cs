@@ -168,6 +168,11 @@ public static class IaCRulesTemplateUtil
             rules.Add(TemplateService.ProcessTemplate("IaCRules/functionapp-rules", parameters.ToDictionary()));
         }
 
+        if (parameters.ResourceTypes.Contains(AzureServiceNames.AzureStorage))
+        {
+            rules.Add(TemplateService.ProcessTemplate("IaCRules/storage-rules", parameters.ToDictionary()));
+        }
+
         return string.Join(Environment.NewLine, rules);
     }
 

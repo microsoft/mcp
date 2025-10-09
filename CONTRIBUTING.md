@@ -36,6 +36,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - [Running the Analysis](#running-the-analysis)
       - [Installing Git Hooks](#installing-git-hooks)
     - [Model Context Protocol (MCP)](#model-context-protocol-mcp)
+    - [Package README](#package-readme)
   - [Advanced Configuration](#advanced-configuration)
     - [Configuring External MCP Servers](#configuring-external-mcp-servers)
       - [Registry Configuration](#registry-configuration)
@@ -55,7 +56,8 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Getting Started
 
-> ⚠️ If you are a Microsoft employee then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
+> [!IMPORTANT] 
+> If you are a **Microsoft employee** then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
 
 ### Prerequisites
 
@@ -102,7 +104,8 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Adding a New Command
 
-> **⚠️ Important: Submit One Tool Per Pull Request**
+> [!TIP]  
+> **Submit One Tool Per Pull Request**
 >
 > We strongly recommend submitting **one tool per pull request** to streamline the review process and provide better onboarding experience. This approach results in:
 >
@@ -129,11 +132,11 @@ If you are contributing significant changes, or if the issue is already assigned
    "create [namespace] [resource] [operation] command using #new-command.md as a reference"
    ```
 
-4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+4. **Follow implementation guidelines** in [docs/new-command.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 
 5. **Update documentation**:
-   - Add the new command to [/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md)
-   - Add test prompts for the new command in [/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/docs/e2eTestPrompts.md)
+   - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+   - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
 6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
@@ -172,7 +175,7 @@ Requirements:
 
 ### End-to-end Tests
 
-End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/docs/e2eTestPrompts.md`.
+End-to-end tests are performed manually. Command authors must thoroughly test each command to ensure correct tool invocation and results. At least one prompt per tool is required and should be added to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`.
 
 ### Testing Local Build with VS Code
 
@@ -195,14 +198,15 @@ Update your mcp.json to point to the locally built azmcp executable:
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
 }
 ```
 
-> **Note:** Replace `<absolute-path-to>` with the full path to your built executable.
+> [!NOTE]
+> Replace `<absolute-path-to>` with the full path to your built executable.
 > On **Windows**, use `azmcp.exe`. On **macOS/Linux**, use `azmcp`.
 
 #### Server Modes
@@ -216,7 +220,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -230,7 +234,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -244,7 +248,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -258,7 +262,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -272,8 +276,22 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
+    }
+  }
+}
+```
+
+**Specific Tool Mode** (expose only specific tools):
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
     }
   }
 }
@@ -285,7 +303,8 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 > - **Namespace Mode**: `--namespace <service-name>` - expose specific services
 > - **Namespace Proxy Mode**: `--mode namespace` - collapse tools by namespace (useful for VS Code's 128 tool limit)
 > - **Single Tool Mode**: `--mode single` - single "azure" tool with internal routing
-> - **Combined Mode**: Both `--namespace` and `--mode` can be used together
+> - **Specific Tool Mode**: `--tool <tool-name>` - expose only specific tools by name (finest granularity)
+> - **Combined Mode**: Multiple options can be used together (`--namespace` + `--mode` etc.)
 
 #### Start from IDE
 
@@ -295,7 +314,7 @@ With the configuration in place, you can launch the MCP server directly from you
 
 To build a local image for testing purposes:
 
-1. Execute: `./eng/scripts/Build-Docker.ps1`.
+1. Execute: `./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"`.
 2. Update `mcp.json` to point to locally built Docker image:
 
     ```json
@@ -309,7 +328,7 @@ To build a local image for testing purposes:
             "--rm",
             "--env-file",
             "/full/path/to/.env"
-            "azure/azure-mcp:<insert-version-here>",
+            "azure-sdk/azure-mcp:<version-number-of-docker-image>",
           ]
         }
       }
@@ -318,7 +337,8 @@ To build a local image for testing purposes:
 
 ### Live Tests
 
-> ⚠️ If you are a Microsoft employee with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
+> [!IMPORTANT]
+> If you are a **Microsoft employee** with Azure source permissions then please review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake). As part of reviewing community contributions, Azure team members can run live tests by adding this comment to the PR `/azp run  mcp - pullrequest - live`.
 
 Before running live tests:
 
@@ -483,6 +503,28 @@ The Azure MCP Server implements the [Model Context Protocol specification](https
 - Handle errors according to MCP specifications
 - Provide proper argument suggestions
 
+### Package README
+
+A single package README.md could be used to generate context specific content for different package types (npm, nuget, vsix) using html comment annotations to mark sections for removal or insertion whem processed with script at `.\eng\scripts\Process-PackageReadMe.ps1`
+
+Supported comment annotations:
+
+- Section Removal
+  - **Purpose:** Remove one or more lines, or parts of a line of markdown for specified package types.
+  - **Example:**
+  ```
+  <!-- remove-section: start nuget;npm remove_various_lines -->
+  ......
+  various markdown lines to be removed for nuget and npm
+  ......
+  <!-- remove-section: end remove_various_lines -->
+  ```
+
+- Section Insert
+  - **Purpose:** Insert a chunk of text into a line for a specified package type. 
+  - **Example:**
+  `<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->`
+
 ## Advanced Configuration
 
 ### Configuring External MCP Servers
@@ -607,7 +649,7 @@ We're building this in the open.  Your feedback is much appreciated, and will he
 ### Additional Resources
 
 - [Azure MCP Documentation](https://github.com/microsoft/mcp/blob/main/README.md)
-- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/docs/new-command.md)
+- [Command Implementation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/new-command.md)
 - [VS Code Insiders Download](https://code.visualstudio.com/insiders/)
 - [GitHub Copilot Documentation](https://docs.github.com/en/copilot)
 

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Models.Command;
@@ -83,7 +84,7 @@ public sealed class AzqrCommandTests
 
             // Assert
             Assert.NotNull(response);
-            Assert.Equal(200, response.Status);
+            Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.Equal("azqr report generated successfully.", response.Message);
             await _processService.Received().ExecuteAsync(
                 Arg.Any<string>(),
@@ -123,6 +124,6 @@ public sealed class AzqrCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

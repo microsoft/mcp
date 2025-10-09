@@ -14,29 +14,23 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     private const string CommandTitle = "Sample Kusto Table Data";
     private readonly ILogger<SampleCommand> _logger = logger;
 
-    private readonly Option<int> _limitOption = KustoOptionDefinitions.Limit;
-
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_limitOption);
+        command.Options.Add(KustoOptionDefinitions.Limit);
     }
 
     protected override SampleOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Limit = parseResult.GetValueOrDefault(_limitOption);
+        options.Limit = parseResult.GetValueOrDefault<int>(KustoOptionDefinitions.Limit.Name);
         return options;
     }
 
     public override string Name => "sample";
 
     public override string Description =>
-        """
-        Return a sample of rows from the specified table in an Kusto table.
-        Requires `cluster-uri` (or `cluster`), `database`, and `table`.
-        Results are returned as a JSON array of documents, for example: `[{'Column1': val1, 'Column2': val2}, ...]`.
-        """;
+        "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
 
     public override string Title => CommandTitle;
 
@@ -44,7 +38,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -67,7 +61,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
 
             if (UseClusterUri(options))
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.ClusterUri!,
                     options.Database!,
                     query,
@@ -77,7 +71,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
             }
             else
             {
-                results = await kusto.QueryItems(
+                results = await kusto.QueryItemsAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,
@@ -87,9 +81,7 @@ public sealed class SampleCommand(ILogger<SampleCommand> logger) : BaseTableComm
                     options.RetryPolicy);
             }
 
-            context.Response.Results = results?.Count > 0 ?
-                ResponseResult.Create(new SampleCommandResult(results), KustoJsonContext.Default.SampleCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), KustoJsonContext.Default.SampleCommandResult);
         }
         catch (Exception ex)
         {

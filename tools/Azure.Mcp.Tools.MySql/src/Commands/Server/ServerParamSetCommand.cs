@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Tools.MySql.Json;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.MySql.Options;
 using Azure.Mcp.Tools.MySql.Options.Server;
 using Azure.Mcp.Tools.MySql.Services;
@@ -13,12 +13,10 @@ namespace Azure.Mcp.Tools.MySql.Commands.Server;
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private const string CommandTitle = "Set MySQL Server Parameter";
-    private readonly Option<string> _paramOption = MySqlOptionDefinitions.Param;
-    private readonly Option<string> _valueOption = MySqlOptionDefinitions.Value;
 
     public override string Name => "set";
 
-    public override string Description => "Sets/updates a MySQL server configuration parameter to a new value to optimize performance, security, or operational behavior. This command enables fine-tuned configuration management with validation to ensure parameter changes are compatible with the server's current state and constraints.";
+    public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";
 
     public override string Title => CommandTitle;
 
@@ -26,7 +24,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     {
         Destructive = true,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -35,15 +33,15 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_paramOption);
-        command.Options.Add(_valueOption);
+        command.Options.Add(MySqlOptionDefinitions.Param);
+        command.Options.Add(MySqlOptionDefinitions.Value);
     }
 
     protected override ServerParamSetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Param = parseResult.GetValue(_paramOption);
-        options.Value = parseResult.GetValue(_valueOption);
+        options.Param = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Param.Name);
+        options.Value = parseResult.GetValueOrDefault<string>(MySqlOptionDefinitions.Value.Name);
         return options;
     }
 
@@ -61,9 +59,7 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
             string result = await mysqlService.SetServerParameterAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Param!, options.Value!);
             context.Response.Results = !string.IsNullOrEmpty(result) ?
-                ResponseResult.Create(
-                    new ServerParamSetCommandResult(options.Param!, result),
-                    MySqlJsonContext.Default.ServerParamSetCommandResult) :
+                ResponseResult.Create(new(options.Param!, result), MySqlJsonContext.Default.ServerParamSetCommandResult) :
                 null;
         }
         catch (Exception ex)

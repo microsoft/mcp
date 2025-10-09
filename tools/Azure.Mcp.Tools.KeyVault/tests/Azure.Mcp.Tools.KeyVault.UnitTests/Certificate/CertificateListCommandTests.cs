@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.KeyVault.Commands;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
 using Azure.Mcp.Tools.KeyVault.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -68,14 +69,14 @@ public class CertificateListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<CertificateListResult>(json);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.CertificateListCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(expectedCertificates, result.Certificates);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenNoCertificates()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCertificates()
     {
         // Arrange
         _keyVaultService.ListCertificates(
@@ -95,7 +96,13 @@ public class CertificateListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Null(response.Results);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, KeyVaultJsonContext.Default.CertificateListCommandResult);
+
+        Assert.NotNull(result);
+        Assert.Empty(result.Certificates);
     }
 
     [Fact]
@@ -121,13 +128,7 @@ public class CertificateListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expectedError, response.Message);
-    }
-
-    private class CertificateListResult
-    {
-        [JsonPropertyName("certificates")]
-        public List<string> Certificates { get; set; } = [];
     }
 }

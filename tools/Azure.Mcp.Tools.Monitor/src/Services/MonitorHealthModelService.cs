@@ -46,7 +46,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(entity, healthModelName, resourceGroupName, subscription);
+        ValidateRequiredParameters((nameof(entity), entity), (nameof(healthModelName), healthModelName), (nameof(resourceGroupName), resourceGroupName), (nameof(subscription), subscription));
 
         string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName);
         string entityHealthUrl = $"{dataplaneEndpoint}api/entities/{entity}/history";
@@ -146,7 +146,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
 
     private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource)
     {
-        var tokenRequestContext = new TokenRequestContext(new[] { $"{resource}/.default" });
+        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
         var tokenCredential = await GetCredential();
         return await tokenCredential
             .GetTokenAsync(tokenRequestContext, CancellationToken.None)

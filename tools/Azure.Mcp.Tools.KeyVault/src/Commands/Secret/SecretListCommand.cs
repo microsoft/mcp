@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Secret;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,7 +15,6 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
 {
     private const string _commandTitle = "List Key Vault Secrets";
     private readonly ILogger<SecretListCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
 
     public override string Name => "list";
 
@@ -24,28 +24,25 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
     };
 
     public override string Description =>
-        """
-        List all secrets in an Azure Key Vault. This command retrieves and displays the names of all secrets
-        stored in the specified vault.
-        """;
+        "List/enumerate all secrets in a Key Vault. Not for fetching a single secret.";
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
     }
 
     protected override SecretListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
         return options;
     }
 
@@ -67,11 +64,7 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = secrets?.Count > 0 ?
-                ResponseResult.Create(
-                    new SecretListCommandResult(secrets),
-                    KeyVaultJsonContext.Default.SecretListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(secrets ?? []), KeyVaultJsonContext.Default.SecretListCommandResult);
         }
         catch (Exception ex)
         {

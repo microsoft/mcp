@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -16,8 +17,6 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Queue;
 public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : SubscriptionCommand<BaseQueueOptions>
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
-    private readonly Option<string> _queueOption = ServiceBusOptionDefinitions.Queue;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
     public override string Name => "details";
 
@@ -37,7 +36,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -46,15 +45,15 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_queueOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Queue);
     }
 
     protected override BaseQueueOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Name = parseResult.GetValueOrDefault(_queueOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.Name = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Queue.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
         return options;
     }
 
@@ -76,9 +75,7 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new QueueDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.QueueDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,9 +93,9 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => 404,
+        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
     internal record QueueDetailsCommandResult(QueueDetails QueueDetails);

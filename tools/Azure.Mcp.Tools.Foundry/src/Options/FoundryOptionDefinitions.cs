@@ -9,7 +9,6 @@ public static class FoundryOptionDefinitions
     public const string SearchForFreePlayground = "search-for-free-playground";
     public const string PublisherName = "publisher";
     public const string LicenseName = "license";
-    public const string OptionalModelName = "model-name";
     public const string DeploymentName = "deployment";
     public const string ModelName = "model-name";
     public const string ModelFormat = "model-format";
@@ -20,7 +19,31 @@ public static class FoundryOptionDefinitions
     public const string SkuCapacity = "sku-capacity";
     public const string ScaleType = "scale-type";
     public const string ScaleCapacity = "scale-capacity";
+    public const string AgentId = "agent-id";
+    public const string Query = "query";
+    public const string Evaluators = "evaluators";
+    public const string EvaluatorName = "evaluator";
+    public const string Response = "response";
+    public const string ToolCalls = "tool-calls";
+    public const string ToolDefinitions = "tool-definitions";
+    public const string AzureOpenAIEndpoint = "azure-openai-endpoint";
+    public const string AzureOpenAIDeployment = "azure-openai-deployment";
     public const string IndexName = "index";
+    public const string PromptText = "prompt-text";
+    public const string MaxTokens = "max-tokens";
+    public const string Temperature = "temperature";
+    public const string ResourceName = "resource-name";
+    public const string InputText = "input-text";
+    public const string User = "user";
+    public const string EncodingFormat = "encoding-format";
+    public const string Dimensions = "dimensions";
+    public const string MessageArray = "message-array";
+    public const string TopP = "top-p";
+    public const string FrequencyPenalty = "frequency-penalty";
+    public const string PresencePenalty = "presence-penalty";
+    public const string Stop = "stop";
+    public const string Stream = "stream";
+    public const string Seed = "seed";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -29,14 +52,6 @@ public static class FoundryOptionDefinitions
         Description = "The endpoint URL for the Azure AI service.",
         Required = true
     };
-
-    public static readonly Option<string> OptionalModelNameOption = new(
-        $"--{ModelName}"
-    )
-    {
-        Description = "The name of the model to search for."
-    };
-
 
     public static readonly Option<string> DeploymentNameOption = new(
         $"--{DeploymentName}"
@@ -133,11 +148,189 @@ public static class FoundryOptionDefinitions
         Description = "The scale capacity for the deployment."
     };
 
+    public static readonly Option<string> AgentIdOption = new(
+        $"--{AgentId}"
+    )
+    {
+        Description = "The ID of the agent to interact with.",
+        Required = true
+    };
+
+    public static readonly Option<string> QueryOption = new(
+        $"--{Query}"
+    )
+    {
+        Description = "The query sent to the agent.",
+        Required = true
+    };
+
+    public static readonly Option<string> EvaluatorsOption = new(
+        $"--{Evaluators}"
+    )
+    {
+        Description = "The list of evaluators to use for evaluation, separated by commas. If not specified, all evaluators will be used."
+    };
+
+    public static readonly Option<string> EvaluatorNameOption = new(
+        $"--{EvaluatorName}"
+    )
+    {
+        Description = "The name of the evaluator to use (intent_resolution, tool_call_accuracy, task_adherence).",
+        Required = true
+    };
+
+    public static readonly Option<string> ResponseOption = new(
+        $"--{Response}"
+    )
+    {
+        Description = "The response from the agent.",
+    };
+
+    public static readonly Option<string> ToolCallsOption = new(
+        $"--{ToolCalls}"
+    )
+    {
+        Description = "The tool calls made by the agent."
+    };
+
+    public static readonly Option<string> ToolDefinitionsOption = new(
+        $"--{ToolDefinitions}"
+    )
+    {
+        Description = "Optional tool definitions made by the agent in JSON format."
+    };
+
+    public static readonly Option<string> AzureOpenAIEndpointOption = new(
+        $"--{AzureOpenAIEndpoint}"
+    )
+    {
+        Description = "The endpoint URL for the Azure OpenAI service to be used in evaluation.",
+        Required = true
+    };
+
+    public static readonly Option<string> AzureOpenAIDeploymentOption = new(
+        $"--{AzureOpenAIDeployment}"
+    )
+    {
+        Description = "The deployment name for the Azure OpenAI model to be used in evaluation.",
+        Required = true
+    };
+
     public static readonly Option<string> IndexNameOption = new(
         $"--{IndexName}"
     )
     {
         Description = "The name of the knowledge index.",
         Required = true
+    };
+
+    public static readonly Option<string> PromptTextOption = new(
+        $"--{PromptText}"
+    )
+    {
+        Description = "The prompt text to send to the completion model.",
+        Required = true
+    };
+
+    public static readonly Option<string> ResourceNameOption = new(
+        $"--{ResourceName}"
+    )
+    {
+        Description = "The name of the Azure OpenAI resource.",
+        Required = true
+    };
+
+    public static readonly Option<int> MaxTokensOption = new(
+        $"--{MaxTokens}"
+    )
+    {
+        Description = "The maximum number of tokens to generate in the completion."
+    };
+
+    public static readonly Option<double> TemperatureOption = new(
+        $"--{Temperature}"
+    )
+    {
+        Description = "Controls randomness in the output. Lower values make it more deterministic."
+    };
+
+    public static readonly Option<string> InputTextOption = new(
+        $"--{InputText}"
+    )
+    {
+        Description = "The input text to generate embeddings for.",
+        Required = true
+    };
+
+    public static readonly Option<string> UserOption = new(
+        $"--{User}"
+    )
+    {
+        Description = "Optional user identifier for tracking and abuse monitoring."
+    };
+
+    public static readonly Option<string> EncodingFormatOption = new(
+        $"--{EncodingFormat}"
+    )
+    {
+        Description = "The format to return embeddings in (float or base64).",
+        DefaultValueFactory = _ => "float"
+    };
+
+    public static readonly Option<int> DimensionsOption = new(
+        $"--{Dimensions}"
+    )
+    {
+        Description = "The number of dimensions for the embedding output. Only supported in some models."
+    };
+
+    public static readonly Option<string> MessageArrayOption = new(
+        $"--{MessageArray}"
+    )
+    {
+        Description = "Array of messages in the conversation (JSON format). Each message should have 'role' and 'content' properties.",
+        Required = true
+    };
+
+    public static readonly Option<double> TopPOption = new(
+        $"--{TopP}"
+    )
+    {
+        Description = "Controls diversity via nucleus sampling (0.0 to 1.0). Default is 1.0."
+    };
+
+    public static readonly Option<double> FrequencyPenaltyOption = new(
+        $"--{FrequencyPenalty}"
+    )
+    {
+        Description = "Penalizes new tokens based on their frequency (-2.0 to 2.0). Default is 0."
+    };
+
+    public static readonly Option<double> PresencePenaltyOption = new(
+        $"--{PresencePenalty}"
+    )
+    {
+        Description = "Penalizes new tokens based on presence (-2.0 to 2.0). Default is 0."
+    };
+
+    public static readonly Option<string> StopOption = new(
+        $"--{Stop}"
+    )
+    {
+        Description = "Up to 4 sequences where the API will stop generating further tokens."
+    };
+
+    public static readonly Option<bool> StreamOption = new(
+        $"--{Stream}"
+    )
+    {
+        Description = "Whether to stream back partial progress. Default is false."
+    };
+
+    public static readonly Option<int> SeedOption = new(
+        $"--{Seed}"
+    )
+    {
+        Description = "If specified, the system will make a best effort to sample deterministically."
     };
 }

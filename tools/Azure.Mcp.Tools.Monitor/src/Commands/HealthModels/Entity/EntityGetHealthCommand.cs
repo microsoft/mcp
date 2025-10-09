@@ -1,29 +1,29 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Monitor.Options;
-using Azure.Mcp.Tools.Monitor.Options.HealthModels.Entity;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 
-public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<EntityGetHealthOptions>
+public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
     private const string CommandName = "gethealth";
     public override string Name => CommandName;
-
     public override string Description =>
-         $"""
-        Gets the health of an entity from a specified Azure Monitor Health Model.
-        Returns entity health information.
-
-        Required arguments:
+    $"""
+    Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.
+    For basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  
+    For querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  
+    For querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. 
+    Required arguments:
         - {MonitorOptionDefinitions.Health.Entity.Name}: The entity to get health for
         - {MonitorOptionDefinitions.Health.HealthModel.Name}: The health model name
-        """;
+    """;
 
     public override string Title => CommandTitle;
 
@@ -31,29 +31,13 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
     };
 
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
-
-    protected override void RegisterOptions(Command command)
-    {
-        base.RegisterOptions(command);
-        command.Options.Add(_entityOption);
-        command.Options.Add(_healthModelOption);
-        RequireResourceGroup();
-    }
-
-    protected override EntityGetHealthOptions BindOptions(ParseResult parseResult)
-    {
-        var options = base.BindOptions(parseResult);
-        options.Entity = parseResult.GetValue(_entityOption);
-        options.HealthModelName = parseResult.GetValue(_healthModelOption);
-        return options;
-    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
@@ -102,10 +86,10 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        KeyNotFoundException => 404,
-        ArgumentException => 400,
+        KeyNotFoundException => HttpStatusCode.NotFound,
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 }

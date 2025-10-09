@@ -22,8 +22,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
 
     public override string Description =>
         $"""
-        List all Redis Cluster resources in a specified subscription. Returns an array of Redis Cluster details.
-        Use this command to explore which Redis Cluster resources are available in your subscription.
+        List/show all Redis Clusters in a subscription. Returns Redis Cluster details including Azure Managed Redis clusters and Azure Redis Enterprise clusters. Use this command to explore and view which Redis Cluster resources are available in your subscription.
         """;
     public override string Title => CommandTitle;
 
@@ -31,7 +30,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -55,11 +54,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = clusters.Any() ?
-                ResponseResult.Create(
-                    new ClusterListCommandResult(clusters),
-                    RedisJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), RedisJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

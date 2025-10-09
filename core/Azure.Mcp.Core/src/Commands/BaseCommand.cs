@@ -1,25 +1,21 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-
 using System.CommandLine.Parsing;
 using System.Diagnostics;
+using System.Net;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Models.Option;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
-public abstract class BaseCommand : IBaseCommand
+public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : class, new()
 {
     private const string MissingRequiredOptionsPrefix = "Missing Required options: ";
-    private const int ValidationErrorStatusCode = 400;
     private const string TroubleshootingUrl = "https://aka.ms/azmcp/troubleshooting";
 
     private readonly Command _command;
-    private bool _usesResourceGroup;
-    private bool _requiresResourceGroup;
 
     protected BaseCommand()
     {
@@ -38,6 +34,14 @@ public abstract class BaseCommand : IBaseCommand
     protected virtual void RegisterOptions(Command command)
     {
     }
+
+    /// <summary>
+    /// Binds the parsed command line arguments to a strongly-typed options object.
+    /// Implement this method in derived classes to provide option binding logic.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>An options object containing the bound options.</returns>
+    protected abstract TOptions BindOptions(ParseResult parseResult);
 
     public abstract Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);
 
@@ -78,19 +82,20 @@ public abstract class BaseCommand : IBaseCommand
         response.Results = ResponseResult.Create(result, JsonSourceGenerationContext.Default.ExceptionResult);
     }
 
-    internal record ExceptionResult(
-        string Message,
-        string? StackTrace,
-        string Type);
-
     protected virtual string GetErrorMessage(Exception ex) => ex.Message;
 
-    protected virtual int GetStatusCode(Exception ex) => 500;
-
-    public virtual ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    protected virtual HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        var result = new ValidationResult { IsValid = true };
+        ArgumentException => HttpStatusCode.BadRequest,  // Bad Request for invalid arguments
+        InvalidOperationException => HttpStatusCode.UnprocessableEntity,  // Unprocessable Entity for configuration errors
+        _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
+    };
 
+    public ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    {
+        var result = new ValidationResult();
+
+        // First, check for missing required options
         var missingOptions = commandResult.Command.Options
             .Where(o => o.Required && !o.HasDefaultValue && !commandResult.HasOptionResult(o))
             .Select(o => $"--{NameNormalization.NormalizeOptionName(o.Name)}")
@@ -100,72 +105,41 @@ public abstract class BaseCommand : IBaseCommand
 
         if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
-            result.IsValid = false;
-            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{missingOptionsJoined}";
-            SetValidationError(commandResponse, result.ErrorMessage!);
-            return result;
+            result.Errors.Add($"{MissingRequiredOptionsPrefix}{missingOptionsJoined}");
         }
 
-        // If no missing required options, propagate parser/validator errors as-is.
-        // Commands can throw CommandValidationException for structured handling.
+        // Check for parser/validator errors
         if (commandResult.Errors != null && commandResult.Errors.Any())
         {
-            result.IsValid = false;
-            var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
-            result.ErrorMessage = combined;
-            SetValidationError(commandResponse, result.ErrorMessage);
-            return result;
+            result.Errors.Add(string.Join(", ", commandResult.Errors.Select(e => e.Message)));
         }
 
-        // Enforce logical requirements (e.g., resource group required by this command)
-        if (result.IsValid && _requiresResourceGroup)
+        if (!result.IsValid && commandResponse != null)
         {
-            if (!commandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup))
-            {
-                result.IsValid = false;
-                result.ErrorMessage = $"{MissingRequiredOptionsPrefix}--resource-group";
-                SetValidationError(commandResponse, result.ErrorMessage);
-            }
+            commandResponse.Status = HttpStatusCode.BadRequest;
+            commandResponse.Message = string.Join('\n', result.Errors);
         }
 
         return result;
+    }
 
-        static void SetValidationError(CommandResponse? response, string errorMessage)
+    /// <summary>
+    /// Sets validation error details on the command response with a custom status code.
+    /// </summary>
+    /// <param name="response">The command response to update.</param>
+    /// <param name="errorMessage">The error message.</param>
+    /// <param name="statusCode">The HTTP status code (defaults to ValidationErrorStatusCode).</param>
+    protected static void SetValidationError(CommandResponse? response, string errorMessage, HttpStatusCode statusCode)
+    {
+        if (response != null)
         {
-            if (response != null)
-            {
-                response.Status = ValidationErrorStatusCode;
-                response.Message = errorMessage;
-            }
+            response.Status = statusCode;
+            response.Message = errorMessage;
         }
     }
-
-
-    // TODO(jongio): Consider a stronger, declarative model for option requirements.
-
-    protected void UseResourceGroup()
-    {
-        if (_usesResourceGroup)
-            return;
-        _usesResourceGroup = true;
-        _command.Options.Add(OptionDefinitions.Common.ResourceGroup);
-    }
-
-    protected void RequireResourceGroup()
-    {
-        UseResourceGroup();
-        _requiresResourceGroup = true;
-    }
-
-    protected string? GetResourceGroup(ParseResult parseResult)
-    {
-        if (!UsesResourceGroup)
-            return null;
-
-        return parseResult.CommandResult.HasOptionResult(OptionDefinitions.Common.ResourceGroup)
-                ? parseResult.CommandResult.GetValue(OptionDefinitions.Common.ResourceGroup)
-                : null;
-    }
-
-    protected bool UsesResourceGroup => _usesResourceGroup;
 }
+
+internal record ExceptionResult(
+    string Message,
+    string? StackTrace,
+    string Type);

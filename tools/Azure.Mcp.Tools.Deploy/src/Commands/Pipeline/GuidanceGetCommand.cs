@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Pipeline;
 using Azure.Mcp.Tools.Deploy.Services.Util;
@@ -15,11 +17,6 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 {
     private const string CommandTitle = "Get Azure Deployment CICD Pipeline Guidance";
     private readonly ILogger<GuidanceGetCommand> _logger = logger;
-
-    private readonly Option<bool> _useAZDPipelineConfigOption = DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig;
-    private readonly Option<string> _organizationNameOption = DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName;
-    private readonly Option<string> _repositoryNameOption = DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName;
-    private readonly Option<string> _githubEnvironmentNameOption = DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName;
 
     public override string Name => "get";
 
@@ -42,19 +39,19 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_useAZDPipelineConfigOption);
-        command.Options.Add(_organizationNameOption);
-        command.Options.Add(_repositoryNameOption);
-        command.Options.Add(_githubEnvironmentNameOption);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName);
+        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName);
     }
 
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.UseAZDPipelineConfig = parseResult.GetValue(_useAZDPipelineConfigOption);
-        options.OrganizationName = parseResult.GetValue(_organizationNameOption);
-        options.RepositoryName = parseResult.GetValue(_repositoryNameOption);
-        options.GithubEnvironmentName = parseResult.GetValue(_githubEnvironmentNameOption);
+        options.UseAZDPipelineConfig = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig.Name);
+        options.OrganizationName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName.Name);
+        options.RepositoryName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName.Name);
+        options.GithubEnvironmentName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName.Name);
         return options;
     }
 
@@ -72,7 +69,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
             var result = PipelineGenerationUtil.GeneratePipelineGuidelines(options);
 
             context.Response.Message = result;
-            context.Response.Status = 200;
+            context.Response.Status = HttpStatusCode.OK;
         }
         catch (Exception ex)
         {

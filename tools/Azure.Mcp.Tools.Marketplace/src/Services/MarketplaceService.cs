@@ -54,7 +54,9 @@ public class MarketplaceService(ITenantService tenantService)
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(productId, subscription);
+        ValidateRequiredParameters(
+            (nameof(productId), productId),
+            (nameof(subscription), subscription));
 
         string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
@@ -90,7 +92,7 @@ public class MarketplaceService(ITenantService tenantService)
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
@@ -141,7 +143,7 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
-        var productsListResponse = await ExecuteMarketplaceRequestAsync<ProductsListResponse>(
+        var productsListResponse = await ExecuteMarketplaceRequestAsync(
             url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant);
 
         var result = new ProductListResponseWithNextCursor
@@ -196,7 +198,7 @@ public class MarketplaceService(ITenantService tenantService)
 
     private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
     {
-        var productDetails = await ExecuteMarketplaceRequestAsync<ProductDetails>(
+        var productDetails = await ExecuteMarketplaceRequestAsync(
             url,
             MarketplaceJsonContext.Default.ProductDetails,
             retryPolicy,
@@ -251,7 +253,7 @@ public class MarketplaceService(ITenantService tenantService)
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
         string accessToken = await GetAccessTokenAsync(tenant);
-        ValidateRequiredParameters(accessToken);
+        ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         var request = pipeline.CreateRequest();
         request.Method = RequestMethod.Get;

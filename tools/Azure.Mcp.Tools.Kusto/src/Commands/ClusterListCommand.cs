@@ -17,11 +17,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     public override string Name => "list";
 
     public override string Description =>
-        """
-        List all Kusto clusters in a subscription. This command retrieves all clusters
-        available in the specified subscription. Requires `subscription`.
-        Result is a list of cluster names as a JSON array.
-        """;
+        "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.";
 
     public override string Title => CommandTitle;
 
@@ -29,7 +25,7 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -47,14 +43,12 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         try
         {
             var kusto = context.GetService<IKustoService>();
-            var clusterNames = await kusto.ListClusters(
+            var clusterNames = await kusto.ListClustersAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = clusterNames?.Count > 0 ?
-                ResponseResult.Create(new ClusterListCommandResult(clusterNames), KustoJsonContext.Default.ClusterListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(clusterNames ?? []), KustoJsonContext.Default.ClusterListCommandResult);
         }
         catch (Exception ex)
         {

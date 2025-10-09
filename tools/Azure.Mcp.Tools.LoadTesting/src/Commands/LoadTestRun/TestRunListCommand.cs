@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestRun;
 using Azure.Mcp.Tools.LoadTesting.Options.LoadTestRun;
@@ -15,13 +16,11 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
 {
     private const string _commandTitle = "Test Run List";
     private readonly ILogger<TestRunListCommand> _logger = logger;
-    private readonly Option<string> _loadTestIdOption = OptionDefinitions.LoadTesting.Test;
     public override string Name => "list";
     public override string Description =>
         $"""
-        Retrieves a comprehensive list of all test run executions for a specific load test configuration.
-        This command provides an overview of test execution history, allowing you to track performance
-        trends, compare results across multiple runs, and analyze testing patterns over time.
+        Retrieves a comprehensive list of all test run executions for a specific load test. We get the test ID from the user and all the associated test runs are fetched. It is a one to many relationship.
+        Each test run only stores data corresponding to that particular run associated for that test. This does NOT return the test configuration or plan. For that use the test command. This is only for testruns.
         """;
     public override string Title => _commandTitle;
 
@@ -29,7 +28,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -38,13 +37,13 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_loadTestIdOption);
+        command.Options.Add(OptionDefinitions.LoadTesting.Test);
     }
 
     protected override TestRunListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TestId = parseResult.GetValue(_loadTestIdOption);
+        options.TestId = parseResult.GetValueOrDefault<string>(OptionDefinitions.LoadTesting.Test.Name);
         return options;
     }
 
@@ -70,9 +69,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
             // Set results if any were returned
-            context.Response.Results = results != null ?
-                ResponseResult.Create(new TestRunListCommandResult(results), LoadTestJsonContext.Default.TestRunListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunListCommandResult);
         }
         catch (Exception ex)
         {

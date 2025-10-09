@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.AzureIsv.Options;
 using Azure.Mcp.Tools.AzureIsv.Options.Datadog;
 using Azure.Mcp.Tools.AzureIsv.Services;
@@ -14,7 +16,6 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
 {
     private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
-    private readonly Option<string> _datadogResourceOption = DatadogOptionDefinitions.DatadogResourceName;
 
     public override string Name => "list";
 
@@ -32,7 +33,7 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -41,14 +42,15 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_datadogResourceOption);
-        RequireResourceGroup();
+        command.Options.Add(DatadogOptionDefinitions.DatadogResourceName);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
     }
 
     protected override MonitoredResourcesListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.DatadogResource = parseResult.GetValue(_datadogResourceOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.DatadogResource = parseResult.GetValueOrDefault<string>(DatadogOptionDefinitions.DatadogResourceName.Name);
         return options;
     }
 
@@ -69,9 +71,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
                 options.Subscription!,
                 options.DatadogResource!);
             context.Response.Results = results?.Count > 0
-                ? ResponseResult.Create(new MonitoredResourcesListResult(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
-                : ResponseResult.Create(new MonitoredResourcesListResult([
-                    "No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
+                ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
+                : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);
         }
         catch (Exception ex)
         {

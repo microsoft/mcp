@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Tools.Grafana.Models;
 using Azure.Mcp.Tools.Grafana.Options.Workspace;
 using Azure.Mcp.Tools.Grafana.Services;
 using Microsoft.Extensions.Logging;
@@ -31,7 +32,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -54,11 +55,7 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = workspaces.Any() ?
-                ResponseResult.Create(
-                    new WorkspaceListCommandResult(workspaces),
-                    GrafanaJsonContext.Default.WorkspaceListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(workspaces ?? []), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }
         catch (Exception ex)
         {
@@ -70,5 +67,5 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
         return context.Response;
     }
 
-    internal record WorkspaceListCommandResult(IEnumerable<Models.Workspace.Workspace> Workspaces);
+    internal record WorkspaceListCommandResult(IEnumerable<GrafanaWorkspace> Workspaces);
 }

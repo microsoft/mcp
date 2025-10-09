@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
-
 namespace Azure.Mcp.Tools.AppLens.Models;
 
 /// <summary>
@@ -196,7 +194,7 @@ public class ChatMessageResponseBody
 
     public static ChatMessageResponseBody FromJson(string json)
     {
-        return JsonSerializer.Deserialize<ChatMessageResponseBody>(json, AppLensJsonContext.Default.ChatMessageResponseBody)!;
+        return JsonSerializer.Deserialize(json, AppLensJsonContext.Default.ChatMessageResponseBody)!;
     }
 }
 

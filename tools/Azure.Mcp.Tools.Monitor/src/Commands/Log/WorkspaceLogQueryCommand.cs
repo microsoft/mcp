@@ -8,25 +8,26 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Monitor.Commands.Log;
 
-public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseMonitorCommand<WorkspaceLogQueryOptions>()
+public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> logger) : BaseWorkspaceMonitorCommand<WorkspaceLogQueryOptions>()
 {
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
-    private readonly Option<string> _tableNameOption = MonitorOptionDefinitions.TableName;
-    private readonly Option<string> _queryOption = MonitorOptionDefinitions.Query;
-    private readonly Option<int> _hoursOption = MonitorOptionDefinitions.Hours;
-    private readonly Option<int> _limitOption = MonitorOptionDefinitions.Limit;
 
     public override string Name => "query";
 
     public override string Description =>
-        $"""
-        Execute a KQL query against a Log Analytics workspace. Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName}
-        and resource group. Optional {MonitorOptionDefinitions.HoursName}
-        (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) and {MonitorOptionDefinitions.LimitName}
-        (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) parameters.
-        The {MonitorOptionDefinitions.QueryTextName} parameter accepts KQL syntax.
-        """;
+    $"""
+    Query logs across an ENTIRE Log Analytics workspace using Kusto Query Language (KQL). 
+    Use this tool when the user wants to query all resources in a workspace or doesn't specify a particular resource name/ID (e.g., "show all errors in workspace", "query workspace logs", "what happened in my workspace").
+    This tool queries across all resources and tables in the workspace.
+    
+    When to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.
+    When NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.
+
+    Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName} and resource group.
+    Optional: {MonitorOptionDefinitions.HoursName} and {MonitorOptionDefinitions.LimitName}.
+    {MonitorOptionDefinitions.QueryTextName} accepts KQL syntax.
+    """;
 
     public override string Title => CommandTitle;
 
@@ -34,7 +35,7 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -43,19 +44,19 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_tableNameOption);
-        command.Options.Add(_queryOption);
-        command.Options.Add(_hoursOption);
-        command.Options.Add(_limitOption);
+        command.Options.Add(MonitorOptionDefinitions.TableName);
+        command.Options.Add(MonitorOptionDefinitions.Query);
+        command.Options.Add(MonitorOptionDefinitions.Hours);
+        command.Options.Add(MonitorOptionDefinitions.Limit);
     }
 
     protected override WorkspaceLogQueryOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TableName = parseResult.GetValueOrDefault(_tableNameOption);
-        options.Query = parseResult.GetValueOrDefault(_queryOption);
-        options.Hours = parseResult.GetValueOrDefault(_hoursOption);
-        options.Limit = parseResult.GetValueOrDefault(_limitOption);
+        options.TableName = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.TableName.Name);
+        options.Query = parseResult.GetValueOrDefault<string>(MonitorOptionDefinitions.Query.Name);
+        options.Hours = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Hours.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(MonitorOptionDefinitions.Limit.Name);
         return options;
     }
 

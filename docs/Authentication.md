@@ -26,13 +26,13 @@ Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity lib
 
 ### Production Environments
 
-For Kubernetes workloads or Azure-hosted apps, set the following environment variable to `true`:
+For Kubernetes workloads or Azure-hosted apps, set the following environment variable:
 
 ```bash
-export AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS=true
+export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-This configuration modifies the credential chain to enable authentication via workload identity and managed identity, in that order.
+This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order.
 
 ### Development Environments
 
@@ -112,6 +112,68 @@ When local authentication is disabled, Azure MCP Server must use Microsoft Entra
 - Are there any Conditional Access policies that might block authentication?
 - Is there a preferred authentication method (user vs. service principal)?
 - Are there network restrictions (private endpoints, firewall rules)?
+
+### Azure Cosmos DB (RBAC for SQL data plane)
+
+Azure Cosmos DB supports data plane access via Microsoft Entra ID (RBAC). If key-based authentication is disabled (recommended), grant a Microsoft Entra user or service principal a built-in data role at the Cosmos account scope.
+
+Prerequisites:
+- Azure CLI installed (`az version`)
+- Logged in to the correct tenant/subscription (`az login`)
+- Resource group and account name for the Cosmos DB account
+
+Role options (built-in):
+- Data Contributor: full read/write data access — role ID `00000000-0000-0000-0000-000000000002`
+- Data Reader: read-only data access — role ID `00000000-0000-0000-0000-000000000001`
+
+PowerShell example (assign Data Contributor to a user):
+
+```powershell
+$user = 'user@contoso.com'
+$resourceGroup = 'rg-name'
+$account = 'cosmos-account-name'
+
+# Account scope
+$resourceId = az cosmosdb show -g $resourceGroup -n $account --query "id" -o tsv
+
+# Built-in Data Contributor role
+$roleId = az cosmosdb sql role definition show -a $account -g $resourceGroup -i 00000000-0000-0000-0000-000000000002 --query id -o tsv
+
+# Principal object ID (user)
+$principalId = az ad user show --id $user --query 'id' -o tsv
+
+az cosmosdb sql role assignment create --resource-group $resourceGroup --account-name $account --principal-id $principalId --role-definition-id $roleId --scope $resourceId
+```
+
+Bash example (assign Data Reader to a service principal):
+
+```bash
+spAppId="00000000-0000-0000-0000-000000000000" # replace with your app (client) ID
+resourceGroup="rg-name"
+account="cosmos-account-name"
+
+# Account scope
+resourceId=$(az cosmosdb show -g "$resourceGroup" -n "$account" --query id -o tsv)
+
+# Built-in Data Reader role
+roleId=$(az cosmosdb sql role definition show -a "$account" -g "$resourceGroup" -i 00000000-0000-0000-0000-000000000001 --query id -o tsv)
+
+# Principal object ID (service principal)
+principalId=$(az ad sp show --id "$spAppId" --query id -o tsv)
+
+az cosmosdb sql role assignment create \
+  --resource-group "$resourceGroup" \
+  --account-name "$account" \
+  --principal-id "$principalId" \
+  --role-definition-id "$roleId" \
+  --scope "$resourceId"
+```
+
+Notes:
+- Scope can be set at the account level (as above) or narrowed to database/container scopes if needed.
+- RBAC propagation may take several minutes after assignment.
+- Use the Reader role for read-only scenarios and Contributor for read/write tooling.
+- Ensure you authenticate via one of the supported credentials (for example, Azure CLI — `az login`) before using Cosmos tools in Azure MCP.
 
 ### Authentication Through Network Restrictions
 

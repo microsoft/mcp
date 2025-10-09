@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
@@ -10,7 +11,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.AspNetCore;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -22,15 +22,9 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 /// This command is hidden from the main command list.
 /// </summary>
 [HiddenCommand]
-public sealed class ServiceStartCommand : BaseCommand
+public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
     private const string CommandTitle = "Start MCP Server";
-    private readonly Option<string> _transportOption = ServiceOptionDefinitions.Transport;
-    private readonly Option<string[]?> _namespaceOption = ServiceOptionDefinitions.Namespace;
-    private readonly Option<string?> _modeOption = ServiceOptionDefinitions.Mode;
-    private readonly Option<bool?> _readOnlyOption = ServiceOptionDefinitions.ReadOnly;
-    private readonly Option<bool> _debugOption = ServiceOptionDefinitions.Debug;
-    private readonly Option<bool> _enableInsecureTransportsOption = ServiceOptionDefinitions.EnableInsecureTransports;
 
     /// <summary>
     /// Gets the name of the command.
@@ -61,12 +55,54 @@ public sealed class ServiceStartCommand : BaseCommand
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_transportOption);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_modeOption);
-        command.Options.Add(_readOnlyOption);
-        command.Options.Add(_debugOption);
-        command.Options.Add(_enableInsecureTransportsOption);
+        command.Options.Add(ServiceOptionDefinitions.Transport);
+        command.Options.Add(ServiceOptionDefinitions.Namespace);
+        command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.Tool);
+        command.Options.Add(ServiceOptionDefinitions.ReadOnly);
+        command.Options.Add(ServiceOptionDefinitions.Debug);
+        command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
+        command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Validators.Add(commandResult =>
+        {
+            ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
+            ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
+            ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+            ValidateNamespaceAndToolMutualExclusion(
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult);
+        });
+    }
+
+    /// <summary>
+    /// Binds the parsed command line arguments to the ServiceStartOptions object.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>A configured ServiceStartOptions instance.</returns>
+    protected override ServiceStartOptions BindOptions(ParseResult parseResult)
+    {
+        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+
+        // When --tool switch is used, automatically change the mode to "all"
+        if (tools != null && tools.Length > 0)
+        {
+            mode = ModeTypes.All;
+        }
+
+        var options = new ServiceStartOptions
+        {
+            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
+            Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+            Mode = mode,
+            Tool = tools,
+            ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
+            Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
+            EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+        };
+        return options;
     }
 
     /// <summary>
@@ -77,57 +113,118 @@ public sealed class ServiceStartCommand : BaseCommand
     /// <returns>A command response indicating the result of the operation.</returns>
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
-        string[]? namespaces = parseResult.GetValueOrDefault(_namespaceOption);
-        string? mode = parseResult.GetValueOrDefault(_modeOption);
-        bool? readOnly = parseResult.GetValueOrDefault(_readOnlyOption);
-
-        var debug = parseResult.GetValueOrDefault(_debugOption);
-
-        if (!IsValidMode(mode))
+        if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
-            throw new ArgumentException($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
+            return context.Response;
         }
 
-        var enableInsecureTransports = parseResult.GetValueOrDefault(_enableInsecureTransportsOption);
+        var options = BindOptions(parseResult);
 
-        if (enableInsecureTransports)
+        try
         {
-            var includeProdCreds = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
-            if (!includeProdCreds)
-            {
-                throw new InvalidOperationException("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
-            }
+            using var host = CreateHost(options);
+            await host.StartAsync(CancellationToken.None);
+            await host.WaitForShutdownAsync(CancellationToken.None);
+
+            return context.Response;
         }
-
-        var serverOptions = new ServiceStartOptions
+        catch (Exception ex)
         {
-            Transport = parseResult.GetValueOrDefault(_transportOption) ?? TransportTypes.StdIo,
-            Namespace = namespaces,
-            Mode = mode,
-            ReadOnly = readOnly,
-            Debug = debug,
-            EnableInsecureTransports = enableInsecureTransports,
-        };
-
-        using var host = CreateHost(serverOptions);
-        await host.StartAsync(CancellationToken.None);
-        await host.WaitForShutdownAsync(CancellationToken.None);
-
-        return context.Response;
+            HandleException(context, ex);
+            return context.Response;
+        }
     }
 
     /// <summary>
     /// Validates if the provided mode is a valid mode type.
     /// </summary>
     /// <param name="mode">The mode to validate.</param>
-    /// <returns>True if the mode is valid, otherwise false.</returns>
-    private static bool IsValidMode(string? mode)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateMode(string? mode, CommandResult commandResult)
     {
-        return mode == ModeTypes.SingleToolProxy ||
-               mode == ModeTypes.NamespaceProxy ||
-               mode == ModeTypes.All ||
-               mode == ModeTypes.ConsolidatedProxy;
+        if (mode == ModeTypes.SingleToolProxy ||
+            mode == ModeTypes.NamespaceProxy ||
+            mode == ModeTypes.All ||
+            mode == ModeTypes.ConsolidatedProxy)
+        {
+            return; // Success
+        }
+
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
     }
+
+    /// <summary>
+    /// Validates if the provided transport is valid.
+    /// </summary>
+    /// <param name="transport">The transport to validate.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateTransport(string? transport, CommandResult commandResult)
+    {
+        if (transport is null || transport == TransportTypes.StdIo)
+        {
+            return; // Success
+        }
+
+        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
+    }
+
+    /// <summary>
+    /// Validates if the insecure transport configuration is valid.
+    /// </summary>
+    /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResult commandResult)
+    {
+        // If insecure transports are not enabled, configuration is valid
+        if (!enableInsecureTransports)
+        {
+            return; // Success
+        }
+
+        // If insecure transports are enabled, check if proper credentials are configured
+        var hasCredentials = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
+        if (hasCredentials)
+        {
+            return; // Success
+        }
+
+        commandResult.AddError("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
+    }
+
+    /// <summary>
+    /// Validates that --namespace and --tool options are not used together.
+    /// </summary>
+    /// <param name="namespaces">The namespace values.</param>
+    /// <param name="tools">The tool values.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(string[]? namespaces, string[]? tools, CommandResult commandResult)
+    {
+        bool hasNamespace = namespaces != null && namespaces.Length > 0;
+        bool hasTool = tools != null && tools.Length > 0;
+
+        if (hasNamespace && hasTool)
+        {
+            commandResult.AddError("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+        }
+    }
+
+    /// <summary>
+    /// Provides custom error messages for specific exception types to improve user experience.
+    /// </summary>
+    /// <param name="ex">The exception to format an error message for.</param>
+    /// <returns>A user-friendly error message.</returns>
+    protected override string GetErrorMessage(Exception ex) => ex switch
+    {
+        ArgumentException argEx when argEx.Message.Contains("Invalid transport") =>
+            "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
+        ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
+            "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
+            "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
+            "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
+        _ => base.GetErrorMessage(ex)
+    };
 
     /// <summary>
     /// Creates the host for the MCP server with the specified options.
@@ -289,14 +386,5 @@ public sealed class ServiceStartCommand : BaseCommand
         }
 
         return url;
-    }
-
-    /// <summary>
-    /// Hosted service for running the MCP server using standard input/output.
-    /// </summary>
-    private sealed class StdioMcpServerHostedService(IMcpServer session) : BackgroundService
-    {
-        /// <inheritdoc />
-        protected override Task ExecuteAsync(CancellationToken stoppingToken) => session.RunAsync(stoppingToken);
     }
 }

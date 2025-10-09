@@ -16,7 +16,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     {
         // Get a real cluster to target
         var listResult = await CallToolAsync(
-            "azmcp_aks_cluster_list",
+            "azmcp_aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -31,7 +31,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Find a node pool to query
         var nodepoolList = await CallToolAsync(
-            "azmcp_aks_nodepool_list",
+            "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -56,7 +56,11 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "nodepool", nodepoolName }
             });
 
-        var nodePool = nodepoolGet.AssertProperty("nodePool");
+        nodePools = nodepoolGet.AssertProperty("nodePools");
+        Assert.Equal(JsonValueKind.Array, nodePools.ValueKind);
+        Assert.Single(nodePools.EnumerateArray());
+
+        var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
         Assert.Equal(nodepoolName, nodePool.GetProperty("name").GetString());
 
@@ -68,6 +72,54 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         if (nodePool.TryGetProperty("provisioningState", out var stateProperty))
         {
             Assert.False(string.IsNullOrEmpty(stateProperty.GetString()));
+        }
+
+        Assert.True(nodePool.TryGetProperty("orchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("currentOrchestratorVersion", out _));
+        Assert.True(nodePool.TryGetProperty("enableAutoScaling", out _));
+        Assert.True(nodePool.TryGetProperty("maxPods", out _));
+        Assert.True(nodePool.TryGetProperty("osSKU", out _));
+        Assert.True(nodePool.TryGetProperty("nodeImageVersion", out _));
+
+        // Enriched node pool fields (presence/type checks)
+        if (nodePool.TryGetProperty("tags", out var tags))
+        {
+            Assert.True(tags.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("spotMaxPrice", out var spot))
+        {
+            Assert.True(spot.ValueKind is JsonValueKind.Number or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("workloadRuntime", out var wr))
+        {
+            Assert.True(wr.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("networkProfile", out var np))
+        {
+            Assert.True(np.ValueKind is JsonValueKind.Object or JsonValueKind.Null);
+            if (np.ValueKind == JsonValueKind.Object)
+            {
+                if (np.TryGetProperty("allowedHostPorts", out var ahp))
+                {
+                    Assert.True(ahp.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("applicationSecurityGroups", out var asg))
+                {
+                    Assert.True(asg.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+                if (np.TryGetProperty("nodePublicIPTags", out var ipt))
+                {
+                    Assert.True(ipt.ValueKind is JsonValueKind.Array or JsonValueKind.Null);
+                }
+            }
+        }
+        if (nodePool.TryGetProperty("podSubnetID", out var podSubnet))
+        {
+            Assert.True(podSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
+        }
+        if (nodePool.TryGetProperty("vnetSubnetID", out var vnetSubnet))
+        {
+            Assert.True(vnetSubnet.ValueKind is JsonValueKind.String or JsonValueKind.Null);
         }
     }
 
@@ -87,49 +139,38 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         // Should return runtime error details in results
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
     [Fact]
     public async Task Should_validate_required_parameters()
     {
-        // Missing nodepool
+        // Missing cluster
         var r1 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
-                { "cluster", "cluster" }
+                { "nodepool", "np1" }
             });
         Assert.False(r1.HasValue);
 
-        // Missing cluster
+        // Missing resource-group
         var r2 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "rg" },
+                { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
         Assert.False(r2.HasValue);
 
-        // Missing resource-group
-        var r3 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "cluster", "cluster" },
-                { "nodepool", "np1" }
-            });
-        Assert.False(r3.HasValue);
-
         // Missing subscription
-        var r4 = await CallToolAsync(
+        var r3 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
@@ -137,7 +178,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
-        Assert.False(r4.HasValue);
+        Assert.False(r3.HasValue);
     }
 
     [Fact]
@@ -155,8 +196,8 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         Assert.True(result.HasValue);
         var errorDetails = result.Value;
-        Assert.True(errorDetails.TryGetProperty("message", out _));
-        Assert.True(errorDetails.TryGetProperty("type", out var typeProperty));
+        errorDetails.AssertProperty("message");
+        var typeProperty = errorDetails.AssertProperty("type");
         Assert.Equal("Exception", typeProperty.GetString());
     }
 
@@ -177,4 +218,3 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
         Assert.False(result.HasValue);
     }
 }
-

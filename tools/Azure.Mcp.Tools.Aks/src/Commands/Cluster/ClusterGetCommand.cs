@@ -2,6 +2,8 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Aks.Options;
 using Azure.Mcp.Tools.Aks.Options.Cluster;
 using Azure.Mcp.Tools.Aks.Services;
@@ -11,18 +13,16 @@ namespace Azure.Mcp.Tools.Aks.Commands.Cluster;
 
 public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseAksCommand<ClusterGetOptions>
 {
-    private const string CommandTitle = "Get AKS Cluster Details";
+    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
-
-    // Define options from OptionDefinitions
-    private readonly Option<string> _clusterNameOption = AksOptionDefinitions.Cluster;
 
     public override string Name => "get";
 
     public override string Description =>
         """
-        Get details for a specific Azure Kubernetes Service (AKS) cluster.
-        Returns detailed cluster information including configuration, network settings, and status.
+        Get or list Azure Kubernetes Service (AKS) clusters. If a specific cluster name is provided, that cluster will
+        be retrieved. Otherwise, all clusters will be listed in the specified subscription. Returns detailed cluster
+        information including configuration, network settings, and status.
         """;
 
     public override string Title => CommandTitle;
@@ -31,7 +31,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -40,14 +40,27 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        RequireResourceGroup();
-        command.Options.Add(_clusterNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(AksOptionDefinitions.Cluster);
+        command.Validators.Add(commandResults =>
+        {
+            var clusterName = commandResults.GetValueOrDefault(AksOptionDefinitions.Cluster);
+            if (!string.IsNullOrEmpty(clusterName))
+            {
+                var resourceGroup = commandResults.GetValueOrDefault(OptionDefinitions.Common.ResourceGroup);
+                if (string.IsNullOrEmpty(resourceGroup))
+                {
+                    commandResults.AddError("When specifying a cluster name, the --resource-group option is required.");
+                }
+            }
+        });
     }
 
     protected override ClusterGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.ClusterName = parseResult.GetValue(_clusterNameOption);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(AksOptionDefinitions.Cluster.Name);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         return options;
     }
 
@@ -63,17 +76,14 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         try
         {
             var aksService = context.GetService<IAksService>();
-            var cluster = await aksService.GetCluster(
+            var clusters = await aksService.GetClusters(
                 options.Subscription!,
-                options.ClusterName!,
-                options.ResourceGroup!,
+                options.ClusterName,
+                options.ResourceGroup,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = cluster is null ?
-                null : ResponseResult.Create(
-                    new ClusterGetCommandResult(cluster),
-                    AksJsonContext.Default.ClusterGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(clusters ?? []), AksJsonContext.Default.ClusterGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -86,21 +96,5 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseA
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "AKS cluster not found. Verify the cluster name, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            $"Authorization failed accessing the AKS cluster. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    protected override int GetStatusCode(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx => reqEx.Status,
-        _ => base.GetStatusCode(ex)
-    };
-
-    internal record ClusterGetCommandResult(Models.Cluster Cluster);
+    internal record ClusterGetCommandResult(List<Models.Cluster> Clusters);
 }

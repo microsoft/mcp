@@ -1,8 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.FunctionApp.Models;
 using Azure.Mcp.Tools.FunctionApp.Options;
 using Azure.Mcp.Tools.FunctionApp.Options.FunctionApp;
@@ -16,8 +18,6 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 {
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
-
-    private readonly Option<string> _optionalFunctionAppNameOption = FunctionAppOptionDefinitions.OptionalFunctionApp;
 
     public override string Name => "get";
 
@@ -34,7 +34,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -43,13 +43,14 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        UseResourceGroup();
-        command.Options.Add(_optionalFunctionAppNameOption);
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
+        command.Options.Add(FunctionAppOptionDefinitions.FunctionApp);
+
         command.Validators.Add(result =>
         {
-            if (result.HasOptionResult(_optionalFunctionAppNameOption) && !result.HasOptionResult(_resourceGroupOption))
+            if (result.HasOptionResult(FunctionAppOptionDefinitions.FunctionApp.Name) && !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name))
             {
-                result.AddError($"--{_optionalFunctionAppNameOption.Name} option requires --{_resourceGroupOption.Name} option to be specified.");
+                result.AddError($"--{FunctionAppOptionDefinitions.FunctionApp.Name} option requires --{OptionDefinitions.Common.ResourceGroup.Name} option to be specified.");
             }
         });
     }
@@ -57,7 +58,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     protected override FunctionAppGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.FunctionAppName = parseResult.GetValue(_optionalFunctionAppNameOption);
+        options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
+        options.FunctionAppName = parseResult.GetValueOrDefault<string>(FunctionAppOptionDefinitions.FunctionApp.Name);
         return options;
     }
 
@@ -78,9 +80,7 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = functionApps is { Count: > 0 }
-                ? ResponseResult.Create(new(functionApps), FunctionAppJsonContext.Default.FunctionAppGetCommandResult)
-                : null;
+            context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -103,9 +103,9 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
 
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Function App not found. Verify the app name, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed accessing the Function App. Details: {reqEx.Message}",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)

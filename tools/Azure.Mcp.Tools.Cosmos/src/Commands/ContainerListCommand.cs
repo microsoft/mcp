@@ -28,7 +28,7 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -54,11 +54,7 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = containers?.Count > 0 ?
-                ResponseResult.Create(
-                    new ContainerListCommandResult(containers),
-                    CosmosJsonContext.Default.ContainerListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(containers ?? []), CosmosJsonContext.Default.ContainerListCommandResult);
         }
         catch (Exception ex)
         {

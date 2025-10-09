@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.KeyVault.Options;
 using Azure.Mcp.Tools.KeyVault.Options.Key;
 using Azure.Mcp.Tools.KeyVault.Services;
@@ -14,9 +15,6 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 {
     private const string CommandTitle = "Create Key Vault Key";
     private readonly ILogger<KeyCreateCommand> _logger = logger;
-    private readonly Option<string> _vaultOption = KeyVaultOptionDefinitions.VaultName;
-    private readonly Option<string> _keyOption = KeyVaultOptionDefinitions.KeyName;
-    private readonly Option<string> _keyTypeOption = KeyVaultOptionDefinitions.KeyType;
 
     public override string Name => "create";
 
@@ -24,34 +22,31 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
     };
 
     public override string Description =>
-        """
-        Create a new key in an Azure Key Vault. This command creates a key with the specified name and type
-        in the given vault.
-        """;
+        "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_vaultOption);
-        command.Options.Add(_keyOption);
-        command.Options.Add(_keyTypeOption);
+        command.Options.Add(KeyVaultOptionDefinitions.VaultName);
+        command.Options.Add(KeyVaultOptionDefinitions.KeyName);
+        command.Options.Add(KeyVaultOptionDefinitions.KeyType);
     }
 
     protected override KeyCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.VaultName = parseResult.GetValue(_vaultOption);
-        options.KeyName = parseResult.GetValue(_keyOption);
-        options.KeyType = parseResult.GetValue(_keyTypeOption);
+        options.VaultName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.VaultName.Name);
+        options.KeyName = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.KeyName.Name);
+        options.KeyType = parseResult.GetValueOrDefault<string>(KeyVaultOptionDefinitions.KeyType.Name);
         return options;
     }
 
@@ -76,7 +71,7 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new KeyCreateCommandResult(
+                new(
                     key.Name,
                     key.KeyType.ToString(),
                     key.Properties.Enabled,

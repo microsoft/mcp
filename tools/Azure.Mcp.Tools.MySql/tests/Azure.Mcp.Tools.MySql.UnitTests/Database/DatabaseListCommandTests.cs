@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Database;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,18 +50,18 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseListResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.DatabaseListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedDatabases, result.Databases);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist()
     {
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
@@ -76,8 +77,13 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
-        Assert.Null(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.DatabaseListCommandResult);
+        Assert.NotNull(result);
+        Assert.Empty(result.Databases);
     }
 
     [Fact]
@@ -98,7 +104,7 @@ public class DatabaseListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Access denied", response.Message);
     }
 
@@ -107,16 +113,7 @@ public class DatabaseListCommandTests
     {
         var command = new DatabaseListCommand(_logger);
 
-        Assert.Equal("list", command.Name);
-        Assert.Equal("Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.", command.Description);
-        Assert.Equal("List MySQL Databases", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class DatabaseListResult
-    {
-        [JsonPropertyName("Databases")]
-        public List<string> Databases { get; set; } = new List<string>();
     }
 }

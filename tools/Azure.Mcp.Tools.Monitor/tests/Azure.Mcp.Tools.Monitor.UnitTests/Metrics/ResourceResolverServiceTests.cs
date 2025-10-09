@@ -91,19 +91,11 @@ public class ResourceResolverServiceTests
 
     [Theory]
     [InlineData("", "")]
+    [InlineData(null, null)]
     public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentException(string? subscription, string? resourceName)
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!));
-    }
-
-    [Theory]
-    [InlineData(null, null)]
-    public async Task ResolveResourceIdAsync_WithNullOrEmptySubscription_ThrowsArgumentNullException(string? subscription, string? resourceName)
-    {
-        // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
             _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!));
     }
 
@@ -257,17 +249,4 @@ public class ResourceResolverServiceTests
     }
 
     #endregion
-}
-
-// Helper class to create async enumerables for testing
-public static class AsyncPageableHelper
-{
-    public static async IAsyncEnumerable<T> CreateAsyncEnumerable<T>(IEnumerable<T> items)
-    {
-        foreach (var item in items)
-        {
-            yield return item;
-        }
-        await Task.CompletedTask;
-    }
 }

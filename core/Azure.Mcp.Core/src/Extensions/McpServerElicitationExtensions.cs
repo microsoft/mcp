@@ -1,11 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
-using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using static ModelContextProtocol.Protocol.ElicitRequestParams;
 
 namespace Azure.Mcp.Core.Extensions;
@@ -23,7 +20,7 @@ public static class McpServerElicitationExtensions
     /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     /// <returns>A task that represents the asynchronous elicitation operation.</returns>
     public static async Task<ElicitationResponse> RequestElicitationAsync(
-        this IMcpServer server,
+        this McpServer server,
         ElicitationRequestParams request,
         CancellationToken cancellationToken = default)
     {
@@ -64,7 +61,7 @@ public static class McpServerElicitationExtensions
     /// </summary>
     /// <param name="server">The MCP server instance.</param>
     /// <returns>True if the client supports elicitation, false otherwise.</returns>
-    public static bool SupportsElicitation(this IMcpServer server)
+    public static bool SupportsElicitation(this McpServer server)
     {
         return server?.ClientCapabilities?.Elicitation != null;
     }
@@ -76,7 +73,7 @@ public static class McpServerElicitationExtensions
     /// <param name="toolName">The name of the tool.</param>
     /// <param name="toolMetadata">The tool metadata to check.</param>
     /// <returns>True if elicitation should be triggered, false otherwise.</returns>
-    public static bool ShouldTriggerElicitation(this IMcpServer server, string toolName, object? toolMetadata)
+    public static bool ShouldTriggerElicitation(this McpServer server, string toolName, object? toolMetadata)
     {
         if (!server.SupportsElicitation())
         {
@@ -88,7 +85,7 @@ public static class McpServerElicitationExtensions
         {
             return jsonMetadata.TryGetPropertyValue("Secret", out var secretValue) &&
                    secretValue is JsonValue jsonValue &&
-                   jsonValue.TryGetValue<bool>(out bool isSecret) &&
+                   jsonValue.TryGetValue(out bool isSecret) &&
                    isSecret;
         }
 

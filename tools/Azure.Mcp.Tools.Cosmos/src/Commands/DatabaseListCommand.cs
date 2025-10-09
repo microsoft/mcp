@@ -27,7 +27,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -52,11 +52,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = databases?.Count > 0 ?
-                ResponseResult.Create(
-                    new DatabaseListCommandResult(databases),
-                    CosmosJsonContext.Default.DatabaseListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(databases ?? []), CosmosJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)
         {

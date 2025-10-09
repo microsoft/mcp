@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Tools.ResourceHealth.Options;
-
 namespace Azure.Mcp.Tools.ResourceHealth.Options.ServiceHealthEvents;
 
 public class ServiceHealthEventsListOptions : BaseResourceHealthOptions

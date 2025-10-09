@@ -17,8 +17,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
     public override string Name => "create";
     public override string Description =>
         $"""
-        Creates a new Azure Load Testing resource in the currently selected subscription and resource group for the logged-in tenant.
-        Returns the created Load Testing resource.
+        Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. 
+        Once the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.
         """;
     public override string Title => _commandTitle;
 
@@ -26,7 +26,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
     {
         Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -55,7 +55,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.RetryPolicy);
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestResourceCreateCommandResult(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :
                 null;
         }
         catch (Exception ex)

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
 using Azure.Mcp.Core.Extensions;
@@ -16,19 +17,14 @@ namespace Azure.Mcp.Tools.ServiceBus.Commands.Topic;
 public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : SubscriptionCommand<BaseTopicOptions>
 {
     private const string CommandTitle = "Get Service Bus Topic Details";
-    private readonly Option<string> _topicOption = ServiceBusOptionDefinitions.Topic;
-    private readonly Option<string> _namespaceOption = ServiceBusOptionDefinitions.Namespace;
     private readonly ILogger<TopicDetailsCommand> _logger = logger;
     public override string Name => "details";
 
     public override string Description =>
         """
-        Get details about a Service Bus topic. Returns topic properties and runtime information. Properties returned include
-        number of subscriptions, max message size, max topic size, number of scheduled messages, etc.
-
-        Required arguments:
-        - namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)
-        - topic: Topic name to get information about.
+        Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.
+        Required arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.
+        Do not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.
         """;
 
     public override string Title => CommandTitle;
@@ -37,7 +33,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -46,15 +42,15 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(_namespaceOption);
-        command.Options.Add(_topicOption);
+        command.Options.Add(ServiceBusOptionDefinitions.Namespace);
+        command.Options.Add(ServiceBusOptionDefinitions.Topic);
     }
 
     protected override BaseTopicOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.TopicName = parseResult.GetValueOrDefault(_topicOption);
-        options.Namespace = parseResult.GetValueOrDefault(_namespaceOption);
+        options.TopicName = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Topic.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(ServiceBusOptionDefinitions.Namespace.Name);
         return options;
     }
 
@@ -76,9 +72,7 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(
-                new TopicDetailsCommandResult(details),
-                ServiceBusJsonContext.Default.TopicDetailsCommandResult);
+            context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }
         catch (Exception ex)
         {
@@ -96,9 +90,9 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => 404,
+        ServiceBusException sbEx when sbEx.Reason == ServiceBusFailureReason.MessagingEntityNotFound => HttpStatusCode.NotFound,
         _ => base.GetStatusCode(ex)
     };
 
