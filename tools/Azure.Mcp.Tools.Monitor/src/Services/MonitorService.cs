@@ -31,6 +31,11 @@ public class MonitorService : BaseAzureService, IMonitorService
     private readonly IResourceResolverService _resourceResolverService;
     private readonly IHttpClientService _httpClientService;
 
+    // Token caching fields
+    private string? _cachedManagementToken;
+    private DateTimeOffset _managementTokenExpiryTime;
+    private const int TokenExpirationBufferSeconds = 300; // 5 minutes buffer
+
     public MonitorService(
         ISubscriptionService subscriptionService,
         ITenantService tenantService,
@@ -442,16 +447,14 @@ public class MonitorService : BaseAzureService, IMonitorService
         query += $"&$filter={Uri.EscapeDataString(filter)}";
         uriBuilder.Query = query;
 
-        // Get access token
-        var credential = await GetCredential(tenant);
-        var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
-        var token = await credential.GetTokenAsync(tokenRequestContext, default);
+        // Get cached access token
+        var tokenString = await GetCachedManagementTokenAsync(tenant);
 
         // Make paginated requests
         string? nextRequestUrl = uriBuilder.Uri.ToString();
         do
         {
-            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, token);
+            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, tokenString);
             returnValue.AddRange(listResponse.Value);
             nextRequestUrl = listResponse.NextLink;
         } while (!string.IsNullOrEmpty(nextRequestUrl));
@@ -459,10 +462,10 @@ public class MonitorService : BaseAzureService, IMonitorService
         return returnValue;
     }
 
-    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, AccessToken token)
+    private async Task<ActivityLogListResponse> MakeActivityLogRequestAsync(string url, string token)
     {
         using HttpRequestMessage httpRequest = new(HttpMethod.Get, url);
-        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
+        httpRequest.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
         using HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(httpRequest);
 
@@ -521,5 +524,25 @@ public class MonitorService : BaseAzureService, IMonitorService
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
+    }
+
+    private async Task<string> GetCachedManagementTokenAsync(string? tenant)
+    {
+        // Check if we have a cached token that's still valid
+        if (_cachedManagementToken != null && DateTimeOffset.UtcNow < _managementTokenExpiryTime)
+        {
+            return _cachedManagementToken;
+        }
+
+        // Get a new token
+        var credential = await GetCredential(tenant);
+        var tokenRequestContext = new TokenRequestContext(new[] { "https://management.azure.com/.default" });
+        var token = await credential.GetTokenAsync(tokenRequestContext, default);
+
+        // Cache the token with a buffer before expiration
+        _cachedManagementToken = token.Token;
+        _managementTokenExpiryTime = token.ExpiresOn.AddSeconds(-TokenExpirationBufferSeconds);
+
+        return _cachedManagementToken;
     }
 }
