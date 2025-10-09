@@ -56,6 +56,7 @@ jobs:
       echo "Running container tests..."
       echo "Calling 'azmcp tools list'"
       # Override entrypoint to list tools directly instead of starting the server
+      mkdir -p $(Build.ArtifactStagingDirectory)/docker_output
       docker run --rm --entrypoint ./azmcp $(Build.Repository.Name)/server:$(Build.BuildId) tools list > $(Build.ArtifactStagingDirectory)/docker_output/tools.json
       echo "tools list output (truncated):"
       head -n 40 $(Build.ArtifactStagingDirectory)/docker_output/tools.json || true
