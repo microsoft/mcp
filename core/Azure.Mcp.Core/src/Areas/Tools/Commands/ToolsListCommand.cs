@@ -73,12 +73,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     .Where(name => !string.IsNullOrEmpty(name));
 
                 // Apply namespace filtering if specified
-                if (options.Namespaces.Count > 0)
-                {
-                    var namespacePrefixes = options.Namespaces.Select(ns => $"azmcp_{ns}_").ToList();
-                    allToolNames = allToolNames.Where(name => 
-                        namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
-                }
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, CommandFactory.Separator);
 
                 var toolNames = await Task.Run(() => allToolNames
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -138,12 +133,9 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
 
             // Apply namespace filtering if specified
-            if (options.Namespaces.Count > 0)
-            {
-                var namespacePrefixes = options.Namespaces.Select(ns => $"azmcp {ns}").ToList();
-                allTools = allTools.Where(tool => 
-                    namespacePrefixes.Any(prefix => tool.Command.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
-            }
+            var filteredToolNames = ApplyNamespaceFilterToNames(allTools.Select(t => t.Command), options.Namespaces, ' ');
+            var filteredToolNamesSet = filteredToolNames.ToHashSet(StringComparer.OrdinalIgnoreCase);
+            allTools = allTools.Where(tool => filteredToolNamesSet.Contains(tool.Command));
 
             var tools = await Task.Run(() => allTools.ToList());
 
@@ -157,6 +149,18 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
             return context.Response;
         }
+    }
+
+    private static IEnumerable<string> ApplyNamespaceFilterToNames(IEnumerable<string> names, List<string> namespaces, char separator)
+    {
+        if (namespaces.Count == 0)
+        {
+            return names;
+        }
+
+        var namespacePrefixes = namespaces.Select(ns => $"azmcp{separator}{ns}{separator}").ToList();
+        return names.Where(name => 
+            namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
     }
 
     private static CommandInfo CreateCommand(string tokenizedName, IBaseCommand command)
