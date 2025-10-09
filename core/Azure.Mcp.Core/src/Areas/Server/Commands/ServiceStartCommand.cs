@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Net;
+using Azure.Mcp.Core.Areas.Server.Authentication.HttpHost;
 using Azure.Mcp.Core.Areas.Server.Configuration;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
@@ -345,6 +346,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
         Console.WriteLine(serverOptions.ServerConfiguration!.ToString());
+        var authConfig = HttpHostAuthenticationConfigurationFactory.Create(serverOptions.ServerConfiguration);
 
         return Host.CreateDefaultBuilder()
             .ConfigureLogging(logging =>
@@ -368,6 +370,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                         });
                     });
 
+                    authConfig.ConfigureServices(services);
                     ConfigureServices(services);
                     ConfigureMcpServer(services, serverOptions);
                 });
@@ -375,10 +378,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 webBuilder.Configure(app =>
                 {
                     app.UseCors("AllowAll");
+
+                    authConfig.ConfigureMiddleware(app);
                     app.UseRouting();
                     app.UseEndpoints(endpoints =>
                     {
-                        endpoints.MapMcp();
+                        var mcpEndpoints = endpoints.MapMcp();
+                        authConfig.ConfigureEndpoints(mcpEndpoints);
                     });
                 });
 
