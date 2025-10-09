@@ -14,7 +14,6 @@ public sealed class ToolsSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ToolsListCommand>();
-        services.AddSingleton<ToolsListNamesCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -24,9 +23,6 @@ public sealed class ToolsSetup : IAreaSetup
 
         var list = serviceProvider.GetRequiredService<ToolsListCommand>();
         tools.AddCommand(list.Name, list);
-
-        var listNames = serviceProvider.GetRequiredService<ToolsListNamesCommand>();
-        tools.AddCommand(listNames.Name, listNames);
 
         return tools;
     }

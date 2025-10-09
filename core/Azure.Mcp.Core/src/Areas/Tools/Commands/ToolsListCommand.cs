@@ -1,8 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine.Parsing;
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
 using Microsoft.Extensions.Logging;
 
@@ -19,7 +23,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         """
         List all available commands and their tools in a hierarchical structure. This command returns detailed information
         about each command, including its name, description, full command path, available subcommands, and all supported
-        arguments. Use this to explore the CLI's functionality or to build interactive command interfaces.
+        arguments. Use --name to return only tool names, and --namespace to filter by specific namespaces.
         """;
 
     public override string Title => CommandTitle;
@@ -37,14 +41,19 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ToolsListOptionDefinitions.Namespaces);
+        command.Options.Add(ToolsListOptionDefinitions.NamespaceMode);
+        command.Options.Add(ToolsListOptionDefinitions.Namespace);
+        command.Options.Add(ToolsListOptionDefinitions.Name);
     }
 
     protected override ToolsListOptions BindOptions(ParseResult parseResult)
     {
+        var namespaces = parseResult.GetValueOrDefault<string[]>(ToolsListOptionDefinitions.Namespace.Name) ?? [];
         return new ToolsListOptions
         {
-            Namespaces = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.Namespaces)
+            NamespaceMode = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NamespaceMode),
+            Name = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.Name),
+            Namespaces = namespaces.ToList()
         };
     }
 
@@ -55,8 +64,33 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             var factory = context.GetService<CommandFactory>();
             var options = BindOptions(parseResult);
 
-            // If the --namespaces flag is set, return distinct top‑level namespaces (child groups beneath root 'azmcp').
-            if (options.Namespaces)
+            // If the --name flag is set, return only tool names
+            if (options.Name)
+            {
+                // Get all visible commands and extract their tokenized names (full command paths)
+                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                    .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
+                    .Where(name => !string.IsNullOrEmpty(name));
+
+                // Apply namespace filtering if specified
+                if (options.Namespaces.Count > 0)
+                {
+                    var namespacePrefixes = options.Namespaces.Select(ns => $"azmcp_{ns}_").ToList();
+                    allToolNames = allToolNames.Where(name => 
+                        namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
+                }
+
+                var toolNames = await Task.Run(() => allToolNames
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                    .ToList());
+
+                var result = new ToolNamesResult(toolNames);
+                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                return context.Response;
+            }
+
+            // If the --namespace-mode flag is set, return distinct top‑level namespaces (child groups beneath root 'azmcp').
+            if (options.NamespaceMode)
             {
                 var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
                 var surfaced = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "extension" };
@@ -99,9 +133,19 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 return context.Response;
             }
 
-            var tools = await Task.Run(() => CommandFactory.GetVisibleCommands(factory.AllCommands)
-                .Select(kvp => CreateCommand(kvp.Key, kvp.Value))
-                .ToList());
+            // Get all tools with full details
+            var allTools = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                .Select(kvp => CreateCommand(kvp.Key, kvp.Value));
+
+            // Apply namespace filtering if specified
+            if (options.Namespaces.Count > 0)
+            {
+                var namespacePrefixes = options.Namespaces.Select(ns => $"azmcp {ns}").ToList();
+                allTools = allTools.Where(tool => 
+                    namespacePrefixes.Any(prefix => tool.Command.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
+            }
+
+            var tools = await Task.Run(() => allTools.ToList());
 
             context.Response.Results = ResponseResult.Create(tools, ModelsJsonContext.Default.ListCommandInfo);
             return context.Response;
@@ -135,4 +179,6 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             Metadata = command.Metadata
         };
     }
+
+    public record ToolNamesResult(List<string> Names);
 }

@@ -14,7 +14,7 @@ namespace Azure.Mcp.Core.Models;
 [JsonSerializable(typeof(ElicitationSchemaRoot))]
 [JsonSerializable(typeof(ElicitationSchemaProperty))]
 [JsonSerializable(typeof(ToolMetadata))]
-[JsonSerializable(typeof(ToolsListNamesCommand.ToolNamesResult))]
+[JsonSerializable(typeof(ToolsListCommand.ToolNamesResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public sealed partial class ModelsJsonContext : JsonSerializerContext
 {
