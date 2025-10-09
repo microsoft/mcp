@@ -25,7 +25,7 @@ public class AksSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AKS command group
-        var aks = new CommandGroup(Name, "Azure Kubernetes Service operations - Commands for managing Azure Kubernetes Service (AKS) cluster resources. Includes operations for listing clusters, retrieving cluster configurations, and managing Kubernetes environments in Azure.");
+        var aks = new CommandGroup(Name, "Azure Kubernetes Service operations - Manage and query Azure Kubernetes Service (AKS) resources such as clusters, node pools, and control plane configurations across subscriptions. Use these commands to list clusters, inspect cluster properties, and retrieve node pool details. This tool doesn't run kubectl workloads, manage pods, or deploy applications inside clusters; it focuses on Azure-level AKS resource management.");
 
         // Create AKS subgroups
         var cluster = new CommandGroup("cluster", "AKS cluster operations - Commands for listing and managing AKS clusters in your Azure subscription.");
