@@ -116,13 +116,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
-| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
-| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_email_send | Send an email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send an email from my communication service to <email-address> |
+| azmcp_communication_email_send | Send HTML-formatted email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send email with CC to <email-address-1> and <email-address-2> |
+| azmcp_communication_email_send | Send email to multiple recipients: <email-address-1>, <email-address-2> |
+| azmcp_communication_email_send | Send email with reply-to address set to <email-address> |
+| azmcp_communication_email_send | Send email with custom sender name <sender-name> |
+| azmcp_communication_email_send | Send an email with BCC recipients |
+| azmcp_communication_sms_send | Send an SMS message to <phone-number> saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to <phone-number-2> from <phone-number-1> with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: <phone-number-1>, <phone-number-2> |
 | azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
 | azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
-| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
-| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send broadcast SMS to <phone-number-1> and <phone-number-2> saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to <phone-number-1> |
 | azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
 
 ## Azure Confidential Ledger

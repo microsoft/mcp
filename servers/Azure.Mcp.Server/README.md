@@ -280,6 +280,11 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Send SMS with delivery reporting enabled"
 * "Send a broadcast SMS to multiple recipients"
 * "Send SMS with custom tracking tag"
+* "Send an email from 'sender@example.com' to 'recipient@example.com' with subject 'Hello' and message 'Welcome!'"
+* "Send an HTML email to multiple recipients with CC and BCC using Azure Communication Services"
+* "Send an email with reply-to address 'reply@example.com' and subject 'Support Request'"
+* "Send an email from my communication service endpoint with custom sender name and multiple recipients"
+* "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
 ### 📦 Azure Container Apps
 
