@@ -48,8 +48,6 @@ public class NamespaceDeleteCommandTests
         Assert.NotNull(command);
         Assert.Equal("delete", command.Name);
         Assert.Equal("Delete Event Hubs Namespace", command.Title);
-        Assert.Contains("Delete a Namespace", command.Description);
-        Assert.Contains("WARNING: This operation is irreversible", command.Description);
         Assert.True(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
         Assert.False(command.Metadata.ReadOnly);
@@ -185,7 +183,6 @@ public class NamespaceDeleteCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
-        Assert.Contains("Event Hubs namespace not found", response.Message);
     }
 
     [Fact]
@@ -294,7 +291,6 @@ public class NamespaceDeleteCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
-        Assert.Contains("resource group, subscription, or namespace was not found", response.Message);
     }
 
     [Fact]

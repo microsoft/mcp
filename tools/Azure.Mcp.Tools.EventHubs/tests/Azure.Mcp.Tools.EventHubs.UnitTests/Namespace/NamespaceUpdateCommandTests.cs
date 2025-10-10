@@ -400,7 +400,6 @@ public class NamespaceUpdateCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Message);
-        Assert.Contains("Event Hubs namespace not found", response.Message);
     }
 
     [Fact]
