@@ -136,10 +136,11 @@ public class EmailSendCommandTests
                         Assert.Fail($"Expected validation failure for scenario: {scenario}, but got status: {response.Status}");
                     }
                 }
-                catch (ArgumentException)
+                catch (ArgumentException ex)
                 {
                     // This is expected for service-level validation failures
-                    Assert.True(true, $"Got expected ArgumentException for scenario: {scenario}");
+                    Assert.NotNull(ex.Message);
+                    Assert.NotEmpty(ex.Message);
                 }
             }
         }
