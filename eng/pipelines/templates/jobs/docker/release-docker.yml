@@ -28,7 +28,7 @@ jobs:
         steps:
         - download: current
           artifact: docker_output
-          displayName: Download built image tar
+          displayName: Download built image .tar
 
         - task: AzureCLI@2
           displayName: Login to ${{ parameters.ContainerRegistry }}
@@ -42,30 +42,33 @@ jobs:
         - script: |
             echo "Loading image..."
             docker load -i $(Pipeline.Workspace)/docker_output/image.tar
+            docker image inspect "$(DockerLocalTag)" >/dev/null 2>&1 || { echo "Local tag $(DockerLocalTag) not found after load"; exit 1; }
           displayName: Load image
 
         - script: |
-            VERSION=$(DockerImageVersion)
-            NAME=$(DockerImageName)
-            ACR=${{ parameters.ContainerRegistry }}.azurecr.io
-            ENV=${{ parameters.DeploymentEnvironment }}
+            if [ -z "$(DockerImageVersion)" ] || [ -z "$(DockerImageName)" ]; then
+              echo "ERROR: Required tag components missing (version='$(DockerImageVersion)', name='$(DockerImageName)')" >&2
+              exit 1
+            fi
 
-            # LOCAL_TAG must match the tag used when the image was originally built & saved.
-            LOCAL_TAG="$(Build.Repository.Name)/server:$(Build.BuildId)"
-            VERSION_TAG="$ACR/$ENV/$NAME:$VERSION"
-            LATEST_TAG="$ACR/$ENV/$NAME:latest"
+            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(DockerImageName)"
 
-            echo "Tagging $LOCAL_TAG as:"
-            echo "  $VERSION_TAG"
-            echo "  $LATEST_TAG"
+            echo "Base repository: $BASE_REPO"
 
-            docker tag $LOCAL_TAG $VERSION_TAG
-            docker tag $LOCAL_TAG $LATEST_TAG
+            VERSIONED_TAG="$BASE_REPO:$(DockerImageVersion)"
+            LATEST_TAG="$BASE_REPO:latest"
 
-            echo "Pushing version tag..."
-            docker push $VERSION_TAG
+            echo "Tagging $(DockerLocalTag) as:"
+            echo "  Versioned tag: $VERSIONED_TAG"
+            echo "  Latest tag: $LATEST_TAG"
+
+            docker tag "$(DockerLocalTag)" "$VERSIONED_TAG"
+            docker tag "$(DockerLocalTag)" "$LATEST_TAG" 
+
+            echo "Pushing versioned tag..."
+            docker push "$VERSIONED_TAG"
             echo "Pushing latest tag..."
-            docker push $LATEST_TAG
+            docker push "$LATEST_TAG"
 
             echo "Done."
           displayName: Push image to ACR
