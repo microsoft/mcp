@@ -82,7 +82,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new EventHubDeleteCommandResult(deleted, options.EventHub!),
+                new(deleted, options.EventHub!),
                 EventHubsJsonContext.Default.EventHubDeleteCommandResult);
         }
         catch (Exception ex)
