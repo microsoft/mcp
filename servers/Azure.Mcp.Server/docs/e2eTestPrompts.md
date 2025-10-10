@@ -118,6 +118,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
+## Azure CLI Generate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
+| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
+
 ## Azure Container Registry (ACR)
 
 | Tool Name | Test Prompt |

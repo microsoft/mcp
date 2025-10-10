@@ -404,6 +404,12 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
+### Azure CLI Generate Operations
+```bash
+# Generate an Azure CLI command based on user intent
+azmcp extension cli generate --cli-type <cli-type> --intent <intent>
+```
+
 ### Azure Application Insights Operations
 
 #### Code Optimization Recommendations
