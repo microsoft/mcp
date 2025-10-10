@@ -101,7 +101,6 @@ extends:
         displayName: 'Sign and Pack'
         dependsOn:
         - Initialize
-        - Build
         pool:
           name: $(LINUXPOOL)
           image: $(LINUXVMIMAGE)
@@ -115,48 +114,3 @@ extends:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
             ServerName: ${{ parameters.ServerName }}
-
-      - ${{ if eq(parameters.PublishTarget, 'public') }}:
-        - stage: Release
-          dependsOn:
-          - Initialize
-          - SignAndPack
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          - name: VersionSuffix
-            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-          - name: DockerImageName
-            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
-          - name: DockerImageVersion
-            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
-          jobs:
-          - template: /eng/pipelines/templates/jobs/release.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}
-              IncludeNative: false
-              IncludeDockerRelease: ${{ parameters.IncludeDockerRelease }}
-              IsTestPipeline: ${{ parameters.IsTestPipeline }}
-
-      - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
-        - stage: Integration
-          dependsOn:
-          - Initialize
-          - SignAndPack
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          - name: VersionSuffix
-            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
-          jobs:
-          - template: /eng/pipelines/templates/jobs/integration.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}
