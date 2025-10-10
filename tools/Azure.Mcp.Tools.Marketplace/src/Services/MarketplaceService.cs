@@ -14,8 +14,8 @@ using Azure.Mcp.Tools.Marketplace.Models;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
-public class MarketplaceService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), IMarketplaceService
+public class MarketplaceService(ITokenCredentialProvider tokenCredentialProvider, ITenantService tenantService, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IMarketplaceService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
 

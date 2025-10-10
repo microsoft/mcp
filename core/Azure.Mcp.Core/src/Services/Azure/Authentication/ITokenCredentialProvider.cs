@@ -6,9 +6,9 @@ using Azure.Core;
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
-/// Factory for creating TokenCredential instances based on <see cref="ServerConfiguration"/>.
+/// Provider to obtain TokenCredential instances based on <see cref="ServerConfiguration"/>.
 /// </summary>
-public interface ITokenCredentialFactory
+public interface ITokenCredentialProvider
 {
     /// <summary>
     /// Creates a TokenCredential based on <see cref="ServerConfiguration"/>.
@@ -27,18 +27,18 @@ public interface ITokenCredentialFactory
     /// <summary>
     /// Special singleton instance that signals to use <see cref="CustomChainedCredential"/>.
     /// </summary>
-    public static readonly ITokenCredentialFactory Default = new DefaultTokenCredentialFactory();
+    public static readonly ITokenCredentialProvider Default = new DefaultTokenCredentialProvider();
 }
 
 /// <summary>
 /// Internal marker implementation that represents "use <see cref="CustomChainedCredential"/>".
 /// </summary>
-internal sealed class DefaultTokenCredentialFactory : ITokenCredentialFactory
+internal sealed class DefaultTokenCredentialProvider : ITokenCredentialProvider
 {
     public Task<TokenCredential> CreateAsync(string? tenant = null)
     {
         throw new InvalidOperationException(
-            "DefaultTokenCredentialFactory is a marker instance for BaseAzureService to use CustomChainedCredential");
+            "DefaultTokenCredentialProvider is a marker instance for BaseAzureService to use CustomChainedCredential");
     }
 
     public string? GetCurrentUserId() => null; // Single-user mode

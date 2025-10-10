@@ -16,12 +16,12 @@ namespace Azure.Mcp.Tools.Kusto.Services;
 
 
 public sealed class KustoService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     ICacheService cacheService,
     IHttpClientService httpClientService,
-    ILogger<KustoService> logger) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IKustoService
+    ILogger<KustoService> logger) : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IKustoService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

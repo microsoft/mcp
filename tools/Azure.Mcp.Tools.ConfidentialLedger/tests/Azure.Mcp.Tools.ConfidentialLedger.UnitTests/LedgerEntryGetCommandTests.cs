@@ -56,7 +56,7 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService(ITokenCredentialFactory.Default);
+        var service = new ConfidentialLedgerService(ITokenCredentialProvider.Default);
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
     }

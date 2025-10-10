@@ -18,7 +18,7 @@ using Azure.ResourceManager.StorageCache.Models;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Services;
 
-public sealed class ManagedLustreService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, IResourceGroupService resourceGroupService, ITenantService tenantService) : BaseAzureService(tokenCredentialFactory, tenantService), IManagedLustreService
+public sealed class ManagedLustreService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, IResourceGroupService resourceGroupService, ITenantService tenantService) : BaseAzureService(tokenCredentialProvider, tenantService), IManagedLustreService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;

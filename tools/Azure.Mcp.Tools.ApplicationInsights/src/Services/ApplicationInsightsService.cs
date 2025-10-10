@@ -15,12 +15,12 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 
 public class ApplicationInsightsService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IProfilerDataService profilerDataClient,
-    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IApplicationInsightsService
+    ILogger<ApplicationInsightsService> logger) : BaseAzureService(tokenCredentialProvider, tenantService), IApplicationInsightsService
 {
     private const int MaxRecommendations = 20;
     private readonly ISubscriptionService _subscriptionService = subscriptionService;

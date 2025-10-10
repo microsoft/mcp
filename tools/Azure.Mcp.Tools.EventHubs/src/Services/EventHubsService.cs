@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.EventHubs.Services;
 
-public class EventHubsService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
-    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IEventHubsService
+public class EventHubsService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventHubsService> logger)
+    : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IEventHubsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     private readonly ITenantService _tenantService = tenantService;

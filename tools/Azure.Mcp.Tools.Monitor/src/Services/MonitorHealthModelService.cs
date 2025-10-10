@@ -12,8 +12,8 @@ using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorHealthModelService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ICacheService cacheService, IHttpClientService httpClientService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), IMonitorHealthModelService
+public class MonitorHealthModelService(ITokenCredentialProvider tokenCredentialProvider, ITenantService tenantService, ICacheService cacheService, IHttpClientService httpClientService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IMonitorHealthModelService
 {
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com";

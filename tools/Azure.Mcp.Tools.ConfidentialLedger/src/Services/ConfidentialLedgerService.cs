@@ -18,7 +18,7 @@ using Azure.Security.ConfidentialLedger;
 
 namespace Azure.Mcp.Tools.ConfidentialLedger.Services;
 
-public class ConfidentialLedgerService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IConfidentialLedgerService
+public class ConfidentialLedgerService(ITokenCredentialProvider tokenCredentialProvider) : BaseAzureService(tokenCredentialProvider), IConfidentialLedgerService
 {
     // NOTE: We construct the data-plane endpoint from the ledger name.
     private static Uri BuildLedgerUri(string ledgerName) => new($"https://{ledgerName}.confidential-ledger.azure.com");

@@ -14,7 +14,7 @@ using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechReco
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
-public class SpeechService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService, ILogger<SpeechService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), ISpeechService
+public class SpeechService(ITokenCredentialProvider tokenCredentialProvider, ITenantService tenantService, ILogger<SpeechService> logger) : BaseAzureService(tokenCredentialProvider, tenantService), ISpeechService
 {
     private readonly ILogger<SpeechService> _logger = logger;
     /// <summary>

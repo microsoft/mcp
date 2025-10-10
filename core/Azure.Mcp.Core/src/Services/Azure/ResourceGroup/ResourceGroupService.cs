@@ -10,8 +10,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 
-public class ResourceGroupService(ITokenCredentialFactory tokenCredentialFactory, ICacheService cacheService, ISubscriptionService subscriptionService)
-    : BaseAzureService(tokenCredentialFactory), IResourceGroupService
+public class ResourceGroupService(ITokenCredentialProvider tokenCredentialProvider, ICacheService cacheService, ISubscriptionService subscriptionService)
+    : BaseAzureService(tokenCredentialProvider), IResourceGroupService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));

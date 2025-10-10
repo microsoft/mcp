@@ -36,10 +36,10 @@ using OpenAI.Embeddings;
 namespace Azure.Mcp.Tools.Foundry.Services;
 
 public class FoundryService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
+    ITenantService tenantService) : BaseAzureResourceService(tokenCredentialProvider, subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
 {
     private static readonly Dictionary<string, Func<IEvaluator>> AgentEvaluatorDictionary = new()
     {

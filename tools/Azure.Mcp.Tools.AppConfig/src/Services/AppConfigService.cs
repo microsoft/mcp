@@ -17,8 +17,8 @@ namespace Azure.Mcp.Tools.AppConfig.Services;
 
 using ETag = Core.Models.ETag;
 
-public sealed class AppConfigService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger)
-    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAppConfigService
+public sealed class AppConfigService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger)
+    : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IAppConfigService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

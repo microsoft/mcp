@@ -9,7 +9,7 @@ using Azure.Monitor.Query;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MetricsQueryClientService(ITokenCredentialFactory tokenCredentialFactory, ITenantService tenantService) : BaseAzureService(tokenCredentialFactory, tenantService), IMetricsQueryClientService
+public class MetricsQueryClientService(ITokenCredentialProvider tokenCredentialProvider, ITenantService tenantService) : BaseAzureService(tokenCredentialProvider, tenantService), IMetricsQueryClientService
 {
     public async Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null)
     {

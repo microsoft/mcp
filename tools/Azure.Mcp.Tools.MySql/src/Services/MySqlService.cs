@@ -15,7 +15,7 @@ using MySqlConnector;
 
 namespace Azure.Mcp.Tools.MySql.Services;
 
-public class MySqlService(ITokenCredentialFactory tokenCredentialFactory, IResourceGroupService resourceGroupService, ITenantService tenantService, ICacheService cacheService, ILogger<MySqlService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IMySqlService
+public class MySqlService(ITokenCredentialProvider tokenCredentialProvider, IResourceGroupService resourceGroupService, ITenantService tenantService, ICacheService cacheService, ILogger<MySqlService> logger) : BaseAzureService(tokenCredentialProvider, tenantService), IMySqlService
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

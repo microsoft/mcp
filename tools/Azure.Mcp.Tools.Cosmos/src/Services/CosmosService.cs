@@ -13,8 +13,8 @@ using Microsoft.Azure.Cosmos;
 
 namespace Azure.Mcp.Tools.Cosmos.Services;
 
-public class CosmosService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), ICosmosService, IDisposable
+public class CosmosService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), ICosmosService, IDisposable
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

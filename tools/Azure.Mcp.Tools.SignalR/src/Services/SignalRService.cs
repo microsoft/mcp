@@ -19,10 +19,10 @@ namespace Azure.Mcp.Tools.SignalR.Services;
 /// Service for Azure SignalR operations using Resource Graph API.
 /// </summary>
 public sealed class SignalRService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tokenCredentialFactory, tenantService), ISignalRService
+    ICacheService cacheService) : BaseAzureService(tokenCredentialProvider, tenantService), ISignalRService
 {
     private readonly ISubscriptionService _subscriptionService =
         subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));

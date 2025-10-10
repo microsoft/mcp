@@ -12,8 +12,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.EventGrid.Services;
 
-public class EventGridService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
-    : BaseAzureService(tokenCredentialFactory, tenantService), IEventGridService
+public class EventGridService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<EventGridService> logger)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IEventGridService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<EventGridService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

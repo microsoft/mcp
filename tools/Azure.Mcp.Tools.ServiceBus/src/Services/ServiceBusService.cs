@@ -10,7 +10,7 @@ using Azure.Messaging.ServiceBus.Administration;
 
 namespace Azure.Mcp.Tools.ServiceBus.Services;
 
-public class ServiceBusService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IServiceBusService
+public class ServiceBusService(ITokenCredentialProvider tokenCredentialProvider) : BaseAzureService(tokenCredentialProvider), IServiceBusService
 {
     public async Task<QueueDetails> GetQueueDetails(
         string namespaceName,

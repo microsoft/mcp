@@ -15,8 +15,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
-    : BaseAzureService(tokenCredentialFactory, tenantService), ICommunicationService
+public class CommunicationService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
+    : BaseAzureService(tokenCredentialProvider, tenantService), ICommunicationService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

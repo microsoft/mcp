@@ -17,7 +17,7 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 
-public class WorkbooksService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService _subscriptionService, ITenantService tenantService, ILogger<WorkbooksService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IWorkbooksService
+public class WorkbooksService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService _subscriptionService, ITenantService tenantService, ILogger<WorkbooksService> logger) : BaseAzureService(tokenCredentialProvider, tenantService), IWorkbooksService
 {
     private readonly ILogger<WorkbooksService> _logger = logger;
     private readonly ITenantService _tenantService = tenantService;

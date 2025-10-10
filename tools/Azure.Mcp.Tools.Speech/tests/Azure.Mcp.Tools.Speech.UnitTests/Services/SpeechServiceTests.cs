@@ -21,14 +21,14 @@ public class SpeechServiceTests
         _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SpeechService>>();
 
-        _speechService = new SpeechService(ITokenCredentialFactory.Default, _tenantService, _logger);
+        _speechService = new SpeechService(ITokenCredentialProvider.Default, _tenantService, _logger);
     }
 
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
     {
         // Arrange & Act
-        var service = new SpeechService(ITokenCredentialFactory.Default, _tenantService, _logger);
+        var service = new SpeechService(ITokenCredentialProvider.Default, _tenantService, _logger);
 
         // Assert
         Assert.NotNull(service);

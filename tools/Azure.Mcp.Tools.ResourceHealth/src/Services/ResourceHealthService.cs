@@ -14,8 +14,8 @@ using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 
 namespace Azure.Mcp.Tools.ResourceHealth.Services;
 
-public class ResourceHealthService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), IResourceHealthService
+public class ResourceHealthService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IResourceHealthService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));

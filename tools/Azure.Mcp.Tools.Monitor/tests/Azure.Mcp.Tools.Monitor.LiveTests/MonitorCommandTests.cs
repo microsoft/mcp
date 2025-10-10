@@ -39,13 +39,13 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(ITokenCredentialFactory.Default, cacheService);
-        var subscriptionService = new SubscriptionService(ITokenCredentialFactory.Default, cacheService, tenantService);
-        var resourceGroupService = new ResourceGroupService(ITokenCredentialFactory.Default, cacheService, subscriptionService);
-        var resourceResolverService = new ResourceResolverService(ITokenCredentialFactory.Default, subscriptionService, tenantService);
+        var tenantService = new TenantService(ITokenCredentialProvider.Default, cacheService);
+        var subscriptionService = new SubscriptionService(ITokenCredentialProvider.Default, cacheService, tenantService);
+        var resourceGroupService = new ResourceGroupService(ITokenCredentialProvider.Default, cacheService, subscriptionService);
+        var resourceResolverService = new ResourceResolverService(ITokenCredentialProvider.Default, subscriptionService, tenantService);
         var httpClientOptions = new HttpClientOptions();
         var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
-        return new MonitorService(ITokenCredentialFactory.Default, subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
+        return new MonitorService(ITokenCredentialProvider.Default, subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
     }
 
     // [Fact]

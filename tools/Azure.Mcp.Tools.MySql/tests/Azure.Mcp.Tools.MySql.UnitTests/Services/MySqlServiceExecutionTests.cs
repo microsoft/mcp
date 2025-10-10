@@ -27,7 +27,7 @@ public class MySqlServiceExecutionTests
         _cacheService = Substitute.For<ICacheService>();
         _logger = Substitute.For<ILogger<MySqlService>>();
 
-        _mysqlService = new MySqlService(ITokenCredentialFactory.Default, _resourceGroupService, _tenantService, _cacheService, _logger);
+        _mysqlService = new MySqlService(ITokenCredentialProvider.Default, _resourceGroupService, _tenantService, _cacheService, _logger);
     }
 
     [Fact]

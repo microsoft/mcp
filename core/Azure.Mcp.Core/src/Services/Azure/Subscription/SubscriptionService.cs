@@ -9,8 +9,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.Subscription;
 
-public class SubscriptionService(ITokenCredentialFactory tokenCredentialFactory, ICacheService cacheService, ITenantService tenantService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), ISubscriptionService
+public class SubscriptionService(ITokenCredentialProvider tokenCredentialProvider, ICacheService cacheService, ITenantService tenantService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), ISubscriptionService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private const string CacheGroup = "subscription";

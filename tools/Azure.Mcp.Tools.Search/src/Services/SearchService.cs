@@ -19,7 +19,7 @@ using Azure.Search.Documents.Models;
 
 namespace Azure.Mcp.Tools.Search.Services;
 
-public sealed class SearchService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ICacheService cacheService) : BaseAzureService(tokenCredentialFactory), ISearchService
+public sealed class SearchService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ICacheService cacheService) : BaseAzureService(tokenCredentialProvider), ISearchService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

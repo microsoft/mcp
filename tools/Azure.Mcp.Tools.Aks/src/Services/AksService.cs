@@ -14,10 +14,10 @@ using Azure.ResourceManager.ContainerService.Models;
 namespace Azure.Mcp.Tools.Aks.Services;
 
 public sealed class AksService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tokenCredentialFactory, tenantService), IAksService
+    ICacheService cacheService) : BaseAzureService(tokenCredentialProvider, tenantService), IAksService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

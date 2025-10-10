@@ -17,8 +17,8 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
-public class RedisService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService _subscriptionService, ITenantService _tenantService)
-    : BaseAzureService(tokenCredentialFactory, _tenantService), IRedisService
+public class RedisService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService _subscriptionService, ITenantService _tenantService)
+    : BaseAzureService(tokenCredentialProvider, _tenantService), IRedisService
 {
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
         string subscription,

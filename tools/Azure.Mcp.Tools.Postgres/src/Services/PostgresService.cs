@@ -18,7 +18,7 @@ public class PostgresService : BaseAzureService, IPostgresService
 
     private const string CacheGroup = "postgres";
 
-    public PostgresService(ITokenCredentialFactory tokenCredentialFactory, IResourceGroupService resourceGroupService, ICacheService cacheService) : base(tokenCredentialFactory)
+    public PostgresService(ITokenCredentialProvider tokenCredentialProvider, IResourceGroupService resourceGroupService, ICacheService cacheService) : base(tokenCredentialProvider)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

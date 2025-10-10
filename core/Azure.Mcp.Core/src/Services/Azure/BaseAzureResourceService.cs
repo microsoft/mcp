@@ -21,10 +21,10 @@ namespace Azure.Mcp.Core.Services.Azure;
 /// Provides common methods for executing resource queries against Azure Resource Manager resources.
 /// </summary>
 public abstract class BaseAzureResourceService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILoggerFactory? loggerFactory = null) : BaseAzureService(tokenCredentialFactory, tenantService, loggerFactory)
+    ILoggerFactory? loggerFactory = null) : BaseAzureService(tokenCredentialProvider, tenantService, loggerFactory)
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));

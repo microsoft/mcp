@@ -14,8 +14,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Authorization.Services;
 
-public class AuthorizationService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
-    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAuthorizationService
+public class AuthorizationService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
+    : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IAuthorizationService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

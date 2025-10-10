@@ -10,8 +10,8 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class ResourceResolverService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService)
-    : BaseAzureService(tokenCredentialFactory, tenantService), IResourceResolverService
+public class ResourceResolverService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IResourceResolverService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 

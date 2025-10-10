@@ -17,7 +17,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
-public class LoadTestingService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService) : BaseAzureService(tokenCredentialFactory), ILoadTestingService
+public class LoadTestingService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService) : BaseAzureService(tokenCredentialProvider), ILoadTestingService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(string subscription, string? resourceGroup = null, string? testResourceName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)

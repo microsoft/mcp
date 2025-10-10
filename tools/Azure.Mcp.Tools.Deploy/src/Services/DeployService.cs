@@ -8,7 +8,7 @@ using Azure.Mcp.Tools.Deploy.Services.Util;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
-public class DeployService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IDeployService
+public class DeployService(ITokenCredentialProvider tokenCredentialProvider) : BaseAzureService(tokenCredentialProvider), IDeployService
 {
 
     public async Task<string> GetAzdResourceLogsAsync(

@@ -22,12 +22,12 @@ using Azure.ResourceManager.OperationalInsights;
 namespace Azure.Mcp.Tools.Monitor.Services;
 
 public class MonitorService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
     IResourceGroupService resourceGroupService,
     IResourceResolverService resourceResolverService,
-    IHttpClientService httpClientService) : BaseAzureService(tokenCredentialFactory, tenantService), IMonitorService
+    IHttpClientService httpClientService) : BaseAzureService(tokenCredentialProvider, tenantService), IMonitorService
 {
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat

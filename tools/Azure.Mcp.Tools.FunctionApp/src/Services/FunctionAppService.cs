@@ -12,10 +12,10 @@ using Azure.ResourceManager.AppService;
 namespace Azure.Mcp.Tools.FunctionApp.Services;
 
 public sealed class FunctionAppService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService) : BaseAzureService(tokenCredentialFactory, tenantService), IFunctionAppService
+    ICacheService cacheService) : BaseAzureService(tokenCredentialProvider, tenantService), IFunctionAppService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));

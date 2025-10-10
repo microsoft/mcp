@@ -10,7 +10,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.BicepSchema.Services
 {
-    public class BicepSchemaService(ITokenCredentialFactory tokenCredentialFactory) : BaseAzureService(tokenCredentialFactory), IBicepSchemaService
+    public class BicepSchemaService(ITokenCredentialProvider tokenCredentialProvider) : BaseAzureService(tokenCredentialProvider), IBicepSchemaService
     {
         public TypesDefinitionResult GetResourceTypeDefinitions(IServiceProvider serviceProvider, string resourceTypeName, string? apiVersion = null)
         {

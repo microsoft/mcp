@@ -12,8 +12,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Acr.Services;
 
-public sealed class AcrService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
-    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IAcrService
+public sealed class AcrService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AcrService> logger)
+    : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IAcrService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AcrService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

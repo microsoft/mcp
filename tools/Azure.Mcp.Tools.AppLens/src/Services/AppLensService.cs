@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tools.AppLens.Services;
 /// <summary>
 /// Service implementation for AppLens diagnostic operations.
 /// </summary>
-public class AppLensService(ITokenCredentialFactory tokenCredentialFactory, IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tokenCredentialFactory, tenantService), IAppLensService
+public class AppLensService(ITokenCredentialProvider tokenCredentialProvider, IHttpClientService httpClientService, ISubscriptionService subscriptionService, ITenantService? tenantService = null) : BaseAzureService(tokenCredentialProvider, tenantService), IAppLensService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));

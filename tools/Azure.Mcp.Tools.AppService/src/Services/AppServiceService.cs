@@ -14,10 +14,10 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Tools.AppService.Services;
 
 public class AppServiceService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ILogger<AppServiceService> logger) : BaseAzureService(tokenCredentialFactory, tenantService), IAppServiceService
+    ILogger<AppServiceService> logger) : BaseAzureService(tokenCredentialProvider, tenantService), IAppServiceService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppServiceService> _logger = logger;

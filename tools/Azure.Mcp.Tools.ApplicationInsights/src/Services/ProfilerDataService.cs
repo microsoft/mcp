@@ -24,11 +24,11 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 /// Expect to be replaced by Azure SDK in future.
 /// </summary>
 public class ProfilerDataService(
-    ITokenCredentialFactory tokenCredentialFactory,
+    ITokenCredentialProvider tokenCredentialProvider,
     IHttpClientService httpClientService,
     ILogger<ProfilerDataService> logger,
     ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
-    : BaseAzureService(tokenCredentialFactory, tenantService, loggerFactory), IProfilerDataService
+    : BaseAzureService(tokenCredentialProvider, tenantService, loggerFactory), IProfilerDataService
 {
     private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
     private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";

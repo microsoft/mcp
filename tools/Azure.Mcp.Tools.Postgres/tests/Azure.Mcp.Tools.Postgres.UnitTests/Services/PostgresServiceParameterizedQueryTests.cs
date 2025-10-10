@@ -24,7 +24,7 @@ public class PostgresServiceParameterizedQueryTests
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
         _cacheService = Substitute.For<ICacheService>();
-        _postgresService = new PostgresService(ITokenCredentialFactory.Default, _resourceGroupService, _cacheService);
+        _postgresService = new PostgresService(ITokenCredentialProvider.Default, _resourceGroupService, _cacheService);
     }
 
     [Theory]

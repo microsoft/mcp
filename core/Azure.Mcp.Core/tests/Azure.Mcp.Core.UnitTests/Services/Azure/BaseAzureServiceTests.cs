@@ -133,7 +133,7 @@ public class BaseAzureServiceTests
         Assert.Equal(input, result);
     }
 
-    private sealed class TestAzureService(ITenantService? tenantService = null) : BaseAzureService(ITokenCredentialFactory.Default, tenantService)
+    private sealed class TestAzureService(ITenantService? tenantService = null) : BaseAzureService(ITokenCredentialProvider.Default, tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
             CreateArmClientAsync(tenant, retryPolicy);

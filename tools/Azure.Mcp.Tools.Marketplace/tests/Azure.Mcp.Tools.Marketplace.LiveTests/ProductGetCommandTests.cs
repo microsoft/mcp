@@ -26,8 +26,8 @@ public class ProductGetCommandTests : CommandTestsBase
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(ITokenCredentialFactory.Default, cacheService);
-        _marketplaceService = new MarketplaceService(ITokenCredentialFactory.Default, tenantService, cacheService);
+        var tenantService = new TenantService(ITokenCredentialProvider.Default, cacheService);
+        _marketplaceService = new MarketplaceService(ITokenCredentialProvider.Default, tenantService, cacheService);
     }
 
     [Fact]

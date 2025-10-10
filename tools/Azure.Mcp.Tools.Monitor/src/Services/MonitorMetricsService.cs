@@ -14,8 +14,8 @@ using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(ITokenCredentialFactory tokenCredentialFactory, IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
-    : BaseAzureService(tokenCredentialFactory), IMonitorMetricsService
+public class MonitorMetricsService(ITokenCredentialProvider tokenCredentialProvider, IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
+    : BaseAzureService(tokenCredentialProvider), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
     private readonly IMetricsQueryClientService _metricsQueryClientService = metricsQueryClientService ?? throw new ArgumentNullException(nameof(metricsQueryClientService));

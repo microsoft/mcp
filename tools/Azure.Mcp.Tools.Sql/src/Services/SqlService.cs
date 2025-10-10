@@ -16,7 +16,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Sql.Services;
 
-public class SqlService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), ISqlService
+public class SqlService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<SqlService> logger) : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), ISqlService
 {
     private readonly ILogger<SqlService> _logger = logger;
 

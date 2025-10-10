@@ -16,8 +16,8 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
-public class GrafanaService(ITokenCredentialFactory tokenCredentialFactory, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<GrafanaService> logger)
-    : BaseAzureResourceService(tokenCredentialFactory, subscriptionService, tenantService), IGrafanaService
+public class GrafanaService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<GrafanaService> logger)
+    : BaseAzureResourceService(tokenCredentialProvider, subscriptionService, tenantService), IGrafanaService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<GrafanaService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

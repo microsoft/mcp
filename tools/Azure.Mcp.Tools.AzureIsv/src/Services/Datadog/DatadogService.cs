@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 
 public partial class DatadogService : BaseAzureService, IDatadogService
 {
-    public DatadogService(ITokenCredentialFactory tokenCredentialFactory, ITenantService? tenantService = null) : base(tokenCredentialFactory, tenantService)
+    public DatadogService(ITokenCredentialProvider tokenCredentialProvider, ITenantService? tenantService = null) : base(tokenCredentialProvider, tenantService)
     {
     }
 
