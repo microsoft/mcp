@@ -11,8 +11,6 @@ param(
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
-. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
-
 $wrapperSourcePath = "$RepoRoot/eng/npm/wrapper"
 $platformSourcePath = "$RepoRoot/eng/npm/platform"
 
@@ -93,7 +91,8 @@ try {
                 Write-Warning "Executable permissions are not set when packing on a Windows agent."
             }
 
-            Extract-PackageSpecificReadMe -InputReadMePath "$serverDirectory/README.md" `
+            & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
+                -InputReadMePath "$serverDirectory/README.md" `
                 -OutputDirectory $tempFolder -PackageType "npm" -InsertPayload @{ ToolTitle = 'NPM Package' }
 
             Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
@@ -123,7 +122,9 @@ try {
         $wrapperPackageJson | ConvertTo-Json -Depth 10 | Out-File -FilePath "$tempFolder/package.json" -Encoding utf8
         Write-Host "Created package.json in $tempFolder"
 
-        Extract-PackageSpecificReadMe -InputReadMePath "$serverDirectory/README.md" `
+
+        & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
+            -InputReadMePath "$serverDirectory/README.md" `
             -OutputDirectory $tempFolder -PackageType "npm" -InsertPayload @{ ToolTitle = 'NPM Package' }
             
         Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
