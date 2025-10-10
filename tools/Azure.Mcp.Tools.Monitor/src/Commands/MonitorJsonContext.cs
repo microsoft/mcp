@@ -7,22 +7,29 @@ using Azure.Mcp.Tools.Monitor.Commands.ActivityLog;
 using Azure.Mcp.Tools.Monitor.Commands.Metrics;
 using Azure.Mcp.Tools.Monitor.Commands.Table;
 using Azure.Mcp.Tools.Monitor.Commands.TableType;
+using Azure.Mcp.Tools.Monitor.Commands.WebTests;
 using Azure.Mcp.Tools.Monitor.Commands.Workspace;
 using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 
 namespace Azure.Mcp.Tools.Monitor.Commands;
 
-[JsonSerializable(typeof(List<JsonNode>))]
-[JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
-[JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
-[JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
-[JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
-[JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
+[JsonSerializable(typeof(ActivityLogEventData))]
+[JsonSerializable(typeof(ActivityLogEventLevel))]
 [JsonSerializable(typeof(ActivityLogListCommand.ActivityLogListCommandResult))]
 [JsonSerializable(typeof(ActivityLogListResponse))]
-[JsonSerializable(typeof(ActivityLogEventData))]
 [JsonSerializable(typeof(ActivityLogLocalizableString))]
-[JsonSerializable(typeof(ActivityLogEventLevel))]
+[JsonSerializable(typeof(List<JsonNode>))]
+[JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
+[JsonSerializable(typeof(MetricsDefinitionsCommand.MetricsDefinitionsCommandResult))]
+[JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
+[JsonSerializable(typeof(MetricsQueryCommand.MetricsQueryCommandResult))]
+[JsonSerializable(typeof(TableListCommand.TableListCommandResult))]
+[JsonSerializable(typeof(TableTypeListCommand.TableTypeListCommandResult))]
+[JsonSerializable(typeof(WebTestsCreateCommand.WebTestsCreateCommandResult))]
+[JsonSerializable(typeof(WebTestsGetCommand.WebTestsGetCommandResult))]
+[JsonSerializable(typeof(WebTestsListCommand.WebTestsListCommandResult))]
+[JsonSerializable(typeof(WebTestsUpdateCommand.WebTestsUpdateCommandResult))]
+[JsonSerializable(typeof(WorkspaceListCommand.WorkspaceListCommandResult))]
 [JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSerializable(typeof(Dictionary<string, object?>))]
 [JsonSerializable(typeof(object))]

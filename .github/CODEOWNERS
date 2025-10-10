@@ -130,10 +130,10 @@
 
 
 # PRLabel: %tools-Monitor
-/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @jongio @zaaslam @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Monitor
-# ServiceOwners:                       @smritiy @srnagar @jongio
+# ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
 /tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
