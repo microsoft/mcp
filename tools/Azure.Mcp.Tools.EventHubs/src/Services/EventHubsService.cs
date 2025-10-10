@@ -281,7 +281,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<List<EventHub>> ListEventHubsAsync(
+    public async Task<List<EventHub>> GetEventHubsAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,

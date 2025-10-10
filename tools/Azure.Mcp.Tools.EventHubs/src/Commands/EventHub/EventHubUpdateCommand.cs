@@ -35,14 +35,6 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         Note: Some properties like partition count cannot be changed after creation.
         This is a potentially long-running operation that waits for completion.
         
-        Required options:
-        - --eventhub (event hub name)
-        - --namespace (namespace name)
-        - --resource-group
-        
-        Optional configuration:
-        - --partition-count (number of partitions, typically 1-32)
-        - --message-retention-in-hours (retention time in hours)
         """;
 
     public override string Title => CommandTitle;

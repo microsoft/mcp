@@ -44,7 +44,7 @@ public interface IEventHubsService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<EventHub>> ListEventHubsAsync(
+    Task<List<EventHub>> GetEventHubsAsync(
         string namespaceName,
         string resourceGroup,
         string subscription,

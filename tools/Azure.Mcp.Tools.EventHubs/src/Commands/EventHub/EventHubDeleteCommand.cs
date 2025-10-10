@@ -30,11 +30,6 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         The operation is idempotent - if the event hub doesn't exist, the command reports success
         with Deleted = false. If the event hub is successfully deleted, Deleted = true is returned.
         
-        Required options:
-        - --eventhub (event hub name to delete)
-        - --namespace (namespace containing the event hub)
-        - --resource-group
-        
         Warning: This operation cannot be undone. All messages and consumer groups in the event hub
         will be permanently deleted.
         """;

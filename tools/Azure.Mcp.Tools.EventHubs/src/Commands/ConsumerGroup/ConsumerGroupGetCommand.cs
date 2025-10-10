@@ -24,9 +24,9 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         """
         Get consumer groups from Azure event hub. This command can either:
         
-        List all consumer groups in an event hub (using --eventhub with --namespace with --resource-group)
-        Get a single consumer group by name (using --consumer-group with --eventhub with --namespace with --resource-group)
-        
+        1) List all consumer groups in an event hub
+        2) Get a single consumer group by name
+
         The eventhub, namespace, and resource-group parameters are required (for both get and list)
         The consumer-group parameter is only required for getting a specific consumer-group
         

@@ -26,15 +26,12 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     public override string Description =>
         """
         Get event hubs from Azure namespace. This command can either:
-        1. List all event hubs in a namespace (using --namespace with --resource-group)
-        2. Get a single event hub by name (using --eventhub with --namespace with --resource-group)
+        1. List all event hubs in a namespace 
+        2. Get a single event hub by name
         
         When retrieving a single event hub or listing multiple event hubs, detailed information including 
         partition count, settings, and metadata is returned for all event hubs.
         
-        Required options:
-        - --namespace and --resource-group (for listing all event hubs in namespace)
-        - --eventhub, --namespace, and --resource-group (for getting specific event hub)
         """;
 
     public override string Title => CommandTitle;
@@ -53,8 +50,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsOptional());
 
         command.Validators.Add(result =>
         {
@@ -104,7 +101,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
             }
             else
             {
-                var eventHubs = await _service.ListEventHubsAsync(
+                var eventHubs = await _service.GetEventHubsAsync(
                     options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
