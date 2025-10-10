@@ -100,6 +100,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
+
 ## Azure App Service
 
 | Tool Name | Test Prompt |
@@ -130,6 +131,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
 | azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
 | azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
+
+## Azure CLI Install
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_install | Get Azure CLI installation instructions |
+| azmcp_extension_cli_install | How to install azd |
+| azmcp_extension_cli_install | What is Azure Functions Core tools and how to install it |
 
 ## Azure Container Registry (ACR)
 

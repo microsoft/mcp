@@ -17,6 +17,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_eventhubs_eventhub_consumergroup_get`: Get details of a consumer group for an Event Hub.
   - `azmcp_eventhubs_eventhub_consumergroup_delete`: Delete a consumer group from an Event Hub.
 - Added support for getting Azure AI Foundry (Cognitive Services) resource details via the command `azmcp_foundry_resource_get`. This unified command can list all AI Foundry resources in a subscription, filter by resource group, or get details for a specific resource including deployed models with their configurations (model name, version, SKU, capacity, and provisioning state). [[#762](https://github.com/microsoft/mcp/pull/762)]
+- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
+- Added `azmcp extension cli install` command for getting installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
 
 ### Breaking Changes
 
@@ -101,7 +103,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
 - Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
-- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[203](https://github.com/microsoft/mcp/issues/203)]
 
 ### Breaking Changes
 

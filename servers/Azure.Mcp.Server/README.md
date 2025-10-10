@@ -278,6 +278,10 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 * Generate Azure CLI commands based on user intent
 
+### 🖥️ Azure CLI Install
+
+* Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools CLI for your platform.
+
 ### 📞 Azure Communication Services
 
 * "Send an SMS message to +1234567890"

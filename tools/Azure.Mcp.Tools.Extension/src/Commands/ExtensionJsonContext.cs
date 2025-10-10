@@ -10,6 +10,7 @@ namespace Azure.Mcp;
 [JsonSerializable(typeof(AzureCliGenerateRequest))]
 [JsonSerializable(typeof(AzqrReportResult))]
 [JsonSerializable(typeof(CliGenerateResult))]
+[JsonSerializable(typeof(CliInstallResult))]
 [JsonSerializable(typeof(JsonElement))]
 [JsonSerializable(typeof(List<string>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
