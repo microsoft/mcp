@@ -20,6 +20,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Fix flow of `Activity.Current` in telemetry service by changing `ITelemetryService`'s activity calls to synchronous. [[#558](https://github.com/microsoft/mcp/pull/558)]
+
 ### Bugs Fixed
 
 ### Other Changes

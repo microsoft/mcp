@@ -57,9 +57,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the output of the tool invocation.</returns>
     public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = await _telemetry.StartActivity(ActivityName.ToolExecuted, request?.Server?.ClientInfo);
-
-        Activity.Current = activity;
+        using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request?.Server?.ClientInfo);
 
         if (request?.Params == null)
         {
@@ -142,7 +140,7 @@ public sealed class McpRuntime : IMcpRuntime
     /// <returns>A result containing the list of available tools.</returns>
     public async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        using var activity = await _telemetry.StartActivity(ActivityName.ListToolsHandler, request?.Server?.ClientInfo);
+        using var activity = _telemetry.StartActivity(ActivityName.ListToolsHandler, request?.Server?.ClientInfo);
 
         try
         {
