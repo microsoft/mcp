@@ -174,6 +174,6 @@ internal class CommandFactoryHelpers
         {
         }
 
-        public ValueTask InitializeAsync() => ValueTask.CompletedTask;
+        public Task InitializeAsync() => Task.CompletedTask;
     }
 }

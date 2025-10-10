@@ -29,5 +29,5 @@ public interface ITelemetryService : IDisposable
     /// Performs any initialization operations before telemetry service is ready.
     /// </summary>
     /// <returns>A task that completes when initialization is complete.</returns>
-    ValueTask InitializeAsync();
+    Task InitializeAsync();
 }

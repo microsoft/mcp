@@ -115,7 +115,7 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public async ValueTask InitializeAsync()
+    public async Task InitializeAsync()
     {
         if (!_isEnabled)
         {

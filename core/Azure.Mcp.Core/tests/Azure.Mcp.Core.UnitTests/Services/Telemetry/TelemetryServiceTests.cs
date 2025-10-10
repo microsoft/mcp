@@ -226,7 +226,7 @@ public class TelemetryServiceTests
         // Act & Assert
         using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger);
 
-        await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync().AsTask());
+        await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
         Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
     }
