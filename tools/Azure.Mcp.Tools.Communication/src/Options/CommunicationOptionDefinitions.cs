@@ -83,7 +83,7 @@ public static class CommunicationOptionDefinitions
     /// The email address to send from.
     /// </summary>
     public static readonly Option<string> Sender = new(
-        "--sender"
+        "--from"
     )
     {
         Description = "The email address to send from (must be from a verified domain)",

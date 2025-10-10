@@ -22,7 +22,7 @@ public interface ICommunicationService
     /// Sends an email using Azure Communication Services.
     /// </summary>
     /// <param name="endpoint">The Azure Communication Services endpoint.</param>
-    /// <param name="sender">The email address to send from (must be from a verified domain).</param>
+    /// <param name="from">The email address to send from (must be from a verified domain).</param>
     /// <param name="senderName">The display name of the sender.</param>
     /// <param name="to">The recipient email addresses.</param>
     /// <param name="subject">The email subject.</param>
@@ -35,7 +35,7 @@ public interface ICommunicationService
     /// <returns>The result of the email send operation.</returns>
     Task<EmailSendResult> SendEmailAsync(
         string endpoint,
-        string sender,
+        string from,
         string? senderName,
         string[] to,
         string subject,

@@ -15,8 +15,8 @@ public class EmailSendOptions : BaseCommunicationOptions
     /// <summary>
     /// The email address to send from (must be from a verified domain).
     /// </summary>
-    [JsonPropertyName("sender")]
-    public string? Sender { get; set; }
+    [JsonPropertyName("from")]
+    public string? From { get; set; }
 
     /// <summary>
     /// The display name of the sender.

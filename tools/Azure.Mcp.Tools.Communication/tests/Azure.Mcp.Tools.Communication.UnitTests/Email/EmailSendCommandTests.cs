@@ -61,15 +61,15 @@ public class EmailSendCommandTests
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", null, false, "Missing message")]
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "", false, "Empty message")]
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "Message", true, "Valid parameters")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string? endpoint, string? sender, string? to, string? subject, string? message, bool shouldSucceed, string scenario)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string? endpoint, string? from, string? to, string? subject, string? message, bool shouldSucceed, string scenario)
     {
         // Arrange
         var args = new List<string>();
 
         if (endpoint != null)
         { args.AddRange(["--endpoint", endpoint]); }
-        if (sender != null)
-        { args.AddRange(["--sender", sender]); }
+        if (from != null)
+        { args.AddRange(["--from", from]); }
         if (to != null)
         { args.AddRange(["--to", to]); }
         if (subject != null)
@@ -151,7 +151,7 @@ public class EmailSendCommandTests
         // Arrange
         string[] args = [
             "--endpoint", "https://example.communication.azure.com",
-            "--sender", "sender@example.com",
+            "--from", "sender@example.com",
             "--to", "recipient@example.com",
             "--subject", "Test Subject",
             "--message", "Test Message"
@@ -222,7 +222,7 @@ public class EmailSendCommandTests
         // Arrange
         string[] args = [
             "--endpoint", "https://example.communication.azure.com",
-            "--sender", "sender@example.com",
+            "--from", "sender@example.com",
             "--to", "recipient@example.com",
             "--subject", "Test Subject",
             "--message", "Test Message"

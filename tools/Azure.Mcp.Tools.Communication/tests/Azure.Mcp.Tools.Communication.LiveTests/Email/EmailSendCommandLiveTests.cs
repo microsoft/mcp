@@ -43,7 +43,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
             new()
             {
                 { "endpoint", endpoint },
-                { "sender", senderEmail },
+                { "from", senderEmail },
                 { "to", new[] { testEmail } },
                 { "subject", "Test Email from Azure MCP Live Test" },
                 { "message", "This is a test email sent from Azure MCP Live Test." },
@@ -105,10 +105,10 @@ public class EmailSendCommandLiveTests : CommandTestsBase
 
     [Theory]
     [InlineData("--endpoint https://example.communication.azure.com")]
-    [InlineData("--endpoint https://example.communication.azure.com --sender sender@example.com")]
-    [InlineData("--endpoint https://example.communication.azure.com --sender sender@example.com --to")]
-    [InlineData("--endpoint https://example.communication.azure.com --sender sender@example.com --to recipient@example.com")]
-    [InlineData("--endpoint https://example.communication.azure.com --sender sender@example.com --to recipient@example.com --subject 'Test'")]
+    [InlineData("--endpoint https://example.communication.azure.com --from sender@example.com")]
+    [InlineData("--endpoint https://example.communication.azure.com --from sender@example.com --to")]
+    [InlineData("--endpoint https://example.communication.azure.com --from sender@example.com --to recipient@example.com")]
+    [InlineData("--endpoint https://example.communication.azure.com --from sender@example.com --to recipient@example.com --subject 'Test'")]
     public async Task Should_Return400_WithInvalidInput(string args)
     {
         var result = await CallToolAsync(

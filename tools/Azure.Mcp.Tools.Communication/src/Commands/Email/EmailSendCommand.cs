@@ -82,7 +82,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
     protected override EmailSendOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Sender = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Sender.Name);
+        options.From = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.Sender.Name);
         options.SenderName = parseResult.GetValueOrDefault<string>(CommunicationOptionDefinitions.SenderName.Name);
         options.To = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
         options.Cc = parseResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.Cc.Name);
@@ -107,7 +107,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         {
             var result = await communicationService.SendEmailAsync(
                 options.Endpoint!,
-                options.Sender!,
+                options.From!,
                 options.SenderName,
                 options.To!,
                 options.Subject!,

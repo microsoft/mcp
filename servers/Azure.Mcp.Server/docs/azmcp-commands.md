@@ -480,7 +480,7 @@ azmcp appservice database add --subscription "my-subscription" \
 # Send email using Azure Communication Services
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "<endpoint>" \
-                               --sender "<sender-email>" \
+                               --from "<sender-email>" \
                                --to "<recipient-email>" \
                                --subject "<email-subject>" \
                                --message "<email-content>" \
@@ -494,7 +494,7 @@ azmcp communication email send --endpoint "<endpoint>" \
 # Send plain text email
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --sender "sender@verified-domain.com" \
+                               --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
                                --subject "Important message" \
                                --message "Hello from Azure Communication Services!"
@@ -502,7 +502,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 # Send HTML-formatted email with CC and sender name
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --sender "sender@verified-domain.com" \
+                               --from "sender@verified-domain.com" \
                                --sender-name "Support Team" \
                                --to "recipient@example.com" \
                                --cc "manager@example.com" \
@@ -513,7 +513,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 # Send to multiple recipients with BCC and reply-to
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
-                               --sender "notifications@verified-domain.com" \
+                               --from "notifications@verified-domain.com" \
                                --to "recipient1@example.com,recipient2@example.com" \
                                --bcc "archive@example.com" \
                                --reply-to "support@example.com" \

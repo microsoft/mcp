@@ -90,7 +90,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
     /// <inheritdoc/>
     public async Task<Models.EmailSendResult> SendEmailAsync(
         string endpoint,
-        string sender,
+        string from,
         string? senderName,
         string[] to,
         string subject,
@@ -105,7 +105,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         // Validate required parameters using base class method
         ValidateRequiredParameters(
             (nameof(endpoint), endpoint),
-            (nameof(sender), sender),
+            (nameof(from), from),
             (nameof(subject), subject),
             (nameof(message), message));
 
@@ -145,7 +145,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             var recipientBcc = bcc?.Select(address => new EmailAddress(address)).ToList();
             // Create the email message
             var emailMessage = new EmailMessage(
-                senderAddress: sender,
+                senderAddress: from,
                 content: emailContent,
                 recipients: new EmailRecipients(recipientList, recipientCc, recipientBcc));
 
@@ -159,7 +159,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             }
 
             _logger.LogInformation("Sending email from {Sender} to {ToCount} recipient(s), CC: {CcCount}, BCC: {BccCount}",
-                sender, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
+                from, to.Length, cc?.Length ?? 0, bcc?.Length ?? 0);
 
             // Send the email
             var response = await emailClient.SendAsync(
@@ -181,7 +181,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to send email from {Sender} to {ToCount} recipient(s)", sender, to.Length);
+            _logger.LogError(ex, "Failed to send email from {Sender} to {ToCount} recipient(s)", from, to.Length);
             throw;
         }
     }
