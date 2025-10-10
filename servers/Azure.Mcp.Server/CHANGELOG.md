@@ -7,6 +7,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[203](https://github.com/microsoft/mcp/issues/203)]
+- Added `azmcp extension cli install` command for getting installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[74](https://github.com/microsoft/mcp/issues/74)]
 
 ### Breaking Changes
 
@@ -89,7 +91,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
 - Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
-- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[203](https://github.com/microsoft/mcp/issues/203)]
 
 ### Breaking Changes
 
