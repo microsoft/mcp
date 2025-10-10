@@ -14,9 +14,15 @@ jobs:
     os: linux
 
   steps:
-  - download: current
-    artifactName: binaries_signed
-    displayName: "Download signed binaries"
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download binaries from successful run"
+    inputs:
+      buildType: specific
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionId)
+      runId: 5435900
+      artifact: binaries_signed
+      targetPath: $(Build.ArtifactStagingDirectory)/external_binaries
 
   - task: CopyFiles@2
     displayName: "Copy Dockerfile"
