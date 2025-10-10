@@ -16,6 +16,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_eventhubs_eventhub_consumergroup_update`: Create or update a consumer group for an Event Hub.
   - `azmcp_eventhubs_eventhub_consumergroup_get`: Get details of a consumer group for an Event Hub.
   - `azmcp_eventhubs_eventhub_consumergroup_delete`: Delete a consumer group from an Event Hub.
+- Added support for getting Azure AI Foundry (Cognitive Services) resource details via the command `azmcp_foundry_resource_get`. This unified command can list all AI Foundry resources in a subscription, filter by resource group, or get details for a specific resource including deployed models with their configurations (model name, version, SKU, capacity, and provisioning state).
 
 ### Breaking Changes
 
@@ -30,6 +31,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
 - Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
+- Added support for Azure AI Search knowledge bases and knowledge sources (preview):
+  - `azmcp_search_knowledge_source_list` - List knowledge sources defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_list` - List knowledge bases defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_retrieve` - Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  These commands enable agentic retrieval and reasoning grounded in Azure AI Search's new knowledge constructs.
+- Bumped Azure AI Search .NET SDK dependency to align with knowledge agent APIs.
 
 ### Breaking Changes
 
@@ -92,6 +99,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
 - Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
+- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[203](https://github.com/microsoft/mcp/issues/203)]
 
 ### Breaking Changes
 

@@ -277,6 +277,12 @@ azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
                                  [--auth-method <auth-method>]
+
+# Get Azure AI Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
 ```
 
 ### Azure AI Search Operations
@@ -296,6 +302,20 @@ azmcp search index query --subscription <subscription> \
 
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
+
+# Get AI Search knowledge sources (all or a specific one)
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# Get AI Search knowledge bases (all or a specific one)
+azmcp search knowledge base get --service <service>
+                                [--knowledge-base <knowledge-base>]
+
+# Run retrieval against an AI Search knowledge base
+azmcp search knowledge base retrieve --service <service> \
+                                     --knowledge-base <knowledge-base> \
+                                     [--query <query>] \
+                                     [--messages <messages>]
 ```
 
 ### Azure AI Services Speech Operations
@@ -388,6 +408,12 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --question <question> \
                                 --resource-type <resource-type> \
                                 --resource <resource>
+```
+
+### Azure CLI Generate Operations
+```bash
+# Generate an Azure CLI command based on user intent
+azmcp extension cli generate --cli-type <cli-type> --intent <intent>
 ```
 
 ### Azure Application Insights Operations

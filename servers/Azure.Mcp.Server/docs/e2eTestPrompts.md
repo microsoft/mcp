@@ -24,11 +24,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
 | azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
+| azmcp_foundry_resource_get | List all AI Foundry resources in my subscription |
+| azmcp_foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
+| azmcp_foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
 
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_search_knowledge_base_get | List all knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | List all knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Query knowledge base <agent-name> in search service <service-name> about <query> |
+| azmcp_search_knowledge_base_retrieve | Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query> |
+| azmcp_search_knowledge_base_retrieve | What does knowledge base <agent-name> in search service <service-name> know about <query> |
+| azmcp_search_knowledge_base_retrieve | Find information about <query> using knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Get the details of knowledge source <source-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge source <source-name> in search service <service-name> |
 | azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |
@@ -97,6 +120,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
+## Azure CLI Generate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
+| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
 
 ## Azure Container Registry (ACR)
 
