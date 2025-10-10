@@ -89,7 +89,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.RetryPolicy);
 
                 var singleResult = consumerGroup != null ? new List<Models.ConsumerGroup> { consumerGroup } : new List<Models.ConsumerGroup>();
-                context.Response.Results = ResponseResult.Create(new ConsumerGroupGetCommandResult(singleResult), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(singleResult), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
             }
             else
             {
