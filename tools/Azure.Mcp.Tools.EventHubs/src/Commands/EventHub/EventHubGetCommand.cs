@@ -50,17 +50,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsOptional());
-
-        command.Validators.Add(result =>
-        {
-            if (result.HasOptionResult(EventHubsOptionDefinitions.EventHub) &&
-                (!result.HasOptionResult(EventHubsOptionDefinitions.Namespace) ||
-                 !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name)))
-            {
-                result.AddError($"--{EventHubsOptionDefinitions.EventHub} option requires both --{EventHubsOptionDefinitions.Namespace} and --{OptionDefinitions.Common.ResourceGroup.Name} options.");
-            }
-        });
+        command.Options.Add(EventHubsOptionDefinitions.EventHubOption);
     }
 
     protected override EventHubGetOptions BindOptions(ParseResult parseResult)

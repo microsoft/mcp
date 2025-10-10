@@ -50,7 +50,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.UserMetadataOption.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.UserMetadataOption);
     }
 
     protected override ConsumerGroupUpdateOptions BindOptions(ParseResult parseResult)

@@ -50,8 +50,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption);
         command.Validators.Add(commandResult =>
         {
             var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);

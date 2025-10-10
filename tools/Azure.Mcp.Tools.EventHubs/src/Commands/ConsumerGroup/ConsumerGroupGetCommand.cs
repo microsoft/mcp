@@ -50,7 +50,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption);
     }
 
     protected override ConsumerGroupGetOptions BindOptions(ParseResult parseResult)
