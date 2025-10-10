@@ -1,22 +1,26 @@
 parameters:
 - name: ServerName
   type: string
-- name: DependsOn
-  type: object
 
 jobs:
 - job: CreateDockerArtifact
   displayName: "Build Docker image"
-  dependsOn: ${{ parameters.DependsOn }}
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
     os: linux
 
   steps:
-  - download: current
-    artifactName: binaries_signed
-    displayName: "Download signed binaries"
+  - task: DownloadPipelineArtifact@2
+    displayName: Download signed MCP server binaries from specific run
+    inputs:
+      buildType: specific
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionId) # or a literal ID if different pipeline
+      runVersion: specific # required to honor runId
+      runId: 5435900
+      artifact: binaries_signed
+      path: $(Build.ArtifactStagingDirectory)
 
   - task: CopyFiles@2
     displayName: "Copy Dockerfile"
@@ -35,7 +39,10 @@ jobs:
         $version = $properties.Version
         Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
         Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-        Write-Host "##vso[task.setvariable variable=DockerLocalTag;isOutput=true]$(Build.Repository.Name)/server:$(Build.BuildId)"
+        # Set DockerLocalTag both as a local and an output variable.
+        $dockerLocalTag = "$(Build.Repository.Name)/server:$(Build.BuildId)"
+        Write-Host "##vso[task.setvariable variable=DockerLocalTag]$dockerLocalTag"
+        Write-Host "##vso[task.setvariable variable=DockerLocalTag;isOutput=true]$dockerLocalTag"
     env:
       VERSION_SUFFIX: "$(VersionSuffix)"
 

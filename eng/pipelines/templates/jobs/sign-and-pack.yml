@@ -6,73 +6,8 @@ parameters:
   default: 120
 
 jobs:
-- job: Sign
-  timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
-  pool: # Binary signing of mac bits needs to happen on mac see https://github.com/Azure/azure-mcp/blob/4ff032fafc77bc618738879b7028665c0de2e632/eng/scripts/Compress-ForSigning.ps1#L40
-    name: $(MACPOOL)
-    vmImage: $(MACVMIMAGE)
-    os: macos
-  steps:
-  - checkout: self
-
-  - download: current
-    displayName: Download artifacts
-
-  - task: Powershell@2
-    displayName: "Stage files for signing"
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
-      arguments: >
-        -ArtifactsPath '$(Pipeline.Workspace)'
-        -ArtifactPrefix 'build_'
-        -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
-
-  - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
-    parameters:
-      SigningKeyCode: 'CP-230012' # MS Cert
-      BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/win-*/**/azmcp.dll
-        **/win-*/**/azmcp.exe
-        **/win-*/**/mcptmp.dll
-        **/win-*/**/mcptmp.exe
-        **/win-*/**/*.Mcp.*.dll
-
-  - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
-    parameters:
-      SigningKeyCode: 'CP-231522' # MS 3rd Party Cert
-      BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/win-*/**/ModelContextProtocol*.dll
-        **/win-*/**/Newtonsoft.Json.dll
-        **/win-*/**/Npgsql.dll
-        **/win-*/**/OpenAI.dll
-        **/win-*/**/OpenTelemetry*.dll
-        **/win-*/**/YamlDotNet.dll
-
-  - template: pipelines/steps/azd-cli-mac-signing.yml@azure-sdk-build-tools
-    parameters:
-      MacPath: $(Build.ArtifactStagingDirectory)/signed
-      MacPattern: "**/*.zip"
-
-  - task: Powershell@2
-    displayName: "Expand Mac executables after signing"
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Expand-AfterSigning.ps1
-      arguments: >
-        -Path '$(Build.ArtifactStagingDirectory)/signed'
-
-  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
-    parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
-      ArtifactName: binaries_signed
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
-
 - job: Verify_Signing
   displayName: "Verify Signing"
-  dependsOn: Sign
   pool:
     name: $(WINDOWSPOOL) # Signing verification must happen on windows
     image: $(WINDOWSVMIMAGE)
@@ -83,14 +18,21 @@ jobs:
   steps:
   - checkout: none
 
-  - download: current
-    artifact: binaries_signed
-    displayName: "Download signed MCP server binaries"
+  - task: DownloadPipelineArtifact@2
+    displayName: Download signed MCP server binaries from specific run
+    inputs:
+      buildType: specific
+      project: $(System.TeamProject)
+      pipeline: $(System.DefinitionId) # or a literal ID if different pipeline
+      runVersion: specific # required to honor runId
+      runId: 5435900
+      artifact: binaries_signed
+      path: $(Build.ArtifactStagingDirectory)
 
   - pwsh: |
       Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
       $allSigned = $true
-      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/binaries_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
+      $signedBinaries = Get-ChildItem -Path '$(Build.ArtifactStagingDirectory)/binaries_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
       foreach ($binary in $signedBinaries) {
           if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
               Write-Host "Binary $($binary.FullName) is NOT signed correctly."
@@ -106,20 +48,6 @@ jobs:
       }
     displayName: "Verify Binary Signing"
 
-- template: /eng/pipelines/templates/jobs/npm/pack-npm.yml
-  parameters:
-    DependsOn: Sign
-
-- template: /eng/pipelines/templates/jobs/nuget/sign-and-pack-nuget.yml
-  parameters:
-    DependsOn: Sign
-
-- template: /eng/pipelines/templates/jobs/vsix/sign-and-pack-vsix.yml
-  parameters:
-    DependsOn: Sign
-    ServerName: ${{ parameters.ServerName }}
-
 - template: /eng/pipelines/templates/jobs/docker/pack-docker.yml
   parameters:
-    DependsOn: Sign
     ServerName: ${{ parameters.ServerName }}

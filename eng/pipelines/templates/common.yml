@@ -101,7 +101,6 @@ extends:
         displayName: 'Sign and Pack'
         dependsOn:
         - Initialize
-        - Build
         pool:
           name: $(LINUXPOOL)
           image: $(LINUXVMIMAGE)
