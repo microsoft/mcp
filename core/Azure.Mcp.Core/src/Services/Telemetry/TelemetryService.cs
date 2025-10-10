@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Options;
@@ -18,11 +19,17 @@ namespace Azure.Mcp.Core.Services.Telemetry;
 internal class TelemetryService : ITelemetryService
 {
     private readonly IMachineInformationProvider _informationProvider;
-    private readonly ManualResetEventSlim _initializationCompleted = new ManualResetEventSlim(false);
     private readonly bool _isEnabled;
     private readonly ILogger<TelemetryService> _logger;
-    private readonly TimeSpan _operationTimeout;
     private readonly List<KeyValuePair<string, object?>> _tagsList;
+    private readonly SemaphoreSlim _initalizeLock = new(1);
+
+    /// <summary>
+    /// Task created on the first invocation of <see cref="InitializeAsync"/>.
+    /// This is saved so that repeated invocations will see the same exception
+    /// as the first invocation.
+    /// </summary>
+    private Task? _initalizationTask = null;
 
     private bool _initializationSuccessful;
     private bool _isInitialized;
@@ -48,7 +55,6 @@ internal class TelemetryService : ITelemetryService
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;
         _logger = logger;
-        _operationTimeout = options.Value.OperationTimeout;
     }
 
     /// <summary>
@@ -56,6 +62,12 @@ internal class TelemetryService : ITelemetryService
     /// </summary>
     internal IReadOnlyList<KeyValuePair<string, object?>> GetDefaultTags()
     {
+        if (!_isEnabled)
+        {
+            return [];
+        }
+
+        CheckInitialization();
         return _tagsList.ToImmutableList();
     }
 
@@ -74,22 +86,7 @@ internal class TelemetryService : ITelemetryService
             return null;
         }
 
-        if (!_isInitialized)
-        {
-            throw new InvalidOperationException(
-                $"Telemetry service has not been initialized. Use {nameof(InitializeAsync)}() before any other operations.");
-        }
-
-        if (!_initializationCompleted.Wait(_operationTimeout))
-        {
-            throw new InvalidOperationException(
-                $"Telemetry service did not finish initialization within {_operationTimeout.TotalSeconds} seconds.");
-        }
-
-        if (!_initializationSuccessful)
-        {
-            throw new InvalidOperationException("Telemetry service was not successfully initialized. Check logs for initialization errors.");
-        }
+        CheckInitialization();
 
         var activity = Parent.StartActivity(activityId);
 
@@ -120,31 +117,74 @@ internal class TelemetryService : ITelemetryService
     /// </summary>
     public async ValueTask InitializeAsync()
     {
-        var previouslyInitialized = Interlocked.CompareExchange(ref _isInitialized, true, false);
-
-        if (previouslyInitialized)
+        if (!_isEnabled)
         {
             return;
         }
 
-        try
+        // Quick check if initialization already happened. Avoids
+        // trying to get the lock.
+        if (_initalizationTask == null)
         {
-            var macAddressHash = await _informationProvider.GetMacAddressHash();
-            var deviceId = await _informationProvider.GetOrCreateDeviceId();
+            // Get async lock for starting initialization
+            await _initalizeLock.WaitAsync();
 
-            _tagsList.Add(new(TagName.MacAddressHash, macAddressHash));
-            _tagsList.Add(new(TagName.DevDeviceId, deviceId));
+            try
+            {
+                // Check after acquiring lock to ensure we honor work
+                // started while we were waiting.
+                if (_initalizationTask == null)
+                {
+                    _initalizationTask = InnerInitializeAsync();
+                }
+            }
+            finally
+            {
+                _initalizeLock.Release();
+            }
+        }
 
-            _initializationSuccessful = true;
-        }
-        catch (Exception ex)
+        // Await the response of the initialization work regardless of if
+        // we or another invocation created the Task representing it. All
+        // awaiting on this will give the same result to ensure idempotency.
+        await _initalizationTask;
+
+        async Task InnerInitializeAsync()
         {
-            _logger.LogError(ex, "Error occurred initializing telemetry service.");
-            throw;
+            try
+            {
+                var macAddressHash = await _informationProvider.GetMacAddressHash();
+                var deviceId = await _informationProvider.GetOrCreateDeviceId();
+
+                _tagsList.Add(new(TagName.MacAddressHash, macAddressHash));
+                _tagsList.Add(new(TagName.DevDeviceId, deviceId));
+
+                _initializationSuccessful = true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error occurred initializing telemetry service.");
+                throw;
+            }
+            finally
+            {
+                _isInitialized = true;
+            }
         }
-        finally
+    }
+
+    private void CheckInitialization()
+    {
+        if (!_isInitialized)
         {
-            _initializationCompleted.Set();
+            throw new InvalidOperationException(
+                $"Telemetry service has not been initialized. Use {nameof(InitializeAsync)}() before any other operations.");
         }
+
+        if (!_initializationSuccessful)
+        {
+            throw new InvalidOperationException("Telemetry service was not successfully initialized. Check logs for initialization errors.");
+        }
+
     }
 }

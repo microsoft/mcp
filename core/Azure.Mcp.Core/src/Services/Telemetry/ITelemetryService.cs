@@ -13,7 +13,7 @@ public interface ITelemetryService : IDisposable
     /// </summary>
     /// <param name="activityName">Name of the activity.</param>
     /// <returns>An Activity object or null if there are no active listeners or telemetry is disabled.</returns>
-    /// <exception cref="IllegalOperationException">If the service is not in an operational state or <see cref="InitializeAsync"/> was not invoked.</exception>
+    /// <exception cref="InvalidOperationException">If the service is not in an operational state or <see cref="InitializeAsync"/> was not invoked.</exception>
     Activity? StartActivity(string activityName);
 
     /// <summary>
@@ -22,7 +22,7 @@ public interface ITelemetryService : IDisposable
     /// <param name="activityName">Name of the activity.</param>
     /// <param name="clientInfo">MCP client information to add to the activity.</param>
     /// <returns>An Activity object or null if there are no active listeners or telemetry is disabled.</returns>
-    /// <exception cref="IllegalOperationException">If the service is not in an operational state or <see cref="InitializeAsync"/> was not invoked.</exception>
+    /// <exception cref="InvalidOperationException">If the service is not in an operational state or <see cref="InitializeAsync"/> was not invoked.</exception>
     Activity? StartActivity(string activityName, Implementation? clientInfo);
 
     /// <summary>
