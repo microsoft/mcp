@@ -320,7 +320,7 @@ public class TelemetryServiceTests
         Assert.True(tags.ContainsKey(tagName));
         Assert.Equal(expectedValue, tags[tagName]);
     }
-    
+
     private class ExceptionalInformationProvider : IMachineInformationProvider
     {
         public Task<string> GetMacAddressHash() => Task.FromResult("test-mac-address");
