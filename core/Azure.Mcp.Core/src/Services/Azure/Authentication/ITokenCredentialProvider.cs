@@ -11,6 +11,11 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 public interface ITokenCredentialProvider
 {
     /// <summary>
+    /// Special singleton instance that signals to use <see cref="CustomChainedCredential"/>.
+    /// </summary>
+    public static readonly ITokenCredentialProvider Default = new DefaultTokenCredentialProvider();
+
+    /// <summary>
     /// Creates a TokenCredential based on <see cref="ServerConfiguration"/>.
     /// </summary>
     /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
@@ -23,11 +28,6 @@ public interface ITokenCredentialProvider
     /// </summary>
     /// <returns>User identity string, or null for single-user mode</returns>
     string? GetCurrentUserId();
-
-    /// <summary>
-    /// Special singleton instance that signals to use <see cref="CustomChainedCredential"/>.
-    /// </summary>
-    public static readonly ITokenCredentialProvider Default = new DefaultTokenCredentialProvider();
 }
 
 /// <summary>

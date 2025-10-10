@@ -15,6 +15,11 @@ namespace Azure.Mcp.Core.Areas.Server.Authentication.HttpHost;
 public interface IHttpHostAuthenticationConfiguration
 {
     /// <summary>
+    /// Gets the default authentication configuration that performs no authentication setup.
+    /// </summary>
+    public static readonly IHttpHostAuthenticationConfiguration Default = new DefaultImplementation();
+
+    /// <summary>
     /// Configures authentication services in the dependency injection container.
     /// This method is called during the service registration phase of HTTP host startup.
     /// </summary>
@@ -36,4 +41,41 @@ public interface IHttpHostAuthenticationConfiguration
     /// </summary>
     /// <param name="mcpEndpoints">The MCP endpoint convention builder to configure authorization on.</param>
     void ConfigureEndpoints(IEndpointConventionBuilder mcpEndpoints);
+
+    /// <summary>
+    /// Default no-operation authentication configuration that performs no authentication setup.
+    /// This implementation maintains open endpoints without any authentication requirements.
+    /// </summary>
+    private sealed class DefaultImplementation : IHttpHostAuthenticationConfiguration
+    {
+        /// <summary>
+        /// Configures no authentication services. This is a no-operation implementation.
+        /// </summary>
+        /// <param name="services">The service collection (not modified).</param>
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // No authentication services to configure
+            // This maintains the current behavior where authentication is disabled
+        }
+
+        /// <summary>
+        /// Configures no authentication middleware. This is a no-operation implementation.
+        /// </summary>
+        /// <param name="app">The application builder (not modified).</param>
+        public void ConfigureMiddleware(IApplicationBuilder app)
+        {
+            // No authentication middleware to configure
+            // UseAuthentication() and UseAuthorization() are not called
+        }
+
+        /// <summary>
+        /// Configures no endpoint authorization. This is a no-operation implementation.
+        /// </summary>
+        /// <param name="mcpEndpoints">The MCP endpoint convention builder (not modified).</param>
+        public void ConfigureEndpoints(IEndpointConventionBuilder mcpEndpoints)
+        {
+            // No authorization requirements on endpoints
+            // RequireAuthorization() is not called, endpoints remain open
+        }
+    }
 }

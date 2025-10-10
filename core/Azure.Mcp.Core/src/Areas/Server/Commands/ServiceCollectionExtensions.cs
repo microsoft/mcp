@@ -42,7 +42,7 @@ public static class AzureMcpServiceCollectionExtensions
         // Register Azure authentication provider based on configuration
         services.AddSingleton<ITokenCredentialProvider>(serviceProvider =>
         {
-            return TokenCredentialProviderFactory.Create(serviceStartOptions.ServerConfiguration, serviceProvider);
+            return TokenCredentialProviderFactory.Create(serviceStartOptions.ServerConfiguration!, serviceProvider);
         });
 
         // Register options for service start

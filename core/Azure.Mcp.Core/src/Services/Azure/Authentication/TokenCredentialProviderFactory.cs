@@ -20,7 +20,7 @@ public static class TokenCredentialProviderFactory
     /// </summary>
     /// <param name="serverConfiguration">
     /// The server configuration containing authentication settings.
-    /// If null or Default type, returns the default marker provider.
+    /// If Default type, returns the default marker provider.
     /// </param>
     /// <param name="serviceProvider">
     /// Service provider for resolving dependencies like IHttpContextAccessor and ITokenAcquisition.
@@ -33,11 +33,14 @@ public static class TokenCredentialProviderFactory
     /// <exception cref="NotSupportedException">
     /// Thrown when the authentication configuration is not supported.
     /// </exception>
-    public static ITokenCredentialProvider Create(ServerConfiguration? serverConfiguration, IServiceProvider serviceProvider)
+    public static ITokenCredentialProvider Create(ServerConfiguration serverConfiguration, IServiceProvider serviceProvider)
     {
-        var outboundType = serverConfiguration?.OutboundAuthentication?.Type;
+        ArgumentNullException.ThrowIfNull(serverConfiguration, nameof(serverConfiguration));
+        ArgumentNullException.ThrowIfNull(serviceProvider, nameof(serviceProvider));
 
-        if (outboundType == null || outboundType == OutboundAuthenticationType.Default)
+        var outboundType = serverConfiguration.OutboundAuthentication.Type;
+
+        if (outboundType == OutboundAuthenticationType.Default)
         {
             return ITokenCredentialProvider.Default;
         }
@@ -49,13 +52,13 @@ public static class TokenCredentialProviderFactory
         else if (outboundType == OutboundAuthenticationType.BearerToken)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            return new BearerTokenCredentialProvider(serverConfiguration!.OutboundAuthentication!, httpContextAccessor);
+            return new BearerTokenCredentialProvider(serverConfiguration.OutboundAuthentication, httpContextAccessor);
         }
         else if (outboundType == OutboundAuthenticationType.OnBehalfOf)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
-            return new OnBehalfOfTokenCredentialProvider(serverConfiguration!.OutboundAuthentication!.AzureAd!, httpContextAccessor, tokenAcquisition);
+            return new OnBehalfOfTokenCredentialProvider(serverConfiguration.OutboundAuthentication.AzureAd!, httpContextAccessor, tokenAcquisition);
         }
         else
         {

@@ -32,7 +32,7 @@ public static class HttpHostAuthenticationConfigurationFactory
         if (serverConfiguration?.InboundAuthentication?.Type != InboundAuthenticationType.EntraIDAccessToken)
         {
             // No authentication required
-            return new NoneAuthentication();
+            return IHttpHostAuthenticationConfiguration.Default;
         }
 
         var outboundType = serverConfiguration.OutboundAuthentication?.Type;

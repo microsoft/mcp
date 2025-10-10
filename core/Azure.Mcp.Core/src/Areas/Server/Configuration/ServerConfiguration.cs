@@ -12,6 +12,21 @@ namespace Azure.Mcp.Core.Areas.Server.Configuration;
 public class ServerConfiguration
 {
     /// <summary>
+    /// Gets the default server configuration instance.
+    /// </summary>
+    public static readonly ServerConfiguration Default = new()
+    {
+        InboundAuthentication = new InboundAuthenticationConfig
+        {
+            Type = InboundAuthenticationType.None
+        },
+        OutboundAuthentication = new OutboundAuthenticationConfig
+        {
+            Type = OutboundAuthenticationType.Default
+        }
+    };
+
+    /// <summary>
     /// Configuration for validating incoming HTTP requests.
     /// </summary>
     [JsonPropertyName("inboundAuthentication")]
@@ -39,14 +54,14 @@ public class ServerConfiguration
     /// <returns>The loaded or default server configuration</returns>
     public static ServerConfiguration LoadFromFileOrDefault(string? filePath)
     {
-        ServerConfiguration config;
         if (string.IsNullOrWhiteSpace(filePath))
         {
-            config = GetDefault();
+            return ServerConfiguration.Default;
         }
-        else
+        ServerConfiguration config = LoadFromFile(filePath);
+        if (IsDefault(config))
         {
-            config = LoadFromFile(filePath);
+            return ServerConfiguration.Default;
         }
         ConfigurationValidator.Validate(config);
         return config;
@@ -100,25 +115,17 @@ public class ServerConfiguration
     }
 
     /// <summary>
-    /// Gets the default server configuration (Example 6: Default).
-    /// Uses None for inbound authentication and Default credential chain for outbound.
-    /// Suitable for stdio mode or HTTP mode without authentication.
+    /// Determines whether the specified configuration represents the default configuration.
     /// </summary>
-    /// <returns>Default server configuration</returns>
-    private static ServerConfiguration GetDefault()
+    /// <param name="config">The configuration to check</param>
+    /// <returns>true if the configuration matches the default configuration; otherwise, false</returns>
+    private static bool IsDefault(ServerConfiguration config)
     {
-        var config = new ServerConfiguration
-        {
-            InboundAuthentication = new InboundAuthenticationConfig
-            {
-                Type = InboundAuthenticationType.None
-            },
-            OutboundAuthentication = new OutboundAuthenticationConfig
-            {
-                Type = OutboundAuthenticationType.Default
-            }
-        };
-        return config;
+        return config.InboundAuthentication.Type == InboundAuthenticationType.None &&
+               config.OutboundAuthentication.Type == OutboundAuthenticationType.Default &&
+               config.InboundAuthentication.AzureAd == null &&
+               config.OutboundAuthentication.AzureAd == null &&
+               config.OutboundAuthentication.HeaderName == null;
     }
 }
 
