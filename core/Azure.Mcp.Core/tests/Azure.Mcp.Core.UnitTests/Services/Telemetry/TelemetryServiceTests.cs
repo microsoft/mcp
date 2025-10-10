@@ -51,12 +51,9 @@ public class TelemetryServiceTests
 
         // Act
         var activity = service.StartActivity(activityId);
-        var defaultTags = service.GetDefaultTags();
 
         // Assert
         Assert.Null(activity);
-
-        AssertDefaultTags(defaultTags, _mockServiceOptions.Value);
     }
 
     [Fact]
@@ -109,23 +106,37 @@ public class TelemetryServiceTests
     }
 
     [Fact]
-    public void Constructor_SetsDefaultTags()
+    public void GetDefaultTags_ThrowsWhenTagsNotInitialized()
     {
         // Arrange
+        _mockOptions.Value.Returns(_testConfiguration);
+
+        // Act & Assert
+        var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
+
+        Assert.Throws<InvalidOperationException>(() => service.GetDefaultTags());
+    }
+
+    [Fact]
+    public void GetDefaultTags_ReturnsEmptyOnDisabled()
+    {
+        // Arrange
+        _testConfiguration.IsTelemetryEnabled = false;
+
         var serviceStartOptions = new ServiceStartOptions
         {
             Mode = "test-mode",
             Debug = true,
             Transport = "test-transport"
         };
-
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
-        // Act & Assert
+        // Act
         var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
         var tags = service.GetDefaultTags();
 
-        AssertDefaultTags(tags, serviceStartOptions);
+        // Assert
+        Assert.Empty(tags);
     }
 
     [Theory]
@@ -224,6 +235,14 @@ public class TelemetryServiceTests
     public async Task StartActivity_ReturnsActivityWhenEnabled()
     {
         // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Mode = "test-mode",
+            Debug = true,
+            Transport = "test-transport"
+        };
+        _mockServiceOptions.Value.Returns(serviceStartOptions);
+
         var configuration = new AzureMcpServerConfiguration
         {
             Name = "TestService",
@@ -238,6 +257,8 @@ public class TelemetryServiceTests
 
         await service.InitializeAsync();
 
+        var defaultTags = service.GetDefaultTags();
+
         // Act
         var activity = service.StartActivity(operationName);
 
@@ -246,6 +267,8 @@ public class TelemetryServiceTests
         {
             Assert.Equal(operationName, activity.OperationName);
         }
+
+        AssertDefaultTags(defaultTags);
     }
 
     [Fact]
