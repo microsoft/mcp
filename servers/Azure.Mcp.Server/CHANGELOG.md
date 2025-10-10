@@ -28,6 +28,11 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+  - AKS (Azure Kubernetes Service)
+    - `azmcp_aks_cluster_get`
+    - `azmcp_aks_nodepool_get`
+
 ## 0.8.6 (2025-10-09)
 
 ### Features Added
