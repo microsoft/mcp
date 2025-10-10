@@ -38,7 +38,7 @@ internal class TelemetryService : ITelemetryService
 
     public TelemetryService(IMachineInformationProvider informationProvider,
         IOptions<AzureMcpServerConfiguration> options,
-        IOptions<ServiceStartOptions>? serverOptions, 
+        IOptions<ServiceStartOptions>? serverOptions,
         ILogger<TelemetryService> logger)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
