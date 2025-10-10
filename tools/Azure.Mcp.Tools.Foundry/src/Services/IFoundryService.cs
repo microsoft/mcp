@@ -135,4 +135,17 @@ public interface IFoundryService
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<AiResourceInformation>> ListAiResourcesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<AiResourceInformation> GetAiResourceAsync(
+        string subscription,
+        string resourceGroup,
+        string resourceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

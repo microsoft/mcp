@@ -196,6 +196,10 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         --azure-openai-deployment <azure-openai-deployment> \
                                         [--evaluators <evaluators>]
 
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry knowledge index list --endpoint <endpoint>
@@ -277,6 +281,12 @@ azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
                                  [--auth-method <auth-method>]
+
+# Get Azure AI Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
 ```
 
 ### Azure AI Search Operations

@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_agents_connect | Query an agent in my AI foundry project |
 | azmcp_foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| azmcp_foundry_agents_list | List all agents in my AI Foundry project |
+| azmcp_foundry_agents_list | Show me the available agents in my AI Foundry project |
 | azmcp_foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
@@ -24,6 +26,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
 | azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
+| azmcp_foundry_resource_get | List all AI Foundry resources in my subscription |
+| azmcp_foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
+| azmcp_foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
 
 ## Azure AI Search
 

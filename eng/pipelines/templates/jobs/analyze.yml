@@ -51,8 +51,7 @@ jobs:
 
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations
-      . $(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1
-      $hasFailures = Validate-All-PackageReadmes
+      $hasFailures = & "$(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1" -Command "validate-all"
       if ($hasFailures) {
         exit 1
       }
