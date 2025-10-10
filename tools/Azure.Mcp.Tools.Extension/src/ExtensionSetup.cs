@@ -33,7 +33,7 @@ public sealed class ExtensionSetup : IAreaSetup
         var azqr = serviceProvider.GetRequiredService<AzqrCommand>();
         extension.AddCommand(azqr.Name, azqr);
 
-        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installlation instructions for Azure CLI, Azure Developer CLI and Azure Core FUnction Tools CLI.");
+        var cli = new CommandGroup("cli", "Commands for helping users to use CLI tools for Azure services operations. Includes operations for generating Azure CLI commands and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.");
         extension.AddSubGroup(cli);
         var cliGenerateCommand = serviceProvider.GetRequiredService<CliGenerateCommand>();
         cli.AddCommand(cliGenerateCommand.Name, cliGenerateCommand);

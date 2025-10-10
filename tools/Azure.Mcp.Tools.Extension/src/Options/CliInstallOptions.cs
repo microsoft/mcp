@@ -8,6 +8,6 @@ namespace Azure.Mcp.Tools.Extension.Options;
 
 public class CliInstallOptions : GlobalOptions
 {
-    [JsonPropertyName(ExtensionOptionDefinitions.CliGenerate.CliTypeName)]
+    [JsonPropertyName(ExtensionOptionDefinitions.CliInstall.CliTypeName)]
     public string? CliType { get; set; }
 }
