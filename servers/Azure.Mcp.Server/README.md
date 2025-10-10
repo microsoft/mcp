@@ -191,9 +191,10 @@ npx -y @azure/mcp [command]
 
 <details>
 <summary>Additional instructions</summary>
-To troubleshoot @azure/mcp package (or respective binaries)installation refer - https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md
 
-To understand how platform-specific binaries are installed with @azure/mcp, read - https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md
+To troubleshoot @azure/mcp package (or respective binaries)installation, see [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md)
+
+To understand how platform-specific binaries are installed with @azure/mcp, see [Wrapper Binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md)
 </details>
 
 
@@ -293,10 +294,6 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Show me the websites in my 'my-resource-group' resource group"
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
-
-### 🖥️ Azure CLI Generate
-
-* Generate Azure CLI commands based on user intent
 
 ### 🖥️ Azure CLI Generate
 
