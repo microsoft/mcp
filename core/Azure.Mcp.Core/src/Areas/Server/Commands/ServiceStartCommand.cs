@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Services.Caching;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -372,6 +373,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
                     authConfig.ConfigureServices(services);
                     ConfigureServices(services);
+                    var outboundType = serverOptions.ServerConfiguration!.OutboundAuthentication.Type;
+                    if (outboundType == OutboundAuthenticationType.BearerToken ||
+                        outboundType == OutboundAuthenticationType.OnBehalfOf)
+                    {
+                        services.AddSingleton<ICacheService, NoCacheService>();
+                    }
                     ConfigureMcpServer(services, serverOptions);
                 });
 
