@@ -37,7 +37,8 @@ public static class CommunicationOptionDefinitions
     )
     {
         Description = "The recipient phone number(s) in E.164 international standard format (e.g., +14255550123). Multiple numbers can be provided.",
-        Required = true
+        Required = true,
+        Arity = ArgumentArity.OneOrMore
     };
 
     public static readonly Option<string> Message = new(
