@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -37,6 +38,12 @@ public static class AzureMcpServiceCollectionExtensions
     {
         // Register HTTP client services
         services.AddHttpClientServices();
+
+        // Register Azure authentication provider based on configuration
+        services.AddSingleton<ITokenCredentialProvider>(serviceProvider =>
+        {
+            return TokenCredentialProviderFactory.Create(serviceStartOptions.ServerConfiguration, serviceProvider);
+        });
 
         // Register options for service start
         services.AddSingleton(serviceStartOptions);
