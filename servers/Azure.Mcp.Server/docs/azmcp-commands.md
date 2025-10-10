@@ -277,6 +277,12 @@ azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
                                  [--auth-method <auth-method>]
+
+# Get Azure AI Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
 ```
 
 ### Azure AI Search Operations
@@ -296,6 +302,20 @@ azmcp search index query --subscription <subscription> \
 
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
+
+# Get AI Search knowledge sources (all or a specific one)
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# Get AI Search knowledge bases (all or a specific one)
+azmcp search knowledge base get --service <service>
+                                [--knowledge-base <knowledge-base>]
+
+# Run retrieval against an AI Search knowledge base
+azmcp search knowledge base retrieve --service <service> \
+                                     --knowledge-base <knowledge-base> \
+                                     [--query <query>] \
+                                     [--messages <messages>]
 ```
 
 ### Azure AI Services Speech Operations
@@ -390,6 +410,12 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
+### Azure CLI Generate Operations
+```bash
+# Generate an Azure CLI command based on user intent
+azmcp extension cli generate --cli-type <cli-type> --intent <intent>
+```
+
 ### Azure Application Insights Operations
 
 #### Code Optimization Recommendations
@@ -477,34 +503,87 @@ azmcp appservice database add --subscription "my-subscription" \
 ### Azure Communication Services Operations
 
 ```bash
+# Send email using Azure Communication Services
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "<endpoint>" \
+                               --from "<sender-email>" \
+                               --to "<recipient-email>" \
+                               --subject "<email-subject>" \
+                               --message "<email-content>" \
+                               [--is-html] \
+                               [--sender-name "<sender-display-name>"] \
+                               [--cc "<cc-recipient-email>"] \
+                               [--bcc "<bcc-recipient-email>"] \
+                               [--reply-to "<reply-to-email>"]
+
+# Examples:
+# Send plain text email
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --to "recipient@example.com" \
+                               --subject "Important message" \
+                               --message "Hello from Azure Communication Services!"
+
+# Send HTML-formatted email with CC and sender name
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "sender@verified-domain.com" \
+                               --sender-name "Support Team" \
+                               --to "recipient@example.com" \
+                               --cc "manager@example.com" \
+                               --subject "Monthly Report" \
+                               --message "<h1>Monthly Report</h1><p>Please find attached your monthly report.</p>" \
+                               --is-html
+
+# Send to multiple recipients with BCC and reply-to
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
+                               --from "notifications@verified-domain.com" \
+                               --to "recipient1@example.com,recipient2@example.com" \
+                               --bcc "archive@example.com" \
+                               --reply-to "support@example.com" \
+                               --subject "System Notification" \
+                               --message "This is an automated notification."
+```
+
+**Options:**
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
+-   `--sender`: Email address to send from, must be from a verified domain (required)
+-   `--to`: Recipient email address(es), comma-separated for multiple recipients (required)
+-   `--subject`: Email subject line (required)
+-   `--message`: Email content body (required)
+-   `--is-html`: Flag indicating the message content is HTML format (optional)
+-   `--sender-name`: Display name of the sender (optional)
+-   `--cc`: Carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
+-   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
+
 # Send SMS message using Azure Communication Services
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "<connection-string>" \
-    --from "<sender-phone-number>" \
-    --to "<recipient-phone-number>" \
-    --message "<message-text>" \
-    [--enable-delivery-report] \
-    [--tag "<custom-tag>"]
+azmcp communication sms send --connection-string "<connection-string>" \
+                             --from "<sender-phone-number>" \
+                             --to "<recipient-phone-number>" \
+                             --message "<message-text>" \
+                             [--enable-delivery-report] \
+                             [--tag "<custom-tag>"]
 
 # Examples:
 # Send SMS to single recipient
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124" \
-    --message "Hello from Azure Communication Services!"
+azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+                             --from "+14255550123" \
+                             --to "+14255550124" \
+                             --message "Hello from Azure Communication Services!"~
 
 # Send SMS to multiple recipients with delivery reporting
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send \
-    --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-    --from "+14255550123" \
-    --to "+14255550124,+14255550125" \
-    --message "Broadcast message" \
-    --enable-delivery-report \
-    --tag "marketing-campaign"
+azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..."
+                             --from "+14255550123" \
+                             --to "+14255550124,+14255550125" \
+                             --message "Broadcast message" \
+                             --enable-delivery-report \
+                             --tag "marketing-campaign"
 ```
 
 **Options:**

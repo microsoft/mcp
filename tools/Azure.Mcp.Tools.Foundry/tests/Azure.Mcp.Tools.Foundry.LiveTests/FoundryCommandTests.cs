@@ -754,6 +754,259 @@ public class FoundryCommandTests(ITestOutputHelper output)
         Assert.Equal(deploymentName, commandDeploymentName.GetString());
     }
 
+    [Fact]
+    public async Task Should_list_all_foundry_resources_in_subscription()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should have at least one resource (the test resource)
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        // Verify first resource structure
+        var firstResource = resources.EnumerateArray().First();
+
+        // Verify required properties exist
+        var resourceName = firstResource.AssertProperty("resourceName");
+        Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
+        Assert.NotEmpty(resourceName.GetString()!);
+
+        var resourceGroup = firstResource.AssertProperty("resourceGroup");
+        Assert.Equal(JsonValueKind.String, resourceGroup.ValueKind);
+        Assert.NotEmpty(resourceGroup.GetString()!);
+
+        var subscriptionName = firstResource.AssertProperty("subscriptionName");
+        Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
+        Assert.NotEmpty(subscriptionName.GetString()!);
+
+        var location = firstResource.AssertProperty("location");
+        Assert.Equal(JsonValueKind.String, location.ValueKind);
+        Assert.NotEmpty(location.GetString()!);
+
+        var endpoint = firstResource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+
+        var kind = firstResource.AssertProperty("kind");
+        Assert.Equal(JsonValueKind.String, kind.ValueKind);
+        Assert.NotEmpty(kind.GetString()!);
+
+        var skuName = firstResource.AssertProperty("skuName");
+        Assert.Equal(JsonValueKind.String, skuName.ValueKind);
+        Assert.NotEmpty(skuName.GetString()!);
+
+        // Verify deployments array exists (may be empty)
+        var deployments = firstResource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_foundry_resources_in_resource_group()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.ResourceGroupName;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should have at least one resource in this resource group
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        // Verify all resources are in the specified resource group
+        foreach (var resource in resources.EnumerateArray())
+        {
+            var rg = resource.GetProperty("resourceGroup");
+            Assert.Equal(resourceGroup, rg.GetString());
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_specific_foundry_resource()
+    {
+        var subscriptionId = Settings.SubscriptionId;
+        var resourceGroup = Settings.ResourceGroupName;
+        var resourceName = Settings.ResourceBaseName;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", resourceGroup },
+                { "resource-name", resourceName },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should return exactly one resource
+        Assert.Single(resources.EnumerateArray());
+
+        var resource = resources.EnumerateArray().First();
+
+        // Verify resource details match the request
+        var returnedResourceName = resource.AssertProperty("resourceName");
+        Assert.Equal(resourceName, returnedResourceName.GetString());
+
+        var returnedResourceGroup = resource.AssertProperty("resourceGroup");
+        Assert.Equal(resourceGroup, returnedResourceGroup.GetString());
+
+        // Verify all required properties
+        var subscriptionName = resource.AssertProperty("subscriptionName");
+        Assert.Equal(JsonValueKind.String, subscriptionName.ValueKind);
+        Assert.NotEmpty(subscriptionName.GetString()!);
+
+        var location = resource.AssertProperty("location");
+        Assert.Equal(JsonValueKind.String, location.ValueKind);
+        Assert.NotEmpty(location.GetString()!);
+
+        var endpoint = resource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+        Assert.StartsWith("https://", endpoint.GetString());
+
+        var kind = resource.AssertProperty("kind");
+        Assert.Equal(JsonValueKind.String, kind.ValueKind);
+        Assert.Contains(kind.GetString(), new[] { "OpenAI", "AIServices", "CognitiveServices" });
+
+        var skuName = resource.AssertProperty("skuName");
+        Assert.Equal(JsonValueKind.String, skuName.ValueKind);
+        Assert.NotEmpty(skuName.GetString()!);
+
+        // Verify deployments array structure
+        var deployments = resource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+
+        // If deployments exist, verify their structure
+        var deploymentsArray = deployments.EnumerateArray().ToArray();
+        if (deploymentsArray.Length > 0)
+        {
+            var firstDeployment = deploymentsArray[0];
+
+            var deploymentName = firstDeployment.AssertProperty("deploymentName");
+            Assert.Equal(JsonValueKind.String, deploymentName.ValueKind);
+            Assert.NotEmpty(deploymentName.GetString()!);
+
+            var modelName = firstDeployment.AssertProperty("modelName");
+            Assert.Equal(JsonValueKind.String, modelName.ValueKind);
+            Assert.NotEmpty(modelName.GetString()!);
+
+            // Optional properties - verify structure if present
+            if (firstDeployment.TryGetProperty("modelVersion", out var modelVersion))
+            {
+                Assert.Equal(JsonValueKind.String, modelVersion.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("modelFormat", out var modelFormat))
+            {
+                Assert.Equal(JsonValueKind.String, modelFormat.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("skuName", out var deploymentSkuName))
+            {
+                Assert.Equal(JsonValueKind.String, deploymentSkuName.ValueKind);
+            }
+
+            if (firstDeployment.TryGetProperty("skuCapacity", out var skuCapacity))
+            {
+                Assert.Equal(JsonValueKind.Number, skuCapacity.ValueKind);
+                Assert.True(skuCapacity.GetInt32() > 0);
+            }
+
+            if (firstDeployment.TryGetProperty("provisioningState", out var provisioningState))
+            {
+                Assert.Equal(JsonValueKind.String, provisioningState.ValueKind);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_get_foundry_resource_using_static_resources()
+    {
+        // Use the static OpenAI account that's defined in test-resources.bicep
+        var staticOpenAIAccount = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "azmcp-test");
+        var staticResourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
+        var subscriptionId = Settings.SubscriptionId;
+
+        var result = await CallToolAsync(
+            "azmcp_foundry_resource_get",
+            new()
+            {
+                { "subscription", subscriptionId },
+                { "resource-group", staticResourceGroup },
+                { "resource-name", staticOpenAIAccount },
+                { "tenant", Settings.TenantId }
+            });
+
+        // Verify the response structure
+        var resources = result.AssertProperty("resources");
+        Assert.Equal(JsonValueKind.Array, resources.ValueKind);
+
+        // Should return the static resource
+        Assert.NotEmpty(resources.EnumerateArray());
+
+        var resource = resources.EnumerateArray().First();
+
+        // Verify resource matches static configuration
+        var resourceName = resource.AssertProperty("resourceName");
+        Assert.Equal(staticOpenAIAccount, resourceName.GetString());
+
+        var resourceGroup = resource.AssertProperty("resourceGroup");
+        Assert.Equal(staticResourceGroup, resourceGroup.GetString());
+
+        // Verify endpoint is valid
+        var endpoint = resource.AssertProperty("endpoint");
+        Assert.Equal(JsonValueKind.String, endpoint.ValueKind);
+        Assert.NotEmpty(endpoint.GetString()!);
+        Assert.StartsWith("https://", endpoint.GetString());
+
+        // Verify deployments exist for static resource
+        var deployments = resource.AssertProperty("deployments");
+        Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
+
+        // Static resource should have at least the gpt-4o-mini deployment
+        var deploymentsArray = deployments.EnumerateArray().ToArray();
+        if (deploymentsArray.Length > 0)
+        {
+            // Check if gpt-4o-mini deployment exists
+            var hasExpectedDeployment = deploymentsArray.Any(d =>
+            {
+                if (d.TryGetProperty("deploymentName", out var name) ||
+                    d.TryGetProperty("modelName", out name))
+                {
+                    var nameStr = name.GetString();
+                    return nameStr != null && nameStr.Contains("gpt-4o-mini", StringComparison.OrdinalIgnoreCase);
+                }
+                return false;
+            });
+
+            Output.WriteLine($"Found {deploymentsArray.Length} deployment(s) on static resource");
+        }
+    }
+
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
     {
         var client = new PersistentAgentsClient(

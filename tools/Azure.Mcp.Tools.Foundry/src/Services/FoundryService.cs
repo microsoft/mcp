@@ -1272,6 +1272,133 @@ public class FoundryService(
         }
     }
 
+    public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+            var resources = new List<AiResourceInformation>();
+
+            // Get Cognitive Services accounts
+            if (string.IsNullOrEmpty(resourceGroup))
+            {
+                // List all AI resources in the subscription
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                {
+                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                    resources.Add(resourceInfo);
+                }
+            }
+            else
+            {
+                // List AI resources in specific resource group - filter by resource group
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                {
+                    if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                        resources.Add(resourceInfo);
+                    }
+                }
+            }
+
+            return resources;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list AI resources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<AiResourceInformation> GetAiResourceAsync(
+        string subscription,
+        string resourceGroup,
+        string resourceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(resourceName), resourceName));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            if (rgResource?.Value == null)
+            {
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            }
+
+            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName);
+            if (account?.Value == null)
+            {
+                throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
+            }
+
+            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get AI resource: {ex.Message}", ex);
+        }
+    }
+
+    private async Task<AiResourceInformation> BuildResourceInformation(
+        CognitiveServicesAccountResource account,
+        string subscriptionName)
+    {
+        var resourceInfo = new AiResourceInformation
+        {
+            ResourceName = account.Data.Name,
+            ResourceGroup = account.Data.Id.ResourceGroupName,
+            SubscriptionName = subscriptionName,
+            Location = account.Data.Location.Name,
+            Endpoint = account.Data.Properties?.Endpoint,
+            Kind = account.Data.Kind,
+            SkuName = account.Data.Sku?.Name,
+            Deployments = []
+        };
+
+        // Get deployments for this resource
+        try
+        {
+            await foreach (var deployment in account.GetCognitiveServicesAccountDeployments())
+            {
+                var deploymentInfo = new DeploymentInformation
+                {
+                    DeploymentName = deployment.Data.Name,
+                    ModelName = deployment.Data.Properties?.Model?.Name,
+                    ModelVersion = deployment.Data.Properties?.Model?.Version,
+                    ModelFormat = deployment.Data.Properties?.Model?.Format,
+                    SkuName = deployment.Data.Sku?.Name,
+                    SkuCapacity = deployment.Data.Sku?.Capacity,
+                    ScaleType = deployment.Data.Properties?.ScaleSettings?.ScaleType.ToString(),
+                    ProvisioningState = deployment.Data.Properties?.ProvisioningState.ToString()
+                };
+                resourceInfo.Deployments?.Add(deploymentInfo);
+            }
+        }
+        catch
+        {
+            // If we can't list deployments, continue with empty list
+            resourceInfo.Deployments = [];
+        }
+
+        return resourceInfo;
+    }
+
     private static JsonTypeInfo<Dictionary<string, object?>> DictionaryTypeInfo { get; } =
         (JsonTypeInfo<Dictionary<string, object?>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(Dictionary<string, object?>));
 

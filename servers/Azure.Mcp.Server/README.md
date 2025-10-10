@@ -274,12 +274,21 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
 
+### 🖥️ Azure CLI Generate
+
+* Generate Azure CLI commands based on user intent
+
 ### 📞 Azure Communication Services
 
 * "Send an SMS message to +1234567890"
 * "Send SMS with delivery reporting enabled"
 * "Send a broadcast SMS to multiple recipients"
 * "Send SMS with custom tracking tag"
+* "Send an email from 'sender@example.com' to 'recipient@example.com' with subject 'Hello' and message 'Welcome!'"
+* "Send an HTML email to multiple recipients with CC and BCC using Azure Communication Services"
+* "Send an email with reply-to address 'reply@example.com' and subject 'Support Request'"
+* "Send an email from my communication service endpoint with custom sender name and multiple recipients"
+* "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
 
 ### 📦 Azure Container Apps
 
@@ -389,6 +398,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
+- 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
 - 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
