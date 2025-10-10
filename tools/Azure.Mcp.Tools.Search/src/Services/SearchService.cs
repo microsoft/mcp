@@ -245,8 +245,8 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
 
             var results = await knowledgeBaseClient.RetrieveAsync(request);
 
-            using var response = results.GetRawResponse().ContentStream ?? throw new InvalidOperationException("Response content stream is null");
-            return await ProcessRetrieveResponse(response);
+            var response = results.GetRawResponse().Content ?? throw new InvalidOperationException("Response had no content");
+            return await ProcessRetrieveResponse(response.ToStream());
         }
         catch (Exception ex)
         {
@@ -254,20 +254,22 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         }
     }
 
-    private static async Task<string> ProcessRetrieveResponse(Stream responseStream)
+    internal static async Task<string> ProcessRetrieveResponse(Stream responseStream)
     {
         using var jsonDoc = await JsonDocument.ParseAsync(responseStream);
         using var stream = new MemoryStream();
-        using var writer = new Utf8JsonWriter(stream);
-        writer.WriteStartObject();
-        foreach (var prop in jsonDoc.RootElement.EnumerateObject())
+        using (var writer = new Utf8JsonWriter(stream))
         {
-            if (prop.Name is "response" or "references")
+            writer.WriteStartObject();
+            foreach (var prop in jsonDoc.RootElement.EnumerateObject())
             {
-                prop.WriteTo(writer);
+                if (prop.Name is "response" or "references")
+                {
+                    prop.WriteTo(writer);
+                }
             }
+            writer.WriteEndObject();
         }
-        writer.WriteEndObject();
         return Encoding.UTF8.GetString(stream.ToArray());
     }
 
