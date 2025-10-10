@@ -420,6 +420,12 @@ azmcp applens resource diagnose --subscription <subscription> \
 azmcp extension cli generate --cli-type <cli-type> --intent <intent>
 ```
 
+### Azure CLI Install Operations
+```bash
+# Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
+azmcp extension cli install --cli-type <cli-type>
+```
+
 ### Azure Application Insights Operations
 
 #### Code Optimization Recommendations

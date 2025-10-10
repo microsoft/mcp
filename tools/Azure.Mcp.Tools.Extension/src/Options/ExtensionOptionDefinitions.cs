@@ -26,6 +26,18 @@ public static class ExtensionOptionDefinitions
         };
     }
 
+    public static class CliInstall
+    {
+        public const string CliTypeName = "cli-type";
+        public static readonly Option<string> CliType = new(
+            $"--{CliTypeName}"
+        )
+        {
+            Description = "The type of CLI tool to use. Supported values are 'az' for Azure CLI, 'azd' for Azure Developer CLI, and 'func' for Azure Functions Core Tools CLI.",
+            Required = true
+        };
+    }
+
     public static class Az
     {
         public const string CommandName = "command";

@@ -3,8 +3,7 @@
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-public interface ICliGenerateService
+public interface ICliInstallService
 {
-    public Task<HttpResponseMessage> GenerateAzureCLICommandAsync(
-        string intent);
+    public Task<HttpResponseMessage> GetCliInstallInstructions(string cliType);
 }

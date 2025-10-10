@@ -174,8 +174,28 @@ dotnet tool install --global Azure.Mcp
 Install the Node.js package: [@azure/mcp](https://www.npmjs.com/package/@azure/mcp).
 
 ```bash
-npm install -g @azure/mcp
+npm install @azure/mcp@latest
 ```
+
+To install a specific version, use:
+
+```bash
+npm install @azure/mcp@<version>
+```
+
+To install and/or invoke the Azure MCP tool, use:
+
+```bash
+npx -y @azure/mcp [command]
+```
+
+<details>
+<summary>Additional instructions</summary>
+
+To troubleshoot @azure/mcp package (or respective binaries)installation, see [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md)
+
+To understand how platform-specific binaries are installed with @azure/mcp, see [Wrapper Binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md)
+</details>
 
 ### Docker
 
@@ -277,6 +297,10 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 ### 🖥️ Azure CLI Generate
 
 * Generate Azure CLI commands based on user intent
+
+### 🖥️ Azure CLI Install
+
+* Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools CLI for your platform.
 
 ### 📞 Azure Communication Services
 
