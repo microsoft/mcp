@@ -13,16 +13,16 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Search.UnitTests.Knowledge;
 
-public class KnowledgeBaseRunRetrievalCommandTests
+public class KnowledgeBaseRetrieveCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ISearchService _searchService;
-    private readonly ILogger<KnowledgeBaseRunRetrievalCommand> _logger;
+    private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger;
 
-    public KnowledgeBaseRunRetrievalCommandTests()
+    public KnowledgeBaseRetrieveCommandTests()
     {
         _searchService = Substitute.For<ISearchService>();
-        _logger = Substitute.For<ILogger<KnowledgeBaseRunRetrievalCommand>>();
+        _logger = Substitute.For<ILogger<KnowledgeBaseRetrieveCommand>>();
 
         var collection = new ServiceCollection();
         collection.AddSingleton(_searchService);
@@ -42,7 +42,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(json);
 
-        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
@@ -64,7 +64,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             Arg.Any<RetryPolicyOptions>())
             .Returns(json);
 
-        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
@@ -77,7 +77,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
     [Fact]
     public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages()
     {
-        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
@@ -87,9 +87,21 @@ public class KnowledgeBaseRunRetrievalCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_Returns400_WhenHasBothQueryAndMessages()
+    {
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
+        var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life --messages user:Hello");
+        var context = new CommandContext(_serviceProvider);
+
+        var response = await command.ExecuteAsync(context, args);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("Specifying both --query and --messages is not allowed.", response.Message);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
     {
-        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
@@ -108,7 +120,7 @@ public class KnowledgeBaseRunRetrievalCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new Exception("Test failure"));
 
-        var command = new KnowledgeBaseRunRetrievalCommand(_logger);
+        var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);

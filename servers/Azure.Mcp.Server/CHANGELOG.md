@@ -18,7 +18,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for Azure AI Search knowledge bases and knowledge sources (preview):
   - `azmcp_search_knowledge_source_list` - List knowledge sources defined in an Azure AI Search service.
   - `azmcp_search_knowledge_base_list` - List knowledge bases defined in an Azure AI Search service.
-  - `azmcp_search_knowledge_base_run-retrieval` - Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  - `azmcp_search_knowledge_base_retrieve` - Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
   These commands enable agentic retrieval and reasoning grounded in Azure AI Search's new knowledge constructs.
 - Bumped Azure AI Search .NET SDK dependency to align with knowledge agent APIs.
 

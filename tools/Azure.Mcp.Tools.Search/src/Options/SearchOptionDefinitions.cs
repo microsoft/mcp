@@ -9,6 +9,7 @@ public static class SearchOptionDefinitions
     public const string IndexName = "index";
     public const string QueryName = "query";
     public const string KnowledgeBaseName = "knowledge-base";
+    public const string KnowledgeSourceName = "knowledge-source";
     public const string MessagesName = "messages";
 
     public static readonly Option<string> Service = new(
@@ -43,18 +44,26 @@ public static class SearchOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> OptionalQuery = new(
+    public static readonly Option<string> KnowledgeSource = new(
+        $"--{KnowledgeSourceName}"
+    )
+    {
+        Description = "The name of the knowledge source within the Azure AI Search service.",
+        Required = true
+    };
+
+    public static readonly Option<string> KnowledgeQuery = new(
         $"--{QueryName}"
     )
     {
-        Description = "Optional natural language query for retrieval when a conversational message history isn't provided.",
+        Description = "Natural language query for retrieval when a conversational message history isn't provided.",
         Required = false
     };
 
     public static readonly Option<string[]> Messages = new(
         $"--{MessagesName}")
     {
-        Description = "Optional conversation history messages passed to the knowledge base. Specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
+        Description = "Conversation history messages passed to the knowledge base. Able to specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
         Arity = ArgumentArity.ZeroOrMore,
         AllowMultipleArgumentsPerToken = true
     };

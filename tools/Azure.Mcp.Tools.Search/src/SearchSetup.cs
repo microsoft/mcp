@@ -22,9 +22,9 @@ public class SearchSetup : IAreaSetup
         services.AddSingleton<ServiceListCommand>();
         services.AddSingleton<IndexGetCommand>();
         services.AddSingleton<IndexQueryCommand>();
-        services.AddSingleton<KnowledgeSourceListCommand>();
-        services.AddSingleton<KnowledgeBaseListCommand>();
-        services.AddSingleton<KnowledgeBaseRunRetrievalCommand>();
+        services.AddSingleton<KnowledgeSourceGetCommand>();
+        services.AddSingleton<KnowledgeBaseGetCommand>();
+        services.AddSingleton<KnowledgeBaseRetrieveCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -33,17 +33,13 @@ public class SearchSetup : IAreaSetup
         """
         Search operations - Commands for Azure AI Search (formerly known as \"Azure Cognitive Search\") services,
         search indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,
-        search indexes, or introspect search services and their components. You can use knowledge bases for 
-        in-depth agentic retrieval, or just execute searches against search indexes for fast single-shot search. 
-        There are also commands for listing indexes, knowledge sources and knowledge bases, and to describe 
-        schemas. This tool supports  enterprise search, document search, and knowledge mining workloads. Do not 
-        use this tool for database queries, Azure Monitor log searches, general web search, or simple string 
-        matching operations - this tool is specifically designed for Azure AI Search service management and 
-        complex search operations. This tool is a hierarchical MCP command router where sub-commands are routed to 
-        MCP servers that require specific fields inside the \"parameters\" object. To invoke a command, set 
-        \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available 
-        sub-commands for different search service and index operations. Note that this tool requires appropriate 
-        Azure AI Search permissions and will only access search services and indexes accessible to the 
+        search indexes, or introspect search services and their components. This tool supports enterprise search,
+        document search, and knowledge mining. Do not use this tool for database queries or Azure Monitor
+        logs, this tool is specifically designed for Azure AI Search. This tool is a hierarchical MCP command
+        router where sub-commands are routed to MCP servers that require specific fields inside the \"parameters\"
+        object. To invoke a command, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\"
+        to discover available sub-commands for different search service and index operations. Note that this tool
+        requires appropriate Azure AI Search permissions and will only access search resources accessible to the
         authenticated user.
         """);
 
@@ -61,21 +57,22 @@ public class SearchSetup : IAreaSetup
         var indexQuery = serviceProvider.GetRequiredService<IndexQueryCommand>();
         index.AddCommand(indexQuery.Name, indexQuery);
 
-        var knowledge = new CommandGroup("knowledge", "Azure AI Search knowledge operations - Commands for listing knowledge sources and bases in a search service.");
+        var knowledge = new CommandGroup("knowledge", "Azure AI Search knowledge operations - Commands retrieving data from knowledge sources, listing knowledge sources and knowledge bases in a search service.");
         search.AddSubGroup(knowledge);
 
-        var knowledgeSource = new CommandGroup("source", "Knowledge source operations - list knowledge sources associated with a service.");
+        var knowledgeSource = new CommandGroup("source", "Knowledge source operations - get knowledge sources associated with a service.");
         knowledge.AddSubGroup(knowledgeSource);
-        var knowledgeSourceList = serviceProvider.GetRequiredService<KnowledgeSourceListCommand>();
-        knowledgeSource.AddCommand(knowledgeSourceList.Name, knowledgeSourceList);
 
-        var knowledgeBase = new CommandGroup("base", "Knowledge base operations - list knowledge bases associated with a service.");
+        var knowledgeSourceGet = serviceProvider.GetRequiredService<KnowledgeSourceGetCommand>();
+        knowledgeSource.AddCommand(knowledgeSourceGet.Name, knowledgeSourceGet);
+
+        var knowledgeBase = new CommandGroup("base", "Knowledge base operations - get knowledge bases associated with a service.");
         knowledge.AddSubGroup(knowledgeBase);
 
-        var knowledgeBaseList = serviceProvider.GetRequiredService<KnowledgeBaseListCommand>();
-        knowledgeBase.AddCommand(knowledgeBaseList.Name, knowledgeBaseList);
-        var knowledgeBaseRunretrieval = serviceProvider.GetRequiredService<KnowledgeBaseRunRetrievalCommand>();
-        knowledgeBase.AddCommand(knowledgeBaseRunretrieval.Name, knowledgeBaseRunretrieval);
+        var knowledgeBaseGet = serviceProvider.GetRequiredService<KnowledgeBaseGetCommand>();
+        knowledgeBase.AddCommand(knowledgeBaseGet.Name, knowledgeBaseGet);
+        var knowledgeBaseRetrieve = serviceProvider.GetRequiredService<KnowledgeBaseRetrieveCommand>();
+        knowledgeBase.AddCommand(knowledgeBaseRetrieve.Name, knowledgeBaseRetrieve);
 
         return search;
     }

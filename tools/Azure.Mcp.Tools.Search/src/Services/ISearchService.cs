@@ -20,10 +20,12 @@ public interface ISearchService
 
     Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
         string serviceName,
+        string? knowledgeSourceName = null,
         RetryPolicyOptions? retryPolicy = null);
 
     Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
         string serviceName,
+        string? knowledgeBaseName = null,
         RetryPolicyOptions? retryPolicy = null);
 
     Task<List<JsonElement>> QueryIndex(
