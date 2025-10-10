@@ -510,16 +510,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_redis_cache_accesspolicy_list | List all access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_accesspolicy_list | Show me the access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_list | List all Redis Caches in my subscription |
-| azmcp_redis_cache_list | Show me my Redis Caches |
-| azmcp_redis_cache_list | Show me the Redis Caches in my subscription |
-| azmcp_redis_cluster_database_list | List all databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_database_list | Show me the databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_list | List all Redis Clusters in my subscription |
-| azmcp_redis_cluster_list | Show me my Redis Clusters |
-| azmcp_redis_cluster_list | Show me the Redis Clusters in my subscription |
+| azmcp_redis_list | List all Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis resources |
+| azmcp_redis_list | Show me the Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis caches |
+| azmcp_redis_list | Get Redis clusters |
 
 ## Azure Resource Group
 
