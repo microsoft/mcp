@@ -97,7 +97,7 @@ public class NamespaceGetCommandTests
                         new Models.EventHubsSku("Standard", "Standard", null)),
                 };
 
-                _eventHubsService.ListNamespacesAsync(
+                _eventHubsService.GetNamespacesAsync(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
@@ -128,7 +128,7 @@ public class NamespaceGetCommandTests
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription 12345678-1234-1234-1234-123456789012 --resource-group rg-eventhubs-test");
 
-        _eventHubsService.ListNamespacesAsync(
+        _eventHubsService.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
@@ -148,7 +148,7 @@ public class NamespaceGetCommandTests
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group rg-eventhubs-prod");
-        _eventHubsService.ListNamespacesAsync(
+        _eventHubsService.GetNamespacesAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),

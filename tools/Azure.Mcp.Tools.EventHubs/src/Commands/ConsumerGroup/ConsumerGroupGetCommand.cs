@@ -95,7 +95,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
             else
             {
                 // List all consumer groups
-                var consumerGroups = await eventHubsService.ListConsumerGroupsAsync(
+                var consumerGroups = await eventHubsService.GetConsumerGroupsAsync(
                     options.EventHub!,
                     options.Namespace!,
                     options.ResourceGroup!,

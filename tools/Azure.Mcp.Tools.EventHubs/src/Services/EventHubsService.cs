@@ -20,7 +20,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task<List<Namespace>> ListNamespacesAsync(
+    public async Task<List<Namespace>> GetNamespacesAsync(
         string? resourceGroup,
         string subscription,
         string? tenant = null,
@@ -645,7 +645,7 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         }
     }
 
-    public async Task<List<ConsumerGroup>> ListConsumerGroupsAsync(
+    public async Task<List<ConsumerGroup>> GetConsumerGroupsAsync(
         string eventHubName,
         string namespaceName,
         string resourceGroup,
