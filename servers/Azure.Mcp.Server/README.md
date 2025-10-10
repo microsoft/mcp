@@ -166,7 +166,11 @@ Install Azure MCP Server via a package manager:
 Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 
 ```bash
-dotnet tool install --global Azure.Mcp
+dotnet tool install Azure.Mcp
+```
+or 
+```bash
+dotnet tool install Azure.Mcp --version <version>
 ```
 
 ### NPM
