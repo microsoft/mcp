@@ -96,7 +96,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.RetryPolicy);
 
                 var results = eventHub != null ? new List<Models.EventHub> { eventHub } : new List<Models.EventHub>();
-                context.Response.Results = ResponseResult.Create(new EventHubGetCommandResult(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(results), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }
             else
             {
