@@ -17,6 +17,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code only shows a subset of tools available](#vs-code-only-shows-a-subset-of-tools-available)
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
+    - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
   - [Remote MCP Server](#remote-mcp-server)
       - [SSE Transport](#sse-transport)
       - [Streamable HTTP Transport](#streamable-http-transport)
@@ -44,7 +45,10 @@ By default, Azure MCP Server communicates with MCP Clients via standard I/O. Any
 
 ### Can I select what tools to load in the MCP server?
 
-Yes, you can enable multiple MCP servers that only load the services you need. In this example, two MCP servers are registered that only expose `storage` and `keyvault` tools:
+Yes, you can control which tools are exposed using several approaches. The `--namespace` and `--tool` options cannot be used together.
+
+#### Option 1: Filter by Service Namespace
+Use the `--namespace` option to expose only tools for specific Azure services:
 
 ```json
 {
@@ -67,6 +71,42 @@ Yes, you can enable multiple MCP servers that only load the services you need. I
         "start",
         "--namespace",
         "keyvault"
+      ]
+    }
+  }
+}
+```
+
+#### Option 2: Filter by Specific Tools
+Use the `--tool` option to expose only specific tools by name. This provides the most granular control. It automatically switches to `all` mode:
+
+```json
+{
+  "servers": {
+    "Azure Storage Accounts Only": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "args": [
+        "server",
+        "start",
+        "--tool",
+        "azmcp_storage_account_get",
+        "--tool",
+        "azmcp_storage_account_create"
+      ]
+    },
+    "Essential Azure Tools": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/azure-mcp/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp[.exe]",
+      "args": [
+        "server",
+        "start",
+        "--tool",
+        "azmcp_subscription_list",
+        "--tool",
+        "azmcp_group_list",
+        "--tool",
+        "azmcp_storage_account_get"
       ]
     }
   }
@@ -211,6 +251,36 @@ If the issue persists, you can take a more aggressive approach by clearing the f
 Clear Node Modules Cache
 
 - npm cache clean --force
+
+### MCP Tools That Require Additional Input Fail Silently
+
+The **Elicitation** feature in VS Code lets MCP tools request user input through interactive prompts during execution. If elicitation is not supported, affected tools may fail without showing prompts or may return errors about client compatibility. Updating VS Code usually resolves the issue.
+
+#### Requirements
+Elicitation is supported starting with **VS Code version 1.102 or newer** (released June 2025).
+
+#### Symptoms
+When elicitation isn't supported, you may experience:
+- MCP tools that need user input fail without explanation
+- Missing interactive prompts when tools request additional information
+- Error messages indicating elicitation is unsupported by the client
+
+![Elicitation error message](elicitation_not_supported.png)
+
+#### Solution
+Update VS Code to version 1.102 or newer:
+
+1. Open VS Code
+2. Go to **Help** > **Check for Updates**
+3. Install the latest version if available
+4. Restart VS Code after updating
+
+To verify your VS Code version:
+- Go to **Help** > **About** (or **Code** > **About Visual Studio Code** on macOS)
+- Check that the version number is 1.102.0 or higher
+
+> [!NOTE]
+> If you're using VS Code Insiders, elicitation support is included in versions from June 2025 onwards.
 
 ## Authentication
 

@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Collections.Immutable;
 using System.Diagnostics;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
@@ -21,7 +23,9 @@ internal class TelemetryService : ITelemetryService
 
     internal ActivitySource Parent { get; }
 
-    public TelemetryService(IMachineInformationProvider informationProvider, IOptions<AzureMcpServerConfiguration> options)
+    public TelemetryService(IMachineInformationProvider informationProvider,
+        IOptions<AzureMcpServerConfiguration> options,
+        IOptions<ServiceStartOptions>? serverOptions)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
         _tagsList = new List<KeyValuePair<string, object?>>()
@@ -29,10 +33,24 @@ internal class TelemetryService : ITelemetryService
             new(TagName.AzureMcpVersion, options.Value.Version),
         };
 
+        if (serverOptions?.Value != null)
+        {
+            _tagsList.Add(new(TagName.ServerMode, serverOptions.Value.Mode));
+        }
+
         Parent = new ActivitySource(options.Value.Name, options.Value.Version, _tagsList);
         _informationProvider = informationProvider;
 
         Task.Factory.StartNew(InitializeTagList);
+    }
+
+    /// <summary>
+    /// TESTING PURPOSES ONLY: Gets the default tags used for telemetry.
+    /// </summary>
+    internal async Task<IReadOnlyList<KeyValuePair<string, object?>>> GetDefaultTags()
+    {
+        await _isInitialized.Task;
+        return _tagsList.ToImmutableList();
     }
 
     public ValueTask<Activity?> StartActivity(string activityId) => StartActivity(activityId, null);

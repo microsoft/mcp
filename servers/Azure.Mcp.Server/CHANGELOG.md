@@ -2,11 +2,87 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.4 (Unreleased)
+## 0.8.7 (Unreleased)
 
 ### Features Added
 
-- Added the support to return meta data in `tool list` command[[#564](https://github.com/microsoft/mcp/issues/564)].
+- Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 0.8.6 (2025-10-09)
+
+### Features Added
+
+- Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
+- Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
+- Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
+
+### Breaking Changes
+
+- Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` only for the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
+
+### Other Changes
+
+- Telemetry:
+  - Added `ServerMode` telemetry tag to distinguish start-up modes for the MCP server. [[#738](https://github.com/microsoft/mcp/pull/738)]
+  - Updated `ToolArea` telemetry field to be populated for namespace (and intent/learn) calls. [[#739](https://github.com/microsoft/mcp/pull/739)]
+
+## 0.8.5 (2025-10-07)
+
+### Features Added
+
+- Added the following OpenAI commands: [[#647](https://github.com/microsoft/mcp/pull/647)]
+  - `azmcp_foundry_openai_chat-completions-create`: Create interactive chat completions using Azure OpenAI chat models in AI Foundry.
+  - `azmcp_foundry_openai_embeddings-create`: Generate vector embeddings using Azure OpenAI embedding models in AI Foundry
+  - `azmcp_foundry_openai_models-list`: List all available OpenAI models and deployments in an Azure resource.
+- Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. [[#473](https://github.com/microsoft/mcp/pull/473)]
+- Added support for appending tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees in Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_append`. [[#705](https://github.com/microsoft/mcp/pull/705)]
+- Added the following Azure Managed Lustre commands:
+  - `azmcp_azuremanagedlustre_filesystem_subnetsize_validate`: Check if the subnet can host the target Azure Managed Lustre SKU and size [[#110](https://github.com/microsoft/mcp/issues/110)].
+  - `azmcp_azuremanagedlustre_filesystem_create`: Create an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
+  - `azmcp_azuremanagedlustre_filesystem_update`: Update an Azure Managed Lustre filesystem. [[#50](https://github.com/microsoft/mcp/issues/50)]
+- Added support for listing all Azure SignalR runtime instances or getting detailed information about a single one via the command `azmcp_signalr_runtime_get`. [[#83](https://github.com/microsoft/mcp/pull/83)]
+
+### Breaking Changes
+
+- Renamed `azmcp_azuremanagedlustre` commands to `azmcp_managedlustre`. [[#345](https://github.com/microsoft/mcp/issues/345)]
+  - Renamed `azmcp_managedlustre_filesystem_required-subnet-size` to `azmcp_managedlustre_filesystem_subnetsize_ask`. [[#111](https://github.com/microsoft/mcp/issues/111)]
+- Merged the following Azure Kubernetes Service (AKS) tools: [[#591](https://github.com/microsoft/mcp/issues/591)]
+  - Merged `azmcp_aks_cluster_list` into `azmcp_aks_cluster_get`, which can perform both operations based on whether `--cluster` is passed.
+  - Merged `azmcp_aks_nodepool_list` into `azmcp_aks_nodepool_get`, which can perform both operations based on whether `--nodepool` is passed.
+
+### Bugs Fixed
+
+- Improved description of Load Test commands. [[#92](https://github.com/microsoft/mcp/pull/92)]
+- Fixed an issue where Azure Subscription tools were not available in the default (namespace) server mode. [[#634](https://github.com/microsoft/mcp/pull/634)]
+- Improved error message for macOS users when interactive browser authentication fails due to broker threading requirements. The error now provides clear guidance to use Azure CLI, Azure PowerShell, or Azure Developer CLI for authentication instead. [[#684](https://github.com/microsoft/mcp/pull/684)]
+- Added validation for the Cosmos query command `azmcp_cosmos_database_container_item_query`. [[#524](https://github.com/microsoft/mcp/pull/524)]
+- Fixed the construction of Azure Resource Graph queries for App Configuration in the `FindAppConfigStore` method. The name filter is now correctly passed via the `additionalFilter` parameter instead of `tableName`, resolving "ExactlyOneStartingOperatorRequired" and "BadRequest" errors when setting key-value pairs. [[#670](https://github.com/microsoft/mcp/pull/670)]
+- Updated the description of the Monitor tool and corrected the prompt for command `azmcp_monitor_healthmodels_entity_gethealth` to ensure that the LLM picks up the correct tool. [[#630](https://github.com/microsoft/mcp/pull/630)]
+- Fixed "BadRequest" error in Azure Container Registry to get a registry, and in EventHubs to get a namespace. [[#729](https://github.com/microsoft/mcp/pull/729)]
+- Added redundancy in Dockerfile to ensure the azmcp in the Docker image is actually executable. [[#732](https://github.com/microsoft/mcp/pull/732)]
+
+### Other Changes
+
+- Updated the description of `azmcp_bicepschema_get` to increase selection accuracy by LLMs. [[#649](https://github.com/microsoft/mcp/pull/649)]
+- Update the `ToolName` telemetry field to use the normalized command name when the `CommandFactory` tool is used. [[#716](https://github.com/microsoft/mcp/pull/716)]
+- Updated the default tool loading behavior to execute namespace tool calls directly instead of spawning separate child processes for each namespace. [[#704](https://github.com/microsoft/mcp/pull/704)]
+
+#### Dependency updates
+
+- Updated `Microsoft.Azure.Cosmos.Aot` from `0.1.2-preview.2` to `0.1.4-preview.2`, which upgrades the transitive Newtonsoft.Json dependency to `13.0.4`. [[#662](https://github.com/microsoft/mcp/pull/662)]
+
+## 0.8.4 (2025-10-02)
+
+### Features Added
+
+- Added support to return metadata when using the `azmcp_tool_list` command. [[#564](https://github.com/microsoft/mcp/issues/564)]
+- Added support for returning a list of tool namespaces instead of individual tools when using the `azmcp_tool_list` command with the `--namespaces` option. [[#496](https://github.com/microsoft/mcp/issues/496)]
 - Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[203](https://github.com/microsoft/mcp/issues/203)]
 
 ### Breaking Changes
@@ -16,15 +92,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed the name of the Key Vault Managed HSM settings get command from `azmcp_keyvault_admin_get` to `azmcp_keyvault_admin_settings_get`. [[#643](https://github.com/microsoft/mcp/issues/643)]
-- Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[644](https://github.com/microsoft/mcp/pull/644)]
+- Removed redundant DI instantiation of MCP server providers, as these are expected to be instantiated by the MCP server discovery mechanism. [[#644](https://github.com/microsoft/mcp/pull/644)]
 - Fixed App Lens having a runtime error for reflection-based serialization when using native AoT MCP build. [[#639](https://github.com/microsoft/mcp/pull/639)]
 - Added validation for the PostgreSQL database query command `azmcp_postgres_database_query`.[[#518](https://github.com/microsoft/mcp/pull/518)]
 
 ### Other Changes
 
 - Change base Docker image from `bookworm-slim` to `alpine`. [[#651](https://github.com/microsoft/mcp/pull/651)]
-
-- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
+  - Grafana [[#628](https://github.com/microsoft/mcp/pull/628)]
+- Updated the description of the following commands to increase selection accuracy by LLMs:
+  - App Deployment: `azmcp_deploy_app_logs_get` [[#640](https://github.com/microsoft/mcp/pull/640)]
   - Kusto: [[#666](https://github.com/microsoft/mcp/pull/666)]
     - `azmcp_kusto_cluster_get`
     - `azmcp_kusto_cluster_list`
@@ -33,16 +111,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
     - `azmcp_kusto_sample`
     - `azmcp_kusto_table_list`
     - `azmcp_kusto_table_schema`
+  - Redis: [[#655](https://github.com/microsoft/mcp/pull/655)]
+    - `azmcp_redis_cache_list`
+    - `azmcp_redis_cluster_list`
   - Service Bus: `azmcp_servicebus_topic_details` [[#642](https://github.com/microsoft/mcp/pull/642)]
-- Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
-  - Grafana [[628](https://github.com/microsoft/mcp/pull/628)]
 
 #### Dependency Updates
 
+- Updated the `ModelContextProtocol.AspNetCore` version from `0.3.0-preview.4` to `0.4.0-preview.1`. [[#576](https://github.com/Azure/azure-mcp/pull/576)]
 - Removed the following dependencies:
-  - `Azure.ResourceManager.Grafana` [[628](https://github.com/microsoft/mcp/pull/622)]
-
-- Updated the description of Redis commands to increase selection accuracy by LLMs: [[#655](https://github.com/microsoft/mcp/pull/655)]
+  - `Azure.ResourceManager.Grafana` [[#628](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.3 (2025-09-30)
 
@@ -70,7 +148,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Refactored tool implementation to use Azure Resource Graph queries instead of direct ARM API calls:
   - Authorization [[607](https://github.com/microsoft/mcp/pull/607)]
-  - AppConig [[606](https://github.com/microsoft/mcp/pull/606)]
+  - AppConfig [[606](https://github.com/microsoft/mcp/pull/606)]
   - ACR [[622](https://github.com/microsoft/mcp/pull/622)]
 - Fixed the names of the following MySQL and Postgres commands: [[#614](https://github.com/microsoft/mcp/pull/614)]
   - `azmcp_mysql_server_config_config`    → `azmcp_mysql_server_config_get`
@@ -87,7 +165,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - App Lens: `azmcp_applens_resource_diagnose` [[#556](https://github.com/microsoft/mcp/pull/556)]
   - Cloud Architect: `azmcp_cloudarchitect_design` [[#587](https://github.com/microsoft/mcp/pull/587)]
   - Cosmos DB: `azmcp_cosmos_database_container_item_query` [[#625](https://github.com/microsoft/mcp/pull/625)]
-  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)] 
+  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)]
     - `azmcp_eventgrid_subscription_list`
     - `azmcp_eventgrid_topic_list`
   - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]
@@ -118,9 +196,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 #### Dependency Updates
 
 - Removed the following dependencies:
-  - `Azure.ResourceManager.Authorization` [[607](https://github.com/microsoft/mcp/pull/607)]
-  - `Azure.ResourceManager.AppConfiguration` [[606](https://github.com/microsoft/mcp/pull/606)]
-  - `Azure.ResourceManager.ContainerRegistry` [[622](https://github.com/microsoft/mcp/pull/622)]
+  - `Azure.ResourceManager.Authorization` [[#607](https://github.com/microsoft/mcp/pull/607)]
+  - `Azure.ResourceManager.AppConfiguration` [[#606](https://github.com/microsoft/mcp/pull/606)]
+  - `Azure.ResourceManager.ContainerRegistry` [[#622](https://github.com/microsoft/mcp/pull/622)]
 
 ## 0.8.2 (2025-09-25)
 
@@ -140,7 +218,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
   - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
-- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[358](https://github.com/microsoft/mcp/pull/358)]
+- Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
 ### Breaking Changes
 
@@ -917,4 +995,4 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 - See https://github.com/Azure/azure-mcp/releases/tag/0.0.10
 
 ### Other Changes
-- See Blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/
+- See blog post for details https://devblogs.microsoft.com/azure-sdk/introducing-the-azure-mcp-server/

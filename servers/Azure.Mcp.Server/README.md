@@ -3,9 +3,14 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 -->
 # <!-- remove-section: start nuget;vsix remove_azure_logo --><img height="36" width="36" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/acom_social_icon_azure" alt="Microsoft Azure Logo" /> <!-- remove-section: end remove_azure_logo -->Azure MCP Server <!-- insert-section: nuget;vsix;npm {{ToolTitle}} -->
 
-All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.  This project is in Public Preview and implementation may significantly change prior to our General Availability.
+All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053)
+
+[![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
+[![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
+[![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
+
 <!-- remove-section: end remove_install_links -->
 
 ## Table of Contents
@@ -34,7 +39,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 # Overview
 
-**Azure MCP Server** supercharges your agents with Azure context across **30+ different Azure services**.
+**Azure MCP Server** supercharges your agents with Azure context across **40+ different Azure services**.
 
 # Installation
 
@@ -273,23 +278,33 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 * Generate Azure CLI commands based on user intent
 
+### 📞 Azure Communication Services
+
+* "Send an SMS message to +1234567890"
+* "Send SMS with delivery reporting enabled"
+* "Send a broadcast SMS to multiple recipients"
+* "Send SMS with custom tracking tag"
+* "Send an email from 'sender@example.com' to 'recipient@example.com' with subject 'Hello' and message 'Welcome!'"
+* "Send an HTML email to multiple recipients with CC and BCC using Azure Communication Services"
+* "Send an email with reply-to address 'reply@example.com' and subject 'Support Request'"
+* "Send an email from my communication service endpoint with custom sender name and multiple recipients"
+* "Send an email to 'user1@example.com' and 'user2@example.com' with subject 'Team Update' and message 'Please review the attached document.'"
+
 ### 📦 Azure Container Apps
 
 * "List the container apps in my subscription"
 * "Show me the container apps in my 'my-resource-group' resource group"
+
+### 🔐 Azure Confidential Ledger
+
+* "Append entry {"foo":"bar"} to ledger contoso"
+* "Get entry with id 2.40 from ledger contoso"
 
 ### 📦 Azure Container Registry (ACR)
 
 * "List all my Azure Container Registries"
 * "Show me my container registries in the 'my-resource-group' resource group"
 * "List all my Azure Container Registry repositories"
-
-### ☸️ Azure Kubernetes Service (AKS)
-
-* "List my AKS clusters in my subscription"
-* "Show me all my Azure Kubernetes Service clusters"
-* "List the node pools for my AKS cluster"
-* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
 
 ### 📊 Azure Cosmos DB
 
@@ -323,10 +338,19 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Import a certificate file into key vault 'my-vault' using the name 'tls-cert'"
 * "Get the account settings for my key vault 'my-vault'"
 
+### ☸️ Azure Kubernetes Service (AKS)
+
+* "List my AKS clusters in my subscription"
+* "Show me all my Azure Kubernetes Service clusters"
+* "List the node pools for my AKS cluster"
+* "Get details for the node pool 'np1' of my AKS cluster 'my-aks-cluster' in the 'my-resource-group' resource group"
+
 ### ⚡ Azure Managed Lustre
 
 * "List the Azure Managed Lustre clusters in resource group 'my-resource-group'"
 * "How many IP Addresses I need to create a 128 TiB cluster of AMLFS 500?"
+* "Check if 'my-subnet-id' can host an Azure Managed Lustre with 'my-size' TiB and 'my-sku' in 'my-region'
+* Create a 4 TIB Azure Managed Lustre filesystem in 'my-region' attaching to 'my-subnet' in virtual network 'my-virtual-network'
 
 ### 📊 Azure Monitor
 
@@ -366,7 +390,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
+The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
@@ -375,6 +399,8 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
+- 📞 **Azure Communication Services** - SMS messaging and communication
+- 🔐 **Azure Confidential Ledger** - Tamper-proof ledger operations
 - 📦 **Azure Container Apps** - Container hosting
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
@@ -396,11 +422,11 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
+- 🚌 **Azure Service Bus** - Message queuing
+- 🏥 **Azure Service Health** - Resource health status and availability
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
-- 🚌 **Azure Service Bus** - Message queuing
-- 🏥 **Azure Service Health** - Resource health status and availability
 - 💾 **Azure Storage** - Blob storage
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
@@ -414,7 +440,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 ## Documentation
 
 - See our [official documentation on learn.microsoft.com](https://learn.microsoft.com/azure/developer/azure-mcp-server/) to learn how to use the Azure MCP Server to interact with Azure resources through natural language commands from AI agents and other types of clients.
-- For additional command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
+- For additional command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
 
 ## Feedback and Support
 

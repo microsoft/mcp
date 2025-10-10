@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Monitor.Services;
@@ -36,7 +37,10 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var tenantService = new TenantService(cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
-        return new MonitorService(subscriptionService, tenantService, resourceGroupService);
+        var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
+        var httpClientOptions = new HttpClientOptions();
+        var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
+        return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
     }
 
     [Fact]

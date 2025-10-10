@@ -88,17 +88,17 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
             var namespaceDetails = await ExecuteSingleResourceQueryAsync(
                             "Microsoft.EventHub/namespaces",
-                            resourceGroup,
-                            subscription,
-                            retryPolicy,
-                            ConvertToNamespace,
-                            $"name =~ '{EscapeKqlString(namespaceName)}'");
+                            resourceGroup: resourceGroup,
+                            subscription: subscription,
+                            retryPolicy: retryPolicy,
+                            converter: ConvertToNamespace,
+                            additionalFilter: $"name =~ '{EscapeKqlString(namespaceName)}'");
 
             if (namespaceDetails == null)
             {

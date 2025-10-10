@@ -28,6 +28,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;
 using OpenAI.Chat;
+using OpenAI.Embeddings;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -170,7 +171,7 @@ public class FoundryService(
 
     public async Task<List<Deployment>> ListDeployments(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -195,7 +196,13 @@ public class FoundryService(
         string azureAiServicesName, string resourceGroup, string subscriptionId, string? modelVersion = null, string? modelSource = null,
         string? skuName = null, int? skuCapacity = null, string? scaleType = null, int? scaleCapacity = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(deploymentName, modelName, modelFormat, azureAiServicesName, resourceGroup, subscriptionId);
+        ValidateRequiredParameters(
+            (nameof(deploymentName), deploymentName),
+            (nameof(modelName), modelName),
+            (nameof(modelFormat), modelFormat),
+            (nameof(azureAiServicesName), azureAiServicesName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscriptionId), subscriptionId));
 
         try
         {
@@ -267,7 +274,7 @@ public class FoundryService(
 
     public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -309,7 +316,9 @@ public class FoundryService(
 
     public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint, indexName);
+        ValidateRequiredParameters(
+            (nameof(endpoint), endpoint),
+            (nameof(indexName), indexName));
 
         try
         {
@@ -363,7 +372,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(promptText), promptText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -421,6 +435,303 @@ public class FoundryService(
         return new CompletionResult(completionText, usageInfo);
     }
 
+    public async Task<EmbeddingResult> CreateEmbeddingsAsync(
+        string resourceName,
+        string deploymentName,
+        string inputText,
+        string subscription,
+        string resourceGroup,
+        string? user = null,
+        string encodingFormat = "float",
+        int? dimensions = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(inputText), inputText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get the endpoint
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+
+        var embeddingClient = client.GetEmbeddingClient(deploymentName);
+
+        // Create the embedding request
+        var embedding = await embeddingClient.GenerateEmbeddingAsync(inputText);
+
+        var result = embedding.Value;
+
+        var embeddingData = new List<EmbeddingData>
+        {
+            new EmbeddingData(
+                "embedding",
+                0,
+                result.ToFloats().ToArray())
+        };
+
+        // Note: Usage information might not be available in the current SDK version
+        // Using placeholder values for now
+        var splitInput = inputText.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        var usageInfo = new EmbeddingUsageInfo(
+            splitInput.Length, // Approximate token count
+            splitInput.Length);
+
+        return new EmbeddingResult(
+            "list",
+            embeddingData,
+            deploymentName,
+            usageInfo);
+    }
+
+    public async Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
+        string resourceName,
+        string subscription,
+        string resourceGroup,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get all deployments for this account
+        var deployments = cognitiveServicesAccount.Value.GetCognitiveServicesAccountDeployments();
+        var allDeployments = new List<OpenAiModelDeployment>();
+
+        await foreach (var deployment in deployments.GetAllAsync())
+        {
+            var deploymentData = deployment.Data;
+            var properties = deploymentData.Properties;
+
+            // Determine model capabilities based on model name
+            var capabilities = DetermineModelCapabilities(properties.Model?.Name);
+
+            var modelDeployment = new OpenAiModelDeployment(
+                DeploymentName: deploymentData.Name,
+                ModelName: properties.Model?.Name ?? "Unknown",
+                ModelVersion: properties.Model?.Version,
+                ScaleType: properties.ScaleSettings?.ScaleType?.ToString(),
+                Capacity: properties.ScaleSettings?.Capacity,
+                ProvisioningState: deploymentData.Properties.ProvisioningState?.ToString(),
+                CreatedAt: null, // This information may not be available in the current API
+                UpdatedAt: null, // This information may not be available in the current API
+                Capabilities: capabilities
+            );
+
+            allDeployments.Add(modelDeployment);
+        }
+
+        return new OpenAiModelsListResult(allDeployments, resourceName);
+    }
+
+    private static OpenAiModelCapabilities DetermineModelCapabilities(string? modelName)
+    {
+        if (string.IsNullOrEmpty(modelName))
+        {
+            return new OpenAiModelCapabilities(false, false, false, false);
+        }
+
+        var modelNameLower = modelName.ToLowerInvariant();
+
+        // Determine capabilities based on model name patterns
+        var isEmbeddingModel = modelNameLower.Contains("embedding") || modelNameLower.Contains("ada");
+        var isCompletionModel = modelNameLower.Contains("gpt") || modelNameLower.Contains("davinci") || modelNameLower.Contains("curie") || modelNameLower.Contains("babbage");
+        var isChatModel = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-4") || modelNameLower.Contains("gpt-35");
+        var supportsFineTuning = modelNameLower.Contains("gpt-3.5") || modelNameLower.Contains("gpt-35") || modelNameLower.Contains("davinci");
+
+        return new OpenAiModelCapabilities(
+            Completions: isCompletionModel,
+            Embeddings: isEmbeddingModel,
+            ChatCompletions: isChatModel,
+            FineTuning: supportsFineTuning
+        );
+    }
+
+    public async Task<ChatCompletionResult> CreateChatCompletionsAsync(
+        string resourceName,
+        string deploymentName,
+        string subscription,
+        string resourceGroup,
+        List<object> messages,
+        int? maxTokens = null,
+        double? temperature = null,
+        double? topP = null,
+        double? frequencyPenalty = null,
+        double? presencePenalty = null,
+        string? stop = null,
+        bool? stream = null,
+        int? seed = null,
+        string? user = null,
+        string? tenant = null,
+        AuthMethod authMethod = AuthMethod.Credential,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
+
+        if (messages == null || messages.Count == 0)
+        {
+            throw new ArgumentException("Messages array cannot be null or empty", nameof(messages));
+        }
+
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+        // Get the Cognitive Services account
+        var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+
+        // Get the endpoint
+        var accountData = cognitiveServicesAccount.Value.Data;
+        var endpoint = accountData.Properties.Endpoint;
+
+        if (string.IsNullOrEmpty(endpoint))
+        {
+            throw new InvalidOperationException($"Endpoint not found for resource '{resourceName}'");
+        }
+
+        // Create Azure OpenAI client with flexible authentication
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+
+        var chatClient = client.GetChatClient(deploymentName);
+
+        // Convert messages to ChatMessage objects
+        var chatMessages = new List<OpenAI.Chat.ChatMessage>();
+        foreach (var message in messages)
+        {
+            if (message is JsonObject jsonMessage)
+            {
+                var role = jsonMessage["role"]?.ToString();
+                var content = jsonMessage["content"]?.ToString();
+
+                if (string.IsNullOrEmpty(role) || string.IsNullOrEmpty(content))
+                {
+                    throw new ArgumentException("Each message must have 'role' and 'content' properties");
+                }
+
+                OpenAI.Chat.ChatMessage chatMessage = role.ToLowerInvariant() switch
+                {
+                    "system" => OpenAI.Chat.ChatMessage.CreateSystemMessage(content),
+                    "user" => OpenAI.Chat.ChatMessage.CreateUserMessage(content),
+                    "assistant" => OpenAI.Chat.ChatMessage.CreateAssistantMessage(content),
+                    _ => throw new ArgumentException($"Invalid message role: {role}")
+                };
+
+                chatMessages.Add(chatMessage);
+            }
+            else
+            {
+                throw new ArgumentException("Messages must be valid JSON objects with 'role' and 'content' properties");
+            }
+        }
+
+        // Create chat completion options
+        var options = new ChatCompletionOptions();
+        if (maxTokens.HasValue)
+            options.MaxOutputTokenCount = maxTokens.Value;
+        if (temperature.HasValue)
+            options.Temperature = (float)temperature.Value;
+        if (topP.HasValue)
+            options.TopP = (float)topP.Value;
+        if (frequencyPenalty.HasValue)
+            options.FrequencyPenalty = (float)frequencyPenalty.Value;
+        if (presencePenalty.HasValue)
+            options.PresencePenalty = (float)presencePenalty.Value;
+#pragma warning disable OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        if (seed.HasValue)
+            options.Seed = seed.Value;
+#pragma warning restore OPENAI001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
+        if (!string.IsNullOrEmpty(user))
+            options.EndUserId = user;
+
+        // Handle stop sequences
+        if (!string.IsNullOrEmpty(stop))
+        {
+            var stopSequences = stop.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                  .Select(s => s.Trim())
+                                  .ToArray();
+            foreach (var stopSequence in stopSequences)
+            {
+                options.StopSequences.Add(stopSequence);
+            }
+        }
+
+        // Create the chat completion
+        var response = await chatClient.CompleteChatAsync(chatMessages, options);
+        var result = response.Value;
+
+        // Convert response to our model
+        var choices = new List<ChatCompletionChoice>();
+        for (int i = 0; i < result.Content.Count; i++)
+        {
+            var contentPart = result.Content[i];
+            var message = new ChatCompletionMessage(
+                Role: "assistant",
+                Content: contentPart.Text,
+                Name: null,
+                FunctionCall: null,
+                ToolCalls: null
+            );
+
+            var choice = new ChatCompletionChoice(
+                Index: i,
+                Message: message,
+                FinishReason: result.FinishReason.ToString(),
+                LogProbs: null
+            );
+
+            choices.Add(choice);
+        }
+
+        // Create usage information
+        var usage = new ChatCompletionUsageInfo(
+            PromptTokens: result.Usage?.InputTokenCount ?? 0,
+            CompletionTokens: result.Usage?.OutputTokenCount ?? 0,
+            TotalTokens: result.Usage?.TotalTokenCount ?? 0
+        );
+
+        return new ChatCompletionResult(
+            Id: result.Id ?? Guid.NewGuid().ToString(),
+            Object: "chat.completion",
+            Created: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            Model: deploymentName,
+            Choices: choices,
+            Usage: usage,
+            SystemFingerprint: result.SystemFingerprint
+        );
+    }
+
     private async Task<AzureOpenAIClient> CreateOpenAIClientWithAuth(
         string endpoint,
         string resourceName,
@@ -456,7 +767,7 @@ public class FoundryService(
 
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -489,7 +800,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var credential = await GetCredential(tenantId);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
@@ -572,7 +886,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy);
 
@@ -631,7 +948,10 @@ public class FoundryService(
 
     public async Task<AgentsEvaluateResult> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(evaluatorName, query, agentResponse);
+        ValidateRequiredParameters(
+            (nameof(evaluatorName), evaluatorName),
+            (nameof(query), query),
+            (nameof(agentResponse), agentResponse));
         try
         {
             if (!AgentEvaluatorDictionary.ContainsKey(evaluatorName.ToLowerInvariant()))
