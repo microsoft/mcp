@@ -56,11 +56,11 @@ jobs:
       echo "Running container tests..."
       echo "Calling 'azmcp tools list'"
       # Override entrypoint to list tools directly instead of starting the server
-      mkdir -p $(Build.ArtifactStagingDirectory)/docker_output
-      docker run --rm --entrypoint ./azmcp $(Build.Repository.Name)/server:$(Build.BuildId) tools list > $(Build.ArtifactStagingDirectory)/docker_output/tools.json
+      mkdir -p $(Build.ArtifactStagingDirectory
+      docker run --rm --entrypoint ./azmcp $(Build.Repository.Name)/server:$(Build.BuildId) tools list > $(Build.ArtifactStagingDirectory)/tools.json
       echo "tools list output (truncated):"
-      head -n 40 $(Build.ArtifactStagingDirectory)/docker_output/tools.json || true
-      if grep -q '"status"[[:space:]]*:[[:space:]]*200' $(Build.ArtifactStagingDirectory)/docker_output/tools.json; then
+      head -n 40 $(Build.ArtifactStagingDirectory)/tools.json || true
+      if grep -q '"status"[[:space:]]*:[[:space:]]*200' $(Build.ArtifactStagingDirectory)/tools.json; then
         echo "Status 200 confirmed in tools list output.";
       else
         echo "ERROR: tools list output did not contain status 200" >&2; exit 1;
@@ -75,8 +75,8 @@ jobs:
       echo "Image digest: $digest"
       echo "##vso[task.setvariable variable=DockerImageDigest;isOutput=true]$digest"
       echo "Saving image"
-      docker save $IMAGE_TAG -o $(Build.ArtifactStagingDirectory)/docker_output/image.tar
-      ls -lh $(Build.ArtifactStagingDirectory)/docker_output/image.tar
+      docker save $IMAGE_TAG -o $(Build.ArtifactStagingDirectory)/image.tar
+      ls -lh $(Build.ArtifactStagingDirectory)/image.tar
     name: CaptureImage
     displayName: Capture image digest and save tar
 
