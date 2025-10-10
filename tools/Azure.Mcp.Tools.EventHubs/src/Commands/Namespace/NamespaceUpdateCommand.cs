@@ -175,25 +175,5 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        KeyNotFoundException => $"Event Hubs namespace not found. Verify the namespace name, resource group, and that you have access.",
-        Identity.AuthenticationFailedException authEx =>
-            "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to update Event Hubs namespaces in the specified resource group.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "The specified resource group, subscription, or namespace was not found. Please verify the names.",
-        RequestFailedException reqEx when reqEx.Status == 409 =>
-            "Conflict: The namespace is currently being updated or is in a state that prevents updates. Please try again later.",
-        ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
-            "Invalid resource group name. Please provide a valid resource group name.",
-        ArgumentException argEx when argEx.ParamName == "subscription" =>
-            "Invalid subscription. Please provide a valid subscription ID or name.",
-        ArgumentException argEx when argEx.ParamName == "tags" =>
-            $"Invalid tags format: {argEx.Message}",
-        _ => base.GetErrorMessage(ex)
-    };
-
     internal record NamespaceUpdateCommandResult(Models.Namespace Namespace);
 }

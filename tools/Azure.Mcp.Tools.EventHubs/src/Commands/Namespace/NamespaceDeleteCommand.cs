@@ -96,23 +96,5 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        KeyNotFoundException => $"Event Hubs namespace not found. Verify the namespace name, resource group, and that you have access.",
-        Identity.AuthenticationFailedException authEx =>
-            "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to delete Event Hubs namespaces in the specified resource group.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "The specified resource group, subscription, or namespace was not found. Please verify the names.",
-        RequestFailedException reqEx when reqEx.Status == 409 =>
-            "Conflict: The namespace cannot be deleted in its current state. It may be in the process of being updated or deleted.",
-        ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
-            "Invalid resource group name. Please provide a valid resource group name.",
-        ArgumentException argEx when argEx.ParamName == "subscription" =>
-            "Invalid subscription. Please provide a valid subscription ID or name.",
-        _ => base.GetErrorMessage(ex)
-    };
-
     internal record NamespaceDeleteCommandResult(bool Success, string Message);
 }

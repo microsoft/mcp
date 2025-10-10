@@ -122,22 +122,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        KeyNotFoundException => $"Event Hubs namespace not found. Verify the namespace name, resource group, and that you have access.",
-        Identity.AuthenticationFailedException authEx =>
-            "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to get Event Hubs namespaces in the specified resource group.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "The specified resource group or subscription was not found. Please verify the resource group name and subscription.",
-        ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
-            "Invalid resource group name. Please provide a valid resource group name.",
-        ArgumentException argEx when argEx.ParamName == "subscription" =>
-            "Invalid subscription. Please provide a valid subscription ID or name.",
-        _ => base.GetErrorMessage(ex)
-    };
-
     internal record NamespacesGetCommandResult(List<Models.Namespace> Namespaces);
     internal record NamespaceGetCommandResult(Models.Namespace Namespace);
 }

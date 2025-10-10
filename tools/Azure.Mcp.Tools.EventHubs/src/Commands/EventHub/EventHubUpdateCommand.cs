@@ -115,28 +115,5 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         _ => base.GetStatusCode(ex)
     };
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        AuthenticationFailedException =>
-            "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to create or update Event Hubs in the specified namespace and resource group.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "The specified namespace, resource group, or subscription was not found. Please verify all names and identifiers.",
-        RequestFailedException reqEx when reqEx.Status == 400 =>
-            $"Invalid event hub configuration. Please check your parameters (partition count, retention time, etc.). Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 409 =>
-            "Conflict occurred. The event hub may be in a transitional state or the operation conflicts with another in progress.",
-        ArgumentException argEx when argEx.ParamName == "eventHubName" =>
-            "Invalid event hub name. Please provide a valid event hub name.",
-        ArgumentException argEx when argEx.ParamName == "namespaceName" =>
-            "Invalid namespace name. Please provide a valid Event Hubs namespace name.",
-        ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
-            "Invalid resource group name. Please provide a valid resource group name.",
-        ArgumentException argEx when argEx.ParamName == "subscription" =>
-            "Invalid subscription. Please provide a valid subscription ID or name.",
-        _ => base.GetErrorMessage(ex)
-    };
-
     internal record EventHubUpdateCommandResult(Models.EventHub EventHub);
 }
