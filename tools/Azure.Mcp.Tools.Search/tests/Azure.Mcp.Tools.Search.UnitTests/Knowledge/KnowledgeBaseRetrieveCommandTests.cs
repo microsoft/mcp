@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Search.Commands.Knowledge;
@@ -48,7 +49,7 @@ public class KnowledgeBaseRetrieveCommandTests
 
         var response = await command.ExecuteAsync(context, args);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -70,7 +71,7 @@ public class KnowledgeBaseRetrieveCommandTests
 
         var response = await command.ExecuteAsync(context, args);
 
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
@@ -82,7 +83,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var context = new CommandContext(_serviceProvider);
 
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --query or at least one --messages", response.Message);
     }
 
@@ -105,7 +106,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid message format", response.Message);
     }
 
@@ -124,7 +125,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test failure", response.Message);
     }
 }
