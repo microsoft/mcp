@@ -40,7 +40,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
 
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,
+        OpenWorld = false,
         Destructive = true,
         Idempotent = true,
         ReadOnly = false,
