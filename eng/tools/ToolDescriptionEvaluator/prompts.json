@@ -424,6 +424,10 @@
   "azmcp_azuremanagedlustre_filesystem_subnetsize_validate": [
     "Validate if <subnet_id> can host <filesystem_size> of <amlfs_sku>"
   ],
+  "azmcp_azuremanagedlustre_filesystem_importjob_create": [
+    "Create an import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Start a filesystem import job for AMLFS <filesystem_name> with prefixes <prefixes>"
+  ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
   ],
