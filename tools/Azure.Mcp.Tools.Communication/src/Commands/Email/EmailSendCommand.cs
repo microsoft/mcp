@@ -61,7 +61,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         {
             var to = commandResult.GetValueOrDefault<string[]>(CommunicationOptionDefinitions.ToEmail.Name);
             if (to == null || to.Length == 0)
-                commandResult.AddError("At least one 'to' email address must be provided");
+                commandResult.AddError("At least one 'to' email address must be provided.");
             else if (to.Any(string.IsNullOrWhiteSpace))
                 commandResult.AddError("to email addresses cannot be empty.");
 
