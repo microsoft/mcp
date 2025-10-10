@@ -102,8 +102,8 @@ try {
             Set-Content -Path $wrapperToolNuspec
 
 		& "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
-            -InputReadMePath "$serverDirectory/README.md" ` -OutputDirectory $tempPath `
-            -PackageType "vsix" -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' }
+            -InputReadMePath "$serverDirectory/README.md" -OutputDirectory $tempNugetWrapperDir `
+			-PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
 			
 		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
