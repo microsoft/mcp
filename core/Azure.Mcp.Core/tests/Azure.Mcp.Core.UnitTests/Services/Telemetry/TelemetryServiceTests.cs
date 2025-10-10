@@ -268,7 +268,7 @@ public class TelemetryServiceTests
             Assert.Equal(operationName, activity.OperationName);
         }
 
-        AssertDefaultTags(defaultTags);
+        AssertDefaultTags(defaultTags, serviceStartOptions);
     }
 
     [Fact]
