@@ -23,7 +23,7 @@ internal class CliInstallService(IHttpClientService httpClientService) : ICliIns
         }
         else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            osStr = "macos";
+            osStr = "macOS";
         }
         else
         {
