@@ -25,7 +25,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
         Create or Update a Consumer Group. This tool will either create a Consumer Group resource 
         or update a pre-existing Consumer Group resource within the specified Event Hub, depending 
         on whether or not the specified Consumer Group already exists. This tool may modify existing 
-        configurations, and is considered to be destructive. This is a potentially long-running operation.
+        configurations, and is considered to be destructive. 
         
         The tool requires specifying the resource group, namespace name, event hub name, and consumer 
         group name. Optionally, you can provide user metadata for the consumer group.

@@ -24,9 +24,9 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
         """
         Delete a Consumer Group. This tool will delete a pre-existing Consumer Group from the specified 
         Event Hub. This tool will remove existing configurations, and is considered to be destructive.
-        
-        The tool requires specifying the resource group, namespace name, event hub name, and consumer 
-        group name to identify the consumer group to delete.
+
+        The tool requires specifying the resource group, Namespace name, Event Hub name, and Consumer
+        Group name to identify the Consumer Group to delete.
         """;
 
     public override string Title => CommandTitle;

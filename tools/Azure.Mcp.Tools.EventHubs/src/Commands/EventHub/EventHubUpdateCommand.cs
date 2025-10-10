@@ -24,10 +24,10 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
 
     public override string Description =>
         """
-        Create or update an event hub within an Azure Event Hubs namespace. This command can either:
-        1. Create a new event hub if it doesn't exist
-        2. Update an existing event hub's configuration
-        
+        Create or update an Event Hub within an Azure Event Hubs namespace. This command can either:
+        1. Create a new Event Hub if it doesn't exist
+        2. Update an existing Event Hub's configuration
+
         You can configure:
         - Partition count (number of partitions for parallel processing)
         - Message retention time (how long messages are retained in hours)

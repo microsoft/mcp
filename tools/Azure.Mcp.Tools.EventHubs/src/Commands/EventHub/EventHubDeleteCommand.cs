@@ -24,13 +24,12 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
 
     public override string Description =>
         """
-        Delete an event hub from an Azure Event Hubs namespace. This operation permanently removes
-        the specified event hub and all its data. This is a destructive operation.
-        
-        The operation is idempotent - if the event hub doesn't exist, the command reports success
-        with Deleted = false. If the event hub is successfully deleted, Deleted = true is returned.
-        
-        Warning: This operation cannot be undone. All messages and consumer groups in the event hub
+        Delete an Event Hub from an Azure Event Hubs namespace. This operation permanently removes
+        the specified Event Hub and all its data. This is a destructive operation.
+
+        The operation is idempotent - if the Event Hub doesn't exist, the command reports success
+        with Deleted = false. If the Event Hub is successfully deleted, Deleted = true is returned.
+        Warning: This operation cannot be undone. All messages and consumer groups in the Event Hub
         will be permanently deleted.
         """;
 

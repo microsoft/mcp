@@ -25,12 +25,13 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
 
     public override string Description =>
         """
-        Get event hubs from Azure namespace. This command can either:
-        1. List all event hubs in a namespace 
-        2. Get a single event hub by name
-        
-        When retrieving a single event hub or listing multiple event hubs, detailed information including 
-        partition count, settings, and metadata is returned for all event hubs.
+        Get Event Hubs from Azure namespace. This command can either:
+        1. List all Event Hubs in a namespace
+        2. Get a single Event Hub by name
+
+        When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
+        partition count, settings, and metadata is returned for all Event Hubs.
+        """;
         
         """;
 

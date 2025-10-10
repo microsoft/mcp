@@ -26,8 +26,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
         Delete a Namespace. This tool will delete a pre-existing Namespace from the 
         specified resource group. This tool will remove existing configurations, and is 
         considered to be destructive.
-        
-        WARNING: This operation is irreversible. All Event Hubs, consumer groups, and 
+
+        WARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and
         configurations within the namespace will be permanently deleted.
         
         The namespace must exist in the specified resource group. If the namespace is not found,

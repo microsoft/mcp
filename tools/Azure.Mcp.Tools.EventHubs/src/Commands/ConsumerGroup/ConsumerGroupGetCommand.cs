@@ -22,14 +22,13 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
 
     public override string Description =>
         """
-        Get consumer groups from Azure event hub. This command can either:
-        
-        1) List all consumer groups in an event hub
+        Get consumer groups from Azure Event Hub. This command can either:
+
+        1) List all consumer groups in an Event Hub
         2) Get a single consumer group by name
 
-        The eventhub, namespace, and resource-group parameters are required (for both get and list)
-        The consumer-group parameter is only required for getting a specific consumer-group
-        
+        The EventHub, Namespace, and ResourceGroup parameters are required (for both get and list)
+        The Consumer Group parameter is only required for getting a specific consumer-group
         When retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.
         """;
 
