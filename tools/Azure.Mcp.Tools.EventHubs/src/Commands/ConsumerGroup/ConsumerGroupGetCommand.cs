@@ -102,7 +102,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
                     options.Tenant,
                     options.RetryPolicy);
 
-                context.Response.Results = ResponseResult.Create(new ConsumerGroupGetCommandResult(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(consumerGroups ?? []), EventHubsJsonContext.Default.ConsumerGroupGetCommandResult);
             }
         }
         catch (Exception ex)
