@@ -29,6 +29,26 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_search_knowledge_base_get | List all knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | List all knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Query knowledge base <agent-name> in search service <service-name> about <query> |
+| azmcp_search_knowledge_base_retrieve | Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query> |
+| azmcp_search_knowledge_base_retrieve | What does knowledge base <agent-name> in search service <service-name> know about <query> |
+| azmcp_search_knowledge_base_retrieve | Find information about <query> using knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Get the details of knowledge source <source-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge source <source-name> in search service <service-name> |
 | azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |

@@ -18,9 +18,26 @@ public interface ISearchService
         string? indexName,
         RetryPolicyOptions? retryPolicy = null);
 
+    Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
+        string serviceName,
+        string? knowledgeSourceName = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
+        string serviceName,
+        string? knowledgeBaseName = null,
+        RetryPolicyOptions? retryPolicy = null);
+
     Task<List<JsonElement>> QueryIndex(
         string serviceName,
         string indexName,
         string searchText,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<string> RetrieveFromKnowledgeBase(
+        string serviceName,
+        string baseName,
+        string? query,
+        IEnumerable<(string role, string message)>? messages,
         RetryPolicyOptions? retryPolicy = null);
 }

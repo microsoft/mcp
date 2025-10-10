@@ -529,6 +529,30 @@
             "env": {
                 "DOTNET_ENVIRONMENT": "Development"
             }
+        },
+        {
+            "name": "Debug Azure AI Search knowledge base retrieve",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "search",
+                "knowledge",
+                "base",
+                "retrieve",
+                "--service",
+                "${input:searchService}",
+                "--knowledge-base",
+                "${input:knowledgeBase}",
+                "--query",
+                "${input:searchRetrieveQuery}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
         }
     ],
     "compounds": [
@@ -628,6 +652,24 @@
             "type": "promptString",
             "description": "SQL Database Name",
             "default": "testdb"
+        },
+        {
+            "id": "searchService",
+            "type": "promptString",
+            "description": "Azure AI Search Service Name",
+            "default": ""
+        },
+        {
+            "id": "knowledgeBase",
+            "type": "promptString",
+            "description": "Knowledge Base Index Name",
+            "default": ""
+        },
+        {
+            "id": "searchRetrieveQuery",
+            "type": "promptString",
+            "description": "Knowledge base retrieval query",
+            "default": ""
         }
     ]
 }

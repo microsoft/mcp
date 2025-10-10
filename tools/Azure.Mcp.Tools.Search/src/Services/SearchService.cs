@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -9,6 +10,8 @@ using Azure.Mcp.Tools.Search.Commands;
 using Azure.Mcp.Tools.Search.Models;
 using Azure.ResourceManager.Search;
 using Azure.Search.Documents;
+using Azure.Search.Documents.Agents;
+using Azure.Search.Documents.Agents.Models;
 using Azure.Search.Documents.Indexes;
 using Azure.Search.Documents.Indexes.Models;
 using Azure.Search.Documents.Models;
@@ -141,6 +144,131 @@ public sealed class SearchService(ISubscriptionService subscriptionService, ICac
         {
             throw new Exception($"Error querying Search index: {ex.Message}", ex);
         }
+    }
+
+    public async Task<List<KnowledgeSourceInfo>> ListKnowledgeSources(
+        string serviceName,
+        string? knowledgeSourceName = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        try
+        {
+            var sources = new List<KnowledgeSourceInfo>();
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+
+            if (string.IsNullOrEmpty(knowledgeSourceName))
+            {
+                await foreach (var source in searchClient.GetKnowledgeSourcesAsync())
+                {
+                    sources.Add(new KnowledgeSourceInfo(source.Name, source.GetType().Name, source.Description));
+                }
+            }
+            else
+            {
+                var result = await searchClient.GetKnowledgeSourceAsync(knowledgeSourceName);
+                if (result?.Value != null)
+                {
+                    sources.Add(new KnowledgeSourceInfo(result.Value.Name, result.Value.GetType().Name, result.Value.Description));
+                }
+            }
+
+            return sources;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge sources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<List<KnowledgeBaseInfo>> ListKnowledgeBases(
+        string serviceName,
+        string? knowledgeBaseName = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName));
+
+        try
+        {
+            var bases = new List<KnowledgeBaseInfo>();
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+
+            if (string.IsNullOrEmpty(knowledgeBaseName))
+            {
+                await foreach (var knowledgeBase in searchClient.GetKnowledgeAgentsAsync())
+                {
+                    bases.Add(new KnowledgeBaseInfo(knowledgeBase.Name, knowledgeBase.Description, [.. knowledgeBase.KnowledgeSources.Select(ks => ks.Name)]));
+                }
+            }
+            else
+            {
+                var result = await searchClient.GetKnowledgeAgentAsync(knowledgeBaseName);
+                if (result?.Value != null)
+                {
+                    if (result.Value.Name.Equals(knowledgeBaseName, StringComparison.OrdinalIgnoreCase))
+                    {
+                        bases.Add(new KnowledgeBaseInfo(result.Value.Name, result.Value.Description, [.. result.Value.KnowledgeSources.Select(ks => ks.Name)]));
+                    }
+                }
+            }
+
+            return bases;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving Search knowledge bases: {ex.Message}", ex);
+        }
+    }
+    public async Task<string> RetrieveFromKnowledgeBase(
+        string serviceName,
+        string baseName,
+        string? query,
+        IEnumerable<(string role, string message)>? messages,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(serviceName), serviceName), (nameof(baseName), baseName));
+
+        try
+        {
+            var searchClient = await GetSearchIndexClient(serviceName, retryPolicy);
+
+            var clientOptions = AddDefaultPolicies(new SearchClientOptions());
+            ConfigureRetryPolicy(clientOptions, retryPolicy);
+
+            var knowledgeBaseClient = new KnowledgeAgentRetrievalClient(searchClient.Endpoint, baseName, await GetCredential(), clientOptions);
+
+            var request = new KnowledgeAgentRetrievalRequest(
+                messages != null ?
+                    messages.Select(m => new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(m.message)]) { Role = m.role }) :
+                    [new KnowledgeAgentMessage([new KnowledgeAgentMessageTextContent(query)]) { Role = "user" }]);
+
+            var results = await knowledgeBaseClient.RetrieveAsync(request);
+
+            using var response = results.GetRawResponse().ContentStream ?? throw new InvalidOperationException("Response content stream is null");
+            return await ProcessRetrieveResponse(response);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error retrieving data from knowledge base: {ex.Message}", ex);
+        }
+    }
+
+    private static async Task<string> ProcessRetrieveResponse(Stream responseStream)
+    {
+        using var jsonDoc = await JsonDocument.ParseAsync(responseStream);
+        using var stream = new MemoryStream();
+        using var writer = new Utf8JsonWriter(stream);
+        writer.WriteStartObject();
+        foreach (var prop in jsonDoc.RootElement.EnumerateObject())
+        {
+            if (prop.Name is "response" or "references")
+            {
+                prop.WriteTo(writer);
+            }
+        }
+        writer.WriteEndObject();
+        return Encoding.UTF8.GetString(stream.ToArray());
     }
 
     private static List<string> FindVectorFields(SearchIndex indexDefinition)

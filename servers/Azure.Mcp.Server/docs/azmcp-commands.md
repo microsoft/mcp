@@ -296,6 +296,20 @@ azmcp search index query --subscription <subscription> \
 
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
+
+# Get AI Search knowledge sources (all or a specific one)
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# Get AI Search knowledge bases (all or a specific one)
+azmcp search knowledge base get --service <service>
+                                [--knowledge-base <knowledge-base>]
+
+# Run retrieval against an AI Search knowledge base
+azmcp search knowledge base retrieve --service <service> \
+                                     --knowledge-base <knowledge-base> \
+                                     [--query <query>] \
+                                     [--messages <messages>]
 ```
 
 ### Azure AI Services Speech Operations
