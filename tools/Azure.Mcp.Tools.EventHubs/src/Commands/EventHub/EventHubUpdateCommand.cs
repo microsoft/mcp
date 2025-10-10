@@ -93,7 +93,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new EventHubUpdateCommandResult(eventHub),
+                new(eventHub),
                 EventHubsJsonContext.Default.EventHubUpdateCommandResult);
         }
         catch (Exception ex)
