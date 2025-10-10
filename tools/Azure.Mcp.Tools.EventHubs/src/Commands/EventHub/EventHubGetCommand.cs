@@ -37,7 +37,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
 
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,
+        OpenWorld = false,
         Destructive = false,
         Idempotent = true,
         ReadOnly = true,
