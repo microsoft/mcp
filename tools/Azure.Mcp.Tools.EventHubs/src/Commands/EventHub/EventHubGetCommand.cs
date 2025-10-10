@@ -32,8 +32,6 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
         When retrieving a single Event Hub or listing multiple Event Hubs, detailed information including
         partition count, settings, and metadata is returned for all Event Hubs.
         """;
-        
-        """;
 
     public override string Title => CommandTitle;
 
@@ -56,11 +54,11 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
 
         command.Validators.Add(result =>
         {
-            if (result.HasOptionResult(EventHubsOptionDefinitions.EventHubName) &&
+            if (result.HasOptionResult(EventHubsOptionDefinitions.EventHub) &&
                 (!result.HasOptionResult(EventHubsOptionDefinitions.Namespace) ||
                  !result.HasOptionResult(OptionDefinitions.Common.ResourceGroup.Name)))
             {
-                result.AddError($"--{EventHubsOptionDefinitions.EventHubName} option requires both --{EventHubsOptionDefinitions.Namespace} and --{OptionDefinitions.Common.ResourceGroup.Name} options.");
+                result.AddError($"--{EventHubsOptionDefinitions.EventHub} option requires both --{EventHubsOptionDefinitions.Namespace} and --{OptionDefinitions.Common.ResourceGroup.Name} options.");
             }
         });
     }

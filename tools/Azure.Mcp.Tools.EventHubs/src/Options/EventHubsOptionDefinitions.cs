@@ -7,7 +7,6 @@ public static class EventHubsOptionDefinitions
 {
     public const string ConsumerGroup = "consumer-group";
     public const string EventHub = "eventhub";
-    public const string EventHubName = "eventhub";
     public const string EventHubStatus = "status";
     public const string IsAutoInflateEnabled = "is-auto-inflate-enabled";
     public const string KafkaEnabled = "kafka-enabled";
@@ -31,19 +30,11 @@ public static class EventHubsOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<string> EventHubNameOption = new(
-        $"--{EventHubName}"
-    )
-    {
-        Description = "The name of the Event Hub within the namespace.",
-        Required = false
-    };
-
     public static readonly Option<string> EventHubOption = new(
         $"--{EventHub}"
     )
     {
-        Description = "The name of the event hub to retrieve from the namespace. Must be used with --namespace and --resource-group options.",
+        Description = "The name of the Event Hub within the namespace.",
         Required = false
     };
 

@@ -49,7 +49,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.ConsumerGroupOption.AsOptional());
     }
 
@@ -58,7 +58,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name);
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
         options.ConsumerGroup = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.ConsumerGroupOption.Name);
         return options;
     }

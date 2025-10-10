@@ -50,7 +50,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
     }
 
     protected override EventHubDeleteOptions BindOptions(ParseResult parseResult)
@@ -58,7 +58,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name);
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name);
         return options;
     }
 

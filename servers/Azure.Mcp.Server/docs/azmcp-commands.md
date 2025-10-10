@@ -904,13 +904,13 @@ azmcp eventgrid events publish --subscription <subscription> \
 ### Azure Event Hubs
 
 ```bash
-# Get Event Hubs namespaces (list all in subscription/resource group or get specific namespace)
+# Get Event Hubs Namespaces (list all in subscription/resource group or get specific namespace)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace get --subscription <subscription> \
                               [--resource-group <resource-group>] \
                               [--namespace <namespace>]
 
-# Create or update an Event Hubs namespace
+# Create or update an Event Hubs Namespace
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace update --subscription <subscription> \
                                  --resource-group <resource-group> \
@@ -925,7 +925,7 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--zone-redundant <true/false>] \
                                  [--tags <json-tags>]
 
-# Delete an Event Hubs namespace
+# Delete an Event Hubs Namespace
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace delete --subscription <subscription> \
                                  --resource-group <resource-group> \
@@ -933,14 +933,14 @@ azmcp eventhubs namespace delete --subscription <subscription> \
 ```
 
 ```bash
-# Get event hubs (list all in namespace or get specific event hub)
+# Get Event Hubs (list all in namespace or get specific event hub)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs eventhub get --subscription <subscription> \
                              --resource-group <resource-group> \
                              --namespace <namespace> \
                              [--eventhub <eventhub-name>]
 
-# Create or update an event hub
+# Create or update an Event Hub
 # ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs eventhub update --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -950,7 +950,7 @@ azmcp eventhubs eventhub update --subscription <subscription> \
                                 [--message-retention-in-hours <hours>] \
                                 [--status <status>]
 
-# Delete an event hub
+# Delete an Event Hub
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs eventhub delete --subscription <subscription> \
                                 --resource-group <resource-group> \
@@ -959,7 +959,7 @@ azmcp eventhubs eventhub delete --subscription <subscription> \
 ```
 
 ```bash
-# Get consumer groups (list all in event hub or get specific consumer group)
+# Get Consumer Groups (list all in event hub or get specific consumer group)
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs consumergroup get --subscription <subscription> \
                                   --resource-group <resource-group> \
@@ -967,7 +967,7 @@ azmcp eventhubs consumergroup get --subscription <subscription> \
                                   --eventhub <eventhub-name> \
                                   [--consumer-group <consumer-group-name>]
 
-# Create or update a consumer group
+# Create or update a Consumer Group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs consumergroup update --subscription <subscription> \
                                      --resource-group <resource-group> \
@@ -976,7 +976,7 @@ azmcp eventhubs consumergroup update --subscription <subscription> \
                                      --consumer-group <consumer-group-name> \
                                      [--user-metadata <user-metadata>]
 
-# Delete a consumer group
+# Delete a Consumer Group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs consumergroup delete --subscription <subscription> \
                                      --resource-group <resource-group> \

@@ -34,7 +34,6 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         
         Note: Some properties like partition count cannot be changed after creation.
         This is a potentially long-running operation that waits for completion.
-        
         """;
 
     public override string Title => CommandTitle;
@@ -54,7 +53,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.EventHubNameOption.AsRequired());
+        command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.PartitionCountOption);
         command.Options.Add(EventHubsOptionDefinitions.MessageRetentionInHoursOption);
         command.Options.Add(EventHubsOptionDefinitions.StatusOption);
@@ -65,7 +64,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name) ?? string.Empty;
-        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubNameOption.Name) ?? string.Empty;
+        options.EventHub = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.EventHubOption.Name) ?? string.Empty;
         options.PartitionCount = parseResult.GetValueOrDefault<int?>(EventHubsOptionDefinitions.PartitionCountOption.Name);
         options.MessageRetentionInHours = parseResult.GetValueOrDefault<long?>(EventHubsOptionDefinitions.MessageRetentionInHoursOption.Name);
         options.Status = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.StatusOption.Name);

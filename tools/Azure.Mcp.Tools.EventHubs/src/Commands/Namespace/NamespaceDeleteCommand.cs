@@ -23,7 +23,7 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
 
     public override string Description =>
         """
-        Delete a Namespace. This tool will delete a pre-existing Namespace from the 
+        Delete Event Hubs namespace. This tool will delete a pre-existing Namespace from the 
         specified resource group. This tool will remove existing configurations, and is 
         considered to be destructive.
 
