@@ -22,7 +22,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 
     public override string Description =>
         """
-        Retrieves and lists all products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.
+        Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.
         """;
 
     public override string Title => CommandTitle;
