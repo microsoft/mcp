@@ -7,7 +7,8 @@ namespace Azure.Mcp.Tools.Communication.Options;
 public static class CommunicationOptionDefinitions
 {
     public const string EndpointName = "endpoint";
-    public const string FromName = "from";
+    public const string FromSmsName = "from";
+    public const string FromEmailName = "from";
     public const string ToName = "to";
     public const string ToEmailName = "to";
     public const string EmailMessageName = "message";
@@ -24,7 +25,7 @@ public static class CommunicationOptionDefinitions
     };
 
     public static readonly Option<string> From = new(
-        $"--{FromName}"
+        $"--{FromSmsName}"
     )
     {
         Description = "The SMS-enabled phone number associated with your Communication Services resource (in E.164 format, e.g., +14255550123). Can also be a short code or alphanumeric sender ID.",
@@ -83,7 +84,7 @@ public static class CommunicationOptionDefinitions
     /// The email address to send from.
     /// </summary>
     public static readonly Option<string> Sender = new(
-        "--from"
+        $"--{FromEmailName}"
     )
     {
         Description = "The email address to send from (must be from a verified domain)",
