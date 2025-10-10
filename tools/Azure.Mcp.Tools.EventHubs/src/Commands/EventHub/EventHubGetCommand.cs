@@ -107,7 +107,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
                     options.Tenant,
                     options.RetryPolicy);
 
-                context.Response.Results = ResponseResult.Create(new EventHubGetCommandResult(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
+                context.Response.Results = ResponseResult.Create(new(eventHubs ?? []), EventHubsJsonContext.Default.EventHubGetCommandResult);
             }
         }
         catch (Exception ex)
