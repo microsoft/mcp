@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_agents_connect | Query an agent in my AI foundry project |
 | azmcp_foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| azmcp_foundry_agents_list | List all agents in my AI Foundry project |
+| azmcp_foundry_agents_list | Show me the available agents in my AI Foundry project |
 | azmcp_foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
@@ -24,11 +26,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
 | azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
+| azmcp_foundry_resource_get | List all AI Foundry resources in my subscription |
+| azmcp_foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
+| azmcp_foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
 
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_search_knowledge_base_get | List all knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | List all knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Query knowledge base <agent-name> in search service <service-name> about <query> |
+| azmcp_search_knowledge_base_retrieve | Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query> |
+| azmcp_search_knowledge_base_retrieve | What does knowledge base <agent-name> in search service <service-name> know about <query> |
+| azmcp_search_knowledge_base_retrieve | Find information about <query> using knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Get the details of knowledge source <source-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge source <source-name> in search service <service-name> |
 | azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |
@@ -98,6 +123,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
+## Azure CLI Generate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
+| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
+
 ## Azure Container Registry (ACR)
 
 | Tool Name | Test Prompt |
@@ -116,13 +149,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_communication_sms_send | Send an SMS message to +1234567890 saying "Hello" |
-| azmcp_communication_sms_send | Send SMS to +1234567890 from +1234567891 with message "Test message" |
-| azmcp_communication_sms_send | Send SMS to multiple recipients: +1234567890, +1234567891 |
+| azmcp_communication_email_send | Send an email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send an email from my communication service to <email-address> |
+| azmcp_communication_email_send | Send HTML-formatted email to <email-address> with subject <subject> |
+| azmcp_communication_email_send | Send email with CC to <email-address-1> and <email-address-2> |
+| azmcp_communication_email_send | Send email to multiple recipients: <email-address-1>, <email-address-2> |
+| azmcp_communication_email_send | Send email with reply-to address set to <email-address> |
+| azmcp_communication_email_send | Send email with custom sender name <sender-name> |
+| azmcp_communication_email_send | Send an email with BCC recipients |
+| azmcp_communication_sms_send | Send an SMS message to <phone-number> saying "Hello" |
+| azmcp_communication_sms_send | Send SMS to <phone-number-2> from <phone-number-1> with message "Test message" |
+| azmcp_communication_sms_send | Send SMS to multiple recipients: <phone-number-1>, <phone-number-2> |
 | azmcp_communication_sms_send | Send SMS with delivery reporting enabled |
 | azmcp_communication_sms_send | Send SMS message with custom tracking tag "campaign1" |
-| azmcp_communication_sms_send | Send broadcast SMS to +1234567890 and +1234567891 saying "Urgent notification" |
-| azmcp_communication_sms_send | Send SMS from my communication service to +1234567890 |
+| azmcp_communication_sms_send | Send broadcast SMS to <phone-number-1> and <phone-number-2> saying "Urgent notification" |
+| azmcp_communication_sms_send | Send SMS from my communication service to <phone-number-1> |
 | azmcp_communication_sms_send | Send an SMS with delivery receipt tracking |
 
 ## Azure Confidential Ledger
@@ -235,6 +276,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
 | azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
+| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> |
+| azmcp_eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
+| azmcp_eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
 
 ## Azure Function App
 
