@@ -7,6 +7,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added the following Event Hubs commands:
+  - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace.
+  - `azmcp_eventhubs_namespace_delete`: Delete an existing Event Hubs namespace.
+  - `azmcp_eventhubs_eventhub_update`: Create or update an Event Hub within a namespace.
+  - `azmcp_eventhubs_eventhub_get`: Get details of an Event Hub within a namespace.
+  - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace.
+  - `azmcp_eventhubs_eventhub_consumergroup_update`: Create or update a consumer group for an Event Hub.
+  - `azmcp_eventhubs_eventhub_consumergroup_get`: Get details of a consumer group for an Event Hub.
+  - `azmcp_eventhubs_eventhub_consumergroup_delete`: Delete a consumer group from an Event Hub.
 - Added support for getting Azure AI Foundry (Cognitive Services) resource details via the command `azmcp_foundry_resource_get`. This unified command can list all AI Foundry resources in a subscription, filter by resource group, or get details for a specific resource including deployed models with their configurations (model name, version, SKU, capacity, and provisioning state). [[#762](https://github.com/microsoft/mcp/pull/762)]
 
 ### Breaking Changes

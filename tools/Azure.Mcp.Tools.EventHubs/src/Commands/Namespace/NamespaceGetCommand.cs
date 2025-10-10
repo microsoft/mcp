@@ -24,9 +24,9 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     public override string Description =>
         """
         Get Event Hubs namespaces from Azure. This command supports three modes of operation:
-        1. List all Event Hubs namespaces in a subscription (when no --resource-group is provided)
-        2. List all Event Hubs namespaces in a specific resource group (when only --resource-group is provided)
-        3. Get a single namespace by name (using --namespace with --resource-group)
+        1. List all Event Hubs namespaces in a subscription 
+        2. List all Event Hubs namespaces in a specific resource group 
+        3. Get a single namespace by name 
         
         When retrieving a single namespace, detailed information including SKU, settings, and metadata 
         is returned. When listing namespaces, the same detailed information is returned for all 
@@ -50,11 +50,11 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsOptional());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceName.AsOptional());
+        command.Options.Add(OptionDefinitions.Common.ResourceGroup);
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption);
         command.Validators.Add(commandResult =>
         {
-            var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
+            var namespaceName = commandResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
             var resourceGroup = commandResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
 
             if (!string.IsNullOrEmpty(namespaceName) && string.IsNullOrEmpty(resourceGroup))
@@ -68,7 +68,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
     {
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
-        options.NamespaceName = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceName.Name);
+        options.Namespace = parseResult.GetValueOrDefault<string>(EventHubsOptionDefinitions.NamespaceOption.Name);
         return options;
     }
 
@@ -86,13 +86,13 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
             var eventHubsService = context.GetService<IEventHubsService>();
 
             // Determine if this is a single namespace request or list request
-            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.NamespaceName);
+            bool isSingleNamespaceRequest = !string.IsNullOrEmpty(options.Namespace);
 
             if (isSingleNamespaceRequest)
             {
                 // Get single namespace with detailed information
                 var namespaceDetails = await eventHubsService.GetNamespaceAsync(
-                    options.NamespaceName!,
+                    options.Namespace!,
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
@@ -121,22 +121,6 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
         return context.Response;
     }
-
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        KeyNotFoundException => $"Event Hubs namespace not found. Verify the namespace name, resource group, and that you have access.",
-        Identity.AuthenticationFailedException authEx =>
-            "Authentication failed. Please ensure your Azure credentials are properly configured and have not expired.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
-            "Access denied. Please ensure you have sufficient permissions to get Event Hubs namespaces in the specified resource group.",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
-            "The specified resource group or subscription was not found. Please verify the resource group name and subscription.",
-        ArgumentException argEx when argEx.ParamName == "resourceGroup" =>
-            "Invalid resource group name. Please provide a valid resource group name.",
-        ArgumentException argEx when argEx.ParamName == "subscription" =>
-            "Invalid subscription. Please provide a valid subscription ID or name.",
-        _ => base.GetErrorMessage(ex)
-    };
 
     internal record NamespacesGetCommandResult(List<Models.Namespace> Namespaces);
     internal record NamespaceGetCommandResult(Models.Namespace Namespace);

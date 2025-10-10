@@ -897,552 +897,6 @@
       ]
     },
     {
-      "name": "create",
-      "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
-      "command": "azmcp azuremanagedlustre filesystem create",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--name",
-          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--location",
-          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--sku",
-          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--size",
-          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--subnet-id",
-          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--zone",
-          "description": "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\nExample: --zone 1",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--maintenance-day",
-          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--maintenance-time",
-          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--hsm-container",
-          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--hsm-log-container",
-          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--import-prefix",
-          "description": "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--root-squash-mode",
-          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--no-squash-nid-list",
-          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--squash-uid",
-          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--squash-gid",
-          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--custom-encryption",
-          "description": "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--key-url",
-          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--source-vault",
-          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--user-assigned-identity-id",
-          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
-      "command": "azmcp azuremanagedlustre filesystem list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "get",
-      "description": "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
-      "command": "azmcp azuremanagedlustre filesystem sku get",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--location",
-          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "ask",
-      "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
-      "command": "azmcp azuremanagedlustre filesystem subnetsize ask",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--sku",
-          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--size",
-          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "validate",
-      "description": "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
-      "command": "azmcp azuremanagedlustre filesystem subnetsize validate",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--sku",
-          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--size",
-          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--subnet-id",
-          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--location",
-          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "update",
-      "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
-      "command": "azmcp azuremanagedlustre filesystem update",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--name",
-          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--maintenance-day",
-          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--maintenance-time",
-          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--no-squash-nid-list",
-          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--squash-uid",
-          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--squash-gid",
-          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--root-squash-mode",
-          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
       "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azmcp azureterraformbestpractices get",
@@ -2516,6 +1970,553 @@
       ]
     },
     {
+      "name": "delete",
+      "description": "Delete a Consumer Group. This tool will delete a pre-existing Consumer Group from the specified \r\nEvent Hub. This tool will remove existing configurations, and is considered to be destructive.\r\n\r\nThe tool requires specifying the resource group, namespace name, event hub name, and consumer \r\ngroup name to identify the consumer group to delete.",
+      "command": "azmcp eventhubs consumergroup delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Get consumer groups from Azure event hub. This command can either:\r\n\r\nList all consumer groups in an event hub (using --eventhub with --namespace with --resource-group)\r\nGet a single consumer group by name (using --consumer-group with --eventhub with --namespace with --resource-group)\r\n\r\nThe eventhub, namespace, and resource-group parameters are required (for both get and list)\r\nThe consumer-group parameter is only required for getting a specific consumer-group\r\n\r\nWhen retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.",
+      "command": "azmcp eventhubs consumergroup get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Create or Update a Consumer Group. This tool will either create a Consumer Group resource \r\nor update a pre-existing Consumer Group resource within the specified Event Hub, depending \r\non whether or not the specified Consumer Group already exists. This tool may modify existing \r\nconfigurations, and is considered to be destructive. This is a potentially long-running operation.\r\n\r\nThe tool requires specifying the resource group, namespace name, event hub name, and consumer \r\ngroup name. Optionally, you can provide user metadata for the consumer group.",
+      "command": "azmcp eventhubs consumergroup update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user-metadata",
+          "description": "User metadata for the consumer group.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Delete an event hub from an Azure Event Hubs namespace. This operation permanently removes\r\nthe specified event hub and all its data. This is a destructive operation.\r\n\r\nThe operation is idempotent - if the event hub doesn't exist, the command reports success\r\nwith Deleted = false. If the event hub is successfully deleted, Deleted = true is returned.\r\n\r\nRequired options:\r\n- --eventhub (event hub name to delete)\r\n- --namespace (namespace containing the event hub)\r\n- --resource-group\r\n\r\nWarning: This operation cannot be undone. All messages and consumer groups in the event hub\r\nwill be permanently deleted.",
+      "command": "azmcp eventhubs eventhub delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Get event hubs from Azure namespace. This command can either:\r\n1. List all event hubs in a namespace (using --namespace with --resource-group)\r\n2. Get a single event hub by name (using --eventhub with --namespace with --resource-group)\r\n\r\nWhen retrieving a single event hub or listing multiple event hubs, detailed information including \r\npartition count, settings, and metadata is returned for all event hubs.\r\n\r\nRequired options:\r\n- --namespace and --resource-group (for listing all event hubs in namespace)\r\n- --eventhub, --namespace, and --resource-group (for getting specific event hub)",
+      "command": "azmcp eventhubs eventhub get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Create or update an event hub within an Azure Event Hubs namespace. This command can either:\r\n1. Create a new event hub if it doesn't exist\r\n2. Update an existing event hub's configuration\r\n\r\nYou can configure:\r\n- Partition count (number of partitions for parallel processing)\r\n- Message retention time (how long messages are retained in hours)\r\n\r\nNote: Some properties like partition count cannot be changed after creation.\r\nThis is a potentially long-running operation that waits for completion.\r\n\r\nRequired options:\r\n- --eventhub (event hub name)\r\n- --namespace (namespace name)\r\n- --resource-group\r\n\r\nOptional configuration:\r\n- --partition-count (number of partitions, typically 1-32)\r\n- --message-retention-in-hours (retention time in hours)",
+      "command": "azmcp eventhubs eventhub update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--partition-count",
+          "description": "The number of partitions for the event hub. Must be between 1 and 32 (or higher based on namespace tier).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--message-retention-in-hours",
+          "description": "The message retention time in hours. Minimum is 1 hour, maximum depends on the namespace tier.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--status",
+          "description": "The status of the event hub (Active, Disabled, etc.). Note: Status may be read-only in some operations.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Delete a Namespace. This tool will delete a pre-existing Namespace from the \r\nspecified resource group. This tool will remove existing configurations, and is \r\nconsidered to be destructive.\r\n\r\nWARNING: This operation is irreversible. All Event Hubs, consumer groups, and \r\nconfigurations within the namespace will be permanently deleted.\r\n\r\nThe namespace must exist in the specified resource group. If the namespace is not found,\r\nan error will be returned.",
+      "command": "azmcp eventhubs namespace delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "get",
       "description": "Get Event Hubs namespaces from Azure. This command supports three modes of operation:\r\n1. List all Event Hubs namespaces in a subscription (when no --resource-group is provided)\r\n2. List all Event Hubs namespaces in a specific resource group (when only --resource-group is provided)\r\n3. Get a single namespace by name (using --namespace with --resource-group)\r\n\r\nWhen retrieving a single namespace, detailed information including SKU, settings, and metadata \r\nis returned. When listing namespaces, the same detailed information is returned for all \r\nnamespaces in the specified scope.\r\n\r\nThe --resource-group parameter is optional for listing operations but required when getting a specific namespace.",
       "command": "azmcp eventhubs namespace get",
@@ -2577,6 +2578,127 @@
         {
           "name": "--namespace",
           "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Create or Update a Namespace. This tool will either create a Namespace resource or \r\nupdate a pre-existing Namespace resource within the specified resource group, depending on \r\nwhether or not the specified Namespace already exists. This tool may modify existing \r\nconfigurations, and is considered to be destructive. This is a potentially long-running operation.\r\n\r\nWhen updating an existing namespace, you only need to provide the properties you want to change.\r\nUnspecified properties will retain their existing values. At least one update property must be provided.\r\n\r\nCommon update scenarios:\r\n- Scale up/down by changing SKU tier or capacity\r\n- Enable/disable auto-inflate and set maximum throughput units\r\n- Enable/disable Kafka support\r\n- Modify tags for resource management\r\n- Enable/disable zone redundancy (Premium SKU only)",
+      "command": "azmcp eventhubs namespace update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "The Azure region where the namespace is located (e.g., 'eastus', 'westus2').",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-name",
+          "description": "The SKU name for the namespace. Valid values: 'Basic', 'Standard', 'Premium'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-tier",
+          "description": "The SKU tier for the namespace. Valid values: 'Basic', 'Standard', 'Premium'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-capacity",
+          "description": "The SKU capacity (throughput units) for the namespace. Valid range depends on the SKU.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--is-auto-inflate-enabled",
+          "description": "Enable or disable auto-inflate for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maximum-throughput-units",
+          "description": "The maximum throughput units when auto-inflate is enabled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--kafka-enabled",
+          "description": "Enable or disable Kafka for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--zone-redundant",
+          "description": "Enable or disable zone redundancy for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--tags",
+          "description": "Tags for the namespace in JSON format (e.g., '{\"key1\":\"value1\",\"key2\":\"value2\"}').",
           "type": "string",
           "required": null
         }
@@ -5771,6 +5893,552 @@
         {
           "name": "--description",
           "description": "The description for the load test run. This provides additional context about the test run.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
+      "command": "azmcp managedlustre filesystem create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--zone",
+          "description": "Availability zone identifier. Use a single digit string matching the region's AZ labels (e.g. '1').\nExample: --zone 1",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--hsm-container",
+          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--hsm-log-container",
+          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--import-prefix",
+          "description": "Optional HSM import prefix (path prefix inside the container starting with /). Examples: '/ingest/', '/archive/2019/'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--custom-encryption",
+          "description": "Enable customer-managed encryption using a Key Vault key. When true, --key-url and --source-vault required, with a user-assigned identity already configured for Key Vault key access.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--key-url",
+          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--source-vault",
+          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--user-assigned-identity-id",
+          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
+      "command": "azmcp managedlustre filesystem list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
+      "command": "azmcp managedlustre filesystem sku get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "ask",
+      "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
+      "command": "azmcp managedlustre filesystem subnetsize ask",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "validate",
+      "description": "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
+      "command": "azmcp managedlustre filesystem subnetsize validate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku",
+          "description": "The AMLFS SKU. Exact allowed values: AMLFS-Durable-Premium-40, AMLFS-Durable-Premium-125, AMLFS-Durable-Premium-250, AMLFS-Durable-Premium-500.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--size",
+          "description": "The AMLFS size in TiB as an integer (no unit). Examples: 4, 12, 128.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--subnet-id",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "Azure region/region short name (use Azure location token, lowercase). Examples: uaenorth, swedencentral, eastus.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
+      "command": "azmcp managedlustre filesystem update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--name",
+          "description": "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--maintenance-day",
+          "description": "Preferred maintenance day. Allowed values: Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maintenance-time",
+          "description": "Preferred maintenance time in UTC. Format: HH:MM (24-hour). Examples: 00:00, 23:00.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--no-squash-nid-list",
+          "description": "Comma-separated list of NIDs (network identifiers) not to squash. Example: '10.0.2.4@tcp;10.0.2.[6-8]@tcp'.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-uid",
+          "description": "Numeric UID to squash root to. Required in case root squash mode is not None. Example: --squash-uid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--squash-gid",
+          "description": "Numeric GID to squash root to.  Required in case root squash mode is not None. Example: --squash-gid 1000.\n",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--root-squash-mode",
+          "description": "Root squash mode. Allowed values: All, RootOnly, None.\n",
           "type": "string",
           "required": null
         }
@@ -11288,5 +11956,5 @@
     }
   ],
   "consolidated_azure_tools": null,
-  "duration": 100
+  "duration": 82
 }
