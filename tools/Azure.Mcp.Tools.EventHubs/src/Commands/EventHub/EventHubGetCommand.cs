@@ -50,7 +50,7 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsOptional());
+        command.Options.Add(EventHubsOptionDefinitions.NamespaceOption.AsRequired());
         command.Options.Add(EventHubsOptionDefinitions.EventHubOption.AsOptional());
 
         command.Validators.Add(result =>
