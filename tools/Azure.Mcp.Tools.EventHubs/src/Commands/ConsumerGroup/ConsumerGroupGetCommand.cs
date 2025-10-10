@@ -36,7 +36,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
 
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,       // Queries Azure resources
+        OpenWorld = false,       // Queries Azure resources
         Destructive = false,    // Read-only operation
         Idempotent = true,      // Same parameters produce same results
         ReadOnly = true,        // Only reads data
