@@ -28,6 +28,8 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
+
+        services.AddSingleton<ResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -75,6 +77,11 @@ public class FoundrySetup : IAreaSetup
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());
+
+        var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Azure AI Foundry resources.");
+        foundry.AddSubGroup(resources);
+
+        resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
 
         return foundry;
     }

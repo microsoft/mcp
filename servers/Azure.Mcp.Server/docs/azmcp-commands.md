@@ -277,6 +277,12 @@ azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
                                  [--auth-method <auth-method>]
+
+# Get Azure AI Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
 ```
 
 ### Azure AI Search Operations

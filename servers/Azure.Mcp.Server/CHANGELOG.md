@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added support for getting Azure AI Foundry (Cognitive Services) resource details via the command `azmcp_foundry_resource_get`. This unified command can list all AI Foundry resources in a subscription, filter by resource group, or get details for a specific resource including deployed models with their configurations (model name, version, SKU, capacity, and provisioning state).
 
 ### Breaking Changes
 
