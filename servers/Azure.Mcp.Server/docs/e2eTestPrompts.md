@@ -24,6 +24,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
 | azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
+| azmcp_foundry_resource_get | List all AI Foundry resources in my subscription |
+| azmcp_foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
+| azmcp_foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
 
 ## Azure AI Search
 

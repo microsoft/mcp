@@ -758,7 +758,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     public async Task Should_list_all_foundry_resources_in_subscription()
     {
         var subscriptionId = Settings.SubscriptionId;
-        
+
         var result = await CallToolAsync(
             "azmcp_foundry_resource_get",
             new()
@@ -770,13 +770,13 @@ public class FoundryCommandTests(ITestOutputHelper output)
         // Verify the response structure
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
-        
+
         // Should have at least one resource (the test resource)
         Assert.NotEmpty(resources.EnumerateArray());
 
         // Verify first resource structure
         var firstResource = resources.EnumerateArray().First();
-        
+
         // Verify required properties exist
         var resourceName = firstResource.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, resourceName.ValueKind);
@@ -816,7 +816,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     {
         var subscriptionId = Settings.SubscriptionId;
         var resourceGroup = Settings.ResourceGroupName;
-        
+
         var result = await CallToolAsync(
             "azmcp_foundry_resource_get",
             new()
@@ -829,7 +829,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         // Verify the response structure
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
-        
+
         // Should have at least one resource in this resource group
         Assert.NotEmpty(resources.EnumerateArray());
 
@@ -847,7 +847,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
         var resourceGroup = Settings.ResourceGroupName;
         var resourceName = Settings.ResourceBaseName;
-        
+
         var result = await CallToolAsync(
             "azmcp_foundry_resource_get",
             new()
@@ -861,12 +861,12 @@ public class FoundryCommandTests(ITestOutputHelper output)
         // Verify the response structure
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
-        
+
         // Should return exactly one resource
         Assert.Single(resources.EnumerateArray());
 
         var resource = resources.EnumerateArray().First();
-        
+
         // Verify resource details match the request
         var returnedResourceName = resource.AssertProperty("resourceName");
         Assert.Equal(resourceName, returnedResourceName.GetString());
@@ -950,7 +950,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var staticOpenAIAccount = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNT", "azmcp-test");
         var staticResourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
-        
+
         var result = await CallToolAsync(
             "azmcp_foundry_resource_get",
             new()
@@ -964,12 +964,12 @@ public class FoundryCommandTests(ITestOutputHelper output)
         // Verify the response structure
         var resources = result.AssertProperty("resources");
         Assert.Equal(JsonValueKind.Array, resources.ValueKind);
-        
+
         // Should return the static resource
         Assert.NotEmpty(resources.EnumerateArray());
 
         var resource = resources.EnumerateArray().First();
-        
+
         // Verify resource matches static configuration
         var resourceName = resource.AssertProperty("resourceName");
         Assert.Equal(staticOpenAIAccount, resourceName.GetString());
@@ -986,7 +986,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         // Verify deployments exist for static resource
         var deployments = resource.AssertProperty("deployments");
         Assert.Equal(JsonValueKind.Array, deployments.ValueKind);
-        
+
         // Static resource should have at least the gpt-4o-mini deployment
         var deploymentsArray = deployments.EnumerateArray().ToArray();
         if (deploymentsArray.Length > 0)

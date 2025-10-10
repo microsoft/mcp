@@ -1284,9 +1284,9 @@ public class FoundryService(
         {
             ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            
+
             var resources = new List<AiResourceInformation>();
-            
+
             // Get Cognitive Services accounts
             if (string.IsNullOrEmpty(resourceGroup))
             {
@@ -1335,7 +1335,7 @@ public class FoundryService(
             ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
             var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            
+
             if (rgResource?.Value == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
