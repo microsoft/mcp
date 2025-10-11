@@ -12,24 +12,24 @@ using Microsoft.Identity.Web;
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
-/// Token credential provider that uses On-Behalf-Of (OBO) flow to exchange incoming tokens for Azure access tokens.
+/// Token credential provider that uses JWT exchange flow (On-Behalf-Of) to exchange incoming tokens for Azure access tokens.
 /// This is a multi-user provider that performs token exchange per request.
 /// </summary>
-public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
+public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
 {
     private readonly AzureAdConfig _azureAdConfig;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITokenAcquisition _tokenAcquisition;
 
     /// <summary>
-    /// Initializes a new instance of the OnBehalfOfTokenCredentialProvider class.
+    /// Initializes a new instance of the JwtOboCredentialProvider class.
     /// </summary>
     /// <param name="azureAdConfig">The Azure AD configuration containing client credentials.</param>
     /// <param name="httpContextAccessor">HTTP context accessor to read incoming tokens.</param>
-    /// <param name="tokenAcquisition">Token acquisition service for OBO token flows.</param>
+    /// <param name="tokenAcquisition">Token acquisition service for JWT On-Behalf-Of flows.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
     /// <exception cref="ArgumentException">Thrown when required Azure AD configuration is missing.</exception>
-    public OnBehalfOfTokenCredentialProvider(AzureAdConfig azureAdConfig, IHttpContextAccessor httpContextAccessor, ITokenAcquisition tokenAcquisition)
+    public JwtOboCredentialProvider(AzureAdConfig azureAdConfig, IHttpContextAccessor httpContextAccessor, ITokenAcquisition tokenAcquisition)
     {
         _azureAdConfig = azureAdConfig ?? throw new ArgumentNullException(nameof(azureAdConfig));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
@@ -37,28 +37,28 @@ public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
 
         if (string.IsNullOrEmpty(azureAdConfig.TenantId))
         {
-            throw new ArgumentException("TenantId is required for On-Behalf-Of authentication", nameof(azureAdConfig));
+            throw new ArgumentException("TenantId is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
         }
 
         if (string.IsNullOrEmpty(azureAdConfig.ClientId))
         {
-            throw new ArgumentException("ClientId is required for On-Behalf-Of authentication", nameof(azureAdConfig));
+            throw new ArgumentException("ClientId is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
         }
 
         if (string.IsNullOrEmpty(azureAdConfig.ClientSecret))
         {
-            throw new ArgumentException("ClientSecret is required for On-Behalf-Of authentication", nameof(azureAdConfig));
+            throw new ArgumentException("ClientSecret is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
         }
     }
 
     /// <summary>
-    /// Creates a TokenCredential using On-Behalf-Of flow with the incoming token from HTTP context.
+    /// Creates a TokenCredential using JWT On-Behalf-Of flow with the incoming token from HTTP context.
     /// </summary>
     /// <param name="tenant">Optional tenant ID to override the configured tenant.</param>
-    /// <returns>A TokenCredential that performs On-Behalf-Of token exchange.</returns>
+    /// <returns>A TokenCredential that performs JWT On-Behalf-Of exchange.</returns>
     public Task<TokenCredential> CreateAsync(string? tenant = null)
     {
-        return Task.FromResult<TokenCredential>(new OnBehalfOfTokenCredential(_tokenAcquisition, _httpContextAccessor));
+        return Task.FromResult<TokenCredential>(new JwtOboTokenCredential(_tokenAcquisition, _httpContextAccessor));
     }
 
     /// <summary>
@@ -74,7 +74,7 @@ public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
 
             if (principal?.Identity?.IsAuthenticated != true)
             {
-                throw new InvalidOperationException("User is not authenticated. On-Behalf-Of authentication requires an authenticated user context.");
+                throw new InvalidOperationException("User is not authenticated. JWT exchange authentication requires an authenticated user context.");
             }
 
             // Extract user object ID using the same pattern as the reference code
@@ -124,14 +124,14 @@ public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
     }
 
     /// <summary>
-    /// Inner TokenCredential implementation that uses ITokenAcquisition for OBO token flows.
+    /// Inner TokenCredential implementation that uses ITokenAcquisition for JWT On-Behalf-Of flows.
     /// </summary>
-    private sealed class OnBehalfOfTokenCredential : TokenCredential
+    private sealed class JwtOboTokenCredential : TokenCredential
     {
         private readonly ITokenAcquisition _tokenAcquisition;
         private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public OnBehalfOfTokenCredential(ITokenAcquisition tokenAcquisition, IHttpContextAccessor httpContextAccessor)
+        public JwtOboTokenCredential(ITokenAcquisition tokenAcquisition, IHttpContextAccessor httpContextAccessor)
         {
             _tokenAcquisition = tokenAcquisition;
             _httpContextAccessor = httpContextAccessor;
@@ -158,7 +158,7 @@ public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
             try
             {
                 var scopes = requestContext.Scopes.ToArray();
-                // This automatically uses the current user's ClaimsPrincipal from HTTP context to perform OBO token exchange
+                // This automatically uses the current user's ClaimsPrincipal from HTTP context to perform JWT exchange
                 var accessToken = await _tokenAcquisition.GetAccessTokenForUserAsync(scopes);
 
                 if (string.IsNullOrEmpty(accessToken))
@@ -172,7 +172,7 @@ public sealed class OnBehalfOfTokenCredentialProvider : ITokenCredentialProvider
             }
             catch (Exception ex) when (!(ex is InvalidOperationException))
             {
-                throw new AuthenticationFailedException($"Failed to acquire OBO token: {ex.Message}", ex);
+                throw new AuthenticationFailedException($"Failed to acquire JWT exchange token: {ex.Message}", ex);
             }
         }
 

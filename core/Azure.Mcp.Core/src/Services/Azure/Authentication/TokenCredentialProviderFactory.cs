@@ -52,13 +52,13 @@ public static class TokenCredentialProviderFactory
         else if (outboundType == OutboundAuthenticationType.BearerToken)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            return new BearerTokenCredentialProvider(serverConfiguration.OutboundAuthentication, httpContextAccessor);
+            return new JwtPassthroughCredentialProvider(serverConfiguration.OutboundAuthentication, httpContextAccessor);
         }
         else if (outboundType == OutboundAuthenticationType.OnBehalfOf)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
-            return new OnBehalfOfTokenCredentialProvider(serverConfiguration.OutboundAuthentication.AzureAd!, httpContextAccessor, tokenAcquisition);
+            return new JwtOboCredentialProvider(serverConfiguration.OutboundAuthentication.AzureAd!, httpContextAccessor, tokenAcquisition);
         }
         else
         {
