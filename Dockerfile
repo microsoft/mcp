@@ -1,29 +1,12 @@
 # Build the runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS runtime
+FROM --platform=$BUILDPLATFORM mcr.microsoft.com/dotnet/runtime:10.0.0-rc.1-azurelinux3.0-distroless AS runtime
 
-# Add build argument for publish directory
 ARG PUBLISH_DIR
-
-# Error out if PUBLISH_DIR is not set
-RUN if [ -z "$PUBLISH_DIR" ]; then \
-    echo "ERROR: PUBLISH_DIR build argument is required" && exit 1; \
-    fi
-
-RUN apk add --no-cache libc6-compat
+ARG TARGETOS
+ARG TARGETARCH
 
 # Copy the contents of the publish directory to '/azuremcpserver' and set it as the working directory
-RUN mkdir -p /azuremcpserver
-COPY ${PUBLISH_DIR} /azuremcpserver/
+COPY ${PUBLISH_DIR}/${TARGETOS}-${TARGETARCH}/dist/ /azuremcpserver/
 WORKDIR /azuremcpserver
-
-# List the contents of the current directory
-RUN ls -la
-
-# Ensure the main binary exists and is executable
-RUN if [ ! -f "azmcp" ]; then \
-    echo "ERROR: azmcp executable does not exist" && exit 1; \
-    fi \
-    && chmod +x azmcp \
-    && test -x azmcp
 
 ENTRYPOINT ["./azmcp", "server", "start"]
