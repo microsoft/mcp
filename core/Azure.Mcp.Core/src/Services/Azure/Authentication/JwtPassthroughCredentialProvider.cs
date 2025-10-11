@@ -8,44 +8,30 @@ using Microsoft.AspNetCore.Http;
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
-/// Token credential provider that passes through JWT bearer tokens from HTTP request headers.
+/// Token credential provider that passes through JWT bearer tokens from HTTP Authorization header.
 /// </summary>
 public sealed class JwtPassthroughCredentialProvider : ITokenCredentialProvider
 {
-    private readonly OutboundAuthenticationConfig _config;
     private readonly IHttpContextAccessor _httpContextAccessor;
 
     /// <summary>
     /// Initializes a new instance of the JwtPassthroughCredentialProvider class.
     /// </summary>
-    /// <param name="config">The outbound authentication configuration containing header name.</param>
     /// <param name="httpContextAccessor">HTTP context accessor to read request headers.</param>
-    /// <exception cref="ArgumentNullException">Thrown when config or httpContextAccessor is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when config type is not BearerToken or HeaderName is missing.</exception>
-    public JwtPassthroughCredentialProvider(OutboundAuthenticationConfig config, IHttpContextAccessor httpContextAccessor)
+    /// <exception cref="ArgumentNullException">Thrown when httpContextAccessor is null.</exception>
+    public JwtPassthroughCredentialProvider(IHttpContextAccessor httpContextAccessor)
     {
-        _config = config ?? throw new ArgumentNullException(nameof(config));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
-
-        if (config.Type != OutboundAuthenticationType.BearerToken)
-        {
-            throw new ArgumentException($"Expected OutboundAuthenticationType.BearerToken, got {config.Type}", nameof(config));
-        }
-
-        if (string.IsNullOrEmpty(config.HeaderName))
-        {
-            throw new ArgumentException("HeaderName is required for BearerToken authentication", nameof(config));
-        }
     }
 
     /// <summary>
-    /// Creates a TokenCredential using the JWT bearer token from the current HTTP request header.
+    /// Creates a TokenCredential using the JWT bearer token from the current HTTP Authorization header.
     /// </summary>
     /// <param name="tenant">Optional tenant ID (may be used for validation).</param>
-    /// <returns>A TokenCredential that uses the JWT bearer token from the HTTP header.</returns>
+    /// <returns>A TokenCredential that uses the JWT bearer token from the Authorization header.</returns>
     public Task<TokenCredential> CreateAsync(string? tenant = null)
     {
-        return Task.FromResult<TokenCredential>(new JwtPassthroughTokenCredential(_httpContextAccessor, _config.HeaderName!));
+        return Task.FromResult<TokenCredential>(new JwtPassthroughTokenCredential(_httpContextAccessor));
     }
 
     /// <summary>
@@ -64,17 +50,16 @@ public sealed class JwtPassthroughCredentialProvider : ITokenCredentialProvider
     }
 
     /// <summary>
-    /// Inner TokenCredential implementation that passes through JWT bearer tokens from HTTP context.
+    /// Inner TokenCredential implementation that passes through JWT bearer tokens from HTTP Authorization header.
     /// </summary>
     private sealed class JwtPassthroughTokenCredential : TokenCredential
     {
+        private const string AuthorizationHeader = "Authorization";
         private readonly IHttpContextAccessor _httpContextAccessor;
-        private readonly string _headerName;
 
-        public JwtPassthroughTokenCredential(IHttpContextAccessor httpContextAccessor, string headerName)
+        public JwtPassthroughTokenCredential(IHttpContextAccessor httpContextAccessor)
         {
             _httpContextAccessor = httpContextAccessor;
-            _headerName = headerName;
         }
 
         public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
@@ -90,11 +75,11 @@ public sealed class JwtPassthroughCredentialProvider : ITokenCredentialProvider
                 throw new InvalidOperationException("No HTTP context available. This credential can only be used within an HTTP request.");
             }
 
-            // Extract token from the configured header
-            var headerValue = httpContext.Request.Headers[_headerName].FirstOrDefault();
+            // Extract token from the Authorization header
+            var headerValue = httpContext.Request.Headers[AuthorizationHeader].FirstOrDefault();
             if (string.IsNullOrEmpty(headerValue))
             {
-                throw new InvalidOperationException($"No JWT bearer token found in header '{_headerName}'.");
+                throw new InvalidOperationException("No JWT bearer token found in Authorization header.");
             }
 
             // Remove "Bearer " prefix if present
@@ -104,7 +89,7 @@ public sealed class JwtPassthroughCredentialProvider : ITokenCredentialProvider
 
             if (string.IsNullOrEmpty(token))
             {
-                throw new InvalidOperationException($"Empty JWT bearer token in header '{_headerName}'.");
+                throw new InvalidOperationException("Empty JWT bearer token in Authorization header.");
             }
 
             // Since we get a fresh token from HTTP headers for each request,

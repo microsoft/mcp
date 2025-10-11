@@ -49,16 +49,16 @@ public static class TokenCredentialProviderFactory
             // TODO: Extract clientId from configuration if needed for user-assigned identity
             return new ManagedIdentityCredentialProvider(clientId: null);
         }
-        else if (outboundType == OutboundAuthenticationType.BearerToken)
+        else if (outboundType == OutboundAuthenticationType.JwtPassthrough)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            return new JwtPassthroughCredentialProvider(serverConfiguration.OutboundAuthentication, httpContextAccessor);
+            return new JwtPassthroughCredentialProvider(httpContextAccessor);
         }
-        else if (outboundType == OutboundAuthenticationType.OnBehalfOf)
+        else if (outboundType == OutboundAuthenticationType.JwtObo)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
-            return new JwtOboCredentialProvider(serverConfiguration.OutboundAuthentication.AzureAd!, httpContextAccessor, tokenAcquisition);
+            return new JwtOboCredentialProvider(httpContextAccessor, tokenAcquisition);
         }
         else
         {

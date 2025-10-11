@@ -11,14 +11,14 @@ using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 
-namespace Azure.Mcp.Core.Areas.Server.Authentication.HttpHost.Implementations;
+namespace Azure.Mcp.Core.Areas.Server.Authentication.HttpHost;
 
 /// <summary>
 /// JWT Bearer authentication configuration for HTTP host scenarios.
 /// This implementation sets up JWT token validation for incoming requests and configures
 /// the necessary middleware and authorization policies.
 /// </summary>
-public sealed class JwtBearerAuthentication : IHttpHostAuthenticationConfiguration
+internal sealed class JwtHttpHostAuthSetup : IHttpHostAuthSetup
 {
     private readonly ServerConfiguration _serverConfiguration;
 
@@ -31,17 +31,17 @@ public sealed class JwtBearerAuthentication : IHttpHostAuthenticationConfigurati
     /// This constructor assumes the configuration is valid for JWT Bearer authentication.
     /// Use HttpHostAuthenticationConfigurationFactory.Create() to ensure proper instantiation.
     /// </remarks>
-    public JwtBearerAuthentication(ServerConfiguration serverConfiguration)
+    public JwtHttpHostAuthSetup(ServerConfiguration serverConfiguration)
     {
         _serverConfiguration = serverConfiguration ?? throw new ArgumentNullException(nameof(serverConfiguration));
     }
 
     /// <summary>
-    /// Configures JWT Bearer authentication services including token validation,
+    /// Sets up JWT Bearer authentication services including token validation,
     /// authorization policies, forwarded headers, and HTTP context accessor.
     /// </summary>
     /// <param name="services">The service collection to configure authentication services in.</param>
-    public void ConfigureServices(IServiceCollection services)
+    public void SetupServices(IServiceCollection services)
     {
         var azureAd = _serverConfiguration.InboundAuthentication.AzureAd!;
 
@@ -89,11 +89,11 @@ public sealed class JwtBearerAuthentication : IHttpHostAuthenticationConfigurati
     }
 
     /// <summary>
-    /// Configures authentication and authorization middleware in the HTTP pipeline.
+    /// Sets up authentication and authorization middleware in the HTTP pipeline.
     /// Adds UseForwardedHeaders, UseAuthentication, and UseAuthorization middleware.
     /// </summary>
     /// <param name="app">The application builder to configure middleware pipeline.</param>
-    public void ConfigureMiddleware(IApplicationBuilder app)
+    public void SetupMiddleware(IApplicationBuilder app)
     {
         app.UseForwardedHeaders();
         app.UseAuthentication();
@@ -101,11 +101,11 @@ public sealed class JwtBearerAuthentication : IHttpHostAuthenticationConfigurati
     }
 
     /// <summary>
-    /// Configures authorization requirements on MCP endpoints.
+    /// Sets up authorization requirements on MCP endpoints.
     /// Requires authentication for all MCP protocol endpoints.
     /// </summary>
     /// <param name="mcpEndpoints">The MCP endpoint convention builder to configure authorization on.</param>
-    public void ConfigureEndpoints(IEndpointConventionBuilder mcpEndpoints)
+    public void SetupEndpoints(IEndpointConventionBuilder mcpEndpoints)
     {
         // Require authentication for all MCP endpoints
         mcpEndpoints.RequireAuthorization();

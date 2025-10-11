@@ -17,8 +17,8 @@ public class InboundAuthenticationConfig
     public required InboundAuthenticationType Type { get; set; }
 
     /// <summary>
-    /// Azure AD configuration for <see cref="InboundAuthenticationType.EntraIDAccessToken"/> based validation.
-    /// Required when <see cref="Type"/> is set to <see cref="InboundAuthenticationType.EntraIDAccessToken"/>.
+    /// Azure AD configuration for <see cref="InboundAuthenticationType.JwtBearerScheme"/> based validation.
+    /// Required when <see cref="Type"/> is set to <see cref="InboundAuthenticationType.JwtBearerScheme"/>.
     /// </summary>
     [JsonPropertyName("azureAd")]
     public AzureAdConfig? AzureAd { get; set; }

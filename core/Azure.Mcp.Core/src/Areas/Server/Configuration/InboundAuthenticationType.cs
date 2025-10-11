@@ -17,8 +17,8 @@ public enum InboundAuthenticationType
     None,
 
     /// <summary>
-    /// Validates incoming requests using Entra ID (Azure AD) access tokens.
+    /// Validates incoming requests using JWT Bearer token scheme.
     /// Requires AzureAd configuration with TenantId, ClientId, and Audience.
     /// </summary>
-    EntraIDAccessToken
+    JwtBearerScheme
 }

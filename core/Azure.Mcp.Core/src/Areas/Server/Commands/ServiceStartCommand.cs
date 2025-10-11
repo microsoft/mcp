@@ -347,7 +347,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
         Console.WriteLine(serverOptions.ServerConfiguration!.ToString());
-        var authConfig = HttpHostAuthenticationConfigurationFactory.Create(serverOptions.ServerConfiguration);
+        var authConfig = HttpHostAuthSetupFactory.Create(serverOptions.ServerConfiguration);
 
         return Host.CreateDefaultBuilder()
             .ConfigureLogging(logging =>
@@ -371,11 +371,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                         });
                     });
 
-                    authConfig.ConfigureServices(services);
+                    authConfig.SetupServices(services);
                     ConfigureServices(services);
                     var outboundType = serverOptions.ServerConfiguration!.OutboundAuthentication.Type;
-                    if (outboundType == OutboundAuthenticationType.BearerToken ||
-                        outboundType == OutboundAuthenticationType.OnBehalfOf)
+                    if (outboundType == OutboundAuthenticationType.JwtPassthrough ||
+                        outboundType == OutboundAuthenticationType.JwtObo)
                     {
                         services.AddSingleton<ICacheService, NoCacheService>();
                     }
@@ -386,12 +386,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 {
                     app.UseCors("AllowAll");
 
-                    authConfig.ConfigureMiddleware(app);
+                    authConfig.SetupMiddleware(app);
                     app.UseRouting();
                     app.UseEndpoints(endpoints =>
                     {
                         var mcpEndpoints = endpoints.MapMcp();
-                        authConfig.ConfigureEndpoints(mcpEndpoints);
+                        authConfig.SetupEndpoints(mcpEndpoints);
                     });
                 });
 

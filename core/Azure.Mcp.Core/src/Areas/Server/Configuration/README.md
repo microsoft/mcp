@@ -1,6 +1,6 @@
 # Azure MCP Server Configuration
 
-Auth Configuration in Azure MCP Server.
+Authentication configuration for Azure MCP Server.
 
 ## Configuration Model
 
@@ -10,7 +10,7 @@ Auth Configuration in Azure MCP Server.
 ## Examples
 
 ### Default (No Authentication)
-Suitable for local development with stdio mode. Uses ambient Azure credentials (Azure CLI, Managed Identity).
+Running locally, uses ambient Azure credentials (Azure CLI, Managed Identity).
 
 ```json
 {
@@ -41,7 +41,7 @@ Suitable for local development with stdio mode. Uses ambient Azure credentials (
 ```json
 {
   "inboundAuthentication": {
-    "type": "EntraIDAccessToken",
+    "type": "JwtBearerScheme",
     "azureAd": {
       "instance": "https://login.microsoftonline.com/",
       "tenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
@@ -55,7 +55,8 @@ Suitable for local development with stdio mode. Uses ambient Azure credentials (
 }
 ```
 
-### Bearer Token (HTTP mode)
+### JWT Passthrough (HTTP mode)
+Forwards incoming token to Azure APIs without validation.
 
 #### Without inbound authentication:
 ```json
@@ -64,8 +65,7 @@ Suitable for local development with stdio mode. Uses ambient Azure credentials (
     "type": "None"
   },
   "outboundAuthentication": {
-    "type": "BearerToken",
-    "headerName": "X-Azure-Token"
+    "type": "JwtPassthrough"
   }
 }
 ```
@@ -74,7 +74,7 @@ Suitable for local development with stdio mode. Uses ambient Azure credentials (
 ```json
 {
   "inboundAuthentication": {
-    "type": "EntraIDAccessToken",
+    "type": "JwtBearerScheme",
     "azureAd": {
       "instance": "https://login.microsoftonline.com/",
       "tenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
@@ -83,19 +83,18 @@ Suitable for local development with stdio mode. Uses ambient Azure credentials (
     }
   },
   "outboundAuthentication": {
-    "type": "BearerToken",
-    "headerName": "X-Azure-Token"
+    "type": "JwtPassthrough"
   }
 }
 ```
 
 ### On-Behalf-Of Flow (HTTP mode)
-Validates incoming token and exchanges it for Azure token via OBO flow.
+Validates incoming token and exchanges it for Azure token using OBO flow.
 
 ```json
 {
   "inboundAuthentication": {
-    "type": "EntraIDAccessToken",
+    "type": "JwtBearerScheme",
     "azureAd": {
       "instance": "https://login.microsoftonline.com/",
       "tenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
@@ -104,22 +103,26 @@ Validates incoming token and exchanges it for Azure token via OBO flow.
     }
   },
   "outboundAuthentication": {
-    "type": "OnBehalfOf",
-    "azureAd": {
-      "instance": "https://login.microsoftonline.com/",
-      "tenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
-      "clientId": "85a0b190-f927-4e27-b286-cd301d965e4a",
-      "audience": "85a0b190-f927-4e27-b286-cd301d965e4a",
-      "clientSecret": "your-client-secret"
+    "type": "JwtObo",
+    "clientCredential": {
+      "kind": "ClientSecret",
+      "secret": "your-client-secret"
     }
   }
 }
 ```
 
-**Note**: For OBO flow, the `instance`, `tenantId`, `clientId`, and `audience` in `outboundAuthentication.azureAd` must match `inboundAuthentication.azureAd`. Only `clientSecret` is unique to outbound configuration.
+## Client Credential Types
 
-## Validation Rules (validated at config load time)
+The `clientCredential` configuration supports multiple credential types:
+
+- **ClientSecret**: Uses a shared secret
+- **CertificateLocal**: Uses a local certificate (not yet implemented)
+- **CertificateKeyVault**: Uses a certificate from Azure Key Vault (not yet implemented)
+
+## Validation Rules
 
 - **Default** outbound requires **None** inbound
-- **OnBehalfOf** outbound requires **EntraIDAccessToken** inbound and matching Azure AD properties
-- **ManagedIdentity** and **BearerToken** support both **None** and **EntraIDAccessToken** inbound
+- **JwtObo** outbound requires **JwtBearerScheme** inbound
+- **ManagedIdentity** and **JwtPassthrough** support both **None** and **JwtBearerScheme** inbound
+- **JwtObo** inherits tenant/client configuration from inbound auth - no duplication needed

@@ -124,8 +124,7 @@ public class ServerConfiguration
         return config.InboundAuthentication.Type == InboundAuthenticationType.None &&
                config.OutboundAuthentication.Type == OutboundAuthenticationType.Default &&
                config.InboundAuthentication.AzureAd == null &&
-               config.OutboundAuthentication.AzureAd == null &&
-               config.OutboundAuthentication.HeaderName == null;
+               config.OutboundAuthentication.ClientCredential == null;
     }
 }
 

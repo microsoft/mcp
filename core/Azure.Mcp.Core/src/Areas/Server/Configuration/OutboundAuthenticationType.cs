@@ -24,15 +24,15 @@ public enum OutboundAuthenticationType
     ManagedIdentity,
 
     /// <summary>
-    /// Uses a bearer token from HTTP request header for Azure API calls.
-    /// Requires HeaderName configuration.
+    /// Uses JWT passthrough from HTTP Authorization header for Azure API calls.
+    /// Forwards the incoming JWT token directly to Azure APIs.
     /// </summary>
-    BearerToken,
+    JwtPassthrough,
 
     /// <summary>
-    /// Uses On-Behalf-Of (OBO) flow to exchange incoming token for Azure access token.
-    /// Requires InboundAuthentication.Type to be EntraIDAccessToken.
+    /// Uses JWT exchange (On-Behalf-Of) flow to exchange incoming token for Azure access token.
+    /// Requires InboundAuthentication.Type to be JwtBearerScheme.
     /// Requires ClientSecret in AzureAd configuration.
     /// </summary>
-    OnBehalfOf
+    JwtObo
 }

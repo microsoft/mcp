@@ -10,14 +10,16 @@ internal static class ConfigurationValidator
 {
     /// <summary>
     /// Validates the server configuration, checking all authentication requirements.
+    /// 
     /// </summary>
     /// <param name="config">The server configuration to validate.</param>
     /// <exception cref="InvalidOperationException">Thrown when the configuration is invalid.</exception>
     internal static void Validate(ServerConfiguration config)
     {
         ValidateAuthenticationTypes(config);
-        ValidateOnBehalfOfConfiguration(config);
-        ValidateBearerTokenConfiguration(config);
+        // Validate configuration requirements for specific authentication types
+        ValidateJwtOboConfiguration(config);
+        ValidateJwtPassthroughConfiguration(config);
         ValidateManagedIdentityConfiguration(config);
     }
 
@@ -31,138 +33,92 @@ internal static class ConfigurationValidator
         var inboundType = config.InboundAuthentication.Type;
         var outboundType = config.OutboundAuthentication.Type;
 
-        // Default outbound requires None inbound
-        if (outboundType == OutboundAuthenticationType.Default
-            && inboundType != InboundAuthenticationType.None)
+        if (inboundType == InboundAuthenticationType.None)
         {
-            throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'Default' requires InboundAuthentication.Type to be 'None'. " +
-                $"Current InboundAuthentication.Type is '{inboundType}'.");
+            // When Inbound=None, only Default, ManagedIdentity, JwtPassthrough are allowed
+            if (outboundType != OutboundAuthenticationType.Default &&
+                outboundType != OutboundAuthenticationType.ManagedIdentity &&
+                outboundType != OutboundAuthenticationType.JwtPassthrough)
+            {
+                throw new InvalidOperationException(
+                    $"InboundAuthentication.Type 'None' requires OutboundAuthentication.Type to be 'Default', 'ManagedIdentity', or 'JwtPassthrough'. " +
+                    $"Current OutboundAuthentication.Type is '{outboundType}'.");
+            }
         }
-
-        // ManagedIdentity outbound can have None or EntraIDAccessToken inbound
-        if (outboundType == OutboundAuthenticationType.ManagedIdentity
-            && inboundType != InboundAuthenticationType.None
-            && inboundType != InboundAuthenticationType.EntraIDAccessToken)
+        else if (inboundType == InboundAuthenticationType.JwtBearerScheme)
         {
-            throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'ManagedIdentity' requires InboundAuthentication.Type to be either 'None' or 'EntraIDAccessToken'. " +
-                $"Current InboundAuthentication.Type is '{inboundType}'.");
+            // When Inbound=JwtBearerScheme, only ManagedIdentity, JwtPassthrough, JwtObo are allowed
+            if (outboundType != OutboundAuthenticationType.ManagedIdentity &&
+                outboundType != OutboundAuthenticationType.JwtPassthrough &&
+                outboundType != OutboundAuthenticationType.JwtObo)
+            {
+                throw new InvalidOperationException(
+                    $"InboundAuthentication.Type 'JwtBearerScheme' requires OutboundAuthentication.Type to be 'ManagedIdentity', 'JwtPassthrough', or 'JwtObo'. " +
+                    $"Current OutboundAuthentication.Type is '{outboundType}'.");
+            }
         }
-
-        // BearerToken outbound can have None or EntraIDAccessToken inbound
-        if (outboundType == OutboundAuthenticationType.BearerToken
-            && inboundType != InboundAuthenticationType.None
-            && inboundType != InboundAuthenticationType.EntraIDAccessToken)
+        else
         {
             throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'BearerToken' requires InboundAuthentication.Type to be either 'None' or 'EntraIDAccessToken'. " +
-                $"Current InboundAuthentication.Type is '{inboundType}'.");
-        }
-
-        // OnBehalfOf requires EntraIDAccessToken inbound
-        if (outboundType == OutboundAuthenticationType.OnBehalfOf
-            && inboundType != InboundAuthenticationType.EntraIDAccessToken)
-        {
-            throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'OnBehalfOf' requires InboundAuthentication.Type to be 'EntraIDAccessToken'. " +
-                $"Current InboundAuthentication.Type is '{inboundType}'.");
+                $"Unsupported InboundAuthentication.Type '{inboundType}'. " +
+                "Supported types are: 'None', 'JwtBearerScheme'.");
         }
     }
 
     /// <summary>
-    /// Validates On-Behalf-Of configuration requirements.
+    /// Validates JWT exchange (OBO) configuration requirements.
     /// </summary>
     /// <param name="config">The server configuration to validate.</param>
-    /// <exception cref="InvalidOperationException">Thrown when OBO configuration is invalid.</exception>
-    private static void ValidateOnBehalfOfConfiguration(ServerConfiguration config)
+    /// <exception cref="InvalidOperationException">Thrown when JWT exchange configuration is invalid.</exception>
+    private static void ValidateJwtOboConfiguration(ServerConfiguration config)
     {
-        if (config.OutboundAuthentication.Type != OutboundAuthenticationType.OnBehalfOf)
+        if (config.OutboundAuthentication.Type != OutboundAuthenticationType.JwtObo)
         {
-            return; // Only validate when using OBO
+            return; // Only validate when using JWT OBO
         }
 
-        // OutboundAuthentication.AzureAd must be present
-        if (config.OutboundAuthentication.AzureAd is null)
-        {
-            throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'OnBehalfOf' requires OutboundAuthentication.AzureAd to be configured.");
-        }
-
-        // InboundAuthentication.AzureAd must be present
+        // InboundAuthentication.AzureAd must be present (JwtObo inherits from inbound)
         if (config.InboundAuthentication.AzureAd is null)
         {
             throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'OnBehalfOf' requires InboundAuthentication.AzureAd to be configured.");
+                "OutboundAuthentication.Type 'JwtObo' requires InboundAuthentication.AzureAd to be configured.");
         }
 
+        // Validate the inbound AzureAd configuration
         ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd);
-        ValidateAzureAdConfiguration(config.OutboundAuthentication.AzureAd);
 
-        // ClientSecret must be present in OutboundAuthentication.AzureAd
-        if (string.IsNullOrWhiteSpace(config.OutboundAuthentication.AzureAd.ClientSecret))
+        // OutboundAuthentication.ClientCredential must be present
+        if (config.OutboundAuthentication.ClientCredential is null)
         {
             throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'OnBehalfOf' requires OutboundAuthentication.AzureAd.ClientSecret to be configured.");
+                "OutboundAuthentication.Type 'JwtObo' requires OutboundAuthentication.ClientCredential to be configured.");
         }
 
-        // Verify that Instance, TenantId, ClientId, and Audience match between inbound and outbound
-        var inbound = config.InboundAuthentication.AzureAd;
-        var outbound = config.OutboundAuthentication.AzureAd;
-
-        if (!string.Equals(inbound.Instance, outbound.Instance, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"OutboundAuthentication.AzureAd.Instance ('{outbound.Instance}') must match InboundAuthentication.AzureAd.Instance ('{inbound.Instance}').");
-        }
-
-        if (!string.Equals(inbound.TenantId, outbound.TenantId, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"OutboundAuthentication.AzureAd.TenantId ('{outbound.TenantId}') must match InboundAuthentication.AzureAd.TenantId ('{inbound.TenantId}').");
-        }
-
-        if (!string.Equals(inbound.ClientId, outbound.ClientId, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"OutboundAuthentication.AzureAd.ClientId ('{outbound.ClientId}') must match InboundAuthentication.AzureAd.ClientId ('{inbound.ClientId}').");
-        }
-
-        if (!string.Equals(inbound.Audience, outbound.Audience, StringComparison.OrdinalIgnoreCase))
-        {
-            throw new InvalidOperationException(
-                $"OutboundAuthentication.AzureAd.Audience ('{outbound.Audience}') must match InboundAuthentication.AzureAd.Audience ('{inbound.Audience}').");
-        }
+        // Validate ClientCredential based on Kind
+        ValidateClientCredentialConfiguration(config.OutboundAuthentication.ClientCredential);
     }
 
     /// <summary>
-    /// Validates Bearer Token configuration requirements.
+    /// Validates JWT passthrough configuration requirements.
     /// </summary>
     /// <param name="config">The server configuration to validate.</param>
-    /// <exception cref="InvalidOperationException">Thrown when Bearer Token configuration is invalid.</exception>
-    private static void ValidateBearerTokenConfiguration(ServerConfiguration config)
+    /// <exception cref="InvalidOperationException">Thrown when JWT passthrough configuration is invalid.</exception>
+    private static void ValidateJwtPassthroughConfiguration(ServerConfiguration config)
     {
-        if (config.OutboundAuthentication.Type != OutboundAuthenticationType.BearerToken)
+        if (config.OutboundAuthentication.Type != OutboundAuthenticationType.JwtPassthrough)
         {
-            return; // Only validate when using Bearer Token
+            return;
         }
 
-        // HeaderName must be present
-        if (string.IsNullOrWhiteSpace(config.OutboundAuthentication.HeaderName))
-        {
-            throw new InvalidOperationException(
-                "OutboundAuthentication.Type 'BearerToken' requires OutboundAuthentication.HeaderName to be configured.");
-        }
-
-        // If inbound auth is EntraIDAccessToken, AzureAd must be present
-        if (config.InboundAuthentication.Type == InboundAuthenticationType.EntraIDAccessToken
+        // If inbound auth is JwtBearerScheme, AzureAd must be present
+        if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme
             && config.InboundAuthentication.AzureAd is null)
         {
             throw new InvalidOperationException(
-                "InboundAuthentication.Type 'EntraIDAccessToken' requires InboundAuthentication.AzureAd to be configured.");
+                "InboundAuthentication.Type 'JwtBearerScheme' requires InboundAuthentication.AzureAd to be configured.");
         }
 
-        if (config.InboundAuthentication.Type == InboundAuthenticationType.EntraIDAccessToken)
+        if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme)
         {
             ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!);
         }
@@ -177,18 +133,18 @@ internal static class ConfigurationValidator
     {
         if (config.OutboundAuthentication.Type != OutboundAuthenticationType.ManagedIdentity)
         {
-            return; // Only validate when using Managed Identity
+            return;
         }
 
-        // If inbound auth is EntraIDAccessToken, AzureAd must be present
-        if (config.InboundAuthentication.Type == InboundAuthenticationType.EntraIDAccessToken
+        // If inbound auth is JwtBearerScheme, AzureAd must be present
+        if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme
             && config.InboundAuthentication.AzureAd is null)
         {
             throw new InvalidOperationException(
-                "InboundAuthentication.Type 'EntraIDAccessToken' requires InboundAuthentication.AzureAd to be configured.");
+                "InboundAuthentication.Type 'JwtBearerScheme' requires InboundAuthentication.AzureAd to be configured.");
         }
 
-        if (config.InboundAuthentication.Type == InboundAuthenticationType.EntraIDAccessToken)
+        if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme)
         {
             ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!);
         }
@@ -219,6 +175,78 @@ internal static class ConfigurationValidator
         if (string.IsNullOrWhiteSpace(azureAd.Audience))
         {
             throw new InvalidOperationException("AzureAd.Audience cannot be null or empty.");
+        }
+    }
+
+    /// <summary>
+    /// Validates client credential configuration based on the specified kind.
+    /// </summary>
+    /// <param name="clientCredential">The client credential configuration to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when client credential configuration is invalid.</exception>
+    private static void ValidateClientCredentialConfiguration(ClientCredentialConfig clientCredential)
+    {
+        switch (clientCredential.Kind)
+        {
+            case JwtOboClientCredentialKind.ClientSecret:
+                if (string.IsNullOrWhiteSpace(clientCredential.Secret))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'ClientSecret' requires ClientCredential.Secret to be configured.");
+                }
+                // Ensure other properties are not set for ClientSecret
+                if (!string.IsNullOrWhiteSpace(clientCredential.Thumbprint))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'ClientSecret' should not have ClientCredential.Thumbprint configured.");
+                }
+                if (!string.IsNullOrWhiteSpace(clientCredential.KeyVaultUrl))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'ClientSecret' should not have ClientCredential.KeyVaultUrl configured.");
+                }
+                break;
+
+            case JwtOboClientCredentialKind.CertificateLocal:
+                if (string.IsNullOrWhiteSpace(clientCredential.Thumbprint))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateLocal' requires ClientCredential.Thumbprint to be configured.");
+                }
+                // Ensure other properties are not set for CertificateLocal
+                if (!string.IsNullOrWhiteSpace(clientCredential.Secret))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateLocal' should not have ClientCredential.Secret configured.");
+                }
+                if (!string.IsNullOrWhiteSpace(clientCredential.KeyVaultUrl))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateLocal' should not have ClientCredential.KeyVaultUrl configured.");
+                }
+                break;
+
+            case JwtOboClientCredentialKind.CertificateKeyVault:
+                if (string.IsNullOrWhiteSpace(clientCredential.Thumbprint))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateKeyVault' requires ClientCredential.Thumbprint to be configured.");
+                }
+                if (string.IsNullOrWhiteSpace(clientCredential.KeyVaultUrl))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateKeyVault' requires ClientCredential.KeyVaultUrl to be configured.");
+                }
+                // Ensure Secret is not set for CertificateKeyVault
+                if (!string.IsNullOrWhiteSpace(clientCredential.Secret))
+                {
+                    throw new InvalidOperationException(
+                        "ClientCredential.Kind 'CertificateKeyVault' should not have ClientCredential.Secret configured.");
+                }
+                break;
+
+            default:
+                throw new InvalidOperationException(
+                    $"Unsupported ClientCredential.Kind '{clientCredential.Kind}'.");
         }
     }
 }

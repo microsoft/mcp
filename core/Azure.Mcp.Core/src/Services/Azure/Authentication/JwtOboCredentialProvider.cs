@@ -14,48 +14,30 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// <summary>
 /// Token credential provider that uses JWT exchange flow (On-Behalf-Of) to exchange incoming tokens for Azure access tokens.
 /// This is a multi-user provider that performs token exchange per request.
+/// Azure AD configuration is inherited from inbound authentication.
 /// </summary>
 public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
 {
-    private readonly AzureAdConfig _azureAdConfig;
     private readonly IHttpContextAccessor _httpContextAccessor;
     private readonly ITokenAcquisition _tokenAcquisition;
 
     /// <summary>
     /// Initializes a new instance of the JwtOboCredentialProvider class.
     /// </summary>
-    /// <param name="azureAdConfig">The Azure AD configuration containing client credentials.</param>
     /// <param name="httpContextAccessor">HTTP context accessor to read incoming tokens.</param>
-    /// <param name="tokenAcquisition">Token acquisition service for JWT On-Behalf-Of flows.</param>
+    /// <param name="tokenAcquisition">Token acquisition service for JWT exchange flows.</param>
     /// <exception cref="ArgumentNullException">Thrown when any parameter is null.</exception>
-    /// <exception cref="ArgumentException">Thrown when required Azure AD configuration is missing.</exception>
-    public JwtOboCredentialProvider(AzureAdConfig azureAdConfig, IHttpContextAccessor httpContextAccessor, ITokenAcquisition tokenAcquisition)
+    public JwtOboCredentialProvider(IHttpContextAccessor httpContextAccessor, ITokenAcquisition tokenAcquisition)
     {
-        _azureAdConfig = azureAdConfig ?? throw new ArgumentNullException(nameof(azureAdConfig));
         _httpContextAccessor = httpContextAccessor ?? throw new ArgumentNullException(nameof(httpContextAccessor));
         _tokenAcquisition = tokenAcquisition ?? throw new ArgumentNullException(nameof(tokenAcquisition));
-
-        if (string.IsNullOrEmpty(azureAdConfig.TenantId))
-        {
-            throw new ArgumentException("TenantId is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
-        }
-
-        if (string.IsNullOrEmpty(azureAdConfig.ClientId))
-        {
-            throw new ArgumentException("ClientId is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
-        }
-
-        if (string.IsNullOrEmpty(azureAdConfig.ClientSecret))
-        {
-            throw new ArgumentException("ClientSecret is required for JWT On-Behalf-Of authentication", nameof(azureAdConfig));
-        }
     }
 
     /// <summary>
-    /// Creates a TokenCredential using JWT On-Behalf-Of flow with the incoming token from HTTP context.
+    /// Creates a TokenCredential using JWT exchange flow with the incoming token from HTTP context.
     /// </summary>
     /// <param name="tenant">Optional tenant ID to override the configured tenant.</param>
-    /// <returns>A TokenCredential that performs JWT On-Behalf-Of exchange.</returns>
+    /// <returns>A TokenCredential that performs JWT exchange.</returns>
     public Task<TokenCredential> CreateAsync(string? tenant = null)
     {
         return Task.FromResult<TokenCredential>(new JwtOboTokenCredential(_tokenAcquisition, _httpContextAccessor));
@@ -124,7 +106,7 @@ public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
     }
 
     /// <summary>
-    /// Inner TokenCredential implementation that uses ITokenAcquisition for JWT On-Behalf-Of flows.
+    /// Inner TokenCredential implementation that uses ITokenAcquisition for JWT OBO flows.
     /// </summary>
     private sealed class JwtOboTokenCredential : TokenCredential
     {
