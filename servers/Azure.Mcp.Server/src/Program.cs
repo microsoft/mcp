@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
+using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ internal class Program
         try
         {
             Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
+            Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
             ConfigureServices(services);
@@ -34,6 +36,7 @@ internal class Program
             });
 
             var serviceProvider = services.BuildServiceProvider();
+            await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
@@ -138,5 +141,14 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+    }
+
+    internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
+    {
+        // Perform any initialization before starting the service.
+        // If the initialization operation fails, do not continue because we do not want
+        // invalid telemetry published.
+        var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
+        await telemetryService.InitializeAsync();
     }
 }

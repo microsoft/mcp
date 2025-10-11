@@ -8,6 +8,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_foundry_agents_connect | Query an agent in my AI foundry project |
 | azmcp_foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| azmcp_foundry_agents_list | List all agents in my AI Foundry project |
+| azmcp_foundry_agents_list | Show me the available agents in my AI Foundry project |
 | azmcp_foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
 | azmcp_foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | azmcp_foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
@@ -24,11 +26,34 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
 | azmcp_foundry_openai_models-list | List all available OpenAI models in my Azure resource |
 | azmcp_foundry_openai_models-list | Show me the OpenAI model deployments |
+| azmcp_foundry_resource_get | List all AI Foundry resources in my subscription |
+| azmcp_foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
+| azmcp_foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
 
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| azmcp_search_knowledge_base_get | List all knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | List all knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge bases in the search service <service-name> |
+| azmcp_search_knowledge_base_get | Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_base_get | Show me the knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query> |
+| azmcp_search_knowledge_base_retrieve | Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query> |
+| azmcp_search_knowledge_base_retrieve | Query knowledge base <agent-name> in search service <service-name> about <query> |
+| azmcp_search_knowledge_base_retrieve | Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query> |
+| azmcp_search_knowledge_base_retrieve | What does knowledge base <agent-name> in search service <service-name> know about <query> |
+| azmcp_search_knowledge_base_retrieve | Find information about <query> using knowledge base <agent-name> in search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | List all knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge sources in the search service <service-name> |
+| azmcp_search_knowledge_source_get | Get the details of knowledge source <source-name> in the Azure AI Search service <service-name> |
+| azmcp_search_knowledge_source_get | Show me the knowledge source <source-name> in search service <service-name> |
 | azmcp_search_index_get | Show me the details of the index \<index-name> in Cognitive Search service \<service-name> |
 | azmcp_search_index_get | List all indexes in the Cognitive Search service \<service-name> |
 | azmcp_search_index_get | Show me the indexes in the Cognitive Search service \<service-name> |
@@ -75,6 +100,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applens_resource_diagnose | Please help me diagnose issues with my app using app lens |
 | azmcp_applens_resource_diagnose | Use app lens to check why my app is slow? |
 | azmcp_applens_resource_diagnose | What does app lens say is wrong with my service? |
+
 ## Azure App Service
 
 | Tool Name | Test Prompt |
@@ -97,6 +123,22 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | Show me code optimization recommendations for all Application Insights resources in my subscription |
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
+
+## Azure CLI Generate
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
+| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
+
+## Azure CLI Install
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azmcp_extension_cli_install | Get Azure CLI installation instructions |
+| azmcp_extension_cli_install | How to install azd |
+| azmcp_extension_cli_install | What is Azure Functions Core tools and how to install it |
 
 ## Azure Container Registry (ACR)
 
@@ -243,6 +285,19 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 |:----------|:----------|
 | azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
 | azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
+| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> |
+| azmcp_eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
+| azmcp_eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
 
 ## Azure Function App
 
@@ -412,6 +467,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_monitor_table_list | Show me the tables in the Log Analytics workspace <workspace_name> |
 | azmcp_monitor_table_type_list | List all available table types in the Log Analytics workspace <workspace_name> |
 | azmcp_monitor_table_type_list | Show me the available table types in the Log Analytics workspace <workspace_name> |
+| azmcp_monitor_webtests_create | Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
+| azmcp_monitor_webtests_get | Get Web Test details for <webtest_resource_name> in my subscription in <resource_group> |
+| azmcp_monitor_webtests_list | List all Web Test resources in my subscription |
+| azmcp_monitor_webtests_list | List all Web Test resources in my subscription in <resource_group> |
+| azmcp_monitor_webtests_update | Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component> |
 | azmcp_monitor_workspace_list | List all Log Analytics workspaces in my subscription |
 | azmcp_monitor_workspace_list | Show me my Log Analytics workspaces |
 | azmcp_monitor_workspace_list | Show me the Log Analytics workspaces in my subscription |

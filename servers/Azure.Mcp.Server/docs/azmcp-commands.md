@@ -196,6 +196,10 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         --azure-openai-deployment <azure-openai-deployment> \
                                         [--evaluators <evaluators>]
 
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry knowledge index list --endpoint <endpoint>
@@ -277,6 +281,12 @@ azmcp foundry openai models-list --subscription <subscription> \
                                  --resource-group <resource-group> \
                                  --resource-name <resource-name> \
                                  [--auth-method <auth-method>]
+
+# Get Azure AI Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
 ```
 
 ### Azure AI Search Operations
@@ -296,6 +306,20 @@ azmcp search index query --subscription <subscription> \
 
 # List AI Search accounts in a subscription
 azmcp search list --subscription <subscription>
+
+# Get AI Search knowledge sources (all or a specific one)
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# Get AI Search knowledge bases (all or a specific one)
+azmcp search knowledge base get --service <service>
+                                [--knowledge-base <knowledge-base>]
+
+# Run retrieval against an AI Search knowledge base
+azmcp search knowledge base retrieve --service <service> \
+                                     --knowledge-base <knowledge-base> \
+                                     [--query <query>] \
+                                     [--messages <messages>]
 ```
 
 ### Azure AI Services Speech Operations
@@ -388,6 +412,18 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --question <question> \
                                 --resource-type <resource-type> \
                                 --resource <resource>
+```
+
+### Azure CLI Generate Operations
+```bash
+# Generate an Azure CLI command based on user intent
+azmcp extension cli generate --cli-type <cli-type> --intent <intent>
+```
+
+### Azure CLI Install Operations
+```bash
+# Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
+azmcp extension cli install --cli-type <cli-type>
 ```
 
 ### Azure Application Insights Operations
@@ -904,11 +940,85 @@ azmcp eventgrid events publish --subscription <subscription> \
 ### Azure Event Hubs
 
 ```bash
-# Get detailed properties of an Event Hubs namespace
+# Get Event Hubs Namespaces (list all in subscription/resource group or get specific namespace)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace get --subscription <subscription> \
-                              --namespace <namespace> \
-                              --resource-group <resource-group>
+                              [--resource-group <resource-group>] \
+                              [--namespace <namespace>]
+
+# Create or update an Event Hubs Namespace
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs namespace update --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --namespace <namespace> \
+                                 [--location <location>] \
+                                 [--sku-name <sku-name>] \
+                                 [--sku-tier <sku-tier>] \
+                                 [--sku-capacity <sku-capacity>] \
+                                 [--is-auto-inflate-enabled <true/false>] \
+                                 [--maximum-throughput-units <units>] \
+                                 [--kafka-enabled <true/false>] \
+                                 [--zone-redundant <true/false>] \
+                                 [--tags <json-tags>]
+
+# Delete an Event Hubs Namespace
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs namespace delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --namespace <namespace>
+```
+
+```bash
+# Get Event Hubs (list all in namespace or get specific event hub)
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --namespace <namespace> \
+                             [--eventhub <eventhub-name>]
+
+# Create or update an Event Hub
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name> \
+                                [--partition-count <count>] \
+                                [--message-retention-in-hours <hours>] \
+                                [--status <status>]
+
+# Delete an Event Hub
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub delete --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name>
+```
+
+```bash
+# Get Consumer Groups (list all in event hub or get specific consumer group)
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup get --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --namespace <namespace> \
+                                  --eventhub <eventhub-name> \
+                                  [--consumer-group <consumer-group-name>]
+
+# Create or update a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup update --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --namespace <namespace> \
+                                     --eventhub <eventhub-name> \
+                                     --consumer-group <consumer-group-name> \
+                                     [--user-metadata <user-metadata>]
+
+# Delete a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup delete --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --namespace <namespace> \
+                                     --eventhub <eventhub-name> \
+                                     --consumer-group <consumer-group-name>
 ```
 
 ### Azure Function App Operations
@@ -1288,6 +1398,65 @@ azmcp monitor metrics query --subscription <subscription> \
                             --end-time "2024-01-01T23:59:59Z" \
                             --interval "PT1H" \
                             --aggregation "Average"
+```
+
+#### Web Tests (Availability Tests)
+```bash
+# List all web tests in a subscription or optionally, within a resource group
+azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
+
+# Get details for a specific web test
+azmcp monitor webtests get --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --webtest-resource <webtest-resource-name>
+
+# Create a new web test in Azure Monitor
+azmcp monitor webtests create --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              --appinsights-component <component-name> \
+                              --location <location> \
+                              --webtest-locations <locations> \
+                              --request-url <url> \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
+
+# Update an existing web test in Azure Monitor
+azmcp monitor webtests update --subscription <subscription> \
+                              --resource-group <resource-group> \
+                              --webtest-resource <webtest-resource-name> \
+                              [--appinsights-component <component-name>] \
+                              [--location <location>] \
+                              [--webtest-locations <locations>] \
+                              [--request-url <url>] \
+                              [--webtest <display-name>] \
+                              [--description <description>] \
+                              [--enabled <true|false>] \
+                              [--expected-status-code <code>] \
+                              [--follow-redirects <true|false>] \
+                              [--frequency <seconds>] \
+                              [--headers <key=value,key2=value2>] \
+                              [--http-verb <get|post|..>] \
+                              [--ignore-status-code <true|false>] \
+                              [--parse-requests <true|false>] \
+                              [--request-body <body>] \
+                              [--retry-enabled <true|false>] \
+                              [--ssl-check <true|false>] \
+                              [--ssl-lifetime-check <days>] \
+                              [--timeout <seconds>]
 ```
 
 ### Azure Managed Lustre

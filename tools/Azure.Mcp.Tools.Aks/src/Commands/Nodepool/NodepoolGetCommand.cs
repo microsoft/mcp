@@ -13,17 +13,13 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
 public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : BaseAksCommand<NodepoolGetOptions>
 {
-    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool";
+    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
 
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get or list Azure Kubernetes Service (AKS) node pools (agent pools) in a cluster. If a specific node pool name
-        is provided, that node pool will be retrieved. Otherwise, all node pools will be listed in the specified cluster.
-        Returns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.
-        """;
+        "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.";
 
     public override string Title => CommandTitle;
 
