@@ -16,7 +16,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     {
         // Get a real cluster to target
         var listResult = await CallToolAsync(
-            "azmcp_aks_cluster_list",
+            "azmcp_aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -31,7 +31,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Find a node pool to query
         var nodepoolList = await CallToolAsync(
-            "azmcp_aks_nodepool_list",
+            "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -56,7 +56,11 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "nodepool", nodepoolName }
             });
 
-        var nodePool = nodepoolGet.AssertProperty("nodePool");
+        nodePools = nodepoolGet.AssertProperty("nodePools");
+        Assert.Equal(JsonValueKind.Array, nodePools.ValueKind);
+        Assert.Single(nodePools.EnumerateArray());
+
+        var nodePool = nodePools.EnumerateArray().First();
         Assert.Equal(JsonValueKind.Object, nodePool.ValueKind);
         Assert.Equal(nodepoolName, nodePool.GetProperty("name").GetString());
 
@@ -143,41 +147,30 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_parameters()
     {
-        // Missing nodepool
+        // Missing cluster
         var r1 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", "rg" },
-                { "cluster", "cluster" }
+                { "nodepool", "np1" }
             });
         Assert.False(r1.HasValue);
 
-        // Missing cluster
+        // Missing resource-group
         var r2 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", "rg" },
+                { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
         Assert.False(r2.HasValue);
 
-        // Missing resource-group
-        var r3 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
-            new()
-            {
-                { "subscription", Settings.SubscriptionId },
-                { "cluster", "cluster" },
-                { "nodepool", "np1" }
-            });
-        Assert.False(r3.HasValue);
-
         // Missing subscription
-        var r4 = await CallToolAsync(
+        var r3 = await CallToolAsync(
             "azmcp_aks_nodepool_get",
             new()
             {
@@ -185,7 +178,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
                 { "cluster", "cluster" },
                 { "nodepool", "np1" }
             });
-        Assert.False(r4.HasValue);
+        Assert.False(r3.HasValue);
     }
 
     [Fact]

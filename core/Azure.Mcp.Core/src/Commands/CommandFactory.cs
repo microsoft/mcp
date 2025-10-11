@@ -179,7 +179,7 @@ public class CommandFactory
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
-            using var activity = await _telemetryService.StartActivity(ActivityName.CommandExecuted);
+            using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
 
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
@@ -299,7 +299,7 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_get' would return 'storage').
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     public string? GetServiceArea(string fullCommandName)

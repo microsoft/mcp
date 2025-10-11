@@ -21,6 +21,7 @@ internal static class TelemetryConstants
         public const string SubscriptionGuid = "AzSubscriptionGuid";
         public const string ToolName = "ToolName";
         public const string ToolArea = "ToolArea";
+        public const string ServerMode = "ServerMode";
     }
 
     internal class ActivityName

@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
@@ -14,16 +13,13 @@ namespace Azure.Mcp.Tools.Aks.Commands.Nodepool;
 
 public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : BaseAksCommand<NodepoolGetOptions>
 {
-    private const string CommandTitle = "Get AKS Node Pool";
+    private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
 
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get details for a specific node pool (agent pool) in an Azure Kubernetes Service (AKS) cluster.
-        Returns key configuration and status including size, count, OS, mode, autoscaling, and provisioning state.
-        """;
+        "List Azure Kubernetes Service (AKS) node pools for a cluster. Requires `--subscription`, `--resource-group`, and `--cluster`; add `--nodepool` to fetch one pool. Returns `NodePool[]` metadata (SKU, node count, OS, mode, autoscale, provisioning state). Not for scaling, draining, or kubectl tasks—use Kubernetes tools for cluster operations.";
 
     public override string Title => CommandTitle;
 
@@ -41,7 +37,7 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(AksOptionDefinitions.Cluster);
+        command.Options.Add(AksOptionDefinitions.Cluster.AsRequired());
         command.Options.Add(AksOptionDefinitions.Nodepool);
     }
 
@@ -66,16 +62,15 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
         try
         {
             var aksService = context.GetService<IAksService>();
-            var nodePool = await aksService.GetNodePool(
+            var nodePools = await aksService.GetNodePools(
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.ClusterName!,
-                options.NodepoolName!,
+                options.NodepoolName,
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = nodePool is null ?
-                null : ResponseResult.Create(new(nodePool), AksJsonContext.Default.NodepoolGetCommandResult);
+            context.Response.Results = ResponseResult.Create(new(nodePools ?? []), AksJsonContext.Default.NodepoolGetCommandResult);
         }
         catch (Exception ex)
         {
@@ -88,16 +83,6 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
         return context.Response;
     }
 
-    protected override string GetErrorMessage(Exception ex) => ex switch
-    {
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
-            "AKS node pool not found. Verify the node pool name, cluster, resource group, and subscription, and ensure you have access.",
-        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
-            $"Authorization failed accessing the AKS node pool. Details: {reqEx.Message}",
-        RequestFailedException reqEx => reqEx.Message,
-        _ => base.GetErrorMessage(ex)
-    };
-
-    internal record NodepoolGetCommandResult(Models.NodePool NodePool);
+    internal record NodepoolGetCommandResult(List<Models.NodePool> NodePools);
 }
 
