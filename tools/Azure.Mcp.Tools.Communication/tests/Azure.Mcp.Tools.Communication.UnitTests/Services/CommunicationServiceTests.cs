@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using Azure.Communication.Email;
 using Azure.Core;
 using Azure.Mcp.Core.Exceptions;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Communication.Models;
@@ -30,7 +31,7 @@ public class CommunicationServiceTests
         _mockSubscriptionService = Substitute.For<ISubscriptionService>();
         _mockTenantService = Substitute.For<ITenantService>();
         _mockLogger = Substitute.For<ILogger<CommunicationService>>();
-        _service = new CommunicationService(_mockSubscriptionService, _mockTenantService, _mockLogger);
+        _service = new CommunicationService(ITokenCredentialProvider.Default, _mockSubscriptionService, _mockTenantService, _mockLogger);
     }
 
     [Fact]
