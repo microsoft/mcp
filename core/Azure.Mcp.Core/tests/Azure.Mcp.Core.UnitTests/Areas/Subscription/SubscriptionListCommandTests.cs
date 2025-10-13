@@ -187,7 +187,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         Assert.Contains("1 subscriptions returned", result.Message);
         Assert.Contains("characters", result.Message);
@@ -215,7 +215,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
@@ -244,7 +244,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
 
         var jsonDoc = JsonDocument.Parse(JsonSerializer.Serialize(result.Results));
@@ -273,7 +273,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.Null(result.Results);
         Assert.Equal("No subscriptions found.", result.Message);
     }
@@ -298,7 +298,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Results);
         // Should use default behavior (10000 characters is the default)
         Assert.Contains("1 subscriptions returned", result.Message);
@@ -325,7 +325,7 @@ public class SubscriptionListCommandTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(200, result.Status);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
 
         // Should either return empty results or truncated results, but handle it gracefully
         if (result.Results != null)
