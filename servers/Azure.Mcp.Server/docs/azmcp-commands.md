@@ -304,22 +304,26 @@ azmcp search index query --subscription <subscription> \
                          --index <index> \
                          --query <query>
 
-# List AI Search accounts in a subscription
-azmcp search list --subscription <subscription>
-
-# Get AI Search knowledge sources (all or a specific one)
-azmcp search knowledge source get --service <service>
-                                  [--knowledge-source <knowledge-source>]
-
 # Get AI Search knowledge bases (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base get --service <service>
                                 [--knowledge-base <knowledge-base>]
 
 # Run retrieval against an AI Search knowledge base
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
                                      [--messages <messages>]
+
+# Get AI Search knowledge sources (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# List AI Search accounts in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search list --subscription <subscription>
 ```
 
 ### Azure AI Services Speech Operations

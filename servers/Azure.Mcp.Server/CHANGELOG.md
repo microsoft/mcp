@@ -25,6 +25,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added the following Azure CLI commands:
   - `azmcp_extension_cli_generate`: Generate Azure CLI commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
   - `azmcp_extension_cli_install`: Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+- Added support for Azure AI Search knowledge bases and knowledge sources commands: [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `azmcp_search_knowledge_base_list`: List knowledge bases defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_retrieve`: Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  - `azmcp_search_knowledge_source_list`: List knowledge sources defined in an Azure AI Search service.
+
+### Breaking Changes
+
+- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
+  - Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into the aforementioned `azmcp_redis_list` command. [[#757](https://github.com/microsoft/mcp/issues/757)]
 
 ### Bugs Fixed
 
@@ -38,11 +47,19 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - AKS (Azure Kubernetes Service): [[#771](https://github.com/microsoft/mcp/pull/771)]
     - `azmcp_aks_cluster_get`
     - `azmcp_aks_nodepool_get`
+  - Marketplace: [[#761](https://github.com/microsoft/mcp/pull/761)]
+    - `azmcp_marketplace_product_list`
   - Storage: [[#650](https://github.com/microsoft/mcp/pull/650)]
     - `azmcp_storage_account_get`
     - `azmcp_storage_blob_get`
     - `azmcp_storage_blob_container_create`
     - `azmcp_storage_blob_container_get`
+
+#### Dependency Updates
+
+- Updated the following libraries:
+  - `Azure.Search.Documents`: `11.7.0-beta.6` → `11.7.0-beta.7`. [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.1` → `0.4.0-preview.2`. [[#767](https://github.com/Azure/azure-mcp/pull/767)]
 
 ## 0.8.6 (2025-10-09)
 
@@ -51,18 +68,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
 - Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
-- Added support for Azure AI Search knowledge bases and knowledge sources (preview):
-  - `azmcp_search_knowledge_source_list` - List knowledge sources defined in an Azure AI Search service.
-  - `azmcp_search_knowledge_base_list` - List knowledge bases defined in an Azure AI Search service.
-  - `azmcp_search_knowledge_base_retrieve` - Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
-  These commands enable agentic retrieval and reasoning grounded in Azure AI Search's new knowledge constructs.
-- Bumped Azure AI Search .NET SDK dependency to align with knowledge agent APIs.
 
 ### Breaking Changes
 
 - Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` for only the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
-- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
-- Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into `azmcp_redis_list`. [[#757](https://github.com/microsoft/mcp/issues/757)]
 
 ### Other Changes
 

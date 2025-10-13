@@ -23,6 +23,10 @@
 - Added the following Azure CLI commands:
   - `azmcp_extension_cli_generate`: Generate Azure CLI commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
   - `azmcp_extension_cli_install`: Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+- Added support for Azure AI Search knowledge bases and knowledge sources commands: [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `azmcp_search_knowledge_base_list`: List knowledge bases defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_retrieve`: Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  - `azmcp_search_knowledge_source_list`: List knowledge sources defined in an Azure AI Search service.
 
 ### Changed
 
@@ -32,11 +36,15 @@
   - AKS (Azure Kubernetes Service): [[#771](https://github.com/microsoft/mcp/pull/771)]
     - `azmcp_aks_cluster_get`
     - `azmcp_aks_nodepool_get`
+  - Marketplace: [[#761](https://github.com/microsoft/mcp/pull/761)]
+    - `azmcp_marketplace_product_list`
   - Storage: [[#650](https://github.com/microsoft/mcp/pull/650)]
     - `azmcp_storage_account_get`
     - `azmcp_storage_blob_get`
     - `azmcp_storage_blob_container_create`
     - `azmcp_storage_blob_container_get`
+- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
+  - Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into the aforementioned `azmcp_redis_list` command. [[#757](https://github.com/microsoft/mcp/issues/757)]
 
 ### Fixed
 
