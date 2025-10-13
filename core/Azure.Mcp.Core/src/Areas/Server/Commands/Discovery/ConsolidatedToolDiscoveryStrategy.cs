@@ -18,7 +18,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IOptions<ServiceStartOptions> options, ILogger<CommandGroupDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IOptions<ServiceStartOptions> options, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ServiceStartOptions> _options = options;

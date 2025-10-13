@@ -38,9 +38,9 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false,
+        ReadOnly = true,
         OpenWorld = true,
-        Idempotent = false,
+        Idempotent = true,
         Secret = false,
         LocalRequired = false
     };

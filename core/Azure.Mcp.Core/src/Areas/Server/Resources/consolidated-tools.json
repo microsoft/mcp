@@ -209,7 +209,7 @@
       ]
     },
     {
-      "name": "deploy_resources_and_applications",
+      "name": "deploy_azure_resources_and_applications",
       "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
       "toolMetadata": {
         "destructive": false,
@@ -227,8 +227,8 @@
       ]
     },
     {
-      "name": "execute_azure_developer_cli",
-      "description": "Execute Azure Developer CLI (azd) commands for modern cloud-native application development workflows. Supports azd operations including project initialization, environment provisioning, application deployment, monitoring setup, and cleanup. Essential for cloud-native development teams using azd templates and Infrastructure as Code patterns with integrated CI/CD pipeline automation.",
+      "name": "execute_azure_deployments",
+      "description": "Execute Azure deployments for applications and AI models. Run Azure Developer CLI (azd) commands for cloud-native application development workflows including project initialization, environment provisioning, application deployment, monitoring setup, and cleanup. Deploy AI models to Azure AI Foundry. Essential for cloud-native development teams using azd templates and Infrastructure as Code patterns with integrated CI/CD pipeline automation.",
       "toolMetadata": {
         "destructive": true,
         "idempotent": false,
@@ -238,7 +238,8 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_extension_azd"
+        "azmcp_extension_azd",
+        "azmcp_foundry_models_deploy"
       ]
     },
     {
@@ -618,21 +619,6 @@
       ]
     },
     {
-      "name": "deploy_azure_ai_models",
-      "description": "Deploy a model to Azure AI Foundry.",
-      "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
-      },
-      "mappedToolList": [
-        "azmcp_foundry_models_deploy"
-      ]
-    },
-    {
       "name": "connect_azure_ai_foundry_agents",
       "description": "Connect to Azure AI Foundry agents for establishing agent connections and communication channels.",
       "toolMetadata": {
@@ -798,7 +784,7 @@
     },
     {
       "name": "get_azure_messaging_service_details",
-      "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, and Event Grid topics and subscriptions.",
+      "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, Event Grid topics and subscriptions, and Event Hubs namespaces, event hubs, consumer groups, and streaming event ingestion resources.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -812,22 +798,30 @@
         "azmcp_eventgrid_subscription_list",
         "azmcp_servicebus_queue_details",
         "azmcp_servicebus_topic_details",
-        "azmcp_servicebus_topic_subscription_details"
+        "azmcp_servicebus_topic_subscription_details",
+        "azmcp_eventhubs_namespace_get",
+        "azmcp_eventhubs_eventhub_get",
+        "azmcp_eventhubs_eventhub_consumergroup_get"
       ]
     },
     {
-      "name": "get_azure_data_analytics_details",
-      "description": "Get details about Azure Event Hubs namespaces and streaming event ingestion resources.",
+      "name": "edit_azure_data_analytics_resources",
+      "description": "Update and delete Azure Event Hubs resources including namespaces, event hubs, and consumer groups.",
       "toolMetadata": {
-        "destructive": false,
+        "destructive": true,
         "idempotent": true,
         "openWorld": false,
-        "readOnly": true,
+        "readOnly": false,
         "secret": false,
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_eventhubs_namespace_get"
+        "azmcp_eventhubs_namespace_update",
+        "azmcp_eventhubs_namespace_delete",
+        "azmcp_eventhubs_eventhub_update",
+        "azmcp_eventhubs_eventhub_delete",
+        "azmcp_eventhubs_eventhub_consumergroup_update",
+        "azmcp_eventhubs_eventhub_consumergroup_delete"
       ]
     },
     {
@@ -966,6 +960,21 @@
       ]
     },
     {
+      "name": "get_azure_confidential_ledger_entries",
+      "description": "Retrieve tamper-proof entries from Azure Confidential Ledger instances.",
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "mappedToolList": [
+        "azmcp_confidentialledger_entries_get"
+      ]
+    },
+    {
       "name": "append_azure_confidential_ledger_entries",
       "description": "Append tamper-proof entries to Azure Confidential Ledger instances and retrieve transaction identifiers.",
       "toolMetadata": {
@@ -981,8 +990,8 @@
       ]
     },
     {
-      "name": "send_azure_communication_sms",
-      "description": "Send SMS messages to one or more recipients using Azure Communication Services with delivery status tracking.",
+      "name": "send_azure_communication_messages",
+      "description": "Send SMS and email messages to one or more recipients using Azure Communication Services with delivery status tracking.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -992,7 +1001,8 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_communication_sms_send"
+        "azmcp_communication_sms_send",
+        "azmcp_communication_email_send"
       ]
     },
     {

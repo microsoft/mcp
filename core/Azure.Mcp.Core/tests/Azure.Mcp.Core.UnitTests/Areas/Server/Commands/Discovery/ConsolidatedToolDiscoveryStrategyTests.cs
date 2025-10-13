@@ -17,7 +17,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
+        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
         var strategy = new ConsolidatedToolDiscoveryStrategy(factory, startOptions, logger);
         if (entryPoint != null)
         {
