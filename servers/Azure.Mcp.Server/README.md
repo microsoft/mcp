@@ -307,7 +307,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * List foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
-  
+
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
@@ -335,6 +335,13 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Show me the websites in my 'my-resource-group' resource group"
 * "Get the details for website 'my-website'"
 * "Get the details for app service plan 'my-app-service-plan'"
+
+### 📈 Azure Application Insights
+
+* "List Application Insights traces for app 'my-ai-app' over the last hour"
+* "List Application Insights trace metadata for app 'my-ai-app' in resource group 'rg-observability'"
+* "Show trace metadata for my Application Insights component 'my-ai-app' using the requests table"
+* "List Application Insights recommendations in my subscription"
 
 ### 🖥️ Azure CLI Generate
 
@@ -463,6 +470,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
+- 📈 **Azure Application Insights** - Distributed trace metadata & performance recommendations
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 🖥️ **Azure CLI Generate** - Generate Azure CLI commands from natural language
 - 📞 **Azure Communication Services** - SMS messaging and communication
