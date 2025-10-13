@@ -258,7 +258,7 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
-        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsCommandInvoked);
+        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked);
         var isCommandInvokedBool = (bool)isCommandInvoked;
         Assert.True(isCommandInvokedBool);
 
@@ -392,7 +392,7 @@ public class McpRuntimeTests
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);
 
-        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsCommandInvoked);
+        var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsServerCommandInvoked);
         bool isCommandInvokedBool = isCommandInvoked is bool b ? b : bool.TryParse(isCommandInvoked?.ToString(), out var parsed) && parsed;
         Assert.True(isCommandInvokedBool);
 

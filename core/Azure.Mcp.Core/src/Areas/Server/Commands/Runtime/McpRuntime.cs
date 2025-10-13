@@ -79,7 +79,7 @@ public sealed class McpRuntime : IMcpRuntime
 
         // Assume that this is a BaseCommand<T>.  If not, the tag will be updated in 
         // the children ToolLoaders.
-        activity?.AddTag(TagName.IsCommandInvoked, true);
+        activity?.AddTag(TagName.IsServerCommandInvoked, true);
 
         var symbol = OptionDefinitions.Common.Subscription;
 

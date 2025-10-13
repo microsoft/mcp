@@ -128,7 +128,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         {
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TelemetryConstants.TagName.IsCommandInvoked, false);
+                Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, false);
 
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }

@@ -170,7 +170,7 @@ public sealed class NamespaceToolLoader(
         {
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TagName.IsCommandInvoked, false);
+                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
 
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
