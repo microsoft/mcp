@@ -381,7 +381,7 @@ public class McpRuntimeTests
 
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
             .Returns<ValueTask<CallToolResult>>(x => throw expectedException);
-        
+
         // Act & Assert
         Assert.NotNull(request.Params);
 
