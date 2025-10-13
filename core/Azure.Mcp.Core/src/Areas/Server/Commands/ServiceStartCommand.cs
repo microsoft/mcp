@@ -374,9 +374,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     authConfig.SetupServices(services);
                     ConfigureServices(services);
                     var outboundType = serverOptions.ServerConfiguration!.OutboundAuthentication.Type;
-                    if (outboundType == OutboundAuthenticationType.JwtPassthrough ||
-                        outboundType == OutboundAuthenticationType.JwtObo)
+                    if (outboundType == OutboundAuthenticationType.JwtPassthrough)
                     {
+                        // Note: similar no-cache for OutboundAuthenticationType.JwtObo when implemented
                         services.AddSingleton<ICacheService, NoCacheService>();
                     }
                     ConfigureMcpServer(services, serverOptions);

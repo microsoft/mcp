@@ -53,12 +53,6 @@ public static class TokenCredentialProviderFactory
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
             return new JwtPassthroughCredentialProvider(httpContextAccessor);
         }
-        else if (outboundType == OutboundAuthenticationType.JwtObo)
-        {
-            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
-            var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
-            return new JwtOboCredentialProvider(httpContextAccessor, tokenAcquisition);
-        }
         else
         {
             throw new NotSupportedException($"Outbound authentication type '{outboundType}' is not supported.");

@@ -40,11 +40,7 @@ public static class HttpHostAuthSetupFactory
         }
 
         var outboundType = serverConfiguration.OutboundAuthentication?.Type;
-        if (outboundType == OutboundAuthenticationType.JwtObo)
-        {
-            return new JwtOboHttpHostAuthSetup(serverConfiguration);
-        }
-        else if (outboundType == OutboundAuthenticationType.ManagedIdentity)
+        if (outboundType == OutboundAuthenticationType.ManagedIdentity)
         {
             return new JwtHttpHostAuthSetup(serverConfiguration);
         }
