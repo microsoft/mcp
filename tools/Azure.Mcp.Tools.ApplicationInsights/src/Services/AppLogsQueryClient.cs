@@ -77,6 +77,6 @@ public class AppLogsQueryClient(LogsQueryClient logsQueryClient) : IAppLogsQuery
             };
         }).ToList(); // Use ToList to force conversion to happen now, not on demand
 
-        return rows;
+        return rows.AsReadOnly();
     }
 }
