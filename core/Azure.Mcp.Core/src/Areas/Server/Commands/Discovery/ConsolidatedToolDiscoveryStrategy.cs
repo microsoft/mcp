@@ -107,7 +107,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
                                      $"ReadOnly={consolidatedTool.ToolMetadata?.ReadOnly}, Secret={consolidatedTool.ToolMetadata?.Secret}, " +
                                      $"LocalRequired={consolidatedTool.ToolMetadata?.LocalRequired}]";
                     _logger.LogError(errorMessage);
-                    // throw new InvalidOperationException(errorMessage);
+                    throw new InvalidOperationException(errorMessage);
                 }
 
                 commandGroup.AddCommand(commandName, command);

@@ -34,7 +34,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        OpenWorld = true,
+        OpenWorld = false,
         Idempotent = true,
         ReadOnly = true,
         Secret = false,

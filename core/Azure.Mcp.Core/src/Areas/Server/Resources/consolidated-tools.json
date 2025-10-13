@@ -148,7 +148,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, and retrieve Application Insights recommendations for performance optimization.",
+      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, and manage web tests for application monitoring.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -163,12 +163,15 @@
         "azmcp_grafana_list",
         "azmcp_datadog_monitoredresources_list",
         "azmcp_monitor_workspace_list",
+        "azmcp_monitor_activitylog_list",
         "azmcp_monitor_healthmodels_entity_gethealth",
         "azmcp_monitor_metrics_definitions",
         "azmcp_monitor_metrics_query",
         "azmcp_monitor_resource_log_query",
         "azmcp_monitor_table_list",
         "azmcp_monitor_table_type_list",
+        "azmcp_monitor_webtests_get",
+        "azmcp_monitor_webtests_list",
         "azmcp_monitor_workspace_log_query",
         "azmcp_resourcehealth_availability-status_get",
         "azmcp_resourcehealth_availability-status_list",
@@ -176,7 +179,37 @@
       ]
     },
     {
-      "name": "deploy_resources_and_applications_to_azure",
+      "name": "create_azure_monitor_webtests",
+      "description": "Create Azure Monitor web tests for application availability monitoring.",
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": false,
+        "openWorld": false,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "mappedToolList": [
+        "azmcp_monitor_webtests_create"
+      ]
+    },
+    {
+      "name": "update_azure_monitor_webtests",
+      "description": "Update Azure Monitor web tests for application availability monitoring.",
+      "toolMetadata": {
+        "destructive": true,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "mappedToolList": [
+        "azmcp_monitor_webtests_update"
+      ]
+    },
+    {
+      "name": "deploy_resources_and_applications",
       "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
       "toolMetadata": {
         "destructive": false,
@@ -318,18 +351,33 @@
       ]
     },
     {
-      "name": "execute_azure_cli",
-      "description": "Answer questions about an Azure environment by executing Azure CLI commands",
+      "name": "generate_azure_cli_commands",
+      "description": "Generate Azure CLI commands from natural language descriptions to help answer questions about Azure environments and operations",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
+        "destructive": false,
+        "idempotent": true,
         "openWorld": false,
-        "readOnly": false,
+        "readOnly": true,
         "secret": false,
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_extension_az"
+        "azmcp_extension_cli_generate"
+      ]
+    },
+    {
+      "name": "install_azure_cli_extensions",
+      "description": "Install Azure CLI extensions to extend Azure CLI functionality with additional commands and features.",
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": false,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": true
+      },
+      "mappedToolList": [
+        "azmcp_extension_cli_install"
       ]
     },
     {
@@ -513,7 +561,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, and listing AI Foundry agents.",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, knowledge base and source information, and listing AI Foundry agents and resources.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -526,12 +574,30 @@
         "azmcp_search_service_list",
         "azmcp_search_index_get",
         "azmcp_search_index_query",
+        "azmcp_search_knowledge_source_get",
+        "azmcp_search_knowledge_base_get",
         "azmcp_foundry_models_deployments_list",
         "azmcp_foundry_models_list",
         "azmcp_foundry_knowledge_index_list",
         "azmcp_foundry_knowledge_index_schema",
         "azmcp_foundry_openai_models-list",
-        "azmcp_foundry_agents_list"
+        "azmcp_foundry_agents_list",
+        "azmcp_foundry_resource_get"
+      ]
+    },
+    {
+      "name": "retrieve_azure_ai_knowledge_base_content",
+      "description": "Retrieve content from Azure AI Search knowledge bases using semantic search queries to find relevant information.",
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": true,
+        "openWorld": true,
+        "readOnly": true,
+        "secret": false,
+        "localRequired": false
+      },
+      "mappedToolList": [
+        "azmcp_search_knowledge_base_retrieve"
       ]
     },
     {
