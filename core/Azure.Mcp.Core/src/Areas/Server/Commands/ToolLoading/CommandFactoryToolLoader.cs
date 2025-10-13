@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -26,6 +27,7 @@ public sealed class CommandFactoryToolLoader(
     ILogger<CommandFactoryToolLoader> logger) : IToolLoader
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IOptions<ToolLoaderOptions> _options = options;
     private IReadOnlyDictionary<string, IBaseCommand> _toolCommands =
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
@@ -61,7 +63,19 @@ public sealed class CommandFactoryToolLoader(
     /// <returns>A result containing the list of available tools.</returns>
     public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var tools = CommandFactory.GetVisibleCommands(_toolCommands)
+        var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
+
+        // Filter by specific tools if provided
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            visibleCommands = visibleCommands.Where(kvp =>
+            {
+                var toolKey = kvp.Key;
+                return _options.Value.Tool.Any(tool => tool.Contains(toolKey, StringComparison.OrdinalIgnoreCase));
+            });
+        }
+
+        var tools = visibleCommands
             .Select(kvp => GetTool(kvp.Key, kvp.Value))
             .Where(tool => !_options.Value.ReadOnly || (tool.Annotations?.ReadOnlyHint == true))
             .ToList();
@@ -96,6 +110,32 @@ public sealed class CommandFactoryToolLoader(
         }
 
         var toolName = request.Params.Name;
+
+        // Check if tool filtering is enabled and validate the requested tool
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            if (!_options.Value.Tool.Any(tool => tool.Contains(toolName, StringComparison.OrdinalIgnoreCase)))
+            {
+                var content = new TextContentBlock
+                {
+                    Text = $"Tool '{toolName}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                };
+
+                return new CallToolResult
+                {
+                    Content = [content],
+                    IsError = true,
+                };
+            }
+        }
+
+        var activity = Activity.Current;
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(toolName));
+        }
+
         var command = _toolCommands.GetValueOrDefault(toolName);
         if (command == null)
         {
@@ -110,7 +150,7 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
-        var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+        var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive data
         var metadata = command.Metadata;
@@ -189,8 +229,8 @@ public sealed class CommandFactoryToolLoader(
 
         if (commandContext.Activity != null)
         {
-            var serviceArea = commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.AddTag(TelemetryConstants.TagName.ToolArea, serviceArea);
+            var serviceArea = _commandFactory.GetServiceArea(toolName);
+            commandContext.Activity.AddTag(TagName.ToolArea, serviceArea);
         }
 
         try

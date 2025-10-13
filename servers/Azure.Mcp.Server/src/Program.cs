@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
+using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -22,6 +23,7 @@ internal class Program
         try
         {
             Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.ConfigureServices = ConfigureServices;
+            Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             ServiceCollection services = new();
             ConfigureServices(services);
@@ -34,6 +36,7 @@ internal class Program
             });
 
             var serviceProvider = services.BuildServiceProvider();
+            await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
@@ -71,7 +74,7 @@ internal class Program
             new Azure.Mcp.Tools.AppService.AppServiceSetup(),
             new Azure.Mcp.Tools.Authorization.AuthorizationSetup(),
             new Azure.Mcp.Tools.AzureIsv.AzureIsvSetup(),
-            new Azure.Mcp.Tools.AzureManagedLustre.AzureManagedLustreSetup(),
+            new Azure.Mcp.Tools.ManagedLustre.ManagedLustreSetup(),
             new Azure.Mcp.Tools.AzureTerraformBestPractices.AzureTerraformBestPracticesSetup(),
             new Azure.Mcp.Tools.Deploy.DeploySetup(),
             new Azure.Mcp.Tools.EventGrid.EventGridSetup(),
@@ -79,6 +82,7 @@ internal class Program
             new Azure.Mcp.Tools.BicepSchema.BicepSchemaSetup(),
             new Azure.Mcp.Tools.Cosmos.CosmosSetup(),
             new Azure.Mcp.Tools.CloudArchitect.CloudArchitectSetup(),
+            new Azure.Mcp.Tools.ConfidentialLedger.ConfidentialLedgerSetup(),
             new Azure.Mcp.Tools.EventHubs.EventHubsSetup(),
             new Azure.Mcp.Tools.Foundry.FoundrySetup(),
             new Azure.Mcp.Tools.FunctionApp.FunctionAppSetup(),
@@ -93,10 +97,12 @@ internal class Program
             new Azure.Mcp.Tools.MySql.MySqlSetup(),
             new Azure.Mcp.Tools.Postgres.PostgresSetup(),
             new Azure.Mcp.Tools.Redis.RedisSetup(),
+            new Azure.Mcp.Tools.Communication.CommunicationSetup(),
             new Azure.Mcp.Tools.ResourceHealth.ResourceHealthSetup(),
             new Azure.Mcp.Tools.Search.SearchSetup(),
             new Azure.Mcp.Tools.Speech.SpeechSetup(),
             new Azure.Mcp.Tools.ServiceBus.ServiceBusSetup(),
+            new Azure.Mcp.Tools.SignalR.SignalRSetup(),
             new Azure.Mcp.Tools.Sql.SqlSetup(),
             new Azure.Mcp.Tools.Storage.StorageSetup(),
             new Azure.Mcp.Tools.VirtualDesktop.VirtualDesktopSetup(),
@@ -135,5 +141,14 @@ internal class Program
             services.AddSingleton(area);
             area.ConfigureServices(services);
         }
+    }
+
+    internal static async Task InitializeServicesAsync(IServiceProvider serviceProvider)
+    {
+        // Perform any initialization before starting the service.
+        // If the initialization operation fails, do not continue because we do not want
+        // invalid telemetry published.
+        var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
+        await telemetryService.InitializeAsync();
     }
 }

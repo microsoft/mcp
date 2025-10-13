@@ -23,7 +23,6 @@ public class CommandFactory
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
 
-    private const string RootCommandGroupName = "azmcp";
     public const char Separator = '_';
 
     /// <summary>
@@ -47,6 +46,8 @@ public class CommandFactory
             writer.WriteStringValue(cleanValue);
         }
     }
+
+    internal const string RootCommandGroupName = "azmcp";
 
     public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
     {
@@ -178,7 +179,7 @@ public class CommandFactory
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
-            using var activity = await _telemetryService.StartActivity(ActivityName.CommandExecuted);
+            using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
 
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
@@ -276,7 +277,29 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_list' would return 'storage').
+    /// Removes <see cref="RootCommandGroupName"/> from a command name.
+    /// </summary>
+    public string RemoveRootGroupFromCommandName(string fullCommandName)
+    {
+        var split = fullCommandName.Split(Separator, 2);
+
+        if (split.Length < 2)
+        {
+            return fullCommandName;
+        }
+
+        if (string.Equals(RootCommandGroupName, split[0]))
+        {
+            return split[1];
+        }
+        else
+        {
+            return fullCommandName;
+        }
+    }
+
+    /// <summary>
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_get' would return 'storage').
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     public string? GetServiceArea(string fullCommandName)

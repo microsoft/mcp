@@ -73,9 +73,9 @@ public sealed class KustoService(
             var cluster = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.Kusto/clusters",
                         resourceGroup: null, // all resource groups
-                        subscriptionId,
-                        retryPolicy,
-                        ConvertToClusterModel,
+                        subscription: subscriptionId,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToClusterModel,
                         additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'");
 
             if (cluster == null)
@@ -115,7 +115,7 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri);
+        ValidateRequiredParameters((nameof(clusterUri), clusterUri));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant).ConfigureAwait(false);
         var kustoResult = await kustoClient.ExecuteControlCommandAsync(
@@ -149,7 +149,7 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName);
+        ValidateRequiredParameters((nameof(clusterUri), clusterUri), (nameof(databaseName), databaseName));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant);
         var kustoResult = await kustoClient.ExecuteControlCommandAsync(
@@ -224,7 +224,10 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName, query);
+        ValidateRequiredParameters(
+            (nameof(clusterUri), clusterUri),
+            (nameof(databaseName), databaseName),
+            (nameof(query), query));
 
         var cslQueryProvider = await GetOrCreateCslQueryProviderAsync(clusterUri, tenant);
         var result = new List<JsonElement>();
