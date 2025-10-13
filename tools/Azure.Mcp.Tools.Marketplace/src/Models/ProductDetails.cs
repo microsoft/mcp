@@ -51,7 +51,6 @@ public class ProductSummary
     public IReadOnlyList<string>? ProductLabels { get; set; }
     public PublisherType? PublisherType { get; set; }
     public PublishingStage? PublishingStage { get; set; }
-    public string? ProductId { get; set; }
     public string? UniqueProductId { get; set; }
     public ProductType? ProductType { get; set; }
     public IReadOnlyList<string>? OperatingSystems { get; set; }
