@@ -1,5 +1,12 @@
 targetScope = 'resourceGroup'
 
+// Deployment dependency chain:
+// 1. PostgreSQL Server creation
+// 2. Firewall rules configuration
+// 3. Entra ID administrator setup (requires server to be accessible)
+// 4. Database creation (best practice: after Entra ID config when using AD auth)
+// 5. Role assignments
+
 @minLength(3)
 @maxLength(17)
 @description('The base resource name. PostgreSQL Server names have a max length restriction.')
@@ -47,13 +54,14 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-pr
     }
     authConfig: {
       activeDirectoryAuth: 'Enabled'
-      passwordAuth: 'Disabled'
+      passwordAuth: 'Enabled'  // Keep both enabled during testing for flexibility
       tenantId: tenant().tenantId
     }
   }
 }
 
 // Configure Entra ID administrator for PostgreSQL server
+// Must wait for server to be fully provisioned and firewall rules to be configured
 resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/administrators@2023-12-01-preview' = {
   parent: postgresServer
   name: testApplicationOid
@@ -62,6 +70,10 @@ resource postgresAdministrator 'Microsoft.DBforPostgreSQL/flexibleServers/admini
     principalName: testApplicationOid
     tenantId: tenant().tenantId
   }
+  dependsOn: [
+    allowAllAzureServicesRule
+    allowAllIpsRule
+  ]
 }
 
 // Firewall rule to allow all Azure services
@@ -85,6 +97,7 @@ resource allowAllIpsRule 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRule
 }
 
 // Test database
+// Depends on Entra ID administrator being configured first (best practice for Entra ID deployments)
 resource testDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-12-01-preview' = {
   parent: postgresServer
   name: 'testdb'
@@ -92,6 +105,9 @@ resource testDatabase 'Microsoft.DBforPostgreSQL/flexibleServers/databases@2023-
     charset: 'utf8'
     collation: 'en_US.utf8'
   }
+  dependsOn: [
+    postgresAdministrator
+  ]
 }
 
 // PostgreSQL Contributor role definition
