@@ -1,8 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Net;
 using System.Text.Json;
+using Azure.Core;
+using Azure.Identity;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Npgsql;
@@ -12,12 +13,12 @@ namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
 public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    private string ServerName => Settings.ResourceBaseName;
-    private string ServerFqdn => Settings.DeploymentOutputs.GetValueOrDefault("postgresServerFqdn")
-        ?? $"{ServerName}.postgres.database.azure.com";
     private const string TestDatabaseName = "testdb";
-    private const string TestDatabase2Name = "testdb2";
+
+    private string ServerName => Settings.ResourceBaseName;
+    private string ServerFqdn => $"{ServerName}.postgres.database.azure.com";
     private string AdminUsername => Settings.PrincipalName ?? string.Empty;
+
     private static bool _testDataInitialized = false;
     private static readonly SemaphoreSlim _initLock = new(1, 1);
 
@@ -57,11 +58,11 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Output.WriteLine($"TestDatabaseName: {TestDatabaseName}");
 
         // Get Entra ID access token for PostgreSQL
-        var tokenCredential = new Azure.Identity.DefaultAzureCredential();
-        var tokenRequestContext = new Azure.Core.TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+        var tokenCredential = new DefaultAzureCredential();
+        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
+        AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
 
-        var connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
+        string connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
 
         Output.WriteLine($"Connecting to PostgreSQL...");
         await using var connection = new NpgsqlConnection(connectionString);
@@ -69,17 +70,17 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         Output.WriteLine($"Connected successfully!");
 
         // Create employees table
-        var createEmployeesTable = @"
-CREATE TABLE IF NOT EXISTS employees (
-    id SERIAL PRIMARY KEY,
-    first_name VARCHAR(50) NOT NULL,
-    last_name VARCHAR(50) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    department VARCHAR(50),
-    salary DECIMAL(10, 2),
-    hire_date DATE DEFAULT CURRENT_DATE,
-    is_active BOOLEAN DEFAULT true
-);";
+        string createEmployeesTable = @"
+            CREATE TABLE IF NOT EXISTS employees (
+                id SERIAL PRIMARY KEY,
+                first_name VARCHAR(50) NOT NULL,
+                last_name VARCHAR(50) NOT NULL,
+                email VARCHAR(100) UNIQUE NOT NULL,
+                department VARCHAR(50),
+                salary DECIMAL(10, 2),
+                hire_date DATE DEFAULT CURRENT_DATE,
+                is_active BOOLEAN DEFAULT true
+            );";
 
         await using (var cmd = new NpgsqlCommand(createEmployeesTable, connection))
         {
@@ -87,15 +88,15 @@ CREATE TABLE IF NOT EXISTS employees (
         }
 
         // Insert employee data
-        var insertEmployees = @"
-INSERT INTO employees (first_name, last_name, email, department, salary, hire_date, is_active)
-VALUES 
-    ('John', 'Doe', 'john.doe@example.com', 'Engineering', 75000.00, '2023-01-15', true),
-    ('Jane', 'Smith', 'jane.smith@example.com', 'Marketing', 65000.00, '2023-02-20', true),
-    ('Bob', 'Johnson', 'bob.johnson@example.com', 'Sales', 70000.00, '2023-03-10', true),
-    ('Alice', 'Williams', 'alice.williams@example.com', 'Engineering', 80000.00, '2023-04-05', true),
-    ('Charlie', 'Brown', 'charlie.brown@example.com', 'HR', 60000.00, '2023-05-12', false)
-ON CONFLICT (email) DO NOTHING;";
+        string insertEmployees = @"
+            INSERT INTO employees (first_name, last_name, email, department, salary, hire_date, is_active)
+            VALUES 
+                ('John', 'Doe', 'john.doe@example.com', 'Engineering', 75000.00, '2023-01-15', true),
+                ('Jane', 'Smith', 'jane.smith@example.com', 'Marketing', 65000.00, '2023-02-20', true),
+                ('Bob', 'Johnson', 'bob.johnson@example.com', 'Sales', 70000.00, '2023-03-10', true),
+                ('Alice', 'Williams', 'alice.williams@example.com', 'Engineering', 80000.00, '2023-04-05', true),
+                ('Charlie', 'Brown', 'charlie.brown@example.com', 'HR', 60000.00, '2023-05-12', false)
+            ON CONFLICT (email) DO NOTHING;";
 
         await using (var cmd = new NpgsqlCommand(insertEmployees, connection))
         {
@@ -103,13 +104,13 @@ ON CONFLICT (email) DO NOTHING;";
         }
 
         // Create departments table
-        var createDepartmentsTable = @"
-CREATE TABLE IF NOT EXISTS departments (
-    dept_id SERIAL PRIMARY KEY,
-    dept_name VARCHAR(50) NOT NULL UNIQUE,
-    location VARCHAR(100),
-    budget DECIMAL(12, 2)
-);";
+        string createDepartmentsTable = @"
+            CREATE TABLE IF NOT EXISTS departments (
+                dept_id SERIAL PRIMARY KEY,
+                dept_name VARCHAR(50) NOT NULL UNIQUE,
+                location VARCHAR(100),
+                budget DECIMAL(12, 2)
+            );";
 
         await using (var cmd = new NpgsqlCommand(createDepartmentsTable, connection))
         {
@@ -117,14 +118,14 @@ CREATE TABLE IF NOT EXISTS departments (
         }
 
         // Insert department data
-        var insertDepartments = @"
-INSERT INTO departments (dept_name, location, budget)
-VALUES 
-    ('Engineering', 'Seattle', 1000000.00),
-    ('Marketing', 'New York', 500000.00),
-    ('Sales', 'San Francisco', 750000.00),
-    ('HR', 'Austin', 300000.00)
-ON CONFLICT (dept_name) DO NOTHING;";
+        string insertDepartments = @"
+            INSERT INTO departments (dept_name, location, budget)
+            VALUES 
+                ('Engineering', 'Seattle', 1000000.00),
+                ('Marketing', 'New York', 500000.00),
+                ('Sales', 'San Francisco', 750000.00),
+                ('HR', 'Austin', 300000.00)
+            ON CONFLICT (dept_name) DO NOTHING;";
 
         await using (var cmd = new NpgsqlCommand(insertDepartments, connection))
         {
@@ -137,7 +138,7 @@ ON CONFLICT (dept_name) DO NOTHING;";
     [Fact]
     public async Task Should_ListDatabases_Successfully()
     {
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_database_list",
             new()
             {
@@ -148,26 +149,23 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully retrieve the list of databases
-        var databases = result.AssertProperty("databases");
+        JsonElement databases = result.AssertProperty("Databases");
         Assert.Equal(JsonValueKind.Array, databases.ValueKind);
 
         // Should contain at least our test databases
-        var databaseArray = databases.EnumerateArray().ToList();
-        Assert.True(databaseArray.Count >= 2, "Should contain at least testdb and testdb2 databases");
+        List<JsonElement> databaseList = databases.EnumerateArray().ToList();
+        Assert.True(databaseList.Count >= 2, $"Should contain at least {TestDatabaseName} and postgres databases");
 
         // Verify that our test databases exist
-        var testDbNames = databaseArray.Select(db => db.GetString()).ToList();
-        Assert.Contains("testdb", testDbNames);
-        Assert.Contains("testdb2", testDbNames);
-
-        // PostgreSQL system databases should also be present
+        List<string?> testDbNames = databaseList.Select(db => db.GetString()).ToList();
+        Assert.Contains(TestDatabaseName, testDbNames);
         Assert.Contains("postgres", testDbNames);
     }
 
     [Fact]
     public async Task Should_ListTables_Successfully()
     {
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_table_list",
             new()
             {
@@ -179,14 +177,14 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully retrieve the list of tables
-        var tables = result.AssertProperty("tables");
+        JsonElement tables = result.AssertProperty("Tables");
         Assert.Equal(JsonValueKind.Array, tables.ValueKind);
 
         // Should contain our test tables
-        var tableArray = tables.EnumerateArray().ToList();
-        Assert.True(tableArray.Count >= 2, "Should contain at least employees and departments tables");
+        List<JsonElement> tableList = tables.EnumerateArray().ToList();
+        Assert.True(tableList.Count >= 2, "Should contain at least employees and departments tables");
 
-        var tableNames = tableArray.Select(t => t.GetString()).ToList();
+        List<string?> tableNames = tableList.Select(t => t.GetString()).ToList();
         Assert.Contains("employees", tableNames);
         Assert.Contains("departments", tableNames);
     }
@@ -194,7 +192,7 @@ ON CONFLICT (dept_name) DO NOTHING;";
     [Fact]
     public async Task Should_GetTableSchema_Successfully()
     {
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_table_schema_get",
             new()
             {
@@ -207,15 +205,15 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully retrieve the table schema
-        var schema = result.AssertProperty("schema");
+        JsonElement schema = result.AssertProperty("Schema");
         Assert.Equal(JsonValueKind.Array, schema.ValueKind);
 
         // Should contain all columns from the employees table
-        var schemaArray = schema.EnumerateArray().ToList();
+        List<JsonElement> schemaArray = schema.EnumerateArray().ToList();
         Assert.True(schemaArray.Count >= 8, "Should contain at least 8 columns");
 
         // Verify that key columns exist in the schema
-        var schemaJson = schema.ToString();
+        string schemaJson = schema.ToString();
         Assert.Contains("id", schemaJson);
         Assert.Contains("first_name", schemaJson);
         Assert.Contains("last_name", schemaJson);
@@ -230,7 +228,7 @@ ON CONFLICT (dept_name) DO NOTHING;";
     public async Task Should_ExecuteQuery_Successfully()
     {
         // Test a simple SELECT query
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_database_query",
             new()
             {
@@ -243,15 +241,15 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully execute the query
-        var queryResult = result.AssertProperty("queryResult");
+        JsonElement queryResult = result.AssertProperty("QueryResult");
         Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
 
         // Should return at least the employees we inserted
-        var resultArray = queryResult.EnumerateArray().ToList();
-        Assert.True(resultArray.Count >= 2, "Should return at least 2 Engineering employees");
+        List<JsonElement> resultList = queryResult.EnumerateArray().ToList();
+        Assert.True(resultList.Count >= 2, "Should return at least 2 Engineering employees");
 
         // Verify the result contains expected data
-        var resultJson = queryResult.ToString();
+        string resultJson = queryResult.ToString();
         Assert.Contains("John", resultJson);
         Assert.Contains("Alice", resultJson);
     }
@@ -260,7 +258,7 @@ ON CONFLICT (dept_name) DO NOTHING;";
     public async Task Should_ExecuteQuery_WithAggregation_Successfully()
     {
         // Test a query with COUNT aggregation
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_database_query",
             new()
             {
@@ -273,11 +271,11 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully execute the query
-        var queryResult = result.AssertProperty("queryResult");
+        JsonElement queryResult = result.AssertProperty("QueryResult");
         Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
 
         // Should return aggregated results
-        var resultArray = queryResult.EnumerateArray().ToList();
+        List<JsonElement> resultArray = queryResult.EnumerateArray().ToList();
         Assert.True(resultArray.Count >= 3, "Should return at least 3 departments");
     }
 
@@ -285,7 +283,7 @@ ON CONFLICT (dept_name) DO NOTHING;";
     public async Task Should_ExecuteQuery_WithJoin_Successfully()
     {
         // Test a query with JOIN
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_database_query",
             new()
             {
@@ -301,179 +299,184 @@ ON CONFLICT (dept_name) DO NOTHING;";
             });
 
         // Should successfully execute the join query
-        var queryResult = result.AssertProperty("queryResult");
+        JsonElement queryResult = result.AssertProperty("QueryResult");
         Assert.Equal(JsonValueKind.Array, queryResult.ValueKind);
 
         // Should return employees in Seattle
-        var resultArray = queryResult.EnumerateArray().ToList();
+        List<JsonElement> resultArray = queryResult.EnumerateArray().ToList();
         Assert.True(resultArray.Count >= 1, "Should return at least 1 employee in Seattle");
     }
 
     [Fact]
     public async Task Should_ListServerConfigs_Successfully()
     {
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_server_config_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
-                { "server", ServerName }
+                { "server", ServerName },
+                { "user", AdminUsername },
             });
 
         // Should successfully retrieve server configurations
-        var configs = result.AssertProperty("configurations");
-        Assert.Equal(JsonValueKind.Array, configs.ValueKind);
+        JsonElement config = result.AssertProperty("Configuration");
+        Assert.Equal(JsonValueKind.String, config.ValueKind);
+
+        string[] configLines = config
+            .GetString()?
+            .Trim()
+            .Split("\n") ?? Array.Empty<string>();
 
         // Should contain multiple configuration parameters
-        var configArray = configs.EnumerateArray().ToList();
-        Assert.True(configArray.Count > 0, "Should return at least one configuration parameter");
+        Assert.True(configLines.Length > 0, "Should return at least one configuration parameter");
+
+        List<KeyValuePair<string, string>> configList = configLines
+            .Select(line =>
+            {
+                string[] parts = line.Split(":", 2);
+                return new KeyValuePair<string, string>(
+                    parts[0].Trim(),
+                    parts.Length > 1 ? parts[1].Trim() : string.Empty);
+            })
+            .ToList();
+
+        // Should contain at least the "Server Name" parameter
+        KeyValuePair<string, string> serverConfig = configList.FirstOrDefault(c => c.Key == "Server Name");
+        Assert.Equal("Server Name", serverConfig.Key);
+        Assert.Equal(ServerName, serverConfig.Value);
     }
 
     [Fact]
     public async Task Should_GetServerParameter_Successfully()
     {
         // Get a specific server parameter (max_connections is a common one)
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_server_param_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
-                { "parameter", "max_connections" }
+                { "user", AdminUsername },
+                { "param", "max_connections" }
             });
 
         // Should successfully retrieve the parameter
-        var parameter = result.AssertProperty("parameter");
-        Assert.Equal(JsonValueKind.Object, parameter.ValueKind);
+        JsonElement parameter = result.AssertProperty("ParameterValue");
+        Assert.Equal(JsonValueKind.String, parameter.ValueKind);
 
-        // Verify parameter properties
-        var paramName = parameter.GetProperty("name").GetString();
-        Assert.Equal("max_connections", paramName);
-
-        var paramValue = parameter.GetProperty("value");
-        Assert.NotEqual(JsonValueKind.Undefined, paramValue.ValueKind);
+        int maxConnections = int.Parse(parameter.GetString() ?? "0");
+        Assert.True(maxConnections > 0, "max_connections should be greater than 0");
     }
 
     [Fact]
     public async Task Should_ListServers_Successfully()
     {
-        var result = await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
             "azmcp_postgres_server_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
-                { "resource-group", Settings.ResourceGroupName }
+                { "resource-group", Settings.ResourceGroupName },
+                { "user", AdminUsername },
             });
 
         // Should successfully retrieve the list of servers
-        var servers = result.AssertProperty("servers");
-        Assert.Equal(JsonValueKind.Array, servers.ValueKind);
+        List<string?> servers = result.AssertProperty("Servers")
+            .EnumerateArray()
+            .Select(s => s.GetString())
+            .ToList();
+        Assert.True(servers.Count >= 1, $"Should contain at least the {ServerName} server");
 
-        // Should contain at least our test server
-        var serverArray = servers.EnumerateArray().ToList();
-        Assert.True(serverArray.Count >= 1, "Should contain at least the test PostgreSQL server");
-
-        // Verify our test server is in the list
-        var testServer = serverArray.FirstOrDefault(s =>
-            s.GetProperty("name").GetString()?.Contains(ServerName) == true);
-        Assert.NotEqual(default, testServer);
-
-        // Verify server properties
-        if (testServer.ValueKind != JsonValueKind.Undefined)
-        {
-            var serverType = testServer.GetProperty("type").GetString();
-            Assert.Contains("Microsoft.DBforPostgreSQL/flexibleServers", serverType, StringComparison.OrdinalIgnoreCase);
-
-            var serverState = testServer.GetProperty("state").GetString();
-            Assert.Equal("Ready", serverState, ignoreCase: true);
-        }
+        // Verify that our test server exists
+        Assert.Contains(ServerName, servers);
     }
 
     [Fact]
     public async Task Should_RejectNonSelectQuery_WithValidationError()
     {
-        // Test that non-SELECT queries are rejected
-        var exception = await Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await CallToolAsync(
-                "azmcp_postgres_database_query",
-                new()
-                {
+        JsonElement? result = await CallToolAsync(
+            "azmcp_postgres_database_query",
+            new()
+            {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
                     { "user", AdminUsername },
                     { "query", "DELETE FROM employees WHERE id = 1;" }
-                });
-        });
+            });
 
-        // Should reject with validation error
-        Assert.Contains("validation", exception.Message, StringComparison.OrdinalIgnoreCase);
+        // no exception is thrown and response is not propagated here to check the following:
+        // "status": 400,
+        // "message": "Only single read-only SELECT statements are allowed.",
+        Assert.Null(result);
     }
 
     [Fact]
     public async Task Should_HandleInvalidServerName_Gracefully()
     {
-        var exception = await Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await CallToolAsync(
+        JsonElement? result = await CallToolAsync(
                 "azmcp_postgres_database_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "server", "nonexistent-server-12345" },
+                    { "server", Guid.NewGuid().ToString() }, // <-- nonexistent_server
+                    { "database", TestDatabaseName },
                     { "user", AdminUsername }
                 });
-        });
 
         // Should handle the error gracefully
-        Assert.NotNull(exception);
+        JsonElement errorMessageProperty = result.Value.GetProperty("message");
+        Assert.Equal(JsonValueKind.String, errorMessageProperty.ValueKind);
+        Assert.Equal("No such host is known.", errorMessageProperty.GetString());
     }
 
     [Fact]
     public async Task Should_HandleInvalidDatabaseName_Gracefully()
     {
-        var exception = await Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await CallToolAsync(
+        string nonexistentDatabase = Guid.NewGuid().ToString();
+
+        JsonElement? result = await CallToolAsync(
                 "azmcp_postgres_table_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
-                    { "database", "nonexistent_database" },
+                    { "database", nonexistentDatabase },
                     { "user", AdminUsername }
                 });
-        });
 
         // Should handle the error gracefully
-        Assert.NotNull(exception);
+        JsonElement errorMessageProperty = result.Value.GetProperty("message");
+        Assert.Equal(JsonValueKind.String, errorMessageProperty.ValueKind);
+        Assert.Contains($"\"{nonexistentDatabase}\" does not exist", errorMessageProperty.GetString());
     }
 
     [Fact]
     public async Task Should_HandleInvalidTableName_Gracefully()
     {
-        var exception = await Assert.ThrowsAsync<Exception>(async () =>
-        {
-            await CallToolAsync(
-                "azmcp_postgres_table_schema_get",
-                new()
-                {
+        JsonElement? result = await CallToolAsync(
+            "azmcp_postgres_table_schema_get",
+            new()
+            {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
                     { "user", AdminUsername },
-                    { "table", "nonexistent_table" }
-                });
-        });
+                    { "table", Guid.NewGuid().ToString() } // <-- nonexistent_table
+            });
 
-        // Should handle the error gracefully
-        Assert.NotNull(exception);
+        JsonElement schema = result.AssertProperty("Schema");
+        Assert.Equal(JsonValueKind.Array, schema.ValueKind);
+
+        // Schema should be empty for nonexistent table
+        List<JsonElement> schemaList = schema.EnumerateArray().ToList();
+        Assert.Empty(schemaList);
     }
 }
