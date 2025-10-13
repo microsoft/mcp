@@ -29,7 +29,6 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
     public abstract string Description { get; }
     public abstract string Title { get; }
     public abstract ToolMetadata Metadata { get; }
-    public virtual string? CompositeToolMapped { get; protected set; }
 
     protected virtual void RegisterOptions(Command command)
     {

@@ -34,13 +34,6 @@ public interface IBaseCommand
     ToolMetadata Metadata { get; }
 
     /// <summary>
-    /// Gets the name of the composite tool that this command maps to.
-    /// Used for discovery and routing in the consolidated tool system.
-    /// If null, the command is not mapped to any composite tool.
-    /// </summary>
-    string? CompositeToolMapped { get; }
-
-    /// <summary>
     /// Gets the command definition
     /// </summary>
     Command GetCommand();

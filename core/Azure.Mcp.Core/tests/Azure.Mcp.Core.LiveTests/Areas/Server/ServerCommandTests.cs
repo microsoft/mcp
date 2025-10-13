@@ -193,7 +193,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task SingleProxyMode_LoadsSingleAzureTool()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
+        await using var client = await CreateClientAsync("server", "start", "--mode", "single");
 
         // Act
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -573,6 +573,188 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.Equal(toolNames.Count, uniqueNames.Count);
 
         Output.WriteLine($"Verified {toolNames.Count} unique tool names in default (namespace) mode");
+    }
+
+    #endregion
+
+    #region Consolidated Proxy Mode Tests
+
+    [Fact]
+    public async Task ConsolidatedProxyMode_LoadsConsolidatedTools()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // In consolidated mode, should have consolidated tools grouping related operations
+        Assert.True(toolNames.Count > 20, $"Expected more than 20 consolidated tools, got {toolNames.Count}");
+
+        // Should include some known consolidated tools
+        Assert.Contains(toolNames, name => name.Contains("azure_subscriptions_and_resource_groups", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("azure_databases_details", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(toolNames, name => name.Contains("azure_storage_details", StringComparison.OrdinalIgnoreCase));
+
+        Output.WriteLine($"Consolidated proxy mode loaded {toolNames.Count} tools");
+        foreach (var name in toolNames)
+        {
+            Output.WriteLine($"  - {name}");
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
+
+        // Act - Call a consolidated tool in learn mode
+        var learnParameters = new Dictionary<string, object?>
+        {
+            ["learn"] = true
+        };
+
+        var result = await client.CallToolAsync("get_azure_databases_details", learnParameters, cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // Get the text content
+        var textContent = result.Content.OfType<TextContentBlock>().FirstOrDefault();
+        Assert.NotNull(textContent);
+        Assert.NotEmpty(textContent.Text);
+
+        var responseText = textContent.Text;
+
+        // Verify the response contains information about database commands
+        Assert.Contains("available command", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("database", responseText, StringComparison.OrdinalIgnoreCase);
+
+        // Verify it contains multiple database-related commands
+        Assert.Contains("mysql", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("postgres", responseText, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("sql", responseText, StringComparison.OrdinalIgnoreCase);
+
+        Output.WriteLine("Consolidated database tool learn mode response:");
+        Output.WriteLine(responseText);
+        Output.WriteLine($"✓ Learn mode returned {responseText.Length} characters of consolidated command information");
+    }
+
+    [Fact]
+    public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage", "--namespace", "sql");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolNames = listResult.Select(t => t.Name).ToList();
+
+        // Should only include consolidated tools related to specified namespaces
+        var hasRelevantTools = toolNames.Any(name =>
+            name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("sql", StringComparison.OrdinalIgnoreCase) ||
+            name.Contains("database", StringComparison.OrdinalIgnoreCase));
+
+        Assert.True(hasRelevantTools, "Should have consolidated tools related to storage or database namespaces");
+
+        // In consolidated mode with namespace filter, should have fewer tools than without filter
+        Assert.True(toolNames.Count < 30, $"Expected fewer than 30 tools with namespace filter, got {toolNames.Count}");
+
+        Output.WriteLine($"Consolidated proxy mode with [storage, sql] namespaces loaded {toolNames.Count} tools");
+        foreach (var name in toolNames)
+        {
+            Output.WriteLine($"  - {name}");
+        }
+    }
+
+    [Fact]
+    public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--read-only");
+
+        // Act
+        var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotEmpty(listResult);
+
+        var toolCount = listResult.Count();
+        Assert.True(toolCount > 0, "Should have at least some read-only consolidated tools");
+
+        // Verify all tools have read-only annotations
+        var toolsWithReadOnlyHint = 0;
+        var toolsWithAnnotations = 0;
+
+        foreach (var tool in listResult)
+        {
+            var hasAnnotations = tool.ProtocolTool?.Annotations != null;
+            var readOnlyHint = tool.ProtocolTool?.Annotations?.ReadOnlyHint;
+
+            if (hasAnnotations)
+            {
+                toolsWithAnnotations++;
+            }
+
+            if (readOnlyHint.HasValue && readOnlyHint.Value)
+            {
+                toolsWithReadOnlyHint++;
+            }
+
+            // Verify tool names don't contain destructive operations
+            Assert.DoesNotContain("create_", tool.Name, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("edit_", tool.Name, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("delete_", tool.Name, StringComparison.OrdinalIgnoreCase);
+            Assert.DoesNotContain("update_", tool.Name, StringComparison.OrdinalIgnoreCase);
+
+            Output.WriteLine($"Tool: {tool.Name} - HasAnnotations: {hasAnnotations}, ReadOnlyHint: {readOnlyHint}");
+        }
+
+        Output.WriteLine($"Tools with annotations: {toolsWithAnnotations}/{toolCount}");
+        Output.WriteLine($"Tools with ReadOnlyHint=true: {toolsWithReadOnlyHint}/{toolCount}");
+
+        // In read-only mode, ALL tools must have annotations and ReadOnlyHint=true
+        Assert.Equal(toolCount, toolsWithAnnotations);
+        Assert.Equal(toolCount, toolsWithReadOnlyHint);
+
+        Output.WriteLine($"✓ All {toolCount} consolidated tools have annotations and ReadOnlyHint=true in read-only mode");
+    }
+
+    [Fact]
+    public async Task ConsolidatedProxyMode_CanCallConsolidatedTool()
+    {
+        // Arrange
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
+
+        // Act - Call the consolidated subscriptions and resource groups tool
+        var result = await client.CallToolAsync("get_azure_subscriptions_and_resource_groups",
+            new Dictionary<string, object?> { },
+            cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Content);
+        Assert.NotEmpty(result.Content);
+
+        // The result should contain subscription and resource group data
+        var firstContent = result.Content.FirstOrDefault();
+        Assert.NotNull(firstContent);
+
+        // Log for debugging
+        Output.WriteLine($"Consolidated tool result: {firstContent}");
     }
 
     #endregion

@@ -1,6 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
+using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Microsoft.Extensions.Logging;
@@ -25,6 +28,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
     /// This can be used to specify a custom entry point for the commands.
     /// </summary>
     public string? EntryPoint { get; set; } = null;
+    public static readonly string[] IgnoredCommandGroups = ["server", "tools"];
 
     /// <summary>
     /// Discovers available command groups and converts them to MCP server providers.
@@ -32,52 +36,140 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
     /// <returns>A collection of command group server providers.</returns>
     public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
     {
-        // Find all commands with the same CompositeToolMapped value
-        var allCommands = _commandFactory.AllCommands;
-        var matchingCommands = allCommands
-            .Where(kvp => !string.IsNullOrWhiteSpace(kvp.Value.CompositeToolMapped) && 
-                        string.Equals(kvp.Value.CompositeToolMapped, "get_azure_best_practices", StringComparison.OrdinalIgnoreCase))
-            .ToList();
-        
-        // Create a new CommandGroup and add the matching commands
-        var commandGroup = new CommandGroup("get_azure_best_practices", "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, and deployment best practices.");
-        _commandFactory.RootGroup.AddSubGroup(commandGroup);
-        foreach (var (commandName, command) in matchingCommands)
+        // Load consolidated tools from JSON file
+        var consolidatedTools = new List<ConsolidatedToolDefinition>();
+        try
         {
-            commandGroup.AddCommand(commandName, command);
-            // Extract just the command name (remove any prefix)
-            // TODO: It is going to be all get commands???
-            // var simpleName = commandName.Replace("azmcp_", "").Replace("_", ".");
-            // commandGroup.AddCommand(simpleName, command);
+            var assembly = Assembly.GetExecutingAssembly();
+            var resourceName = "Azure.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
+            using var stream = assembly.GetManifestResourceStream(resourceName);
+            if (stream != null)
+            {
+                using var reader = new StreamReader(stream);
+                var json = reader.ReadToEnd();
+                var jsonDoc = JsonDocument.Parse(json);
+                if (jsonDoc.RootElement.TryGetProperty("consolidated_tools", out var toolsArray))
+                {
+                    consolidatedTools = JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
+                }
+            }
         }
-        commandGroup.ToolMetadata = new ToolMetadata
+        catch (Exception ex)
         {
-            Destructive = false,
-            Idempotent = true,
-            OpenWorld = false,
-            ReadOnly = true,
-            LocalRequired = false,
-            Secret = false
-        };
+            _logger.LogError(ex, "Failed to load consolidated tools from JSON file");
+            return Task.FromResult<IEnumerable<IMcpServerProvider>>(new List<IMcpServerProvider>());
+        }
 
-        CommandGroupServerProvider serverProvider = new CommandGroupServerProvider(commandGroup)
+        var providers = new List<IMcpServerProvider>();
+        var allCommands = _commandFactory.AllCommands;
+
+        // Filter out commands that belong to ignored command groups
+        var filteredCommands = allCommands
+            .Where(kvp =>
+            {
+                var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
+                return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
+            })
+            .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        // Track unmatched commands
+        var unmatchedCommands = new HashSet<string>(filteredCommands.Keys, StringComparer.OrdinalIgnoreCase);
+
+        // Iterate through each consolidated tool definition
+        foreach (var consolidatedTool in consolidatedTools)
         {
-            ReadOnly = _options.Value.ReadOnly ?? false,
-            EntryPoint = EntryPoint,
-        };
+            // Find all commands that match this consolidated tool's mapped tool list
+            var matchingCommands = filteredCommands
+                .Where(kvp => consolidatedTool.MappedToolList != null &&
+                            consolidatedTool.MappedToolList.Contains(kvp.Key, StringComparer.OrdinalIgnoreCase))
+                .ToList();
 
-        var providers = new List<IMcpServerProvider> { serverProvider };
-        // providers.AddRange(_commandFactory.RootGroup.SubGroup
-        //     .Where(group => _options.Value.Namespace == null ||
-        //                    _options.Value.Namespace.Length == 0 ||
-        //                    _options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-        //     .Select(group => new CommandGroupServerProvider(group)
-        //     {
-        //         ReadOnly = _options.Value.ReadOnly ?? false,
-        //         EntryPoint = EntryPoint,
-        //     })
-        //     .Cast<IMcpServerProvider>();
+            if (matchingCommands.Count == 0)
+            {
+                continue;
+            }
+
+            // Create a new CommandGroup and add the matching commands
+            var commandGroup = new CommandGroup(consolidatedTool.Name, consolidatedTool.Description);
+            _commandFactory.RootGroup.AddSubGroup(commandGroup);
+
+            foreach (var (commandName, command) in matchingCommands)
+            {
+                // Validate that the command's metadata matches the consolidated tool's metadata
+                if (!AreMetadataEqual(command.Metadata, consolidatedTool.ToolMetadata))
+                {
+                    var errorMessage = $"Command '{commandName}' has mismatched ToolMetadata for consolidated tool '{consolidatedTool.Name}'. " +
+                                     $"Command metadata: [Destructive={command.Metadata.Destructive}, Idempotent={command.Metadata.Idempotent}, " +
+                                     $"OpenWorld={command.Metadata.OpenWorld}, ReadOnly={command.Metadata.ReadOnly}, Secret={command.Metadata.Secret}, " +
+                                     $"LocalRequired={command.Metadata.LocalRequired}], " +
+                                     $"Consolidated tool metadata: [Destructive={consolidatedTool.ToolMetadata?.Destructive}, " +
+                                     $"Idempotent={consolidatedTool.ToolMetadata?.Idempotent}, OpenWorld={consolidatedTool.ToolMetadata?.OpenWorld}, " +
+                                     $"ReadOnly={consolidatedTool.ToolMetadata?.ReadOnly}, Secret={consolidatedTool.ToolMetadata?.Secret}, " +
+                                     $"LocalRequired={consolidatedTool.ToolMetadata?.LocalRequired}]";
+                    _logger.LogError(errorMessage);
+                    // throw new InvalidOperationException(errorMessage);
+                }
+
+                commandGroup.AddCommand(commandName, command);
+                // Remove matched commands from the unmatched list
+                unmatchedCommands.Remove(commandName);
+            }
+
+            commandGroup.ToolMetadata = consolidatedTool.ToolMetadata;
+
+            ConsolidatedToolServerProvider serverProvider = new ConsolidatedToolServerProvider(commandGroup)
+            {
+                ReadOnly = _options.Value.ReadOnly ?? false,
+                EntryPoint = EntryPoint,
+            };
+
+            providers.Add(serverProvider);
+        }
+
+#if DEBUG
+        // In debug mode, throw an error if there are unmatched commands
+        if (unmatchedCommands.Count > 0)
+        {
+            var unmatchedList = string.Join(", ", unmatchedCommands.OrderBy(c => c));
+            var errorMessage = $"Found {unmatchedCommands.Count} unmatched commands: {unmatchedList}";
+            _logger.LogError(errorMessage);
+            throw new InvalidOperationException(errorMessage);
+        }
+#else
+        // In release mode, just log a warning
+        if (unmatchedCommands.Count > 0)
+        {
+            var unmatchedList = string.Join(", ", unmatchedCommands.OrderBy(c => c));
+            _logger.LogWarning("Found {Count} unmatched commands: {Commands}", unmatchedCommands.Count, unmatchedList);
+        }
+#endif
 
         return Task.FromResult<IEnumerable<IMcpServerProvider>>(providers);
+    }
+
+    /// <summary>
+    /// Compares two ToolMetadata objects for equality.
+    /// </summary>
+    /// <param name="metadata1">The first ToolMetadata to compare.</param>
+    /// <param name="metadata2">The second ToolMetadata to compare.</param>
+    /// <returns>True if the metadata objects are equal, false otherwise.</returns>
+    private static bool AreMetadataEqual(ToolMetadata? metadata1, ToolMetadata? metadata2)
+    {
+        if (metadata1 == null && metadata2 == null)
+        {
+            return true;
+        }
+        
+        if (metadata1 == null || metadata2 == null)
+        {
+            return false;
+        }
+        
+        return metadata1.Destructive == metadata2.Destructive &&
+               metadata1.Idempotent == metadata2.Idempotent &&
+               metadata1.OpenWorld == metadata2.OpenWorld &&
+               metadata1.ReadOnly == metadata2.ReadOnly &&
+               metadata1.Secret == metadata2.Secret &&
+               metadata1.LocalRequired == metadata2.LocalRequired;
     }
 }

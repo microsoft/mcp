@@ -41,8 +41,6 @@ public sealed class BestPracticesCommand(ILogger<BestPracticesCommand> logger) :
         Secret = false
     };
 
-    public override string CompositeToolMapped => "get_azure_best_practices";
-
     protected override void RegisterOptions(Command command)
     {
         command.Options.Add(BestPracticesOptionDefinitions.Resource);

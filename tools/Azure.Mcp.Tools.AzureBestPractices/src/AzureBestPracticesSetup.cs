@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.AzureBestPractices;
 
 public class AzureBestPracticesSetup : IAreaSetup
 {
-    public string Name => "get-bestpractices";
+    public string Name => "get_bestpractices";
 
     public void ConfigureServices(IServiceCollection services)
     {

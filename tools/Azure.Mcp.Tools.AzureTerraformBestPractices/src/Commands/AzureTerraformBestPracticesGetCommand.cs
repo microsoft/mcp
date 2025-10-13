@@ -43,7 +43,6 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         Secret = false
     };
 
-    public override string CompositeToolMapped => "get_azure_best_practices";
     protected override EmptyOptions BindOptions(ParseResult parseResult) => new();
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)

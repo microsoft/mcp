@@ -29,4 +29,10 @@ public sealed class ConsolidatedToolDefinition
     /// </summary>
     [JsonPropertyName("toolMetadata")]
     public ToolMetadata? ToolMetadata { get; set; }
+
+    /// <summary>
+    /// Gets or sets the list of tool names that are mapped to this consolidated tool.
+    /// </summary>
+    [JsonPropertyName("mappedToolList")]
+    public List<string> MappedToolList { get; set; } = new List<string>();
 }

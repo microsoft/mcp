@@ -8,9 +8,12 @@ using ModelContextProtocol.Client;
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 
 /// <summary>
-/// Represents a command group that provides metadata and MCP client creation.
+/// Server provider that starts the azmcp server in "all" mode while explicitly
+/// enumerating each tool (command) in a command group using repeated --tool flags.
+/// This allows selective exposure of only the commands that belong to the provided group
+/// without relying on the namespace grouping mechanism.
 /// </summary>
-public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcpServerProvider
+public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : IMcpServerProvider
 {
     private readonly CommandGroup _commandGroup = commandGroup;
     private string? _entryPoint = System.Diagnostics.Process.GetCurrentProcess().MainModule?.FileName;
@@ -57,11 +60,17 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
 
     /// <summary>
     /// Builds the command-line arguments for the MCP server process.
+    /// Pattern: server start --mode all (--tool <qualifiedCommand>)+ [--read-only]
     /// </summary>
-    /// <returns>An array of command-line arguments.</returns>
     internal string[] BuildArguments()
     {
-        var arguments = new List<string> { "server", "start", "--mode", "all", "--namespace", _commandGroup.Name };
+        var arguments = new List<string> { "server", "start", "--mode", "all" };
+
+        foreach (var kvp in _commandGroup.Commands)
+        {
+            arguments.Add("--tool");
+            arguments.Add(kvp.Key);
+        }
 
         if (ReadOnly)
         {
@@ -80,7 +89,8 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
         {
             Id = _commandGroup.Name,
             Name = _commandGroup.Name,
-            Description = _commandGroup.Description
+            Description = _commandGroup.Description,
+            ToolMetadata = _commandGroup.ToolMetadata,
         };
     }
 }
