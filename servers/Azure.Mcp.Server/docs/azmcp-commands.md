@@ -513,7 +513,7 @@ azmcp extension cli generate --cli-type <cli-type>
                              --intent <intent>
 ```
 
-### Install
+#### Install
 
 ```bash
 # Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
