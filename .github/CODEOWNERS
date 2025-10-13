@@ -173,7 +173,7 @@
 # ServiceOwners:                       @shankarsama @EldertGrootenboer
 
 # PRLabel: %tools-Redis
-/tools/Azure.Mcp.Tools.Redis/          @philon-msft @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Redis
 # ServiceOwners:                       @philon-msft @carldc
