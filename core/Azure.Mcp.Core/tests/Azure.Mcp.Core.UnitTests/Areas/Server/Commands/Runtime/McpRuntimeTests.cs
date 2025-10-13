@@ -258,7 +258,7 @@ public class McpRuntimeTests
         Assert.Equal(ActivityStatusCode.Ok, activity.Status);
 
         var isCommandInvoked = GetAndAssertTagKeyValue(activity, TagName.IsCommandInvoked);
-        var isCommandInvokedBool = bool.Parse(isCommandInvoked.ToString() ?? string.Empty);
+        var isCommandInvokedBool = (bool)isCommandInvoked;
         Assert.True(isCommandInvokedBool);
 
         var actualToolName = GetAndAssertTagKeyValue(activity, TagName.ToolName);
