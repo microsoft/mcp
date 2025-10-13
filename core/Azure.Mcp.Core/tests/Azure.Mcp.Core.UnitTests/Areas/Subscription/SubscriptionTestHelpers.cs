@@ -30,12 +30,12 @@ public static class SubscriptionTestHelpers
 
         // Create subscription data using the official model factory
         return ResourceManagerModelFactory.SubscriptionData(
-            resourceId,
-            subscriptionId,
-            displayName,
-            subGuid,
-            SubscriptionState.Enabled,
-            policies,
+            id: resourceId,
+            subscriptionId: subscriptionId,
+            displayName: displayName,
+            tenantId: subGuid,
+            state: SubscriptionState.Enabled,
+            subscriptionPolicies: policies,
             authorizationSource: "RoleBased",
             managedByTenants: [],
             tags: new Dictionary<string, string>());
