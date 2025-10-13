@@ -1,5 +1,47 @@
 # Release History
 
+## 0.9.0 (2025-10-13)
+
+### Added
+
+- Added support for sending an email via Azure Communication Services via the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added the following Event Hubs commands: [[#750](https://github.com/microsoft/mcp/pull/750)]
+  - `azmcp_eventhubs_consumergroup_update`: Create or update a consumer group for an Event Hub.
+  - `azmcp_eventhubs_consumergroup_get`: Get details of a consumer group for an Event Hub
+  - `azmcp_eventhubs_consumergroup_delete`: Delete a consumer group from an Event Hub
+  - `azmcp_eventhubs_eventhub_update`: Create or update an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_get`: Get details of an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace
+  - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace
+  - `azmcp_eventhubs_namespace_delete`: Delete an existing Event Hubs namespace.
+- Added support for listing Azure AI Foundry (Cognitive Services) resources or getting details of a specific one via the command `azmcp_foundry_resource_get`. [[#762](https://github.com/microsoft/mcp/pull/762)]
+- Added support for Azure Monitor Web Tests management operations: [[#529](https://github.com/microsoft/mcp/issues/529)]
+  - `azmcp_monitor_webtests_create`: Create a new web test in Azure Monitor
+  - `azmcp_monitor_webtests_get`: Get details for a specific web test
+  - `azmcp_monitor_webtests_list`: List all web tests in a subscription or optionally, within a resource group
+  - `azmcp_monitor_webtests_update`: Update an existing web test in Azure Monitor
+- Added the following Azure CLI commands:
+  - `azmcp_extension_cli_generate`: Generate Azure CLI commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
+  - `azmcp_extension_cli_install`: Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+
+### Changed
+
+- Added more deployment related best practices. [[#698](https://github.com/microsoft/mcp/issues/698)]
+- Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
+- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+  - AKS (Azure Kubernetes Service): [[#771](https://github.com/microsoft/mcp/pull/771)]
+    - `azmcp_aks_cluster_get`
+    - `azmcp_aks_nodepool_get`
+  - Storage: [[#650](https://github.com/microsoft/mcp/pull/650)]
+    - `azmcp_storage_account_get`
+    - `azmcp_storage_blob_get`
+    - `azmcp_storage_blob_container_create`
+    - `azmcp_storage_blob_container_get`
+
+### Fixed
+
+- Fix flow of `Activity.Current` in telemetry service by changing `ITelemetryService`'s activity calls to synchronous. [[#558](https://github.com/microsoft/mcp/pull/558)]
+
 ## 0.8.6 (2025-10-09)
 
 ### Added
