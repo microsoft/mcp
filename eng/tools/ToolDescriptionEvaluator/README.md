@@ -56,7 +56,27 @@ dotnet run -- --validate \
   --prompt "what storage accounts do I have"
 ```
 
-### 3. Custom Files Mode
+### 3. Tool Prefix Filtering Mode
+
+Filter prompts by tool name prefix to test specific Azure service tools. Service names are automatically prefixed with `azmcp_`:
+
+```bash
+# Filter by service name (auto-prefixed to azmcp_*)
+dotnet run -- --area "keyvault"      # Filters azmcp_keyvault_* tools
+dotnet run -- --area "storage"       # Filters azmcp_storage_* tools
+dotnet run -- --area "functionapp"   # Filters azmcp_functionapp_* tools
+dotnet run -- --area "sql"           # Filters azmcp_sql_* tools
+dotnet run -- --area "cosmos"        # Filters azmcp_cosmos_* tools
+
+# Filter multiple services at once (comma-separated)
+dotnet run -- --area "keyvault,storage"       # Filters both Key Vault and Storage tools
+dotnet run -- --area "sql,cosmos,storage"     # Filters SQL, Cosmos, and Storage tools
+
+# Or use explicit prefix (same result)
+dotnet run -- --area "azmcp_keyvault"
+```
+
+### 4. Custom Files Mode
 
 Use custom tools or prompts files:
 
@@ -67,8 +87,8 @@ dotnet run -- --tools-file my-tools.json
 # Use custom prompts file (supports .md or .json)
 dotnet run -- --prompts-file my-prompts.md
 
-# Use both custom files
-dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.json
+# Use both custom files with prefix filtering
+dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.json --area "storage"
 ```
 
 ## Input Data Sources
@@ -91,7 +111,20 @@ The tool can load data from multiple sources:
 You can call the build script in this directory:
 
 ```bash
+# Run with all areas
 ./Run-ToolDescriptionEvaluator.ps1
+
+# Run with specific tool prefix filtering
+./Run-ToolDescriptionEvaluator.ps1 -Area "storage"
+./Run-ToolDescriptionEvaluator.ps1 -Area "keyvault"
+./Run-ToolDescriptionEvaluator.ps1 -Area "functionapp"
+
+# Run with multiple areas (comma-separated)
+./Run-ToolDescriptionEvaluator.ps1 -Area "keyvault,storage"
+./Run-ToolDescriptionEvaluator.ps1 -Area "sql,cosmos,functionapp"
+
+# Build Azure MCP Server first, then run with prefix filtering
+./Run-ToolDescriptionEvaluator.ps1 -BuildAzureMcp -Area "sql"
 ```
 
 or run the following commands directly:
@@ -99,6 +132,9 @@ or run the following commands directly:
 ```bash
 dotnet build
 dotnet run
+
+# With tool prefix filtering
+dotnet run -- --area "storage"
 ```
 
 ## Setup
@@ -168,12 +204,34 @@ dotnet run -- --text
 - Includes confidence scores and success rates
 - Shows top matching tools for each prompt
 
-### Custom output file name
+### Command Line Options
 
-You can use a custom file name by using the option `--output-file-name`
+The tool supports several command line options for customization:
 
 ```bash
-dotnet run -- --output-file-name my-tests
+# Tool prefix filtering
+dotnet run -- --area "storage"                    # Filter to storage tools only (auto-prefixed to azmcp_storage)
+dotnet run -- --area "keyvault"                   # Filter to Key Vault tools only (auto-prefixed to azmcp_keyvault)
+dotnet run -- --area "functionapp"                # Filter to Function App tools only (auto-prefixed to azmcp_functionapp)
+dotnet run -- --area "keyvault,storage"           # Filter to multiple areas (comma-separated)
+dotnet run -- --area "sql,cosmos,functionapp"     # Filter to SQL, Cosmos, and Function App tools
+
+# File options
+dotnet run -- --tools-file my-tools.json          # Use custom tools file
+dotnet run -- --prompts-file my-prompts.md        # Use custom prompts file
+dotnet run -- --output-file-name my-tests         # Custom output filename
+
+# Output format
+dotnet run -- --text-results                      # Output in plain text format
+
+# Result limits
+dotnet run -- --top 10                           # Show top 10 results per test
+
+# CI mode
+dotnet run -- --ci                               # Run in CI mode (graceful failures)
+
+# Combined options
+dotnet run -- --area "keyvault" --text-results --top 3
 ```
 
 ### Analysis Metrics
@@ -202,17 +260,51 @@ The tool provides several key metrics:
 
 #### Markdown Format (Default)
 
-The tool reads from `../../../docs/e2eTestPrompts.md` which contains tables like:
+The tool reads from `../../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md` which contains tables organized by service:
 
 ```markdown
 ## Azure Storage
 
 | Tool Name | Test Prompt |
 |:----------|:------------|
-| azmcp-storage-account-get | List all storage accounts in my subscription |
-| azmcp-storage-account-get | Show me my storage accounts |
-| azmcp-storage-container-get | List containers in storage account <account-name> |
+| azmcp_storage_account_get | List all storage accounts in my subscription |
+| azmcp_storage_account_get | Show me my storage accounts |
+| azmcp_storage_container_get | List containers in storage account <account-name> |
+
+## Azure Key Vault
+
+| Tool Name | Test Prompt |
+|:----------|:------------|
+| azmcp_keyvault_secret_get | Get my secret from Key Vault |
+| azmcp_keyvault_key_list | List all keys in my Key Vault |
 ```
+
+#### Tool Prefix Filtering
+
+The tool supports filtering by tool name prefixes using the `--area` parameter. This allows you to test all tools for a specific Azure service by matching the tool name prefix.
+
+For example, `--area "keyvault"` (auto-prefixed to `azmcp_keyvault`) will match all tools starting with `azmcp_keyvault` including:
+- `azmcp_keyvault_certificate_create`
+- `azmcp_keyvault_certificate_get`  
+- `azmcp_keyvault_secret_get`
+- `azmcp_keyvault_key_list`
+- And all other Key Vault tools
+
+```bash
+# Filter by service name (automatically prefixed with azmcp_)
+dotnet run -- --area "keyvault"       # Matches all azmcp_keyvault_* tools
+dotnet run -- --area "storage"        # Matches all azmcp_storage_* tools
+dotnet run -- --area "functionapp"    # Matches all azmcp_functionapp_* tools
+
+# Filter multiple services at once (comma-separated)
+dotnet run -- --area "keyvault,storage"        # Matches Key Vault and Storage tools
+dotnet run -- --area "sql,cosmos,functionapp"  # Matches SQL, Cosmos, and Function App tools
+
+# Or use explicit prefix (same result)
+dotnet run -- --area "azmcp_keyvault"
+```
+
+Common service names (automatically prefixed with `azmcp_`) include: `foundry`, `search`, `appconfig`, `applens`, `appservice`, `applicationinsights`, `acr`, `cosmos`, `kusto`, `mysql`, `postgres`, `eventgrid`, `functionapp`, `keyvault`, `aks`, `loadtesting`, `monitor`, `quota`, `redis`, `storage`, `servicebus`, `sql`, `virtualdesktop`, `workbooks`, and more.
 
 #### JSON Format (Alternative)
 
