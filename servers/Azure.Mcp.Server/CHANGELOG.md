@@ -25,6 +25,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
 - Added `azmcp extension cli install` command for getting installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
 - Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
+- Added support for publishing MCP server start options as `ServerStarted`. ([#794](https://github.com/microsoft/mcp/pull/794))
 
 ### Breaking Changes
 
