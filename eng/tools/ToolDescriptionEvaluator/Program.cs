@@ -698,7 +698,9 @@ class Program
                     string.IsNullOrWhiteSpace(trimmedLine))
                 {
                     continue;
-                }                // Parse table rows. For example: | tool_name | Test prompt |
+                }
+
+                // Parse table rows. For example: | tool_name | Test prompt |
                 if (trimmedLine.StartsWith("|") && trimmedLine.Contains("|"))
                 {
                     var parts = trimmedLine.Split('|', StringSplitOptions.RemoveEmptyEntries);
