@@ -34,6 +34,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added more deployment related best practices [[#698](https://github.com/microsoft/mcp/issues/698)]
 - Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
   - AKS (Azure Kubernetes Service)
     - `azmcp_aks_cluster_get`
