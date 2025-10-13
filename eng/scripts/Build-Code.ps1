@@ -20,7 +20,8 @@ param(
     [ValidateSet('x64','arm64')]
     [string] $Architecture,
     [Parameter(ParameterSetName='AllPlatforms')]
-    [switch] $AllPlatforms
+    [switch] $AllPlatforms,
+    [switch] $ReleaseBuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -152,6 +153,10 @@ function BuildServer($serverName) {
 
             if($SingleFile) {
                 $command += " /p:PublishSingleFile=true"
+            }
+
+            if ($ReleaseBuild) {
+                $command += " /p:PublishRelease=true"
             }
 
             Invoke-LoggedMsBuildCommand $command -GroupOutput

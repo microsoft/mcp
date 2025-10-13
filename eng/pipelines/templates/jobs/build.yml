@@ -14,6 +14,13 @@ parameters:
   type: number
 - name: ServerName
   type: string
+- name: PublishTarget
+  type: string
+  default: none
+  values:
+  - internal
+  - public
+  - none
 
 jobs:
 - job: Build_${{ parameters.OSName }}
@@ -69,6 +76,7 @@ jobs:
         -SelfContained
         -Trimmed
         -SingleFile
+        -ReleaseBuild:$${{ eq(parameters.PublishTarget, 'public') }}
 
   - task: Powershell@2
     displayName: "Run tests"
@@ -111,6 +119,7 @@ jobs:
         -Architecture '$(Architecture)'
         -CleanBuild
         -BuildNative
+        -ReleaseBuild:$${{ eq(parameters.PublishTarget, 'public') }}
 
   # --- VS Code Extension Packaging Steps ---
   - task: NodeTool@0
