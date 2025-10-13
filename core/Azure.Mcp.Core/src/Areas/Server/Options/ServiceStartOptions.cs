@@ -72,7 +72,7 @@ public class ServiceStartOptions
     public string? LogLevel { get; set; } = "info";
 
     /// <summary>
-    /// Gets or sets whether verbose logging is enabled. When true, equivalent to setting LogLevel to "debug".
+    /// Gets or sets whether verbose logging is enabled. When true, equivalent to setting LogLevel to "trace" (maximum detail).
     /// </summary>
     [JsonPropertyName("verbose")]
     public bool Verbose { get; set; } = false;

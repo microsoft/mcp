@@ -112,13 +112,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 options.LogFile = envLogFile;
             }
         }
-
-        // Verbose flag overrides log level
-        if (options.Verbose && options.LogLevel == "info")
-        {
-            options.LogLevel = "debug";
-        }
-
         return options;
     }
 
@@ -184,6 +177,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>The effective LogLevel to use.</returns>
     private static LogLevel ParseLogLevel(ServiceStartOptions serverOptions)
     {
+        // Priority order:
+        // 1. Explicit LogLevel option
+        // 2. Verbose flag -> Trace level (most detailed)
+        // 3. Debug flag -> Debug level (less detailed than verbose)
+        // 4. Default -> Information level
+
         if (!string.IsNullOrEmpty(serverOptions.LogLevel))
         {
             return serverOptions.LogLevel.ToLowerInvariant() switch
@@ -200,7 +199,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         if (serverOptions.Verbose)
         {
-            return LogLevel.Debug;
+            return LogLevel.Trace;
         }
 
         if (serverOptions.Debug)

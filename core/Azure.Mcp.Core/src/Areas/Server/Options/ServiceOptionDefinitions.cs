@@ -95,11 +95,11 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => "info"
     };
 
-    public static readonly Option<string?> Verbose = new($"--{VerboseName}")
+    public static readonly Option<bool> Verbose = new($"--{VerboseName}")
     {
         Required = false,
-        Description = "Enable verbose logging (equivalent to --log-level debug).",
-        DefaultValueFactory = _ => "false"
+        Description = "Enable maximum verbose logging (equivalent to --log-level trace). More detailed than --debug.",
+        DefaultValueFactory = _ => false
     };
 
     public static readonly Option<string?> LogFile = new($"--{LogFileName}")
