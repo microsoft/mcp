@@ -20,9 +20,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 
     public override string Description =>
         """
-        Updates properties of a workbook, including its display name and serialized content.
-        At least one property must be provided for the update operation.
-        Returns the updated workbook object upon successful completion.
+        Updates an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.
         """;
 
     public override string Title => CommandTitle;
