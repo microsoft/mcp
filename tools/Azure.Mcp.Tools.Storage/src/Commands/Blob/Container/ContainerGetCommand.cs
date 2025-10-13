@@ -21,8 +21,7 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
 
     public override string Description =>
         $"""
-        Gets the details of Azure Storage containers, including metadata, lease status, access level, and more. If a specific
-        container name is not provided, the command will return details for all containers within the specified account.
+        Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.
         """;
 
     public override string Title => CommandTitle;
