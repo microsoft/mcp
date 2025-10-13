@@ -666,7 +666,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_workbooks_list | List all workbooks in my resource group <resource_group_name> |
 | azmcp_workbooks_list | What workbooks do I have in resource group <resource_group_name>? |
 | azmcp_workbooks_show | Get information about the workbook with resource ID <workbook_resource_id> |
-| azmcp_workbooks_show | Show me the workbook with display name <workbook_display_name> |
+| azmcp_workbooks_show | Show me the workbook with resource ID <workbook_resource_id> |
 | azmcp_workbooks_update | Update the workbook <workbook_resource_id> with a new text step |
 
 ## Bicep
