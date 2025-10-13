@@ -308,14 +308,17 @@ azmcp search index query --subscription <subscription> \
 azmcp search list --subscription <subscription>
 
 # Get AI Search knowledge sources (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge source get --service <service>
                                   [--knowledge-source <knowledge-source>]
 
 # Get AI Search knowledge bases (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base get --service <service>
                                 [--knowledge-base <knowledge-base>]
 
 # Run retrieval against an AI Search knowledge base
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
@@ -417,12 +420,14 @@ azmcp applens resource diagnose --subscription <subscription> \
 ### Azure CLI Generate Operations
 ```bash
 # Generate an Azure CLI command based on user intent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp extension cli generate --cli-type <cli-type> --intent <intent>
 ```
 
 ### Azure CLI Install Operations
 ```bash
 # Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp extension cli install --cli-type <cli-type>
 ```
 
@@ -615,6 +620,7 @@ azmcp confidentialledger entries append --ledger <ledger-name> \
                                         [--collection-id <collection-id>]
 
 # Retrieve a Confidential Ledger entry with verification proof
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp confidentialledger entries get --ledger <ledger-name> \
                                      --transaction-id <transaction-id> \
                                      [--collection-id <collection-id>]
@@ -1286,6 +1292,7 @@ azmcp tools list --namespaces
 
 ```bash
 # List the activity logs of an Azure Resource
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor activitylog list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --resource-type <resource-type> \
@@ -1403,14 +1410,17 @@ azmcp monitor metrics query --subscription <subscription> \
 #### Web Tests (Availability Tests)
 ```bash
 # List all web tests in a subscription or optionally, within a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
 
 # Get details for a specific web test
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests get --subscription <subscription> \
                           --resource-group <resource-group> \
                           --webtest-resource <webtest-resource-name>
 
 # Create a new web test in Azure Monitor
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
@@ -1435,6 +1445,7 @@ azmcp monitor webtests create --subscription <subscription> \
                               [--timeout <seconds>]
 
 # Update an existing web test in Azure Monitor
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests update --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
