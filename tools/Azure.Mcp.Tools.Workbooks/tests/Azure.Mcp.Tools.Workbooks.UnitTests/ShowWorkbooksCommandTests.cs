@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Tools.Workbooks.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.Mcp.Tools.Workbooks.Services;
@@ -105,10 +107,10 @@ public class ShowWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ShowWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Workbook);
@@ -140,7 +142,7 @@ public class ShowWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Failed to retrieve workbook", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -167,7 +169,7 @@ public class ShowWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Service error", response.Message);
         Assert.Contains("troubleshooting", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -316,7 +318,7 @@ public class ShowWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("workbook", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -335,7 +337,7 @@ public class ShowWorkbooksCommandTests
         var response = await _command.ExecuteAsync(context, args);
 
         // Assert
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("workbook", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -413,10 +415,10 @@ public class ShowWorkbooksCommandTests
         // Assert
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ShowWorkbooksCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Workbook);
@@ -430,10 +432,5 @@ public class ShowWorkbooksCommandTests
         Assert.Contains("AzureActivity", workbook.SerializedData);
         Assert.Contains("piechart", workbook.SerializedData);
         Assert.Equal("complex-user-id-12345", workbook.UserId);
-    }
-
-    private class ShowWorkbooksCommandResult
-    {
-        public WorkbookInfo Workbook { get; set; } = null!;
     }
 }

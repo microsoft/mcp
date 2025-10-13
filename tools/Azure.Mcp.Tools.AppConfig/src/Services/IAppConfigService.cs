@@ -12,30 +12,19 @@ public interface IAppConfigService
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
-    Task<List<KeyValueSetting>> ListKeyValues(
+    Task<List<KeyValueSetting>> GetKeyValues(
         string accountName,
         string subscription,
-        string? key = null, string? label = null,
+        string? key = null,
+        string? label = null,
+        string? keyFilter = null,
+        string? labelFilter = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
-    Task<KeyValueSetting> GetKeyValue(
+    Task SetKeyValueLockState(
         string accountName,
         string key,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        string? label = null,
-        string? contentType = null);
-    Task LockKeyValue(
-        string accountName,
-        string key,
-        string subscription,
-        string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null,
-        string? label = null);
-    Task UnlockKeyValue(
-        string accountName,
-        string key,
+        bool locked,
         string subscription,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,

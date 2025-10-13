@@ -135,13 +135,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     /// </summary>
     /// <param name="tenant">Optional Azure tenant ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
-    protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    /// <param name="armClientOptions">Optional ARM client options</param>
+    protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, ArmClientOptions? armClientOptions = null)
     {
         var tenantId = await ResolveTenantIdAsync(tenant);
 
         // Return cached client if parameters match
         if (_armClient != null &&
             _lastArmClientTenantId == tenantId &&
+            armClientOptions == null &&
             RetryPolicyOptions.AreEqual(_lastRetryPolicy, retryPolicy))
         {
             return _armClient;
@@ -150,7 +152,8 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
         try
         {
             var credential = await GetCredential(tenantId);
-            var options = ConfigureRetryPolicy(AddDefaultPolicies(new ArmClientOptions()), retryPolicy);
+            var options = armClientOptions ?? new ArmClientOptions();
+            ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
             _armClient = new ArmClient(credential, default, options);
             _lastArmClientTenantId = tenantId;
@@ -165,15 +168,57 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     /// <summary>
-    /// Validates that the provided parameters are not null or empty
+    /// Generic token caching mechanism that handles token acquisition and caching with expiration
     /// </summary>
-    /// <param name="parameters">Array of parameters to validate</param>
-    /// <exception cref="ArgumentException">Thrown when any parameter is null or empty</exception>
-    protected static void ValidateRequiredParameters(params string?[] parameters)
+    /// <param name="resource">The Azure resource scope for which to get the token</param>
+    /// <param name="getCachedToken">Function to get the currently cached token</param>
+    /// <param name="setCachedToken">Action to set/cache the new token</param>
+    /// <param name="getExpiryTime">Function to get the current token expiry time</param>
+    /// <param name="setExpiryTime">Action to set the new token expiry time</param>
+    /// <param name="tenant">Optional tenant for credential acquisition</param>
+    /// <param name="tokenExpirationBufferSeconds">Buffer seconds before actual expiration (default: 300)</param>
+    /// <returns>A valid access token</returns>
+    protected async Task<string> GetCachedTokenAsync(
+        string resource,
+        Func<string?> getCachedToken,
+        Action<string> setCachedToken,
+        Func<DateTimeOffset> getExpiryTime,
+        Action<DateTimeOffset> setExpiryTime,
+        string? tenant = null,
+        int tokenExpirationBufferSeconds = 300)
     {
-        foreach (var param in parameters)
+        var cachedToken = getCachedToken();
+        if (cachedToken != null && DateTimeOffset.UtcNow < getExpiryTime())
         {
-            ArgumentException.ThrowIfNullOrEmpty(param);
+            return cachedToken;
+        }
+
+        var credential = await GetCredential(tenant);
+        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
+        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+        setCachedToken(accessToken.Token);
+        setExpiryTime(accessToken.ExpiresOn.AddSeconds(-tokenExpirationBufferSeconds));
+
+        return accessToken.Token;
+    }
+
+    /// <summary>
+    /// Validates that the provided named parameters are not null or empty
+    /// </summary>
+    /// <param name="namedParameters">Array of tuples containing parameter names and values to validate</param>
+    /// <exception cref="ArgumentException">Thrown when any parameter is null or empty</exception>
+    protected static void ValidateRequiredParameters(params (string name, string? value)[] namedParameters)
+    {
+        var missingParams = namedParameters
+            .Where(param => string.IsNullOrEmpty(param.value))
+            .Select(param => param.name)
+            .ToArray();
+
+        if (missingParams.Length > 0)
+        {
+            throw new ArgumentException(
+                $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
         }
     }
 }

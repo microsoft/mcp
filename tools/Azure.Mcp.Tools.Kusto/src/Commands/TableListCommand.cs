@@ -16,11 +16,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
     public override string Name => "list";
 
     public override string Description =>
-        """
-        List all tables in a specific Kusto database.
-        Required `cluster-uri` (or `subscription` and `cluster`) and `database`.
-        Returns table names as a JSON array.
-        """;
+        "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.";
 
     public override string Title => CommandTitle;
 
@@ -28,7 +24,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -50,7 +46,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 
             if (UseClusterUri(options))
             {
-                tableNames = await kusto.ListTables(
+                tableNames = await kusto.ListTablesAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Tenant,
@@ -59,7 +55,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
             }
             else
             {
-                tableNames = await kusto.ListTables(
+                tableNames = await kusto.ListTablesAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,

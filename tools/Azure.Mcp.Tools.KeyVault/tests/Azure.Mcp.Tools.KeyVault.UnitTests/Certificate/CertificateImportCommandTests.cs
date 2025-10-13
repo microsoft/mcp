@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Net;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.KeyVault.Commands.Certificate;
@@ -53,7 +54,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -74,7 +76,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status); // due to forced exception
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
 
     public static IEnumerable<object[]> RequiredArgumentCases()
@@ -115,7 +117,7 @@ public class CertificateImportCommandTests
         // Assert
         if (shouldPassValidation)
         {
-            Assert.NotEqual(400, response.Status); // could be 500 due to forced exception, but not a validation failure
+            Assert.NotEqual(HttpStatusCode.BadRequest, response.Status); // could be 500 due to forced exception, but not a validation failure
             await _keyVaultService.Received(1).ImportCertificate(
                 _knownVault,
                 _knownCertName,
@@ -127,7 +129,7 @@ public class CertificateImportCommandTests
         }
         else
         {
-            Assert.Equal(400, response.Status);
+            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         }
     }
 
@@ -153,7 +155,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
     }
 
@@ -170,7 +172,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -191,7 +194,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
     [Fact]
@@ -206,7 +209,8 @@ public class CertificateImportCommandTests
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -226,7 +230,7 @@ public class CertificateImportCommandTests
             _knownSubscription,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>());
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
     [Fact]
@@ -236,7 +240,7 @@ public class CertificateImportCommandTests
         var tempPath = Path.GetTempFileName();
         try
         {
-            await File.WriteAllBytesAsync(tempPath, new byte[] { 1, 2, 3, 4 }, TestContext.Current.CancellationToken);
+            await File.WriteAllBytesAsync(tempPath, [1, 2, 3, 4], TestContext.Current.CancellationToken);
             _keyVaultService.ImportCertificate(
                 _knownVault,
                 _knownCertName,
@@ -244,7 +248,8 @@ public class CertificateImportCommandTests
                 null,
                 _knownSubscription,
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception("Test error"));
+                Arg.Any<RetryPolicyOptions>())
+                .ThrowsAsync(new Exception("Test error"));
             var args = _commandDefinition.Parse([
                 "--vault", _knownVault,
                 "--certificate", _knownCertName,
@@ -262,7 +267,7 @@ public class CertificateImportCommandTests
                 _knownSubscription,
                 Arg.Any<string?>(),
                 Arg.Any<RetryPolicyOptions>());
-            Assert.Equal(500, response.Status);
+            Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
         finally
         {
@@ -287,7 +292,8 @@ public class CertificateImportCommandTests
             null,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(errorMessage));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(errorMessage));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -298,7 +304,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(errorMessage, response.Message);
     }
 
@@ -316,7 +322,8 @@ public class CertificateImportCommandTests
             password,
             _knownSubscription,
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(mismatchMessage));
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception(mismatchMessage));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -328,7 +335,7 @@ public class CertificateImportCommandTests
 
         var response = await _command.ExecuteAsync(_context, args);
 
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);
     }
 }

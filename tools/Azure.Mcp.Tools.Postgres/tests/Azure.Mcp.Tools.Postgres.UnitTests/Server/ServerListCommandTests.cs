@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -43,12 +44,12 @@ public class ServerListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerListCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedServers, result.Servers);
     }
@@ -68,7 +69,7 @@ public class ServerListCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerListResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.ServerListCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.Servers);
     }
@@ -88,7 +89,7 @@ public class ServerListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
@@ -109,13 +110,7 @@ public class ServerListCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
-    }
-
-    private class ServerListResult
-    {
-        [JsonPropertyName("Servers")]
-        public List<string> Servers { get; set; } = [];
     }
 }

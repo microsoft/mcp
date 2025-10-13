@@ -24,17 +24,14 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
     };
 
     public override string Description =>
-        """
-        Gets a certificate from an Azure Key Vault. This command retrieves and displays details
-        about a specific certificate in the specified vault.
-        """;
+        "Get/retrieve/show details for a single certificate in a Key Vault (latest version). Not for listing multiple certificates or importing existing ones. Required: --vault <vault>, --certificate <certificate> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer, thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,7 +68,7 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateGetCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

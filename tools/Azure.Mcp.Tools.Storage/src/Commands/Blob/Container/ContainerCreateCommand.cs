@@ -18,16 +18,16 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
 
     public override string Description =>
         """
-        Creates an Azure Storage container, returning the last modified time, the ETag of the created container, and more.
+        Create/provision a new Azure Storage blob container in a storage account. Required: --account <account>, --container <container>, --subscription <subscription>. Optional: --public-access-level, --tenant <tenant>. Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold. Creates a logical container for organizing blobs within a storage account.
         """;
 
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -52,8 +52,7 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Tenant,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(containerInfo),
-                StorageJsonContext.Default.ContainerCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }
         catch (Exception ex)
         {

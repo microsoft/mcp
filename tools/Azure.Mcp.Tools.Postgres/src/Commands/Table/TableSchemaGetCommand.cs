@@ -14,7 +14,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 {
     private const string CommandTitle = "Get PostgreSQL Table Schema";
 
-    public override string Name => "schema";
+    public override string Name => "get";
     public override string Description => "Retrieves the schema of a specified table in a PostgreSQL database.";
     public override string Title => CommandTitle;
 
@@ -22,7 +22,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -56,11 +56,7 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
             List<string> schema = await pgService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, options.Database!, options.Table!);
-            context.Response.Results = schema?.Count > 0 ?
-                ResponseResult.Create(
-                    new TableSchemaGetCommandResult(schema),
-                    PostgresJsonContext.Default.TableSchemaGetCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)
         {

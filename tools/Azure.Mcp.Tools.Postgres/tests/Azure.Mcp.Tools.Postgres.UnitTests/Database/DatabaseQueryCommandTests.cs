@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.TestUtilities;
+using Azure.Mcp.Tools.Postgres.Commands;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -49,11 +50,11 @@ public class DatabaseQueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.NotNull(result);
         Assert.Equal(expectedResults, result.QueryResult);
     }
@@ -71,11 +72,11 @@ public class DatabaseQueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<DatabaseQueryResult>(json);
+        var result = JsonSerializer.Deserialize(json, PostgresJsonContext.Default.DatabaseQueryCommandResult);
         Assert.NotNull(result);
         Assert.Empty(result.QueryResult);
     }
@@ -103,15 +104,57 @@ public class DatabaseQueryCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(400, response.Status);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Equal($"Missing Required options: {missingParameter}", response.Message);
     }
 
-    private class DatabaseQueryResult
+    [Theory]
+    [InlineData("DELETE FROM users;")]
+    [InlineData("SELECT * FROM users; DROP TABLE users;")]
+    [InlineData("SELECT * FROM users -- comment")] // inline comment
+    [InlineData("SELECT * FROM users /* block comment */")] // block comment
+    [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
+    [InlineData("UPDATE accounts SET balance=0;")]
+    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
     {
-        [JsonPropertyName("QueryResult")]
-        public List<string> QueryResult { get; set; } = [];
+        var command = new DatabaseQueryCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", badQuery
+        ]);
 
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
+        // Service should never be called for invalid queries.
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_LongQuery_ValidationError()
+    {
+        var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
+        var command = new DatabaseQueryCommand(_logger);
+        var args = command.GetCommand().Parse([
+            "--subscription", "sub123",
+            "--resource-group", "rg1",
+            "--user", "user1",
+            "--server", "server1",
+            "--database", "db123",
+            "--query", longSelect
+        ]);
+
+        var context = new CommandContext(_serviceProvider);
+        var response = await command.ExecuteAsync(context, args);
+
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+    }
 }

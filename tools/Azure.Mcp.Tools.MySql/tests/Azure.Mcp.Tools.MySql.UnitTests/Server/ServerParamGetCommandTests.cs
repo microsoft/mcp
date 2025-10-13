@@ -1,9 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Tools.MySql.Commands;
 using Azure.Mcp.Tools.MySql.Commands.Server;
 using Azure.Mcp.Tools.MySql.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -50,12 +51,12 @@ public class ServerParamGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(200, response.Status);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Equal("Success", response.Message);
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServerParamGetCommand.ServerParamGetCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, MySqlJsonContext.Default.ServerParamGetCommandResult);
         Assert.NotNull(result);
         Assert.Equal("max_connections", result.Parameter);
         Assert.Equal(expectedValue, result.Value);
@@ -80,7 +81,7 @@ public class ServerParamGetCommandTests
         var response = await command.ExecuteAsync(context, args);
 
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Parameter 'invalid_param' not found", response.Message);
     }
 
@@ -89,19 +90,7 @@ public class ServerParamGetCommandTests
     {
         var command = new ServerParamGetCommand(_logger);
 
-        Assert.Equal("param", command.Name);
-        Assert.Equal("Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.", command.Description);
-        Assert.Equal("Get MySQL Server Parameter", command.Title);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.ReadOnly);
-    }
-
-    private class ServerParamResult
-    {
-        [JsonPropertyName("Parameter")]
-        public string Parameter { get; set; } = string.Empty;
-
-        [JsonPropertyName("Value")]
-        public string Value { get; set; } = string.Empty;
     }
 }

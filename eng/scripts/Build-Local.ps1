@@ -36,6 +36,10 @@ function Build($os, $arch) {
         -OutputPath $buildOutputPath `
         -DebugBuild:$DebugBuild `
         -BuildNative:$BuildNative
+
+    if ($LastExitCode -ne 0) {
+        exit $LastExitCode
+    }
 }
 
 Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue

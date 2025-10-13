@@ -22,19 +22,16 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
     };
 
     public override string Description =>
-        """
-        Creates a new certificate in an Azure Key Vault. This command creates a certificate with the specified name in
-        the given vault using the default certificate policy.
-        """;
+        "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -75,7 +72,7 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
             var certificate = completedOperation.Value;
 
             context.Response.Results = ResponseResult.Create(
-                new CertificateCreateCommandResult(
+                new(
                     certificate.Name,
                     certificate.Id,
                     certificate.KeyId,

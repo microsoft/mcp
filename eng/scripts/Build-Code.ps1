@@ -125,7 +125,7 @@ function BuildServer($serverName) {
 
             if ($CleanBuild) {
                 # Clean up any previous build artifacts.
-                Invoke-LoggedCommand "dotnet clean '$projectFile' --configuration $configuration" -GroupOutput
+                Invoke-LoggedMsBuildCommand "dotnet clean '$projectFile' --configuration $configuration" -GroupOutput
             }
 
             # Clear and recreate the package output directory
@@ -154,7 +154,7 @@ function BuildServer($serverName) {
                 $command += " /p:PublishSingleFile=true"
             }
 
-            Invoke-LoggedCommand $command -GroupOutput
+            Invoke-LoggedMsBuildCommand $command -GroupOutput
 
             $package = [ordered]@{
                 name = "$packageName-$node_os-$arch"
@@ -184,7 +184,7 @@ function BuildServer($serverName) {
     }
 }
 
-
+$exitCode = 0
 Push-Location $RepoRoot
 try {
     $serverNames = @(if($ServerName) {
@@ -195,8 +195,13 @@ try {
 
     foreach ($serverName in $serverNames) {
         BuildServer $serverName
+        if ($LastExitCode -ne 0) {
+            $exitCode = $LastExitCode
+        }
     }
 }
 finally {
     Pop-Location
 }
+
+exit $exitCode

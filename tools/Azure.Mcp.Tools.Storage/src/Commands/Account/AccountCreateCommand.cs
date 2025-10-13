@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
@@ -31,9 +32,9 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -90,9 +91,7 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
                 options.RetryPolicy);
 
             // Set results
-            context.Response.Results = ResponseResult.Create(
-                new AccountCreateCommandResult(account),
-                StorageJsonContext.Default.AccountCreateCommandResult);
+            context.Response.Results = ResponseResult.Create(new(account), StorageJsonContext.Default.AccountCreateCommandResult);
         }
         catch (Exception ex)
         {
@@ -109,16 +108,17 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     // Implementation-specific error handling
     protected override string GetErrorMessage(Exception ex) => ex switch
     {
-        RequestFailedException reqEx when reqEx.Status == 409 =>
+        KeyNotFoundException => $"Storage account not found. Verify the account name, subscription, and that you have access.",
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Conflict =>
             "Storage account name already exists. Choose a different name.",
-        RequestFailedException reqEx when reqEx.Status == 403 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.Forbidden =>
             $"Authorization failed creating the storage account. Details: {reqEx.Message}",
-        RequestFailedException reqEx when reqEx.Status == 404 =>
+        RequestFailedException reqEx when reqEx.Status == (int)HttpStatusCode.NotFound =>
             "Resource group not found. Verify the resource group exists and you have access.",
         RequestFailedException reqEx => reqEx.Message,
         _ => base.GetErrorMessage(ex)
     };
 
     // Strongly-typed result record
-    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] AccountInfo Account);
+    internal record AccountCreateCommandResult([property: JsonPropertyName("account")] StorageAccountResult Account);
 }

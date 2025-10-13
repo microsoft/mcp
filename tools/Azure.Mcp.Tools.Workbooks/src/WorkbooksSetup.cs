@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Workbooks.Commands.Workbooks;
 using Azure.Mcp.Tools.Workbooks.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Workbooks;
 
@@ -17,26 +16,33 @@ public class WorkbooksSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IWorkbooksService, WorkbooksService>();
+
+        services.AddSingleton<ListWorkbooksCommand>();
+        services.AddSingleton<ShowWorkbooksCommand>();
+        services.AddSingleton<UpdateWorkbooksCommand>();
+        services.AddSingleton<CreateWorkbooksCommand>();
+        services.AddSingleton<DeleteWorkbooksCommand>();
     }
 
-    public void RegisterCommands(CommandGroup rootGroup, ILoggerFactory loggerFactory)
+    public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var workbooks = new CommandGroup(Name, "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.");
-        rootGroup.AddSubGroup(workbooks);
 
-        workbooks.AddCommand("list", new ListWorkbooksCommand(
-            loggerFactory.CreateLogger<ListWorkbooksCommand>()));
+        var workbooksList = serviceProvider.GetRequiredService<ListWorkbooksCommand>();
+        workbooks.AddCommand(workbooksList.Name, workbooksList);
 
-        workbooks.AddCommand("show", new ShowWorkbooksCommand(
-            loggerFactory.CreateLogger<ShowWorkbooksCommand>()));
+        var workbooksShow = serviceProvider.GetRequiredService<ShowWorkbooksCommand>();
+        workbooks.AddCommand(workbooksShow.Name, workbooksShow);
 
-        workbooks.AddCommand("update", new UpdateWorkbooksCommand(
-            loggerFactory.CreateLogger<UpdateWorkbooksCommand>()));
+        var workbooksUpdate = serviceProvider.GetRequiredService<UpdateWorkbooksCommand>();
+        workbooks.AddCommand(workbooksUpdate.Name, workbooksUpdate);
 
-        workbooks.AddCommand("create", new CreateWorkbooksCommand(
-            loggerFactory.CreateLogger<CreateWorkbooksCommand>()));
+        var workbooksCreate = serviceProvider.GetRequiredService<CreateWorkbooksCommand>();
+        workbooks.AddCommand(workbooksCreate.Name, workbooksCreate);
 
-        workbooks.AddCommand("delete", new DeleteWorkbooksCommand(
-            loggerFactory.CreateLogger<DeleteWorkbooksCommand>()));
+        var workbooksDelete = serviceProvider.GetRequiredService<DeleteWorkbooksCommand>();
+        workbooks.AddCommand(workbooksDelete.Name, workbooksDelete);
+
+        return workbooks;
     }
 }

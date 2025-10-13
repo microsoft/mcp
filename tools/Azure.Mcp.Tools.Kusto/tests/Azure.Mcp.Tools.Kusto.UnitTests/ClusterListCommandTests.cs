@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
@@ -35,7 +36,7 @@ public sealed class ClusterListCommandTests
     {
         // Arrange
         var expectedClusters = new List<string> { "clusterA", "clusterB" };
-        _kusto.ListClusters(
+        _kusto.ListClustersAsync(
             "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
             .Returns(expectedClusters);
 
@@ -62,7 +63,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
-        _kusto.ListClusters("sub123", null, null)
+        _kusto.ListClustersAsync("sub123", null, null)
             .Returns([]);
 
         var command = new ClusterListCommand(_logger);
@@ -91,7 +92,7 @@ public sealed class ClusterListCommandTests
         var subscriptionId = "sub123";
 
         // Arrange
-        _kusto.ListClusters(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+        _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<string>>(new Exception("Test error")));
 
         var command = new ClusterListCommand(_logger);
@@ -103,7 +104,7 @@ public sealed class ClusterListCommandTests
 
         // Assert
         Assert.NotNull(response);
-        Assert.Equal(500, response.Status);
+        Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 }

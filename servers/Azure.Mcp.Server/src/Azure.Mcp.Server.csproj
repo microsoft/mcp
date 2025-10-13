@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.7.1</Version>
+    <Version>0.8.7</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
@@ -10,6 +10,7 @@
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
     <PackageId>Azure.Mcp</PackageId>
     <ToolCommandName>$(CliName)</ToolCommandName>
+    <PackageIcon>azureicon.png</PackageIcon>
   </PropertyGroup>
   
   <PropertyGroup>
@@ -64,5 +65,14 @@
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="$(RepoRoot)\eng\images\azureicon.png" Pack="true" PackagePath="azureicon.png" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <None Include="..\docs\azmcp-commands.md" />
+    <None Include="..\docs\e2eTestPrompts.md" />
+    <None Include="..\docs\new-command.md" />
   </ItemGroup>
 </Project>

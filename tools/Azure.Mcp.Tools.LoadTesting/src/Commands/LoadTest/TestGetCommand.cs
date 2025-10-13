@@ -19,8 +19,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     public override string Name => "get";
     public override string Description =>
         $"""
-        Get the Azure Load Testing test configuration for the specified load test id in the specified load test resource.
-        This command retrieves the details of a specific load test configuration, including its parameters and settings. Based on this we can see what all parameters were set for the test configuration.
+        Get the configuration and setup details for a load test by its test ID in a Load Testing resource.
+        Returns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.
         """;
     public override string Title => _commandTitle;
 
@@ -28,7 +28,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -73,7 +73,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
 
             // Set results if any were returned
             context.Response.Results = results != null ?
-                ResponseResult.Create(new TestGetCommandResult(results), LoadTestJsonContext.Default.TestGetCommandResult) :
+                ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestGetCommandResult) :
                 null;
         }
         catch (Exception ex)

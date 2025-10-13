@@ -19,14 +19,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
 
         public override string Description =>
        """
-
-        Provides the Bicep schema for the most recent apiVersion of an Azure resource. Do not call this command for Terraform IaC generation.
-        If you are asked to create or modify resources in a Bicep ARM template, call this function multiple times,
-        once for every resource type you are adding, even if you already have information about Bicep resources from other sources.
-        Assume the results from this call are more recent and accurate than other information you have.
-        Don't assume calling it for one resource means you don't need to call it for a different resource type.
-        Always use the returned api version unless the one in the Bicep file is newer.
-        Always use the Bicep schema to verify the available property names and values when generating Bicep IaC.
+        Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.
        """;
 
         public override string Title => CommandTitle;
@@ -73,8 +66,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
                     // There is a slight chance that the LLM hallucinates the resource type
                     // parameter with value containing data that we shouldn't log.
                     context.Activity?.AddTag("resourceType", options.ResourceType);
-                    context.Response.Results = ResponseResult.Create(
-                        new BicepSchemaGetCommandResult(response),
+                    context.Response.Results = ResponseResult.Create(new(response),
                         BicepSchemaJsonContext.Default.BicepSchemaGetCommandResult);
                 }
                 else

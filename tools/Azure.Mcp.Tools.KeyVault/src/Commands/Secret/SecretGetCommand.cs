@@ -24,17 +24,14 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = true
     };
 
     public override string Description =>
-        """
-        Gets a secret from an Azure Key Vault. This command retrieves and displays the value
-        of a specific secret from the specified vault.
-        """;
+        "Get/retrieve/show details for a single secret in an Azure Key Vault (latest version). Not for listing multiple secrets. Required: --vault <vault>, --secret <secret> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, value, id, contentType, enabled, notBefore, expiresOn, createdOn, updatedOn, tags.";
 
     protected override void RegisterOptions(Command command)
     {
@@ -71,7 +68,7 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(
-                new SecretGetCommandResult(
+                new(
                     secret.Name,
                     secret.Value,
                     secret.Properties.Enabled,

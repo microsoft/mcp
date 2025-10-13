@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.Net;
@@ -22,24 +22,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
 
     public override string Description =>
         """
-        Retrieves products (offers) that a subscription has access to in the Azure Marketplace.
-        Returns a list of marketplace products including display names, publishers, pricing information, and metadata.
-
-        Required options:
-        - subscription: Azure subscription ID or name
-
-        Additional options:
-        - search: Search for products using a short general term (up to 25 characters)
-        - language: Specify the language for returned information (default: en)
-
-        Advanced query options (OData):
-        - filter: Filter results using OData syntax (e.g., "displayName eq 'Azure'")
-        - orderby: Sort results by a single field using OData syntax (e.g., "displayName asc")
-        - select: Select specific fields using OData syntax (e.g., "displayName,publisherDisplayName")
-        - expand: Include related data in the response using OData syntax (e.g., "plans" to include plan details)
-
-        Pagination:
-        - next-cursor: Token used for pagination to request the next batch of products in a multi-part response
+        Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.
         """;
 
     public override string Title => CommandTitle;
@@ -48,7 +31,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -140,10 +123,10 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         _ => base.GetErrorMessage(ex)
     };
 
-    protected override int GetStatusCode(Exception ex) => ex switch
+    protected override HttpStatusCode GetStatusCode(Exception ex) => ex switch
     {
-        HttpRequestException httpEx => (int)httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
-        ArgumentException => 400,
+        HttpRequestException httpEx => httpEx.StatusCode.GetValueOrDefault(HttpStatusCode.InternalServerError),
+        ArgumentException => HttpStatusCode.BadRequest,
         _ => base.GetStatusCode(ex)
     };
 

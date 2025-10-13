@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -46,6 +47,8 @@ public static class AzureMcpServiceCollectionExtensions
         {
             Namespace = serviceStartOptions.Namespace,
             ReadOnly = serviceStartOptions.ReadOnly ?? false,
+            InsecureDisableElicitation = serviceStartOptions.InsecureDisableElicitation,
+            Tool = serviceStartOptions.Tool,
         };
 
         if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
@@ -73,21 +76,18 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
         services.AddSingleton<ServerToolLoader>();
+        services.AddSingleton<NamespaceToolLoader>();
 
         // Register server discovery strategies
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
 
-        // Register server providers
-        services.AddSingleton<CommandGroupServerProvider>();
-        services.AddSingleton<RegistryServerProvider>();
-
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
-        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy || serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
+        if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
             {
@@ -100,6 +100,10 @@ public static class AzureMcpServiceCollectionExtensions
                 var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
                 return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
             });
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
+        {
+            services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
         }
 
         // Configure tool loading based on mode
@@ -114,8 +118,31 @@ public static class AzureMcpServiceCollectionExtensions
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var toolLoaders = new List<IToolLoader>
                 {
-                    sp.GetRequiredService<ServerToolLoader>(),
+                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    new ServerToolLoader(
+                        sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()
+                    ),
+                    // NamespaceToolLoader enables direct in-process execution for tools in Azure namespaces
+                    sp.GetRequiredService<NamespaceToolLoader>(),
                 };
+
+                // Always add utility commands (subscription, group) in namespace mode
+                // so they are available regardless of which namespaces are loaded
+                var utilityToolLoaderOptions = new ToolLoaderOptions(
+                    Namespace: Discovery.DiscoveryConstants.UtilityNamespaces,
+                    ReadOnly: defaultToolLoaderOptions.ReadOnly,
+                    InsecureDisableElicitation: defaultToolLoaderOptions.InsecureDisableElicitation,
+                    Tool: defaultToolLoaderOptions.Tool
+                );
+
+                toolLoaders.Add(new CommandFactoryToolLoader(
+                    sp,
+                    sp.GetRequiredService<CommandFactory>(),
+                    Options.Create(utilityToolLoaderOptions),
+                    loggerFactory.CreateLogger<CommandFactoryToolLoader>()
+                ));
 
                 // Append extension commands when no other namespaces are specified.
                 if (defaultToolLoaderOptions.Namespace?.SequenceEqual(["extension"]) == true)
@@ -158,13 +185,10 @@ public static class AzureMcpServiceCollectionExtensions
                     Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
                 };
 
-                mcpServerOptions.Capabilities = new ServerCapabilities
+                mcpServerOptions.Handlers = new()
                 {
-                    Tools = new ToolsCapability()
-                    {
-                        CallToolHandler = mcpRuntime.CallToolHandler,
-                        ListToolsHandler = mcpRuntime.ListToolsHandler,
-                    }
+                    CallToolHandler = mcpRuntime.CallToolHandler,
+                    ListToolsHandler = mcpRuntime.ListToolsHandler,
                 };
 
                 // Add instructions for the server

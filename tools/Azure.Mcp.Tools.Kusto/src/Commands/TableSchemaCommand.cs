@@ -16,10 +16,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
     public override string Name => "schema";
 
     public override string Description =>
-        """
-        Get the schema of a specific table in an Kusto database.
-        Requires `cluster-uri` ( or `subscription` and `cluster`), `database` and `table`.
-        """;
+        "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.";
 
     public override string Title => CommandTitle;
 
@@ -27,7 +24,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
     {
         Destructive = false,
         Idempotent = true,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = true,
         LocalRequired = false,
         Secret = false
@@ -49,7 +46,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
 
             if (UseClusterUri(options))
             {
-                tableSchema = await kusto.GetTableSchema(
+                tableSchema = await kusto.GetTableSchemaAsync(
                     options.ClusterUri!,
                     options.Database!,
                     options.Table!,
@@ -59,7 +56,7 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
             }
             else
             {
-                tableSchema = await kusto.GetTableSchema(
+                tableSchema = await kusto.GetTableSchemaAsync(
                     options.Subscription!,
                     options.ClusterName!,
                     options.Database!,
