@@ -67,16 +67,27 @@ jobs:
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
-      arguments: >
-        -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -VersionSuffix '$(VersionSuffix)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -SelfContained
-        -Trimmed
-        -SingleFile
-        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
+      ${{ if ne(parameters.PublishTarget, 'none') }}:
+        arguments: >
+          -ServerName '${{ parameters.ServerName }}'
+          -OutputPath '$(Build.ArtifactStagingDirectory)'
+          -VersionSuffix '$(VersionSuffix)'
+          -OperatingSystem '${{ parameters.OSName }}'
+          -Architecture '$(Architecture)'
+          -SelfContained
+          -Trimmed
+          -SingleFile
+          -ReleaseBuild
+      ${{ else }}:
+        arguments: >
+          -ServerName '${{ parameters.ServerName }}'
+          -OutputPath '$(Build.ArtifactStagingDirectory)'
+          -VersionSuffix '$(VersionSuffix)'
+          -OperatingSystem '${{ parameters.OSName }}'
+          -Architecture '$(Architecture)'
+          -SelfContained
+          -Trimmed
+          -SingleFile
 
   - task: Powershell@2
     displayName: "Run tests"
