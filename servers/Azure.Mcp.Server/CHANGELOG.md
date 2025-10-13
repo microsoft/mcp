@@ -2,44 +2,64 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.8.7 (Unreleased)
+## 0.9.0 (2025-10-13)
 
 ### Features Added
 
-- Added support for sending email via Azure Communication Services with the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
-- Added the following Event Hubs commands:
-  - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace.
+- Added support for sending an email via Azure Communication Services via the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added the following Event Hubs commands: [[#750](https://github.com/microsoft/mcp/pull/750)]
+  - `azmcp_eventhubs_consumergroup_update`: Create or update a consumer group for an Event Hub.
+  - `azmcp_eventhubs_consumergroup_get`: Get details of a consumer group for an Event Hub
+  - `azmcp_eventhubs_consumergroup_delete`: Delete a consumer group from an Event Hub
+  - `azmcp_eventhubs_eventhub_update`: Create or update an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_get`: Get details of an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace
+  - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace
   - `azmcp_eventhubs_namespace_delete`: Delete an existing Event Hubs namespace.
-  - `azmcp_eventhubs_eventhub_update`: Create or update an Event Hub within a namespace.
-  - `azmcp_eventhubs_eventhub_get`: Get details of an Event Hub within a namespace.
-  - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace.
-  - `azmcp_eventhubs_eventhub_consumergroup_update`: Create or update a consumer group for an Event Hub.
-  - `azmcp_eventhubs_eventhub_consumergroup_get`: Get details of a consumer group for an Event Hub.
-  - `azmcp_eventhubs_eventhub_consumergroup_delete`: Delete a consumer group from an Event Hub.
-- Added support for getting Azure AI Foundry (Cognitive Services) resource details via the command `azmcp_foundry_resource_get`. This unified command can list all AI Foundry resources in a subscription, filter by resource group, or get details for a specific resource including deployed models with their configurations (model name, version, SKU, capacity, and provisioning state). [[#762](https://github.com/microsoft/mcp/pull/762)]
+- Added support for listing Azure AI Foundry (Cognitive Services) resources or getting details of a specific one via the command `azmcp_foundry_resource_get`. [[#762](https://github.com/microsoft/mcp/pull/762)]
 - Added support for Azure Monitor Web Tests management operations: [[#529](https://github.com/microsoft/mcp/issues/529)]
-  - `azmcp-monitor-webtests-list` - List all web tests in a subscription or optionally, within a resource group
-  - `azmcp-monitor-webtests-get` - Get details for a specific web test
-  - `azmcp-monitor-webtests-create` - Create a new web test in Azure Monitor
-  - `azmcp-monitor-webtests-update` - Update an existing web test in Azure Monitor
-- Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
-- Added `azmcp extension cli install` command for getting installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
-- Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
+  - `azmcp_monitor_webtests_create`: Create a new web test in Azure Monitor
+  - `azmcp_monitor_webtests_get`: Get details for a specific web test
+  - `azmcp_monitor_webtests_list`: List all web tests in a subscription or optionally, within a resource group
+  - `azmcp_monitor_webtests_update`: Update an existing web test in Azure Monitor
+- Added the following Azure CLI commands:
+  - `azmcp_extension_cli_generate`: Generate Azure CLI commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
+  - `azmcp_extension_cli_install`: Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+- Added support for Azure AI Search knowledge bases and knowledge sources commands: [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `azmcp_search_knowledge_base_list`: List knowledge bases defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_retrieve`: Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  - `azmcp_search_knowledge_source_list`: List knowledge sources defined in an Azure AI Search service.
 
 ### Breaking Changes
 
-- Fix flow of `Activity.Current` in telemetry service by changing `ITelemetryService`'s activity calls to synchronous. [[#558](https://github.com/microsoft/mcp/pull/558)]
+- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
+  - Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into the aforementioned `azmcp_redis_list` command. [[#757](https://github.com/microsoft/mcp/issues/757)]
 
 ### Bugs Fixed
 
+- Fix flow of `Activity.Current` in telemetry service by changing `ITelemetryService`'s activity calls to synchronous. [[#558](https://github.com/microsoft/mcp/pull/558)]
+
 ### Other Changes
 
-- Added more deployment related best practices [[#698](https://github.com/microsoft/mcp/issues/698)]
+- Added more deployment related best practices. [[#698](https://github.com/microsoft/mcp/issues/698)]
+- Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
 - Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
-  - AKS (Azure Kubernetes Service)
+  - AKS (Azure Kubernetes Service): [[#771](https://github.com/microsoft/mcp/pull/771)]
     - `azmcp_aks_cluster_get`
     - `azmcp_aks_nodepool_get`
-- Updated the description of Storage commands to decrease ambiguity and increase selection accuracy by LLMs: [[#650](https://github.com/microsoft/mcp/pull/650)]
+  - Marketplace: [[#761](https://github.com/microsoft/mcp/pull/761)]
+    - `azmcp_marketplace_product_list`
+  - Storage: [[#650](https://github.com/microsoft/mcp/pull/650)]
+    - `azmcp_storage_account_get`
+    - `azmcp_storage_blob_get`
+    - `azmcp_storage_blob_container_create`
+    - `azmcp_storage_blob_container_get`
+
+#### Dependency Updates
+
+- Updated the following libraries:
+  - `Azure.Search.Documents`: `11.7.0-beta.6` → `11.7.0-beta.7`. [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.1` → `0.4.0-preview.2`. [[#767](https://github.com/Azure/azure-mcp/pull/767)]
 
 ## 0.8.6 (2025-10-09)
 
@@ -48,18 +68,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added `--tool` option to start Azure MCP server with only specific tools by name, providing fine-grained control over tool exposure. This option switches server mode to `--all` automatically. The `--namespace` and `--tool` options cannot be used together. [[#685](https://github.com/microsoft/mcp/issues/685)]
 - Added support for getting ledger entries on Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_get`. [[#705](https://github.com/microsoft/mcp/pull/723)]
 - Added support for listing an Azure resource's activity logs via the command `azmcp_monitor_activitylog_list`. [[#720](https://github.com/microsoft/mcp/pull/720)]
-- Added support for Azure AI Search knowledge bases and knowledge sources (preview):
-  - `azmcp_search_knowledge_source_list` - List knowledge sources defined in an Azure AI Search service.
-  - `azmcp_search_knowledge_base_list` - List knowledge bases defined in an Azure AI Search service.
-  - `azmcp_search_knowledge_base_retrieve` - Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
-  These commands enable agentic retrieval and reasoning grounded in Azure AI Search's new knowledge constructs.
-- Bumped Azure AI Search .NET SDK dependency to align with knowledge agent APIs.
 
 ### Breaking Changes
 
 - Unified required parameter validation: null or empty values now always throw `ArgumentException` with an improved message listing all invalid parameters. Previously this would throw either `ArgumentNullException` or `ArgumentException` for only the first invalid value. [[#718](https://github.com/microsoft/mcp/pull/718)]
-- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
-- Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into `azmcp_redis_list`. [[#757](https://github.com/microsoft/mcp/issues/757)]
 
 ### Other Changes
 
