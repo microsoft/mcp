@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
+
 namespace Azure.Mcp.Tools.Monitor.Options;
 
 public static class MonitorOptionDefinitions
@@ -12,6 +14,7 @@ public static class MonitorOptionDefinitions
     public const string LimitName = "limit";
     public const string EntityName = "entity";
     public const string HealthModelName = "health-model";
+    public const string WebTestResourceName = "webtest-resource";
 
     public static readonly Option<string> TableType = new(
         $"--{TableTypeName}"
@@ -202,6 +205,178 @@ public static class MonitorOptionDefinitions
         {
             Description = "The name of the health model for which to get the health.",
             Required = true
+        };
+    }
+
+    public static class WebTest
+    {
+        public const string WebTestsLocationsName = "webtest-locations";
+        public const string RequestUrlName = "request-url";
+        public const string AppInsightsComponentIdName = "appinsights-component";
+        public const string ResourceLocationName = "location";
+        public const string WebTestNameName = "webtest";
+        public const string DescriptionName = "description";
+        public const string EnabledName = "enabled";
+        public const string ExpectedStatusCodeName = "expected-status-code";
+        public const string FollowRedirectsName = "follow-redirects";
+        public const string FrequencyInSecondsName = "frequency";
+        public const string HeadersName = "headers";
+        public const string HttpVerbName = "http-verb";
+        public const string IgnoreStatusCodeName = "ignore-status-code";
+        public const string ParseRequestsName = "parse-requests";
+        public const string RequestBodyName = "request-body";
+        public const string RetryEnabledName = "retry-enabled";
+        public const string SslCheckName = "ssl-check";
+        public const string SslLifetimeCheckInDaysName = "ssl-lifetime-check";
+        public const string TimeoutInSecondsName = "timeout";
+
+        public static readonly Option<string> WebTestResourceName = new(
+            $"--{MonitorOptionDefinitions.WebTestResourceName}"
+        )
+        {
+            Description = "The name of the Web Test resource to operate on.",
+            Required = true
+        };
+
+        public static readonly Option<string> AppInsightsComponentId = new(
+            $"--{AppInsightsComponentIdName}"
+        )
+        {
+            Description = "The resource id of the Application Insights component to associate with the web test."
+        };
+
+        public static readonly Option<string> ResourceLocation = new(
+            $"--{ResourceLocationName}"
+        )
+        {
+            Description = "The location where the web test resource is created. This should be the same as the AppInsights component location."
+        };
+
+        public static readonly Option<string> Locations = new(
+            $"--{WebTestsLocationsName}"
+        )
+        {
+            Description = "List of locations to run the test from (comma-separated values). Location refers to the geo-location population tag specific to Availability Tests."
+        };
+
+        public static readonly Option<string> RequestUrl = new(
+            $"--{RequestUrlName}"
+        )
+        {
+            Description = "The absolute URL to test",
+        };
+
+        public static readonly Option<string> WebTestName = new(
+            $"--{WebTestNameName}"
+        )
+        {
+            Description = "The name of the test in web test resource"
+        };
+
+        public static readonly Option<string> Description = new(
+            $"--{DescriptionName}"
+        )
+        {
+            Description = "The description of the web test"
+        };
+
+        public static readonly Option<bool?> Enabled = new(
+            $"--{EnabledName}"
+        )
+        {
+            Description = "Whether the web test is enabled",
+            DefaultValueFactory = _ => true
+        };
+
+        public static readonly Option<int?> ExpectedStatusCode = new(
+            $"--{ExpectedStatusCodeName}"
+        )
+        {
+            Description = "Expected HTTP status code",
+            DefaultValueFactory = _ => (int)HttpStatusCode.OK
+        };
+
+        public static readonly Option<bool?> FollowRedirects = new(
+            $"--{FollowRedirectsName}"
+        )
+        {
+            Description = "Whether to follow redirects"
+        };
+
+        public static readonly Option<int?> FrequencyInSeconds = new(
+            $"--{FrequencyInSecondsName}"
+        )
+        {
+            Description = "Test frequency in seconds. Supported values 300, 600, 900 seconds.",
+            DefaultValueFactory = _ => 300
+        };
+
+        public static readonly Option<string> Headers = new(
+            $"--{HeadersName}"
+        )
+        {
+            Description = "HTTP headers to include in the request. Comma-separated KEY=VALUE"
+        };
+
+        public static readonly Option<string> HttpVerb = new(
+            $"--{HttpVerbName}"
+        )
+        {
+            Description = "HTTP method (get, post, etc.)",
+            DefaultValueFactory = _ => HttpMethod.Get.ToString()
+        };
+
+        public static readonly Option<bool?> IgnoreStatusCode = new(
+            $"--{IgnoreStatusCodeName}"
+        )
+        {
+            Description = "Whether to ignore the status code validation",
+            DefaultValueFactory = _ => false
+        };
+
+        public static readonly Option<bool?> ParseRequests = new(
+            $"--{ParseRequestsName}"
+        )
+        {
+            Description = "Whether to parse dependent requests"
+        };
+
+        public static readonly Option<string> RequestBody = new(
+            $"--{RequestBodyName}"
+        )
+        {
+            Description = "The body of the request"
+        };
+
+        public static readonly Option<bool?> RetryEnabled = new(
+            $"--{RetryEnabledName}"
+        )
+        {
+            Description = "Whether retries are enabled"
+        };
+
+        public static readonly Option<bool?> SslCheck = new(
+            $"--{SslCheckName}"
+        )
+        {
+            Description = "Whether to check SSL certificates",
+            DefaultValueFactory = _ => true
+        };
+
+        public static readonly Option<int?> SslLifetimeCheckInDays = new(
+            $"--{SslLifetimeCheckInDaysName}"
+        )
+        {
+            Description = "Number of days to check SSL certificate lifetime",
+            DefaultValueFactory = _ => 7
+        };
+
+        public static readonly Option<int?> TimeoutInSeconds = new(
+            $"--{TimeoutInSecondsName}"
+        )
+        {
+            Description = "Request timeout in seconds (max 2 minutes). Supported values: 30, 60, 90, 120 seconds",
+            DefaultValueFactory = _ => 120
         };
     }
 }

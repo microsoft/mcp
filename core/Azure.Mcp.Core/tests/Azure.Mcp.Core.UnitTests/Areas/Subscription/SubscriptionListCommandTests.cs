@@ -21,7 +21,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 public class SubscriptionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
-    private readonly IMcpServer _mcpServer;
+    private readonly McpServer _mcpServer;
     private readonly ILogger<SubscriptionListCommand> _logger;
     private readonly ISubscriptionService _subscriptionService;
     private readonly SubscriptionListCommand _command;
@@ -30,7 +30,7 @@ public class SubscriptionListCommandTests
 
     public SubscriptionListCommandTests()
     {
-        _mcpServer = Substitute.For<IMcpServer>();
+        _mcpServer = Substitute.For<McpServer>();
         _subscriptionService = Substitute.For<ISubscriptionService>();
         _logger = Substitute.For<ILogger<SubscriptionListCommand>>();
         var collection = new ServiceCollection()
@@ -106,7 +106,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNullResults()
+    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNotNullResults()
     {
         // Arrange
         _subscriptionService
@@ -121,7 +121,7 @@ public class SubscriptionListCommandTests
         // Assert
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.Null(result.Results);
+        Assert.NotNull(result.Results);
     }
 
     [Fact]

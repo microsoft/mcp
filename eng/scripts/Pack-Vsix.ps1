@@ -7,7 +7,9 @@ param(
 
 $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
+
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
 $sourcePath = "$RepoRoot/eng/vscode"
 
 $buildId = $env:BUILD_BUILDID
@@ -60,6 +62,10 @@ try {
         $version = $serverJson.version
         $serverDirectory = $serverJsonFile.Directory
         $serverName = $serverDirectory.Name
+
+        & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
+            -InputReadMePath "$serverDirectory/README.md" ` -OutputDirectory $tempPath `
+            -PackageType "vsix" -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' }
 
         if($setDevVersion -and $buildId) {
             <#

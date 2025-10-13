@@ -116,10 +116,10 @@
 # ServiceOwners:                       @jayanthjj @pachaturevedi
 
 # PRLabel: %tools-Kusto
-/tools/Azure.Mcp.Tools.Kusto/          @danield137 @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Kusto/          @prvavill @danield137 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Kusto
-# ServiceOwners:                       @danield137
+# ServiceOwners:                       @prvavill @danield137
 
 
 # PRLabel: %tools-Marketplace
@@ -130,14 +130,14 @@
 
 
 # PRLabel: %tools-Monitor
-/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @jongio @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Monitor/        @smritiy @srnagar @jongio @zaaslam @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Monitor
-# ServiceOwners:                       @smritiy @srnagar @jongio
+# ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
-# PRLabel: %tools-AzureManagedLustre
-/tools/Azure.Mcp.Tools.AzureManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
-# ServiceLabel: %tools-AzureManagedLustre
+# PRLabel: %tools-ManagedLustre
+/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+# ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
 # PRLabel: %tools-MySQL
@@ -209,8 +209,28 @@
 # ServiceLabel: %tools-VirtualDesktop
 # ServiceOwners:                       @vladimisms
 
+
 # PRLabel: %tools-EventGrid
-/tools/Azure.Mcp.Tools.EventGrid/     @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.EventGrid/      @microsoft/azure-mcp
 
 # ServiceLabel: %tools-EventGrid
-# ServiceOwners:                      @microsoft/azure-mcp
+# ServiceOwners:                       @microsoft/azure-mcp
+
+
+# PRLabel: %tools-Workbooks
+/tools/Azure.Mcp.Tools.Workbooks/      @matteing @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Workbooks
+# ServiceOwners:                       @matteing
+
+# PRLabel: %tools-SignalR
+/tools/Azure.Mcp.Tools.SignalR/        @kenchennt @JialinXin @HaofanLiao @microsoft/azure-mcp
+
+# ServiceLabel: %tools-SignalR
+# ServiceOwners:                       @kenchennt @JialinXin
+
+# PRLabel: %tools-ConfidentialLedger
+/tools/Azure.Mcp.Tools.ConfidentialLedger/          @taicchoumsft @ivarprudnikov @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ConfidentialLedger
+# ServiceOwners:                       @taicchoumsft @ivarprudnikov

@@ -16,13 +16,18 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     public override string Name => "query";
 
     public override string Description =>
-        $"""
-        Execute a KQL query against a Log Analytics workspace. Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName}
-        and resource group. Optional {MonitorOptionDefinitions.HoursName}
-        (default: {MonitorOptionDefinitions.Hours.GetDefaultValue()}) and {MonitorOptionDefinitions.LimitName}
-        (default: {MonitorOptionDefinitions.Limit.GetDefaultValue()}) parameters.
-        The {MonitorOptionDefinitions.QueryTextName} parameter accepts KQL syntax.
-        """;
+    $"""
+    Query logs across an ENTIRE Log Analytics workspace using Kusto Query Language (KQL). 
+    Use this tool when the user wants to query all resources in a workspace or doesn't specify a particular resource name/ID (e.g., "show all errors in workspace", "query workspace logs", "what happened in my workspace").
+    This tool queries across all resources and tables in the workspace.
+    
+    When to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.
+    When NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.
+
+    Requires {WorkspaceOptionDefinitions.WorkspaceIdOrName} and resource group.
+    Optional: {MonitorOptionDefinitions.HoursName} and {MonitorOptionDefinitions.LimitName}.
+    {MonitorOptionDefinitions.QueryTextName} accepts KQL syntax.
+    """;
 
     public override string Title => CommandTitle;
 

@@ -18,10 +18,7 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 
     public override string Description =>
         """
-		Deletes an Azure SQL Database from an existing SQL Server. This command removes the specified database
-		and is idempotent - attempting to delete a database that does not exist will succeed with Deleted = false.
-		Equivalent to 'az sql db delete'.
-		Returns whether the database was deleted during this operation.
+		Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.
 		""";
 
     public override string Title => CommandTitle;

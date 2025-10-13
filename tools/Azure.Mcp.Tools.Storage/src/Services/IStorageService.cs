@@ -8,13 +8,14 @@ namespace Azure.Mcp.Tools.Storage.Services;
 
 public interface IStorageService
 {
-    Task<List<AccountInfo>> GetAccountDetails(
+    Task<List<StorageAccountInfo>> GetAccountDetails(
         string? account,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
-    Task<AccountInfo> CreateStorageAccount(
+    Task<StorageAccountResult> CreateStorageAccount(
         string account,
         string resourceGroup,
         string location,

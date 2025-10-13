@@ -62,15 +62,24 @@ public class AccountCreateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            var expectedAccount = new AccountInfo(
-                "testaccount",
-                "eastus",
-                "StorageV2",
-                "Standard_LRS",
-                "Standard",
-                false,
-                false,
-                true);
+            var properties = new Dictionary<string, object>
+            {
+                { "hnsEnabled", false },
+                { "provisioningState", "Succeeded" },
+                { "creationTime", DateTimeOffset.UtcNow.ToString("o") },
+                { "allowBlobPublicAccess", false },
+                { "enableHttpsTrafficOnly", true }
+            };
+            var expectedAccount = new StorageAccountResult(
+                HasData: true,
+                Id: "/subscriptions/sub123/resourceGroups/testrg/providers/Microsoft.Storage/storageAccounts/testaccount",
+                Name: "testaccount",
+                Type: "Microsoft.Storage/storageAccounts",
+                Location: "eastus",
+                SkuName: "Standard_LRS",
+                SkuTier: "Standard",
+                Kind: "StorageV2",
+                Properties: properties);
 
             _storageService.CreateStorageAccount(
                 Arg.Any<string>(),
@@ -207,7 +216,7 @@ public class AccountCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(Task.FromException<AccountInfo>(new Exception("Test error")));
+            .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
@@ -224,15 +233,24 @@ public class AccountCreateCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        var expectedAccount = new AccountInfo(
-            "testaccount",
-            "eastus",
-            "StorageV2",
-            "Standard_GRS",
-            "Standard",
-            true,
-            false,
-            true);
+        var properties = new Dictionary<string, object>
+            {
+                { "hnsEnabled", true },
+                { "provisioningState", "Succeeded" },
+                { "creationTime", DateTimeOffset.UtcNow.ToString("o") },
+                { "allowBlobPublicAccess", false },
+                { "enableHttpsTrafficOnly", true }
+            };
+        var expectedAccount = new StorageAccountResult(
+            HasData: true,
+            Id: "/subscriptions/sub123/resourceGroups/testrg/providers/Microsoft.Storage/storageAccounts/testaccount",
+            Name: "testaccount",
+            Type: "Microsoft.Storage/storageAccounts",
+            Location: "eastus",
+            SkuName: "Standard_GRS",
+            SkuTier: "Standard",
+            Kind: "StorageV2",
+            Properties: properties);
 
         _storageService.CreateStorageAccount(
             "testaccount",

@@ -115,13 +115,9 @@ public class CommandFactoryTests
     {
         // Arrange
         var duplicate = "Duplicate Name";
-        var area = Substitute.For<IAreaSetup>();
-        var area1 = Substitute.For<IAreaSetup>();
-        var area2 = Substitute.For<IAreaSetup>();
-
-        area.Name.Returns(duplicate);
-        area1.Name.Returns("Name1");
-        area2.Name.Returns(duplicate);
+        var area = CreateIAreaSetup(duplicate);
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup(duplicate);
 
         var serviceAreas = new List<IAreaSetup> { area, area1, area2 };
 
@@ -134,13 +130,9 @@ public class CommandFactoryTests
     public void Constructor_Throws_AreaSetups_EmptyName()
     {
         // Arrange
-        var area = Substitute.For<IAreaSetup>();
-        var area1 = Substitute.For<IAreaSetup>();
-        var area2 = Substitute.For<IAreaSetup>();
-
-        area.Name.Returns("Name");
-        area1.Name.Returns("Name1");
-        area2.Name.Returns(string.Empty);
+        var area = CreateIAreaSetup("Name");
+        var area1 = CreateIAreaSetup("Name1");
+        var area2 = CreateIAreaSetup(string.Empty);
 
         var serviceAreas = new List<IAreaSetup> { area, area1, area2 };
 
@@ -169,8 +161,39 @@ public class CommandFactoryTests
         // Act
         var actual = factory.GetServiceArea(commandNameToTry);
 
+        // Try in the case that the root prefix is not used.  This is in the case that the tool
+        // is created using the IAreaSetup name as root.
+        var actual2 = factory.GetServiceArea(commandName);
+
         // Assert
         Assert.Equal(expected, actual);
+        Assert.Equal(expected, actual2);
+    }
+
+    [Fact]
+    public void GetCommandName_WithOutRootGroup()
+    {
+        // Arrange
+        var commandName = "kusto_cluster_list";
+        var area1 = CreateIAreaSetup("name1");
+        var area2 = CreateIAreaSetup("name2");
+        var area3 = CreateIAreaSetup("name3");
+
+        var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
+
+        // All commands in command factory are prefixed with the root command group.
+        var commandNameToTry = CommandFactory.RootCommandGroupName + CommandFactory.Separator + commandName;
+
+        // Act
+        var actual = factory.RemoveRootGroupFromCommandName(commandNameToTry);
+
+        // Try in the case that the root prefix is not used.
+        var actual2 = factory.RemoveRootGroupFromCommandName(commandName);
+
+        // Assert
+        Assert.Equal(commandName, actual);
+        Assert.Equal(commandName, actual2);
     }
 
     [Fact]
@@ -252,13 +275,11 @@ public class CommandFactoryTests
         var area = Substitute.For<IAreaSetup>();
 
         area.Name.Returns(areaName);
-        area.When(e => e.RegisterCommands(Arg.Any<CommandGroup>(), Arg.Any<ILoggerFactory>()))
-            .Do(callInfo =>
-            {
-                var actual = callInfo.ArgAt<CommandGroup>(0);
-                var newCommandGroup = CreateCommandGroup(areaName);
-                actual.SubGroup.Add(newCommandGroup);
-            });
+        area.RegisterCommands(Arg.Any<IServiceProvider>()).Returns(caller =>
+        {
+            var newCommandGroup = CreateCommandGroup(areaName);
+            return newCommandGroup;
+        });
 
         return area;
     }

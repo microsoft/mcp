@@ -88,6 +88,59 @@ public class ServiceStartCommandTests
         Assert.True(hasInsecureDisableElicitationOption, "InsecureDisableElicitation option should be registered");
     }
 
+    [Fact]
+    public void AllOptionsRegistered_IncludesTool()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasToolOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.Tool.Name);
+        Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Theory]
+    [InlineData("azmcp_storage_account_get")]
+    [InlineData("azmcp_keyvault_secret_get")]
+    [InlineData(null)]
+    public void ToolOption_ParsesCorrectly(string? expectedTool)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithTool(expectedTool != null ? [expectedTool] : null);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        if (expectedTool == null)
+        {
+            Assert.True(actualTools == null || actualTools.Length == 0);
+        }
+        else
+        {
+            Assert.NotNull(actualTools);
+            Assert.Single(actualTools);
+            Assert.Equal(expectedTool, actualTools[0]);
+        }
+    }
+
+    [Fact]
+    public void ToolOption_ParsesMultipleToolsCorrectly()
+    {
+        // Arrange
+        var expectedTools = new[] { "azmcp_storage_account_get", "azmcp_keyvault_secret_get" };
+        var parseResult = CreateParseResultWithTool(expectedTools);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        Assert.NotNull(actualTools);
+        Assert.Equal(expectedTools.Length, actualTools.Length);
+        Assert.Equal(expectedTools, actualTools);
+    }
+
     [Theory]
     [InlineData("sse")]
     [InlineData("websocket")]
@@ -171,6 +224,41 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
+    public void BindOptions_WithTool_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedTool = "azmcp_group_list";
+        var parseResult = CreateParseResultWithTool([expectedTool]);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Single(options.Tool);
+        Assert.Equal(expectedTool, options.Tool[0]);
+        Assert.Equal("stdio", options.Transport);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
+    public void BindOptions_WithMultipleToolsAndExplicitMode_OverridesToAllMode()
+    {
+        // Arrange - Explicitly set mode to single but also provide multiple tools
+        var tools = new[] { "azmcp_group_list", "azmcp_subscription_list" };
+        var parseResult = CreateParseResultWithToolsAndMode(tools, "single");
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Equal(2, options.Tool.Length);
+        Assert.Equal(tools, options.Tool);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
     public void BindOptions_WithDefaults_ReturnsDefaultValues()
     {
         // Arrange
@@ -201,7 +289,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.True(result.IsValid);
-        Assert.Null(result.ErrorMessage);
+        Assert.Empty(result.Errors);
     }
 
     [Fact]
@@ -216,7 +304,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("Invalid transport 'invalid'", result.ErrorMessage);
+        Assert.Contains("Invalid transport 'invalid'", string.Join('\n', result.Errors));
     }
 
     [Fact]
@@ -231,7 +319,38 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.False(result.IsValid);
-        Assert.Contains("Invalid mode 'invalid'", result.ErrorMessage);
+        Assert.Contains("Invalid mode 'invalid'", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public void Validate_WithNamespaceAndTool_ReturnsInvalidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--namespace and --tool options cannot be used together", response.Message);
     }
 
     [Fact]
@@ -274,6 +393,20 @@ public class ServiceStartCommandTests
         // Assert
         Assert.Contains("Insecure transport configuration error", message);
         Assert.Contains("proper authentication configured", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithNamespaceAndToolException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("--namespace and --tool options cannot be used together");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Configuration error", message);
+        Assert.Contains("mutually exclusive", message);
     }
 
     [Fact]
@@ -383,14 +516,8 @@ public class ServiceStartCommandTests
         return root.Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithInsecureDisableElicitation(bool insecureDisableElicitation)
+    private ParseResult CreateParseResultWithInsecureDisableElicitation(bool insecureDisableElicitation)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -402,21 +529,11 @@ public class ServiceStartCommandTests
             args.Add("--insecure-disable-elicitation");
         }
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithTransport(string transport)
+    private ParseResult CreateParseResultWithTransport(string transport)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -426,21 +543,11 @@ public class ServiceStartCommandTests
             "--read-only"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithoutTransport()
+    private ParseResult CreateParseResultWithoutTransport()
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--mode",
@@ -448,21 +555,11 @@ public class ServiceStartCommandTests
             "--read-only"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithMode(string? mode)
+    private ParseResult CreateParseResultWithMode(string? mode)
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport",
@@ -475,21 +572,11 @@ public class ServiceStartCommandTests
             args.Add(mode);
         }
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithAllOptions()
+    private ParseResult CreateParseResultWithAllOptions()
     {
-        var root = new RootCommand
-        {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
-        };
         var args = new List<string>
         {
             "--transport", "stdio",
@@ -501,24 +588,60 @@ public class ServiceStartCommandTests
             "--insecure-disable-elicitation"
         };
 
-        return root.Parse([.. args]);
+        return _command.GetCommand().Parse([.. args]);
     }
 
-    private static ParseResult CreateParseResultWithMinimalOptions()
+    private ParseResult CreateParseResultWithTool(string[]? tools)
     {
-        var root = new RootCommand
+        var args = new List<string>
         {
-            ServiceOptionDefinitions.Namespace,
-            ServiceOptionDefinitions.Transport,
-            ServiceOptionDefinitions.Mode,
-            ServiceOptionDefinitions.ReadOnly,
-            ServiceOptionDefinitions.Debug,
-            ServiceOptionDefinitions.EnableInsecureTransports,
-            ServiceOptionDefinitions.InsecureDisableElicitation
+            "--transport", "stdio"
         };
-        var args = new List<string>();
 
-        return root.Parse([.. args]);
+        if (tools is not null)
+        {
+            foreach (var tool in tools)
+            {
+                args.Add("--tool");
+                args.Add(tool);
+            }
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithMinimalOptions()
+    {
+        return _command.GetCommand().Parse([]);
+    }
+
+    private ParseResult CreateParseResultWithToolsAndMode(string[] tools, string mode)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--mode", mode
+        };
+
+        foreach (var tool in tools)
+        {
+            args.Add("--tool");
+            args.Add(tool);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithNamespaceAndTool()
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--namespace", "storage",
+            "--tool", "azmcp_storage_account_get"
+        };
+
+        return _command.GetCommand().Parse([.. args]);
     }
 
     private ServiceStartOptions GetBoundOptions(ParseResult parseResult)

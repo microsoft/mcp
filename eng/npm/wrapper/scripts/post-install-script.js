@@ -1,9 +1,22 @@
+const fs = require('fs')
+const path = require('path')
 const os = require('os');
 
 const platform = os.platform();
 const arch = os.arch();
 
-const requiredPackage = `@azure/mcp-${platform}-${arch}`;
+const pkgJsonPath = path.join(__dirname, '..', 'package.json');
+let baseName = '@azure/mcp';
+try {
+  const pkg = JSON.parse(fs.readFileSync(pkgJsonPath, 'utf8'));
+  if (pkg.name) {
+    baseName = pkg.name;
+  }
+} catch (e) {
+  // fallback to default
+}
+
+const requiredPackage = `${baseName}-${platform}-${arch}`;
 
 try {
   require.resolve(requiredPackage);

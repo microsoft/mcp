@@ -57,7 +57,7 @@ If you'd like to use a specific version of the Azure MCP server, you can specify
 			"--source",
 			"https://api.nuget.org/v3/index.json",
 			"--version",
-			"0.8.0",
+			"0.8.6",
 			"--yes",
 			"--",
 			"azmcp",
@@ -73,6 +73,13 @@ When configured this way, you will need to update the version as new release bec
 ## What can you do with the Azure MCP Server?
 
 Here are some cool prompts you can try across our supported Azure services:
+
+### 🧮 Azure AI Foundry
+
+* List Azure Foundry models
+* Deploy foundry models
+* List foundry model deployments
+* List knowledge indexes
 
 ### 🔎 Azure AI Search
 
@@ -228,13 +235,6 @@ Here are some cool prompts you can try across our supported Azure services:
 * View topic configuration and status information
 * Access endpoint and key details for event publishing
 
-### 🧮 Azure Foundry
-
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
-* List knowledge indexes
-
 ### ☁️ Azure Function App
 
 * List Azure Function Apps
@@ -384,44 +384,44 @@ Here are some cool prompts you can try across our supported Azure services:
 
 Agents and models can discover and learn best practices and usage guidelines for the `azd` MCP tool. For more information, see [AZD Best Practices](https://github.com/microsoft/mcp/tree/main/tools/Azure.Mcp.Tools.Extension/src/Resources/azd-best-practices.txt).
 
-For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
+For detailed command documentation and examples, see [Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
 
 </details>
 
 ## Complete List of Supported Azure Services
 
-The Azure MCP Server provides tools for interacting with **26 Azure service areas**:
+The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
+- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
 - 📦 **Azure Container Registry (ACR)** - Container registry management
 - 📊 **Azure Cosmos DB** - NoSQL database operations
 - 🧮 **Azure Data Explorer** - Analytics queries and KQL
-- 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 🐬 **Azure Database for MySQL** - MySQL database management
+- 🐘 **Azure Database for PostgreSQL** - PostgreSQL database management
 - 📊 **Azure Event Grid** - Event routing and management
 - ⚡ **Azure Functions** - Function App management
-- 🧮 **Azure Foundry** - AI model management, AI model deployment, and knowledge index management
-- 🚀 **Azure Managed Grafana** - Monitoring dashboards
-- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🔑 **Azure Key Vault** - Secrets, keys, and certificates
 - ☸️ **Azure Kubernetes Service (AKS)** - Container orchestration
 - 📦 **Azure Load Testing** - Performance testing
+- 🚀 **Azure Managed Grafana** - Monitoring dashboards
+- 🗃️ **Azure Managed Lustre** - High-performance Lustre filesystem operations
 - 🏪 **Azure Marketplace** - Product discovery
 - 📈 **Azure Monitor** - Logging, metrics, and health monitoring
-- 🏥 **Azure Service Health** - Resource health status and availability
 - ⚙️ **Azure Native ISV Services** - Third-party integrations
 - 🛡️ **Azure Quick Review CLI** - Compliance scanning
 - 📊 **Azure Quota** - Resource quota and usage management
+- 🎭 **Azure RBAC** - Access control management
 - 🔴 **Azure Redis Cache** - In-memory data store
 - 🏗️ **Azure Resource Groups** - Resource organization
-- 🎭 **Azure RBAC** - Access control management
-- 🚌 **Azure Service Bus** - Message queuing
 - 🗄️ **Azure SQL Database** - Relational database management
 - 🗄️ **Azure SQL Elastic Pool** - Database resource sharing
 - 🗄️ **Azure SQL Server** - Server administration
-- 💾 **Azure Storage** - Blob, table, file, and data lake storage
+- 🚌 **Azure Service Bus** - Message queuing
+- 🏥 **Azure Service Health** - Resource health status and availability
+- 💾 **Azure Storage** - Blob storage
 - 📋 **Azure Subscription** - Subscription management
 - 🏗️ **Azure Terraform Best Practices** - Infrastructure as code guidance
 - 🖥️ **Azure Virtual Desktop** - Virtual desktop infrastructure
@@ -432,7 +432,7 @@ The Azure MCP Server provides tools for interacting with **26 Azure service area
 ## Documentation
 
 - See our [official documentation on learn.microsoft.com](https://learn.microsoft.com/azure/developer/azure-mcp-server/) to learn how to use the Azure MCP Server to interact with Azure resources through natural language commands from AI agents and other types of clients.
-- For additional command documentation and examples, see our [GitHub repository section on Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/docs/azmcp-commands.md).
+- For additional command documentation and examples, see our [GitHub repository section on Azure MCP Commands](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
 
 
 ## Feedback & Support

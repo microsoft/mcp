@@ -4,6 +4,7 @@
 using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Monitor.Models;
+using Azure.Mcp.Tools.Monitor.Models.ActivityLog;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
@@ -54,4 +55,15 @@ public interface IMonitorService
         string workspace,
         string? tenant,
         RetryPolicyOptions? retryPolicy);
+
+    Task<List<ActivityLogEventData>> ListActivityLogs(
+        string subscription,
+        string resourceName,
+        string? resourceGroup = null,
+        string? resourceType = null,
+        double hours = 24.0,
+        ActivityLogEventLevel? eventLevel = null,
+        int top = 10,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }

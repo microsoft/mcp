@@ -21,9 +21,10 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 
     public override string Description =>
         """
-        Update configuration settings for an existing Azure SQL Database. This command modifies an existing database's
-        compute tier, performance characteristics, redundancy, or other settings. Equivalent to 'az sql db update'.
-        Returns the updated database information including applied configuration changes.
+        Scale and configure Azure SQL Database performance settings.
+        Update an existing database's SKU, compute tier, storage capacity,
+        or redundancy options to meet changing performance requirements.
+        Returns the updated database configuration including applied scaling changes.
         """;
 
     public override string Title => CommandTitle;

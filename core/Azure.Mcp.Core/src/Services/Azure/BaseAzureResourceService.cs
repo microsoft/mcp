@@ -75,6 +75,7 @@ public abstract class BaseAzureResourceService(
     /// <param name="subscription">The subscription ID or name</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
     /// <param name="converter">Function to convert JsonElement to the target type</param>
+    /// <param name="tableName">Optional table name to query (default: "resources")</param>
     /// <param name="additionalFilter">Optional additional KQL filter conditions</param>
     /// <param name="limit">Maximum number of results to return (default: 50)</param>
     /// <param name="cancellationToken">Cancellation token</param>
@@ -85,11 +86,12 @@ public abstract class BaseAzureResourceService(
         string subscription,
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
+        string? tableName = "resources",
         string? additionalFilter = null,
         int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(resourceType, subscription);
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
         var results = new List<T>();
@@ -97,7 +99,7 @@ public abstract class BaseAzureResourceService(
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
-        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
+        var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
@@ -152,16 +154,17 @@ public abstract class BaseAzureResourceService(
         string subscription,
         RetryPolicyOptions? retryPolicy,
         Func<JsonElement, T> converter,
+        string? tableName = "resources",
         string? additionalFilter = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        ValidateRequiredParameters(resourceType, subscription);
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
-        var queryFilter = $"Resources | where type =~ '{EscapeKqlString(resourceType)}'";
+        var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
         if (!string.IsNullOrEmpty(resourceGroup))
         {
             if (!await ValidateResourceGroupExistsAsync(subscriptionResource, resourceGroup, cancellationToken))
