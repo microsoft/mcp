@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
@@ -169,6 +170,8 @@ public sealed class NamespaceToolLoader(
         {
             if (learn && string.IsNullOrEmpty(command))
             {
+                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
+
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
