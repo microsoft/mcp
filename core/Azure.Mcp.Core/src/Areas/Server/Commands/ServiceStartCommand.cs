@@ -98,12 +98,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 options.LogLevel = envLogLevel;
             }
         }
-        
+
         if (!options.Verbose && EnvironmentHelpers.GetEnvironmentVariableAsBool("AZMCP_VERBOSE"))
         {
             options.Verbose = true;
         }
-        
+
         if (string.IsNullOrEmpty(options.LogFile))
         {
             var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE");
@@ -402,7 +402,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     options.LogToStandardErrorThreshold = effectiveLogLevel;
                     options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
                 });
-                
+
                 logging.AddSimpleConsole(simple =>
                 {
                     simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;

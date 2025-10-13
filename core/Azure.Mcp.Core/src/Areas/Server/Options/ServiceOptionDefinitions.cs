@@ -87,7 +87,7 @@ public static class ServiceOptionDefinitions
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
     };
-    
+
     public static readonly Option<string?> LogLevel = new($"--{LogLevelName}")
     {
         Required = false,

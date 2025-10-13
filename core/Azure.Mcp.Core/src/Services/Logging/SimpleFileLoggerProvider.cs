@@ -7,45 +7,69 @@ namespace Azure.Mcp.Core.Services.Logging;
 
 /// <summary>
 /// Simple file logger provider for writing logs to a file.
+/// Uses a shared StreamWriter with AutoFlush for efficient high-frequency logging.
 /// </summary>
 internal sealed class SimpleFileLoggerProvider : ILoggerProvider
 {
     private readonly string _filePath;
     private readonly LogLevel _minLevel;
+    private readonly StreamWriter _streamWriter;
     private readonly object _lock = new();
+    private bool _disposed = false;
 
     public SimpleFileLoggerProvider(string filePath, LogLevel minLevel)
     {
         _filePath = filePath;
         _minLevel = minLevel;
+
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(filePath);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        // Create StreamWriter with AutoFlush for immediate writes without frequent file open/close
+        _streamWriter = new StreamWriter(filePath, append: true)
+        {
+            AutoFlush = true
+        };
     }
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new SimpleFileLogger(categoryName, _filePath, _minLevel, _lock);
+        return new SimpleFileLogger(categoryName, _minLevel, _streamWriter, _lock);
     }
 
     public void Dispose()
     {
-        // Nothing to dispose
+        if (!_disposed)
+        {
+            lock (_lock)
+            {
+                _streamWriter?.Dispose();
+                _disposed = true;
+            }
+        }
     }
 }
 
 /// <summary>
 /// Simple file logger implementation.
+/// Uses a shared StreamWriter for efficient logging without frequent file open/close operations.
 /// </summary>
 internal sealed class SimpleFileLogger : ILogger
 {
     private readonly string _categoryName;
-    private readonly string _filePath;
     private readonly LogLevel _minLevel;
+    private readonly StreamWriter _streamWriter;
     private readonly object _lock;
 
-    public SimpleFileLogger(string categoryName, string filePath, LogLevel minLevel, object lockObject)
+    public SimpleFileLogger(string categoryName, LogLevel minLevel, StreamWriter streamWriter, object lockObject)
     {
         _categoryName = categoryName;
-        _filePath = filePath;
         _minLevel = minLevel;
+        _streamWriter = streamWriter;
         _lock = lockObject;
     }
 
@@ -66,26 +90,25 @@ internal sealed class SimpleFileLogger : ILogger
             return;
         }
 
-        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
         var logLevelString = GetLogLevelString(logLevel);
         var message = formatter(state, exception);
-        
+
         var logEntry = $"[{timestamp}] [{logLevelString}] {_categoryName}: {message}";
-        
+
         if (exception != null)
         {
             logEntry += Environment.NewLine + exception.ToString();
         }
-        
-        logEntry += Environment.NewLine;
 
         lock (_lock)
         {
             try
             {
-                File.AppendAllText(_filePath, logEntry);
+                _streamWriter.WriteLine(logEntry);
+                // AutoFlush is enabled, so no need to manually flush
             }
-            catch
+            catch (IOException)
             {
                 // Silently ignore file write errors to prevent logging from breaking the application
             }
