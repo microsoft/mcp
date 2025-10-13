@@ -156,7 +156,7 @@ function BuildServer($serverName) {
             }
 
             if ($ReleaseBuild) {
-                $command += " /p:PublishRelease=true"
+                $command += " /p:ReleaseBuild=true"
             }
 
             Invoke-LoggedMsBuildCommand $command -GroupOutput
