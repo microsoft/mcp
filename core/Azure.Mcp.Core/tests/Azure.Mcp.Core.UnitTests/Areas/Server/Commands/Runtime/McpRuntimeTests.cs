@@ -69,6 +69,7 @@ public class McpRuntimeTests
     {
         var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
 
+        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
         Assert.NotNull(matching.Value);
 
         return matching.Value;
