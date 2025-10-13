@@ -2,12 +2,17 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualStudio.TestPlatform.TestHost;
+using NSubstitute;
 using Xunit;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -496,6 +501,108 @@ public class ServiceStartCommandTests
         }
     }
 
+
+    [Fact]
+    public void InitializedHandler_SetsStartupInformation()
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "test-transport",
+            Mode = "test-mode",
+            Tool = ["test-tool1", "test-tool2"],
+            ReadOnly = false,
+            Debug = true,
+            Namespace = ["storage", "keyvault"],
+            InsecureDisableElicitation = false,
+            EnableInsecureTransports = true,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
+        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        var mode = GetAndAssertTagKeyValue(activity, TagName.ServerMode);
+        Assert.Equal(serviceStartOptions.Mode, mode);
+
+        var tool = GetAndAssertTagKeyValue(activity, TagName.Tool);
+        Assert.Equal(string.Join(",", serviceStartOptions.Tool), tool);
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        var namespaces = GetAndAssertTagKeyValue(activity, TagName.Namespace);
+        Assert.Equal(string.Join(",", serviceStartOptions.Namespace), namespaces);
+    }
+
+    [Fact]
+    public void InitializedHandler_SetsCorrectInformationWhenNull()
+    {
+        // Arrange
+        // Tool, Mode, and Namespace are null
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "test-transport",
+            Mode = null,
+            ReadOnly = true,
+            Debug = false,
+            InsecureDisableElicitation = true,
+            EnableInsecureTransports = false,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+
+        // Act
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
+        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        Assert.DoesNotContain(TagName.ServerMode, activity.TagObjects.Select(x => x.Key));
+
+        Assert.DoesNotContain(TagName.Tool, activity.TagObjects.Select(x => x.Key));
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
+    }
+
     private static ParseResult CreateParseResult(string? serviceValue)
     {
         var root = new RootCommand
@@ -666,5 +773,15 @@ public class ServiceStartCommandTests
         var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (HttpStatusCode)method!.Invoke(_command, [exception])!;
+    }
+
+    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
+    {
+        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+
+        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
+        Assert.NotNull(matching.Value);
+
+        return matching.Value;
     }
 }
