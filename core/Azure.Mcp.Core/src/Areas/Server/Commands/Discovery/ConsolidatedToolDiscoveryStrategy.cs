@@ -159,12 +159,12 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
         {
             return true;
         }
-        
+
         if (metadata1 == null || metadata2 == null)
         {
             return false;
         }
-        
+
         return metadata1.Destructive == metadata2.Destructive &&
                metadata1.Idempotent == metadata2.Idempotent &&
                metadata1.OpenWorld == metadata2.OpenWorld &&
