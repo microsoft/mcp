@@ -143,7 +143,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
             LogLevel = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogLevel.Name),
             Verbose = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Verbose.Name),
-            LogFile = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFile.Name),
+            LogFile = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFile.Name)
         };
         return ResolveLoggingOptions(options);
     }
@@ -415,7 +415,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 if (!string.IsNullOrEmpty(serverOptions.LogFile))
                 {
                     var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
-                    logging.AddProvider(new SimpleFileLoggerProvider(resolvedPath, effectiveLogLevel));
+                    logging.AddProvider(new FileLoggerProvider(resolvedPath, effectiveLogLevel));
                 }
 
                 logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
@@ -464,7 +464,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 if (!string.IsNullOrEmpty(serverOptions.LogFile))
                 {
                     var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
-                    logging.AddProvider(new SimpleFileLoggerProvider(resolvedPath, effectiveLogLevel));
+                    logging.AddProvider(new FileLoggerProvider(resolvedPath, effectiveLogLevel));
                 }
 
                 logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);

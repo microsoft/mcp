@@ -6,10 +6,10 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Core.Services.Logging;
 
 /// <summary>
-/// Simple file logger provider for writing logs to a file.
+/// File logger provider for writing logs to a file.
 /// Uses a shared StreamWriter with AutoFlush for efficient high-frequency logging.
 /// </summary>
-internal sealed class SimpleFileLoggerProvider : ILoggerProvider
+internal sealed class FileLoggerProvider : ILoggerProvider
 {
     private readonly string _filePath;
     private readonly LogLevel _minLevel;
@@ -17,7 +17,7 @@ internal sealed class SimpleFileLoggerProvider : ILoggerProvider
     private readonly object _lock = new();
     private bool _disposed = false;
 
-    public SimpleFileLoggerProvider(string filePath, LogLevel minLevel)
+    public FileLoggerProvider(string filePath, LogLevel minLevel)
     {
         _filePath = filePath;
         _minLevel = minLevel;
@@ -38,7 +38,7 @@ internal sealed class SimpleFileLoggerProvider : ILoggerProvider
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new SimpleFileLogger(categoryName, _minLevel, _streamWriter, _lock);
+        return new FileLogger(categoryName, _minLevel, _streamWriter, _lock);
     }
 
     public void Dispose()
@@ -55,17 +55,16 @@ internal sealed class SimpleFileLoggerProvider : ILoggerProvider
 }
 
 /// <summary>
-/// Simple file logger implementation.
 /// Uses a shared StreamWriter for efficient logging without frequent file open/close operations.
 /// </summary>
-internal sealed class SimpleFileLogger : ILogger
+internal sealed class FileLogger : ILogger
 {
     private readonly string _categoryName;
     private readonly LogLevel _minLevel;
     private readonly StreamWriter _streamWriter;
     private readonly object _lock;
 
-    public SimpleFileLogger(string categoryName, LogLevel minLevel, StreamWriter streamWriter, object lockObject)
+    public FileLogger(string categoryName, LogLevel minLevel, StreamWriter streamWriter, object lockObject)
     {
         _categoryName = categoryName;
         _minLevel = minLevel;
