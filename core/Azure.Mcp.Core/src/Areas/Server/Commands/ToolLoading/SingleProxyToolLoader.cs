@@ -132,14 +132,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
+        Activity.Current?.AddTag(TelemetryConstants.TagName.IsCommandInvoked, !learn);
+
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {
-            Activity.Current?.AddTag(TelemetryConstants.TagName.IsCommandInvoked, false);
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
         }
         else if (learn && !string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {
-            Activity.Current?.AddTag(TelemetryConstants.TagName.IsCommandInvoked, false);
             return await ToolLearnModeAsync(request, intent ?? "", tool!, cancellationToken);
         }
         else if (!learn && !string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
