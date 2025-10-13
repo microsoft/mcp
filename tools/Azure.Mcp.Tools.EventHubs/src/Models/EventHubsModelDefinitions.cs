@@ -24,6 +24,17 @@ public static class EventHubsModelDefinitions
     public const string KafkaEnabled = "kafkaEnabled";
     public const string ZoneRedundant = "zoneRedundant";
     public const string Tags = "tags";
-    public const string Tier = "tier";
-    public const string Capacity = "capacity";
+    public const string SkuName = "name";
+    public const string SkuTier = "tier";
+    public const string SkuCapacity = "capacity";
+    public const string Namespace = "namespace";
+    public const string EventHub = "eventHub";
+    public const string ConsumerGroup = "consumerGroup";
+    public const string UserMetadata = "userMetadata";
+    public const string PartitionCount = "partitionCount";
+    public const string MessageRetentionInDays = "messageRetentionInDays";
+    public const string CreatedOn = "createdOn";
+    public const string UpdatedOn = "updatedOn";
+    public const string PartitionIds = "partitionIds";
+
 }

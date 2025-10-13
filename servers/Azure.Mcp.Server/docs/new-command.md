@@ -177,12 +177,12 @@ When creating commands that interact with Azure services, you'll need to:
 
 **Package Management:**
 
-For **Resource Graph queries** (using `BaseAzureResourceService`):
+For **Resource Read Operations**:
 - No additional packages required - `Azure.ResourceManager.ResourceGraph` is already included in the core project
-- Only add toolset-specific packages if you need direct ARM operations beyond Resource Graph queries
-- Example: `<PackageReference Include="Azure.ResourceManager.Sql" />` (only if needed for direct ARM operations)
+- Include toolset-specific packages only for specialized ARM read operations that go beyond standard Resource queries.
+    - Example: `<PackageReference Include="Azure.ResourceManager.Sql" />`
 
-For **Direct ARM operations** (using `BaseAzureService`):
+For **Resource Write Operations**:
 - Add the appropriate Azure Resource Manager package to `Directory.Packages.props`
   - Example: `<PackageVersion Include="Azure.ResourceManager.Sql" Version="1.3.0" />`
 - Add the package reference in `Azure.Mcp.Tools.{Toolset}.csproj`
@@ -193,7 +193,7 @@ For **Direct ARM operations** (using `BaseAzureService`):
 **Service Base Class Selection:**
 Choose the appropriate base class for your service based on the operations needed:
 
-1. **For Azure Resource Graph queries** (recommended for resource management operations):
+1. **For Azure Resource Read Operations** (recommended for resource management operations):
    - Inherit from `BaseAzureResourceService` for services that need to query Azure Resource Graph
    - Automatically provides `ExecuteResourceQueryAsync<T>()` and `ExecuteSingleResourceQueryAsync<T>()` methods
    - Handles subscription resolution, tenant lookup, and Resource Graph query execution
@@ -212,7 +212,8 @@ Choose the appropriate base class for your service based on the operations neede
                resourceGroup,
                subscription,
                retryPolicy,
-               ConvertToMyResourceModel);
+               ConvertToMyResourceModel,
+               cancellationToken: cancellationToken);
        }
 
        public async Task<MyResource?> GetResourceAsync(
@@ -227,7 +228,8 @@ Choose the appropriate base class for your service based on the operations neede
                subscription,
                retryPolicy,
                ConvertToMyResourceModel,
-               additionalFilter: $"name =~ '{resourceName}'");
+               additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
+               cancellationToken: cancellationToken);
        }
 
        private static MyResource ConvertToMyResourceModel(JsonElement item)
@@ -242,7 +244,7 @@ Choose the appropriate base class for your service based on the operations neede
    }
    ```
 
-2. **For direct Azure Resource Manager operations**:
+2. **For Azure Resource Write Operations**:
    - Inherit from `BaseAzureService` for services that use ARM clients directly
    - Use when you need direct ARM resource manipulation (create, update, delete)
    - Example:
@@ -252,20 +254,13 @@ Choose the appropriate base class for your service based on the operations neede
    {
        private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-       public async Task<MyResource> GetResourceAsync(string subscription, ...)
+       public async Task<MyResource> CreateResourceAsync(string subscription, ...)
        {
            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
-           // Use subscriptionResource for direct ARM operations
+           // Use subscriptionResource for Azure Resource write operations
        }
    }
    ```
-
-**BaseAzureResourceService Benefits:**
-- Eliminates duplicate Resource Graph query code across services
-- Provides consistent error handling and validation
-- Handles subscription resolution and tenant lookup automatically
-- Supports additional KQL filter parameters for complex queries
-- Maintains AOT compatibility
 
 **API Pattern Discovery:**
 - Study existing services (e.g., Sql, Postgres, Redis) to understand resource access patterns
@@ -274,7 +269,7 @@ Choose the appropriate base class for your service based on the operations neede
    - ❌ Bad: `.GetSqlServerAsync(serverName, cancellationToken)`
 - Check Azure SDK documentation for correct method signatures and property names
 
-**Common Azure Resource Manager Patterns:**
+**Common Azure Resource Read Operation Patterns:**
 ```csharp
 // Resource Graph pattern (via BaseAzureResourceService)
 var resources = await ExecuteResourceQueryAsync(
@@ -283,21 +278,8 @@ var resources = await ExecuteResourceQueryAsync(
     subscription,
     retryPolicy,
     ConvertToSqlDatabaseModel,
-    "name =~ 'mydb*'");  // Optional KQL filter
-
-// Direct ARM pattern (via BaseAzureService)
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
-var resourceGroupResource = await subscriptionResource
-    .GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-var sqlServerResource = await resourceGroupResource.Value
-    .GetSqlServers()
-    .GetAsync(serverName);
-
-var databaseResource = await sqlServerResource.Value
-    .GetSqlDatabases()
-    .GetAsync(databaseName);
+    additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+    cancellationToken: cancellationToken);
 ```
 
 **Property Access Issues:**
