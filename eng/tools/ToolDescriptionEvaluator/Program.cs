@@ -179,7 +179,7 @@ class Program
             // Create vector database
             var db = new VectorDB(new CosineSimilarity());
             var stopwatch = Stopwatch.StartNew();
-            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedAzureTools;
+            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedTools;
 
             if (tools == null || tools.Count == 0)
             {
@@ -1261,7 +1261,7 @@ class Program
                 }
             };
 
-            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedAzureTools;
+            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedTools;
 
             if (tools == null || tools.Count == 0)
             {

@@ -106,8 +106,12 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
                                      $"Idempotent={consolidatedTool.ToolMetadata?.Idempotent}, OpenWorld={consolidatedTool.ToolMetadata?.OpenWorld}, " +
                                      $"ReadOnly={consolidatedTool.ToolMetadata?.ReadOnly}, Secret={consolidatedTool.ToolMetadata?.Secret}, " +
                                      $"LocalRequired={consolidatedTool.ToolMetadata?.LocalRequired}]";
+#if DEBUG
                     _logger.LogError(errorMessage);
                     throw new InvalidOperationException(errorMessage);
+#else
+                    _logger.LogWarning(errorMessage);
+#endif
                 }
 
                 commandGroup.AddCommand(commandName, command);
@@ -126,23 +130,18 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             providers.Add(serverProvider);
         }
 
-#if DEBUG
-        // In debug mode, throw an error if there are unmatched commands
+        // Check for unmatched commands
         if (unmatchedCommands.Count > 0)
         {
             var unmatchedList = string.Join(", ", unmatchedCommands.OrderBy(c => c));
             var errorMessage = $"Found {unmatchedCommands.Count} unmatched commands: {unmatchedList}";
+#if DEBUG
             _logger.LogError(errorMessage);
             throw new InvalidOperationException(errorMessage);
-        }
 #else
-        // In release mode, just log a warning
-        if (unmatchedCommands.Count > 0)
-        {
-            var unmatchedList = string.Join(", ", unmatchedCommands.OrderBy(c => c));
             _logger.LogWarning("Found {Count} unmatched commands: {Commands}", unmatchedCommands.Count, unmatchedList);
-        }
 #endif
+        }
 
         return Task.FromResult<IEnumerable<IMcpServerProvider>>(providers);
     }
