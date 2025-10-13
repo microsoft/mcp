@@ -25,7 +25,7 @@ Running locally, uses ambient Azure credentials (Azure CLI, Managed Identity).
 
 ### Managed Identity (HTTP mode)
 
-#### Without inbound authentication:
+#### System-assigned managed identity (without inbound authentication):
 ```json
 {
   "inboundAuthentication": {
@@ -33,6 +33,19 @@ Running locally, uses ambient Azure credentials (Azure CLI, Managed Identity).
   },
   "outboundAuthentication": {
     "type": "ManagedIdentity"
+  }
+}
+```
+
+#### User-assigned managed identity (without inbound authentication):
+```json
+{
+  "inboundAuthentication": {
+    "type": "None"
+  },
+  "outboundAuthentication": {
+    "type": "ManagedIdentity",
+    "clientId": "12345678-1234-1234-1234-123456789abc"
   }
 }
 ```
@@ -50,7 +63,8 @@ Running locally, uses ambient Azure credentials (Azure CLI, Managed Identity).
     }
   },
   "outboundAuthentication": {
-    "type": "ManagedIdentity"
+    "type": "ManagedIdentity",
+    "clientId": "12345678-1234-1234-1234-123456789abc"
   }
 }
 ```
@@ -111,6 +125,11 @@ Validates incoming token and exchanges it for Azure token using OBO flow.
   }
 }
 ```
+
+## Managed Identity Types
+
+- **System-assigned**: Uses the identity of the Azure resource (VM, Container App, etc.). No `clientId` needed.
+- **User-assigned**: Uses a specific managed identity by `clientId`. Allows multiple identities on one resource.
 
 ## Client Credential Types
 

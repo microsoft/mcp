@@ -81,7 +81,11 @@ internal sealed class JwtHttpHostAuthSetup : IHttpHostAuthSetup
 
         services.AddAuthorization(options =>
         {
-            options.AddPolicy("McpToolExecutor", p => p.RequireRole("Mcp.Tool.Executor"));
+            if (azureAd.RequiredRoles?.Length > 0)
+            {
+                options.AddPolicy("McpRolePolicy", p => p.RequireRole(azureAd.RequiredRoles));
+            }
+
             options.DefaultPolicy = new AuthorizationPolicyBuilder()
                 .RequireAuthenticatedUser()
                 .Build();
@@ -102,13 +106,23 @@ internal sealed class JwtHttpHostAuthSetup : IHttpHostAuthSetup
 
     /// <summary>
     /// Sets up authorization requirements on MCP endpoints.
-    /// Requires authentication for all MCP protocol endpoints.
+    /// Requires authentication and optionally role validation for all MCP protocol endpoints.
     /// </summary>
     /// <param name="mcpEndpoints">The MCP endpoint convention builder to configure authorization on.</param>
     public void SetupEndpoints(IEndpointConventionBuilder mcpEndpoints)
     {
-        // Require authentication for all MCP endpoints
-        mcpEndpoints.RequireAuthorization();
+        var azureAd = _serverConfiguration.InboundAuthentication.AzureAd!;
+
+        if (azureAd.RequiredRoles?.Length > 0)
+        {
+            // Uses the role policy to enforce role requirements
+            mcpEndpoints.RequireAuthorization("McpRolePolicy");
+        }
+        else
+        {
+            // Otherwise falls back to just requiring authentication
+            mcpEndpoints.RequireAuthorization();
+        }
     }
 
     /// <summary>
@@ -118,11 +132,15 @@ internal sealed class JwtHttpHostAuthSetup : IHttpHostAuthSetup
     /// <returns>An array of valid audience strings for token validation.</returns>
     private static string[] GetValidAudiences(AzureAdConfig azureAd)
     {
-        return new[]
+        var audiences = new List<string> { azureAd.Audience };
+
+        // Only include ClientId-based audiences if ClientId is provided
+        if (!string.IsNullOrWhiteSpace(azureAd.ClientId))
         {
-            azureAd.ClientId,
-            $"api://{azureAd.ClientId}",
-            azureAd.Audience
-        }.Distinct().Where(a => !string.IsNullOrWhiteSpace(a)).ToArray();
+            audiences.Add(azureAd.ClientId);
+            audiences.Add($"api://{azureAd.ClientId}");
+        }
+
+        return audiences.Distinct().Where(a => !string.IsNullOrWhiteSpace(a)).ToArray();
     }
 }

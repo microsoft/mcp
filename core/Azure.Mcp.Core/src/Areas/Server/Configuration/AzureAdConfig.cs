@@ -24,9 +24,10 @@ public class AzureAdConfig
 
     /// <summary>
     /// The Azure AD application (client) ID.
+    /// Required for OBO flow, optional for JWT validation only.
     /// </summary>
     [JsonPropertyName("clientId")]
-    public required string ClientId { get; set; }
+    public string? ClientId { get; set; }
 
     /// <summary>
     /// The expected audience (resource identifier) for token validation.
@@ -35,9 +36,10 @@ public class AzureAdConfig
     public required string Audience { get; set; }
 
     /// <summary>
-    /// The client secret for the Azure AD application.
-    /// Required for On-Behalf-Of flow, optional otherwise.
+    /// Optional array of required app roles for authorization.
+    /// If specified, users must have at least one of these roles to access MCP endpoints.
+    /// If not specified or empty, only authentication is required (no role validation).
     /// </summary>
-    [JsonPropertyName("clientSecret")]
-    public string? ClientSecret { get; set; }
+    [JsonPropertyName("requiredRoles")]
+    public string[]? RequiredRoles { get; set; }
 }

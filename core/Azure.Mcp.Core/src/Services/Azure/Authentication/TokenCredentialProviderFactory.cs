@@ -46,8 +46,7 @@ public static class TokenCredentialProviderFactory
         }
         else if (outboundType == OutboundAuthenticationType.ManagedIdentity)
         {
-            // TODO: Extract clientId from configuration if needed for user-assigned identity
-            return new ManagedIdentityCredentialProvider(clientId: null);
+            return new ManagedIdentityCredentialProvider(clientId: serverConfiguration.OutboundAuthentication.ClientId);
         }
         else if (outboundType == OutboundAuthenticationType.JwtPassthrough)
         {

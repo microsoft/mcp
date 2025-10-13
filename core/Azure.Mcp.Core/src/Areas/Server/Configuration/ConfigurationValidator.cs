@@ -21,6 +21,7 @@ internal static class ConfigurationValidator
         ValidateJwtOboConfiguration(config);
         ValidateJwtPassthroughConfiguration(config);
         ValidateManagedIdentityConfiguration(config);
+        ValidateUnusedConfiguration(config);
     }
 
     /// <summary>
@@ -85,7 +86,7 @@ internal static class ConfigurationValidator
         }
 
         // Validate the inbound AzureAd configuration
-        ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd);
+        ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd, isObo: true);
 
         // OutboundAuthentication.ClientCredential must be present
         if (config.OutboundAuthentication.ClientCredential is null)
@@ -120,7 +121,7 @@ internal static class ConfigurationValidator
 
         if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme)
         {
-            ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!);
+            ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!, isObo: false);
         }
     }
 
@@ -146,7 +147,18 @@ internal static class ConfigurationValidator
 
         if (config.InboundAuthentication.Type == InboundAuthenticationType.JwtBearerScheme)
         {
-            ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!);
+            ValidateAzureAdConfiguration(config.InboundAuthentication.AzureAd!, isObo: false);
+        }
+
+        // Validate ClientId format if provided (for user-assigned managed identity)
+        if (!string.IsNullOrWhiteSpace(config.OutboundAuthentication.ClientId))
+        {
+            if (!Guid.TryParse(config.OutboundAuthentication.ClientId, out _))
+            {
+                throw new InvalidOperationException(
+                    $"OutboundAuthentication.ClientId must be a valid GUID format for user-assigned managed identity. " +
+                    $"Provided value: '{config.OutboundAuthentication.ClientId}'");
+            }
         }
     }
 
@@ -155,7 +167,7 @@ internal static class ConfigurationValidator
     /// </summary>
     /// <param name="azureAd">The Azure AD configuration to validate.</param>
     /// <exception cref="InvalidOperationException">Thrown when Azure AD configuration is invalid.</exception>
-    private static void ValidateAzureAdConfiguration(AzureAdConfig azureAd)
+    private static void ValidateAzureAdConfiguration(AzureAdConfig azureAd, bool isObo)
     {
         if (string.IsNullOrWhiteSpace(azureAd.Instance))
         {
@@ -167,7 +179,7 @@ internal static class ConfigurationValidator
             throw new InvalidOperationException("AzureAd.TenantId cannot be null or empty.");
         }
 
-        if (string.IsNullOrWhiteSpace(azureAd.ClientId))
+        if (isObo && string.IsNullOrWhiteSpace(azureAd.ClientId))
         {
             throw new InvalidOperationException("AzureAd.ClientId cannot be null or empty.");
         }
@@ -247,6 +259,25 @@ internal static class ConfigurationValidator
             default:
                 throw new InvalidOperationException(
                     $"Unsupported ClientCredential.Kind '{clientCredential.Kind}'.");
+        }
+    }
+
+    /// <summary>
+    /// Validates that configuration properties are not set when not applicable to the current authentication type.
+    /// </summary>
+    /// <param name="config">The server configuration to validate.</param>
+    /// <exception cref="InvalidOperationException">Thrown when unused configuration is present.</exception>
+    private static void ValidateUnusedConfiguration(ServerConfiguration config)
+    {
+        var outboundType = config.OutboundAuthentication.Type;
+
+        // ClientId should only be used with ManagedIdentity
+        if (outboundType != OutboundAuthenticationType.ManagedIdentity
+            && !string.IsNullOrWhiteSpace(config.OutboundAuthentication.ClientId))
+        {
+            throw new InvalidOperationException(
+                $"OutboundAuthentication.ClientId is only valid when OutboundAuthentication.Type is 'ManagedIdentity'. " +
+                $"Current type is '{outboundType}'. Remove the ClientId property or change the authentication type.");
         }
     }
 }
