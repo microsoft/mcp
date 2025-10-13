@@ -418,7 +418,7 @@ catch (Exception ex)
 ### Base Service Classes
 Choose the appropriate base class based on operations:
 
-**For Resource Graph queries (recommended):**
+**For Azure Resource Read Operations (recommended):**
 ```csharp
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
@@ -430,22 +430,32 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
             resourceGroup,
             subscription,
             retryPolicy,
-            ConvertToStorageAccountModel);
+            ConvertToStorageAccountModel,
+            cancellationToken: cancellationToken);
     }
 }
 ```
 
-**For direct ARM operations:**
+**For Azure Resource Write Operations:**
 ```csharp
 public class StorageService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureService(tenantService), IStorageService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-    public async Task<StorageAccount> GetAccountAsync(string subscription, string resourceGroup, string accountName, RetryPolicyOptions? retryPolicy)
+    public async Task<StorageAccountResult> CreateStorageAccount(
+        string account,
+        string resourceGroup,
+        string location,
+        string subscription,
+        string? sku = null,
+        string? accessTier = null,
+        bool? enableHierarchicalNamespace = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
     {
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
-        // Use subscriptionResource for direct ARM operations
+        // Use subscriptionResource for write operations
     }
 }
 ```
