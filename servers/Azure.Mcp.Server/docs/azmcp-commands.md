@@ -1573,26 +1573,9 @@ azmcp role assignment list --subscription <subscription> \
 ### Azure Redis Operations
 
 ```bash
-
-# Lists Databases in an Azure Redis Cluster
+# Lists all Redis resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cluster database list --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --cluster <cluster>
-
-# Lists Redis Clusters in the Azure Managed Redis or Azure Redis Enterprise services
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cluster list --subscription <subscription>
-
-# Lists Redis Caches in the Azure Cache for Redis service
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cache list --subscription <subscription>
-
-# Lists Access Policy Assignments in an Azure Redis Cache
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp redis cache list accesspolicy --subscription <subscription> \
-                                    --resource-group <resource-group> \
-                                    --cache <cache-name>
+azmcp redis list --subscription <subscription>
 ```
 
 ### Azure Resource Group Operations

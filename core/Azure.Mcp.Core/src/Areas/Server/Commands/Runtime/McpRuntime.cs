@@ -77,6 +77,10 @@ public sealed class McpRuntime : IMcpRuntime
 
         activity?.AddTag(TagName.ToolName, request.Params.Name);
 
+        // Assume that this is a BaseCommand<T>.  If not, the tag will be updated in 
+        // the children ToolLoaders.
+        activity?.AddTag(TagName.IsServerCommandInvoked, true);
+
         var symbol = OptionDefinitions.Common.Subscription;
 
         var subscriptionArgument = request.Params?.Arguments?
