@@ -17,7 +17,7 @@ public class MarketplaceService(ITenantService tenantService)
 {
     private const int TokenExpirationBuffer = 300;
     private const string ManagementApiBaseUrl = "https://management.azure.com";
-    private const string ApiVersion = "2023-01-01-preview";
+    private const string ApiVersion = "2025-05-01";
 
     private string? _cachedAccessToken;
     private DateTimeOffset _tokenExpiryTime;
@@ -260,7 +260,7 @@ public class MarketplaceService(ITenantService tenantService)
         request.Uri.Reset(new Uri(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
+        using var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
 
         if (!response.IsError)
         {
