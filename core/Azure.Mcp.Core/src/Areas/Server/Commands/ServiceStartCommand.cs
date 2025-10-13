@@ -48,6 +48,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
+    public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+
     /// <summary>
     /// Registers command options for the service start command.
     /// </summary>
@@ -123,6 +125,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         try
         {
             using var host = CreateHost(options);
+
+            await InitializeServicesAsync(host.Services);
             await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
 
