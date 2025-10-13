@@ -10,16 +10,12 @@
     <!-- Suppress SYSLIB0020 for generated System.Text.Json code that uses obsolete IgnoreNullValues -->
     <NoWarn>$(NoWarn);SYSLIB0020</NoWarn>
     <BuildNative Condition="'$(BuildNative)' == ''">false</BuildNative>
-    <ReleaseBuild Condition="'$(ReleaseBuild)' == ''">false</ReleaseBuild>
     <!-- Identify Server Projects -->
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
     <IsServerProject Condition="'$(IsServerProject)' == '' and $(_RelativeProjectDir.StartsWith('servers')) and $(_RelativeProjectDir.EndsWith('src'))">true</IsServerProject>
   </PropertyGroup>
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition="'$(ReleaseBuild)' == 'true'">
-    <DefineConstants>$(DefineConstants);RELEASE_BUILD</DefineConstants>
   </PropertyGroup>
     <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">

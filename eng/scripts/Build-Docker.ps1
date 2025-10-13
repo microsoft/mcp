@@ -7,7 +7,7 @@ param(
     [Parameter(Mandatory=$true)]
     [string] $ServerName,
     [switch] $Trimmed,
-    [switch] $DebugBuild
+    [switch] $ReleaseBuild
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -27,7 +27,7 @@ $arch = "x64"
 $SingleFile = $Trimmed
 $tag = "$dockerImageName`:$Version$VersionSuffix";
 
-& "$root/eng/scripts/Build-Code.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -DebugBuild:$DebugBuild -OperatingSystem $os -Architecture $arch
+& "$root/eng/scripts/Build-Code.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -ReleaseBuild:$ReleaseBuild -OperatingSystem $os -Architecture $arch
 if ($LastExitCode -ne 0) {
     exit $LastExitCode
 }

@@ -76,7 +76,7 @@ jobs:
         -SelfContained
         -Trimmed
         -SingleFile
-        -ReleaseBuild:$${{ eq(parameters.PublishTarget, 'public') }}
+        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
 
   - task: Powershell@2
     displayName: "Run tests"
@@ -119,7 +119,7 @@ jobs:
         -Architecture '$(Architecture)'
         -CleanBuild
         -BuildNative
-        -ReleaseBuild:$${{ eq(parameters.PublishTarget, 'public') }}
+        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
 
   # --- VS Code Extension Packaging Steps ---
   - task: NodeTool@0

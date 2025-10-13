@@ -9,7 +9,7 @@ param(
     [switch] $SingleFile,
     [switch] $ReadyToRun,
     [switch] $Trimmed,
-    [switch] $DebugBuild,
+    [switch] $ReleaseBuild,
     [switch] $CleanBuild,
     [switch] $BuildNative,
     [string] $ServerName,
@@ -20,8 +20,7 @@ param(
     [ValidateSet('x64','arm64')]
     [string] $Architecture,
     [Parameter(ParameterSetName='AllPlatforms')]
-    [switch] $AllPlatforms,
-    [switch] $ReleaseBuild
+    [switch] $AllPlatforms
 )
 
 $ErrorActionPreference = 'Stop'
@@ -122,7 +121,7 @@ function BuildServer($serverName) {
             $outputDir = "$serverOutputDirectory/$os-$arch"
             Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
 
-            $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
+            $configuration = if ($ReleaseBuild) { 'Release' } else { 'Debug' }
 
             if ($CleanBuild) {
                 # Clean up any previous build artifacts.
@@ -153,10 +152,6 @@ function BuildServer($serverName) {
 
             if($SingleFile) {
                 $command += " /p:PublishSingleFile=true"
-            }
-
-            if ($ReleaseBuild) {
-                $command += " /p:ReleaseBuild=true"
             }
 
             Invoke-LoggedMsBuildCommand $command -GroupOutput
