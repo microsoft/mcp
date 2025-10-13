@@ -74,6 +74,7 @@ extends:
           AdditionalParameters:
             TestTimeoutInMinutes: 10
             ServerName: ${{ parameters.ServerName }}
+            PublishTarget: ${{ parameters.PublishTarget }}
           MatrixConfigs:
             - Name: build_matrix
               Path: eng/pipelines/build-matrix.json
