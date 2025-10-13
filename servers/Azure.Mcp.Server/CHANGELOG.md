@@ -24,6 +24,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp-monitor-webtests-update` - Update an existing web test in Azure Monitor
 - Added `azmcp extension cli generate` command for generating Azure Cli commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
 - Added `azmcp extension cli install` command for getting installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+- Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
 - Added `--character-limit` parameter to `azmcp_subscription_list` command to control response size. This parameter allows users to limit the number of characters returned in the response, with automatic truncation and informative status messages when the limit is exceeded. Default limit is 10,000 characters.
 
 ### Breaking Changes
