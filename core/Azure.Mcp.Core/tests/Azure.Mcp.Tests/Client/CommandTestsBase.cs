@@ -12,7 +12,7 @@ using System.Reflection;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetime, IDisposable
+public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : IAsyncLifetime, IDisposable, IClassFixture<TestProxyFixture>
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
@@ -20,10 +20,11 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
-    protected TestProxy? Proxy { get; private set; }
+    protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
     private string[]? _customArguments;
     private TestMode _testMode = TestMode.Live;
+
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -42,16 +43,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         Settings = settingsFixture.Settings;
 
         _testMode = GetTestMode();
-
-        // If record/playback requested, start the test proxy BEFORE launching components that may capture env vars
-        if (ShouldUseProxy())
-        {
-            Proxy = new TestProxy(DetermineRepositoryRoot(), debug: Settings.DebugOutput);
-            Proxy.Start();
-            Output.WriteLine($"Test proxy started at {Proxy.BaseUri} (mode: {_testMode})");
-            // Export a conventional environment variable for downstream HTTP clients if they honor it.
-            Environment.SetEnvironmentVariable("TEST_PROXY_HTTP_URI", Proxy.BaseUri);
-        }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
@@ -271,17 +262,4 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     private bool ShouldUseProxy() => _testMode is TestMode.Record or TestMode.Playback ||
         string.Equals(Environment.GetEnvironmentVariable("USE_TEST_PROXY"), "true", StringComparison.OrdinalIgnoreCase);
 
-    private string DetermineRepositoryRoot()
-    {
-        // Heuristic: walk up from assembly location until we find a .git folder or reach root.
-        var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
-        while (!string.IsNullOrEmpty(path))
-        {
-            if (Directory.Exists(Path.Combine(path, ".git"))) return path;
-            var parent = Path.GetDirectoryName(path);
-            if (string.IsNullOrEmpty(parent) || parent == path) break;
-            path = parent;
-        }
-        return Environment.CurrentDirectory;
-    }
 }

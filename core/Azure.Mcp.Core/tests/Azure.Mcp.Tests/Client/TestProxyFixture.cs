@@ -1,4 +1,5 @@
-﻿using Xunit;
+﻿using System.Reflection;
+using Xunit;
 
 namespace Azure.Mcp.Tests.Client
 {
@@ -8,16 +9,33 @@ namespace Azure.Mcp.Tests.Client
     /// </summary>
     public sealed class TestProxyFixture : IAsyncLifetime
     {
+        private string DetermineRepositoryRoot()
+        {
+            // Heuristic: walk up from assembly location until we find a .git folder or reach root.
+            var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
+            while (!string.IsNullOrEmpty(path))
+            {
+                if (Directory.Exists(Path.Combine(path, ".git")))
+                    return path;
+                var parent = Path.GetDirectoryName(path);
+                if (string.IsNullOrEmpty(parent) || parent == path)
+                    break;
+                path = parent;
+            }
+            return Environment.CurrentDirectory;
+        }
+
         /// <summary>
         /// Optional shared proxy instance (not started automatically here to keep side-effects minimal). Tests should set their local copy of Proxy to
         /// This fixture.Proxy in their constructor if they want recorded or playback tests.
         /// </summary>
         public TestProxy? Proxy { get; private set; }
 
-        // xUnit v3 IAsyncLifetime uses ValueTask
         public ValueTask InitializeAsync()
         {
-            // todo: start the proxy here.
+            var root = DetermineRepositoryRoot();
+            Proxy = new TestProxy();
+            Proxy.Start(root);
             return ValueTask.CompletedTask;
         }
 
