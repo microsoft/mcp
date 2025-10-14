@@ -9,7 +9,6 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.VisualStudio.TestPlatform.TestHost;
 using NSubstitute;
 using Xunit;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
