@@ -5,6 +5,9 @@ labels: ["needs-triage", "Azure.Mcp.Server", "Bug-Bash"]
 projects: ["Microsoft/1976"]
 
 body:
+  - type: markdown
+    attributes:
+      value: "<!-- TEMPLATE: bug-bash-v1 -->"
   - type: textarea
     id: background
     attributes:
