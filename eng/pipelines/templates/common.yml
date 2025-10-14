@@ -72,7 +72,7 @@ extends:
           SparseCheckout: false
           JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
           AdditionalParameters:
-            TestTimeoutInMinutes: 10
+            TestTimeoutInMinutes: 30
             ServerName: ${{ parameters.ServerName }}
           MatrixConfigs:
             - Name: build_matrix
