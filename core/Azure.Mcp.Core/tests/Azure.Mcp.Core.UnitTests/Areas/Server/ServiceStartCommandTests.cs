@@ -575,7 +575,6 @@ public class ServiceStartCommandTests
         ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
 
 
-        // Act
 
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
