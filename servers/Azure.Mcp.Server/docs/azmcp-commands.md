@@ -128,6 +128,7 @@ Each consolidated tool groups operations that are commonly used together:
 azmcp server start \
     --mode consolidated \
     [--transport <transport>] \
+    [--namespace <namespace>] \
     [--read-only]
 ```
 

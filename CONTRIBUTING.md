@@ -285,6 +285,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 ```
 
 **Consolidated Mode** (grouped related operations):
+It honors both --read-only and --namespace switches.
 
 ```json
 {
