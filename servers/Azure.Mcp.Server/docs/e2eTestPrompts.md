@@ -124,18 +124,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
-## Azure CLI Generate
+## Azure CLI
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
 | azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
 | azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-
-## Azure CLI Install
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
 | azmcp_extension_cli_install | Get Azure CLI installation instructions |
 | azmcp_extension_cli_install | How to install azd |
 | azmcp_extension_cli_install | What is Azure Functions Core tools and how to install it |
@@ -283,21 +278,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
-| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
-| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
-| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
-| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
+| azmcp_eventhubs_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> |
 | azmcp_eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
-| azmcp_eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
 ## Azure Function App
 
@@ -510,16 +505,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_redis_cache_accesspolicy_list | List all access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_accesspolicy_list | Show me the access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_list | List all Redis Caches in my subscription |
-| azmcp_redis_cache_list | Show me my Redis Caches |
-| azmcp_redis_cache_list | Show me the Redis Caches in my subscription |
-| azmcp_redis_cluster_database_list | List all databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_database_list | Show me the databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_list | List all Redis Clusters in my subscription |
-| azmcp_redis_cluster_list | Show me my Redis Clusters |
-| azmcp_redis_cluster_list | Show me the Redis Clusters in my subscription |
+| azmcp_redis_list | List all Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis resources |
+| azmcp_redis_list | Show me the Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis caches |
+| azmcp_redis_list | Get Redis clusters |
 
 ## Azure Resource Group
 
@@ -676,7 +666,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_workbooks_list | List all workbooks in my resource group <resource_group_name> |
 | azmcp_workbooks_list | What workbooks do I have in resource group <resource_group_name>? |
 | azmcp_workbooks_show | Get information about the workbook with resource ID <workbook_resource_id> |
-| azmcp_workbooks_show | Show me the workbook with display name <workbook_display_name> |
+| azmcp_workbooks_show | Show me the workbook with resource ID <workbook_resource_id> |
 | azmcp_workbooks_update | Update the workbook <workbook_resource_id> with a new text step |
 
 ## Bicep

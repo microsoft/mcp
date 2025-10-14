@@ -1,29 +1,30 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
-using Azure.Mcp.Tools.Redis.Options.ManagedRedis;
+using Azure.Mcp.Tools.Redis.Models;
+using Azure.Mcp.Tools.Redis.Options;
 using Azure.Mcp.Tools.Redis.Services;
 using Microsoft.Extensions.Logging;
 
-namespace Azure.Mcp.Tools.Redis.Commands.ManagedRedis;
+namespace Azure.Mcp.Tools.Redis.Commands;
 
 /// <summary>
-/// Lists Azure Managed Redis cluster resources (`Balanced`, `MemoryOptimized`, `ComputeOptimized`, and `FlashOptimized` tiers) and Azure Redis Enterprise cluster resources (`Enterprise` and `EnterpriseFlash` tiers) in the specified subscription.
+/// Lists Redis resources in a subscription. Returns details for all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.
 /// </summary>
-public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : SubscriptionCommand<ClusterListOptions>()
+public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : SubscriptionCommand<ResourceListOptions>()
 {
-    private const string CommandTitle = "List Redis Clusters";
-    private readonly ILogger<ClusterListCommand> _logger = logger;
+    private const string CommandTitle = "List Redis Resources";
+    private readonly ILogger<ResourceListCommand> _logger = logger;
 
     public override string Name => "list";
 
     public override string Description =>
         $"""
-        List/show all Redis Clusters in a subscription. Returns Redis Cluster details including Azure Managed Redis clusters and Azure Redis Enterprise clusters. Use this command to explore and view which Redis Cluster resources are available in your subscription.
+        List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.
         """;
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
@@ -48,22 +49,23 @@ public sealed class ClusterListCommand(ILogger<ClusterListCommand> logger) : Sub
         try
         {
             var redisService = context.GetService<IRedisService>() ?? throw new InvalidOperationException("Redis service is not available.");
-            var clusters = await redisService.ListClustersAsync(
+            var resources = await redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
                 options.AuthMethod,
                 options.RetryPolicy);
 
-            context.Response.Results = ResponseResult.Create(new(clusters ?? []), RedisJsonContext.Default.ClusterListCommandResult);
+            context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Failed to list Redis Clusters");
+            _logger.LogError(ex, "Failed to list Redis resources");
+
             HandleException(context, ex);
         }
 
         return context.Response;
     }
 
-    internal record ClusterListCommandResult(IEnumerable<Cluster> Clusters);
+    internal record ResourceListCommandResult(IEnumerable<Resource> Resources);
 }
