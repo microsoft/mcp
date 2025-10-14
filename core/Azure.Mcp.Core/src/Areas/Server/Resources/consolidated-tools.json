@@ -743,6 +743,7 @@
         "localRequired": false
       },
       "mappedToolList": [
+        "azmcp_redis_list",
         "azmcp_redis_cache_list",
         "azmcp_redis_cluster_list",
         "azmcp_redis_cache_accesspolicy_list",
