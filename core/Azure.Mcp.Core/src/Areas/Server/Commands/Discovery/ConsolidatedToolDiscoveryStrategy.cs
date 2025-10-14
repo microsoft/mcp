@@ -72,6 +72,14 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             })
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
 
+        // Filter out non read-only tools when --read-only is specified
+        if (_options.Value.ReadOnly == true)
+        {
+            filteredCommands = filteredCommands
+                .Where(kvp => kvp.Value.Metadata.ReadOnly == true)
+                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
         // Track unmatched commands
         var unmatchedCommands = new HashSet<string>(filteredCommands.Keys, StringComparer.OrdinalIgnoreCase);
 
