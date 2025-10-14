@@ -92,7 +92,7 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Description = "Set logging level: trace, debug, info, warn, error. Default is 'info'.",
-        DefaultValueFactory = _ => "info"
+        DefaultValueFactory = _ => null
     };
 
     public static readonly Option<bool> Verbose = new($"--{VerboseName}")

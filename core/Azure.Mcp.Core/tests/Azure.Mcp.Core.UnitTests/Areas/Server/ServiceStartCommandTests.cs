@@ -167,7 +167,7 @@ public class ServiceStartCommandTests
         // Assert
         if (expectedLogLevel == null)
         {
-            Assert.Equal("info", actualLogLevel); // Default value
+            Assert.Null(actualLogLevel);
         }
         else
         {

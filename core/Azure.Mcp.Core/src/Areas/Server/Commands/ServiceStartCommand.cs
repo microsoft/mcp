@@ -90,7 +90,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static ServiceStartOptions ResolveLoggingOptions(ServiceStartOptions options)
     {
         // Environment variables (only if command line option wasn't explicitly set)
-        if (options.LogLevel == "info")
+        if (string.IsNullOrEmpty(options.LogLevel))
         {
             var envLogLevel = Environment.GetEnvironmentVariable("AZMCP_LOG_LEVEL");
             if (!string.IsNullOrEmpty(envLogLevel))
@@ -183,6 +183,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // 3. Debug flag -> Debug level (less detailed than verbose)
         // 4. Default -> Information level
 
+        // Priority 1: If LogLevel was explicitly set (not null), use it regardless of other flags
         if (!string.IsNullOrEmpty(serverOptions.LogLevel))
         {
             return serverOptions.LogLevel.ToLowerInvariant() switch
@@ -197,6 +198,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             };
         }
 
+        // Priority 2: If no explicit log level, check verbose flag
         if (serverOptions.Verbose)
         {
             return LogLevel.Trace;

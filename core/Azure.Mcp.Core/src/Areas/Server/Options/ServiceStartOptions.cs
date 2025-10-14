@@ -69,7 +69,7 @@ public class ServiceStartOptions
     /// Gets or sets the logging level. Valid values: trace, debug, info, warn, error.
     /// </summary>
     [JsonPropertyName("logLevel")]
-    public string? LogLevel { get; set; } = "info";
+    public string? LogLevel { get; set; } = null;
 
     /// <summary>
     /// Gets or sets whether verbose logging is enabled. When true, equivalent to setting LogLevel to "trace" (maximum detail).
