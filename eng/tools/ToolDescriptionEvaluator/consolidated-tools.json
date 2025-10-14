@@ -196,7 +196,7 @@
         "mcp_azure-mcp-ser_azmcp_grafana_list",
         "mcp_azure-mcp-ser_azmcp_datadog_monitoredresources_list",
         "mcp_azure-mcp-ser_azmcp_monitor_workspace_list",
-        "mcp_azure-mcp-ser_azmcp_monitor_healthmodels_entity_gethealth",
+        "mcp_azure-mcp-ser_azmcp_monitor_healthmodels_entity_get",
         "mcp_azure-mcp-ser_azmcp_monitor_metrics_definitions",
         "mcp_azure-mcp-ser_azmcp_monitor_metrics_query",
         "mcp_azure-mcp-ser_azmcp_monitor_resource_log_query",
@@ -208,7 +208,7 @@
       ]
     },
     {
-      "name": "deploy_resources_and_applications_to_azure", 
+      "name": "deploy_resources_and_applications_to_azure",
       "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
       "parameters": {
         "intent": {

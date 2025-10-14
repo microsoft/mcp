@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode.
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -1357,7 +1357,7 @@ azmcp monitor workspace log query --subscription <subscription> \
 ```bash
 # Get the health of an entity
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity gethealth --subscription <subscription> \
+azmcp monitor healthmodels entity get --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --health-model <health-model-name> \
                                             --entity <entity-id>
@@ -1488,7 +1488,7 @@ azmcp monitor webtests update --subscription <subscription> \
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre filesystem list --subscription <subscription> \
-                                         --resource-group <resource-group> 
+                                         --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
