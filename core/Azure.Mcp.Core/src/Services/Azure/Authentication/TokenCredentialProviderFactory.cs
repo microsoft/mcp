@@ -48,6 +48,12 @@ public static class TokenCredentialProviderFactory
         {
             return new ManagedIdentityCredentialProvider(clientId: serverConfiguration.OutboundAuthentication.ClientId);
         }
+        else if (outboundType == OutboundAuthenticationType.JwtObo)
+        {
+            var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();
+            var tokenAcquisition = serviceProvider.GetRequiredService<ITokenAcquisition>();
+            return new JwtOboCredentialProvider(httpContextAccessor, tokenAcquisition);
+        }
         else if (outboundType == OutboundAuthenticationType.JwtPassthrough)
         {
             var httpContextAccessor = serviceProvider.GetRequiredService<IHttpContextAccessor>();

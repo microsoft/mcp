@@ -44,10 +44,15 @@ public static class HttpHostAuthSetupFactory
         {
             return new JwtHttpHostAuthSetup(serverConfiguration);
         }
+        else if (outboundType == OutboundAuthenticationType.JwtObo)
+        {
+            return new JwtOboHttpHostAuthSetup(serverConfiguration);
+        }
         else if (outboundType == OutboundAuthenticationType.JwtPassthrough)
         {
             return new JwtHttpHostAuthSetup(serverConfiguration);
         }
+
         else
         {
             throw new NotSupportedException(

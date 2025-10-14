@@ -32,6 +32,7 @@ internal sealed class JwtOboHttpHostAuthSetup : IHttpHostAuthSetup
     public JwtOboHttpHostAuthSetup(ServerConfiguration serverConfiguration)
     {
         _serverConfiguration = serverConfiguration ?? throw new ArgumentNullException(nameof(serverConfiguration));
+        ValidateClientCredential(_serverConfiguration.OutboundAuthentication.ClientCredential!);
     }
 
     /// <summary>
@@ -41,7 +42,22 @@ internal sealed class JwtOboHttpHostAuthSetup : IHttpHostAuthSetup
     /// <param name="services">The service collection to configure authentication services in.</param>
     public void SetupServices(IServiceCollection services)
     {
-        throw new NotImplementedException("anuchan to discuss with svukel (Steven).");
+        var inboundAzureAd = _serverConfiguration.InboundAuthentication.AzureAd!;
+        var clientCredential = _serverConfiguration.OutboundAuthentication.ClientCredential!;
+
+        services.Configure<ForwardedHeadersOptions>(options =>
+        {
+            options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+            options.KnownNetworks.Clear();
+            options.KnownProxies.Clear();
+        });
+
+        services.AddHttpContextAccessor();
+
+        var microsoftIdentityConfig = CreateMicrosoftIdentityConfiguration(inboundAzureAd, clientCredential);
+        services.AddMicrosoftIdentityWebApiAuthentication(microsoftIdentityConfig, "AzureAd")
+            .EnableTokenAcquisitionToCallDownstreamApi()
+            .AddInMemoryTokenCaches();
     }
 
     /// <summary>
@@ -64,5 +80,60 @@ internal sealed class JwtOboHttpHostAuthSetup : IHttpHostAuthSetup
     public void SetupEndpoints(IEndpointConventionBuilder mcpEndpoints)
     {
         mcpEndpoints.RequireAuthorization();
+    }
+
+    /// <summary>
+    /// Creates an IConfiguration instance for Microsoft Identity Web from Azure AD configuration.
+    /// </summary>
+    /// <param name="inboundAzureAd">The inbound Azure AD configuration for token validation.</param>
+    /// <param name="outboundAzureAd">The outbound Azure AD configuration for OBO token acquisition.</param>
+    /// <returns>An IConfiguration instance that Microsoft Identity Web can use.</returns>
+    private static IConfiguration CreateMicrosoftIdentityConfiguration(AzureAdConfig inboundAzureAd, ClientCredentialConfig clientCredentialConfig)
+    {
+        var configurationData = new Dictionary<string, string?>
+        {
+            ["AzureAd:Instance"] = inboundAzureAd.Instance,
+            ["AzureAd:TenantId"] = inboundAzureAd.TenantId,
+            ["AzureAd:ClientId"] = inboundAzureAd.ClientId,
+            ["AzureAd:Audience"] = inboundAzureAd.Audience,
+            ["AzureAd:ClientSecret"] = clientCredentialConfig.Secret
+        };
+
+        return new ConfigurationBuilder()
+            .AddInMemoryCollection(configurationData)
+            .Build();
+    }
+
+    /// <summary>
+    /// Validates client credential configuration and throws for unsupported types.
+    /// Currently only ClientSecret is supported.
+    /// </summary>
+    /// <param name="clientCredential">The client credential to validate.</param>
+    /// <exception cref="ArgumentException">Thrown when ClientSecret is missing.</exception>
+    /// <exception cref="NotImplementedException">Thrown when certificate types are used (not yet implemented).</exception>
+    private static void ValidateClientCredential(ClientCredentialConfig clientCredential)
+    {
+        switch (clientCredential.Kind)
+        {
+            case JwtOboClientCredentialKind.ClientSecret:
+                if (string.IsNullOrWhiteSpace(clientCredential.Secret))
+                {
+                    throw new ArgumentException("ClientSecret is required when ClientCredential.Kind is ClientSecret", nameof(clientCredential));
+                }
+                break;
+
+            case JwtOboClientCredentialKind.CertificateLocal:
+                throw new NotImplementedException(
+                    "ClientCredential.Kind 'CertificateLocal' is not yet implemented. " +
+                    "Currently only 'ClientSecret' is supported for JWT exchange authentication.");
+
+            case JwtOboClientCredentialKind.CertificateKeyVault:
+                throw new NotImplementedException(
+                    "ClientCredential.Kind 'CertificateKeyVault' is not yet implemented. " +
+                    "Currently only 'ClientSecret' is supported for JWT exchange authentication.");
+
+            default:
+                throw new ArgumentException($"Unsupported ClientCredential.Kind '{clientCredential.Kind}'", nameof(clientCredential));
+        }
     }
 }
