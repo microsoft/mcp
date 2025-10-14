@@ -35,7 +35,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 - ✅ **Focus on** unit tests and mock-based testing
 
 **Examples of each type**:
-- **Azure Service Commands**: ACR Registry List, SQL Database Show, Storage Account List
+- **Azure Service Commands**: ACR Registry List, SQL Database List, Storage Account Get
 - **Non-Azure Commands**: Azure CLI wrapper, Best Practices guidance, Documentation tools
 
 ## Command Architecture
@@ -627,16 +627,18 @@ The `ToolMetadata` class provides behavioral characteristics that help MCP clien
 - **`true`**: Command may interact with an "open world" of external entities where the domain is unpredictable or dynamic
 - **`false`**: Command's domain of interaction is closed and well-defined
 
+**Important:** Most Azure resource commands use `OpenWorld = false` because they operate within the well-defined domain of Azure Resource Manager APIs, even though the specific resources may vary. Only use `OpenWorld = true` for commands that interact with truly unpredictable external systems.
+
 **Examples:**
-- **Open World (`true`)**: Commands that query Azure resources, list storage accounts, search databases - the set of possible results is unpredictable and changes over time
-- **Closed World (`false`)**: Commands that return schema definitions, best practices guides, static documentation, or predefined samples - the domain is well-defined and predictable
+- **Closed World (`false`)**: Azure resource queries (storage accounts, databases, VMs), schema definitions, best practices guides, static documentation - these all operate within well-defined APIs and return structured data
+- **Open World (`true`)**: Commands that interact with unpredictable external systems or unstructured data sources outside of Azure's control
 
 ```csharp
-// Open world - Azure resource queries
-OpenWorld = true,    // Storage account list, database queries, resource discovery
+// Closed world - Most Azure commands
+OpenWorld = false,   // Storage account get, database queries, resource discovery, Bicep schemas, best practices
 
-// Closed world - Static/predictable content
-OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
+// Open world - Truly unpredictable domains (rare)
+OpenWorld = true,    // External web scraping, unstructured data sources, unpredictable third-party systems
 ```
 
 #### Destructive Property
