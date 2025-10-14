@@ -32,6 +32,7 @@ public class SqlSetup : IAreaSetup
         services.AddSingleton<ServerDeleteCommand>();
         services.AddSingleton<ServerListCommand>();
         services.AddSingleton<ServerShowCommand>();
+        services.AddSingleton<ServerConnPolicyShowCommand>();
 
         services.AddSingleton<ElasticPoolListCommand>();
 
@@ -73,6 +74,12 @@ public class SqlSetup : IAreaSetup
         server.AddCommand(serverList.Name, serverList);
         var serverShow = serviceProvider.GetRequiredService<ServerShowCommand>();
         server.AddCommand(serverShow.Name, serverShow);
+
+        var connPolicy = new CommandGroup("conn-policy", "SQL server connection policy operations");
+        server.AddSubGroup(connPolicy);
+
+        var connPolicyShow = serviceProvider.GetRequiredService<ServerConnPolicyShowCommand>();
+        connPolicy.AddCommand(connPolicyShow.Name, connPolicyShow);
 
         var elasticPool = new CommandGroup("elastic-pool", "SQL elastic pool operations");
         sql.AddSubGroup(elasticPool);

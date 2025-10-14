@@ -309,4 +309,20 @@ public interface ISqlService
         string subscription,
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Gets the connection policy for a SQL server.
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server</param>
+    /// <param name="resourceGroup">The name of the resource group</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy options</param>
+    /// <param name="cancellationToken">Cancellation token</param>
+    /// <returns>The SQL server connection policy information</returns>
+    Task<SqlServerConnectionPolicy> GetServerConnectionPolicyAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
 }
