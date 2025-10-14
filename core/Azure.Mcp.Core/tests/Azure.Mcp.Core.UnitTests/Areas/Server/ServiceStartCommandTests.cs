@@ -2,12 +2,16 @@
 // Licensed under the MIT License.
 
 using System.CommandLine;
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using NSubstitute;
 using Xunit;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -86,6 +90,59 @@ public class ServiceStartCommandTests
         var hasInsecureDisableElicitationOption = command.Options.Any(o =>
             o.Name == ServiceOptionDefinitions.InsecureDisableElicitation.Name);
         Assert.True(hasInsecureDisableElicitationOption, "InsecureDisableElicitation option should be registered");
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesTool()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasToolOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.Tool.Name);
+        Assert.True(hasToolOption, "Tool option should be registered");
+    }
+
+    [Theory]
+    [InlineData("azmcp_storage_account_get")]
+    [InlineData("azmcp_keyvault_secret_get")]
+    [InlineData(null)]
+    public void ToolOption_ParsesCorrectly(string? expectedTool)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithTool(expectedTool != null ? [expectedTool] : null);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        if (expectedTool == null)
+        {
+            Assert.True(actualTools == null || actualTools.Length == 0);
+        }
+        else
+        {
+            Assert.NotNull(actualTools);
+            Assert.Single(actualTools);
+            Assert.Equal(expectedTool, actualTools[0]);
+        }
+    }
+
+    [Fact]
+    public void ToolOption_ParsesMultipleToolsCorrectly()
+    {
+        // Arrange
+        var expectedTools = new[] { "azmcp_storage_account_get", "azmcp_keyvault_secret_get" };
+        var parseResult = CreateParseResultWithTool(expectedTools);
+
+        // Act
+        var actualTools = parseResult.GetValue(ServiceOptionDefinitions.Tool);
+
+        // Assert
+        Assert.NotNull(actualTools);
+        Assert.Equal(expectedTools.Length, actualTools.Length);
+        Assert.Equal(expectedTools, actualTools);
     }
 
     [Theory]
@@ -171,6 +228,41 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
+    public void BindOptions_WithTool_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedTool = "azmcp_group_list";
+        var parseResult = CreateParseResultWithTool([expectedTool]);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Single(options.Tool);
+        Assert.Equal(expectedTool, options.Tool[0]);
+        Assert.Equal("stdio", options.Transport);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
+    public void BindOptions_WithMultipleToolsAndExplicitMode_OverridesToAllMode()
+    {
+        // Arrange - Explicitly set mode to single but also provide multiple tools
+        var tools = new[] { "azmcp_group_list", "azmcp_subscription_list" };
+        var parseResult = CreateParseResultWithToolsAndMode(tools, "single");
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.NotNull(options.Tool);
+        Assert.Equal(2, options.Tool.Length);
+        Assert.Equal(tools, options.Tool);
+        Assert.Equal("all", options.Mode);
+    }
+
+    [Fact]
     public void BindOptions_WithDefaults_ReturnsDefaultValues()
     {
         // Arrange
@@ -235,6 +327,37 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
+    public void Validate_WithNamespaceAndTool_ReturnsInvalidResult()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var commandResult = parseResult.CommandResult;
+
+        // Act
+        var result = _command.Validate(commandResult, null);
+
+        // Assert
+        Assert.False(result.IsValid);
+        Assert.Contains("--namespace and --tool options cannot be used together", string.Join('\n', result.Errors));
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithNamespaceAndTool();
+        var serviceProvider = new ServiceCollection().BuildServiceProvider();
+        var context = new CommandContext(serviceProvider);
+
+        // Act
+        var response = await _command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("--namespace and --tool options cannot be used together", response.Message);
+    }
+
+    [Fact]
     public void GetErrorMessage_WithTransportArgumentException_ReturnsCustomMessage()
     {
         // Arrange
@@ -274,6 +397,20 @@ public class ServiceStartCommandTests
         // Assert
         Assert.Contains("Insecure transport configuration error", message);
         Assert.Contains("proper authentication configured", message);
+    }
+
+    [Fact]
+    public void GetErrorMessage_WithNamespaceAndToolException_ReturnsCustomMessage()
+    {
+        // Arrange
+        var exception = new ArgumentException("--namespace and --tool options cannot be used together");
+
+        // Act
+        var message = GetErrorMessage(exception);
+
+        // Assert
+        Assert.Contains("Configuration error", message);
+        Assert.Contains("mutually exclusive", message);
     }
 
     [Fact]
@@ -361,6 +498,107 @@ public class ServiceStartCommandTests
             // Other exceptions are expected since the server can't actually start in a unit test
             // We only care that ArgumentException about transport is not thrown
         }
+    }
+
+
+    [Fact]
+    public void InitializedHandler_SetsStartupInformation()
+    {
+        // Arrange
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "test-transport",
+            Mode = "test-mode",
+            Tool = ["test-tool1", "test-tool2"],
+            ReadOnly = false,
+            Debug = true,
+            Namespace = ["storage", "keyvault"],
+            InsecureDisableElicitation = false,
+            EnableInsecureTransports = true,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
+        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        var mode = GetAndAssertTagKeyValue(activity, TagName.ServerMode);
+        Assert.Equal(serviceStartOptions.Mode, mode);
+
+        var tool = GetAndAssertTagKeyValue(activity, TagName.Tool);
+        Assert.Equal(string.Join(",", serviceStartOptions.Tool), tool);
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        var namespaces = GetAndAssertTagKeyValue(activity, TagName.Namespace);
+        Assert.Equal(string.Join(",", serviceStartOptions.Namespace), namespaces);
+    }
+
+    [Fact]
+    public void InitializedHandler_SetsCorrectInformationWhenNull()
+    {
+        // Arrange
+        // Tool, Mode, and Namespace are null
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "test-transport",
+            Mode = null,
+            ReadOnly = true,
+            Debug = false,
+            InsecureDisableElicitation = true,
+            EnableInsecureTransports = false,
+        };
+        var activity = new Activity("test-activity");
+        var mockTelemetry = Substitute.For<ITelemetryService>();
+        mockTelemetry.StartActivity(Arg.Any<string>()).Returns(activity);
+
+
+        // Act
+        ServiceStartCommand.LogStartTelemetry(mockTelemetry, serviceStartOptions);
+
+
+
+        // Assert
+        mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
+
+        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
+        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+
+        var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
+        Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
+
+        var transport = GetAndAssertTagKeyValue(activity, TagName.Transport);
+        Assert.Equal(serviceStartOptions.Transport, transport);
+
+        Assert.DoesNotContain(TagName.ServerMode, activity.TagObjects.Select(x => x.Key));
+
+        Assert.DoesNotContain(TagName.Tool, activity.TagObjects.Select(x => x.Key));
+
+        var readOnly = GetAndAssertTagKeyValue(activity, TagName.IsReadOnly);
+        Assert.Equal(serviceStartOptions.ReadOnly, readOnly);
+
+        var debug = GetAndAssertTagKeyValue(activity, TagName.IsDebug);
+        Assert.Equal(serviceStartOptions.Debug, debug);
+
+        Assert.DoesNotContain(TagName.Namespace, activity.TagObjects.Select(x => x.Key));
     }
 
     private static ParseResult CreateParseResult(string? serviceValue)
@@ -458,9 +696,57 @@ public class ServiceStartCommandTests
         return _command.GetCommand().Parse([.. args]);
     }
 
+    private ParseResult CreateParseResultWithTool(string[]? tools)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (tools is not null)
+        {
+            foreach (var tool in tools)
+            {
+                args.Add("--tool");
+                args.Add(tool);
+            }
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
     private ParseResult CreateParseResultWithMinimalOptions()
     {
         return _command.GetCommand().Parse([]);
+    }
+
+    private ParseResult CreateParseResultWithToolsAndMode(string[] tools, string mode)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--mode", mode
+        };
+
+        foreach (var tool in tools)
+        {
+            args.Add("--tool");
+            args.Add(tool);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithNamespaceAndTool()
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--namespace", "storage",
+            "--tool", "azmcp_storage_account_get"
+        };
+
+        return _command.GetCommand().Parse([.. args]);
     }
 
     private ServiceStartOptions GetBoundOptions(ParseResult parseResult)
@@ -485,5 +771,15 @@ public class ServiceStartCommandTests
         var method = typeof(ServiceStartCommand).GetMethod("GetStatusCode",
             System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         return (HttpStatusCode)method!.Invoke(_command, [exception])!;
+    }
+
+    private static object GetAndAssertTagKeyValue(Activity activity, string tagName)
+    {
+        var matching = activity.TagObjects.SingleOrDefault(x => string.Equals(x.Key, tagName, StringComparison.OrdinalIgnoreCase));
+
+        Assert.False(matching.Equals(default(KeyValuePair<string, object?>)), $"Tag '{tagName}' was not found in activity tags.");
+        Assert.NotNull(matching.Value);
+
+        return matching.Value;
     }
 }

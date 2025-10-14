@@ -1,8 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Buffers;
+using System.Collections.Generic;
+using System.Globalization;
 using System.Text.Json;
+using System.Threading;
+using System.Threading.Tasks;
 using Azure;
 using Azure.Core;
 using Azure.Identity;
@@ -36,8 +41,9 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
 
     public async Task<AppendEntryResult> AppendEntryAsync(string ledgerName, string entryData, string? collectionId = null)
     {
-        ArgumentException.ThrowIfNullOrWhiteSpace(ledgerName);
-        ArgumentException.ThrowIfNullOrWhiteSpace(entryData);
+        ValidateRequiredParameters(
+            (nameof(ledgerName), ledgerName),
+            (nameof(entryData), entryData));
 
         var credential = await GetCredential();
 
@@ -49,33 +55,69 @@ public class ConfidentialLedgerService : BaseAzureService, IConfidentialLedgerSe
         var operation = await client.PostLedgerEntryAsync(WaitUntil.Completed, content, collectionId);
         var response = operation.GetRawResponse();
 
-        string transactionId = string.Empty;
-        if (response.Headers.TryGetValue("x-ms-ccf-transaction-id", out var headerValue))
+        return new AppendEntryResult
         {
-            transactionId = headerValue ?? string.Empty;
+            TransactionId = operation.Id,
+            State = operation.HasCompleted ? "Committed" : "Pending"
+        };
+    }
+
+    public async Task<LedgerEntryGetResult> GetLedgerEntryAsync(string ledgerName, string transactionId, string? collectionId = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(ledgerName), ledgerName),
+            (nameof(transactionId), transactionId));
+
+        // throw if strings are blank (whitespace)
+        if (string.IsNullOrWhiteSpace(ledgerName))
+        {
+            throw new ArgumentException("Ledger name cannot be empty or whitespace.");
+        }
+        if (string.IsNullOrWhiteSpace(transactionId))
+        {
+            throw new ArgumentException("Transaction ID cannot be empty or whitespace.", nameof(transactionId));
         }
 
-        string state = string.Empty;
-        try
+        var credential = await GetCredential();
+        ConfidentialLedgerClient client = new(BuildLedgerUri(ledgerName), credential);
+
+        Response? getByCollectionResponse = null;
+        bool loaded = false;
+        string? contents = null;
+        string? actualTransactionId = null;
+        using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+        while (!loaded)
         {
-            if (response.ContentStream is not null)
+            if (cts.Token.IsCancellationRequested)
             {
-                using var doc = JsonDocument.Parse(response.ContentStream);
-                if (doc.RootElement.TryGetProperty("state", out var stateProp))
+                throw new TimeoutException($"Timed out waiting for ledger entry to load after 15 seconds. Transaction ID: {transactionId}");
+            }
+            getByCollectionResponse = await client.GetLedgerEntryAsync(transactionId, collectionId).ConfigureAwait(false);
+            using (JsonDocument jsonDoc = JsonDocument.Parse(getByCollectionResponse.Content))
+            {
+                loaded = jsonDoc.RootElement.GetProperty("state").GetString() != "Loading";
+                if (!loaded)
                 {
-                    state = stateProp.GetString() ?? string.Empty;
+                    // Add a small delay to avoid tight polling
+                    await Task.Delay(500, cts.Token).ConfigureAwait(false);
+                }
+                else
+                {
+                    if (jsonDoc.RootElement.TryGetProperty("entry", out var entryElement))
+                    {
+                        contents = entryElement.TryGetProperty("contents", out var contentsElement) ? contentsElement.GetString() : null;
+                        actualTransactionId = entryElement.TryGetProperty("transactionId", out var txElement) ? txElement.GetString() : null;
+                    }
                 }
             }
         }
-        catch
-        {
-            throw new RequestFailedException(response.Status, "Failed to parse response content.");
-        }
 
-        return new AppendEntryResult
+        return new LedgerEntryGetResult
         {
-            TransactionId = transactionId,
-            State = state
+            LedgerName = ledgerName,
+            TransactionId = actualTransactionId ?? transactionId,
+            Contents = contents ?? string.Empty,
         };
     }
 }

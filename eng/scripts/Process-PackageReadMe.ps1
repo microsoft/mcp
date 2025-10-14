@@ -38,6 +38,16 @@ insert-section is used to insert a chunk of text into a line for a specified pac
 e.g.
 <!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->
 #>
+param (
+    [Parameter(Mandatory=$true)]
+    [ValidateSet('extract', 'validate', 'validate-all')]
+    [string] $Command,
+    [string] $InputReadMePath,
+    [string] $OutputDirectory,
+    [ValidateSet('nuget','npm','vsix')]
+    [string] $PackageType,
+    [hashtable] $InsertPayload = @{}
+)
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
@@ -278,4 +288,16 @@ function Validate-All-PackageReadmes {
         }
     }
     return $hasFailures
+}
+
+switch ($Command) {
+    'extract' {
+        Extract-PackageSpecificReadMe -InputReadMePath $InputReadMePath -OutputDirectory $OutputDirectory -PackageType $PackageType -InsertPayload $InsertPayload
+    }
+    'validate' {
+        Validate-PackageReadme -InputReadMePath $InputReadMePath
+    }
+    'validate-all' {
+        Validate-All-PackageReadmes
+    }
 }

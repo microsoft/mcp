@@ -32,6 +32,13 @@ public class ServiceStartOptions
     public string? Mode { get; set; } = ModeTypes.NamespaceProxy;
 
     /// <summary>
+    /// Gets or sets the specific tool names to expose.
+    /// When specified, only these tools will be available.
+    /// </summary>
+    [JsonPropertyName("tool")]
+    public string[]? Tool { get; set; } = null;
+
+    /// <summary>
     /// Gets or sets whether the server should operate in read-only mode.
     /// When true, only tools marked as read-only will be available.
     /// </summary>

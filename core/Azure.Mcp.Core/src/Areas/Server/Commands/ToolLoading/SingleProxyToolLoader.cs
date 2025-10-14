@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
@@ -129,6 +131,8 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         {
             learn = true;
         }
+
+        Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
 
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {

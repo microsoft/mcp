@@ -6,6 +6,7 @@ using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 
@@ -48,6 +50,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
+    public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+
     /// <summary>
     /// Registers command options for the service start command.
     /// </summary>
@@ -58,6 +62,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Transport);
         command.Options.Add(ServiceOptionDefinitions.Namespace);
         command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.Tool);
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
@@ -67,6 +72,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
             ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
             ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+            ValidateNamespaceAndToolMutualExclusion(
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult);
         });
     }
 
@@ -77,11 +86,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>A configured ServiceStartOptions instance.</returns>
     protected override ServiceStartOptions BindOptions(ParseResult parseResult)
     {
+        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+
+        // When --tool switch is used, automatically change the mode to "all"
+        if (tools != null && tools.Length > 0)
+        {
+            mode = ModeTypes.All;
+        }
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
-            Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
+            Mode = mode,
+            Tool = tools,
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
@@ -108,6 +127,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         try
         {
             using var host = CreateHost(options);
+
+            await InitializeServicesAsync(host.Services);
+
+            var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
+            LogStartTelemetry(telemetryService, options);
+
             await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
 
@@ -117,6 +142,30 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         {
             HandleException(context, ex);
             return context.Response;
+        }
+    }
+
+    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServiceStartOptions options)
+    {
+        using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.Transport, options.Transport);
+            activity.SetTag(TagName.ServerMode, options.Mode);
+            activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
+            activity.SetTag(TagName.InsecureDisableElicitation, options.InsecureDisableElicitation);
+            activity.SetTag(TagName.EnableInsecureTransports, options.EnableInsecureTransports);
+            activity.SetTag(TagName.IsDebug, options.Debug);
+
+            if (options.Namespace != null && options.Namespace.Length > 0)
+            {
+                activity.SetTag(TagName.Namespace, string.Join(",", options.Namespace));
+            }
+            if (options.Tool != null && options.Tool.Length > 0)
+            {
+                activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
+            }
         }
     }
 
@@ -176,6 +225,23 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
+    /// Validates that --namespace and --tool options are not used together.
+    /// </summary>
+    /// <param name="namespaces">The namespace values.</param>
+    /// <param name="tools">The tool values.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(string[]? namespaces, string[]? tools, CommandResult commandResult)
+    {
+        bool hasNamespace = namespaces != null && namespaces.Length > 0;
+        bool hasTool = tools != null && tools.Length > 0;
+
+        if (hasNamespace && hasTool)
+        {
+            commandResult.AddError("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+        }
+    }
+
+    /// <summary>
     /// Provides custom error messages for specific exception types to improve user experience.
     /// </summary>
     /// <param name="ex">The exception to format an error message for.</param>
@@ -186,6 +252,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
         ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
             "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
+            "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)

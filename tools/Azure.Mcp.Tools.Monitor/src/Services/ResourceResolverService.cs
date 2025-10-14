@@ -22,7 +22,7 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         if (ResourceIdentifier.TryParse(resourceName, out ResourceIdentifier? result))
         {

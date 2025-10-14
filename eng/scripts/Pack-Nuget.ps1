@@ -19,7 +19,6 @@ param(
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-. "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1"
 
 $mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
@@ -102,8 +101,9 @@ try {
             -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
             Set-Content -Path $wrapperToolNuspec
 
-        Extract-PackageSpecificReadMe -InputReadMePath "$serverDirectory/README.md" `
-            -OutputDirectory $tempNugetWrapperDir -PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
+		& "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
+            -InputReadMePath "$serverDirectory/README.md" -OutputDirectory $tempNugetWrapperDir `
+			-PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
 			
 		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
 		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force

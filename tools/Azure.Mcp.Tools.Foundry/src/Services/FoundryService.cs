@@ -171,7 +171,7 @@ public class FoundryService(
 
     public async Task<List<Deployment>> ListDeployments(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -196,7 +196,13 @@ public class FoundryService(
         string azureAiServicesName, string resourceGroup, string subscriptionId, string? modelVersion = null, string? modelSource = null,
         string? skuName = null, int? skuCapacity = null, string? scaleType = null, int? scaleCapacity = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(deploymentName, modelName, modelFormat, azureAiServicesName, resourceGroup, subscriptionId);
+        ValidateRequiredParameters(
+            (nameof(deploymentName), deploymentName),
+            (nameof(modelName), modelName),
+            (nameof(modelFormat), modelFormat),
+            (nameof(azureAiServicesName), azureAiServicesName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscriptionId), subscriptionId));
 
         try
         {
@@ -268,7 +274,7 @@ public class FoundryService(
 
     public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -310,7 +316,9 @@ public class FoundryService(
 
     public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint, indexName);
+        ValidateRequiredParameters(
+            (nameof(endpoint), endpoint),
+            (nameof(indexName), indexName));
 
         try
         {
@@ -364,7 +372,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, promptText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(promptText), promptText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -435,7 +448,13 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, inputText, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(inputText), inputText),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -493,7 +512,7 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, subscription, resourceGroup);
+        ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
@@ -574,7 +593,12 @@ public class FoundryService(
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(resourceName, deploymentName, subscription, resourceGroup);
+        ValidateRequiredParameters(
+            (nameof(resourceName), resourceName),
+            (nameof(deploymentName), deploymentName),
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup)
+            );
 
         if (messages == null || messages.Count == 0)
         {
@@ -743,7 +767,7 @@ public class FoundryService(
 
     public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint);
+        ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
@@ -776,7 +800,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var credential = await GetCredential(tenantId);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
@@ -859,7 +886,10 @@ public class FoundryService(
     {
         try
         {
-            ValidateRequiredParameters(agentId, query, endpoint);
+            ValidateRequiredParameters(
+                (nameof(agentId), agentId),
+                (nameof(query), query),
+                (nameof(endpoint), endpoint));
 
             var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy);
 
@@ -918,7 +948,10 @@ public class FoundryService(
 
     public async Task<AgentsEvaluateResult> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(evaluatorName, query, agentResponse);
+        ValidateRequiredParameters(
+            (nameof(evaluatorName), evaluatorName),
+            (nameof(query), query),
+            (nameof(agentResponse), agentResponse));
         try
         {
             if (!AgentEvaluatorDictionary.ContainsKey(evaluatorName.ToLowerInvariant()))
@@ -1237,6 +1270,133 @@ public class FoundryService(
                 new Uri(azureOpenAIEndpoint),
                 new ApiKeyCredential(azureOpenAIKey)).GetChatClient(azureOpenAIDeployment).AsIChatClient();
         }
+    }
+
+    public async Task<List<AiResourceInformation>> ListAiResourcesAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters((nameof(subscription), subscription));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+
+            var resources = new List<AiResourceInformation>();
+
+            // Get Cognitive Services accounts
+            if (string.IsNullOrEmpty(resourceGroup))
+            {
+                // List all AI resources in the subscription
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                {
+                    var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                    resources.Add(resourceInfo);
+                }
+            }
+            else
+            {
+                // List AI resources in specific resource group - filter by resource group
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                {
+                    if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
+                    {
+                        var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
+                        resources.Add(resourceInfo);
+                    }
+                }
+            }
+
+            return resources;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list AI resources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<AiResourceInformation> GetAiResourceAsync(
+        string subscription,
+        string resourceGroup,
+        string resourceName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(resourceName), resourceName));
+
+        try
+        {
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+
+            if (rgResource?.Value == null)
+            {
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            }
+
+            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName);
+            if (account?.Value == null)
+            {
+                throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
+            }
+
+            return await BuildResourceInformation(account.Value, subscriptionResource.Data.DisplayName);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get AI resource: {ex.Message}", ex);
+        }
+    }
+
+    private async Task<AiResourceInformation> BuildResourceInformation(
+        CognitiveServicesAccountResource account,
+        string subscriptionName)
+    {
+        var resourceInfo = new AiResourceInformation
+        {
+            ResourceName = account.Data.Name,
+            ResourceGroup = account.Data.Id.ResourceGroupName,
+            SubscriptionName = subscriptionName,
+            Location = account.Data.Location.Name,
+            Endpoint = account.Data.Properties?.Endpoint,
+            Kind = account.Data.Kind,
+            SkuName = account.Data.Sku?.Name,
+            Deployments = []
+        };
+
+        // Get deployments for this resource
+        try
+        {
+            await foreach (var deployment in account.GetCognitiveServicesAccountDeployments())
+            {
+                var deploymentInfo = new DeploymentInformation
+                {
+                    DeploymentName = deployment.Data.Name,
+                    ModelName = deployment.Data.Properties?.Model?.Name,
+                    ModelVersion = deployment.Data.Properties?.Model?.Version,
+                    ModelFormat = deployment.Data.Properties?.Model?.Format,
+                    SkuName = deployment.Data.Sku?.Name,
+                    SkuCapacity = deployment.Data.Sku?.Capacity,
+                    ScaleType = deployment.Data.Properties?.ScaleSettings?.ScaleType.ToString(),
+                    ProvisioningState = deployment.Data.Properties?.ProvisioningState.ToString()
+                };
+                resourceInfo.Deployments?.Add(deploymentInfo);
+            }
+        }
+        catch
+        {
+            // If we can't list deployments, continue with empty list
+            resourceInfo.Deployments = [];
+        }
+
+        return resourceInfo;
     }
 
     private static JsonTypeInfo<Dictionary<string, object?>> DictionaryTypeInfo { get; } =

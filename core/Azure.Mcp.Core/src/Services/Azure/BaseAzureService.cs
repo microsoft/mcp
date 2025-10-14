@@ -168,16 +168,39 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     /// <summary>
-    /// Validates that the provided parameters are not null or empty
+    /// Generic token caching mechanism that handles token acquisition and caching with expiration
     /// </summary>
-    /// <param name="parameters">Array of parameters to validate</param>
-    /// <exception cref="ArgumentException">Thrown when any parameter is null or empty</exception>
-    protected static void ValidateRequiredParameters(params string?[] parameters)
+    /// <param name="resource">The Azure resource scope for which to get the token</param>
+    /// <param name="getCachedToken">Function to get the currently cached token</param>
+    /// <param name="setCachedToken">Action to set/cache the new token</param>
+    /// <param name="getExpiryTime">Function to get the current token expiry time</param>
+    /// <param name="setExpiryTime">Action to set the new token expiry time</param>
+    /// <param name="tenant">Optional tenant for credential acquisition</param>
+    /// <param name="tokenExpirationBufferSeconds">Buffer seconds before actual expiration (default: 300)</param>
+    /// <returns>A valid access token</returns>
+    protected async Task<string> GetCachedTokenAsync(
+        string resource,
+        Func<string?> getCachedToken,
+        Action<string> setCachedToken,
+        Func<DateTimeOffset> getExpiryTime,
+        Action<DateTimeOffset> setExpiryTime,
+        string? tenant = null,
+        int tokenExpirationBufferSeconds = 300)
     {
-        foreach (var param in parameters)
+        var cachedToken = getCachedToken();
+        if (cachedToken != null && DateTimeOffset.UtcNow < getExpiryTime())
         {
-            ArgumentException.ThrowIfNullOrEmpty(param);
+            return cachedToken;
         }
+
+        var credential = await GetCredential(tenant);
+        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
+        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+        setCachedToken(accessToken.Token);
+        setExpiryTime(accessToken.ExpiresOn.AddSeconds(-tokenExpirationBufferSeconds));
+
+        return accessToken.Token;
     }
 
     /// <summary>

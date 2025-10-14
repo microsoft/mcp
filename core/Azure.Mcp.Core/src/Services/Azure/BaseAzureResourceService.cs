@@ -91,7 +91,7 @@ public abstract class BaseAzureResourceService(
         int limit = 50,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(resourceType, subscription);
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
         var results = new List<T>();
@@ -158,7 +158,7 @@ public abstract class BaseAzureResourceService(
         string? additionalFilter = null,
         CancellationToken cancellationToken = default) where T : class
     {
-        ValidateRequiredParameters(resourceType, subscription);
+        ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);

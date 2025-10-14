@@ -8,7 +8,9 @@ using Azure.Mcp.Tools.ConfidentialLedger.Options;
 namespace Azure.Mcp.Tools.ConfidentialLedger;
 
 [JsonSerializable(typeof(AppendEntryOptions))]
+[JsonSerializable(typeof(GetEntryOptions))]
 [JsonSerializable(typeof(AppendEntryResult))]
+[JsonSerializable(typeof(LedgerEntryGetResult))]
 [JsonSerializable(typeof(AppendEntryRequest))]
 public partial class ConfidentialLedgerJsonContext : JsonSerializerContext
 {

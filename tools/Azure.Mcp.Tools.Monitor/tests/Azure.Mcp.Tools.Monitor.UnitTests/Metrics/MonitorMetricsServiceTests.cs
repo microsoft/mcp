@@ -161,28 +161,14 @@ public class MonitorMetricsServiceTests
         var metricNamespace = "Microsoft.Storage/storageAccounts";
 
         // Act & Assert
-        if (subscription is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.QueryMetricsAsync(
-                    subscription!,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName,
-                    metricNamespace,
-                    metricNames));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.QueryMetricsAsync(
-                    subscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName,
-                    metricNamespace,
-                    metricNames));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+        _service.QueryMetricsAsync(
+            subscription!,
+            TestResourceGroup,
+            TestResourceType,
+            TestResourceName,
+            metricNamespace,
+            metricNames));
     }
 
     [Theory]
@@ -195,28 +181,15 @@ public class MonitorMetricsServiceTests
         var metricNamespace = "Microsoft.Storage/storageAccounts";
 
         // Act & Assert
-        if (resourceName is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.QueryMetricsAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName!,
-                    metricNamespace,
-                    metricNames));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.QueryMetricsAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName,
-                    metricNamespace,
-                    metricNames));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.QueryMetricsAsync(
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                resourceName!,
+                metricNamespace,
+                metricNames)
+            );
     }
 
     [Fact]
@@ -234,10 +207,10 @@ public class MonitorMetricsServiceTests
     }
 
     [Fact]
-    public async Task QueryMetricsAsync_WithNullMetricNamespace_ThrowsArgumentNullException()
+    public async Task QueryMetricsAsync_WithNullMetricNamespace_ThrowsArgumentException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentNullException>(() =>
+        await Assert.ThrowsAsync<ArgumentException>(() =>
             _service.QueryMetricsAsync(
                 TestSubscription,
                 TestResourceGroup,
@@ -308,25 +281,13 @@ public class MonitorMetricsServiceTests
     [InlineData("")]
     public async Task ListMetricDefinitionsAsync_WithNullOrEmptySubscription_ThrowsArgumentException(string? subscription)
     {
-        // Act & Assert
-        if (subscription is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.ListMetricDefinitionsAsync(
-                    subscription!,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.ListMetricDefinitionsAsync(
-                    subscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ListMetricDefinitionsAsync(
+                subscription!,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName));
+
     }
 
     [Theory]
@@ -334,25 +295,13 @@ public class MonitorMetricsServiceTests
     [InlineData("")]
     public async Task ListMetricDefinitionsAsync_WithNullOrEmptyResourceName_ThrowsArgumentException(string? resourceName)
     {
-        // Act & Assert
-        if (resourceName is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.ListMetricDefinitionsAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName!));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.ListMetricDefinitionsAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ListMetricDefinitionsAsync(
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                resourceName!));
+
     }
 
     #endregion
@@ -365,24 +314,12 @@ public class MonitorMetricsServiceTests
     public async Task ListMetricNamespacesAsync_WithNullOrEmptySubscription_ThrowsArgumentException(string? subscription)
     {
         // Act & Assert
-        if (subscription is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.ListMetricNamespacesAsync(
-                    subscription!,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.ListMetricNamespacesAsync(
-                    subscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    TestResourceName));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ListMetricNamespacesAsync(
+                subscription!,
+                TestResourceGroup,
+                TestResourceType,
+                TestResourceName));
     }
 
     [Theory]
@@ -391,24 +328,12 @@ public class MonitorMetricsServiceTests
     public async Task ListMetricNamespacesAsync_WithNullOrEmptyResourceName_ThrowsArgumentException(string? resourceName)
     {
         // Act & Assert
-        if (resourceName is null)
-        {
-            await Assert.ThrowsAsync<ArgumentNullException>(() =>
-                _service.ListMetricNamespacesAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName!));
-        }
-        else
-        {
-            await Assert.ThrowsAsync<ArgumentException>(() =>
-                _service.ListMetricNamespacesAsync(
-                    TestSubscription,
-                    TestResourceGroup,
-                    TestResourceType,
-                    resourceName));
-        }
+        await Assert.ThrowsAsync<ArgumentException>(() =>
+            _service.ListMetricNamespacesAsync(
+                TestSubscription,
+                TestResourceGroup,
+                TestResourceType,
+                resourceName!));
     }
 
     #endregion

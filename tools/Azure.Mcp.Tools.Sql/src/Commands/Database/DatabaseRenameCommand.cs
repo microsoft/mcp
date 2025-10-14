@@ -47,7 +47,7 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
     protected override DatabaseRenameOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.NewDatabaseName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.NewDatabaseName);
+        options.NewDatabaseName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.NewDatabaseNameOption.Name);
         return options;
     }
 

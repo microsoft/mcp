@@ -38,7 +38,14 @@ public class AppServiceService(
         try
         {
             // Validate inputs
-            ValidateRequiredParameters(appName, resourceGroup, databaseType, databaseServer, databaseName, subscription);
+            ValidateRequiredParameters(
+                (nameof(appName), appName),
+                (nameof(resourceGroup), resourceGroup),
+                (nameof(databaseType), databaseType),
+                (nameof(databaseServer), databaseServer),
+                (nameof(databaseName), databaseName),
+                (nameof(subscription), subscription)
+                );
 
             // Get Azure resources
             var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy);

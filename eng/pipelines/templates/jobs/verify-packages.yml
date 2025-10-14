@@ -1,0 +1,61 @@
+parameters:
+# required matrix parameters
+- name: UsePlatformContainer
+  type: boolean
+- name: OSName
+  type: string
+- name: Matrix
+  type: object
+- name: DependsOn
+  type: object
+  default: []
+- name: CloudConfig
+  type: object
+- name: TestTimeoutInMinutes
+  type: number
+- name: ServerName
+  type: string
+
+jobs:
+- job: Verify_Packages_${{ parameters.OSName }}
+  displayName: "Verify Packages"
+  dependsOn: ${{ parameters.DependsOn }}
+  strategy:
+    matrix: $[ ${{ parameters.Matrix }} ]
+  pool:
+    name: $(Pool)
+    ${{ if eq(parameters.OSName, 'macOS') }}:
+      vmImage: $(OSVmImage)
+    ${{ else }}:
+      image: $(OSVmImage)
+    os: ${{ parameters.OSName }}
+
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download artifacts
+
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: NodeTool@0
+    displayName: "Use Node.js 20.x"
+    inputs:
+      versionSpec: 20.x
+
+  - task: Powershell@2
+    displayName: "Verify npm and nuget packages"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
+      arguments: >
+        -ServerName ${{ parameters.ServerName }}
+        -ArtifactsDirectory $(Pipeline.Workspace)
+        -TargetOs ${{ parameters.OSName }}
+        -TargetArch $(Architecture)
+        -WorkingDirectory $(Agent.TempDirectory)
+    condition: and(succeeded(), eq(variables['RunTests'], 'true')) # skipping on arm64 machines until #753 is fixed

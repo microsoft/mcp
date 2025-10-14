@@ -34,7 +34,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceName, metricNamespace);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
@@ -211,7 +211,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
         var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
@@ -278,7 +278,7 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription, resourceName);
+        ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
         var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
         var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);

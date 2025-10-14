@@ -20,9 +20,8 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
 
     public override string Description =>
         """
-        Gets information about a specific workbook by its Azure resource ID.
-        Returns workbook details including JSON serialized content, display name, description, category,
-        location, kind, tags, version, modification time, and other metadata.
+        Gets information about a specific Azure Workbook using its resource ID. Returns workbook details including serialized JSON content, display name, description, category, location, kind, tags, version, modification time, and other metadata.
+        Requires the Azure resource ID of the workbook to retrieve.
         """;
 
     public override string Title => CommandTitle;

@@ -54,6 +54,12 @@ public sealed class RegistryToolLoader(
                 .Select(t => t.ProtocolTool)
                 .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true));
 
+            // Filter by specific tools if provided
+            if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+            {
+                filteredTools = filteredTools.Where(t => _options.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
+            }
+
             foreach (var tool in filteredTools)
             {
                 allToolsResponse.Tools.Add(tool);
@@ -89,6 +95,26 @@ public sealed class RegistryToolLoader(
 
         // Initialize the tool client map if not already done
         await InitializeAsync(cancellationToken);
+
+        // Check if tool filtering is enabled and validate the requested tool
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            if (!_options.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var content = new TextContentBlock
+                {
+                    Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                };
+
+                _logger.LogWarning(content.Text);
+
+                return new CallToolResult
+                {
+                    Content = [content],
+                    IsError = true,
+                };
+            }
+        }
 
         if (!_toolClientMap.TryGetValue(request.Params.Name, out var mcpClient) || mcpClient == null)
         {

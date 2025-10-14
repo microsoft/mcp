@@ -259,4 +259,77 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
         Assert.Equal(JsonValueKind.False, valid.ValueKind);
         Assert.False(valid.GetBoolean());
     }
+
+    [Fact]
+    public async Task Should_update_root_squash_and_verify_with_list()
+    {
+        // Update root squash settings for existing filesystem
+        var updateResult = await CallToolAsync(
+            "azmcp_managedlustre_filesystem_update",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "name", Settings.ResourceBaseName },
+                { "root-squash-mode", "All" },
+                { "squash-uid", 2000 },
+                { "squash-gid", 2000 },
+                { "no-squash-nid-list", "10.0.0.5@tcp" }
+            });
+
+        var updatedFs = updateResult.AssertProperty("fileSystem");
+        Assert.Equal(JsonValueKind.Object, updatedFs.ValueKind);
+
+        // Validate root squash fields on direct update response
+        var rsMode = updatedFs.AssertProperty("rootSquashMode");
+        Assert.Equal(JsonValueKind.String, rsMode.ValueKind);
+        Assert.Equal("All", rsMode.GetString());
+        var rsUid = updatedFs.AssertProperty("squashUid");
+        Assert.Equal(JsonValueKind.Number, rsUid.ValueKind);
+        var rsGid = updatedFs.AssertProperty("squashGid");
+        Assert.Equal(JsonValueKind.Number, rsGid.ValueKind);
+        var rsNoSquashList = updatedFs.AssertProperty("noSquashNidList");
+        Assert.Equal(JsonValueKind.String, rsNoSquashList.ValueKind);
+
+        // Verify via list
+        var listResult = await CallToolAsync(
+            "azmcp_managedlustre_filesystem_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId }
+            });
+
+        var fileSystems = listResult.AssertProperty("fileSystems");
+        Assert.Equal(JsonValueKind.Array, fileSystems.ValueKind);
+
+        var found = false;
+        foreach (var fs in fileSystems.EnumerateArray())
+        {
+            if (fs.TryGetProperty("name", out var nameProp) &&
+                nameProp.ValueKind == JsonValueKind.String &&
+                string.Equals(nameProp.GetString(), Settings.ResourceBaseName, StringComparison.OrdinalIgnoreCase))
+            {
+                // Assert required root squash fields (must be present)
+                var listMode = fs.AssertProperty("rootSquashMode");
+                Assert.Equal(JsonValueKind.String, listMode.ValueKind);
+                Assert.Equal("All", listMode.GetString());
+
+                var listUid = fs.AssertProperty("squashUid");
+                Assert.Equal(JsonValueKind.Number, listUid.ValueKind);
+                Assert.Equal(2000, listUid.GetInt32());
+
+                var listGid = fs.AssertProperty("squashGid");
+                Assert.Equal(JsonValueKind.Number, listGid.ValueKind);
+                Assert.Equal(2000, listGid.GetInt32());
+
+                var listNoSquash = fs.AssertProperty("noSquashNidList");
+                Assert.Equal(JsonValueKind.String, listNoSquash.ValueKind);
+                Assert.Equal("10.0.0.5@tcp", listNoSquash.GetString());
+                found = true;
+                break;
+            }
+        }
+
+        Assert.True(found, $"Expected filesystem '{Settings.ResourceBaseName}' to be present after root squash update.");
+    }
 }
