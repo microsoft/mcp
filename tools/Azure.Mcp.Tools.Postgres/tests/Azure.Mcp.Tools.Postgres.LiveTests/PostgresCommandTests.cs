@@ -15,8 +15,8 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 {
     private const string TestDatabaseName = "testdb";
 
-    private string ServerName => Settings.ResourceBaseName;
-    private string ServerFqdn => $"{ServerName}.postgres.database.azure.com";
+    private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
+    private string ServerFqdn => Settings.DeploymentOutputs["POSTGRESSERVERFQDN"];
     private string AdminUsername => Settings.PrincipalName ?? string.Empty;
 
     private static bool _testDataInitialized = false;
