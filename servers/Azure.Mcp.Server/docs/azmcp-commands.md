@@ -631,6 +631,7 @@ azmcp confidentialledger entries append --ledger <ledger-name> \
                                         [--collection-id <collection-id>]
 
 # Retrieve a Confidential Ledger entry with verification proof
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp confidentialledger entries get --ledger <ledger-name> \
                                      --transaction-id <transaction-id> \
                                      [--collection-id <collection-id>]
@@ -1302,6 +1303,7 @@ azmcp tools list --namespaces
 
 ```bash
 # List the activity logs of an Azure Resource
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor activitylog list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --resource-type <resource-type> \

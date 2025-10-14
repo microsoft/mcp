@@ -5,10 +5,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 0.9.1 (Unreleased)
 
 ### Features Added
+- Added support for publishing MCP server start options as `ServerStarted`. ([#794](https://github.com/microsoft/mcp/pull/794))
 
 ### Breaking Changes
 
 ### Bugs Fixed
+- fix `azmcp_sql_db_rename`'s new database name binding bug [[#615](https://github.com/microsoft/mcp/issues/615)]
 
 ### Other Changes
 
