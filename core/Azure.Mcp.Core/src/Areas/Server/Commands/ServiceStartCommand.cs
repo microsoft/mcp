@@ -3,15 +3,23 @@
 
 using System.CommandLine.Parsing;
 using System.Net;
+using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -67,6 +75,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Options.Add(ServiceOptionDefinitions.RunAsRemoteHttpService);
+        command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Validators.Add(commandResult =>
         {
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
@@ -75,6 +85,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ValidateNamespaceAndToolMutualExclusion(
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult);
+            ValidateOutgoingAuthStrategy(
+                commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name),
+                commandResult.GetValueOrDefault<OutgoingAuthenticationTypes>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name),
                 commandResult);
         });
     }
@@ -95,6 +109,17 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             mode = ModeTypes.All;
         }
 
+        var runAsRemoteHttpService = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name);
+        var outgoingAuthStrategy = parseResult.GetValueOrDefault<OutgoingAuthenticationTypes>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
+
+        // Apply safe defaults for outgoing authentication strategy based on hosting mode
+        if (outgoingAuthStrategy == OutgoingAuthenticationTypes.NotSet)
+        {
+            outgoingAuthStrategy = runAsRemoteHttpService
+                ? OutgoingAuthenticationTypes.UseOnBehalfOf
+                : OutgoingAuthenticationTypes.UseHostingEnvironmentIdentity;
+        }
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
@@ -104,7 +129,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
+            RunAsRemoteHttpService = runAsRemoteHttpService,
+            OutgoingAuthStrategy = outgoingAuthStrategy
         };
         return options;
     }
@@ -243,6 +270,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
+    /// Validates that the outgoing authentication strategy is compatible with the hosting mode.
+    /// </summary>
+    /// <param name="runAsRemoteHttpService">Whether the server is running as a remote HTTP service.</param>
+    /// <param name="outgoingAuthStrategy">The outgoing authentication strategy.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateOutgoingAuthStrategy(bool runAsRemoteHttpService, OutgoingAuthenticationTypes outgoingAuthStrategy, CommandResult commandResult)
+    {
+        // UseOnBehalfOf is only valid when running as a remote HTTP service
+        if (!runAsRemoteHttpService && outgoingAuthStrategy == OutgoingAuthenticationTypes.UseOnBehalfOf)
+        {
+            commandResult.AddError("The UseOnBehalfOf outgoing authentication strategy is only valid when running as a remote HTTP service (--run-as-remote-http-service).");
+        }
+    }
+
+    /// <summary>
     /// Provides custom error messages for specific exception types to improve user experience.
     /// </summary>
     /// <param name="ex">The exception to format an error message for.</param>
@@ -255,6 +297,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
         ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
+        ArgumentException argEx when argEx.Message.Contains("UseOnBehalfOf outgoing authentication strategy") =>
+            "Configuration error: The UseOnBehalfOf authentication strategy requires --run-as-remote-http-service to be enabled.",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
@@ -267,7 +311,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for the MCP server.</returns>
     private IHost CreateHost(ServiceStartOptions serverOptions)
     {
-        if (serverOptions.EnableInsecureTransports)
+        if (serverOptions.EnableInsecureTransports || serverOptions.RunAsRemoteHttpService)
         {
             return CreateHttpHost(serverOptions);
         }
@@ -312,6 +356,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             })
             .ConfigureServices(services =>
             {
+                // Configure the ougoing authentication strategy.
+                AddOutgoingAuthentication(services, serverOptions);
+                
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
             })
@@ -325,48 +372,162 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
+        // Configure URLs
+        string? url = GetSafeAspNetCoreUrl(serverOptions);
+        if (url != null)
+        {
+            builder.WebHost.UseUrls(url);
+        }
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.ConfigureOpenTelemetryLogger();
+        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole();
+
+        IServiceCollection services = builder.Services;
+
+        // Configure authentication and authorization for remote HTTP service
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            var authBuilder = services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddMicrosoftIdentityWebApi(builder.Configuration.GetSection("AzureAd"));
+            
+            // Configure JWT Bearer events for OAuth protected resource metadata
+            services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
             {
-                logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
-                logging.AddEventSourceLogger();
-                logging.AddConsole();
-            })
-            .ConfigureWebHostDefaults(webBuilder =>
-            {
-                webBuilder.ConfigureServices(services =>
+                options.Events = new JwtBearerEvents
                 {
-                    services.AddCors(options =>
+                    OnChallenge = context =>
                     {
-                        options.AddPolicy("AllowAll", policy =>
+                        // Add resource_metadata parameter to WWW-Authenticate header
+                        if (!context.Response.HasStarted)
                         {
-                            policy.AllowAnyOrigin()
-                                  .AllowAnyMethod()
-                                  .AllowAnyHeader();
-                        });
-                    });
+                            var request = context.Request;
+                            var resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+                            
+                            // Modify the WWW-Authenticate header to include resource_metadata
+                            context.Response.Headers.WWWAuthenticate = 
+                                $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                        }
+                        return Task.CompletedTask;
+                    }
+                };
+            });
 
-                    ConfigureServices(services);
-                    ConfigureMcpServer(services, serverOptions);
-                });
-
-                webBuilder.Configure(app =>
+            services.AddAuthorizationBuilder()
+                .SetFallbackPolicy(null)
+                .AddPolicy("McpAccess", policy =>
                 {
-                    app.UseCors("AllowAll");
-                    app.UseRouting();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapMcp();
-                    });
+                    policy.RequireAuthenticatedUser();
+
+                    // Entra does not allow for delegated permissions (scopes) and
+                    // application permissions (roles) to have identical values.
+                    policy.RequireScopeOrAppPermission(
+                        allowedScopeValues: ["MCP.All"],
+                        allowedAppPermissionValues: ["App.MCP.All"]);
                 });
+        }
 
-                var url = GetSafeAspNetCoreUrl();
-                webBuilder.UseUrls(url);
-            })
-            .Build();
+        // Configure the ougoing authentication strategy.
+        AddOutgoingAuthentication(services, serverOptions);
+
+        // Configure non-MCP controllers/endpoints/routes/etc.
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            services.AddHealthChecks();
+        }
+
+        // Configure CORS
+        // We're allowing all origins, methods, and headers to support any web
+        // browser clients.
+        // Non-browser clients are unaffected by CORS.
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+
+        // Configure services
+        ConfigureServices(services); // Our static callback hook
+        ConfigureMcpServer(services, serverOptions);
+
+        WebApplication app = builder.Build();
+
+        // Configure middleware pipeline
+        app.UseCors("AllowAll");
+        app.UseRouting();
+
+        // Add OAuth protected resource metadata middleware
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            app.Use(async (context, next) =>
+            {
+                if (context.Request.Path == "/.well-known/oauth-protected-resource" && 
+                    context.Request.Method == "GET")
+                {
+                    var azureAdOptionsMonitor = context.RequestServices.GetRequiredService<IOptionsMonitor<MicrosoftIdentityOptions>>();
+                    var azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                    var request = context.Request;
+                    var baseUrl = $"{request.Scheme}://{request.Host}";
+                    var tenantId = azureAdOptions.TenantId;
+                    var instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
+
+                    var metadata = new OAuthProtectedResourceMetadata
+                    {
+                        Resource = baseUrl,
+                        AuthorizationServers = [$"{instance}/{tenantId}/v2.0"],
+                        ScopesSupported = ["MCP.All"],
+                        BearerMethodsSupported = ["header"],
+
+                        // Intentionally pointing to MCP repo for documentation. Could eventually
+                        // have a dedicated usage doc page, potentially provided by this service itself.
+                        ResourceDocumentation = "https://github.com/Microsoft/mcp",
+                        ResourceSigningAlgValuesSupported = ["RS256"]
+                    };
+                    
+                    context.Response.ContentType = "application/json";
+                    await JsonSerializer.SerializeAsync(
+                        context.Response.Body,
+                        metadata,
+                        OAuthMetadataJsonContext.Default.OAuthProtectedResourceMetadata);
+                    return;
+                }
+
+                await next(context);
+            });
+        }
+
+        // AuthN/Z are always required in the remote HTTP service scenario.
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            app.UseAuthentication();
+            app.UseAuthorization();
+        }
+
+        var mcpEndpointBuilder = app.MapMcp();
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            // All MCP endpoints require MCP.All scope or role
+            mcpEndpointBuilder.RequireAuthorization("McpAccess");
+        }
+
+        // Map non-MCP endpoints as needed.
+        if (serverOptions.RunAsRemoteHttpService)
+        {
+            // Health checks are anonymous (no authentication required)
+            app.MapHealthChecks("/health")
+                .AllowAnonymous();
+        }
+
+        return app;
     }
-
     /// <summary>
     /// Configures the MCP server services.
     /// </summary>
@@ -381,8 +542,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Gets a safe ASP.NET Core URL with security validation.
     /// </summary>
     /// <returns>A validated URL string for ASP.NET Core binding.</returns>
-    private static string GetSafeAspNetCoreUrl()
+    private static string? GetSafeAspNetCoreUrl(ServiceStartOptions options)
     {
+        if (options.RunAsRemoteHttpService)
+        {
+            // When running as a remote HTTP service, let the typical IConfiguration
+            // binding handle the ASPNETCORE_URLS value without additional validation.
+            return null;
+        }
+
         string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:5001";
 
         if (url.Contains(';'))
@@ -420,5 +588,23 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return url;
+    }
+
+    private static void AddOutgoingAuthentication(IServiceCollection services, ServiceStartOptions serverOptions)
+    {
+        // At this point, validation has already occurred and defaults have been applied in BindOptions
+        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthenticationTypes.UseHostingEnvironmentIdentity)
+        {
+            services.AddSingleton<IAzureTokenCredentialProvider, SingleIdentityTokenCredentialProvider>();
+        }
+        else if (serverOptions.OutgoingAuthStrategy == OutgoingAuthenticationTypes.UseOnBehalfOf)
+        {
+            services.AddHttpContextAccessor();
+            services.AddSingleton<IAzureTokenCredentialProvider, HttpOnBehalfOfTokenCredentialProvider>();
+        }
+        else
+        {
+            throw new InvalidOperationException($"Unsupported outgoing authentication strategy '{serverOptions.OutgoingAuthStrategy}'.");
+        }
     }
 }
