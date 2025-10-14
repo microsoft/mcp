@@ -22,7 +22,7 @@ internal class CliGenerateService(IHttpClientService httpClientService) : ICliGe
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);
 
         // AzCli copilot API endpoint
-        const string url = "https://azclis-copilot-apim-ppe-eus.azure-api.net/azcli/copilot";
+        const string url = "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
 
         var requestBody = new AzureCliGenerateRequest()
         {
