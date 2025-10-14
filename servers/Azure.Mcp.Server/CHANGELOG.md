@@ -11,6 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 - fix `azmcp_sql_db_rename`'s new database name binding bug [[#615](https://github.com/microsoft/mcp/issues/615)]
+- Change `azmcp_monitor_healthmodels_entity_gethealth` tool name to `azmcp_monitor_healthmodels_entity_get` [[#808](https://github.com/microsoft/mcp/pull/808)]
 
 ### Other Changes
 
