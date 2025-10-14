@@ -6,11 +6,10 @@ param baseName string = resourceGroup().name
 @description('The location of the resource. By default, this is the same as the resource group.')
 param location string = 'northeurope' // resourceGroup().location
 
-@description('The name of the test database.')
-param testDbName string = 'testdb'
-
 @description('The client OID to grant access to test resources.')
 param testApplicationOid string = '26ffb325-f480-419c-b7a9-2c8a018203a8' // azure-sdk-internal-devops-connections
+
+var testDbName string = 'testdb'
 
 resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-preview' = {
   name: '${baseName}-postgres'
@@ -20,8 +19,6 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
     tier: 'Burstable'
   }
   properties: {
-    //administratorLogin: 'myadmin'
-    //administratorLoginPassword: adminPassword
     version: '15'
     storage: {
       storageSizeGB: 32
@@ -36,7 +33,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
     }
     authConfig: {
       activeDirectoryAuth: 'Enabled'
-      passwordAuth: 'Disabled'  // Keep both enabled during testing for flexibility
+      passwordAuth: 'Disabled'  // S360 compliant
       tenantId: tenant().tenantId
     }
   }
@@ -60,7 +57,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
   resource postgresAdministrator 'administrators' = {
     name: testApplicationOid
     properties: {
-      principalType: 'User'
+      principalType: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'ServicePrincipal' : 'User'
       principalName: deployer().userPrincipalName
       tenantId: tenant().tenantId
     }
