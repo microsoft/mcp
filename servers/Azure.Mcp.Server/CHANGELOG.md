@@ -2,17 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.1 (Unreleased)
-
-### Features Added
-- Added support for publishing MCP server start options as `ServerStarted`. ([#794](https://github.com/microsoft/mcp/pull/794))
-
-### Breaking Changes
+## 0.9.1 (2025-01-14)
 
 ### Bugs Fixed
-- fix `azmcp_sql_db_rename`'s new database name binding bug [[#615](https://github.com/microsoft/mcp/issues/615)]
+
+- Fixed an issue where `azmcp_sql_db_rename` would not work as expected. [[#615](https://github.com/microsoft/mcp/issues/615)]
 
 ### Other Changes
+
+- MCP server start options are now included in logs. ([#794](https://github.com/microsoft/mcp/pull/794))
 
 ## 0.9.0 (2025-10-13)
 

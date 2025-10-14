@@ -1,5 +1,15 @@
 # Release History
 
+## 0.9.1 (2025-01-14)
+
+### Fixed
+
+- Fixed an issue where `azmcp_sql_db_rename` would not work as expected. [[#615](https://github.com/microsoft/mcp/issues/615)]
+
+### Changed
+
+- MCP server start options are now included in logs. ([#794](https://github.com/microsoft/mcp/pull/794))
+
 ## 0.9.0 (2025-10-13)
 
 ### Added
