@@ -70,15 +70,18 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
                 var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
                 return serviceArea == null || !IgnoredCommandGroups.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
             })
+            .Where(kvp => _options.Value.ReadOnly == false || kvp.Value.Metadata.ReadOnly == true)
+            .Where(kvp =>
+            {
+                // Filter by namespace if specified
+                if (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0)
+                {
+                    return true;
+                }
+                var serviceArea = _commandFactory.GetServiceArea(kvp.Key);
+                return serviceArea != null && _options.Value.Namespace.Contains(serviceArea, StringComparer.OrdinalIgnoreCase);
+            })
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-
-        // Filter out non read-only tools when --read-only is specified
-        if (_options.Value.ReadOnly == true)
-        {
-            filteredCommands = filteredCommands
-                .Where(kvp => kvp.Value.Metadata.ReadOnly == true)
-                .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        }
 
         // Track unmatched commands
         var unmatchedCommands = new HashSet<string>(filteredCommands.Keys, StringComparer.OrdinalIgnoreCase);
