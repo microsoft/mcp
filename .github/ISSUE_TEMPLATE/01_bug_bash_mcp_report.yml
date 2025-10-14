@@ -1,8 +1,9 @@
 name: Azure MCP - Bug Bash Report
 description: "File a bug found during Bug Bash for the Azure MCP Server."
 title: "[BUGBASH] "
-labels: ["needs-triage", "Azure.Mcp.Server", "Bug-Bash"]
+labels: ["needs-triage", "server-Azure.Mcp", "Bug-Bash"]
 projects: ["Microsoft/1976"]
+milestone: 2025-10
 
 body:
   - type: markdown
