@@ -60,7 +60,11 @@ public class ToolsListCommandTests
     private static ToolsListCommand.ToolNamesResult DeserializeToolNamesResult(object results)
     {
         var json = JsonSerializer.Serialize(results);
-        return JsonSerializer.Deserialize<ToolsListCommand.ToolNamesResult>(json) ?? new ToolsListCommand.ToolNamesResult(new List<string>());
+        var options = new JsonSerializerOptions
+        {
+            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+        };
+        return JsonSerializer.Deserialize<ToolsListCommand.ToolNamesResult>(json, options) ?? new ToolsListCommand.ToolNamesResult(new List<string>());
     }
 
     /// <summary>
