@@ -304,22 +304,26 @@ azmcp search index query --subscription <subscription> \
                          --index <index> \
                          --query <query>
 
-# List AI Search accounts in a subscription
-azmcp search list --subscription <subscription>
-
-# Get AI Search knowledge sources (all or a specific one)
-azmcp search knowledge source get --service <service>
-                                  [--knowledge-source <knowledge-source>]
-
 # Get AI Search knowledge bases (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base get --service <service>
                                 [--knowledge-base <knowledge-base>]
 
 # Run retrieval against an AI Search knowledge base
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
                                      [--messages <messages>]
+
+# Get AI Search knowledge sources (all or a specific one)
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search knowledge source get --service <service>
+                                  [--knowledge-source <knowledge-source>]
+
+# List AI Search accounts in a subscription
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp search list --subscription <subscription>
 ```
 
 ### Azure AI Services Speech Operations
@@ -414,18 +418,6 @@ azmcp applens resource diagnose --subscription <subscription> \
                                 --resource <resource>
 ```
 
-### Azure CLI Generate Operations
-```bash
-# Generate an Azure CLI command based on user intent
-azmcp extension cli generate --cli-type <cli-type> --intent <intent>
-```
-
-### Azure CLI Install Operations
-```bash
-# Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
-azmcp extension cli install --cli-type <cli-type>
-```
-
 ### Azure Application Insights Operations
 
 #### Code Optimization Recommendations
@@ -510,21 +502,42 @@ azmcp appservice database add --subscription "my-subscription" \
 -   `--connection-string`: Custom connection string (optional - auto-generated if not provided)
 -   `--tenant`: Azure tenant ID for authentication (optional)
 
+### Azure CLI Operations
+
+#### Generate
+
+```bash
+# Generate an Azure CLI command based on user intent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp extension cli generate --cli-type <cli-type>
+                             --intent <intent>
+```
+
+#### Install
+
+```bash
+# Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp extension cli install --cli-type <cli-type>
+```
+
 ### Azure Communication Services Operations
+
+#### Email
 
 ```bash
 # Send email using Azure Communication Services
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication email send --endpoint "<endpoint>" \
-                               --from "<sender-email>" \
-                               --to "<recipient-email>" \
-                               --subject "<email-subject>" \
-                               --message "<email-content>" \
+azmcp communication email send --endpoint <endpoint> \
+                               --from <sender-email> \
+                               --to <recipient-email> \
+                               --subject <email-subject> \
+                               --message <email-content> \
                                [--is-html] \
-                               [--sender-name "<sender-display-name>"] \
-                               [--cc "<cc-recipient-email>"] \
-                               [--bcc "<bcc-recipient-email>"] \
-                               [--reply-to "<reply-to-email>"]
+                               [--sender-name <sender-display-name>] \
+                               [--cc <cc-recipient-email>] \
+                               [--bcc <bcc-recipient-email>] \
+                               [--reply-to <reply-to-email>]
 
 # Examples:
 # Send plain text email
@@ -569,28 +582,31 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 -   `--bcc`: Blind carbon copy recipient email address(es), comma-separated for multiple recipients (optional)
 -   `--reply-to`: Reply-to email address(es), comma-separated for multiple addresses (optional)
 
-# Send SMS message using Azure Communication Services
+#### SMS
+
+```bash
+# SMS message using Azure Communication Services
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string "<connection-string>" \
-                             --from "<sender-phone-number>" \
-                             --to "<recipient-phone-number>" \
-                             --message "<message-text>" \
+azmcp communication sms send --connection-string <connection-string> \
+                             --from <sender-phone-number> \
+                             --to <recipient-phone-number> \
+                             --message <message-text> \
                              [--enable-delivery-report] \
-                             [--tag "<custom-tag>"]
+                             [--tag <custom-tag>]
 
 # Examples:
 # Send SMS to single recipient
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
-                             --from "+14255550123" \
-                             --to "+14255550124" \
-                             --message "Hello from Azure Communication Services!"~
+                             --from "+1234567890" \
+                             --to "+1234567891" \
+                             --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..."
-                             --from "+14255550123" \
-                             --to "+14255550124,+14255550125" \
+                             --from "+1234567890" \
+                             --to "+1234567891,+1234567892" \
                              --message "Broadcast message" \
                              --enable-delivery-report \
                              --tag "marketing-campaign"
@@ -719,7 +735,7 @@ azmcp kusto table schema [--cluster-uri <cluster-uri> | --subscription <subscrip
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp kusto query [--cluster-uri <cluster-uri> | --subscription <subscription> --cluster <cluster>] \
                   --database <database> \
-                  --query "<kql-query>"
+                  --query <kql-query>
 
 ```
 
@@ -940,6 +956,65 @@ azmcp eventgrid events publish --subscription <subscription> \
 ### Azure Event Hubs
 
 ```bash
+# Delete a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup delete --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --namespace <namespace> \
+                                     --eventhub <eventhub-name> \
+                                     --consumer-group <consumer-group-name>
+
+# Get Consumer Groups (list all in event hub or get specific consumer group)
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup get --subscription <subscription> \
+                                  --resource-group <resource-group> \
+                                  --namespace <namespace> \
+                                  --eventhub <eventhub-name> \
+                                  [--consumer-group <consumer-group-name>]
+
+# Create or update a Consumer Group
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs consumergroup update --subscription <subscription> \
+                                     --resource-group <resource-group> \
+                                     --namespace <namespace> \
+                                     --eventhub <eventhub-name> \
+                                     --consumer-group <consumer-group-name> \
+                                     [--user-metadata <user-metadata>]
+```
+
+```bash
+# Delete an Event Hub
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub delete --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name>
+
+# Get Event Hubs (list all in namespace or get specific event hub)
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub get --subscription <subscription> \
+                             --resource-group <resource-group> \
+                             --namespace <namespace> \
+                             [--eventhub <eventhub-name>]
+
+# Create or update an Event Hub
+# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub update --subscription <subscription> \
+                                --resource-group <resource-group> \
+                                --namespace <namespace> \
+                                --eventhub <eventhub-name> \
+                                [--partition-count <count>] \
+                                [--message-retention-in-hours <hours>] \
+                                [--status <status>]
+```
+
+```bash
+# Delete an Event Hubs Namespace
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs namespace delete --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --namespace <namespace>
+
 # Get Event Hubs Namespaces (list all in subscription/resource group or get specific namespace)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs namespace get --subscription <subscription> \
@@ -960,65 +1035,6 @@ azmcp eventhubs namespace update --subscription <subscription> \
                                  [--kafka-enabled <true/false>] \
                                  [--zone-redundant <true/false>] \
                                  [--tags <json-tags>]
-
-# Delete an Event Hubs Namespace
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs namespace delete --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --namespace <namespace>
-```
-
-```bash
-# Get Event Hubs (list all in namespace or get specific event hub)
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs eventhub get --subscription <subscription> \
-                             --resource-group <resource-group> \
-                             --namespace <namespace> \
-                             [--eventhub <eventhub-name>]
-
-# Create or update an Event Hub
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs eventhub update --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --namespace <namespace> \
-                                --eventhub <eventhub-name> \
-                                [--partition-count <count>] \
-                                [--message-retention-in-hours <hours>] \
-                                [--status <status>]
-
-# Delete an Event Hub
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs eventhub delete --subscription <subscription> \
-                                --resource-group <resource-group> \
-                                --namespace <namespace> \
-                                --eventhub <eventhub-name>
-```
-
-```bash
-# Get Consumer Groups (list all in event hub or get specific consumer group)
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup get --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --namespace <namespace> \
-                                  --eventhub <eventhub-name> \
-                                  [--consumer-group <consumer-group-name>]
-
-# Create or update a Consumer Group
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup update --subscription <subscription> \
-                                     --resource-group <resource-group> \
-                                     --namespace <namespace> \
-                                     --eventhub <eventhub-name> \
-                                     --consumer-group <consumer-group-name> \
-                                     [--user-metadata <user-metadata>]
-
-# Delete a Consumer Group
-# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup delete --subscription <subscription> \
-                                     --resource-group <resource-group> \
-                                     --namespace <namespace> \
-                                     --eventhub <eventhub-name> \
-                                     --consumer-group <consumer-group-name>
 ```
 
 ### Azure Function App Operations
@@ -1313,7 +1329,7 @@ azmcp monitor workspace list --subscription <subscription>
 azmcp monitor resource log query --subscription <subscription> \
                                  --resource-id <resource-id> \
                                  --table <table> \
-                                 --query "<kql-query>" \
+                                 --query <kql-query> \
                                  [--hours <hours>] \
                                  [--limit <limit>]
 
@@ -1321,7 +1337,7 @@ azmcp monitor resource log query --subscription <subscription> \
 azmcp monitor workspace log query --subscription <subscription> \
                                   --workspace <workspace> \
                                   --table <table> \
-                                  --query "<kql-query>" \
+                                  --query <kql-query> \
                                   [--hours <hours>] \
                                   [--limit <limit>]
 
@@ -1401,16 +1417,10 @@ azmcp monitor metrics query --subscription <subscription> \
 ```
 
 #### Web Tests (Availability Tests)
+
 ```bash
-# List all web tests in a subscription or optionally, within a resource group
-azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
-
-# Get details for a specific web test
-azmcp monitor webtests get --subscription <subscription> \
-                          --resource-group <resource-group> \
-                          --webtest-resource <webtest-resource-name>
-
 # Create a new web test in Azure Monitor
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests create --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
@@ -1434,7 +1444,18 @@ azmcp monitor webtests create --subscription <subscription> \
                               [--ssl-lifetime-check <days>] \
                               [--timeout <seconds>]
 
+# Get details for a specific web test
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests get --subscription <subscription> \
+                          --resource-group <resource-group> \
+                          --webtest-resource <webtest-resource-name>
+
+# List all web tests in a subscription or optionally, within a resource group
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp monitor webtests list --subscription <subscription> [--resource-group <resource-group>]
+
 # Update an existing web test in Azure Monitor
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor webtests update --subscription <subscription> \
                               --resource-group <resource-group> \
                               --webtest-resource <webtest-resource-name> \
