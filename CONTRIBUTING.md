@@ -141,7 +141,22 @@ If you are contributing significant changes, or if the issue is already assigned
 
 6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
 
-7. **Create Pull Request**:
+7. **Add new tool to consolidated mode**:
+   - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
+   - Paste the follow prompt for Copilot to generate the change to add the new tool:
+      ```txt 
+      I have this list of tools which haven't been matched with any consolidated tools in this file. Help me add them to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tools where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
+
+      <Add new tool name here>
+      ```
+   - Use the following command to find out the correct tool name for your new tool
+      ```
+      cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+      ./azmcp[.exe] tools list --name --namespace <tool_area>
+      ```
+   - Commit the change.
+
+8. **Create Pull Request**:
    - Reference the issue you created
    - Include tests in the `/tests` folder
    - Ensure all tests pass
