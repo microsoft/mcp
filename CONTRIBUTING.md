@@ -284,7 +284,21 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 }
 ```
 
-**Combined Mode** (filter namespaces with proxy mode):
+**Consolidated Mode** (grouped related operations):
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start", "--mode", "consolidated"]
+    }
+  }
+}
+```
+
+**Combined Mode** (filter namespaces with any mode):
 
 ```json
 {
@@ -314,9 +328,11 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 
 > **Server Mode Summary:**
 >
-> - **Default Mode**: No additional parameters - exposes all tools individually
+> - **Default Mode (Namespace)**: No additional parameters - collapses tools by namespace (current default)
+> - **Consolidated Mode**: `--mode consolidated` - exposes consolidated tools grouping related operations, optimized for AI agents.
 > - **Namespace Mode**: `--namespace <service-name>` - expose specific services
 > - **Namespace Proxy Mode**: `--mode namespace` - collapse tools by namespace (useful for VS Code's 128 tool limit)
+> - **All Tools Mode**: `--mode all` - expose all ~800+ individual tools
 > - **Single Tool Mode**: `--mode single` - single "azure" tool with internal routing
 > - **Specific Tool Mode**: `--tool <tool-name>` - expose only specific tools by name (finest granularity)
 > - **Combined Mode**: Multiple options can be used together (`--namespace` + `--mode` etc.)
