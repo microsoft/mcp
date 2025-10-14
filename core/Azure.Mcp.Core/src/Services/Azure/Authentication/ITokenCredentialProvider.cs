@@ -41,5 +41,5 @@ internal sealed class DefaultTokenCredentialProvider : ITokenCredentialProvider
             "DefaultTokenCredentialProvider is a marker instance for BaseAzureService to use CustomChainedCredential");
     }
 
-    public string? GetCurrentUserId() => null; // Single-user mode
+    public string? GetCurrentUserId() => null;
 }

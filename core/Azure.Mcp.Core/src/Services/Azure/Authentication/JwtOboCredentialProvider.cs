@@ -40,7 +40,7 @@ public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
     /// <returns>A TokenCredential that performs JWT exchange.</returns>
     public Task<TokenCredential> CreateAsync(string? tenant = null)
     {
-        return Task.FromResult<TokenCredential>(new JwtOboTokenCredential(_tokenAcquisition, _httpContextAccessor));
+        return Task.FromResult<TokenCredential>(new JwtOboTokenCredential(_tokenAcquisition, _httpContextAccessor, tenant));
     }
 
     /// <summary>
@@ -112,11 +112,13 @@ public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
     {
         private readonly ITokenAcquisition _tokenAcquisition;
         private readonly IHttpContextAccessor _httpContextAccessor;
+        private readonly string? _tenantId;
 
-        public JwtOboTokenCredential(ITokenAcquisition tokenAcquisition, IHttpContextAccessor httpContextAccessor)
+        public JwtOboTokenCredential(ITokenAcquisition tokenAcquisition, IHttpContextAccessor httpContextAccessor, string? tenantId = null)
         {
             _tokenAcquisition = tokenAcquisition;
             _httpContextAccessor = httpContextAccessor;
+            _tenantId = tenantId;
         }
 
         public override AccessToken GetToken(TokenRequestContext requestContext, CancellationToken cancellationToken)
@@ -135,6 +137,20 @@ public sealed class JwtOboCredentialProvider : ITokenCredentialProvider
             if (requestContext.Scopes == null || requestContext.Scopes.Length == 0)
             {
                 throw new ArgumentException("Token request context must have at least one scope.", nameof(requestContext));
+            }
+
+            var principal = httpContext?.User;
+            if (principal?.Identity?.IsAuthenticated != true)
+            {
+                throw new InvalidOperationException("User is not authenticated. JWT exchange authentication requires an authenticated user context.");
+            }
+
+            if (_tenantId != null)
+            {
+                if (ExtractTenantId(principal) != _tenantId)
+                {
+                    throw new InvalidOperationException("User is not authorized to access this tenant.");
+                }
             }
 
             try

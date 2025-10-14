@@ -68,11 +68,11 @@ public abstract class BaseAzureService(ITokenCredentialProvider tokenCredentialP
 
     protected async Task<TokenCredential> GetCredential(string? tenant = null)
     {
-        if (_tokenCredentialProvider == ITokenCredentialProvider.Default)
+        if (_tokenCredentialProvider != ITokenCredentialProvider.Default)
         {
-            return await GetDefaultCredential(tenant);
+            return await _tokenCredentialProvider.CreateAsync(tenant);
         }
-        return await _tokenCredentialProvider.CreateAsync(tenant);
+        return await GetDefaultCredential(tenant);
     }
 
     private async Task<TokenCredential> GetDefaultCredential(string? tenant = null)
@@ -150,6 +150,20 @@ public abstract class BaseAzureService(ITokenCredentialProvider tokenCredentialP
     protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, ArmClientOptions? armClientOptions = null)
     {
         var tenantId = await ResolveTenantIdAsync(tenant);
+        if (_tokenCredentialProvider != ITokenCredentialProvider.Default)
+        {
+            try
+            {
+                var credential = await GetCredential(tenantId);
+                var options = new ArmClientOptions();
+                ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+                return new ArmClient(credential, default, options);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
+            }
+        }
 
         // Return cached client if parameters match
         if (_armClient != null &&
@@ -281,5 +295,10 @@ public abstract class BaseAzureService(ITokenCredentialProvider tokenCredentialP
         }
 
         return accessToken.Token;
+    }
+
+    private bool IsDefaultCredentialProvider()
+    {
+        return _tokenCredentialProvider == ITokenCredentialProvider.Default;
     }
 }
