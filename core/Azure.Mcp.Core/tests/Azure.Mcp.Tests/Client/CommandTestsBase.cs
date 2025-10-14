@@ -8,7 +8,6 @@ using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
-using System.Diagnostics;
 using System.Reflection;
 
 namespace Azure.Mcp.Tests.Client;

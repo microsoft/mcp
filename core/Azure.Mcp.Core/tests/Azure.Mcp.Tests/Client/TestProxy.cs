@@ -16,9 +16,8 @@ namespace Azure.Mcp.Tests.Client;
 /// This version intentionally avoids dependencies on prior internal abstractions that were missing
 /// (e.g. TestEnvironment / ProcessTracker) while still providing stderr/stdout capture for failed tests.
 /// </summary>
-public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisposable
+public sealed class TestProxy(bool debug = false) : IDisposable
 {
-    private readonly string _repositoryRoot = repositoryRoot;
     private readonly bool _debug = debug;
     private readonly StringBuilder _stderr = new();
     private readonly StringBuilder _stdout = new();
@@ -31,12 +30,12 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
     public string BaseUri => _httpPort is int p ? $"http://127.0.0.1:{p}/" : throw new InvalidOperationException("Proxy not started");
 
     public TestProxyClient Client { get; private set; } = default!;
-    public TestProxyAdminClient AdminClient => Client.GetTestProxyAdminClient();
+    public TestProxyAdminClient AdminClient { get; private set; } = default!;
 
     /// <summary>
     /// Start the proxy process if not already started.
     /// </summary>
-    public void Start()
+    public void Start(string repositoryRoot)
     {
         if (_process != null)
         {
@@ -47,7 +46,7 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
             throw new InvalidOperationException("Unable to locate test-proxy executable. Set PROXY_EXE or ensure 'test-proxy' exists on PATH.");
         }
 
-        var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? _repositoryRoot;
+        var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
         var args = $"start -u --storage-location=\"{storageLocation}\"";
 
         var isDll = ExecutablePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
@@ -91,6 +90,7 @@ public sealed class TestProxy(string repositoryRoot, bool debug = false) : IDisp
         }
 
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
+        AdminClient = Client.GetTestProxyAdminClient();
     }
 
     private static async Task PumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
