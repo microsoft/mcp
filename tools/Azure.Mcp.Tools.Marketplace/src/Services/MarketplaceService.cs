@@ -17,7 +17,7 @@ public class MarketplaceService(ITenantService tenantService)
 {
     private const int TokenExpirationBuffer = 300;
     private const string ManagementApiBaseUrl = "https://management.azure.com";
-    private const string ApiVersion = "2025-01-01-preview";
+    private const string ApiVersion = "2023-01-01-preview";
 
     private string? _cachedAccessToken;
     private DateTimeOffset _tokenExpiryTime;
