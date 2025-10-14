@@ -652,7 +652,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
     {
         // Arrange
-        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage", "--namespace", "sql");
+        await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage");
 
         // Act
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -664,16 +664,14 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Should only include consolidated tools related to specified namespaces
         var hasRelevantTools = toolNames.Any(name =>
-            name.Contains("storage", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("sql", StringComparison.OrdinalIgnoreCase) ||
-            name.Contains("database", StringComparison.OrdinalIgnoreCase));
+            name.Contains("storage", StringComparison.OrdinalIgnoreCase));
 
-        Assert.True(hasRelevantTools, "Should have consolidated tools related to storage or database namespaces");
+        Assert.True(hasRelevantTools, "Should have consolidated tools related to storage namespaces");
 
         // In consolidated mode with namespace filter, should have fewer tools than without filter
-        Assert.True(toolNames.Count < 30, $"Expected fewer than 30 tools with namespace filter, got {toolNames.Count}");
+        Assert.True(toolNames.Count < 10, $"Expected fewer than 10 tools with namespace filter, got {toolNames.Count}");
 
-        Output.WriteLine($"Consolidated proxy mode with [storage, sql] namespaces loaded {toolNames.Count} tools");
+        Output.WriteLine($"Consolidated proxy mode with [storage] namespaces loaded {toolNames.Count} tools");
         foreach (var name in toolNames)
         {
             Output.WriteLine($"  - {name}");
