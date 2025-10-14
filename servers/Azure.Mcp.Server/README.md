@@ -234,9 +234,9 @@ npx -y @azure/mcp [command]
 <details>
 <summary>Additional instructions</summary>
 
-To troubleshoot @azure/mcp package (or respective binaries)installation, see [Troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md)
+To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (or respective binaries) installation, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md).
 
-To understand how platform-specific binaries are installed with @azure/mcp, see [Wrapper Binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md)
+To understand how platform-specific binaries are installed with @azure/mcp, review the [wrapper binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md).
 </details>
 
 ### Docker
