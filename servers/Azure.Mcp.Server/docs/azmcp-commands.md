@@ -1294,7 +1294,7 @@ azmcp bestpractices get --resource <resource> --action <action>
 azmcp tools list
 
 # List only the available top-level service namespaces
-azmcp tools list --namespaces
+azmcp tools list --namespace-mode
 ```
 
 ### Azure Monitor Operations
@@ -2008,7 +2008,7 @@ All responses follow a consistent JSON format:
 
 ### Tool and Namespace Result Objects
 
-When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
 | Field | Description |
 |-------|-------------|
