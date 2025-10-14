@@ -1,4 +1,17 @@
 {
+  "azmcp_foundry_agents_connect": [
+    "Query an agent in my AI foundry project"
+  ],
+  "azmcp_foundry_agents_evaluate": [
+    "Evaluate the full query and response I got from my agent for task_adherence"
+  ],
+  "azmcp_foundry_agents_list": [
+    "List all agents in my AI Foundry project",
+    "Show me the available agents in my AI Foundry project"
+  ],
+  "azmcp_foundry_agents_query-and-evaluate": [
+    "Query and evaluate an agent in my AI Foundry project for task_adherence"
+  ],
   "azmcp_foundry_knowledge_index_list": [
     "List all knowledge indexes in my AI Foundry project",
     "Show me the knowledge indexes in my AI Foundry project"
@@ -18,6 +31,51 @@
     "List all AI Foundry models",
     "Show me the available AI Foundry models"
   ],
+  "azmcp_foundry_openai_chat-completions-create": [
+    "Create a chat completion with the message \"Hello, how are you today?\""
+  ],
+  "azmcp_foundry_openai_create-completion": [
+    "Create a completion with the prompt \"What is Azure?\""
+  ],
+  "azmcp_foundry_openai_embeddings-create": [
+    "Generate embeddings for the text \"Azure OpenAI Service\"",
+    "Create vector embeddings for my text using Azure OpenAI"
+  ],
+  "azmcp_foundry_openai_models-list": [
+    "List all available OpenAI models in my Azure resource",
+    "Show me the OpenAI model deployments"
+  ],
+  "azmcp_foundry_resource_get": [
+    "List all AI Foundry resources in my subscription",
+    "Show me the AI Foundry resources in resource group <resource_group_name>",
+    "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>"
+  ],
+  "azmcp_search_knowledge_base_get": [
+    "List all knowledge bases in the Azure AI Search service <service-name>",
+    "Show me the knowledge bases in the Azure AI Search service <service-name>",
+    "List all knowledge bases in the search service <service-name>",
+    "Show me the knowledge bases in the search service <service-name>",
+    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge base <agent-name> in search service <service-name>"
+  ],
+  "azmcp_search_knowledge_base_retrieve": [
+    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Query knowledge base <agent-name> in search service <service-name> about <query>",
+    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
+    "What does knowledge base <agent-name> in search service <service-name> know about <query>",
+    "Find information about <query> using knowledge base <agent-name> in search service <service-name>"
+  ],
+  "azmcp_search_knowledge_source_get": [
+    "List all knowledge sources in the Azure AI Search service <service-name>",
+    "Show me the knowledge sources in the Azure AI Search service <service-name>",
+    "List all knowledge sources in the search service <service-name>",
+    "Show me the knowledge sources in the search service <service-name>",
+    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge source <source-name> in search service <service-name>"
+  ],
   "azmcp_search_index_get": [
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
     "List all indexes in the Cognitive Search service <service-name>",
@@ -31,6 +89,18 @@
     "Show me the Cognitive Search services in my subscription",
     "Show me my Cognitive Search services"
   ],
+  "azmcp_speech_stt_recognize": [
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Transcribe the audio file <file_path> in Spanish language",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Transcribe audio with raw profanity output from file <file_path>"
+  ],
   "azmcp_appconfig_account_list": [
     "List all App Configuration stores in my subscription",
     "Show me the App Configuration stores in my subscription",
@@ -39,9 +109,11 @@
   "azmcp_appconfig_kv_delete": [
     "Delete the key <key_name> in App Configuration store <app_config_store_name>"
   ],
-  "azmcp_appconfig_kv_list": [
+  "azmcp_appconfig_kv_get": [
     "List all key-value settings in App Configuration store <app_config_store_name>",
-    "Show me the key-value settings in App Configuration store <app_config_store_name>"
+    "Show me the key-value settings in App Configuration store <app_config_store_name>",
+    "List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name>",
+    "Show the content for the key <key_name> in App Configuration store <app_config_store_name>"
   ],
   "azmcp_appconfig_kv_lock_set": [
     "Lock the key <key_name> in App Configuration store <app_config_store_name>",
@@ -50,13 +122,32 @@
   "azmcp_appconfig_kv_set": [
     "Set the key <key_name> in App Configuration store <app_config_store_name> to <value>"
   ],
-  "azmcp_appconfig_kv_show": [
-    "Show the content for the key <key_name> in App Configuration store <app_config_store_name>"
-  ],
   "azmcp_applens_resource_diagnose": [
     "Please help me diagnose issues with my app using app lens",
     "Use app lens to check why my app is slow?",
     "What does app lens say is wrong with my service?"
+  ],
+  "azmcp_appservice_database_add": [
+    "Add a database connection to my app service <app_name> in resource group <resource_group>",
+    "Configure a SQL Server database for app service <app_name>",
+    "Add a MySQL database to app service <app_name>",
+    "Add a PostgreSQL database to app service <app_name>",
+    "Add a CosmosDB database to app service <app_name>",
+    "Add database <database_name> on server <database_server> to app service <app_name>",
+    "Set connection string for database <database_name> in app service <app_name>",
+    "Configure tenant <tenant> for database <database_name> in app service <app_name>",
+    "Add database <database_name> with retry policy to app service <app_name>"
+  ],
+  "azmcp_applicationinsights_recommendation_list": [
+    "List code optimization recommendations across my Application Insights components",
+    "Show me code optimization recommendations for all Application Insights resources in my subscription",
+    "List profiler recommendations for Application Insights in resource group <resource_group_name>",
+    "Show me performance improvement recommendations from Application Insights"
+  ],
+  "azmcp_extension_cli_generate": [
+    "Get Azure CLI command to create a Storage account with name <storage_account_name>",
+    "Show me how to use Azure CLI to list all virtual machines in my subscription",
+    "Show me the details of the storage account <account_name> with Azure CLI commands"
   ],
   "azmcp_acr_registry_list": [
     "List all Azure Container Registries in my subscription",
@@ -70,6 +161,37 @@
     "Show me my container registry repositories",
     "List repositories in the container registry <registry_name>",
     "Show me the repositories in the container registry <registry_name>"
+  ],
+  "azmcp_communication_email_send": [
+    "Send an email to <email-address> with subject <subject>",
+    "Send an email from my communication service to <email-address>",
+    "Send HTML-formatted email to <email-address> with subject <subject>",
+    "Send email with CC to <email-address-1> and <email-address-2>",
+    "Send email to multiple recipients: <email-address-1>, <email-address-2>",
+    "Send email with reply-to address set to <email-address>",
+    "Send email with custom sender name <sender-name>",
+    "Send an email with BCC recipients"
+  ],
+  "azmcp_communication_sms_send": [
+    "Send an SMS message to <phone-number> saying \"Hello\"",
+    "Send SMS to <phone-number-2> from <phone-number-1> with message \"Test message\"",
+    "Send SMS to multiple recipients: <phone-number-1>, <phone-number-2>",
+    "Send SMS with delivery reporting enabled",
+    "Send SMS message with custom tracking tag \"campaign1\"",
+    "Send broadcast SMS to <phone-number-1> and <phone-number-2> saying \"Urgent notification\"",
+    "Send SMS from my communication service to <phone-number-1>",
+    "Send an SMS with delivery receipt tracking"
+  ],
+  "azmcp_confidentialledger_entries_append": [
+    "Append an entry to my ledger <ledger_name> with data {\"key\": \"value\"}",
+    "Write a tamper-proof entry to ledger <ledger_name> containing {\"transaction\": \"data\"}",
+    "Append {\"hello\": \"from mcp\"} to my confidential ledger <ledger_name> in collection <collection_id>",
+    "Create an immutable ledger entry in <ledger_name> with content {\"audit\": \"log\"}",
+    "Write an entry to confidential ledger <ledger_name>"
+  ],
+  "azmcp_confidentialledger_entries_get": [
+    "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
+    "Get transaction <transaction_id> from ledger <ledger_name>"
   ],
   "azmcp_cosmos_account_list": [
     "List all cosmosdb accounts in my subscription",
@@ -155,7 +277,7 @@
     "Show me my PostgreSQL servers",
     "Show me the PostgreSQL servers in my subscription"
   ],
-  "azmcp_postgres_server_param": [
+  "azmcp_postgres_server_param_get": [
     "Show me if the parameter my PostgreSQL server <server> has replication enabled"
   ],
   "azmcp_postgres_server_param_set": [
@@ -183,11 +305,58 @@
   "azmcp_deploy_plan_get": [
     "Create a plan to deploy this application to azure"
   ],
+  "azmcp_eventgrid_events_publish": [
+    "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
+    "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
+    "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
+  ],
   "azmcp_eventgrid_topic_list": [
     "List all Event Grid topics in my subscription",
     "Show me the Event Grid topics in my subscription",
     "List all Event Grid topics in subscription <subscription>",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
+  ],
+  "azmcp_eventgrid_subscription_list": [
+    "Show me all Event Grid subscriptions for topic <topic_name>",
+    "List Event Grid subscriptions for topic <topic_name> in subscription <subscription>",
+    "List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name>",
+    "Show all Event Grid subscriptions in my subscription",
+    "List all Event Grid subscriptions in subscription <subscription>",
+    "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
+    "List Event Grid subscriptions for subscription <subscription> in location <location>"
+  ],
+  "azmcp_eventhubs_namespace_get": [
+    "List all Event Hubs namespaces in my subscription",
+    "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_namespace_update": [
+    "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
+    "Update my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_namespace_delete": [
+    "Delete my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_get": [
+    "List all Event Hubs in my namespace <namespace_name>",
+    "Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_update": [
+    "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
+    "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_delete": [
+    "Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_consumergroup_get": [
+    "List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>",
+    "Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_consumergroup_update": [
+    "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
+    "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
+  ],
+  "azmcp_eventhubs_eventhub_consumergroup_delete": [
+    "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
   ],
   "azmcp_functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
@@ -205,45 +374,87 @@
   ],
   "azmcp_keyvault_admin_settings_get": [
     "Get the account settings for my key vault <key_vault_account_name>",
-    "Show me the account settings for key vault <key_vault_account_name>",
+    "Show me the account settings for managed HSM keyvault <key_vault_account_name>",
     "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_create": [
-    "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>"
+    "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
+    "Generate a certificate named <certificate_name> in key vault <key_vault_account_name>",
+    "Request creation of certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name>",
+    "Issue a certificate <certificate_name> in key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_get": [
     "Show me the certificate <certificate_name> in the key vault <key_vault_account_name>",
-    "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>"
+    "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Get the certificate <certificate_name> from vault <key_vault_account_name>",
+    "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
+    "Retrieve certificate metadata for <certificate_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_certificate_import": [
     "Import the certificate in file <file_path> into the key vault <key_vault_account_name>",
-    "Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name>"
+    "Import a certificate into the key vault <key_vault_account_name> using the name <certificate_name>",
+    "Upload certificate file <file_path> to key vault <key_vault_account_name>",
+    "Load certificate <certificate_name> from file <file_path> into vault <key_vault_account_name>",
+    "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>"
   ],
   "azmcp_keyvault_certificate_list": [
     "List all certificates in the key vault <key_vault_account_name>",
-    "Show me the certificates in the key vault <key_vault_account_name>"
+    "Show me the certificates in the key vault <key_vault_account_name>",
+    "What certificates are in the key vault <key_vault_account_name>?",
+    "List certificate names in vault <key_vault_account_name>",
+    "Enumerate certificates in key vault <key_vault_account_name>",
+    "Show certificate names in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_key_create": [
-    "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>"
+    "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
+    "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
+    "Create an oct key in the vault <key_vault_account_name>",
+    "Create an RSA key in the vault <key_vault_account_name> with name <key_name>",
+    "Create an EC key with name <key_name> in the vault <key_vault_account_name>"
+  ],
+  "azmcp_keyvault_key_get": [
+    "Show me the key <key_name> in the key vault <key_vault_account_name>",
+    "Show me the details of the key <key_name> in the key vault <key_vault_account_name>",
+    "Get the key <key_name> from vault <key_vault_account_name>",
+    "Display the key details for <key_name> in vault <key_vault_account_name>",
+    "Retrieve key metadata for <key_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_key_list": [
     "List all keys in the key vault <key_vault_account_name>",
-    "Show me the keys in the key vault <key_vault_account_name>"
+    "Show me the keys in the key vault <key_vault_account_name>",
+    "What keys are in the key vault <key_vault_account_name>?",
+    "List key names in vault <key_vault_account_name>",
+    "Enumerate keys in key vault <key_vault_account_name>",
+    "Show key names in the key vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_create": [
-    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>"
+    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>",
+    "Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name>",
+    "Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name>",
+    "Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name>",
+    "Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name>"
+  ],
+  "azmcp_keyvault_secret_get": [
+    "Show me the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Get the secret <secret_name> from vault <key_vault_account_name>",
+    "Display the secret details for <secret_name> in vault <key_vault_account_name>",
+    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>"
   ],
   "azmcp_keyvault_secret_list": [
     "List all secrets in the key vault <key_vault_account_name>",
-    "Show me the secrets in the key vault <key_vault_account_name>"
+    "Show me the secrets in the key vault <key_vault_account_name>",
+    "What secrets are in the key vault <key_vault_account_name>?",
+    "List secrets names in vault <key_vault_account_name>",
+    "Enumerate secrets in key vault <key_vault_account_name>",
+    "Show secrets names in the key vault <key_vault_account_name>"
   ],
   "azmcp_aks_cluster_get": [
     "Get the configuration of AKS cluster <cluster-name>",
     "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
     "Show me the network configuration for AKS cluster <cluster-name>",
-    "What are the details of my AKS cluster <cluster-name> in <resource-group>?"
-  ],
-  "azmcp_aks_cluster_list": [
+    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
     "List all AKS clusters in my subscription",
     "Show me my Azure Kubernetes Service clusters",
     "What AKS clusters do I have?"
@@ -251,9 +462,7 @@
   "azmcp_aks_nodepool_get": [
     "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
-    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?"
-  ],
-  "azmcp_aks_nodepool_list": [
+    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
     "List nodepools for AKS cluster <cluster-name> in <resource-group>",
     "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
@@ -285,15 +494,24 @@
   "azmcp_grafana_list": [
     "List all Azure Managed Grafana in one subscription"
   ],
-  "azmcp_azuremanagedlustre_filesystem_list": [
+  "azmcp_managedlustre_filesystem_create": [
+    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
+  ],
+  "azmcp_managedlustre_filesystem_list": [
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_required-subnet-size": [
-    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
+  "azmcp_managedlustre_filesystem_sku_get": [
+    "List the Azure Managed Lustre SKUs available in location <location>"
   ],
-  "azmcp_azuremanagedlustre_filesystem_sku_get": [
-    "List the Azure Managed Lustre SKUs available in <location>"
+  "azmcp_managedlustre_filesystem_subnetsize_ask": [
+    "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
+  ],
+  "azmcp_managedlustre_filesystem_subnetsize_validate": [
+    "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
+  ],
+  "azmcp_managedlustre_filesystem_update": [
+    "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "azmcp_marketplace_product_get": [
     "Get details about marketplace product <product_name>"
@@ -302,7 +520,7 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "azmcp_bestpractices_get": [
+  "azmcp_get_bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
     "Get the latest Azure best practices",
@@ -310,12 +528,13 @@
     "Get the latest Azure Functions deployment best practices",
     "Get the latest Azure Functions best practices",
     "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?",
-    "Create the plan for creating a simple HTTP-triggered function app in javascript that returns a random compliment from a predefined list in a JSON response. And deploy it to azure eventually. But don't create any code until I confirm.",
-    "Create the plan for creating a to-do list app. And deploy it to azure as a container app. But don't create any code until I confirm."
+    "What are azure function best practices?"
+  ],
+  "azmcp_monitor_activitylog_list": [
+    "List the activity logs of the last month for <resource_name>"
   ],
   "azmcp_monitor_healthmodels_entity_gethealth": [
-    "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>"
+    "Show me the health status of entity <entity_id> using the health model <health_model_name>"
   ],
   "azmcp_monitor_metrics_definitions": [
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
@@ -417,13 +636,39 @@
   "azmcp_servicebus_topic_subscription_details": [
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>"
   ],
+  "azmcp_signalr_runtime_get": [
+    "Show me the details of SignalR <signalr_name>",
+    "Show me the network information of SignalR runtime <signalr_name>",
+    "Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>",
+    "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
+    "Show all the SignalRs information in <resource_group_name>",
+    "List all SignalRs in my subscription"
+  ],
+  "azmcp_sql_db_create": [
+    "Create a new SQL database named <database_name> in server <server_name>",
+    "Create a SQL database <database_name> with Basic tier in server <server_name>",
+    "Create a new database called <database_name> on SQL server <server_name> in resource group <resource_group_name>"
+  ],
+  "azmcp_sql_db_delete": [
+    "Delete the SQL database <database_name> from server <server_name>",
+    "Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name>",
+    "Delete the database called <database_name> on server <server_name>"
+  ],
   "azmcp_sql_db_list": [
     "List all databases in the Azure SQL server <server_name>",
     "Show me all the databases configuration details in the Azure SQL server <server_name>"
   ],
+  "azmcp_sql_db_rename": [
+    "Rename the SQL database <database_name> on server <server_name> to <new_database_name>",
+    "Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name>"
+  ],
   "azmcp_sql_db_show": [
     "Get the configuration details for the SQL database <database_name> on server <server_name>",
     "Show me the details of SQL database <database_name> in server <server_name>"
+  ],
+  "azmcp_sql_db_update": [
+    "Update the performance tier of SQL database <database_name> on server <server_name>",
+    "Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU"
   ],
   "azmcp_sql_elastic-pool_list": [
     "List all elastic pools in SQL server <server_name>",
@@ -460,6 +705,10 @@
     "Show me the firewall rules for SQL server <server_name>",
     "What firewall rules are configured for my SQL server <server_name>?"
   ],
+  "azmcp_sql_server_list": [
+    "List all Azure SQL servers in resource group <resource_group_name>",
+    "Show me every SQL server available in resource group <resource_group_name>"
+  ],
   "azmcp_sql_server_show": [
     "Show me the details of Azure SQL server <server_name> in resource group <resource_group_name>",
     "Get the configuration details for SQL server <server_name>",
@@ -476,10 +725,6 @@
     "List all storage accounts in my subscription including their location and SKU",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings"
-  ],
-  "azmcp_storage_blob_batch_set-tier": [
-    "Set access tier to Cool for multiple blobs in the container <container> in the storage account <account>",
-    "Change the access tier to Archive for blobs file1.txt and file2.txt in the container <container> in the storage account <account>"
   ],
   "azmcp_storage_blob_container_create": [
     "Create the storage container mycontainer in storage account <account>",
@@ -499,28 +744,6 @@
   ],
   "azmcp_storage_blob_upload": [
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
-  ],
-  "azmcp_storage_datalake_directory_create": [
-    "Create a new directory at the path <directory_path> in Data Lake in the storage account <account>"
-  ],
-  "azmcp_storage_datalake_file-system_list-paths": [
-    "List all paths in the Data Lake file system <file_system> in the storage account <account>",
-    "Show me the paths in the Data Lake file system <file_system> in the storage account <account>",
-    "Recursively list all paths in the Data Lake file system <file_system> in the storage account <account> filtered by <filter_path>"
-  ],
-  "azmcp_storage_queue_message_send": [
-    "Send a message \"Hello, World!\" to the queue <queue> in storage account <account>",
-    "Send a message with TTL of 3600 seconds to the queue <queue> in storage account <account>",
-    "Add a message to the queue <queue> in storage account <account> with visibility timeout of 30 seconds"
-  ],
-  "azmcp_storage_share_file_list": [
-    "List all files and directories in the File Share <share> in the storage account <account>",
-    "Show me the files in the File Share <share> directory <directory_path> in the storage account <account>",
-    "List files with prefix 'report' in the File Share <share> in the storage account <account>"
-  ],
-  "azmcp_storage_table_list": [
-    "List all tables in the storage account <account>",
-    "Show me the tables in the storage account <account>"
   ],
   "azmcp_subscription_list": [
     "List all subscriptions for my account",

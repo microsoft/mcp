@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,6 +28,8 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
+
+        services.AddSingleton<ResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -60,6 +63,13 @@ public class FoundrySetup : IAreaSetup
         var indexSchema = serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>();
         index.AddCommand(indexSchema.Name, indexSchema);
 
+        var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in AI Foundry.");
+        foundry.AddSubGroup(openai);
+
+        openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
+        openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
+        openai.AddCommand("models-list", new OpenAiModelsListCommand());
+        openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
         var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 
@@ -67,6 +77,11 @@ public class FoundrySetup : IAreaSetup
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());
+
+        var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Azure AI Foundry resources.");
+        foundry.AddSubGroup(resources);
+
+        resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
 
         return foundry;
     }

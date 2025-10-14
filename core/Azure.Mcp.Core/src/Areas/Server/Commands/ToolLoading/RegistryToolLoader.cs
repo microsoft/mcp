@@ -21,8 +21,8 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, IMcpClient> _toolClientMap = new();
-    private List<IMcpClient> _discoveredClients = new();
+    private Dictionary<string, McpClient> _toolClientMap = new();
+    private List<McpClient> _discoveredClients = new();
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
 
@@ -53,6 +53,12 @@ public sealed class RegistryToolLoader(
             var filteredTools = toolsResponse
                 .Select(t => t.ProtocolTool)
                 .Where(t => !_options.Value.ReadOnly || (t.Annotations?.ReadOnlyHint == true));
+
+            // Filter by specific tools if provided
+            if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+            {
+                filteredTools = filteredTools.Where(t => _options.Value.Tool.Any(tool => tool.Contains(t.Name, StringComparison.OrdinalIgnoreCase)));
+            }
 
             foreach (var tool in filteredTools)
             {
@@ -89,6 +95,26 @@ public sealed class RegistryToolLoader(
 
         // Initialize the tool client map if not already done
         await InitializeAsync(cancellationToken);
+
+        // Check if tool filtering is enabled and validate the requested tool
+        if (_options.Value.Tool != null && _options.Value.Tool.Length > 0)
+        {
+            if (!_options.Value.Tool.Any(tool => tool.Contains(request.Params.Name, StringComparison.OrdinalIgnoreCase)))
+            {
+                var content = new TextContentBlock
+                {
+                    Text = $"Tool '{request.Params.Name}' is not available. This server is configured to only expose the tools: {string.Join(", ", _options.Value.Tool.Select(t => $"'{t}'"))}",
+                };
+
+                _logger.LogWarning(content.Text);
+
+                return new CallToolResult
+                {
+                    Content = [content],
+                    IsError = true,
+                };
+            }
+        }
 
         if (!_toolClientMap.TryGetValue(request.Params.Name, out var mcpClient) || mcpClient == null)
         {
@@ -152,7 +178,7 @@ public sealed class RegistryToolLoader(
             foreach (var server in serverList)
             {
                 var serverMetadata = server.CreateMetadata();
-                IMcpClient? mcpClient;
+                McpClient? mcpClient;
                 try
                 {
                     mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions);
@@ -160,6 +186,11 @@ public sealed class RegistryToolLoader(
                 catch (InvalidOperationException ex)
                 {
                     _logger.LogWarning("Failed to create client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
+                    continue;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning("Failed to start client for provider {ProviderName}: {Error}", serverMetadata.Name, ex.Message);
                     continue;
                 }
 

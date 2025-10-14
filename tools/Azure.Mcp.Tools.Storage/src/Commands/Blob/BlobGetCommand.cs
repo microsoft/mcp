@@ -22,8 +22,7 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
 
     public override string Description =>
         $"""
-        Gets the details of Azure Storage blobs, including metadata properties, approximate size, last modification time, and more.
-        If a specific blob name is not provided, the command will return details for all blobs within the specified container.
+        List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or get details for a specific blob. Shows blob properties including metadata, size, last modification time, and content properties. If no blob specified, lists all blobs present in the container. Required: account, container <container>, subscription <subscription>. Optional: blob <blob>, tenant <tenant>. Returns: blob name, size, lastModified, contentType, contentMD5, metadata, and blob properties. Do not use this tool to list containers in the storage account.
         """;
 
     public override string Title => CommandTitle;

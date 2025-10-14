@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
@@ -129,6 +131,8 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         {
             learn = true;
         }
+
+        Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
 
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {
@@ -268,7 +272,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
-        IMcpClient? client;
+        McpClient? client;
 
         try
         {
@@ -312,7 +316,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         }
     }
 
-    private static bool SupportsSampling(IMcpServer server)
+    private static bool SupportsSampling(McpServer server)
     {
         return server?.ClientCapabilities?.Sampling != null;
     }
@@ -457,17 +461,6 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         }
 
         return (null, new Dictionary<string, object?>());
-    }
-
-    private McpClientOptions CreateClientOptions(IMcpServer server)
-    {
-        var clientOptions = new McpClientOptions
-        {
-            ClientInfo = server.ClientInfo,
-            Capabilities = new ClientCapabilities(),
-        };
-
-        return clientOptions;
     }
 
     /// <summary>

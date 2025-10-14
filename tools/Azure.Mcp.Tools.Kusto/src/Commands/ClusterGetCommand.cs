@@ -3,6 +3,9 @@
 
 using System.Net;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Commands.Subscription;
+using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Kusto.Models;
 using Azure.Mcp.Tools.Kusto.Options;
 using Azure.Mcp.Tools.Kusto.Services;
@@ -10,7 +13,7 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Kusto.Commands;
 
-public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseClusterCommand<ClusterGetOptions>
+public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : SubscriptionCommand<ClusterGetOptions>
 {
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
@@ -18,10 +21,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
     public override string Name => "get";
 
     public override string Description =>
-        """
-        Get details for a specific Kusto cluster. Requires `subscription` and `cluster`.
-        The response includes the `clusterUri` property for use in subsequent commands.
-        """;
+        "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.";
 
     public override string Title => CommandTitle;
 
@@ -34,6 +34,20 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : BaseC
         LocalRequired = false,
         Secret = false
     };
+
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(KustoOptionDefinitions.Cluster.AsRequired());
+    }
+
+    protected override ClusterGetOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.ClusterName = parseResult.GetValueOrDefault<string>(KustoOptionDefinitions.Cluster.Name);
+
+        return options;
+    }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {

@@ -46,7 +46,6 @@ public class DatabaseUpdateCommandTests
         Assert.Equal("update", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
-        Assert.Contains("Update configuration settings", command.Description);
     }
 
     [Fact]

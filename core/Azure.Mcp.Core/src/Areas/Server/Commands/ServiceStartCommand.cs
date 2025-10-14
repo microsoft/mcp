@@ -6,6 +6,7 @@ using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 
@@ -48,6 +50,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
+    public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+
     /// <summary>
     /// Registers command options for the service start command.
     /// </summary>
@@ -58,10 +62,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Transport);
         command.Options.Add(ServiceOptionDefinitions.Namespace);
         command.Options.Add(ServiceOptionDefinitions.Mode);
+        command.Options.Add(ServiceOptionDefinitions.Tool);
         command.Options.Add(ServiceOptionDefinitions.ReadOnly);
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Validators.Add(commandResult =>
+        {
+            ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
+            ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
+            ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+            ValidateNamespaceAndToolMutualExclusion(
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
+                commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
+                commandResult);
+        });
     }
 
     /// <summary>
@@ -71,44 +86,27 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>A configured ServiceStartOptions instance.</returns>
     protected override ServiceStartOptions BindOptions(ParseResult parseResult)
     {
+        var mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name);
+        var tools = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name);
+
+        // When --tool switch is used, automatically change the mode to "all"
+        if (tools != null && tools.Length > 0)
+        {
+            mode = ModeTypes.All;
+        }
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
-            Mode = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.Mode.Name),
+            Mode = mode,
+            Tool = tools,
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
         };
         return options;
-    }
-
-    /// <summary>
-    /// Validates the command options and arguments.
-    /// </summary>
-    /// <param name="commandResult">The command result to validate.</param>
-    /// <param name="commandResponse">Optional response object to set error details.</param>
-    /// <returns>A ValidationResult indicating whether the validation passed.</returns>
-    public override ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse)
-    {
-        // First run the base validation for required options and parser errors
-        var baseResult = base.Validate(commandResult, commandResponse);
-        if (!baseResult.IsValid)
-        {
-            return baseResult;
-        }
-
-        // Get option values directly from commandResult
-        var mode = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode);
-        var transport = commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport);
-        var enableInsecureTransports = commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports);
-
-        // Validate and return early on any failures
-        return ValidateMode(mode, commandResponse) ??
-               ValidateTransport(transport, commandResponse) ??
-               ValidateInsecureTransportsConfiguration(enableInsecureTransports, commandResponse) ??
-               new ValidationResult { IsValid = true };
     }
 
     /// <summary>
@@ -129,6 +127,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         try
         {
             using var host = CreateHost(options);
+
+            await InitializeServicesAsync(host.Services);
+
+            var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
+            LogStartTelemetry(telemetryService, options);
+
             await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
 
@@ -141,83 +145,100 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
     }
 
+    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServiceStartOptions options)
+    {
+        using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.Transport, options.Transport);
+            activity.SetTag(TagName.ServerMode, options.Mode);
+            activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
+            activity.SetTag(TagName.InsecureDisableElicitation, options.InsecureDisableElicitation);
+            activity.SetTag(TagName.EnableInsecureTransports, options.EnableInsecureTransports);
+            activity.SetTag(TagName.IsDebug, options.Debug);
+
+            if (options.Namespace != null && options.Namespace.Length > 0)
+            {
+                activity.SetTag(TagName.Namespace, string.Join(",", options.Namespace));
+            }
+            if (options.Tool != null && options.Tool.Length > 0)
+            {
+                activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
+            }
+        }
+    }
+
     /// <summary>
     /// Validates if the provided mode is a valid mode type.
     /// </summary>
     /// <param name="mode">The mode to validate.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateMode(string? mode, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateMode(string? mode, CommandResult commandResult)
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
             mode == ModeTypes.All)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = $"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}."
-        };
-
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
-        return result;
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
     }
 
     /// <summary>
     /// Validates if the provided transport is valid.
     /// </summary>
     /// <param name="transport">The transport to validate.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateTransport(string? transport, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateTransport(string? transport, CommandResult commandResult)
     {
         if (transport is null || transport == TransportTypes.StdIo)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = $"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}."
-        };
-
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.BadRequest);
-        return result;
+        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
     }
 
     /// <summary>
     /// Validates if the insecure transport configuration is valid.
     /// </summary>
     /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
-    /// <param name="commandResponse">Optional command response to update on failure.</param>
-    /// <returns>ValidationResult with error details if invalid, null if valid.</returns>
-    private static ValidationResult? ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResponse? commandResponse)
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResult commandResult)
     {
         // If insecure transports are not enabled, configuration is valid
         if (!enableInsecureTransports)
         {
-            return null; // Success
+            return; // Success
         }
 
         // If insecure transports are enabled, check if proper credentials are configured
         var hasCredentials = EnvironmentHelpers.GetEnvironmentVariableAsBool("AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS");
         if (hasCredentials)
         {
-            return null; // Success
+            return; // Success
         }
 
-        var result = new ValidationResult
-        {
-            IsValid = false,
-            ErrorMessage = "Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting."
-        };
+        commandResult.AddError("Using --enable-insecure-transport requires the host to have either Managed Identity or Workload Identity enabled. Please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.");
+    }
 
-        SetValidationError(commandResponse, result.ErrorMessage!, HttpStatusCode.InternalServerError);
-        return result;
+    /// <summary>
+    /// Validates that --namespace and --tool options are not used together.
+    /// </summary>
+    /// <param name="namespaces">The namespace values.</param>
+    /// <param name="tools">The tool values.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateNamespaceAndToolMutualExclusion(string[]? namespaces, string[]? tools, CommandResult commandResult)
+    {
+        bool hasNamespace = namespaces != null && namespaces.Length > 0;
+        bool hasTool = tools != null && tools.Length > 0;
+
+        if (hasNamespace && hasTool)
+        {
+            commandResult.AddError("The --namespace and --tool options cannot be used together. Please specify either --namespace to filter by service namespace or --tool to filter by specific tool names, but not both.");
+        }
     }
 
     /// <summary>
@@ -231,6 +252,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Invalid transport option specified. Use --transport stdio for the supported transport mechanism.",
         ArgumentException argEx when argEx.Message.Contains("Invalid mode") =>
             "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
+        ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
+            "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)

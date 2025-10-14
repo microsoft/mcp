@@ -31,8 +31,8 @@ public class CommandFactoryToolLoaderTests
 
     private static ModelContextProtocol.Server.RequestContext<ListToolsRequestParams> CreateRequest()
     {
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        return new ModelContextProtocol.Server.RequestContext<ListToolsRequestParams>(mockServer, new() { Method = RequestMethods.ToolsList })
         {
             Params = new ListToolsRequestParams()
         };
@@ -97,6 +97,80 @@ public class CommandFactoryToolLoaderTests
             Assert.True(tool.Annotations?.ReadOnlyHint == true,
                 $"Tool '{tool.Name}' should have ReadOnlyHint = true when ReadOnly mode is enabled");
         }
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithToolFilter_ReturnsOnlySpecifiedTool()
+    {
+        // Arrange
+        var (_, commandFactory) = CreateToolLoader();
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+
+        // Skip test if no commands are available
+        if (!availableCommands.Any())
+        {
+            return;
+        }
+
+        var specificToolName = availableCommands.First().Key;
+        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Single(result.Tools);
+        Assert.Equal(specificToolName, result.Tools[0].Name);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithNonExistentToolFilter_ReturnsEmptyList()
+    {
+        // Arrange
+        var nonExistentTool = "non-existent-tool-name";
+        var toolOptions = new ToolLoaderOptions { Tool = [nonExistentTool] };
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Empty(result.Tools);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithToolFilterCaseInsensitive_ReturnsSpecifiedTool()
+    {
+        // Arrange
+        var (_, commandFactory) = CreateToolLoader();
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+
+        // Skip test if no commands are available
+        if (!availableCommands.Any())
+        {
+            return;
+        }
+
+        var specificToolName = availableCommands.First().Key;
+        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName.ToUpperInvariant()] }; // Test case insensitive
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Single(result.Tools);
+        Assert.Equal(specificToolName, result.Tools[0].Name);
     }
 
     [Fact]
@@ -226,8 +300,8 @@ public class CommandFactoryToolLoaderTests
         var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
         var firstCommand = availableCommands.First();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -248,8 +322,8 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = null
         };
@@ -271,8 +345,8 @@ public class CommandFactoryToolLoaderTests
     {
         var (toolLoader, _) = CreateToolLoader();
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -362,10 +436,10 @@ public class CommandFactoryToolLoaderTests
 
         var targetCommand = subscriptionListCommand;
 
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         var arguments = new Dictionary<string, JsonElement>();
 
-        var callToolRequest = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var callToolRequest = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -512,10 +586,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -552,11 +626,11 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-non-secret-get"] = fakeCommand;
 
         // Create mock server with elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         var capabilities = new ClientCapabilities { Elicitation = new ElicitationCapability() };
         mockServer.ClientCapabilities.Returns(capabilities);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -594,10 +668,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server - elicitation support doesn't matter when bypassed
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -639,10 +713,10 @@ public class CommandFactoryToolLoaderTests
         commandMap["fake-secret-get"] = fakeCommand;
 
         // Create mock server without elicitation capabilities
-        var mockServer = Substitute.For<ModelContextProtocol.Server.IMcpServer>();
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
         mockServer.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer)
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
         {
             Params = new CallToolRequestParams
             {
@@ -677,6 +751,189 @@ public class CommandFactoryToolLoaderTests
 
         // Assert
         Assert.True(options.InsecureDisableElicitation);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolFilter_AllowsSpecifiedTool()
+    {
+        // Arrange
+        var (_, commandFactory) = CreateToolLoader();
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+
+        // Skip test if no commands are available
+        if (!availableCommands.Any())
+        {
+            return;
+        }
+
+        var specificToolName = availableCommands.First().Key;
+        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = specificToolName,
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Assert - Should not reject due to tool filtering
+        Assert.NotNull(result);
+        // Note: The result might still be an error for other reasons (like missing parameters),
+        // but it should not be rejected specifically due to tool filtering
+        if (result.IsError == true)
+        {
+            var errorText = ((TextContentBlock)result.Content.First()).Text;
+            Assert.DoesNotContain("is not available", errorText);
+            Assert.DoesNotContain("only expose the tool", errorText);
+        }
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolFilter_RejectsNonSpecifiedTool()
+    {
+        // Arrange
+        var (_, commandFactory) = CreateToolLoader();
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+
+        // Skip test if fewer than 2 commands are available
+        if (availableCommands.Count < 2)
+        {
+            return;
+        }
+
+        var specificToolName = availableCommands.First().Key;
+        var otherToolName = availableCommands.Skip(1).First().Key;
+        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName] };
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = otherToolName, // Request a different tool than the filtered one
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.True(result.IsError);
+        var errorText = ((TextContentBlock)result.Content.First()).Text;
+        Assert.Contains("is not available", errorText);
+        Assert.Contains("only expose the tool", errorText);
+        Assert.Contains(specificToolName, errorText);
+    }
+
+    [Fact]
+    public async Task CallToolHandler_WithToolFilterCaseInsensitive_AllowsSpecifiedTool()
+    {
+        // Arrange
+        var (_, commandFactory) = CreateToolLoader();
+        var availableCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands).ToList();
+
+        // Skip test if no commands are available
+        if (!availableCommands.Any())
+        {
+            return;
+        }
+
+        var specificToolName = availableCommands.First().Key;
+        var toolOptions = new ToolLoaderOptions { Tool = [specificToolName.ToUpperInvariant()] }; // Set filter to uppercase
+        var (toolLoader, _) = CreateToolLoader(toolOptions);
+
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var request = new ModelContextProtocol.Server.RequestContext<CallToolRequestParams>(mockServer, new() { Method = RequestMethods.ToolsCall })
+        {
+            Params = new CallToolRequestParams
+            {
+                Name = specificToolName, // Request with original case
+                Arguments = new Dictionary<string, JsonElement>()
+            }
+        };
+
+        // Act
+        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+
+        // Assert - Should not reject due to tool filtering (case insensitive match)
+        Assert.NotNull(result);
+        if (result.IsError == true)
+        {
+            var errorText = ((TextContentBlock)result.Content.First()).Text;
+            Assert.DoesNotContain("is not available", errorText);
+            Assert.DoesNotContain("only expose the tool", errorText);
+        }
+    }
+
+    [Fact]
+    public void ToolLoaderOptions_WithTool_IsSetCorrectly()
+    {
+        // Arrange & Act
+        var expectedTools = new[] { "azmcp_group_list" };
+        var options = new ToolLoaderOptions(Tool: expectedTools);
+
+        // Assert
+        Assert.Equal(expectedTools, options.Tool);
+    }
+
+    [Fact]
+    public void ToolLoaderOptions_WithMultipleTools_IsSetCorrectly()
+    {
+        // Arrange & Act
+        var expectedTools = new[] { "azmcp_acr_registry_list", "azmcp_group_list" };
+        var options = new ToolLoaderOptions(Tool: expectedTools);
+
+        // Assert
+        Assert.Equal(expectedTools, options.Tool);
+    }
+
+    [Fact]
+    public async Task ListToolsHandler_WithMultipleToolFilter_ReturnsSpecifiedTools()
+    {
+        // Arrange
+        var (toolLoader, commandFactory) = CreateToolLoader();
+        var allCommands = CommandFactory.GetVisibleCommands(commandFactory.AllCommands);
+
+        // Skip test if we don't have at least 2 commands
+        if (allCommands.Count() < 2)
+        {
+            return;
+        }
+
+        var toolNames = allCommands.Take(2).Select(kvp => kvp.Key).ToArray();
+        var toolOptions = new ToolLoaderOptions { Tool = toolNames };
+        var (filteredToolLoader, _) = CreateToolLoader(toolOptions);
+        var request = CreateRequest();
+
+        // Act
+        var result = await filteredToolLoader.ListToolsHandler(request, CancellationToken.None);
+
+        // Assert
+        Assert.NotNull(result);
+        Assert.NotNull(result.Tools);
+        Assert.Equal(2, result.Tools.Count);
+        Assert.Contains(result.Tools, t => t.Name == toolNames[0]);
+        Assert.Contains(result.Tools, t => t.Name == toolNames[1]);
+    }
+
+    [Fact]
+    public void ToolLoaderOptions_DefaultTool_IsNull()
+    {
+        // Arrange & Act
+        var options = new ToolLoaderOptions();
+
+        // Assert
+        Assert.Null(options.Tool);
     }
 
     #endregion

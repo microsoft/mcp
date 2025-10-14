@@ -43,12 +43,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var result = await ExecuteSingleResourceQueryAsync(
                 "Microsoft.Sql/servers/databases",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlDatabaseModel,
-                $"name =~ '{EscapeKqlString(databaseName)}'",
-                cancellationToken);
+                resourceGroup: resourceGroup,
+                subscription: subscription,
+                retryPolicy: retryPolicy,
+                converter: ConvertToSqlDatabaseModel,
+                additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+                cancellationToken: cancellationToken);
 
             if (result == null)
             {
@@ -101,7 +101,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(databaseName), databaseName)
+        );
 
         try
         {
@@ -215,7 +220,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription, databaseName);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(databaseName), databaseName)
+        );
 
         try
         {
@@ -311,7 +321,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
         if (string.IsNullOrWhiteSpace(newDatabaseName))
             throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
         try
@@ -414,9 +429,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 subscription,
                 retryPolicy,
                 ConvertToSqlServerEntraAdministratorModel,
-                $"id contains '/servers/{EscapeKqlString(serverName)}/'",
-                50,
-                cancellationToken);
+                additionalFilter: $"id contains '/servers/{EscapeKqlString(serverName)}/'",
+                cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -525,7 +539,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription, firewallRuleName, startIpAddress, endIpAddress);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(firewallRuleName), firewallRuleName),
+            (nameof(startIpAddress), startIpAddress),
+            (nameof(endIpAddress), endIpAddress)
+        );
 
         try
         {
@@ -585,7 +606,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription, firewallRuleName);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(firewallRuleName), firewallRuleName)
+        );
 
         try
         {
@@ -650,7 +676,14 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription, location, administratorLogin, administratorPassword);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription),
+            (nameof(location), location),
+            (nameof(administratorLogin), administratorLogin),
+            (nameof(administratorPassword), administratorPassword)
+        );
 
         try
         {
@@ -724,7 +757,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
 
         try
         {
@@ -778,7 +815,10 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(resourceGroup, subscription);
+        ValidateRequiredParameters(
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
 
         try
         {
@@ -824,7 +864,11 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, resourceGroup, subscription);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
 
         try
         {
@@ -876,7 +920,12 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default)
     {
-        ValidateRequiredParameters(serverName, databaseName, resourceGroup, subscription);
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(databaseName), databaseName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
 
         try
         {

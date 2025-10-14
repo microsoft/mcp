@@ -22,6 +22,6 @@
     <PackageReference Include="Azure.ResourceManager.ResourceGraph" />
     <PackageReference Include="Microsoft.Extensions.Azure" />
     <PackageReference Include="ModelContextProtocol.AspNetCore" />
-    <PackageReference Include="System.Linq.Async" />
+    <PackageReference Include="System.Linq.AsyncEnumerable" />
   </ItemGroup>
 </Project>

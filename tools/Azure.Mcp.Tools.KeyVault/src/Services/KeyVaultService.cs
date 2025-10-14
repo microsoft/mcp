@@ -22,7 +22,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -50,7 +50,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, keyName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -73,7 +73,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, keyName, keyType, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
 
         var type = new KeyType(keyType);
         var credential = await GetCredential(tenantId);
@@ -95,7 +95,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -124,7 +124,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, secretName, secretValue, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -146,7 +146,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, secretName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -168,7 +168,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -196,7 +196,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, certificateName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -218,7 +218,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, certificateName, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -242,7 +242,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, certificateName, certificateData, subscriptionId);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
         var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
@@ -297,7 +297,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(vaultName, subscription);
+        ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
         var credential = await GetCredential(tenantId);
         var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
         try

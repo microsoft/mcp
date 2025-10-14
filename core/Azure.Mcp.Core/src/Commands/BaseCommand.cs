@@ -90,9 +90,9 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
         _ => HttpStatusCode.InternalServerError  // Internal Server Error for unexpected errors
     };
 
-    public virtual ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
+    public ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null)
     {
-        var result = new ValidationResult { IsValid = true };
+        var result = new ValidationResult();
 
         // First, check for missing required options
         var missingOptions = commandResult.Command.Options
@@ -104,32 +104,22 @@ public abstract class BaseCommand<TOptions> : IBaseCommand where TOptions : clas
 
         if (!string.IsNullOrEmpty(missingOptionsJoined))
         {
-            result.IsValid = false;
-            result.ErrorMessage = $"{MissingRequiredOptionsPrefix}{missingOptionsJoined}";
-            SetValidationError(commandResponse, result.ErrorMessage!);
-            return result;
+            result.Errors.Add($"{MissingRequiredOptionsPrefix}{missingOptionsJoined}");
         }
 
         // Check for parser/validator errors
         if (commandResult.Errors != null && commandResult.Errors.Any())
         {
-            result.IsValid = false;
-            var combined = string.Join(", ", commandResult.Errors.Select(e => e.Message));
-            result.ErrorMessage = combined;
-            SetValidationError(commandResponse, result.ErrorMessage);
-            return result;
+            result.Errors.Add(string.Join(", ", commandResult.Errors.Select(e => e.Message)));
+        }
+
+        if (!result.IsValid && commandResponse != null)
+        {
+            commandResponse.Status = HttpStatusCode.BadRequest;
+            commandResponse.Message = string.Join('\n', result.Errors);
         }
 
         return result;
-
-        static void SetValidationError(CommandResponse? response, string errorMessage)
-        {
-            if (response != null)
-            {
-                response.Status = HttpStatusCode.BadRequest;
-                response.Message = errorMessage;
-            }
-        }
     }
 
     /// <summary>

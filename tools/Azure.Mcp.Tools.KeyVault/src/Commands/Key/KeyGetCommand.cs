@@ -31,10 +31,7 @@ public sealed class KeyGetCommand(ILogger<KeyGetCommand> logger) : SubscriptionC
     };
 
     public override string Description =>
-        """
-        Get a key from an Azure Key Vault. This command retrieves and displays details
-        about a specific key in the specified vault.
-        """;
+        "Get/retrieve/show details for a single key in a Key Vault (latest version). Not for listing multiple keys. Required: --vault <vault>, --key <key> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn.";
 
     protected override void RegisterOptions(Command command)
     {
