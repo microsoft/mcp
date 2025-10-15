@@ -156,27 +156,29 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--  Configure the `mcp.json` file with the following:
 
-    ```json
-    {
-        "mcpServers": {
-            "azure-mcp-server": {
-            "command": "npx",
-            "args": [
-                "-y",
-                "@azure/mcp@latest",
-                "server",
-                "start"
-                ]
+-   To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+-   Configure your `mcp.json` file with the following:
+
+        ```json
+        {
+            "mcpServers": {
+                "azure-mcp-server": {
+                "command": "npx",
+                "args": [
+                    "-y",
+                    "@azure/mcp@latest",
+                    "server",
+                    "start"
+                    ]
+                }
             }
         }
-    }
-    ```
-<!-- remove-section: end remove_node_config_sub_section -->
-<!-- remove-section: start nuget remove_custom_client_config_table -->
-**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
+        ```
+
+    <!-- remove-section: end remove_node_config_sub_section -->
+
+    **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
@@ -192,7 +194,6 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: end remove_custom_client_config_table -->
 <!-- remove-section: start nuget;npm remove_package_manager_section -->
 </details>
-
 
 ## Package Manager
 Package manager installation offers several advantages over IDE-specific setup, including centralized dependency management, CI/CD integration, support for headless/server environments, version control, and project portability.
@@ -215,28 +216,38 @@ dotnet tool install Azure.Mcp --version <version>
 
 Install the Node.js package: [@azure/mcp](https://www.npmjs.com/package/@azure/mcp).
 
+**Local installation (recommended):**
+
 ```bash
 npm install @azure/mcp@latest
 ```
 
-To install a specific version, use:
+**Install a specific version:**
 
 ```bash
 npm install @azure/mcp@<version>
 ```
 
-To install and/or invoke the Azure MCP tool, use:
+**Run without installing (using npx):**
 
 ```bash
-npx -y @azure/mcp [command]
+npx -y @azure/mcp@latest server start
 ```
 
 <details>
 <summary>Additional instructions</summary>
 
+**When to use local vs global installation:**
+
+-   **Local (recommended):** Install in your project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration
+-   **Global:** Install system-wide if you want to run `azmcp` commands directly from any terminal
+
+**Troubleshooting:**
 To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (or respective binaries) installation, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md).
 
+**Architecture:**
 To understand how platform-specific binaries are installed with @azure/mcp, review the [wrapper binaries architecture](https://github.com/microsoft/mcp/blob/main/eng/npm/wrapperBinariesArchitecture.md).
+
 </details>
 
 ### Docker
