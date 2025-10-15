@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Mcp.Core.Services.Logging;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -67,6 +68,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Options.Add(ServiceOptionDefinitions.LogLevel);
+        command.Options.Add(ServiceOptionDefinitions.Verbose);
+        command.Options.Add(ServiceOptionDefinitions.LogFile);
         command.Validators.Add(commandResult =>
         {
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
@@ -77,6 +81,45 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
         });
+    }
+
+    /// <summary>
+    /// Resolves logging options from command line and environment variables.
+    /// Environment variables take precedence over defaults but not over explicit command line options.
+    /// </summary>
+    private static ServiceStartOptions ResolveLoggingOptions(ServiceStartOptions options)
+    {
+        // Environment variables (only if command line option wasn't explicitly set)
+        if (options.LogLevel == "info")
+        {
+            var envLogLevel = Environment.GetEnvironmentVariable("AZMCP_LOG_LEVEL");
+            if (!string.IsNullOrEmpty(envLogLevel))
+            {
+                options.LogLevel = envLogLevel;
+            }
+        }
+        
+        if (!options.Verbose && EnvironmentHelpers.GetEnvironmentVariableAsBool("AZMCP_VERBOSE"))
+        {
+            options.Verbose = true;
+        }
+        
+        if (string.IsNullOrEmpty(options.LogFile))
+        {
+            var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE");
+            if (!string.IsNullOrEmpty(envLogFile))
+            {
+                options.LogFile = envLogFile;
+            }
+        }
+
+        // Verbose flag overrides log level
+        if (options.Verbose && options.LogLevel == "info")
+        {
+            options.LogLevel = "debug";
+        }
+
+        return options;
     }
 
     /// <summary>
@@ -104,9 +147,68 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
+            LogLevel = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogLevel.Name),
+            Verbose = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Verbose.Name),
+            LogFile = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFile.Name),
         };
-        return options;
+        return ResolveLoggingOptions(options);
+    }
+
+    /// <summary>
+    /// Resolves log file path with placeholder substitution.
+    /// </summary>
+    private static string ResolveLogFilePath(string logFilePath)
+    {
+        if (string.IsNullOrEmpty(logFilePath))
+            return logFilePath;
+
+        var resolved = logFilePath
+            .Replace("{timestamp}", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"))
+            .Replace("{pid}", Environment.ProcessId.ToString());
+
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(resolved);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        return resolved;
+    }
+
+    /// <summary>
+    /// Parses log level string to LogLevel enum. Determines the effective log level based on various option sources.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>The effective LogLevel to use.</returns>
+    private static LogLevel ParseLogLevel(ServiceStartOptions serverOptions)
+    {
+        if (!string.IsNullOrEmpty(serverOptions.LogLevel))
+        {
+            return serverOptions.LogLevel.ToLowerInvariant() switch
+            {
+                "trace" => LogLevel.Trace,
+                "debug" => LogLevel.Debug,
+                "info" or "information" => LogLevel.Information,
+                "warn" or "warning" => LogLevel.Warning,
+                "error" => LogLevel.Error,
+                "critical" => LogLevel.Critical,
+                _ => LogLevel.Information
+            };
+        }
+
+        if (serverOptions.Verbose)
+        {
+            return LogLevel.Debug;
+        }
+
+        if (serverOptions.Debug)
+        {
+            return LogLevel.Debug;
+        }
+
+        return LogLevel.Information;
     }
 
     /// <summary>
@@ -290,24 +392,34 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
 
-                if (serverOptions.Debug)
+                // Determine effective log level from new options
+                var effectiveLogLevel = ParseLogLevel(serverOptions);
+                logging.SetMinimumLevel(effectiveLogLevel);
+
+                // Always configure console logger for STDIO mode to send logs to STDERR
+                // This keeps STDOUT clean for MCP protocol communication
+                logging.AddConsole(options =>
                 {
-                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
-                    logging.AddConsole(options =>
-                    {
-                        options.LogToStandardErrorThreshold = LogLevel.Debug;
-                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-                    });
-                    logging.AddSimpleConsole(simple =>
-                    {
-                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                        simple.IncludeScopes = false;
-                        simple.SingleLine = true;
-                        simple.TimestampFormat = "[HH:mm:ss] ";
-                    });
-                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
-                    logging.SetMinimumLevel(LogLevel.Debug);
+                    options.LogToStandardErrorThreshold = effectiveLogLevel;
+                    options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+                });
+                
+                logging.AddSimpleConsole(simple =>
+                {
+                    simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                    simple.IncludeScopes = false;
+                    simple.SingleLine = true;
+                    simple.TimestampFormat = "[HH:mm:ss] ";
+                });
+
+                // Add file logging if specified
+                if (!string.IsNullOrEmpty(serverOptions.LogFile))
+                {
+                    var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
+                    logging.AddProvider(new SimpleFileLoggerProvider(resolvedPath, effectiveLogLevel));
                 }
+
+                logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
             })
             .ConfigureServices(services =>
             {
@@ -330,7 +442,33 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 logging.ClearProviders();
                 logging.ConfigureOpenTelemetryLogger();
                 logging.AddEventSourceLogger();
-                logging.AddConsole();
+
+                // Determine effective log level from new options
+                var effectiveLogLevel = ParseLogLevel(serverOptions);
+                logging.SetMinimumLevel(effectiveLogLevel);
+
+                // For HTTP mode, we can log to console normally (no STDIO separation needed)
+                logging.AddConsole(options =>
+                {
+                    options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+                });
+
+                logging.AddSimpleConsole(simple =>
+                {
+                    simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+                    simple.IncludeScopes = false;
+                    simple.SingleLine = true;
+                    simple.TimestampFormat = "[HH:mm:ss] ";
+                });
+
+                // Add file logging if specified
+                if (!string.IsNullOrEmpty(serverOptions.LogFile))
+                {
+                    var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
+                    logging.AddProvider(new SimpleFileLoggerProvider(resolvedPath, effectiveLogLevel));
+                }
+
+                logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
             })
             .ConfigureWebHostDefaults(webBuilder =>
             {
