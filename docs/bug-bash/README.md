@@ -195,4 +195,3 @@ If you're short on time, try these quick scenarios:
 
 ### Support
 - [GitHub Issues](https://github.com/microsoft/mcp/issues) - Report bugs and issues
-- [Discussions](https://github.com/microsoft/mcp/discussions) - Ask questions and share feedback

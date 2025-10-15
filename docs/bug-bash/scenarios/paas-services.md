@@ -168,8 +168,8 @@ When logging issues, include:
 
 - [Azure App Service Documentation](https://learn.microsoft.com/azure/app-service/)
 - [Azure Functions Documentation](https://learn.microsoft.com/azure/azure-functions/)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## Quick Reference: Supported MCP Tools
@@ -192,4 +192,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Storage Operations Testing](storage-operations.md)
+**Next**: [Storage Operations Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/storage-operations.md)

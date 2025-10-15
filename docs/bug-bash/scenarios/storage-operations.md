@@ -356,8 +356,8 @@ When logging issues, include:
 - [Azure Storage Documentation](https://learn.microsoft.com/azure/storage/)
 - [Azure Blob Storage Best Practices](https://learn.microsoft.com/azure/storage/blobs/storage-blobs-introduction)
 - [Data Lake Storage Gen2](https://learn.microsoft.com/azure/storage/blobs/data-lake-storage-introduction)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## Quick Reference: Supported MCP Tools
@@ -389,4 +389,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Agent Building](agent-building.md)
+**Next**: [Agent Building](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/agent-building.md)
