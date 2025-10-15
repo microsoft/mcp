@@ -2,189 +2,567 @@
 #Requires -Version 7
 
 param(
-	[Parameter(Mandatory=$false)]
 	[string] $ArtifactsPath,
-	[Parameter(Mandatory=$false)]
-	[string] $VersionSuffix,
-	[Parameter(Mandatory=$false)]
-	[string] $OutputPath,
-	[Parameter(Mandatory=$false)]
-	[string] $RepoUrl,
-	[Parameter(Mandatory=$false)]
-	[string] $CommitSha,
-	[Parameter(Mandatory=$false)]
-	[string] $Branch
+    [string] $BuildInfoPath,
+	[string] $OutputPath
 )
 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
-$mcpServerjson = "$RepoRoot/eng/dnx/.mcp/server.json"
+$tempFolder = "$RepoRoot/.work/temp"
 $nuspecSourcePath = "$RepoRoot/eng/dnx/nuspec"
-$azureIconPath = "$RepoRoot/eng/images/azureicon.png"
-$projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
+
+# When running locally, ignore missing artifacts instead of failing
+$ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
+
+$exitCode = 0
 
 if(!$ArtifactsPath) {
 	$ArtifactsPath = "$RepoRoot/.work/build"
 }
 
-if(!$OutputPath) {
-	$OutputPath = "$RepoRoot/.work/package"
+if(!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
+}
+
+if (!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/packages_dnx"
 }
 
 if(!(Test-Path $ArtifactsPath)) {
 	LogError "Artifacts path $ArtifactsPath does not exist."
-	return
+	$exitCode = 1
 }
 
-$sharedProjectProperties = & "$projectPropertiesScript" -ProjectName "Directory.Build.props"
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
+}
+
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+
+$tempDirectory = "$RepoRoot/.work/temp"
+Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+
+Write-Host "Getting TargetFramework from Directory.Build.props"
+$sharedTargetFramework = dotnet msbuild "$RepoRoot/Directory.Build.props" -getProperty:TargetFramework
+
+if($LASTEXITCODE -ne 0 -or !$sharedTargetFramework) {
+    LogError "Failed to get TargetFramework from Directory.Build.props"
+    $exitCode = 1
+}
+
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+# Exit early if there were parameter errors
+if($exitCode -ne 0) {
+    exit $exitCode
+}
+
+function ExportServerJson {
+    param(
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Description,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommandName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageId,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Version,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $RepositoryUrl,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
+    )
+
+    $output = [ordered]@{
+        '$schema' = "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json"
+        description = $Description
+        name = "io.github.microsoft/mcp/$CommandName"
+        packages = @(
+            [ordered]@{
+                registry_name = "nuget"
+                name = $PackageId
+                version = $Version
+                package_arguments = @(
+                    [ordered]@{ type = "positional"; value = "server"; value_hint = "server" },
+                    [ordered]@{ type = "positional"; value = "start"; value_hint = "start" }
+                )
+            }
+        )
+        repository = [ordered]@{
+            url = $RepositoryUrl
+            source = "github"
+        }
+        version_detail = [ordered]@{
+            version = $Version
+        }
+    }
+
+    $output | ConvertTo-Json -Depth 10 | Out-File -Path $OutputPath -Encoding utf8
+
+    Write-Host "`n== Generated $OutputPath` =="
+    Get-Content $OutputPath | Out-Host
+    Write-Host ""
+}
+
+function ExportWrapperToolSettings {
+    param(
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommandName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $RuntimeIdentifier,
+
+        [parameter(Mandatory)]
+        [hashtable] $PlatformReferences,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
+    )
+
+    $xml = New-Object System.Xml.XmlDocument
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
+
+    $dotnetCliTool = $xml.AppendChild($xml.CreateElement("DotNetCliTool"))
+    $dotnetCliTool.SetAttribute("Version", "2")
+
+    $commands = $dotnetCliTool.AppendChild($xml.CreateElement("Commands"))
+    $command = $commands.AppendChild($xml.CreateElement("Command"))
+    $command.SetAttribute("Name", $CommandName)
+
+    $ridPackages = $dotnetCliTool.AppendChild($xml.CreateElement("RuntimeIdentifierPackages"))
+
+    foreach ($key in $PlatformReferences.Keys | Sort-Object) {
+        $platformRef = $ridPackages.AppendChild($xml.CreateElement("RuntimeIdentifierPackage"))
+        $platformRef.SetAttribute("RuntimeIdentifier", $key)
+        $platformRef.SetAttribute("Id", $PlatformReferences[$key])
+    }
+
+    $xml.Save($OutputPath)
+
+    Write-Host "`n== Generated $OutputPath` =="
+    Get-Content $OutputPath | Out-Host
+    Write-Host ""
+
+}
+
+function ExportWrapperPackageNuspec {
+    param(
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageId,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ServerName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Version,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Description,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string[]] $Tags,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $RepositoryUrl,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ReleaseTag,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Branch,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommitSha,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $SharedTargetFramework,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageIcon,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
+    )
+
+    $xml = New-Object System.Xml.XmlDocument
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
+    $package = $xml.AppendChild($xml.CreateElement("package"))
+    $package.SetAttribute("xmlns", "http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd")
+
+    $metadata = $package.AppendChild($xml.CreateElement("metadata"))
+
+    $id = $metadata.AppendChild($xml.CreateElement("id"))
+    $id.InnerText = $PackageId
+
+    $ver = $metadata.AppendChild($xml.CreateElement("version"))
+    $ver.InnerText = $Version
+
+    $authors = $metadata.AppendChild($xml.CreateElement("authors"))
+    $authors.InnerText = "Microsoft"
+
+    $requireLicenseAcceptance = $metadata.AppendChild($xml.CreateElement("requireLicenseAcceptance"))
+    $requireLicenseAcceptance.InnerText = "false"
+
+    $license = $metadata.AppendChild($xml.CreateElement("license"))
+    $license.SetAttribute("type", "expression")
+    $license.InnerText = "MIT"
+
+    $licenseUrl = $metadata.AppendChild($xml.CreateElement("licenseUrl"))
+    $licenseUrl.InnerText = "https://licenses.nuget.org/MIT"
+
+    $readme = $metadata.AppendChild($xml.CreateElement("readme"))
+    $readme.InnerText = "README.md"
+
+    $desc = $metadata.AppendChild($xml.CreateElement("description"))
+    $desc.InnerText = $Description
+
+    $relNotes = $metadata.AppendChild($xml.CreateElement("releaseNotes"))
+    $relNotes.InnerText = "$RepoUrl/tree/$ReleaseTag/servers/$ServerName/CHANGELOG.md"
+
+    $tagsElem = $metadata.AppendChild($xml.CreateElement("tags"))
+    $tagsElem.InnerText = $Tags -join ' '
+
+    $copyright = $metadata.AppendChild($xml.CreateElement("copyright"))
+    $copyright.InnerText = "© Microsoft Corporation. All rights reserved."
+
+    $projectUrlElem = $metadata.AppendChild($xml.CreateElement("projectUrl"))
+    $projectUrlElem.InnerText = "$RepoUrl/tree/$ReleaseTag/servers/$ServerName"
+
+    $packageTypes = $metadata.AppendChild($xml.CreateElement("packageTypes"))
+    $packageType1 = $packageTypes.AppendChild($xml.CreateElement("packageType"))
+    $packageType1.SetAttribute("name", "DotnetTool")
+
+    $packageType2 = $packageTypes.AppendChild($xml.CreateElement("packageType"))
+    $packageType2.SetAttribute("name", "McpServer")
+
+
+    $repository = $metadata.AppendChild($xml.CreateElement("repository"))
+    $repository.SetAttribute("type", "git")
+    $repository.SetAttribute("url", $RepositoryUrl)
+    $repository.SetAttribute("branch", $Branch)
+    $repository.SetAttribute("commit", $CommitSha)
+
+    $frameworkReferences = $metadata.AppendChild($xml.CreateElement("frameworkReferences"))
+    $group = $frameworkReferences.AppendChild($xml.CreateElement("group"))
+    $group.SetAttribute("targetFramework", $SharedTargetFramework)
+    $frameworkReference = $group.AppendChild($xml.CreateElement("frameworkReference"))
+    $frameworkReference.SetAttribute("name", "Microsoft.AspNetCore.App")
+
+    $icon = $metadata.AppendChild($xml.CreateElement("icon"))
+    $icon.InnerText = Split-Path $PackageIcon -Leaf
+
+    $xml.Save($OutputPath)
+
+    Write-Host "`n== Generated $OutputPath` =="
+    Get-Content $OutputPath | Out-Host
+    Write-Host ""
+}
+
+function ExportPlatformToolSettings {
+    param(
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommandName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $EntryPoint,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
+    )
+
+    $xml = New-Object System.Xml.XmlDocument
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
+
+    $dotnetCliTool = $xml.AppendChild($xml.CreateElement("DotNetCliTool"))
+    $dotnetCliTool.SetAttribute("Version", "2")
+
+    $commands = $dotnetCliTool.AppendChild($xml.CreateElement("Commands"))
+    $command = $commands.AppendChild($xml.CreateElement("Command"))
+    $command.SetAttribute("Name", $CommandName)
+    $command.SetAttribute("EntryPoint", $EntryPoint)
+    $command.SetAttribute("Runner", "executable")
+
+    $xml.Save($OutputPath)
+
+    Write-Host "`n== Generated $OutputPath` =="
+    Get-Content $OutputPath | Out-Host
+    Write-Host ""
+}
+
+function ExportPlatformPackageNuspec {
+    param(
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageId,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ServerName,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Version,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Description,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string[]] $Tags,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $RepositoryUrl,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $ReleaseTag,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $Branch,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $CommitSha,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $SharedTargetFramework,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $PackageIcon,
+
+        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
+        [string] $OutputPath
+    )
+
+    $xml = New-Object System.Xml.XmlDocument
+    $xml.AppendChild($xml.CreateXmlDeclaration("1.0", "utf-8", $null)) | Out-Null
+    $package = $xml.AppendChild($xml.CreateElement("package"))
+    $package.SetAttribute("xmlns", "http://schemas.microsoft.com/packaging/2012/06/nuspec.xsd")
+
+    $metadata = $package.AppendChild($xml.CreateElement("metadata"))
+
+    $id = $metadata.AppendChild($xml.CreateElement("id"))
+    $id.InnerText = $PackageId
+
+    $ver = $metadata.AppendChild($xml.CreateElement("version"))
+    $ver.InnerText = $Version
+
+    $authors = $metadata.AppendChild($xml.CreateElement("authors"))
+    $authors.InnerText = "Microsoft"
+
+    $license = $metadata.AppendChild($xml.CreateElement("license"))
+    $license.SetAttribute("type", "expression")
+    $license.InnerText = "MIT"
+
+    $licenseUrl = $metadata.AppendChild($xml.CreateElement("licenseUrl"))
+    $licenseUrl.InnerText = "https://licenses.nuget.org/MIT"
+
+    $desc = $metadata.AppendChild($xml.CreateElement("description"))
+    $desc.InnerText = $Description
+
+    $relNotes = $metadata.AppendChild($xml.CreateElement("releaseNotes"))
+    $relNotes.InnerText = "$RepoUrl/tree/$ReleaseTag/servers/$ServerName/CHANGELOG.md"
+
+    $tagsElem = $metadata.AppendChild($xml.CreateElement("tags"))
+    $tagsElem.InnerText = $Tags -join ' '
+
+    $copyright = $metadata.AppendChild($xml.CreateElement("copyright"))
+    $copyright.InnerText = "© Microsoft Corporation. All rights reserved."
+
+    $projectUrlElem = $metadata.AppendChild($xml.CreateElement("projectUrl"))
+    $projectUrlElem.InnerText = "$RepoUrl/tree/$ReleaseTag/servers/$ServerName"
+
+    $packageTypes = $metadata.AppendChild($xml.CreateElement("packageTypes"))
+    $packageType1 = $packageTypes.AppendChild($xml.CreateElement("packageType"))
+    $packageType1.SetAttribute("name", "DotnetToolRidPackage")
+
+    $repository = $metadata.AppendChild($xml.CreateElement("repository"))
+    $repository.SetAttribute("type", "git")
+    $repository.SetAttribute("url", $RepositoryUrl)
+    $repository.SetAttribute("branch", $Branch)
+    $repository.SetAttribute("commit", $CommitSha)
+
+    $frameworkReferences = $metadata.AppendChild($xml.CreateElement("frameworkReferences"))
+    $group = $frameworkReferences.AppendChild($xml.CreateElement("group"))
+    $group.SetAttribute("targetFramework", $SharedTargetFramework)
+    $frameworkReference = $group.AppendChild($xml.CreateElement("frameworkReference"))
+    $frameworkReference.SetAttribute("name", "Microsoft.AspNetCore.App")
+
+    $icon = $metadata.AppendChild($xml.CreateElement("icon"))
+    $icon.InnerText = Split-Path $PackageIcon -Leaf
+
+    $xml.Save($OutputPath)
+
+    Write-Host "`n== Generated $OutputPath` =="
+    Get-Content $OutputPath | Out-Host
+    Write-Host ""
+}
+
+function BuildServerPackages([hashtable] $server, [bool] $native) {
+    LogInfo "## Packing $($native ? 'native' : 'non-native') NuGet packages for server $($server.name)"
+    $repoUrl = $buildInfo.repositoryUrl
+    $packageId = $server.dnxPackageId
+    $description = $server.dnxDescription ? $server.dnxDescription : $server.description
+    $iconFileName = Split-Path $server.packageIcon -Leaf
+
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    if ($filteredPlatforms.Count -eq 0) {
+        LogInfo "No platforms to build for server $($server.name) with native=$native"
+        return
+    }
+
+    $serverOutputPath = "$OutputPath/$($server.artifactPath)"
+
+    $platformOutputPath = "$serverOutputPath/platform"
+    New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
+
+    # Process all platform packages before the wrapper package
+    $platformRefs = @{}
+
+    # Build the project
+    foreach ($platform in $filteredPlatforms) {
+        LogInfo "## Packing platform $($platform.name)"
+        $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
+
+        if(!(Test-Path $platformDirectory)) {
+            $message = "Platform directory $platformDirectory does not exist."
+            if ($ignoreMissingArtifacts) {
+                LogWarning $message
+            } else {
+                LogError $message
+                $script:exitCode = 1
+            }
+
+            continue
+        }
+
+        $os = $platform.dotnetOs
+        $arch = $platform.architecture
+        $platformOsArch = "$os-$arch"
+
+        $platformToolDir = "$tempDirectory/tools/any/$platformOsArch"
+        $platformPackageId = "$packageId.$platformOsArch"
+        $platformDescription = "$description. Internal implementation package for $platformOsArch."
+        $platformNuspecFile = "$tempDirectory/$platformPackageId.nuspec"
+        New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
+
+        Copy-Item -Path "$platformDirectory/*" -Destination $platformToolDir -Recurse -Force -ProgressAction SilentlyContinue
+        Copy-Item -Path $server.packageIcon -Destination $tempDirectory -Force
+        Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempDirectory -Force
+        Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempDirectory -Force
+
+        ExportPlatformPackageNuspec `
+            -PackageId $platformPackageId `
+            -ServerName $server.name `
+            -Version $server.version `
+            -Description $platformDescription `
+            -Tags $server.dnxPackageTags `
+            -RepositoryUrl $repoUrl `
+            -ReleaseTag $server.releaseTag `
+            -Branch $buildInfo.branch `
+            -CommitSha $buildInfo.commitSha `
+            -SharedTargetFramework $sharedTargetFramework `
+            -PackageIcon $iconFileName `
+            -OutputPath $platformNuspecFile
+
+        ExportPlatformToolSettings `
+            -CommandName $server.cliName `
+            -EntryPoint "$($server.cliName)$($platform.extension)" `
+            -OutputPath "$platformToolDir/DotnetToolSettings.xml"
+
+        $platformRefs[$platformOsArch] = $platformPackageId
+
+        LogInfo "Creating Nuget Symbol Package from $platformNuspecFile"
+        Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
+        $generatedNupkg = Get-ChildItem -Path $platformOutputPath -Filter "*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        $symbolPkgName = $generatedNupkg.Name -replace ".nupkg$", ".symbols.nupkg"
+        Rename-Item -Path $generatedNupkg.FullName -NewName $symbolPkgName -Force
+
+        Get-ChildItem -Path $platformToolDir -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
+        LogInfo "Creating Nuget Package from $platformNuspecFile"
+        Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
+        Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    }
+
+    $wrapperOutputPath = "$serverOutputPath/wrapper"
+    New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
+
+    # Create dnx wrapper nuget tool
+    $wrapperToolDir = "$tempFolder/tools/$sharedTargetFramework/any"
+    $wrapperToolNuspec = "$tempFolder/$packageId.nuspec"
+    New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
+    New-Item -ItemType Directory -Force -Path "$tempFolder/.mcp" | Out-Null
+
+    Copy-Item -Path "$nuspecSourcePath/README.md" -Destination $tempFolder -Force
+    Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
+    Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
+    Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force
+
+    # Export ServerJson
+    ExportServerJson `
+        -Description $description `
+        -CommandName $server.cliName `
+        -PackageId $packageId `
+        -Version $server.version `
+        -RepositoryUrl $buildInfo.repositoryUrl `
+        -OutputPath "$tempFolder/.mcp/server.json"
+
+    # Export WrapperPackageNuspec
+    ExportWrapperPackageNuspec `
+        -PackageId $packageId `
+        -Version $server.version `
+        -ServerName $server.name `
+        -Description $description `
+        -Tags $server.dnxPackageTags `
+        -RepositoryUrl $buildInfo.repositoryUrl `
+        -ReleaseTag $server.releaseTag `
+        -Branch $buildInfo.branch `
+        -CommitSha $buildInfo.commitSha `
+        -SharedTargetFramework $sharedTargetFramework `
+        -PackageIcon $iconFileName `
+        -OutputPath $wrapperToolNuspec
+
+    ExportWrapperToolSettings `
+        -CommandName $server.cliName `
+        -RuntimeIdentifier $sharedTargetFramework `
+        -PlatformReferences $platformRefs `
+        -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
+
+    & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
+        -Command "extract" `
+        -InputReadMePath "$RepoRoot/$($server.readmePath)" `
+        -PackageType "nuget" `
+        -InsertPayload @{ ToolTitle = '.NET Tool' } `
+        -OutputDirectory $tempFolder
+
+    LogInfo "Creating Nuget Package from $wrapperToolNuspec"
+    Invoke-LoggedCommand "nuget pack '$wrapperToolNuspec' -OutputDirectory '$wrapperOutputPath'" -GroupOutput
+    Remove-Item -Path $tempFolder -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+}
 
 Push-Location $RepoRoot
 try {
 	# Clear and recreate the output directory
 	Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-	$wrapperJsonFiles = Get-ChildItem -Path $ArtifactsPath -Filter "wrapper.json" -Recurse
-	foreach($wrapperJsonFile in $wrapperJsonFiles) {
-		$serverDirectory = $wrapperJsonFile.Directory
-		$serverName = $serverDirectory.Name -replace '-native', ''
-		$serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$serverName.csproj"
-		$platformOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/platform"
-		$wrapperOutputPath = "$OutputPath/nuget/$($serverDirectory.Name)/wrapper"
-		$packageIcon = $serverProjectProperties.PackageIcon
-		if (!$packageIcon) {
-			$packageIcon = "microsofticon.png"
-		}
-		$packageIconPath = "$RepoRoot/eng/images/$packageIcon"
+    foreach($server in $buildInfo.servers) {
+        BuildServerPackages -server $server -native $false
 
-		New-Item -ItemType Directory -Force -Path $platformOutputPath | Out-Null
-		New-Item -ItemType Directory -Force -Path $wrapperOutputPath | Out-Null
+        if ($buildInfo.includeNative) {
+            BuildServerPackages -server $server -native $true
+        }
+    }
 
-		$wrapperPackageJson = Get-Content $wrapperJsonFile -Raw | ConvertFrom-Json -AsHashtable
-
-		$platformDirectories = Get-ChildItem -Path $serverDirectory -Directory
-
-		# Create dnx wrapper nuget tool
-        $tempNugetWrapperDir = Join-Path $wrapperOutputPath "temp"
-        $wrapperToolDir = "$tempNugetWrapperDir/tools/$($sharedProjectProperties.TargetFramework)/any"
-        $wrapperToolNuspec = "$tempNugetWrapperDir/$($serverProjectProperties.PackageId).nuspec"
-        New-Item -ItemType Directory -Force -Path $wrapperToolDir | Out-Null
-        New-Item -ItemType Directory -Force -Path "$tempNugetWrapperDir/.mcp" | Out-Null
-
-		$packageVersion = "$($serverProjectProperties.Version)$VersionSuffix"
-		$releaseTag = "$serverName-$packageVersion"
-        
-        (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticToolSettingsTemplate.xml") `
-            -replace "__CommandName__", $serverProjectProperties.CliName |
-            Set-Content -Path "$wrapperToolDir/DotnetToolSettings.xml"
-
-        (Get-Content -Path $mcpServerjson -Raw) `
-            -replace '\$\(PackageDescription\)', $serverProjectProperties.Description `
-            -replace '\$\(PackageId\)', $serverProjectProperties.PackageId `
-            -replace '\$\(PackageVersion\)', $packageVersion `
-            -replace '\$\(ServerName\)', $serverProjectProperties.CliName `
-            -replace '\$\(RepositoryUrl\)', $RepoUrl |
-            Set-Content -Path "$tempNugetWrapperDir/.mcp/server.json"
-        
-        (Get-Content -Path "$nuspecSourcePath/RuntimeAgnosticTemplate.nuspec") `
-            -replace "__Id__", $serverProjectProperties.PackageId `
-            -replace "__Version__", $packageVersion `
-            -replace "__Authors__", $wrapperPackageJson.author `
-            -replace "__Description__", $wrapperPackageJson.description `
-            -replace "__Tags__", ($serverProjectProperties.PackageTags -replace ';', ' ').Trim() `
-            -replace "__ProjectUrl__", "$RepoUrl/tree/$releaseTag/servers/$serverName" `
-			-replace "__ReleaseNotes__", "$RepoUrl/tree/$releaseTag/servers/$serverName/CHANGELOG.md" `
-            -replace "__RepositoryUrl__", $RepoUrl `
-            -replace "__RepositoryBranch__", $Branch `
-            -replace "__CommitSHA__", $CommitSha `
-            -replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
-            Set-Content -Path $wrapperToolNuspec
-
-		& "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" -Command "extract" `
-            -InputReadMePath "$serverDirectory/README.md" -OutputDirectory $tempNugetWrapperDir `
-			-PackageType "nuget" -InsertPayload @{ ToolTitle = '.NET Tool' }
-			
-		Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempNugetWrapperDir -Force
-		Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempNugetWrapperDir -Force
-		Copy-Item -Path $packageIconPath -Destination $tempNugetWrapperDir -Force
-
-		# Build the project
-		foreach ($platformDirectory in $platformDirectories) {
-			$platformOSArch = $platformDirectory.Name
-			$tempPlatformDir = Join-Path $platformOutputPath $platformOSArch
-			$platformToolDir = "$tempPlatformDir/tools/any/$platformOSArch"
-			$platformPackageId = "$($serverProjectProperties.PackageId).$platformOSArch"
-			$platformNuspecFile = "$tempPlatformDir/$platformPackageId.nuspec"
-			New-Item -ItemType Directory -Force -Path $platformToolDir | Out-Null
-
-			Copy-Item -Path "$platformDirectory/dist/*" -Destination $platformToolDir -Recurse -Force
-			Copy-Item -Path $packageIconPath -Destination $tempPlatformDir -Force
-			Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPlatformDir -Force
-			Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPlatformDir -Force
-			$platformToolEntryPoint = (
-				Get-ChildItem -Path $platformToolDir -Filter "$($serverProjectProperties.CliName)*" -Recurse |
-				Where-Object { $_.PSIsContainer -eq $false -and ($_.Extension -eq ".exe" -or $_.Extension -eq "") } |
-				Select-Object -First 1
-			).Name
-			(Get-Content -Path "$nuspecSourcePath/RuntimeSpecificTemplate.nuspec") `
-				-replace "__Id__", $platformPackageId `
-				-replace "__Version__", $packageVersion `
-				-replace "__Authors__", $wrapperPackageJson.author `
-				-replace "__Description__", ($serverProjectProperties.PackageDescription -replace '\$\(RuntimeIdentifier\)', $platformOSArch) `
-				-replace "__Tags__", ($serverProjectProperties.PackageTags -replace ';', ' ').Trim() `
-				-replace "__RepositoryUrl__", $RepoUrl `
-				-replace "__ProjectUrl__", "$RepoUrl/tree/$releaseTag/servers/$serverName" `
-				-replace "__ReleaseNotes__", "$RepoUrl/tree/$releaseTag/servers/$serverName/CHANGELOG.md" `
-				-replace "__RepositoryBranch__", $Branch `
-				-replace "__CommitSHA__", $CommitSha `
-				-replace "__TargetFramework__", $sharedProjectProperties.TargetFramework |
-				Set-Content -Path $platformNuspecFile
-
-			(Get-Content -Path "$nuspecSourcePath/RuntimeSpecificToolSettingsTemplate.xml") `
-				-replace "__CommandName__", $serverProjectProperties.CliName `
-				-replace "__CommandEntryPoint__", $platformToolEntryPoint |
-				Set-Content -Path "$platformToolDir/DotnetToolSettings.xml"
-
-			[xml]$wrapperToolSettings = Get-Content -Path "$wrapperToolDir/DotnetToolSettings.xml"
-			$ridNode = $wrapperToolSettings.DotNetCliTool.RuntimeIdentifierPackages
-			if ($ridNode.Count -eq 1 -and $ridNode.RuntimeIdentifierPackage.RuntimeIdentifier -eq "__RuntimeIdentifier__") {
-				$ridNode.RemoveAll()
-			}
-			$newRid = $wrapperToolSettings.CreateElement("RuntimeIdentifierPackage")
-			$newRid.SetAttribute("RuntimeIdentifier", $platformOSArch)
-			$newRid.SetAttribute("Id", $platformPackageId)
-			$ridNode.AppendChild($newRid) | Out-Null
-			$wrapperToolSettings.Save("$wrapperToolDir/DotnetToolSettings.xml")
-
-			if ((Get-Content -Raw -Path $platformNuspecFile) + (Get-Content -Raw -Path "$platformToolDir/DotnetToolSettings.xml") -match '__') {
-				Write-Error "Placeholder(s) with '__' still found in $platformNuspecFile or DotnetToolSettings.xml. Please check your replacements."
-				exit 1
-			}
-
-			LogInfo "Creating Nuget Symbol Package from $platformNuspecFile"
-			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
-			$generatedNupkg = Get-ChildItem -Path $platformOutputPath -Filter "*.nupkg" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
-			$symbolPkgName = $generatedNupkg.Name -replace ".nupkg$", ".symbols.nupkg"
-			Rename-Item -Path $generatedNupkg.FullName -NewName $symbolPkgName -Force
-
-			Get-ChildItem -Path $platformToolDir -Recurse -Include "*.pdb", "*.dSYM", "*.dbg" | Remove-Item -Force -Recurse -ErrorAction SilentlyContinue
-			LogInfo "Creating Nuget Package from $platformNuspecFile"
-			Invoke-LoggedCommand "nuget pack '$platformNuspecFile' -OutputDirectory '$platformOutputPath'" -GroupOutput
-			Remove-Item -Path $tempPlatformDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-		}
-
-		if ((Get-Content -Raw -Path $wrapperToolNuspec) + (Get-Content -Raw -Path "$wrapperToolDir/DotnetToolSettings.xml") -match '__') {
-			Write-Error "Placeholder(s) with '__' still found in $wrapperToolNuspec or DotnetToolSettings.xml. Please check your replacements."
-			exit 1
-		}
-
-		LogInfo "Creating Nuget Package from $wrapperToolNuspec"
-        Invoke-LoggedCommand "nuget pack '$wrapperToolNuspec' -OutputDirectory '$wrapperOutputPath'" -GroupOutput
-        Remove-Item -Path $tempNugetWrapperDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-	}
-	LogSuccess "`nNuGet packaging completed successfully!" -ForegroundColor Green
+	LogSuccess "`nNuGet packaging completed successfully!"
 }
 finally {
 	Pop-Location
 }
+
+exit $exitCode

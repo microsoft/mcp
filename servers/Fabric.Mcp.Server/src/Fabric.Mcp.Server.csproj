@@ -5,17 +5,37 @@
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
+    <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
+
+    <!--
+    Defaults to the microsoft logo if not specified.
+    <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric_icon.png</PackageIcon>
+    -->
+
+    <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
-    <PackageId>Microsoft.Fabric.Mcp</PackageId>
-    <ToolCommandName>$(CliName)</ToolCommandName>
-    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
+    <!-- docker settings -->
+    <DockerImageName></DockerImageName>
+
+    <!-- dnx/nuget settings -->
+    <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>
+    <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <DnxPackageTags>fabric,mcp</DnxPackageTags>
+
+    <!-- vsix settings -->
+    <VsixPackagePrefix>vscode-fabric-mcp</VsixPackagePrefix>
+    <VsixDescription></VsixDescription>
+    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>$(CliName)</AssemblyName>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+
     <!-- Publishing settings -->
     <IsAotCompatible>true</IsAotCompatible>
     <PublishSingleFile>false</PublishSingleFile>
@@ -40,20 +60,6 @@
     <!-- AOT native build flags -->
     <PublishTrimmed>true</PublishTrimmed>
     <SelfContained>true</SelfContained>
-  </PropertyGroup>
-
-  <!-- Properties for the root (RID-less) .NET Tool package -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <PackageDescription>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric.</PackageDescription>
-    <PackageTags>fabric;mcp;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
-  </ItemGroup>
-  <!-- Properties for the RID-specific .NET Tool packages -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <PackageDescription>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric. Internal implementation package for $(RuntimeIdentifier).</PackageDescription>
   </PropertyGroup>
 
   <ItemGroup>
