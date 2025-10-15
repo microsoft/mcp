@@ -1,5 +1,18 @@
 # Release History
 
+## 0.9.1 (2025-10-14)
+
+### Fixed
+
+- Fixed an issue where `azmcp_sql_db_rename` would not work as expected. [[#615](https://github.com/microsoft/mcp/issues/615)]
+
+### Changed
+
+- MCP server start options are now included in logs. ([#794](https://github.com/microsoft/mcp/pull/794))
+- Updated the description of the following Workbook commands to decrease ambiguity and increase selection accuracy by LLMs: [[#787](https://github.com/microsoft/mcp/pull/787)]
+  - `azmcp_workbook_show`
+  - `azmcp_workbook_update`
+
 ## 0.9.0 (2025-10-13)
 
 ### Added
