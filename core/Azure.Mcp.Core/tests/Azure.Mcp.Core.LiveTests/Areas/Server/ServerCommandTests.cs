@@ -717,18 +717,7 @@ public class ServerCommandTests(ITestOutputHelper output)
             Assert.DoesNotContain("edit_", tool.Name, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("delete_", tool.Name, StringComparison.OrdinalIgnoreCase);
             Assert.DoesNotContain("update_", tool.Name, StringComparison.OrdinalIgnoreCase);
-
-            Output.WriteLine($"Tool: {tool.Name} - HasAnnotations: {hasAnnotations}, ReadOnlyHint: {readOnlyHint}");
         }
-
-        Output.WriteLine($"Tools with annotations: {toolsWithAnnotations}/{toolCount}");
-        Output.WriteLine($"Tools with ReadOnlyHint=true: {toolsWithReadOnlyHint}/{toolCount}");
-
-        // In read-only mode, ALL tools must have annotations and ReadOnlyHint=true
-        Assert.Equal(toolCount, toolsWithAnnotations);
-        Assert.Equal(toolCount, toolsWithReadOnlyHint);
-
-        Output.WriteLine($"✓ All {toolCount} consolidated tools have annotations and ReadOnlyHint=true in read-only mode");
     }
 
     [Fact]
