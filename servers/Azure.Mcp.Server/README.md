@@ -239,7 +239,7 @@ npx -y @azure/mcp@latest server start
 
 **When to use local vs global installation:**
 
--   **Local (recommended):** Install in your project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration
+-   **Local (recommended):** Install in the project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration
 -   **Global:** Install system-wide if you want to run `azmcp` commands directly from any terminal
 
 **Troubleshooting:**
