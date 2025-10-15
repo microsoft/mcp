@@ -15,7 +15,7 @@ Welcome to the Azure MCP Server Bug Bash! We're excited to have you help us impr
 
 The Azure MCP Server enables AI agents to interact with Azure services through natural language commands. As we continue to enhance the server, we need your help to identify issues across different platforms, IDEs, and usage scenarios.
 
-> **🎯 Important**: **MCP tools primarily focus on reading, querying, and inspecting Azure resources**. Most resource creation requires Azure CLI - use it to set up test resources before testing MCP's discovery and inspection capabilities.
+> **Important**: **MCP tools primarily focus on reading, querying, and inspecting Azure resources**. Most resource creation requires Azure CLI - use it to set up test resources before testing MCP's discovery and inspection capabilities.
 
 This bug bash focuses on:
 - **Multi-platform compatibility** (Windows, macOS, Linux)
@@ -61,7 +61,7 @@ We encourage you to test the following areas:
 
 ### Authentication Testing
 - [ ] Test **Azure CLI authentication** (`az login`)
-- [ ] Test **Azure PowerShell authentication** (`ConnectAzAccount`)
+- [ ] Test **Azure PowerShell authentication** (`Connect-AzAccount`)
 - [ ] Test **Interactive browser authentication**
 - [ ] Test authentication across **multiple tenants**
 - [ ] Test authentication with **service principals**
@@ -130,7 +130,6 @@ If you're short on time, try these quick scenarios:
 ## Resources
 
 ### Bug Bash Documentation
-- **[TESTING-SCOPE.md](TESTING-SCOPE.md)** - ⚠️ **READ THIS FIRST!** - Explains what MCP can and cannot do
 - [Installation Testing Guide](installation-testing.md) - Test installation across platforms and IDEs
 - [Testing Scenarios](scenarios/) - Detailed end-to-end testing scenarios
 
