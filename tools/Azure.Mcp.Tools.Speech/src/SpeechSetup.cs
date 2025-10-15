@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Services;
+using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace Azure.Mcp.Tools.Speech;
@@ -15,6 +16,9 @@ public class SpeechSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        // New recognizer-based architecture
+        services.AddSingleton<IFastTranscriptionRecognizer, FastTranscriptionRecognizer>();
+        services.AddSingleton<IRealtimeTranscriptionRecognizer, RealtimeTranscriptionRecognizer>();
         services.AddSingleton<ISpeechService, SpeechService>();
         services.AddSingleton<SttRecognizeCommand>();
     }

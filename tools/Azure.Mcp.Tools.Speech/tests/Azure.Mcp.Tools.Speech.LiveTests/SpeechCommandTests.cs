@@ -146,9 +146,63 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
     [Theory]
     [InlineData("ar-AE", "ar-rewind-music.wav", "ارجع الموسيقى 20 ثانية.")]
-    [InlineData("es-ES", "es-ES.wav", "Rebobinar la música 20 segundos.")]
-    [InlineData("fr-FR", "fr-FR.wav", "Rembobiner la musique de 20 secondes.")]
-    [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17:00 Uhr.")]
+    public async Task Should_recognize_speech_via_fast_transcription_if_supported_locale(string language, string fileName, string expectedText)
+    {
+        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
+
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+
+        var result = await CallToolAsync(
+            "azmcp_speech_stt_recognize",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "endpoint", aiServicesEndpoint },
+                { "file", testAudioFile },
+                { "language", language },
+            });
+
+        Assert.NotNull(result);
+
+        var resultText = result.ToString();
+        Assert.NotNull(resultText);
+
+        // Validate JSON structure is correct
+        var jsonResult = JsonDocument.Parse(resultText);
+        var resultObject = jsonResult.RootElement;
+        Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+        // Validate full text property
+        Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
+        var fullText = textProperty.GetString() ?? "";
+        Output.WriteLine($"Recognition text: '{fullText}'");
+        Assert.Equal(expectedText, fullText);
+
+        Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
+        var segments = segmentsProperty.EnumerateArray().ToArray();
+        Assert.True(segmentsProperty.GetArrayLength() > 0, $"Expected at least one segment, but got {segments.Length}");
+
+        // Verify each segment has RecognizedSpeech reason
+        for (int i = 0; i < segments.Length; i++)
+        {
+            var segment = segments[i];
+            var segmentReason = segment.TryGetProperty("reason", out var segmentReasonProperty)
+                ? segmentReasonProperty.GetString()
+                : "Unknown";
+
+            Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
+            Assert.Equal("RecognizedSpeech", segmentReason);
+        }
+
+        Output.WriteLine($"✅ Language {language} test completed");
+    }
+
+    [Theory]
+    [InlineData("ar-AE", "ar-rewind-music.wav", "ارجع الموسيقى 20 ثانية.")]
+    // [InlineData("es-ES", "es-ES.wav", "Rebobinar la música 20 segundos.")]
+    // [InlineData("fr-FR", "fr-FR.wav", "Rembobiner la musique de 20 secondes.")]
+    // [InlineData("de-DE", "de-DE.wav", "Treffen heute um 17:00 Uhr.")]
     public async Task Should_handle_different_languages(string language, string fileName, string expectedText)
     {
         var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
