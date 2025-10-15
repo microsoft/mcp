@@ -7,7 +7,8 @@ param(
     [string] $ArtifactsDirectory,
     [string] $TargetOs,
     [string] $TargetArch,
-    [string] $WorkingDirectory
+    [string] $WorkingDirectory,
+    [string] $DockerLocalTag
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
@@ -17,7 +18,8 @@ $projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
 function Validate-Nuget-Packages {
     param (
         [string] $ServerName,
-        [string] $ArtifactsPath
+        [string] $ArtifactsPath,
+        [string] $ExeName
     )
 
     $hasFailures = $false
@@ -31,7 +33,7 @@ function Validate-Nuget-Packages {
             Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
             Write-Host "Validating NuGet package for server $ServerName"
 
-            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
+            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- $ExeName tools list
             if ($LASTEXITCODE -eq 0) {
                 Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
             } else {
@@ -49,7 +51,8 @@ function Validate-Npm-Packages {
         [string] $ArtifactsPath,
         [string] $TargetOs,
         [string] $TargetArch,
-        [string] $WorkingDirectory
+        [string] $WorkingDirectory,
+        [string] $ExeName
     )
 
     switch ($TargetOs) {
@@ -80,7 +83,7 @@ function Validate-Npm-Packages {
                     Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
                     npm install $mainPackage.FullName | Out-Null
 
-                    $output = npx azmcp tools list
+                    $output = npx $ExeName tools list
                     if ($LASTEXITCODE -eq 0) {
                         Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
                     } else {
@@ -100,9 +103,43 @@ function Validate-Npm-Packages {
     return $hasFailures
 }
 
-$nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed"
-$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory
+function Validate-Docker-Images {
+    param (
+        [string] $ServerName,
+        [string] $ArtifactsPath,
+        [string] $DockerLocalTag,
+        [string] $ExeName
+    )
 
-if ($nugetHasFailures -or $npmHasFailures) {
+    $hasFailures = $false
+    $imageTar = Join-Path $ArtifactsPath "image.tar"
+    Write-Host "Verifying Docker image"
+    if (Test-Path $imageTar) {
+        docker load -i $imageTar | Out-Null
+
+        $output = docker run --rm --entrypoint ./$ExeName $DockerLocalTag tools list 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Server tools list command completed successfully for server $ServerName."
+        } else {
+            Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+            Write-Host $output
+            $hasFailures = $true
+        }
+    }
+    return $hasFailures
+}
+
+switch ($ServerName) {
+    "Azure.Mcp.Server" { $ExeName = "azmcp" }
+    "Fabric.Mcp.Server"   { $ExeName = "fabmcp" }
+    "Template.Mcp.Server"   { $ExeName = "tmpmcp" }
+    default { throw "Unknown server name: $ServerName" }
+}
+
+$nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed" -ExeName $ExeName
+$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory -ExeName $ExeName
+$dockerHasFailures = Validate-Docker-Images -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/docker_output" -DockerLocalTag $DockerLocalTag -ExeName $ExeName
+
+if ($nugetHasFailures -or $npmHasFailures -or $dockerHasFailures) {
     exit 1
 }

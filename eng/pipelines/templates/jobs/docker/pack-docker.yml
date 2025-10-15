@@ -5,7 +5,7 @@ parameters:
   type: object
 
 jobs:
-- job: CreateDockerArtifact
+- job: BuildDockerImage
   displayName: "Build Docker image"
   dependsOn: ${{ parameters.DependsOn }}
   pool:
@@ -15,8 +15,8 @@ jobs:
 
   steps:
   - download: current
-    artifactName: binaries_signed
-    displayName: "Download signed binaries"
+    artifact: binaries_signed
+    displayName: "Download signed MCP server binaries"
 
   - task: CopyFiles@2
     displayName: "Copy Dockerfile"
@@ -48,20 +48,6 @@ jobs:
         --build-arg PUBLISH_DIR="${{parameters.ServerName}}/linux-x64/dist"
       enableNetwork: true
       useBuildKit: true
-
-  - script: |
-      echo "Running container tests..."
-      echo "Calling 'azmcp tools list'"
-      # Override entrypoint to list tools directly instead of starting the server
-      docker run --rm --entrypoint ./azmcp "$(DockerLocalTag)" tools list > "$(Build.ArtifactStagingDirectory)/tools.json"
-      echo "tools list output (truncated):"
-      head -n 40 "$(Build.ArtifactStagingDirectory)/tools.json" || true
-      if grep -q '"status"[[:space:]]*:[[:space:]]*200' "$(Build.ArtifactStagingDirectory)/tools.json"; then
-        echo "Status 200 confirmed in tools list output.";
-      else
-        echo "ERROR: tools list output did not contain status 200" >&2; exit 1;
-      fi
-    displayName: Run container smoke tests
   
   - script: |
       set -euo pipefail

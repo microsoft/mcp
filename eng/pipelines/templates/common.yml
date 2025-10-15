@@ -120,11 +120,13 @@ extends:
             DependsOn:
               - PackNpm
               - PackNuget
+              - BuildDockerImage
             SparseCheckout: false
             JobTemplatePath: /eng/pipelines/templates/jobs/verify-packages.yml
             AdditionalParameters:
               TestTimeoutInMinutes: 10
               ServerName: ${{ parameters.ServerName }}
+              DockerLocalTag: $[ stageDependencies.SignAndPack.BuildDockerImage.outputs['SetVariables.DockerLocalTag'] ]
             MatrixConfigs:
               - Name: build_matrix
                 Path: eng/pipelines/build-matrix.json
@@ -146,9 +148,11 @@ extends:
           - name: VersionSuffix
             value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           - name: DockerImageName
-            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageName'] ]
+            value: $[ stageDependencies.SignAndPack.BuildDockerImage.outputs['SetVariables.DockerImageName'] ]
           - name: DockerImageVersion
-            value: $[ stageDependencies.SignAndPack.CreateDockerArtifact.outputs['SetVariables.DockerImageVersion'] ]
+            value: $[ stageDependencies.SignAndPack.BuildDockerImage.outputs['SetVariables.DockerImageVersion'] ]
+          - name: DockerLocalTag
+            value: $[ stageDependencies.SignAndPack.BuildDockerImage.outputs['SetVariables.DockerLocalTag'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
