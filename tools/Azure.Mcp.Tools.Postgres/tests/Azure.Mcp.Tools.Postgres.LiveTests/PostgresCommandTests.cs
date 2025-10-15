@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.IdentityModel.Tokens.Jwt;
 using System.Text.Json;
 using Azure.Core;
 using Azure.Identity;
@@ -63,9 +64,16 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
             TenantId = Settings.TenantId
         };
         var tokenCredential = new DefaultAzureCredential(options);
-        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
+        var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
         Output.WriteLine($"Acquiring access token for tenant: {Settings.TenantId}...");
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+        var handler = new JwtSecurityTokenHandler();
+        var jwtToken = handler.ReadJwtToken(accessToken.Token);
+        foreach (var claim in jwtToken.Claims)
+        {
+            Output.WriteLine($"Claim Type: {claim.Type}, Value: {claim.Value}");
+        }
 
         string connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
 
