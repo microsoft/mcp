@@ -378,8 +378,8 @@ When logging issues, include:
 - [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/)
 - [GitHub Actions for Azure](https://learn.microsoft.com/azure/developer/github/github-actions)
 - [Azure DevOps Pipelines](https://learn.microsoft.com/azure/devops/pipelines/)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## 💡 Quick Reference: Supported MCP Tools
@@ -397,4 +397,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Full Stack Applications Testing](full-stack-apps.md)
+**Next**: [Full Stack Applications Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/full-stack-apps.md)
