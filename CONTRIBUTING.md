@@ -421,7 +421,7 @@ This section assumes that the necessary Azure resources for live tests are alrea
 
 To debug the Azure MCP Server (`azmcp`) when running live tests in VS Code:
 
-1. Build the package with debug symbols: `./eng/scripts/Build-Local.ps1 -DebugBuild`
+1. Build the package with debug symbols: `./eng/scripts/Build-Local.ps1`
 2. Set a breakpoint in a command file (e.g., [`KeyValueListCommand.ExecuteAsync`](https://github.com/microsoft/mcp/blob/4ed650a0507921273acc7b382a79049809ef39c1/src/Commands/AppConfig/KeyValue/KeyValueListCommand.cs#L48))
 3. In VS Code, navigate to a test method (e.g., [`AppConfigCommandTests::Should_list_appconfig_kvs()`](https://github.com/microsoft/mcp/blob/4ed650a0507921273acc7b382a79049809ef39c1/tests/Client/AppConfigCommandTests.cs#L56)), add a breakpoint to `CallToolAsync` call in the test method, then right-click and select **Debug Test**
 4. Find the `azmcp` process ID:
