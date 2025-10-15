@@ -29,18 +29,12 @@ Before testing installation, ensure you have:
    # If not installed, download from https://nodejs.org/
    ```
 
-2. **Install via VS Code Extension** (Recommended)
-   - Open VS Code
-   - Go to Extensions (Ctrl+Shift+X)
-   - Search for "Azure MCP Server"
-   - Click Install
-
-3. **Install via NPM** (Alternative)
+3. **Install via NPM**
    ```powershell
    npm install -g @azure/mcp@latest
    ```
 
-4. **Install via NuGet** (Alternative)
+4. **Install via NuGet**
    ```powershell
    dotnet tool install Azure.Mcp
    ```
@@ -78,18 +72,12 @@ azmcp server start --help
    brew install node
    ```
 
-2. **Install via VS Code Extension** (Recommended)
-   - Open VS Code
-   - Go to Extensions (Cmd+Shift+X)
-   - Search for "Azure MCP Server"
-   - Click Install
-
-3. **Install via NPM** (Alternative)
+2. **Install via NPM**
    ```bash
    npm install -g @azure/mcp@latest
    ```
 
-4. **Install via .NET Tool** (Alternative)
+3. **Install via .NET Tool**
    ```bash
    dotnet tool install Azure.Mcp
    ```
@@ -138,18 +126,12 @@ azmcp server start --help
    sudo dnf install nodejs npm
    ```
 
-2. **Install via VS Code Extension** (Recommended)
-   - Open VS Code
-   - Go to Extensions (Ctrl+Shift+X)
-   - Search for "Azure MCP Server"
-   - Click Install
-
-3. **Install via NPM** (Alternative)
+2. **Install via NPM** (Alternative)
    ```bash
    npm install -g @azure/mcp@latest
    ```
 
-4. **Install via .NET Tool** (Alternative)
+3. **Install via .NET Tool** (Alternative)
    ```bash
    dotnet tool install Azure.Mcp
    ```
@@ -189,8 +171,7 @@ azmcp server start --help
 
 1. **Install Extension**
    - Method 1: Via Extension Marketplace
-   - Method 2: Via Command Palette (`ext install ms-azuretools.vscode-azure-mcp-server`)
-   - Method 3: Via [Installation Link](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
+   - Method 2: Via [Installation Link](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server)
 
 2. **Verify Installation**
    ```
@@ -200,11 +181,6 @@ azmcp server start --help
    4. Click "Start Server"
    5. Check Output window for startup logs
    ```
-
-3. **Test Configuration**
-   - Open `.vscode/mcp.json` (if it exists)
-   - Verify server configuration
-   - Test with custom settings
 
 #### Things to Test
 - [ ] Extension installs without errors
@@ -233,29 +209,34 @@ azmcp server start --help
 
 #### Installation Testing
 
-1. **Install Extension**
+1. **Install GitHub Copilot for Azure Extension**
    ```
    1. Open Visual Studio 2022
-   2. Go to Extensions > Manage Extensions
-   3. Search for "GitHub Copilot for Azure"
-   4. Click Install
-   5. Restart Visual Studio
+   2. Go to Extensions → Manage Extensions...
+   3. Switch to the Browse tab in Extension Manager
+   4. Search for "GitHub Copilot for Azure"
+   5. Click Install
+   6. Restart Visual Studio when prompted
    ```
 
 2. **Verify Installation**
    ```
    1. Open a solution or project
    2. Open GitHub Copilot Chat
-   3. Switch to Agent mode
-   4. Verify Azure MCP tools are available
+   3. Select Agent Mode
+   4. Click the tools icon to view available tools
+   5. Search for "Azure MCP Server" to filter results
+   6. Verify Azure MCP tools appear in the list
    ```
 
 #### Things to Test
-- [ ] Extension installs without errors
-- [ ] Extension appears in Extensions list
-- [ ] Extension integrates with Copilot
-- [ ] Tools are accessible in chat
-- [ ] Server responds to commands
+- [ ] GitHub Copilot for Azure extension installs successfully
+- [ ] Extension appears in Extensions list after restart
+- [ ] GitHub Copilot Chat opens correctly
+- [ ] Can switch to Agent Mode
+- [ ] Tools icon shows available MCP tools
+- [ ] Can search/filter for "Azure MCP Server" tools
+- [ ] Server responds to commands in Agent mode
 
 #### Performance Checks
 - [ ] Extension load time: _____ seconds
@@ -272,29 +253,43 @@ azmcp server start --help
 
 #### Installation Testing
 
-1. **Install Plugins**
+1. **Install GitHub Copilot Plugin**
    ```
    1. Open IntelliJ IDEA
    2. Go to Settings/Preferences > Plugins
    3. Search for "GitHub Copilot"
    4. Install GitHub Copilot plugin
-   5. Search for "Azure Toolkit for IntelliJ"
-   6. Install Azure Toolkit
-   7. Restart IDE
+   5. Restart IDE
    ```
 
-2. **Verify Installation**
+2. **Configure Azure MCP Server**
+   ```
+   1. Go to File → Settings (or IntelliJ IDEA → Preferences on macOS)
+   2. Navigate to Tools → AI Assistant → Model Context Protocol (MCP)
+   3. Click the + icon to add a new MCP server
+   4. In the "New MCP Server" dialog, enter:
+      - Name: Azure MCP Server
+      - Command: npx (or azmcp if installed via dotnet tool)
+      - Arguments: -y @azure/mcp@latest server start
+   5. Click OK to save
+   6. Restart AI Assistant if prompted
+   ```
+
+3. **Verify Installation**
    ```
    1. Open GitHub Copilot Chat
    2. Verify Azure MCP tools are available
-   3. Test a simple command
+   3. Test a simple command (e.g., "List my Azure subscriptions")
    ```
 
 #### Things to Test
-- [ ] Plugins install without conflicts
-- [ ] Plugins appear in Plugins list
-- [ ] Azure MCP integrates with Copilot
-- [ ] Tools are accessible
+- [ ] GitHub Copilot plugin installs without errors
+- [ ] Plugin appears in Plugins list
+- [ ] MCP configuration dialog is accessible
+- [ ] Can add Azure MCP Server configuration
+- [ ] Server configuration saves successfully
+- [ ] Azure MCP integrates with Copilot Chat
+- [ ] Tools are accessible in chat
 - [ ] Server responds to commands
 
 #### Performance Checks
@@ -302,11 +297,6 @@ azmcp server start --help
 - [ ] Memory usage: _____ MB
 - [ ] CPU usage during idle: _____ %
 
----
-
----
-
----
 
 ## UI-Based Mode Toggling Testing (Distribution-Specific)
 
