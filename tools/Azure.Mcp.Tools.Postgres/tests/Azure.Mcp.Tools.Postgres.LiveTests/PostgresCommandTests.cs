@@ -61,7 +61,8 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Get Entra ID access token for PostgreSQL
         var options = new DefaultAzureCredentialOptions
         {
-            TenantId = Settings.TenantId
+            TenantId = Settings.TenantId,
+            ExcludeManagedIdentityCredential = true,
         };
         var tokenCredential = new DefaultAzureCredential(options);
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
