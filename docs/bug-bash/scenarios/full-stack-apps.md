@@ -236,8 +236,8 @@ When logging issues, include:
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Azure PostgreSQL Documentation](https://learn.microsoft.com/azure/postgresql/)
 - [Azure SQL Documentation](https://learn.microsoft.com/azure/azure-sql/)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## Quick Reference: Supported MCP Tools
@@ -272,4 +272,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Infrastructure as Code Testing](infra-as-code.md)
+**Next**: [Infrastructure as Code Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/infra-as-code.md)

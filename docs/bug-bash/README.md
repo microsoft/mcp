@@ -94,7 +94,7 @@ We encourage you to test the following areas:
 
 ### Server Mode Testing
 
-See [Server Mode Testing](installation-testing.md#server-mode-testing) for detailed instructions.
+See [Server Mode Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md#server-mode-testing) for detailed instructions.
 
 - [ ] **Namespace mode** (default) - Tools grouped by Azure service (~40-50 tools)
 - [ ] **All mode** - All tools exposed individually (100+ tools)
@@ -139,14 +139,14 @@ We've prepared detailed testing guides for common scenarios:
 
 ### Scenario Guides
 
-1. **[Installation Testing](installation-testing.md)** - Test installation across different platforms and IDEs
-2. **[Infrastructure as Code](scenarios/infra-as-code.md)** - Generate and deploy Azure infrastructure
-3. **[PaaS Services](scenarios/paas-services.md)** - Work with App Service, Container Apps, and Functions
-4. **[Storage Operations](scenarios/storage-operations.md)** - Test blob storage and file operations
-5. **[Database Operations](scenarios/database-operations.md)** - Work with Cosmos DB, PostgreSQL, and Azure SQL
-6. **[Deployment Scenarios](scenarios/deployment.md)** - Deploy resources and applications
-7. **[Full Stack Applications](scenarios/full-stack-apps.md)** - Build complete apps with database backends
-8. **[Agent Building](scenarios/agent-building.md)** - Create and deploy Azure Foundry agents
+1. **[Installation Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md)** - Test installation across different platforms and IDEs
+2. **[Infrastructure as Code](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/infra-as-code.md)** - Generate and deploy Azure infrastructure
+3. **[PaaS Services](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/paas-services.md)** - Work with App Service, Container Apps, and Functions
+4. **[Storage Operations](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/storage-operations.md)** - Test blob storage and file operations
+5. **[Database Operations](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/database-operations.md)** - Work with Cosmos DB, PostgreSQL, and Azure SQL
+6. **[Deployment Scenarios](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/deployment.md)** - Deploy resources and applications
+7. **[Full Stack Applications](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/full-stack-apps.md)** - Build complete apps with database backends
+8. **[Agent Building](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/agent-building.md)** - Create and deploy Azure Foundry agents
 
 ### Quick Start Scenarios
 
@@ -175,13 +175,13 @@ If you're short on time, try these quick scenarios:
   - `"List all containers in database <name> in cosmosdb account <name>"`
 
 **30 minutes: End-to-End Scenario**
-- Follow one of the [detailed scenario guides](scenarios/) like Storage Operations or Database Operations
+- Follow one of the [detailed scenario guides](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios) like Storage Operations or Database Operations
 
 ## Resources
 
 ### Bug Bash Documentation
-- [Installation Testing Guide](installation-testing.md) - Test installation across platforms and IDEs
-- [Testing Scenarios](scenarios/) - Detailed end-to-end testing scenarios
+- [Installation Testing Guide](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md) - Test installation across platforms and IDEs
+- [Testing Scenarios](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios) - Detailed end-to-end testing scenarios
 
 ### Azure MCP Server Documentation
 - [Azure MCP Server Documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/)

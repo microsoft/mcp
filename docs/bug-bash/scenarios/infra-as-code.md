@@ -187,8 +187,8 @@ When logging issues, include:
 - [Azure Bicep Documentation](https://learn.microsoft.com/azure/azure-resource-manager/bicep/)
 - [Azure Terraform Documentation](https://learn.microsoft.com/azure/developer/terraform/)
 - [Azure Resource Manager](https://learn.microsoft.com/azure/azure-resource-manager/)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## Quick Reference: Supported MCP Tools

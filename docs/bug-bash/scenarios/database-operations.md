@@ -367,8 +367,8 @@ When logging issues, include:
 - [Azure Database for PostgreSQL](https://learn.microsoft.com/azure/postgresql/)
 - [Azure Database for MySQL](https://learn.microsoft.com/azure/mysql/)
 - [Azure SQL Database](https://learn.microsoft.com/azure/azure-sql/)
-- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
-- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
 ## 💡 Quick Reference: Supported MCP Tools
@@ -408,4 +408,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Deployment Scenarios Testing](deployment.md)
+**Next**: [Deployment Scenarios Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/deployment.md)
