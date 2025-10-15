@@ -35,7 +35,10 @@ jobs:
         $version = $properties.Version
         Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
         Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-        Write-Host "##vso[task.setvariable variable=DockerLocalTag;isOutput=true]$(Build.Repository.Name)/server:$(Build.BuildId)"
+        # Set DockerLocalTag both as a local and an output variable.
+        $dockerLocalTag = "$(Build.Repository.Name)/server:$(Build.BuildId)"
+        Write-Host "##vso[task.setvariable variable=DockerLocalTag]$dockerLocalTag"
+        Write-Host "##vso[task.setvariable variable=DockerLocalTag;isOutput=true]$dockerLocalTag"
     env:
       VERSION_SUFFIX: "$(VersionSuffix)"
 
