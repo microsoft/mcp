@@ -133,6 +133,8 @@ Report the Issues here at [Create Azure MCP Bash Issue](https://github.com/micro
 ```
 
 2. **Add these instructions to your copilot-instructions file:**
+   
+   Learn how to create a copilot-instructions file: [Configure Custom Instructions for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)
 
 ```markdown
 ## Reporting Issues
