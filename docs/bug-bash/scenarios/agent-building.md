@@ -1,213 +1,389 @@
-# Agent Building Testing Scenario
+# 🤖 AI Agent Building Testing Scenario
 
-Test Azure MCP Server's capabilities for building, deploying, and managing AI agents using Azure AI Foundry and related services.
+> **MCP Tool Support Notice**
+> Azure MCP Server provides **AI Foundry resource inspection, model listing, and agent interaction** capabilities. Resource creation and deployment require Azure CLI or Portal. This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
 
 ## Objectives
 
-- Create and configure Azure AI Foundry resources
-- Build custom AI agents with Azure MCP integration
-- Deploy agents to Azure
-- Test agent interactions and workflows
-- Validate agent monitoring and management
-- Test multi-agent scenarios
+- Test Azure AI Foundry resource discovery and inspection
+- Test AI model listing and deployment management
+- Test agent creation and interaction workflows
+- Validate agent querying and evaluation capabilities
 
 ## Prerequisites
 
 - [ ] Azure MCP Server installed and configured
 - [ ] Azure CLI installed (`az --version`)
 - [ ] Authenticated to Azure (`az login`)
-- [ ] Active Azure subscription with AI services enabled
+- [ ] Active Azure subscription
 - [ ] GitHub Copilot with Agent mode enabled
-- [ ] Basic understanding of AI agent concepts
 
-## Test Scenarios
+---
 
-### Scenario 1: Azure AI Foundry Setup
+## Scenario 1: Azure AI Foundry Resource Discovery & Model Management
 
-**Objective**: Set up Azure AI Foundry resources for agent development
+**Objective**: Complete workflow for discovering AI Foundry resources and managing model deployments
 
-#### Phase 1: Create AI Foundry Resources
+### Step 1: Setup Resources (External - Not MCP)
 
-1. **Create AI Hub**:
-   ```
-   Create an Azure AI Foundry hub:
-   - Name: 'bugbash-ai-hub-<random>'
-   - Resource group: '<your-rg>'
-   - Location: East US
-   - SKU: Standard
-   ```
+> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
 
-2. **Verify hub creation**:
-   ```
-   List all Azure AI Foundry hubs in my subscription
-   ```
+**Option A: Prompt GitHub Copilot Chat** (Recommended):
+```
+Create an Azure resource group 'bugbash-aifoundry-rg' in eastus, then create an Azure AI Services account with SKU S0, and deploy GPT-4o model with deployment name 'gpt-4o-deployment'
+```
 
-3. **Get hub details**:
-   ```
-   Show me the details of AI Foundry hub 'bugbash-ai-hub-<random>'
-   ```
+**Option B: Run Azure CLI Commands Manually**:
+```bash
+# Create resource group
+az group create --name bugbash-aifoundry-rg --location eastus
 
-4. **Create AI project**:
-   ```
-   Create an Azure AI Foundry project:
-   - Name: 'bugbash-ai-project'
-   - Hub: 'bugbash-ai-hub-<random>'
-   - Description: 'Bug bash agent testing project'
-   ```
+# Create Azure AI Foundry resource (AI Services account)
+az cognitiveservices account create \
+  --name bugbash-ai-foundry-$RANDOM \
+  --resource-group bugbash-aifoundry-rg \
+  --location eastus \
+  --kind AIServices \
+  --sku S0
 
-**Verify**:
-- [ ] AI Hub created successfully
-- [ ] Hub is in running state
-- [ ] AI Project created
-- [ ] Resources are properly linked
+# Deploy a model (GPT-4o)
+az cognitiveservices account deployment create \
+  --name <account-name-from-above> \
+  --resource-group bugbash-aifoundry-rg \
+  --deployment-name gpt-4o-deployment \
+  --model-name gpt-4o \
+  --model-version "2024-05-13" \
+  --model-format OpenAI \
+  --sku-capacity 10 \
+  --sku-name Standard
+```
 
-#### Phase 2: Configure AI Services
+### Step 2: Discover AI Foundry Resources with Azure MCP Server
 
-5. **Check available AI models**:
-   ```
-   What AI models are available in my Azure AI Foundry hub 
-   'bugbash-ai-hub-<random>'?
-   ```
-
-6. **Deploy OpenAI model**:
-   ```
-   Deploy GPT-4o model to my AI Foundry project 'bugbash-ai-project'
-   ```
-
-7. **List deployments**:
-   ```
-   List all model deployments in AI Foundry project 'bugbash-ai-project'
-   ```
-
-8. **Get endpoint information**:
-   ```
-   Get the endpoint URL and keys for my deployed model
-   ```
+**2.1 Get AI Foundry resource details** (uses `azmcp_foundry_resource_get`):
+```
+Show me details for Azure AI Foundry resources in my subscription
+```
 
 **Verify**:
-- [ ] Available models listed
-- [ ] Model deployment successful
-- [ ] Endpoint accessible
-- [ ] Authentication configured
+- [ ] Tool invoked: `azmcp_foundry_resource_get`
+- [ ] Your newly created AI Foundry resource appears
+- [ ] Resource properties shown (name, location, SKU)
+
+**2.2 Alternative phrasing**:
+```
+List all Azure AI Foundry resources in resource group 'bugbash-aifoundry-rg'
+```
+
+### Step 3: List Available Models with Azure MCP Server
+
+**3.1 List all available models** (uses `azmcp_foundry_models_list`):
+```
+List all available AI models in Azure AI Foundry
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_models_list`
+- [ ] Model catalog displayed
+- [ ] GPT-4o and other models listed
+- [ ] Model details shown (publisher, license, capabilities)
+
+**3.2 Search for specific models**:
+```
+Show me all GPT models available in Azure AI Foundry
+```
+
+**Verify**:
+- [ ] Filtered list returned
+- [ ] GPT models displayed
+- [ ] Search functionality works
+
+**3.3 Check playground-compatible models**:
+```
+Which models can I use in the free playground?
+```
+
+**Verify**:
+- [ ] Playground-compatible models listed
+- [ ] Filter applied correctly
+
+### Step 4: Inspect Model Deployments with Azure MCP Server
+
+**4.1 List model deployments** (uses `azmcp_foundry_models_deployments_list`):
+```
+List all model deployments in my Azure AI Foundry resource
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_models_deployments_list`
+- [ ] Your GPT-4o deployment appears
+- [ ] Deployment details shown (name, model, SKU, capacity)
+
+**4.2 Alternative phrasing**:
+```
+Show me all deployed models in my AI Foundry resource
+```
+
+### Step 5: List OpenAI Models with Azure MCP Server
+
+**5.1 List OpenAI models** (uses `azmcp_foundry_openai_models-list`):
+```
+List all OpenAI models and deployments in my Azure AI resource '<resource-name>' in resource group 'bugbash-aifoundry-rg'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_openai_models-list`
+- [ ] OpenAI models listed
+- [ ] Deployment information shown
+
+### Step 6: Cleanup (External - Not MCP)
+
+**Option A: Prompt GitHub Copilot Chat**:
+```
+Delete the Azure resource group 'bugbash-aifoundry-rg' and all its resources
+```
+
+**Option B: Run Azure CLI Command Manually**:
+```bash
+# Delete resource group (removes all resources)
+az group delete --name bugbash-aifoundry-rg --yes --no-wait
+```
 
 **Expected Results**:
-- AI Foundry hub created
-- AI project configured
-- AI model deployed
-- Endpoints are accessible
+- AI Foundry resource discovery works
+- Model catalog listing successful
+- Deployment inspection accurate
+- OpenAI model listing functional
 
-### Scenario 2: Deploy and Test Agent
+---
 
-**Objective**: Deploy the agent and test its functionality
+## Scenario 2: AI Agent Creation & Interaction End-to-End
 
-#### Phase 1: Deploy Agent Code
+**Objective**: Complete workflow for creating, querying, and evaluating AI agents
 
-1. **Get deployment guidance**:
-   ```
-   How do I deploy my Python agent code to Function App 
-   'bugbash-agent-func-<random>'?
-   ```
+### Step 1: Setup Agent Resources (External - Not MCP)
 
-2. **Generate sample agent code**:
-   ```
-   Generate sample Python code for an Azure management agent that:
-   - Uses Azure OpenAI for natural language understanding
-   - Uses Azure MCP Server to manage Azure resources
-   - Stores conversation history in Cosmos DB
-   ```
+> **External Setup Required**: Azure MCP Server cannot create resources. Use GitHub Copilot Chat to run Azure CLI commands or use Azure Portal.
 
-3. **Deploy agent**:
-   ```
-   Deploy my agent code to Function App 'bugbash-agent-func-<random>'
-   ```
+**Option A: Prompt GitHub Copilot Chat** (Recommended):
+```
+Create an Azure resource group 'bugbash-agents-rg' in eastus, create an Azure AI Services account with SKU S0, deploy GPT-4o model with deployment name 'agent-gpt4o', then show me the endpoint URL
+```
 
-**Verify**:
-- [ ] Deployment instructions clear
-- [ ] Sample code provided
-- [ ] Deployment successful
-- [ ] Function App running
+**Option B: Run Azure CLI Commands Manually**:
+```bash
+# Create resource group
+az group create --name bugbash-agents-rg --location eastus
 
-#### Phase 2: Test Agent Interactions
+# Create Azure AI Foundry resource
+az cognitiveservices account create \
+  --name bugbash-agents-$RANDOM \
+  --resource-group bugbash-agents-rg \
+  --location eastus \
+  --kind AIServices \
+  --sku S0
 
-4. **Test basic agent query**:
-   ```
-   Send a test request to my agent: "List all my storage accounts"
-   ```
+# Get endpoint URL (you'll need this)
+az cognitiveservices account show \
+  --name <account-name-from-above> \
+  --resource-group bugbash-agents-rg \
+  --query "properties.endpoint" -o tsv
 
-5. **Test resource creation**:
-   ```
-   Ask my agent to: "Create a new storage account named 
-   'agenttest<random>' in East US"
-   ```
+# Deploy GPT-4o for agent use
+az cognitiveservices account deployment create \
+  --name <account-name-from-above> \
+  --resource-group bugbash-agents-rg \
+  --deployment-name agent-gpt4o \
+  --model-name gpt-4o \
+  --model-version "2024-05-13" \
+  --model-format OpenAI \
+  --sku-capacity 10 \
+  --sku-name Standard
+```
 
-6. **Test monitoring capability**:
-   ```
-   Ask my agent: "Show me the health status of all my resources in 
-   resource group '<your-rg>'"
-   ```
+**Option C: Create Agent via Azure AI Foundry Portal**:
+1. Go to [Azure AI Foundry Portal](https://ai.azure.com)
+2. Create a new project
+3. Create an agent with your deployed model
+4. Note the agent ID for testing
 
-7. **Test complex query**:
-   ```
-   Ask my agent: "Which of my resources are costing the most this month?"
-   ```
+### Step 2: List Available Agents with Azure MCP Server
 
-**Verify**:
-- [ ] Agent responds correctly
-- [ ] Resource operations work
-- [ ] Monitoring data retrieved
-- [ ] Complex queries handled
-
-#### Phase 3: Monitor Agent Performance
-
-8. **Check agent logs**:
-   ```
-   Show me the logs for Function App 'bugbash-agent-func-<random>' 
-   from the last hour
-   ```
-
-9. **Monitor agent metrics**:
-   ```
-   Show me performance metrics for my agent Function App
-   ```
-
-10. **Check Cosmos DB usage**:
-    ```
-    Show me the Cosmos DB usage statistics for my agent's state database
-    ```
+**2.1 List all agents** (uses `azmcp_foundry_agents_list`):
+```
+List all AI agents in my Azure AI Foundry project with endpoint '<endpoint-url>'
+```
 
 **Verify**:
-- [ ] Logs accessible
-- [ ] Metrics available
-- [ ] Performance acceptable
-- [ ] State persistence working
+- [ ] Tool invoked: `azmcp_foundry_agents_list`
+- [ ] Your created agent appears
+- [ ] Agent properties shown (ID, name, model)
+
+**2.2 Alternative phrasing**:
+```
+Show me all agents in my AI Foundry project
+```
+
+### Step 3: Query an Agent with Azure MCP Server
+
+**3.1 Connect and query agent** (uses `azmcp_foundry_agents_connect`):
+```
+Query agent '<agent-id>' with: "What Azure services can you help me manage?" using endpoint '<endpoint-url>'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_agents_connect`
+- [ ] Agent response received
+- [ ] Response is coherent and relevant
+
+**3.2 Test agent capabilities**:
+```
+Ask agent '<agent-id>' to: "List the most common Azure resources used in web applications" using endpoint '<endpoint-url>'
+```
+
+**Verify**:
+- [ ] Agent understands the query
+- [ ] Response includes relevant Azure services
+- [ ] Answer is accurate
+
+**3.3 Test agent with specific query**:
+```
+Query agent '<agent-id>': "Explain the difference between Azure SQL Database and Cosmos DB" using endpoint '<endpoint-url>'
+```
+
+**Verify**:
+- [ ] Detailed explanation provided
+- [ ] Technical accuracy maintained
+- [ ] Response format is clear
+
+### Step 4: Evaluate Agent Responses with Azure MCP Server
+
+**4.1 Evaluate a response** (uses `azmcp_foundry_agents_evaluate`):
+```
+Evaluate the response from agent '<agent-id>' for query "What is Azure Storage?" with response "Azure Storage is a cloud storage solution" using evaluator 'groundedness' with Azure OpenAI endpoint '<openai-endpoint>' and deployment '<deployment-name>'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_agents_evaluate`
+- [ ] Evaluation score returned
+- [ ] Groundedness metrics shown
+
+**4.2 Query and evaluate in one step** (uses `azmcp_foundry_agents_query-and-evaluate`):
+```
+Query and evaluate agent '<agent-id>' with: "What are the main features of Azure Functions?" using endpoint '<endpoint-url>' and evaluate with Azure OpenAI endpoint '<openai-endpoint>' and deployment '<deployment-name>'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_agents_query-and-evaluate`
+- [ ] Agent response received
+- [ ] Evaluation metrics provided
+- [ ] Combined workflow successful
+
+### Step 5: Explore Knowledge Indexes with Azure MCP Server
+
+**5.1 List knowledge indexes** (uses `azmcp_foundry_knowledge_index_list`):
+```
+List all knowledge indexes in my AI Foundry project with endpoint '<endpoint-url>'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_knowledge_index_list`
+- [ ] Knowledge indexes listed (if any exist)
+- [ ] Index properties shown
+
+**5.2 Get index schema** (uses `azmcp_foundry_knowledge_index_schema`):
+```
+Show me the schema for knowledge index '<index-name>' using endpoint '<endpoint-url>'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_foundry_knowledge_index_schema`
+- [ ] Schema information returned
+- [ ] Field types and structure shown
+
+### Step 6: Cleanup (External - Not MCP)
+
+**Option A: Prompt GitHub Copilot Chat**:
+```
+Delete the Azure resource group 'bugbash-agents-rg' and all its resources
+```
+
+**Option B: Run Azure CLI Command Manually**:
+```bash
+# Delete resource group (removes all resources)
+az group delete --name bugbash-agents-rg --yes --no-wait
+```
 
 **Expected Results**:
-- Agent deployed successfully
-- Agent responds to queries
-- Resource operations work
-- Monitoring and logging functional
+- Agent listing works correctly
+- Agent querying returns responses
+- Response evaluation provides metrics
+- Combined query-and-evaluate workflow functional
+- Knowledge index inspection successful
+
+---
 
 ## Common Issues to Watch For
 
-- **Authentication Failures**: Managed identity misconfiguration
-- **Token Limits**: Exceeding model context windows
-- **Rate Limiting**: API throttling from AI services
-- **State Persistence**: Session state not saved correctly
-- **Cold Starts**: Function App cold start latency
-- **Network Timeouts**: Long-running operations timing out
-- **Cost Overruns**: Unexpected charges from AI API calls
-- **Model Hallucinations**: Incorrect or inconsistent agent responses
-- **Integration Issues**: MCP Server connection problems
-- **Event Ordering**: Messages processed out of sequence
+| Issue | Description | Resolution |
+|-------|-------------|------------|
+| **Authentication Failures** | Can't connect to AI Foundry endpoint | Verify `az login` and endpoint URL is correct |
+| **Agent Not Found** | Agent ID doesn't exist | List agents first to get valid agent IDs |
+| **Token Limits** | Response truncated or incomplete | Model context window exceeded; use shorter prompts |
+| **Rate Limiting** | API throttling errors | Reduce request frequency or upgrade SKU |
+| **Endpoint Mismatch** | Wrong endpoint URL | Verify endpoint matches your AI Foundry resource |
+| **Model Not Deployed** | Deployment not found | Check model deployments are active and provisioned |
+| **Evaluation Failures** | Evaluator returns errors | Ensure Azure OpenAI deployment exists for evaluation |
+| **Empty Agent List** | No agents returned | Create agents via AI Foundry Portal first |
+
+## What to Report
+
+When logging issues, include:
+- [ ] Exact prompt used
+- [ ] Tool invoked (from MCP tool output)
+- [ ] Expected vs actual results
+- [ ] Error messages (if any)
+- [ ] Agent ID and endpoint URL (redact sensitive info)
+- [ ] Model name and deployment name
+- [ ] Screenshots of unexpected behavior
 
 ## Related Resources
 
 - [Azure AI Foundry Documentation](https://learn.microsoft.com/azure/ai-studio/)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/)
-- [Azure Functions for AI Agents](https://learn.microsoft.com/azure/azure-functions/)
+- [Azure AI Agents](https://learn.microsoft.com/azure/ai-services/agents/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
-- [Azure MCP Server GitHub](https://github.com/microsoft/mcp)
-- [Agent Test Prompts](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
+- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
+
+## 💡 Quick Reference: Supported MCP Tools
+
+### AI Foundry Resources
+- `azmcp_foundry_resource_get` - Get AI Foundry resource details
+- `azmcp_foundry_models_list` - List available AI models
+- `azmcp_foundry_models_deployments_list` - List model deployments
+
+### OpenAI Integration
+- `azmcp_foundry_openai_models-list` - List OpenAI models and deployments
+- `azmcp_foundry_openai_chat-completions-create` - Create chat completions
+- `azmcp_foundry_openai_create-completion` - Generate text completions
+- `azmcp_foundry_openai_embeddings-create` - Generate embeddings
+
+### AI Agents
+- `azmcp_foundry_agents_list` - List AI agents
+- `azmcp_foundry_agents_connect` - Query an agent
+- `azmcp_foundry_agents_evaluate` - Evaluate agent response
+- `azmcp_foundry_agents_query-and-evaluate` - Query and evaluate in one step
+
+### Knowledge Management
+- `azmcp_foundry_knowledge_index_list` - List knowledge indexes
+- `azmcp_foundry_knowledge_index_schema` - Get index schema
+- `azmcp_foundry_knowledge_source_get` - Get knowledge sources
+
+### Model Deployment
+- `azmcp_foundry_models_deploy` - Deploy AI model (write operation)
+
+---
 
 **Next**: [Database Operations Testing](database-operations.md)

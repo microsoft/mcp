@@ -1,16 +1,14 @@
-# 🏗️ Full Stack Application Testing Scenario
+# 🌐 Full Stack Application Testing Scenario
 
-> **⚠️ READ FIRST**: [TESTING-SCOPE.md](../TESTING-SCOPE.md) explains what MCP tools can and cannot do. **This scenario requires BOTH Azure CLI and MCP tools**. Use Azure CLI to create databases and app services, then use MCP tools to query databases, get deployment guidance, add database connections, and monitor applications.
-
-Test Azure MCP Server's ability to help create complete applications with database backends and deploy them to Azure.
+> **MCP Tool Support Notice**
+> Azure MCP Server provides **database inspection, querying, and resource discovery** capabilities. Application code generation, resource creation, and deployment require external tools (Azure CLI, GitHub Copilot code generation, deployment tools). This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
 
 ## Objectives
 
-- Create a complete full-stack application
-- Set up database backends (Cosmos DB, PostgreSQL, or Azure SQL)
-- Deploy application to Azure
-- Test CRUD operations against the database
-- Verify end-to-end functionality
+- Test MCP database inspection capabilities in full-stack context
+- Verify resource discovery for deployed applications
+- Test database querying for application backends
+- Validate end-to-end workflow combining MCP and external tools
 
 ## Prerequisites
 
@@ -18,422 +16,422 @@ Test Azure MCP Server's ability to help create complete applications with databa
 - [ ] Azure CLI installed (`az --version`)
 - [ ] Authenticated to Azure (`az login`)
 - [ ] Active Azure subscription
-- [ ] Development tools installed (Node.js, Python, or .NET SDK)
+- [ ] Development tools (Node.js or Python)
 - [ ] GitHub Copilot with Agent mode enabled
-- [ ] VS Code or preferred IDE
-
-## Test Scenarios
-
-### Scenario 1: Node.js Web App with Cosmos DB
-
-**Objective**: Create a complete Node.js application with Cosmos DB backend
-
-**Steps**:
-
-#### Phase 1: Create the Database
-
-1. **Ask Copilot to create a Cosmos DB account**:
-   ```
-   Create a Cosmos DB account named 'bugbash-cosmos-<random>' in resource 
-   group '<your-rg>' in East US with SQL API
-   ```
-
-2. **Create a database**:
-   ```
-   Create a database named 'TasksDB' in Cosmos DB account 'bugbash-cosmos-<random>'
-   ```
-
-3. **Create a container**:
-   ```
-   Create a container named 'Tasks' in database 'TasksDB' with 
-   partition key '/category' and 400 RU/s throughput
-   ```
-
-4. **Add sample data**:
-   ```
-   Add the following sample tasks to the Tasks container:
-   - { "id": "1", "title": "Buy groceries", "category": "personal", "completed": false }
-   - { "id": "2", "title": "Review PR", "category": "work", "completed": false }
-   - { "id": "3", "title": "Call dentist", "category": "personal", "completed": true }
-   ```
-
-5. **Verify data**:
-   ```
-   Query all tasks from the Tasks container in Cosmos DB
-   ```
-
-#### Phase 2: Build the Application
-
-6. **Ask Copilot to create the application structure**:
-   ```
-   Create a Node.js Express application for a task management system with:
-   - Express.js web framework
-   - Cosmos DB integration using @azure/cosmos
-   - RESTful API endpoints for:
-     * GET /api/tasks - list all tasks
-     * GET /api/tasks/:id - get a specific task
-     * POST /api/tasks - create a new task
-     * PUT /api/tasks/:id - update a task
-     * DELETE /api/tasks/:id - delete a task
-   - A simple HTML frontend with JavaScript
-   - Connection to Cosmos DB 'bugbash-cosmos-<random>'
-   ```
-
-7. **Review the generated code**:
-   - [ ] Check package.json dependencies
-   - [ ] Verify Cosmos DB connection configuration
-   - [ ] Review API endpoint implementations
-   - [ ] Check error handling
-   - [ ] Verify frontend HTML/JS
-
-8. **Ask for configuration guidance**:
-   ```
-   How do I configure the Cosmos DB connection string in my Node.js 
-   application securely?
-   ```
-
-#### Phase 3: Test Locally
-
-9. **Install dependencies**:
-   ```bash
-   npm install
-   ```
-
-10. **Set up environment variables**:
-    ```
-    Get the Cosmos DB connection string for 'bugbash-cosmos-<random>'
-    ```
-    - Copy the connection string
-    - Create `.env` file with connection string
-
-11. **Run the application locally**:
-    ```bash
-    npm start
-    ```
-
-12. **Test the API endpoints**:
-    - [ ] GET /api/tasks returns all tasks
-    - [ ] GET /api/tasks/1 returns specific task
-    - [ ] POST /api/tasks creates new task
-    - [ ] PUT /api/tasks/1 updates task
-    - [ ] DELETE /api/tasks/1 deletes task
-
-13. **Test the frontend**:
-    - [ ] Open http://localhost:3000
-    - [ ] View task list
-    - [ ] Create a new task
-    - [ ] Edit a task
-    - [ ] Delete a task
-    - [ ] Verify changes in Cosmos DB
-
-#### Phase 4: Deploy to Azure
-
-14. **Create App Service resources**:
-    ```
-    Create an Azure App Service for my Node.js application:
-    - Name: 'bugbash-taskapp-<random>'
-    - Resource group: '<your-rg>'
-    - Runtime: Node.js 20 LTS
-    - Tier: B1
-    - Region: East US
-    ```
-
-15. **Configure application settings**:
-    ```
-    Add the Cosmos DB connection string as an application setting 
-    named 'COSMOS_CONNECTION_STRING' in app service 'bugbash-taskapp-<random>'
-    ```
-
-16. **Deploy the application**:
-    ```
-    How do I deploy my Node.js application to Azure App Service 
-    'bugbash-taskapp-<random>'?
-    ```
-    - Follow the deployment instructions provided
-
-17. **Verify deployment**:
-    ```
-    What is the URL for app service 'bugbash-taskapp-<random>'?
-    ```
-    - Open the URL in browser
-    - Test all CRUD operations
-
-**Expected Results**:
-- Cosmos DB account and container created
-- Application code generated correctly
-- Local testing successful
-- Deployment to Azure successful
-- Production app works correctly
-- Database operations work in production
 
 ---
 
-### Scenario 2: Python Web App with PostgreSQL
+## Scenario 1: Node.js App with Cosmos DB Backend End-to-End
 
-**Objective**: Create a Flask application with PostgreSQL backend
+**Objective**: Complete workflow from database setup through querying with a deployed application
 
-**Steps**:
+### Step 1: Create Database Resources (External - Not MCP)
 
-#### Phase 1: Create PostgreSQL Database
+> **External Setup Required**: Use Azure CLI to create Cosmos DB resources
 
-1. **Create PostgreSQL server**:
-   ```
-   Create an Azure Database for PostgreSQL flexible server:
-   - Name: 'bugbash-postgres-<random>'
-   - Resource group: '<your-rg>'
-   - Admin user: 'dbadmin'
-   - Password: '<generate-secure-password>'
-   - Version: PostgreSQL 14
-   - Tier: Burstable B1ms
-   - Region: East US
-   - Allow Azure services access
-   ```
+```bash
+# Create resource group
+az group create --name bugbash-fullstack-rg --location eastus
 
-2. **Create database**:
-   ```
-   Create a database named 'inventory' on PostgreSQL server 
-   'bugbash-postgres-<random>'
-   ```
+# Create Cosmos DB account
+az cosmosdb create \
+  --name bugbash-cosmos-$RANDOM \
+  --resource-group bugbash-fullstack-rg \
+  --locations regionName=eastus
 
-3. **Create table schema**:
-   ```
-   In PostgreSQL database 'inventory', create a table named 'products' with:
-   - id (serial primary key)
-   - name (varchar 100)
-   - description (text)
-   - price (decimal 10,2)
-   - stock (integer)
-   - created_at (timestamp)
-   ```
+# Create database
+az cosmosdb sql database create \
+  --account-name <account-name-from-above> \
+  --resource-group bugbash-fullstack-rg \
+  --name TasksDB
 
-4. **Insert sample data**:
-   ```
-   Insert sample products into the 'products' table:
-   - Laptop, High-performance laptop, 999.99, 10
-   - Mouse, Wireless mouse, 29.99, 50
-   - Keyboard, Mechanical keyboard, 79.99, 30
-   ```
+# Create container
+az cosmosdb sql container create \
+  --account-name <account-name-from-above> \
+  --resource-group bugbash-fullstack-rg \
+  --database-name TasksDB \
+  --name Tasks \
+  --partition-key-path "/category" \
+  --throughput 400
+```
 
-#### Phase 2: Build Python Application
+**Insert sample data** using Azure Portal Data Explorer:
+```json
+{"id": "1", "title": "Buy groceries", "category": "personal", "completed": false}
+{"id": "2", "title": "Review PR", "category": "work", "completed": false}
+{"id": "3", "title": "Call dentist", "category": "personal", "completed": true}
+```
 
-5. **Create Flask application**:
-   ```
-   Create a Python Flask application for an inventory management system:
-   - Flask web framework
-   - psycopg2 for PostgreSQL connection
-   - API endpoints:
-     * GET /api/products - list all products
-     * GET /api/products/<id> - get product details
-     * POST /api/products - add new product
-     * PUT /api/products/<id> - update product
-     * DELETE /api/products/<id> - delete product
-   - Simple HTML frontend
-   - Connection to PostgreSQL 'bugbash-postgres-<random>'
-   ```
+### Step 2: Discover Database Resources with Azure MCP Server
 
-6. **Review generated code**:
-   - [ ] Check requirements.txt
-   - [ ] Verify PostgreSQL connection
-   - [ ] Review API routes
-   - [ ] Check SQL queries
-   - [ ] Verify error handling
+**2.1 List Cosmos DB accounts** (uses `azmcp_cosmos_account_list`):
+```
+List all Cosmos DB accounts in my subscription
+```
 
-#### Phase 3: Test Locally
+**Verify**:
+- [ ] Tool invoked: `azmcp_cosmos_account_list`
+- [ ] Your Cosmos DB account appears
+- [ ] Account properties displayed
 
-7. **Set up virtual environment**:
-   ```bash
-   python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+**2.2 List databases** (uses `azmcp_cosmos_database_list`):
+```
+List all databases in Cosmos DB account '<account-name>'
+```
 
-8. **Configure database connection**:
-   ```
-   Get the PostgreSQL connection string for 'bugbash-postgres-<random>'
-   ```
-   - Create `.env` file with credentials
+**Verify**:
+- [ ] Tool invoked: `azmcp_cosmos_database_list`
+- [ ] 'TasksDB' database listed
 
-9. **Run locally**:
-   ```bash
-   python app.py
-   ```
+**2.3 List containers** (uses `azmcp_cosmos_database_container_list`):
+```
+List all containers in database 'TasksDB' for Cosmos DB account '<account-name>'
+```
 
-10. **Test endpoints**:
-    - [ ] List products
-    - [ ] Get product details
-    - [ ] Add new product
-    - [ ] Update product
-    - [ ] Delete product
+**Verify**:
+- [ ] Tool invoked: `azmcp_cosmos_database_container_list`
+- [ ] 'Tasks' container listed
+- [ ] Partition key '/category' shown
 
-#### Phase 4: Deploy to Azure
+### Step 3: Query Application Data with Azure MCP Server
 
-11. **Create App Service for Python**:
-    ```
-    Create an Azure App Service for Python:
-    - Name: 'bugbash-inventory-<random>'
-    - Runtime: Python 3.11
-    - Tier: B1
-    - Region: East US
-    ```
+**3.1 Query all tasks** (uses `azmcp_cosmos_database_container_item_query`):
+```
+Query all items from container 'Tasks' in database 'TasksDB' for Cosmos DB account '<account-name>'
+```
 
-12. **Configure connection**:
-    ```
-    Configure the PostgreSQL connection in app service settings
-    ```
+**Verify**:
+- [ ] Tool invoked: `azmcp_cosmos_database_container_item_query`
+- [ ] All 3 sample tasks returned
+- [ ] Task properties visible (id, title, category, completed)
 
-13. **Deploy application**:
-    ```
-    Deploy my Python Flask app to 'bugbash-inventory-<random>'
-    ```
+**3.2 Query completed tasks**:
+```
+Show me all completed tasks from container 'Tasks' in database 'TasksDB' for Cosmos DB account '<account-name>'
+```
 
-14. **Test production app**:
-    - Open app URL
-    - Verify all CRUD operations
+**Verify**:
+- [ ] Only completed tasks returned
+- [ ] Filter correctly applied
+
+**3.3 Query by category**:
+```
+Show me all work tasks from container 'Tasks' in database 'TasksDB' for Cosmos DB account '<account-name>'
+```
+
+**Verify**:
+- [ ] Only work category tasks returned
+- [ ] Category filter works
+
+### Step 4: Build and Deploy Application (External Tools - Not MCP)
+
+> **External Development Required**: Use GitHub Copilot for code generation
+
+**Generate application code** (use GitHub Copilot Chat in VS Code):
+```
+Create a Node.js Express application for a task management system with:
+- Express.js web framework
+- Cosmos DB integration using @azure/cosmos
+- RESTful API endpoints for CRUD operations
+- Simple HTML frontend
+- Connection to Cosmos DB '<account-name>'
+```
+
+**Deploy to Azure** (use Azure CLI):
+```bash
+# Create App Service
+az webapp create \
+  --name bugbash-taskapp-$RANDOM \
+  --resource-group bugbash-fullstack-rg \
+  --plan bugbash-plan \
+  --runtime "NODE:18-lts"
+
+# Configure connection string
+az webapp config appsettings set \
+  --name <webapp-name> \
+  --resource-group bugbash-fullstack-rg \
+  --settings COSMOS_CONNECTION_STRING="<connection-string>"
+
+# Deploy code (zip deployment)
+cd task-app
+zip -r app.zip .
+az webapp deployment source config-zip \
+  --resource-group bugbash-fullstack-rg \
+  --name <webapp-name> \
+  --src app.zip
+```
+
+### Step 5: Verify Deployed Application with Azure MCP Server
+
+**5.1 Get App Service details** (uses `azmcp_appservice_get`):
+```
+Show me details for App Service '<webapp-name>' in resource group 'bugbash-fullstack-rg'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_appservice_get`
+- [ ] App Service properties shown
+- [ ] Runtime and configuration visible
+- [ ] App URL displayed
+
+**5.2 Verify data through application**:
+- Open the App Service URL in browser
+- Test the task management interface
+- Create/read/update/delete tasks
+- Verify operations work end-to-end
+
+### Step 6: Query Updated Data with Azure MCP Server
+
+**6.1 Query database to verify application changes** (uses `azmcp_cosmos_database_container_item_query`):
+```
+Query all items from container 'Tasks' in database 'TasksDB' to see changes made through my application
+```
+
+**Verify**:
+- [ ] New tasks created via app are visible
+- [ ] Updated tasks show modifications
+- [ ] Deleted tasks are gone
+- [ ] Database accurately reflects app operations
+
+### Step 7: Cleanup (External - Not MCP)
+
+```bash
+# Delete resource group (removes all resources)
+az group delete --name bugbash-fullstack-rg --yes --no-wait
+```
 
 **Expected Results**:
-- PostgreSQL database created
-- Python application generated
-- Local testing successful
-- Azure deployment successful
-- Production app functional
+- Database discovery works correctly
+- Application data query succeeds
+- App Service inspection functional
+- End-to-end workflow complete
+- Data changes visible through MCP queries
 
 ---
 
-### Scenario 3: .NET Web App with Azure SQL
+## Scenario 2: Python Flask App with PostgreSQL Backend End-to-End
 
-**Objective**: Create an ASP.NET Core application with Azure SQL backend
+**Objective**: Complete workflow for Python application with relational database backend
 
-**Steps**:
+### Step 1: Create PostgreSQL Resources (External - Not MCP)
 
-#### Phase 1: Create Azure SQL Database
+> **External Setup Required**: Use Azure CLI to create PostgreSQL server
 
-1. **Create SQL server**:
-   ```
-   Create an Azure SQL server:
-   - Name: 'bugbash-sqlserver-<random>'
-   - Resource group: '<your-rg>'
-   - Admin login: 'sqladmin'
-   - Password: '<secure-password>'
-   - Region: East US
-   - Allow Azure services
-   ```
+```bash
+# Create resource group
+az group create --name bugbash-flask-rg --location eastus
 
-2. **Create database**:
-   ```
-   Create a database named 'CustomerDB' on SQL server 
-   'bugbash-sqlserver-<random>' with Basic tier
-   ```
+# Create PostgreSQL flexible server
+az postgres flexible-server create \
+  --name bugbash-postgres-$RANDOM \
+  --resource-group bugbash-flask-rg \
+  --location eastus \
+  --admin-user dbadmin \
+  --admin-password <secure-password> \
+  --sku-name Standard_B1ms \
+  --tier Burstable \
+  --version 14 \
+  --storage-size 32 \
+  --public-access 0.0.0.0
 
-3. **Create tables**:
-   ```
-   Create the following tables in CustomerDB:
-   
-   Customers table:
-   - CustomerId (int primary key identity)
-   - FirstName (nvarchar 50)
-   - LastName (nvarchar 50)
-   - Email (nvarchar 100)
-   - Phone (nvarchar 20)
-   - CreatedDate (datetime)
-   
-   Orders table:
-   - OrderId (int primary key identity)
-   - CustomerId (int foreign key)
-   - OrderDate (datetime)
-   - TotalAmount (decimal 18,2)
-   - Status (nvarchar 20)
-   ```
+# Create database
+az postgres flexible-server db create \
+  --resource-group bugbash-flask-rg \
+  --server-name <server-name-from-above> \
+  --database-name inventory
 
-#### Phase 2: Build .NET Application
+# Create table and insert data (use Azure Portal Query Editor or psql)
+# CREATE TABLE products (
+#   id SERIAL PRIMARY KEY,
+#   name VARCHAR(100),
+#   description TEXT,
+#   price DECIMAL(10,2),
+#   stock INTEGER
+# );
+# 
+# INSERT INTO products (name, description, price, stock) VALUES
+# ('Laptop', 'High-performance laptop', 999.99, 10),
+# ('Mouse', 'Wireless mouse', 29.99, 50),
+# ('Keyboard', 'Mechanical keyboard', 79.99, 30);
+```
 
-4. **Create ASP.NET Core Web API**:
-   ```
-   Create an ASP.NET Core 8.0 Web API application for customer management:
-   - Entity Framework Core for database access
-   - Controllers for Customers and Orders
-   - API endpoints following REST conventions
-   - Connection to Azure SQL 'bugbash-sqlserver-<random>'
-   - Swagger/OpenAPI documentation
-   - Include a simple React frontend
-   ```
+### Step 2: Discover PostgreSQL Resources with Azure MCP Server
 
-5. **Review code structure**:
-   - [ ] Check Models (Customer, Order)
-   - [ ] Review DbContext configuration
-   - [ ] Verify Controllers
-   - [ ] Check API routes
-   - [ ] Review frontend React components
+**2.1 List PostgreSQL servers** (uses `azmcp_postgres_server_list`):
+```
+List all PostgreSQL servers in my subscription
+```
 
-#### Phase 3: Test Locally
+**Verify**:
+- [ ] Tool invoked: `azmcp_postgres_server_list`
+- [ ] Your PostgreSQL server appears
+- [ ] Server details shown
 
-6. **Configure connection string**:
-   ```
-   Get the connection string for Azure SQL database 'CustomerDB'
-   ```
-   - Add to appsettings.Development.json
+**2.2 List databases** (uses `azmcp_postgres_database_list`):
+```
+List all databases in PostgreSQL server '<server-name>' in resource group 'bugbash-flask-rg'
+```
 
-7. **Run migrations**:
-   ```bash
-   dotnet ef database update
-   ```
+**Verify**:
+- [ ] Tool invoked: `azmcp_postgres_database_list`
+- [ ] 'inventory' database listed
 
-8. **Start application**:
-   ```bash
-   dotnet run
-   ```
+**2.3 List tables** (uses `azmcp_postgres_table_list`):
+```
+List all tables in database 'inventory' on server '<server-name>' in resource group 'bugbash-flask-rg'
+```
 
-9. **Test API**:
-   - Open Swagger UI: https://localhost:5001/swagger
-   - [ ] Test GET /api/customers
-   - [ ] Test POST /api/customers
-   - [ ] Test GET /api/orders
-   - [ ] Test POST /api/orders
+**Verify**:
+- [ ] Tool invoked: `azmcp_postgres_table_list`
+- [ ] 'products' table listed
 
-#### Phase 4: Deploy to Azure
+### Step 3: Inspect Table Schema with Azure MCP Server
 
-10. **Create App Service**:
-    ```
-    Create an Azure App Service for .NET 8.0:
-    - Name: 'bugbash-customerapi-<random>'
-    - Runtime: .NET 8
-    - Tier: B1
-    ```
+**3.1 Get table schema** (uses `azmcp_postgres_table_schema_get`):
+```
+Show me the schema of table 'products' in database 'inventory' on server '<server-name>' in resource group 'bugbash-flask-rg'
+```
 
-11. **Configure SQL connection**:
-    ```
-    Add SQL connection string to app service configuration
-    ```
+**Verify**:
+- [ ] Tool invoked: `azmcp_postgres_table_schema_get`
+- [ ] All columns listed (id, name, description, price, stock)
+- [ ] Data types shown
+- [ ] Primary key visible
 
-12. **Deploy application**:
-    ```
-    Deploy my .NET application to Azure App Service
-    ```
+### Step 4: Query Application Data with Azure MCP Server
 
-13. **Verify deployment**:
-    - Test API endpoints in production
-    - Verify database connectivity
-    - Test frontend functionality
+**4.1 Query all products** (uses `azmcp_postgres_database_query`):
+```
+Show me all products in the 'products' table in database 'inventory' on server '<server-name>' in resource group 'bugbash-flask-rg'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_postgres_database_query`
+- [ ] All 3 products returned
+- [ ] Product details visible
+
+**4.2 Query with filter**:
+```
+Show me all products with price less than 100 in database 'inventory' on server '<server-name>' in resource group 'bugbash-flask-rg'
+```
+
+**Verify**:
+- [ ] Only Mouse and Keyboard returned
+- [ ] Price filter works correctly
+
+### Step 5: Build and Deploy Flask App (External Tools - Not MCP)
+
+> **External Development Required**: Use GitHub Copilot for code generation
+
+**Generate Flask application** (use GitHub Copilot Chat):
+```
+Create a Python Flask application for inventory management with:
+- Flask web framework
+- psycopg2 for PostgreSQL
+- API endpoints for products CRUD
+- Simple HTML frontend
+- Connection to PostgreSQL '<server-name>'
+```
+
+**Deploy to Azure** (use Azure CLI):
+```bash
+# Create App Service Plan
+az appservice plan create \
+  --name bugbash-flask-plan \
+  --resource-group bugbash-flask-rg \
+  --sku B1 \
+  --is-linux
+
+# Create Web App
+az webapp create \
+  --name bugbash-inventory-$RANDOM \
+  --resource-group bugbash-flask-rg \
+  --plan bugbash-flask-plan \
+  --runtime "PYTHON:3.11"
+
+# Configure database connection
+az webapp config appsettings set \
+  --name <webapp-name> \
+  --resource-group bugbash-flask-rg \
+  --settings DATABASE_URL="<postgres-connection-string>"
+
+# Deploy application
+cd inventory-app
+zip -r app.zip .
+az webapp deployment source config-zip \
+  --resource-group bugbash-flask-rg \
+  --name <webapp-name> \
+  --src app.zip
+```
+
+### Step 6: Verify Deployed Application with Azure MCP Server
+
+**6.1 Get App Service details** (uses `azmcp_appservice_get`):
+```
+Show me details for App Service '<webapp-name>' in resource group 'bugbash-flask-rg'
+```
+
+**Verify**:
+- [ ] Tool invoked: `azmcp_appservice_get`
+- [ ] Flask app details shown
+- [ ] Python runtime visible
+
+**6.2 Test application**:
+- Open the App Service URL
+- Test product CRUD operations
+- Verify database connectivity
+
+### Step 7: Query Updated Data with Azure MCP Server
+
+**7.1 Verify application changes in database** (uses `azmcp_postgres_database_query`):
+```
+Show me all products in database 'inventory' to verify changes made through my Flask application
+```
+
+**Verify**:
+- [ ] New products created via app visible
+- [ ] Updated products show changes
+- [ ] Deleted products are gone
+- [ ] Database state matches app operations
+
+### Step 8: Cleanup (External - Not MCP)
+
+```bash
+# Delete resource group (removes all resources)
+az group delete --name bugbash-flask-rg --yes --no-wait
+```
 
 **Expected Results**:
-- Azure SQL database created
-- .NET application generated
-- EF Core migrations work
-- Local testing successful
-- Azure deployment successful
-- Production API operational
+- PostgreSQL discovery works
+- Table schema inspection accurate
+- Database querying functional
+- App Service inspection works
+- End-to-end workflow complete
+
+---
 
 ## Common Issues to Watch For
 
-- **Database Connection Issues**: Connection string format, firewall rules
-- **Authentication/Authorization**: Missing database credentials
-- **CORS Errors**: Frontend can't communicate with backend
-- **Port Conflicts**: Port already in use locally
-- **Dependency Issues**: Missing or incompatible packages
-- **Environment Variables**: Not properly configured in production
-- **Database Migrations**: Schema changes not applied
-- **Build Failures**: Platform-specific compilation issues
-- **Timeout Issues**: Long-running database operations
-- **Connection Pool Exhaustion**: Too many concurrent connections
+| Issue | Description | Resolution |
+|-------|-------------|------------|
+| **Database Connection Failures** | Can't connect to database | Verify firewall rules allow your IP and Azure services |
+| **Authentication Errors** | Credential issues | Check connection string format and credentials |
+| **Query Syntax Errors** | SQL queries fail | Use correct syntax for database type (T-SQL vs PostgreSQL) |
+| **App Service Configuration** | App can't connect to database | Verify connection string in App Service settings |
+| **CORS Errors** | Frontend can't reach API | Configure CORS in App Service or API code |
+| **Missing Resources** | MCP can't find resources | Ensure resources exist in specified subscription/resource group |
+| **Partition Key Issues** | Cosmos DB queries fail | Include partition key or enable cross-partition queries |
+
+## What to Report
+
+When logging issues, include:
+- [ ] Exact prompt used
+- [ ] Tool invoked (from MCP tool output)
+- [ ] Expected vs actual results
+- [ ] Error messages (if any)
+- [ ] Database type and resource names
+- [ ] Query that was attempted
+- [ ] Screenshots of unexpected behavior
 
 ## Related Resources
 
@@ -441,7 +439,40 @@ Test Azure MCP Server's ability to help create complete applications with databa
 - [Azure Cosmos DB Documentation](https://learn.microsoft.com/azure/cosmos-db/)
 - [Azure PostgreSQL Documentation](https://learn.microsoft.com/azure/postgresql/)
 - [Azure SQL Documentation](https://learn.microsoft.com/azure/azure-sql/)
-- [Deployment Testing](deployment.md)
+- [MCP Command Reference](../../servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [E2E Test Prompts](../../servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
-**Next**: [Infra As Code](infra-as-code.md)
+## Quick Reference: Supported MCP Tools
+
+### Cosmos DB
+- `azmcp_cosmos_account_list` - List Cosmos DB accounts
+- `azmcp_cosmos_database_list` - List databases
+- `azmcp_cosmos_database_container_list` - List containers
+- `azmcp_cosmos_database_container_item_query` - Query container items
+
+### PostgreSQL
+- `azmcp_postgres_server_list` - List PostgreSQL servers
+- `azmcp_postgres_database_list` - List databases
+- `azmcp_postgres_table_list` - List tables
+- `azmcp_postgres_table_schema_get` - Get table schema
+- `azmcp_postgres_database_query` - Execute SELECT queries
+
+### MySQL
+- `azmcp_mysql_server_list` - List MySQL servers
+- `azmcp_mysql_database_list` - List databases
+- `azmcp_mysql_table_list` - List tables
+- `azmcp_mysql_table_schema_get` - Get table schema
+- `azmcp_mysql_database_query` - Execute SELECT queries
+
+### Azure SQL
+- `azmcp_sql_server_list` - List SQL servers
+- `azmcp_sql_db_list` - List databases
+- `azmcp_sql_db_show` - Get database details
+
+### App Service
+- `azmcp_appservice_get` - Get App Service details
+
+---
+
+**Next**: [Infrastructure as Code Testing](infra-as-code.md)
