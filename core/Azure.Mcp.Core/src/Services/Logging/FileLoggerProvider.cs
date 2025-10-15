@@ -1,9 +1,51 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Logging;
+
+/// <summary>
+/// Extension methods for adding file logging to the logging builder.
+/// </summary>
+public static class FileLoggerExtensions
+{
+    /// <summary>
+    /// Adds file logging to the logging builder.
+    /// </summary>
+    /// <param name="builder">The logging builder.</param>
+    /// <param name="filePath">The path to the log file. Supports {timestamp} and {pid} placeholders.</param>
+    /// <returns>The logging builder for chaining.</returns>
+    public static ILoggingBuilder AddFile(this ILoggingBuilder builder, string filePath)
+    {
+        var resolvedPath = ResolveLogFilePath(filePath);
+        builder.Services.AddSingleton<ILoggerProvider>(provider => new FileLoggerProvider(resolvedPath));
+        return builder;
+    }
+
+    /// <summary>
+    /// Resolves log file path with placeholder substitution.
+    /// </summary>
+    private static string ResolveLogFilePath(string logFilePath)
+    {
+        if (string.IsNullOrEmpty(logFilePath))
+            return logFilePath;
+
+        var resolved = logFilePath
+            .Replace("{timestamp}", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"))
+            .Replace("{pid}", Environment.ProcessId.ToString());
+
+        // Ensure directory exists
+        var directory = Path.GetDirectoryName(resolved);
+        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        {
+            Directory.CreateDirectory(directory);
+        }
+
+        return resolved;
+    }
+}
 
 /// <summary>
 /// File logger provider for writing logs to a file.
@@ -12,15 +54,13 @@ namespace Azure.Mcp.Core.Services.Logging;
 internal sealed class FileLoggerProvider : ILoggerProvider
 {
     private readonly string _filePath;
-    private readonly LogLevel _minLevel;
     private readonly StreamWriter _streamWriter;
     private readonly object _lock = new();
     private bool _disposed = false;
 
-    public FileLoggerProvider(string filePath, LogLevel minLevel)
+    public FileLoggerProvider(string filePath)
     {
         _filePath = filePath;
-        _minLevel = minLevel;
 
         // Ensure directory exists
         var directory = Path.GetDirectoryName(filePath);
@@ -38,7 +78,7 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new FileLogger(categoryName, _minLevel, _streamWriter, _lock);
+        return new FileLogger(categoryName, _streamWriter, _lock);
     }
 
     public void Dispose()
@@ -56,18 +96,17 @@ internal sealed class FileLoggerProvider : ILoggerProvider
 
 /// <summary>
 /// Uses a shared StreamWriter for efficient logging without frequent file open/close operations.
+/// The logging framework handles filtering, so this logger writes all messages passed to it.
 /// </summary>
 internal sealed class FileLogger : ILogger
 {
     private readonly string _categoryName;
-    private readonly LogLevel _minLevel;
     private readonly StreamWriter _streamWriter;
     private readonly object _lock;
 
-    public FileLogger(string categoryName, LogLevel minLevel, StreamWriter streamWriter, object lockObject)
+    public FileLogger(string categoryName, StreamWriter streamWriter, object lockObject)
     {
         _categoryName = categoryName;
-        _minLevel = minLevel;
         _streamWriter = streamWriter;
         _lock = lockObject;
     }
@@ -79,16 +118,13 @@ internal sealed class FileLogger : ILogger
 
     public bool IsEnabled(LogLevel logLevel)
     {
-        return logLevel >= _minLevel;
+        // The logging framework handles filtering, so we always return true
+        // and let the framework decide what to log
+        return true;
     }
 
     public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
-        if (!IsEnabled(logLevel))
-        {
-            return;
-        }
-
         var timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff");
         var logLevelString = GetLogLevelString(logLevel);
         var message = formatter(state, exception);

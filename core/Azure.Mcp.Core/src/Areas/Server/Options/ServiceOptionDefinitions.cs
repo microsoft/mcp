@@ -16,7 +16,6 @@ public static class ServiceOptionDefinitions
     public const string LogLevelName = "log-level";
     public const string LogFileName = "log-file";
 
-
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
         Description = "Transport mechanism to use for Azure MCP Server.",
@@ -90,7 +89,7 @@ public static class ServiceOptionDefinitions
     public static readonly Option<string?> LogLevel = new($"--{LogLevelName}")
     {
         Required = false,
-        Description = "Set logging level: trace, debug, info, warn, error. Default is 'info'.",
+        Description = "Set logging level: Trace, Debug, Information, Warning, Error, Critical. Default is 'Information'.",
         DefaultValueFactory = _ => null
     };
 

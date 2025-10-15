@@ -66,7 +66,7 @@ public class ServiceStartOptions
     public bool InsecureDisableElicitation { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets the logging level. Valid values: trace, debug, info, warn, error.
+    /// Gets or sets the logging level. Valid values: Trace, Debug, Information, Warning, Error, Critical.
     /// </summary>
     [JsonPropertyName("logLevel")]
     public string? LogLevel { get; set; } = null;

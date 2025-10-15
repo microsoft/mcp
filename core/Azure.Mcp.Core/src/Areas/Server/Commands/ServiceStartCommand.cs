@@ -98,8 +98,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             }
         }
 
-
-
         if (string.IsNullOrEmpty(options.LogFile))
         {
             var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE");
@@ -143,62 +141,97 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         return ResolveLoggingOptions(options);
     }
 
+
+
     /// <summary>
-    /// Resolves log file path with placeholder substitution.
+    /// Configures logging using standard ASP.NET Core configuration.
+    /// Sets up console logging with appropriate levels based on command line options and environment variables.
     /// </summary>
-    private static string ResolveLogFilePath(string logFilePath)
+    private static void ConfigureLogging(ILoggingBuilder logging, ServiceStartOptions serverOptions, bool isStdioMode)
     {
-        if (string.IsNullOrEmpty(logFilePath))
-            return logFilePath;
+        logging.ClearProviders();
+        logging.ConfigureOpenTelemetryLogger();
+        logging.AddEventSourceLogger();
 
-        var resolved = logFilePath
-            .Replace("{timestamp}", DateTime.UtcNow.ToString("yyyyMMdd-HHmmss"))
-            .Replace("{pid}", Environment.ProcessId.ToString());
-
-        // Ensure directory exists
-        var directory = Path.GetDirectoryName(resolved);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+        // Determine effective log level from options
+        var effectiveLogLevel = GetEffectiveLogLevel(serverOptions);
+        
+        if (isStdioMode)
         {
-            Directory.CreateDirectory(directory);
+            // For STDIO mode, send logs to STDERR to keep STDOUT clean for MCP protocol
+            logging.AddConsole(options =>
+            {
+                options.LogToStandardErrorThreshold = effectiveLogLevel;
+                options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+            });
+        }
+        else
+        {
+            // For HTTP mode, normal console logging
+            logging.AddConsole(options =>
+            {
+                options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
+            });
         }
 
-        return resolved;
+        logging.AddSimpleConsole(simple =>
+        {
+            simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
+            simple.IncludeScopes = false;
+            simple.SingleLine = true;
+            simple.TimestampFormat = "[HH:mm:ss] ";
+        });
+
+        // Add file logging if specified
+        if (!string.IsNullOrEmpty(serverOptions.LogFile))
+        {
+            logging.AddFile(serverOptions.LogFile);
+        }
+
+        // Set minimum level - this works with standard ASP.NET Core configuration
+        logging.SetMinimumLevel(effectiveLogLevel);
+        
+        // Configure console provider filter
+        logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
     }
 
     /// <summary>
-    /// Parses log level string to LogLevel enum. Determines the effective log level based on various option sources.
+    /// Determines the effective log level based on command line options and environment variables.
+    /// Priority: --log-level > --debug > default (Information)
     /// </summary>
-    /// <param name="serverOptions">The server configuration options.</param>
-    /// <returns>The effective LogLevel to use.</returns>
-    private static LogLevel ParseLogLevel(ServiceStartOptions serverOptions)
+    private static LogLevel GetEffectiveLogLevel(ServiceStartOptions serverOptions)
     {
-        // Priority order:
-        // 1. Explicit LogLevel option
-        // 2. Debug flag -> Debug level
-        // 3. Default -> Information level
-
-        // Priority 1: If LogLevel was explicitly set (not null), use it regardless of other flags
+        // Priority 1: Explicit --log-level option
         if (!string.IsNullOrEmpty(serverOptions.LogLevel))
         {
-            return serverOptions.LogLevel.ToLowerInvariant() switch
-            {
-                "trace" => LogLevel.Trace,
-                "debug" => LogLevel.Debug,
-                "info" or "information" => LogLevel.Information,
-                "warn" or "warning" => LogLevel.Warning,
-                "error" => LogLevel.Error,
-                "critical" => LogLevel.Critical,
-                _ => LogLevel.Information
-            };
+            return ParseLogLevel(serverOptions.LogLevel);
         }
 
-        // Priority 2: If no explicit log level, check debug flag
+        // Priority 2: --debug flag
         if (serverOptions.Debug)
         {
             return LogLevel.Debug;
         }
 
+        // Priority 3: Default
         return LogLevel.Information;
+    }
+
+    /// <summary>
+    /// Parses a log level string to LogLevel enum, with fallback to Information for invalid values.
+    /// </summary>
+    private static LogLevel ParseLogLevel(string logLevelString)
+    {
+        return logLevelString.ToLowerInvariant() switch
+        {
+            "trace" => LogLevel.Trace,
+            "debug" => LogLevel.Debug,
+            "info" or "information" => LogLevel.Information,
+            "warn" or "warning" => LogLevel.Warning,
+            "error" => LogLevel.Error,
+            "critical" => LogLevel.Critical,
+            _ => LogLevel.Information // Fallback for invalid values
+        };
     }
 
     /// <summary>
@@ -376,41 +409,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
         return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
-                logging.AddEventSourceLogger();
-
-                // Determine effective log level from new options
-                var effectiveLogLevel = ParseLogLevel(serverOptions);
-                logging.SetMinimumLevel(effectiveLogLevel);
-
-                // Always configure console logger for STDIO mode to send logs to STDERR
-                // This keeps STDOUT clean for MCP protocol communication
-                logging.AddConsole(options =>
-                {
-                    options.LogToStandardErrorThreshold = effectiveLogLevel;
-                    options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-                });
-
-                logging.AddSimpleConsole(simple =>
-                {
-                    simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                    simple.IncludeScopes = false;
-                    simple.SingleLine = true;
-                    simple.TimestampFormat = "[HH:mm:ss] ";
-                });
-
-                // Add file logging if specified
-                if (!string.IsNullOrEmpty(serverOptions.LogFile))
-                {
-                    var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
-                    logging.AddProvider(new FileLoggerProvider(resolvedPath, effectiveLogLevel));
-                }
-
-                logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
-            })
+            .ConfigureLogging(logging => ConfigureLogging(logging, serverOptions, isStdioMode: true))
             .ConfigureServices(services =>
             {
                 ConfigureServices(services);
@@ -427,39 +426,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
         return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
-                logging.AddEventSourceLogger();
-
-                // Determine effective log level from new options
-                var effectiveLogLevel = ParseLogLevel(serverOptions);
-                logging.SetMinimumLevel(effectiveLogLevel);
-
-                // For HTTP mode, we can log to console normally (no STDIO separation needed)
-                logging.AddConsole(options =>
-                {
-                    options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-                });
-
-                logging.AddSimpleConsole(simple =>
-                {
-                    simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                    simple.IncludeScopes = false;
-                    simple.SingleLine = true;
-                    simple.TimestampFormat = "[HH:mm:ss] ";
-                });
-
-                // Add file logging if specified
-                if (!string.IsNullOrEmpty(serverOptions.LogFile))
-                {
-                    var resolvedPath = ResolveLogFilePath(serverOptions.LogFile);
-                    logging.AddProvider(new FileLoggerProvider(resolvedPath, effectiveLogLevel));
-                }
-
-                logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
-            })
+            .ConfigureLogging(logging => ConfigureLogging(logging, serverOptions, isStdioMode: false))
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.ConfigureServices(services =>

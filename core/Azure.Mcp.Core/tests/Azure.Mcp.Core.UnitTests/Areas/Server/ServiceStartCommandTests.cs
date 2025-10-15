@@ -146,11 +146,12 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData("trace")]
-    [InlineData("debug")]
-    [InlineData("info")]
-    [InlineData("warn")]
-    [InlineData("error")]
+    [InlineData("Trace")]
+    [InlineData("Debug")]
+    [InlineData("Information")]
+    [InlineData("Warning")]
+    [InlineData("Error")]
+    [InlineData("Critical")]
     [InlineData(null)]
     public void LogLevelOption_ParsesCorrectly(string? expectedLogLevel)
     {
@@ -170,8 +171,6 @@ public class ServiceStartCommandTests
             Assert.Equal(expectedLogLevel, actualLogLevel);
         }
     }
-
-
 
     [Theory]
     [InlineData("C:\\temp\\test.log")]
@@ -822,21 +821,7 @@ public class ServiceStartCommandTests
         return _command.GetCommand().Parse([.. args]);
     }
 
-    private ParseResult CreateParseResultWithLogLevel(string? logLevel)
-    {
-        var args = new List<string>
-        {
-            "--transport", "stdio"
-        };
 
-        if (logLevel is not null)
-        {
-            args.Add("--log-level");
-            args.Add(logLevel);
-        }
-
-        return _command.GetCommand().Parse([.. args]);
-    }
 
     private ParseResult CreateParseResultWithLogFile(string? logFile)
     {
@@ -849,6 +834,22 @@ public class ServiceStartCommandTests
         {
             args.Add("--log-file");
             args.Add(logFile);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithLogLevel(string? logLevel)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (logLevel is not null)
+        {
+            args.Add("--log-level");
+            args.Add(logLevel);
         }
 
         return _command.GetCommand().Parse([.. args]);
