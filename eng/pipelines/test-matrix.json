@@ -1,9 +1,0 @@
-{
-  "matrix": {
-    "Agent": {
-      "osx": { "OSVmImage": "env:MACVMIMAGE", "Pool": "env:MACPOOL"},
-      "linux": { "OSVmImage": "env:LINUXVMIMAGE", "Pool": "env:LINUXPOOL" },
-      "win": { "OSVmImage": "env:WINDOWSVMIMAGE", "Pool": "env:WINDOWSPOOL" }
-    }
-  }
-}

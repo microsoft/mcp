@@ -1,9 +1,6 @@
 parameters:
 - name: DependsOn
   type: object
-  default: []
-- name: ServerName
-  type: string
 
 jobs:
 - job: SignAndPackVSIX
@@ -15,8 +12,12 @@ jobs:
 
   # Download the signed MCP server binaries for this OS
   - download: current
+    artifact: build_info
+    displayName: "Download build_info"
+
+  - download: current
     artifact: binaries_signed
-    displayName: "Download signed MCP server binaries"
+    displayName: "Download binaries_signed"
 
   - task: NodeTool@0
     displayName: "Use Node.js 20.x"
@@ -24,13 +25,15 @@ jobs:
       versionSpec: 20.x
 
   # --- VS Code Extension Packaging Steps ---
-
-  - pwsh: >
-      eng/scripts/Pack-Vsix.ps1
-      -ServerName '${{ parameters.ServerName }}'
-      -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
-      -OutputPath '$(Build.ArtifactStagingDirectory)'
-    displayName: "Copy signed MCP server binaries to VSIX"
+  - task: Powershell@2
+    displayName: "Pack binaries for VSIX"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Vsix.ps1
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
 
   - template: pipelines/steps/azd-vscode-signing.yml@azure-sdk-build-tools
     parameters:

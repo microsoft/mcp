@@ -1,15 +1,20 @@
 parameters:
+- name: Matrix
+  type: object
+- name: MaxParallel
+  type: number
 - name: TimeoutInMinutes
   type: number
-  default: 75
 
 jobs:
 - job: LiveTest
   displayName: "Live tests -"
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
-  condition: and(succeeded(), eq(stageDependencies.Initialize.Initialize.outputs['GetTestPathsLive.HasTestPaths'], 'true'))
+  # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
-    matrix: $[ stageDependencies.Initialize.Initialize.outputs['GetTestPathsLive.TestMatrix'] ]
+    maxParallel: ${{ parameters.MaxParallel }}
+    matrix: $[ ${{ parameters.Matrix }} ]
   steps:
   - checkout: self
 
@@ -31,9 +36,18 @@ jobs:
     inputs:
       versionSpec: '22.x'
 
-  - pwsh: |
-      ./eng/scripts/Build-Local.ps1 -VerifyNpx
-    displayName: "Verify npm package"
+  - pwsh: >
+      ./eng/scripts/Build-Local.ps1
+      -VerifyNpx
+    displayName: "Build local package"
+    workingDirectory: $(Build.SourcesDirectory)
+
+  - pwsh: >
+      ./eng/scripts/Test-Code.ps1
+      -TestType 'Live'
+      -Path $(PathToTest)
+      -OnlyBuild
+    displayName: "Confirm tests build"
     workingDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/TestResources/build-test-resource-config.yml

@@ -3,6 +3,7 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
+    [string] $BuildInfoPath,
     [string] $ArtifactsPath,
     [string] $ArtifactPrefix,
     [string] $OutputPath
@@ -10,6 +11,7 @@ param(
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+$exitCode = 0
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work"
@@ -21,12 +23,25 @@ if(!$ArtifactPrefix) {
 
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/signed"
-    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue
+    Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+}
+
+if(!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
 if(!(Test-Path -Path $ArtifactsPath -PathType Container)) {
-    Write-Error "Artifacts path '$ArtifactsPath' does not exist or is not a directory."
-    return
+    LogError "Artifacts path '$ArtifactsPath' does not exist or is not a directory."
+    $exitCode = 1
+}
+
+if(!(Test-Path -Path $BuildInfoPath -PathType Leaf)) {
+    LogError "Build info file '$BuildInfoPath' does not exist or is not a file."
+    $exitCode = 1
+}
+
+if ($exitCode -ne 0) {
+    exit $exitCode
 }
 
 $entitlements = "$RepoRoot/eng/dotnet-executable-entitlements.plist"
@@ -46,38 +61,35 @@ if($env:TF_BUILD) {
     }
 }
 
-$serverJsonFiles = $artifactDirectories | Get-ChildItem -Filter "wrapper.json" -Recurse
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
-foreach ($serverJsonFile in $serverJsonFiles) {
-    Write-Host "Processing $serverJsonFile" -ForegroundColor Yellow
-    $serverDirectory = $serverJsonFile.Directory
-    $serverOutputPath = "$OutputPath/$($serverDirectory.Name)"
+foreach ($server in $buildInfo.servers) {
+    Write-Host "Processing $($server.name)" -ForegroundColor Yellow
+    foreach($platform in $server.platforms) {
+        $artifactPath = $platform.artifactPath
+        $platformOutputPath = "$outputPath/$artifactPath"
+        # The relationship between artifacts and platform paths is loose
+        # Locally, they'll all be in the .work/build subdirectory
+        # In a pipeline, each server platform will be in its own artifact directory
+        # We can ignore the artifact directory name and look for any matching <Server>/<Platform> path
 
-    New-Item -ItemType Directory -Force -Path $serverOutputPath | Out-Null
-    if(!(Test-Path -Path "$serverOutputPath/wrapper.Json")) {
-        Copy-Item -Path $serverJsonFile.FullName -Destination $serverOutputPath -Force
-        Copy-Item -Path "$serverDirectory/README.md" -Destination $serverOutputPath -Force
-    }
+        $platformSourcePath = $artifactDirectories
+        | ForEach-Object { "$_/$artifactPath".Replace('\','/') }
+        | Where-Object { Test-Path -Path $_ -PathType Container }
+        | Select-Object -First 1
 
-    $packageJsonFiles = Get-ChildItem -Path $serverDirectory -Filter "package.json" -Recurse
-    foreach($packageJsonFile in $packageJsonFiles) {
-        $packageDirectory = $packageJsonFile.DirectoryName.Replace('\','/')
-        Write-Host "Copying $packageDirectory to $serverOutputPath`n" -ForegroundColor Yellow
-        Copy-Item -Path $packageDirectory -Destination $serverOutputPath -Recurse -Force
+        New-Item -Path (Split-Path -Path $platformOutputPath -Parent) -ItemType Directory -Force | Out-Null
 
-        $packageOutputDirectory = "$serverOutputPath/$($packageJsonFile.Directory.Name)"
+        Write-Host "Copying $platformSourcePath to $platformOutputPath`n" -ForegroundColor Yellow
+        Copy-Item -Path $platformSourcePath -Destination $platformOutputPath -Recurse -Force -ProgressAction SilentlyContinue
 
-        $package = Get-Content $packageJsonFile -Raw | ConvertFrom-Json -AsHashtable
-        $os = $package.os[0]
-
-        Write-Host "`nProcessing $os package in $packageOutputDirectory" -ForegroundColor Yellow
-        if ($os -eq 'darwin') {
+        if ($platform.operatingSystem -eq 'macos') {
             # Only mac binaries need to be compressed. Linux binaries aren't signed and windows are signed uncompressed.
 
             # Mac requires code signing the binary with an entitlements file such that the signed and notarized binary will properly invoke on
             # a mac system. However, the `codesign` command is only available on a MacOS agent. With that being the case, we simply special case
             # this function here to ensure that the script does not fail outside of a MacOS agent.
-            $binaryFilePath = Resolve-Path "$packageOutputDirectory/$($package.bin.Values[0])"
+            $binaryFilePath = Resolve-Path "$platformOutputPath/$($server.cliName)"
 
             if ($IsMacOS) {
                 Invoke-LoggedCommand "chmod +x `"$binaryFilePath`""
@@ -98,9 +110,10 @@ foreach ($serverJsonFile in $serverJsonFiles) {
     }
 }
 
-
 if($env:TF_BUILD) {
     Write-Host "`n##[group] Output Path Contents:"
     Get-ChildItem -Path $OutputPath -File -Recurse | Select-Object -ExpandProperty FullName | Out-Host
     Write-Host "##[endgroup]`n"
 }
+
+exit $exitCode

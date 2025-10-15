@@ -3,43 +3,138 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
-    [string] $VersionSuffix,
-    [Parameter(Mandatory=$true)]
     [string] $ServerName,
-    [switch] $Trimmed,
-    [switch] $ReleaseBuild
+    [string] $BuildInfoPath,
+    [string] $OutputPath
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
-$root = $RepoRoot.Path.Replace('\', '/')
-$distPath = "$root/.work"
-$dockerFile = "$root/Dockerfile"
-$properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName "$ServerName.csproj"
-$dockerImageName = $properties.DockerImageName
+$RepoRoot = $RepoRoot.Path.Replace('\', '/')
+$dockerFile = "$RepoRoot/Dockerfile"
+$exitCode = 0
 
-if(!$Version) {
-    $Version = $properties.Version
+if (!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-# Will fix this when we update Dockerfile to multi-platform
-$os = "linux"
-$arch = "x64"
-$SingleFile = $Trimmed
-$tag = "$dockerImageName`:$Version$VersionSuffix";
-
-& "$root/eng/scripts/Build-Code.ps1" -ServerName $ServerName -VersionSuffix $VersionSuffix -SelfContained -Trimmed:$Trimmed -SingleFile:$SingleFile -ReleaseBuild:$ReleaseBuild -OperatingSystem $os -Architecture $arch
-if ($LastExitCode -ne 0) {
-    exit $LastExitCode
+if (!$OutputPath) {
+    $OutputPath = "$RepoRoot/.work/packages_docker"
 }
 
-[string]$publishDirectory = $([System.IO.Path]::Combine($distPath, "build", $ServerName, "$os-$arch", "dist"))
-$relativeDirectory = $(Resolve-Path $publishDirectory -Relative).Replace('\', '/')
-
-Write-Host "Building Docker image ($tag). PATH: [$relativeDirectory]. Absolute: [$publishDirectory]."
-
-if (!(Test-Path $publishDirectory)) {
-    Write-Error "Build output directory does not exist: $publishDirectory"
-    return
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
 }
 
-& docker build --build-arg PUBLISH_DIR="$relativeDirectory" --file $dockerFile --tag $tag .
+if ($exitCode -ne 0) {
+    exit $exitCode
+}
+
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+$supportedPlatforms = @(
+    "linux/amd64"
+    "linux/arm64"
+    # "windows/amd64"
+    # "windows/arm64"
+)
+
+$servers = $buildInfo.servers
+
+if($ServerName) {
+    $servers = $servers | Where-Object { $_.name -eq $ServerName }
+}
+
+$originalPath = Get-Location
+Set-Location $RepoRoot
+try {
+    foreach($server in $servers) {
+        $dockerImageName = $server.dockerImageName
+        $version = $server.version
+        $serverName = $server.name
+
+        if(-not $dockerImageName) {
+            LogWarning "Skipping server $serverName because it does not have a dockerImageName"
+            continue
+        }
+
+        foreach($platform in $server.platforms) {
+            $dockerOs = switch($platform.operatingSystem) {
+                "linux" { "linux" }
+                "osx" { "linux" }
+                "windows" { "windows" }
+                default {
+                    LogWarning "Skipping unsupported operating system $($platform.operatingSystem) for server $serverName"
+                    continue
+                }
+            }
+
+            $dockerArch = switch($platform.architecture) {
+                "x64" { "amd64" }
+                "arm64" { "arm64" }
+                default {
+                    LogWarning "Skipping unsupported architecture $($platform.architecture) for server $serverName"
+                    continue
+                }
+            }
+
+            $dockerPlatformString = "$dockerOs/$dockerArch"
+
+            $relativePublishDirectory = ".work/build/$($platform.artifactPath)"
+            $publishDirectory = "$RepoRoot/$relativePublishDirectory"
+
+            if($supportedPlatforms -notcontains $dockerPlatformString) {
+                LogWarning "Skipping unsupported platform $dockerPlatformString"
+                continue
+            }
+
+            if (!(Test-Path $publishDirectory)) {
+                LogWarning "Build output directory does not exist: $publishDirectory, skipping"
+                continue
+            }
+
+            $tempPath = "$RepoRoot/.work/temp"
+            Remove-Item -Path $tempPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+
+            $tag = "$dockerImageName`:$version";
+
+            Write-Host "Building Docker image ($tag). PATH: [$relativePublishDirectory]. Absolute: [$publishDirectory]."
+            function quote($str) {
+                return "`"$str`""
+            }
+
+            $dockerArgs = @(
+                "--platform $(quote $dockerPlatformString)"
+                "--build-arg PUBLISH_DIR=$(quote $relativePublishDirectory)"
+                "--build-arg CLI_NAME=$(quote $server.cliName + $platform.extension)"
+                "--file $(quote $dockerFile)"
+                "--tag $(quote $tag)"
+                "--no-cache"
+                "--progress plain"
+                "."
+            )
+
+            Invoke-LoggedCommand "docker build $($dockerArgs -join ' ')"
+            if ($LASTEXITCODE -ne 0) {
+                LogError "Docker build failed for $serverName on $dockerPlatformString"
+                $exitCode = 1
+                continue
+            }
+
+            # the dockerImageName will contain slashes, so consider the full path including tag when creating the directory
+            $platformOutputPath = "$OutputPath/$($platform.artifactPath)/$dockerImageName.tar"
+            New-Item -Path (Split-Path $platformOutputPath -Parent) -ItemType Directory -Force | Out-Null
+
+            Invoke-LoggedCommand "docker save $tag -o $(quote $platformOutputPath)"
+            if ($LASTEXITCODE -ne 0) {
+                LogError "Docker save failed for $serverName on $dockerPlatformString"
+                $exitCode = 1
+            }
+        }
+    }
+}
+finally {
+    Set-Location $originalPath
+}
+
+exit $exitCode

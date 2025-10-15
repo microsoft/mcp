@@ -3,136 +3,136 @@
 
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
+    [string] $BuildInfoPath,
     [string] $OutputPath,
-    [string] $VersionSuffix,
     [switch] $SelfContained,
     [switch] $SingleFile,
     [switch] $ReadyToRun,
     [switch] $Trimmed,
     [switch] $ReleaseBuild,
     [switch] $CleanBuild,
-    [switch] $BuildNative,
+    [switch] $Native,
     [string] $ServerName,
-    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
-    [ValidateSet('windows','linux','macOS')]
-    [string] $OperatingSystem,
-    [Parameter(Mandatory=$true, ParameterSetName='SpecificPlatform')]
+
+    [Parameter(Mandatory, ParameterSetName='SpecificPlatform')]
+    [Alias('OS')]
+    [ValidateSet('windows','linux','macos')]
+    [string[]] $OperatingSystem,
+
+    [Parameter(Mandatory, ParameterSetName='SpecificPlatform')]
     [ValidateSet('x64','arm64')]
-    [string] $Architecture,
+    [string[]] $Architecture,
+
     [Parameter(ParameterSetName='AllPlatforms')]
     [switch] $AllPlatforms
 )
 
 $ErrorActionPreference = 'Stop'
-
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+
+$exitCode = 0
 
 if (!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build"
 }
 
-if($AllPlatforms -and $BuildNative) {
-    Write-Warning "Native Builds do not support Cross OS builds. Only building for the current OS."
+if(!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-#normalize OperatingSystem and Architecture
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
+}
+
+# normalize OperatingSystem and Architecture
 $runtime = [System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier.Split('-')
+
 if($OperatingSystem) {
-    switch($OperatingSystem) {
-        'windows' { $operatingSystems = @('win') }
-        'linux' { $operatingSystems = @('linux') }
-        'macos' { $operatingSystems = @('osx') }
-        default { Write-Error "Unsupported operating system: $OperatingSystem"; return }
-    }
+    $OperatingSystem = $OperatingSystem | Select-Object -Unique
 } else {
-    $operatingSystems = ($AllPlatforms -and !$BuildNative) ? @('win', 'linux', 'osx') : @($runtime[0])
+    if($AllPlatforms -and $Native) {
+        LogWarning "Native Builds do not support Cross OS builds. Only building for the current OS."
+    }
+
+    if ($AllPlatforms -and !$Native) {
+        $OperatingSystem = @('windows', 'linux', 'macOS')
+    } else {
+        if ($IsWindows) {
+            $OperatingSystem = @('windows')
+        } elseif ($IsLinux) {
+            $OperatingSystem = @('linux')
+        } elseif ($IsMacOS) {
+            $OperatingSystem = @('macOS')
+        } else {
+            LogError "Unsupported OS detected. Supported OS are Windows, Linux and macOS."
+            $exitCode = 1
+        }
+    }
 }
 
 if($Architecture) {
-    if ($Architecture -notin @('x64', 'arm64')) {
-        Write-Error "Unsupported architecture: $Architecture"
-        return
-    }
-    $architectures = $($Architecture)
+    $Architecture = $Architecture | Select-Object -Unique
 } else {
-    $architectures = $AllPlatforms ? @('x64', 'arm64') : @($runtime[1])
+    $Architecture = $AllPlatforms ? @('x64', 'arm64') : @($runtime[1])
 }
 
-function BuildServer($serverName) {
-    $serverDirectory = "$RepoRoot/servers/$serverName"
-    $projectFile = Get-Item "$serverDirectory/src/$serverName.csproj"
+# Exit early if there were parameter errors
+if($exitCode -ne 0) {
+    exit $exitCode
+}
 
-    if(!$projectFile) {
-        Write-Error "No project file found for $serverName"
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+function BuildServer($server) {
+    $serverName = $server.name
+
+    if(!(Test-Path $server.path)) {
+        LogError "No project file found for $serverName"
+        $script:exitCode = 1
         return
     }
 
-    $properties = & "$PSScriptRoot/Get-ProjectProperties.ps1" -ProjectName $projectFile.Name
+    $projectPath = $server.path
+    $version = $server.version
 
-    $cliName = $properties.CliName
-    $version = "$($properties.Version)$VersionSuffix"
-    $description = $properties.Description
-    $packageName = $properties.NpmPackageName
-    $keywords = $properties.NpmPackageKeywords -split ','
-    $readmeUrl = $properties.ReadmeUrl
-
-    $serverOutputDirectory = "$OutputPath/$serverName"
-
-    if ($BuildNative) {
-        $packageName += '-native'
-        $serverOutputDirectory += '-native'
-    }
+    $serverOutputDirectory = "$OutputPath/$($server.artifactPath)"
 
     New-Item -Path $serverOutputDirectory -ItemType Directory -Force | Out-Null
 
-    $wrapperPackage = [ordered]@{
-        name = $packageName
-        version = $version
-        description = $description
-        author = 'Microsoft'
-        homepage = $readmeUrl
-        license = 'MIT'
-        keywords = $keywords
-        bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
-        repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-        engines = @{ node = '>=20.0.0' }
-        bin = @{ $cliName = './index.js' }
-        os = @()
-        cpu = @()
-        optionalDependencies = @{}
-        scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
-    }
+    foreach ($os in $OperatingSystem) {
+        foreach ($arch in $Architecture) {
+            $filteredPlatforms = @($server.platforms
+            | Where-Object {
+                ($_.operatingSystem -eq $os) -and
+                ($_.architecture -eq $arch) -and
+                ($_.native -eq $Native) })
 
-    $wrapperPackage | ConvertTo-Json | Out-File -FilePath "$serverOutputDirectory/wrapper.json" -Encoding utf8
-    Write-Host "Created wrapper.json in $serverOutputDirectory" -ForegroundColor Yellow
-
-    Copy-Item "$serverDirectory/README.md" -Destination $serverOutputDirectory -Force
-    Write-Host "Copied README.md to $serverOutputDirectory" -ForegroundColor Yellow
-
-    foreach ($os in $operatingSystems) {
-        foreach ($arch in $architectures) {
-            switch($os) {
-                'win' { $node_os = 'win32'; $extension = '.exe' }
-                'osx' { $node_os = 'darwin'; $extension = '' }
-                default { $node_os = $os; $extension = '' }
+            if ($filteredPlatforms.Count -eq 0) {
+                LogError "No build configuration found for $serverName on $os-$arch with Native=$Native"
+                $script:exitCode = 1
+                continue
+            } elseif ($filteredPlatforms.Count -gt 1) {
+                LogError "Multiple build configurations found for $serverName on $os-$arch with Native=$Native"
+                $script:exitCode = 1
+                continue
             }
 
-            $outputDir = "$serverOutputDirectory/$os-$arch"
-            Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
+            $platform = $filteredPlatforms[0]
 
+            $dotnetOs = $platform.dotnetOs
+            $runtime = "$dotnetOs-$arch"
             $configuration = if ($ReleaseBuild) { 'Release' } else { 'Debug' }
 
-            if ($CleanBuild) {
-                # Clean up any previous build artifacts.
-                Invoke-LoggedMsBuildCommand "dotnet clean '$projectFile' --configuration $configuration" -GroupOutput
-            }
+            $outputDir = "$OutputPath/$($platform.artifactPath)"
+            Write-Host "Building $configuration $runtime, version $version in $outputDir" -ForegroundColor Green
 
             # Clear and recreate the package output directory
             Remove-Item -Path $outputDir -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
-            New-Item -Path "$outputDir/dist" -ItemType Directory -Force | Out-Null
+            New-Item -Path $outputDir -ItemType Directory -Force | Out-Null
 
-            $command = "dotnet publish '$projectFile' --runtime '$os-$arch' --output '$outputDir/dist' /p:Version=$version /p:Configuration=$configuration"
+            $command = "dotnet publish '$projectPath' --runtime '$runtime' --output '$outputDir' /p:Version=$version /p:Configuration=$configuration"
 
             if($SelfContained) {
                 $command += " --self-contained"
@@ -146,7 +146,7 @@ function BuildServer($serverName) {
                 $command += " /p:PublishTrimmed=true"
             }
 
-            if($BuildNative) {
+            if($Native) {
                 $command += " /p:BuildNative=true"
             }
 
@@ -156,45 +156,22 @@ function BuildServer($serverName) {
 
             Invoke-LoggedMsBuildCommand $command -GroupOutput
 
-            $package = [ordered]@{
-                name = "$packageName-$node_os-$arch"
-                version = $version
-                description = "$description, for $node_os on $arch"
-                author = 'Microsoft'
-                homepage = $readmeUrl
-                license = 'MIT'
-                keywords = $properties.NpmPackageKeywords -split ','
-                bugs = @{ url = "https://github.com/microsoft/mcp/issues" }
-                repository = @{ type = 'git'; url = 'https://github.com/microsoft/mcp.git' }
-                engines = @{ node = '>=20.0.0' }
-                main = './index.js'
-                bin = @{ "$cliName-$node_os-$arch" = "./dist/$cliName$extension" }
-                os = @($node_os)
-                cpu = @($arch)
-            }
-
-            $package
-            | ConvertTo-Json
-            | Out-File -FilePath "$outputDir/package.json" -Encoding utf8
-
-            Write-Host "Created package.json in $outputDir" -ForegroundColor Yellow
-
             Write-Host "`nBuild completed successfully!" -ForegroundColor Green
         }
     }
 }
 
-$exitCode = 0
 Push-Location $RepoRoot
 try {
-    $serverNames = @(if($ServerName) {
-        $ServerName
-    } else {
-        Get-ChildItem -Path "$RepoRoot/servers" -Directory | Select-Object -ExpandProperty Name
-    })
+    if ($CleanBuild) {
+        # Clean up any previous build artifacts.
+        Write-Host "Removing existing bin and obj folders"
+        Remove-Item * -Recurse -Include 'obj', 'bin' -Force -ProgressAction SilentlyContinue
+    }
 
-    foreach ($serverName in $serverNames) {
-        BuildServer $serverName
+    foreach ($server in $buildInfo.servers) {
+        BuildServer $server
+
         if ($LastExitCode -ne 0) {
             $exitCode = $LastExitCode
         }

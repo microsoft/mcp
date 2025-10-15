@@ -1,15 +1,11 @@
 parameters:
-# required matrix parameters
-- name: UsePlatformContainer
-  type: boolean
 - name: OSName
   type: string
 - name: Matrix
   type: object
+- name: MaxParallel
+  type: number
 - name: DependsOn
-  type: object
-  default: []
-- name: CloudConfig
   type: object
 - name: TestTimeoutInMinutes
   type: number
@@ -20,7 +16,9 @@ jobs:
 - job: Verify_Packages_${{ parameters.OSName }}
   displayName: "Verify Packages"
   dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
+    maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
   pool:
     name: $(Pool)
@@ -53,7 +51,7 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
       arguments: >
-        -ServerName ${{ parameters.ServerName }}
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
