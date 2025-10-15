@@ -415,9 +415,9 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
 
             if (!string.IsNullOrEmpty(jsonProperty))
             {
-                var jsonResult = JsonDocument.Parse(jsonProperty);
+                using var jsonDoc = JsonDocument.Parse(jsonProperty);
 
-                if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
+                if (jsonDoc.RootElement.TryGetProperty("NBest", out var nbestArray))
                 {
                     foreach (var item in nbestArray.EnumerateArray())
                     {
