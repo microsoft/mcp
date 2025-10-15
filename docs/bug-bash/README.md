@@ -15,10 +15,15 @@ Welcome to the Azure MCP Server Bug Bash! We're excited to have you help us impr
 
 The Azure MCP Server enables AI agents to interact with Azure services through natural language commands. As we continue to enhance the server, we need your help to identify issues across different platforms, IDEs, and usage scenarios.
 
+> **🎯 Important**: Please read [TESTING-SCOPE.md](TESTING-SCOPE.md) to understand what Azure MCP Server can do. **MCP tools primarily focus on reading, querying, and inspecting Azure resources**. Most resource creation requires Azure CLI - use it to set up test resources before testing MCP's discovery and inspection capabilities.
+
 This bug bash focuses on:
 - **Multi-platform compatibility** (Windows, macOS, Linux)
 - **Installation and setup** across different IDEs
-- **Performance and stability** under real-world usage
+- **Resource discovery and inspection** - testing how well MCP finds and retrieves information
+- **Querying capabilities** - testing database queries and data retrieval
+- **Monitoring and diagnostics** - testing log/metric access and health checks
+- **Deployment guidance** - testing how MCP helps plan and guide deployments
 - **Authentication** across different environments
 - **End-to-end scenarios** that developers commonly encounter
 
@@ -124,7 +129,12 @@ If you're short on time, try these quick scenarios:
 
 ## Resources
 
-### Documentation
+### Bug Bash Documentation
+- **[TESTING-SCOPE.md](TESTING-SCOPE.md)** - ⚠️ **READ THIS FIRST!** - Explains what MCP can and cannot do
+- [Installation Testing Guide](installation-testing.md) - Test installation across platforms and IDEs
+- [Testing Scenarios](scenarios/) - Detailed end-to-end testing scenarios
+
+### Azure MCP Server Documentation
 - [Azure MCP Server Documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/)
 - [Installation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md#installation)
 - [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)

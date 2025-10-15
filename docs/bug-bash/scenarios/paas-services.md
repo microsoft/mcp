@@ -1,4 +1,6 @@
-# PaaS Services Testing Scenario
+# 🚀 PaaS Services Testing Scenario
+
+> **⚠️ READ FIRST**: [TESTING-SCOPE.md](../TESTING-SCOPE.md) explains what MCP tools can and cannot do. **Azure MCP Server has LIMITED support for PaaS services** - primarily Function App inspection and App Service database connections. Use Azure CLI to create App Services, Container Apps, and Function Apps before testing.
 
 Test Azure MCP Server's capabilities with Platform-as-a-Service offerings including App Service, Container Apps, and Azure Functions.
 

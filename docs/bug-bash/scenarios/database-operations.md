@@ -1,126 +1,117 @@
-# Database Operations Testing Scenario
+# 🗄️ Database Operations Testing Scenario
 
-Test Azure MCP Server's database management capabilities across Cosmos DB, PostgreSQL, and Azure SQL.
+> **⚠️ READ FIRST**: [TESTING-SCOPE.md](../TESTING-SCOPE.md) explains what MCP tools can and cannot do. **Azure MCP Server focuses on querying and inspecting databases, NOT creating them**. Use Azure CLI to create test databases before running these scenarios.
 
-## Objectives
+Test Azure MCP Server's database querying and inspection capabilities across Cosmos DB, PostgreSQL, MySQL, and Azure SQL.
 
-- Create and manage Cosmos DB accounts and containers
-- Work with PostgreSQL flexible servers
-- Manage Azure SQL databases
-- Test query execution and data operations
-- Verify connection string management
-- Test performance and scaling
+## 🎯 Objectives
 
-## Prerequisites
+- List and inspect Cosmos DB accounts, databases, and containers
+- Query PostgreSQL and MySQL databases
+- List and inspect Azure SQL servers and databases
+- Test query execution and data retrieval
+- Verify table schema inspection
+- Test database configuration viewing
+
+## ✅ Prerequisites
 
 - [ ] Azure MCP Server installed and configured
-- [ ] Azure CLI installed (`az --version`)
+- [ ] **Existing databases already deployed** (use Azure CLI or Portal to create test databases before testing)
+- [ ] Azure CLI installed (`az --version`) for database creation
 - [ ] Authenticated to Azure (`az login`)
-- [ ] Active Azure subscription
+- [ ] Active Azure subscription with existing database resources
 - [ ] GitHub Copilot with Agent mode enabled
+
+> **Note**: Azure MCP Server tools focus on **reading and querying** existing databases. Use Azure CLI commands (`az cosmosdb create`, `az postgres flexible-server create`, `az sql server create`) to create database resources before testing these scenarios.
 
 ## Test Scenarios
 
 ### Scenario 1: Cosmos DB Operations
 
-**Objective**: Test Cosmos DB account, database, and container management
+**Objective**: Test Cosmos DB account listing, database inspection, and querying
 
-#### Phase 1: Create Cosmos DB Resources
+> **Setup Required**: Use Azure CLI to create a test Cosmos DB account before this scenario:
+> ```bash
+> az cosmosdb create --name bugbash-cosmos-$RANDOM --resource-group <your-rg> --locations regionName=eastus
+> az cosmosdb sql database create --account-name <account-name> --name ProductCatalog --resource-group <your-rg>
+> az cosmosdb sql container create --account-name <account-name> --database-name ProductCatalog --name Products --partition-key-path "/category" --resource-group <your-rg>
+> ```
 
-1. **Create Cosmos DB account**:
-   ```
-   Create a Cosmos DB account named 'bugbash-cosmos-<random>' in 
-   resource group '<your-rg>' in East US with SQL API
-   ```
+#### Phase 1: List Cosmos DB Resources
 
-2. **Verify account creation**:
+1. **List all Cosmos DB accounts** (uses `azmcp_cosmos_account_list`):
    ```
    List all Cosmos DB accounts in my subscription
    ```
 
-3. **Check account details**:
+2. **Alternative phrasing**:
    ```
-   Show me the details of Cosmos DB account 'bugbash-cosmos-<random>'
+   Show me my Cosmos DB accounts
    ```
-
-**Verify**:
-- [ ] Account created successfully
-- [ ] API type is SQL (Core)
-- [ ] Location is correct
-- [ ] Account is accessible
-
-#### Phase 2: Database and Container Management
-
-4. **Create database**:
    ```
-   Create a database named 'ProductCatalog' in Cosmos DB account 
-   'bugbash-cosmos-<random>'
-   ```
-
-5. **List databases**:
-   ```
-   List all databases in Cosmos DB account 'bugbash-cosmos-<random>'
-   ```
-
-6. **Create container**:
-   ```
-   Create a container named 'Products' in database 'ProductCatalog' 
-   with partition key '/category' and 400 RU/s throughput
-   ```
-
-7. **List containers**:
-   ```
-   List all containers in database 'ProductCatalog'
+   Show me the Cosmos DB accounts in my subscription
    ```
 
 **Verify**:
-- [ ] Database created successfully
-- [ ] Container created with correct partition key
-- [ ] Throughput set correctly
-- [ ] Resources are listed properly
+- [ ] Tool correctly invoked: `azmcp_cosmos_account_list`
+- [ ] Account list displayed
+- [ ] Account properties shown (name, location, capabilities)
 
-#### Phase 3: Data Operations
+#### Phase 2: Inspect Databases and Containers
 
-8. **Insert sample data**:
+3. **List databases** (uses `azmcp_cosmos_database_list`):
    ```
-   Add the following items to the Products container in Cosmos DB 
-   'bugbash-cosmos-<random>', database 'ProductCatalog':
-   
-   Item 1:
-   {
-     "id": "1",
-     "name": "Laptop",
-     "category": "Electronics",
-     "price": 999.99,
-     "stock": 50
-   }
-   
-   Item 2:
-   {
-     "id": "2",
-     "name": "Desk Chair",
-     "category": "Furniture",
-     "price": 199.99,
-     "stock": 100
-   }
+   List all databases in Cosmos DB account '<account-name>'
    ```
 
-9. **Query data**:
+4. **Alternative phrasing**:
    ```
-   Query all items from the Products container where category is 'Electronics'
+   Show me the databases in Cosmos DB account '<account-name>'
    ```
-
-10. **Query with search**:
-    ```
-    Show me all items that contain the word 'Laptop' in the Products 
-    container in database 'ProductCatalog'
-    ```
 
 **Verify**:
-- [ ] Data inserted successfully
-- [ ] Queries return correct results
-- [ ] Partition key filtering works
-- [ ] Search functionality works
+- [ ] Tool correctly invoked: `azmcp_cosmos_database_list`
+- [ ] Database list displayed
+- [ ] Database properties shown
+
+5. **List containers** (uses `azmcp_cosmos_database_container_list`):
+   ```
+   List all containers in database 'ProductCatalog' for Cosmos DB account '<account-name>'
+   ```
+
+6. **Alternative phrasing**:
+   ```
+   Show me the containers in database 'ProductCatalog' for Cosmos DB account '<account-name>'
+   ```
+
+**Verify**:
+- [ ] Tool correctly invoked: `azmcp_cosmos_database_container_list`
+- [ ] Container list displayed
+- [ ] Container properties shown (partition key, throughput)
+
+#### Phase 3: Query Data
+
+> **Data Setup**: Use Azure Portal or Azure CLI to insert sample data into the Products container before querying.
+
+7. **Query items** (uses `azmcp_cosmos_database_container_item_query`):
+   ```
+   Show me the items that contain the word 'Laptop' in container 'Products' 
+   in database 'ProductCatalog' for Cosmos DB account '<account-name>'
+   ```
+
+8. **Alternative query patterns**:
+   ```
+   Query all items from container 'Products' in database 'ProductCatalog'
+   ```
+   ```
+   Show me items in the Products container where category is 'Electronics'
+   ```
+
+**Verify**:
+- [ ] Tool correctly invoked: `azmcp_cosmos_database_container_item_query`
+- [ ] Query results displayed
+- [ ] Query syntax accepted
+- [ ] Results match expected data
 
 **Expected Results**:
 - Cosmos DB account created

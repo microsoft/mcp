@@ -1,4 +1,6 @@
-# Full Stack Application Testing Scenario
+# 🏗️ Full Stack Application Testing Scenario
+
+> **⚠️ READ FIRST**: [TESTING-SCOPE.md](../TESTING-SCOPE.md) explains what MCP tools can and cannot do. **This scenario requires BOTH Azure CLI and MCP tools**. Use Azure CLI to create databases and app services, then use MCP tools to query databases, get deployment guidance, add database connections, and monitor applications.
 
 Test Azure MCP Server's ability to help create complete applications with database backends and deploy them to Azure.
 

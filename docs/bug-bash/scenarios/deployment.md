@@ -1,6 +1,6 @@
-# Deployment Scenarios Testing
+# 🚢 Deployment Scenarios Testing
 
-Test Azure MCP Server's deployment capabilities, CI/CD integration, and deployment management features.
+Test Azure MCP Server's deployment guidance capabilities, CI/CD integration recommendations, and deployment planning features.
 
 ## Objectives
 
