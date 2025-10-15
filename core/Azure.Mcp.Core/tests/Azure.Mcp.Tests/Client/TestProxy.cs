@@ -151,6 +151,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             .Value;
         if (string.IsNullOrWhiteSpace(value)) throw new InvalidOperationException("Unable to get the custom attribute with TestProxyPath");
 
+        // by default this value should point to a restored testproxy dll
+        if (File.Exists(value))
+        {
+            return value;
+        }
+
         // If value points to a directory, attempt to locate a dll or exe within.
         if (Directory.Exists(value))
         {
