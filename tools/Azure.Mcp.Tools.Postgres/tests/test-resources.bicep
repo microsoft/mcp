@@ -55,10 +55,10 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
   }
 
   resource postgresAdministrator 'administrators' = {
-    name: '26ffb325-f480-419c-b7a9-2c8a018203a8'
+    name: testApplicationOid
     properties: {
-      principalType: 'ServicePrincipal'
-      principalName: 'azure-sdk-internal-devops-connections'
+      principalType: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'ServicePrincipal' : 'User'
+      principalName: testApplicationOid == '26ffb325-f480-419c-b7a9-2c8a018203a8' ? 'azure-sdk-internal-devops-connections' :  deployer().userPrincipalName
       tenantId: tenant().tenantId
     }
     dependsOn: [
