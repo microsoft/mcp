@@ -92,7 +92,7 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
             var messages = new List<object>();
             if (!string.IsNullOrEmpty(options.MessageArray))
             {
-                var jsonDocument = JsonDocument.Parse(options.MessageArray);
+                using var jsonDocument = JsonDocument.Parse(options.MessageArray);
                 foreach (var element in jsonDocument.RootElement.EnumerateArray())
                 {
                     // Convert JsonElement to JsonObject for proper type matching in service
