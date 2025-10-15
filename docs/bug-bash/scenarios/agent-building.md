@@ -1,4 +1,4 @@
-# 🤖 AI Agent Building Testing Scenario
+# AI Agent Building Testing Scenario
 
 > **MCP Tool Support Notice**
 > Azure MCP Server provides **AI Foundry resource inspection, model listing, and agent interaction** capabilities. Resource creation and deployment require Azure CLI or Portal. This scenario guides you through complete end-to-end workflows, clearly marking when to use MCP tools vs external tools.
