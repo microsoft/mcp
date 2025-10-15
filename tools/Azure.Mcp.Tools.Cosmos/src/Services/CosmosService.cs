@@ -203,7 +203,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             var iterator = client.GetDatabaseQueryStreamIterator();
             while (iterator.HasMoreResults)
             {
-                ResponseMessage dbResponse = await iterator.ReadNextAsync();
+                using ResponseMessage dbResponse = await iterator.ReadNextAsync();
                 if (!dbResponse.IsSuccessStatusCode)
                 {
                     throw new Exception(dbResponse.ErrorMessage);
@@ -258,7 +258,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             var iterator = database.GetContainerQueryStreamIterator();
             while (iterator.HasMoreResults)
             {
-                ResponseMessage containerRResponse = await iterator.ReadNextAsync();
+                using ResponseMessage containerRResponse = await iterator.ReadNextAsync();
                 if (!containerRResponse.IsSuccessStatusCode)
                 {
                     throw new Exception(containerRResponse.ErrorMessage);
@@ -314,7 +314,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
 
             while (queryIterator.HasMoreResults)
             {
-                var response = await queryIterator.ReadNextAsync();
+                using ResponseMessage response = await queryIterator.ReadNextAsync();
                 using var document = JsonDocument.Parse(response.Content);
                 items.Add(document.RootElement.Clone());
             }
