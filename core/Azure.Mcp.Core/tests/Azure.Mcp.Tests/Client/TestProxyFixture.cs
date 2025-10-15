@@ -15,7 +15,8 @@ namespace Azure.Mcp.Tests.Client
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
             while (!string.IsNullOrEmpty(path))
             {
-                if (Directory.Exists(Path.Combine(path, ".git")))
+                // we look for both directory and file because depending on user git config the .git may be a file instead of a directory
+                if (Directory.Exists(Path.Combine(path, ".git")) || File.Exists(Path.Combine(path, ".git")))
                     return path;
                 var parent = Path.GetDirectoryName(path);
                 if (string.IsNullOrEmpty(parent) || parent == path)

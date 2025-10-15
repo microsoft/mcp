@@ -11,15 +11,8 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output, fixture)
 {
-
-    [Fact]
-    public void Example()
-    {
-        Console.WriteLine("Example test to ensure test framework is working.");
-    }
-
     [Fact]
     public async Task Should_list_keys()
     {
