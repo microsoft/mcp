@@ -118,8 +118,21 @@ Report the Issues here at [Create Azure MCP Bash Issue](https://github.com/micro
 ### Option 2: Use GitHub MCP Server (AI-Assisted)
 
 **Setup Instructions:**
-1. Add GitHub MCP server to your IDE using this URL: `https://api.githubcopilot.com/mcp/`
-2. Add these instructions to your copilot-instructions file:
+
+1. **Add GitHub MCP server to your mcp.json configuration:**
+
+```json
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }  
+  }
+}
+```
+
+2. **Add these instructions to your copilot-instructions file:**
 
 ```markdown
 ## Reporting Issues
@@ -128,7 +141,7 @@ Report the Issues here at [Create Azure MCP Bash Issue](https://github.com/micro
 - MUST use the issue template provided in https://raw.githubusercontent.com/microsoft/mcp/refs/heads/main/.github/ISSUE_TEMPLATE/01_bug_bash_mcp_report.yml for bug reports.
 ```
 
-3. Use prompts like: *"Create a bug bash issue for [describe the problem]"*
+3. **Use prompts like:** *"Create a bug bash issue for [describe the problem]"*
 
 **Video Tutorial:** [Watch how to report issues with GitHub MCP Server](https://microsoft.sharepoint.com/:v:/t/AzureDeveloperExperience/ERne_pqoSVNAi0Decdnqt_MBU7kg4kLGb62yuAtJqdf1lA?e=dhWufr)
 
