@@ -72,12 +72,6 @@ public class ServiceStartOptions
     public string? LogLevel { get; set; } = null;
 
     /// <summary>
-    /// Gets or sets whether verbose logging is enabled. When true, equivalent to setting LogLevel to "trace" (maximum detail).
-    /// </summary>
-    [JsonPropertyName("verbose")]
-    public bool Verbose { get; set; } = false;
-
-    /// <summary>
     /// Gets or sets the log file path. When specified, logs will be written to this file in addition to console.
     /// Supports placeholders: {timestamp}, {pid}.
     /// </summary>

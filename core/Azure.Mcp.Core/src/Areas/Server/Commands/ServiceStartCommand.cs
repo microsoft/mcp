@@ -69,7 +69,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.LogLevel);
-        command.Options.Add(ServiceOptionDefinitions.Verbose);
         command.Options.Add(ServiceOptionDefinitions.LogFile);
         command.Validators.Add(commandResult =>
         {
@@ -99,10 +98,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             }
         }
 
-        if (!options.Verbose && EnvironmentHelpers.GetEnvironmentVariableAsBool("AZMCP_VERBOSE"))
-        {
-            options.Verbose = true;
-        }
+
 
         if (string.IsNullOrEmpty(options.LogFile))
         {
@@ -142,7 +138,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
             LogLevel = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogLevel.Name),
-            Verbose = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Verbose.Name),
             LogFile = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFile.Name)
         };
         return ResolveLoggingOptions(options);
@@ -179,9 +174,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         // Priority order:
         // 1. Explicit LogLevel option
-        // 2. Verbose flag -> Trace level (most detailed)
-        // 3. Debug flag -> Debug level (less detailed than verbose)
-        // 4. Default -> Information level
+        // 2. Debug flag -> Debug level
+        // 3. Default -> Information level
 
         // Priority 1: If LogLevel was explicitly set (not null), use it regardless of other flags
         if (!string.IsNullOrEmpty(serverOptions.LogLevel))
@@ -198,12 +192,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             };
         }
 
-        // Priority 2: If no explicit log level, check verbose flag
-        if (serverOptions.Verbose)
-        {
-            return LogLevel.Trace;
-        }
-
+        // Priority 2: If no explicit log level, check debug flag
         if (serverOptions.Debug)
         {
             return LogLevel.Debug;

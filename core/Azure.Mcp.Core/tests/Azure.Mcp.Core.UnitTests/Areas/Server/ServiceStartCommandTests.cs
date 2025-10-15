@@ -115,10 +115,6 @@ public class ServiceStartCommandTests
             o.Name == ServiceOptionDefinitions.LogLevel.Name);
         Assert.True(hasLogLevelOption, "LogLevel option should be registered");
 
-        var hasVerboseOption = command.Options.Any(o =>
-            o.Name == ServiceOptionDefinitions.Verbose.Name);
-        Assert.True(hasVerboseOption, "Verbose option should be registered");
-
         var hasLogFileOption = command.Options.Any(o =>
             o.Name == ServiceOptionDefinitions.LogFile.Name);
         Assert.True(hasLogFileOption, "LogFile option should be registered");
@@ -175,33 +171,7 @@ public class ServiceStartCommandTests
         }
     }
 
-    [Theory]
-    [InlineData(true)]
-    [InlineData(false)]
-    public void VerboseOption_ParsesCorrectly(bool expectedVerbose)
-    {
-        // Arrange
-        var parseResult = CreateParseResultWithVerbose(expectedVerbose);
 
-        // Act
-        var actualVerbose = parseResult.GetValue(ServiceOptionDefinitions.Verbose);
-
-        // Assert
-        Assert.Equal(expectedVerbose, actualVerbose);
-    }
-
-    [Fact]
-    public void VerboseOption_DefaultsToFalse()
-    {
-        // Arrange
-        var parseResult = CreateParseResult(null);
-
-        // Act
-        var actualVerbose = parseResult.GetValue(ServiceOptionDefinitions.Verbose);
-
-        // Assert
-        Assert.False(actualVerbose);
-    }
 
     [Theory]
     [InlineData("C:\\temp\\test.log")]
@@ -863,21 +833,6 @@ public class ServiceStartCommandTests
         {
             args.Add("--log-level");
             args.Add(logLevel);
-        }
-
-        return _command.GetCommand().Parse([.. args]);
-    }
-
-    private ParseResult CreateParseResultWithVerbose(bool verbose)
-    {
-        var args = new List<string>
-        {
-            "--transport", "stdio"
-        };
-
-        if (verbose)
-        {
-            args.Add("--verbose");
         }
 
         return _command.GetCommand().Parse([.. args]);

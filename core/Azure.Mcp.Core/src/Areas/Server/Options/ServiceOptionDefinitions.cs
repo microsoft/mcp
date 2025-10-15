@@ -14,7 +14,6 @@ public static class ServiceOptionDefinitions
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
     public const string LogLevelName = "log-level";
-    public const string VerboseName = "verbose";
     public const string LogFileName = "log-file";
 
 
@@ -93,13 +92,6 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Set logging level: trace, debug, info, warn, error. Default is 'info'.",
         DefaultValueFactory = _ => null
-    };
-
-    public static readonly Option<bool> Verbose = new($"--{VerboseName}")
-    {
-        Required = false,
-        Description = "Enable maximum verbose logging (equivalent to --log-level trace). More detailed than --debug.",
-        DefaultValueFactory = _ => false
     };
 
     public static readonly Option<string?> LogFile = new($"--{LogFileName}")

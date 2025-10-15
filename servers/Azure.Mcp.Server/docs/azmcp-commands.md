@@ -151,7 +151,6 @@ The `azmcp server start` command supports the following options:
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable debug logging to stderr (Debug level) |
-| `--verbose` | No | `false` | Enable maximum verbose logging to stderr (Trace level) - more detailed than `--debug` |
 | `--log-level` | No | `info` | Set logging level: `trace`, `debug`, `info`, `warn`, `error` |
 | `--log-file` | No | None | Write logs to specified file path. Supports `{timestamp}` and `{pid}` placeholders |
 | `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
@@ -179,34 +178,28 @@ The Azure MCP Server supports flexible logging configuration for debugging and t
 # Enable debug logging to stderr (Debug level)
 azmcp server start --debug
 
-# Enable maximum verbose logging to stderr (Trace level)
-azmcp server start --verbose
-
-# Set specific log level
+# Set specific log level for maximum detail (Trace level)
 azmcp server start --log-level trace
 
 # Write logs to a file with timestamp and process ID
 azmcp server start --log-file "C:\temp\azmcp_{timestamp}_{pid}.log"
 
-# Combine file logging with verbose console output
-azmcp server start --verbose --log-file "/tmp/azmcp_{timestamp}_{pid}.log"
+# Combine file logging with maximum console output
+azmcp server start --log-level trace --log-file "/tmp/azmcp_{timestamp}_{pid}.log"
 
 # Using environment variables for automation
 # Set AZMCP_LOG_FILE=C:\temp\debug.log
-# Set AZMCP_VERBOSE=true
 # Set AZMCP_LOG_LEVEL=trace
 azmcp server start
 ```
 
 **Logging Level Priority:**
-1. `--verbose` (sets Trace level - most detailed)
+1. `--log-level` (explicit level control)
 2. `--debug` (sets Debug level)
-3. `--log-level` (explicit level control)
-4. Default (Information level)
+3. Default (Information level)
 
 **Environment Variables:**
 - `AZMCP_LOG_FILE`: File path for log output
-- `AZMCP_VERBOSE`: Enable verbose logging (true/false)
 - `AZMCP_LOG_LEVEL`: Set log level (trace, debug, info, warn, error)
 
 ### Azure AI Foundry Operations
