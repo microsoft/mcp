@@ -9,7 +9,7 @@ param(
     [switch] $NoUsePaths,
     [switch] $AllPlatforms,
     [switch] $VerifyNpx,
-    [switch] $DebugBuild,
+    [switch] $ReleaseBuild,
     [switch] $BuildNative
 )
 
@@ -34,7 +34,7 @@ function Build($os, $arch) {
         -SelfContained:(!$NoSelfContained) `
         -Trimmed:$Trimmed `
         -OutputPath $buildOutputPath `
-        -DebugBuild:$DebugBuild `
+        -ReleaseBuild:$ReleaseBuild `
         -BuildNative:$BuildNative
 
     if ($LastExitCode -ne 0) {

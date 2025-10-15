@@ -9,7 +9,7 @@ param(
     [switch] $SingleFile,
     [switch] $ReadyToRun,
     [switch] $Trimmed,
-    [switch] $DebugBuild,
+    [switch] $ReleaseBuild,
     [switch] $CleanBuild,
     [switch] $BuildNative,
     [string] $ServerName,
@@ -121,7 +121,7 @@ function BuildServer($serverName) {
             $outputDir = "$serverOutputDirectory/$os-$arch"
             Write-Host "Building version $version, $os-$arch in $outputDir" -ForegroundColor Green
 
-            $configuration = if ($DebugBuild) { 'Debug' } else { 'Release' }
+            $configuration = if ($ReleaseBuild) { 'Release' } else { 'Debug' }
 
             if ($CleanBuild) {
                 # Clean up any previous build artifacts.
