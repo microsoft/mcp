@@ -617,27 +617,6 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var result = method.Invoke(loader, [server]);
         return (ModelContextProtocol.Client.McpClientOptions)result!;
     }
-
-    // NOTE: Elicitation tests for NamespaceToolLoader
-    // 
-    // The elicitation security feature has been successfully implemented in NamespaceToolLoader.cs (lines 292-352),
-    // following the exact same pattern as CommandFactoryToolLoader where it is thoroughly tested.
-    // 
-    // Unit testing NamespaceToolLoader's elicitation behavior with fake commands is challenging because:
-    // - NamespaceToolLoader uses a hierarchical CommandGroup tree structure (built from IAreaSetup instances)
-    // - CommandFactory.GroupCommands() traverses this tree, not the flat _commandMap dictionary
-    // - Properly injecting fake commands would require registering complete IAreaSetup instances with command groups
-    // 
-    // The core elicitation logic is identical between both loaders and is comprehensively tested in:
-    // - CommandFactoryToolLoaderTests.cs (lines 570-765) - tests with fake commands via direct dictionary injection
-    // - Integration tests with real commands would be more appropriate for NamespaceToolLoader-specific validation
-    //
-    // Implementation verified:
-    // ✅ Code compiles successfully
-    // ✅ Elicitation logic matches CommandFactoryToolLoader exactly
-    // ✅ All security checks, logging, and error handling are present
-    // ✅ Respects InsecureDisableElicitation configuration flag
-
     public void Dispose()
     {
         _serviceProvider?.Dispose();
