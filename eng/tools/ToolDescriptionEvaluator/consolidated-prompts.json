@@ -151,7 +151,7 @@
     "Show me the log of the application deployed by azd",
     "Show me the rules to generate bicep scripts"
   ],
-  "execute_azure_deployments": [
+  "deploy_azure_ai_models": [
     "Deploy a GPT4o instance on my resource <resource-name>"
   ],
   "get_azure_app_config_settings": [
@@ -393,18 +393,7 @@
   "upload_azure_storage_blobs": [
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
-  "get_azure_cache_for_redis_details": [
-    "List all access policies in the Redis Cache <cache_name>",
-    "List all databases in the Redis Cluster <cluster_name>",
-    "List all Redis Caches in my subscription",
-    "List all Redis Clusters in my subscription",
-    "Show me my Redis Caches",
-    "Show me my Redis Clusters",
-    "Show me the access policies in the Redis Cache <cache_name>",
-    "Show me the databases in the Redis Cluster <cluster_name>",
-    "Show me the Redis Caches in my subscription",
-    "Show me the Redis Clusters in my subscription"
-  ],
+  "get_azure_cache_for_redis_details": [],
   "browse_azure_marketplace_products": [
     "Get details about marketplace product <product_name>",
     "Search for Microsoft products in the marketplace",

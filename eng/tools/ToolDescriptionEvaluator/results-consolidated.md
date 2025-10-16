@@ -1,14 +1,14 @@
 # Tool Selection Analysis Setup
 
-**Setup completed:** 2025-10-13 16:19:19  
+**Setup completed:** 2025-10-16 16:24:16  
 **Tool count:** 60  
-**Database setup time:** 1.2460379s  
+**Database setup time:** 1.2856550s  
 
 ---
 
 # Tool Selection Analysis Results
 
-**Analysis Date:** 2025-10-13 16:19:19  
+**Analysis Date:** 2025-10-16 16:24:16  
 **Tool count:** 60  
 
 ## Table of Contents
@@ -143,7 +143,7 @@
 - [Test 128: deploy_azure_resources_and_applications](#test-128)
 - [Test 129: deploy_azure_resources_and_applications](#test-129)
 - [Test 130: deploy_azure_resources_and_applications](#test-130)
-- [Test 131: execute_azure_deployments](#test-131)
+- [Test 131: deploy_azure_ai_models](#test-131)
 - [Test 132: get_azure_app_config_settings](#test-132)
 - [Test 133: get_azure_app_config_settings](#test-133)
 - [Test 134: get_azure_app_config_settings](#test-134)
@@ -324,21 +324,21 @@
 - [Test 309: create_azure_storage](#test-309)
 - [Test 310: update_azure_managed_lustre_filesystems](#test-310)
 - [Test 311: upload_azure_storage_blobs](#test-311)
-- [Test 312: get_azure_cache_for_redis_details](#test-312)
-- [Test 313: get_azure_cache_for_redis_details](#test-313)
-- [Test 314: get_azure_cache_for_redis_details](#test-314)
-- [Test 315: get_azure_cache_for_redis_details](#test-315)
-- [Test 316: get_azure_cache_for_redis_details](#test-316)
-- [Test 317: get_azure_cache_for_redis_details](#test-317)
-- [Test 318: get_azure_cache_for_redis_details](#test-318)
-- [Test 319: get_azure_cache_for_redis_details](#test-319)
-- [Test 320: get_azure_cache_for_redis_details](#test-320)
-- [Test 321: get_azure_cache_for_redis_details](#test-321)
-- [Test 322: browse_azure_marketplace_products](#test-322)
-- [Test 323: browse_azure_marketplace_products](#test-323)
-- [Test 324: browse_azure_marketplace_products](#test-324)
-- [Test 325: get_azure_capacity](#test-325)
-- [Test 326: get_azure_capacity](#test-326)
+- [Test 312: browse_azure_marketplace_products](#test-312)
+- [Test 313: browse_azure_marketplace_products](#test-313)
+- [Test 314: browse_azure_marketplace_products](#test-314)
+- [Test 315: get_azure_capacity](#test-315)
+- [Test 316: get_azure_capacity](#test-316)
+- [Test 317: get_azure_messaging_service_details](#test-317)
+- [Test 318: get_azure_messaging_service_details](#test-318)
+- [Test 319: get_azure_messaging_service_details](#test-319)
+- [Test 320: get_azure_messaging_service_details](#test-320)
+- [Test 321: get_azure_messaging_service_details](#test-321)
+- [Test 322: get_azure_messaging_service_details](#test-322)
+- [Test 323: get_azure_messaging_service_details](#test-323)
+- [Test 324: get_azure_messaging_service_details](#test-324)
+- [Test 325: get_azure_messaging_service_details](#test-325)
+- [Test 326: get_azure_messaging_service_details](#test-326)
 - [Test 327: get_azure_messaging_service_details](#test-327)
 - [Test 328: get_azure_messaging_service_details](#test-328)
 - [Test 329: get_azure_messaging_service_details](#test-329)
@@ -349,54 +349,54 @@
 - [Test 334: get_azure_messaging_service_details](#test-334)
 - [Test 335: get_azure_messaging_service_details](#test-335)
 - [Test 336: get_azure_messaging_service_details](#test-336)
-- [Test 337: get_azure_messaging_service_details](#test-337)
-- [Test 338: get_azure_messaging_service_details](#test-338)
-- [Test 339: get_azure_messaging_service_details](#test-339)
-- [Test 340: get_azure_messaging_service_details](#test-340)
-- [Test 341: get_azure_messaging_service_details](#test-341)
-- [Test 342: get_azure_messaging_service_details](#test-342)
-- [Test 343: get_azure_messaging_service_details](#test-343)
-- [Test 344: get_azure_messaging_service_details](#test-344)
-- [Test 345: get_azure_messaging_service_details](#test-345)
-- [Test 346: get_azure_messaging_service_details](#test-346)
-- [Test 347: edit_azure_data_analytics_resources](#test-347)
-- [Test 348: edit_azure_data_analytics_resources](#test-348)
-- [Test 349: edit_azure_data_analytics_resources](#test-349)
-- [Test 350: edit_azure_data_analytics_resources](#test-350)
-- [Test 351: edit_azure_data_analytics_resources](#test-351)
-- [Test 352: edit_azure_data_analytics_resources](#test-352)
-- [Test 353: edit_azure_data_analytics_resources](#test-353)
-- [Test 354: edit_azure_data_analytics_resources](#test-354)
-- [Test 355: edit_azure_data_analytics_resources](#test-355)
-- [Test 356: publish_azure_eventgrid_events](#test-356)
-- [Test 357: publish_azure_eventgrid_events](#test-357)
-- [Test 358: publish_azure_eventgrid_events](#test-358)
+- [Test 337: edit_azure_data_analytics_resources](#test-337)
+- [Test 338: edit_azure_data_analytics_resources](#test-338)
+- [Test 339: edit_azure_data_analytics_resources](#test-339)
+- [Test 340: edit_azure_data_analytics_resources](#test-340)
+- [Test 341: edit_azure_data_analytics_resources](#test-341)
+- [Test 342: edit_azure_data_analytics_resources](#test-342)
+- [Test 343: edit_azure_data_analytics_resources](#test-343)
+- [Test 344: edit_azure_data_analytics_resources](#test-344)
+- [Test 345: edit_azure_data_analytics_resources](#test-345)
+- [Test 346: publish_azure_eventgrid_events](#test-346)
+- [Test 347: publish_azure_eventgrid_events](#test-347)
+- [Test 348: publish_azure_eventgrid_events](#test-348)
+- [Test 349: get_azure_data_explorer_kusto_details](#test-349)
+- [Test 350: get_azure_data_explorer_kusto_details](#test-350)
+- [Test 351: get_azure_data_explorer_kusto_details](#test-351)
+- [Test 352: get_azure_data_explorer_kusto_details](#test-352)
+- [Test 353: get_azure_data_explorer_kusto_details](#test-353)
+- [Test 354: get_azure_data_explorer_kusto_details](#test-354)
+- [Test 355: get_azure_data_explorer_kusto_details](#test-355)
+- [Test 356: get_azure_data_explorer_kusto_details](#test-356)
+- [Test 357: get_azure_data_explorer_kusto_details](#test-357)
+- [Test 358: get_azure_data_explorer_kusto_details](#test-358)
 - [Test 359: get_azure_data_explorer_kusto_details](#test-359)
-- [Test 360: get_azure_data_explorer_kusto_details](#test-360)
-- [Test 361: get_azure_data_explorer_kusto_details](#test-361)
-- [Test 362: get_azure_data_explorer_kusto_details](#test-362)
-- [Test 363: get_azure_data_explorer_kusto_details](#test-363)
-- [Test 364: get_azure_data_explorer_kusto_details](#test-364)
-- [Test 365: get_azure_data_explorer_kusto_details](#test-365)
-- [Test 366: get_azure_data_explorer_kusto_details](#test-366)
-- [Test 367: get_azure_data_explorer_kusto_details](#test-367)
-- [Test 368: get_azure_data_explorer_kusto_details](#test-368)
-- [Test 369: get_azure_data_explorer_kusto_details](#test-369)
-- [Test 370: create_azure_database_admin_configurations](#test-370)
-- [Test 371: create_azure_database_admin_configurations](#test-371)
-- [Test 372: create_azure_database_admin_configurations](#test-372)
-- [Test 373: delete_azure_database_admin_configurations](#test-373)
-- [Test 374: delete_azure_database_admin_configurations](#test-374)
-- [Test 375: delete_azure_database_admin_configurations](#test-375)
-- [Test 376: get_azure_database_admin_configuration_details](#test-376)
-- [Test 377: get_azure_database_admin_configuration_details](#test-377)
-- [Test 378: get_azure_database_admin_configuration_details](#test-378)
-- [Test 379: get_azure_database_admin_configuration_details](#test-379)
-- [Test 380: get_azure_database_admin_configuration_details](#test-380)
-- [Test 381: get_azure_database_admin_configuration_details](#test-381)
-- [Test 382: get_azure_database_admin_configuration_details](#test-382)
-- [Test 383: get_azure_database_admin_configuration_details](#test-383)
-- [Test 384: get_azure_database_admin_configuration_details](#test-384)
+- [Test 360: create_azure_database_admin_configurations](#test-360)
+- [Test 361: create_azure_database_admin_configurations](#test-361)
+- [Test 362: create_azure_database_admin_configurations](#test-362)
+- [Test 363: delete_azure_database_admin_configurations](#test-363)
+- [Test 364: delete_azure_database_admin_configurations](#test-364)
+- [Test 365: delete_azure_database_admin_configurations](#test-365)
+- [Test 366: get_azure_database_admin_configuration_details](#test-366)
+- [Test 367: get_azure_database_admin_configuration_details](#test-367)
+- [Test 368: get_azure_database_admin_configuration_details](#test-368)
+- [Test 369: get_azure_database_admin_configuration_details](#test-369)
+- [Test 370: get_azure_database_admin_configuration_details](#test-370)
+- [Test 371: get_azure_database_admin_configuration_details](#test-371)
+- [Test 372: get_azure_database_admin_configuration_details](#test-372)
+- [Test 373: get_azure_database_admin_configuration_details](#test-373)
+- [Test 374: get_azure_database_admin_configuration_details](#test-374)
+- [Test 375: get_azure_container_details](#test-375)
+- [Test 376: get_azure_container_details](#test-376)
+- [Test 377: get_azure_container_details](#test-377)
+- [Test 378: get_azure_container_details](#test-378)
+- [Test 379: get_azure_container_details](#test-379)
+- [Test 380: get_azure_container_details](#test-380)
+- [Test 381: get_azure_container_details](#test-381)
+- [Test 382: get_azure_container_details](#test-382)
+- [Test 383: get_azure_container_details](#test-383)
+- [Test 384: get_azure_container_details](#test-384)
 - [Test 385: get_azure_container_details](#test-385)
 - [Test 386: get_azure_container_details](#test-386)
 - [Test 387: get_azure_container_details](#test-387)
@@ -409,58 +409,48 @@
 - [Test 394: get_azure_container_details](#test-394)
 - [Test 395: get_azure_container_details](#test-395)
 - [Test 396: get_azure_container_details](#test-396)
-- [Test 397: get_azure_container_details](#test-397)
-- [Test 398: get_azure_container_details](#test-398)
-- [Test 399: get_azure_container_details](#test-399)
-- [Test 400: get_azure_container_details](#test-400)
-- [Test 401: get_azure_container_details](#test-401)
-- [Test 402: get_azure_container_details](#test-402)
-- [Test 403: get_azure_container_details](#test-403)
-- [Test 404: get_azure_container_details](#test-404)
-- [Test 405: get_azure_container_details](#test-405)
-- [Test 406: get_azure_container_details](#test-406)
-- [Test 407: get_azure_virtual_desktop_details](#test-407)
-- [Test 408: get_azure_virtual_desktop_details](#test-408)
-- [Test 409: get_azure_virtual_desktop_details](#test-409)
-- [Test 410: get_azure_signalr_details](#test-410)
-- [Test 411: get_azure_signalr_details](#test-411)
-- [Test 412: get_azure_signalr_details](#test-412)
-- [Test 413: get_azure_signalr_details](#test-413)
-- [Test 414: get_azure_signalr_details](#test-414)
-- [Test 415: get_azure_signalr_details](#test-415)
-- [Test 416: get_azure_confidential_ledger_entries](#test-416)
-- [Test 417: get_azure_confidential_ledger_entries](#test-417)
-- [Test 418: append_azure_confidential_ledger_entries](#test-418)
-- [Test 419: append_azure_confidential_ledger_entries](#test-419)
-- [Test 420: append_azure_confidential_ledger_entries](#test-420)
-- [Test 421: append_azure_confidential_ledger_entries](#test-421)
-- [Test 422: append_azure_confidential_ledger_entries](#test-422)
+- [Test 397: get_azure_virtual_desktop_details](#test-397)
+- [Test 398: get_azure_virtual_desktop_details](#test-398)
+- [Test 399: get_azure_virtual_desktop_details](#test-399)
+- [Test 400: get_azure_signalr_details](#test-400)
+- [Test 401: get_azure_signalr_details](#test-401)
+- [Test 402: get_azure_signalr_details](#test-402)
+- [Test 403: get_azure_signalr_details](#test-403)
+- [Test 404: get_azure_signalr_details](#test-404)
+- [Test 405: get_azure_signalr_details](#test-405)
+- [Test 406: get_azure_confidential_ledger_entries](#test-406)
+- [Test 407: get_azure_confidential_ledger_entries](#test-407)
+- [Test 408: append_azure_confidential_ledger_entries](#test-408)
+- [Test 409: append_azure_confidential_ledger_entries](#test-409)
+- [Test 410: append_azure_confidential_ledger_entries](#test-410)
+- [Test 411: append_azure_confidential_ledger_entries](#test-411)
+- [Test 412: append_azure_confidential_ledger_entries](#test-412)
+- [Test 413: send_azure_communication_messages](#test-413)
+- [Test 414: send_azure_communication_messages](#test-414)
+- [Test 415: send_azure_communication_messages](#test-415)
+- [Test 416: send_azure_communication_messages](#test-416)
+- [Test 417: send_azure_communication_messages](#test-417)
+- [Test 418: send_azure_communication_messages](#test-418)
+- [Test 419: send_azure_communication_messages](#test-419)
+- [Test 420: send_azure_communication_messages](#test-420)
+- [Test 421: send_azure_communication_messages](#test-421)
+- [Test 422: send_azure_communication_messages](#test-422)
 - [Test 423: send_azure_communication_messages](#test-423)
 - [Test 424: send_azure_communication_messages](#test-424)
 - [Test 425: send_azure_communication_messages](#test-425)
 - [Test 426: send_azure_communication_messages](#test-426)
 - [Test 427: send_azure_communication_messages](#test-427)
 - [Test 428: send_azure_communication_messages](#test-428)
-- [Test 429: send_azure_communication_messages](#test-429)
-- [Test 430: send_azure_communication_messages](#test-430)
-- [Test 431: send_azure_communication_messages](#test-431)
-- [Test 432: send_azure_communication_messages](#test-432)
-- [Test 433: send_azure_communication_messages](#test-433)
-- [Test 434: send_azure_communication_messages](#test-434)
-- [Test 435: send_azure_communication_messages](#test-435)
-- [Test 436: send_azure_communication_messages](#test-436)
-- [Test 437: send_azure_communication_messages](#test-437)
-- [Test 438: send_azure_communication_messages](#test-438)
-- [Test 439: recognize_speech_from_audio](#test-439)
-- [Test 440: recognize_speech_from_audio](#test-440)
-- [Test 441: recognize_speech_from_audio](#test-441)
-- [Test 442: recognize_speech_from_audio](#test-442)
-- [Test 443: recognize_speech_from_audio](#test-443)
-- [Test 444: recognize_speech_from_audio](#test-444)
-- [Test 445: recognize_speech_from_audio](#test-445)
-- [Test 446: recognize_speech_from_audio](#test-446)
-- [Test 447: recognize_speech_from_audio](#test-447)
-- [Test 448: recognize_speech_from_audio](#test-448)
+- [Test 429: recognize_speech_from_audio](#test-429)
+- [Test 430: recognize_speech_from_audio](#test-430)
+- [Test 431: recognize_speech_from_audio](#test-431)
+- [Test 432: recognize_speech_from_audio](#test-432)
+- [Test 433: recognize_speech_from_audio](#test-433)
+- [Test 434: recognize_speech_from_audio](#test-434)
+- [Test 435: recognize_speech_from_audio](#test-435)
+- [Test 436: recognize_speech_from_audio](#test-436)
+- [Test 437: recognize_speech_from_audio](#test-437)
+- [Test 438: recognize_speech_from_audio](#test-438)
 
 ---
 
@@ -475,9 +465,9 @@
 |------|-------|------|--------|
 | 1 | 0.638889 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
 | 2 | 0.420089 | `get_azure_security_configurations` | ❌ |
-| 3 | 0.401270 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.401415 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.384567 | `get_azure_load_testing_details` | ❌ |
-| 5 | 0.366619 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.375987 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -493,7 +483,7 @@
 | 1 | 0.415793 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
 | 2 | 0.328705 | `get_azure_security_configurations` | ❌ |
 | 3 | 0.317407 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.312982 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.313066 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.285674 | `get_azure_storage_details` | ❌ |
 
 ---
@@ -509,9 +499,9 @@
 |------|-------|------|--------|
 | 1 | 0.549609 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
 | 2 | 0.418812 | `get_azure_security_configurations` | ❌ |
-| 3 | 0.370016 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.364712 | `get_azure_load_testing_details` | ❌ |
-| 5 | 0.358284 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.370452 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.366696 | `get_azure_capacity` | ❌ |
+| 5 | 0.364712 | `get_azure_load_testing_details` | ❌ |
 
 ---
 
@@ -524,11 +514,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.347487 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
-| 2 | 0.278204 | `browse_azure_marketplace_products` | ❌ |
-| 3 | 0.242561 | `get_azure_security_configurations` | ❌ |
-| 4 | 0.238716 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.189112 | `get_azure_container_details` | ❌ |
+| 1 | 0.347561 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
+| 2 | 0.278264 | `browse_azure_marketplace_products` | ❌ |
+| 3 | 0.242552 | `get_azure_security_configurations` | ❌ |
+| 4 | 0.238929 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.189155 | `get_azure_container_details` | ❌ |
 
 ---
 
@@ -543,9 +533,9 @@
 |------|-------|------|--------|
 | 1 | 0.671045 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
 | 2 | 0.437174 | `get_azure_security_configurations` | ❌ |
-| 3 | 0.422991 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.381286 | `get_azure_load_testing_details` | ❌ |
-| 5 | 0.379037 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.423039 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.407266 | `get_azure_capacity` | ❌ |
+| 5 | 0.381286 | `get_azure_load_testing_details` | ❌ |
 
 ---
 
@@ -560,9 +550,9 @@
 |------|-------|------|--------|
 | 1 | 0.322378 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
 | 2 | 0.246134 | `browse_azure_marketplace_products` | ❌ |
-| 3 | 0.233990 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.210046 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.201196 | `get_azure_resource_and_app_health_status` | ❌ |
+| 3 | 0.234029 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.214599 | `get_azure_capacity` | ❌ |
+| 5 | 0.210046 | `get_azure_signalr_details` | ❌ |
 
 ---
 
@@ -576,10 +566,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.380158 | `get_azure_subscriptions_and_resource_groups` | ✅ **EXPECTED** |
-| 2 | 0.303601 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.303497 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.274746 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.235632 | `get_azure_resource_and_app_health_status` | ❌ |
-| 5 | 0.227908 | `get_azure_container_details` | ❌ |
+| 4 | 0.248135 | `get_azure_capacity` | ❌ |
+| 5 | 0.239796 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -643,11 +633,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.606747 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
-| 2 | 0.516830 | `get_azure_app_config_settings` | ❌ |
-| 3 | 0.498783 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.468835 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.428887 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.606770 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
+| 2 | 0.516861 | `get_azure_app_config_settings` | ❌ |
+| 3 | 0.498775 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.468858 | `get_azure_signalr_details` | ❌ |
+| 5 | 0.429110 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -663,7 +653,7 @@
 | 1 | 0.558485 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
 | 2 | 0.427410 | `get_azure_security_configurations` | ❌ |
 | 3 | 0.421965 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.420496 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.420740 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.409842 | `get_azure_resource_and_app_health_status` | ❌ |
 
 ---
@@ -698,7 +688,7 @@
 | 2 | 0.514721 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.434995 | `get_azure_signalr_details` | ❌ |
 | 4 | 0.430445 | `deploy_azure_resources_and_applications` | ❌ |
-| 5 | 0.417163 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.417338 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -731,7 +721,7 @@
 | 1 | 0.650735 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
 | 2 | 0.570557 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.467885 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.426620 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.427326 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.394452 | `deploy_azure_resources_and_applications` | ❌ |
 
 ---
@@ -748,7 +738,7 @@
 | 1 | 0.534810 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
 | 2 | 0.433102 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.428962 | `deploy_azure_resources_and_applications` | ❌ |
-| 4 | 0.390991 | `get_azure_capacity` | ❌ |
+| 4 | 0.415746 | `get_azure_capacity` | ❌ |
 | 5 | 0.390919 | `get_azure_best_practices` | ❌ |
 
 ---
@@ -766,7 +756,7 @@
 | 2 | 0.320318 | `get_azure_resource_and_app_health_status` | ❌ |
 | 3 | 0.305243 | `deploy_azure_resources_and_applications` | ❌ |
 | 4 | 0.269663 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.263333 | `execute_azure_deployments` | ❌ |
+| 5 | 0.259482 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
@@ -779,11 +769,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.547155 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
-| 2 | 0.435715 | `get_azure_resource_and_app_health_status` | ❌ |
-| 3 | 0.419457 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.388241 | `deploy_azure_resources_and_applications` | ❌ |
-| 5 | 0.385296 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.547132 | `get_azure_app_resource_details` | ✅ **EXPECTED** |
+| 2 | 0.435720 | `get_azure_resource_and_app_health_status` | ❌ |
+| 3 | 0.419467 | `get_azure_app_config_settings` | ❌ |
+| 4 | 0.388259 | `deploy_azure_resources_and_applications` | ❌ |
+| 5 | 0.385260 | `get_azure_signalr_details` | ❌ |
 
 ---
 
@@ -796,7 +786,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.645561 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.645526 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.460200 | `get_azure_databases_details` | ❌ |
 | 3 | 0.441681 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.441557 | `edit_azure_databases` | ❌ |
@@ -813,7 +803,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.604845 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.604807 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.399204 | `edit_azure_databases` | ❌ |
 | 3 | 0.374759 | `create_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.371454 | `rename_azure_sql_databases` | ❌ |
@@ -830,7 +820,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.662973 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.662946 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.510959 | `edit_azure_databases` | ❌ |
 | 3 | 0.461314 | `get_azure_databases_details` | ❌ |
 | 4 | 0.409706 | `rename_azure_sql_databases` | ❌ |
@@ -847,7 +837,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.607043 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.607029 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.488067 | `edit_azure_databases` | ❌ |
 | 3 | 0.423578 | `get_azure_databases_details` | ❌ |
 | 4 | 0.352923 | `create_azure_sql_databases_and_servers` | ❌ |
@@ -864,11 +854,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.612125 | `add_azure_app_service_database` | ✅ **EXPECTED** |
-| 2 | 0.488271 | `rename_azure_sql_databases` | ❌ |
-| 3 | 0.455473 | `create_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.445528 | `edit_azure_databases` | ❌ |
-| 5 | 0.436024 | `get_azure_databases_details` | ❌ |
+| 1 | 0.612095 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 2 | 0.488180 | `rename_azure_sql_databases` | ❌ |
+| 3 | 0.455573 | `create_azure_sql_databases_and_servers` | ❌ |
+| 4 | 0.445556 | `edit_azure_databases` | ❌ |
+| 5 | 0.436063 | `get_azure_databases_details` | ❌ |
 
 ---
 
@@ -881,7 +871,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.550393 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.550372 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.418395 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.398384 | `create_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.380948 | `edit_azure_databases` | ❌ |
@@ -898,7 +888,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.637303 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.637234 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.518406 | `create_azure_sql_databases_and_servers` | ❌ |
 | 3 | 0.512464 | `edit_azure_databases` | ❌ |
 | 4 | 0.476589 | `rename_azure_sql_databases` | ❌ |
@@ -915,7 +905,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.539505 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.539469 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.446249 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.427201 | `edit_azure_databases` | ❌ |
 | 4 | 0.397353 | `lock_unlock_azure_app_config_settings` | ❌ |
@@ -932,7 +922,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.543995 | `add_azure_app_service_database` | ✅ **EXPECTED** |
+| 1 | 0.543922 | `add_azure_app_service_database` | ✅ **EXPECTED** |
 | 2 | 0.468293 | `edit_azure_databases` | ❌ |
 | 3 | 0.428196 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.395735 | `lock_unlock_azure_app_config_settings` | ❌ |
@@ -949,7 +939,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.394526 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.394601 | `get_azure_database_admin_configuration_details` | ❌ |
 | 2 | 0.378321 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 3 | 0.346100 | `edit_azure_databases` | ❌ |
 | 4 | 0.321543 | `create_azure_sql_databases_and_servers` | ❌ |
@@ -966,11 +956,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.516088 | `get_azure_database_admin_configuration_details` | ❌ |
-| 2 | 0.515522 | `get_azure_app_config_settings` | ❌ |
-| 3 | 0.369146 | `edit_azure_databases` | ❌ |
-| 4 | 0.349769 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.348912 | `create_azure_sql_databases_and_servers` | ❌ |
+| 1 | 0.515990 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.515480 | `get_azure_app_config_settings` | ❌ |
+| 3 | 0.369218 | `edit_azure_databases` | ❌ |
+| 4 | 0.349838 | `edit_azure_sql_databases_and_servers` | ❌ |
+| 5 | 0.348994 | `create_azure_sql_databases_and_servers` | ❌ |
 
 ---
 
@@ -983,7 +973,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.478446 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.478394 | `get_azure_database_admin_configuration_details` | ❌ |
 | 2 | 0.449240 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.378667 | `edit_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.375171 | `get_azure_databases_details` | ✅ **EXPECTED** |
@@ -1004,7 +994,7 @@
 | 2 | 0.435676 | `create_azure_sql_databases_and_servers` | ❌ |
 | 3 | 0.424056 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.423838 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 5 | 0.422601 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.422579 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1021,7 +1011,7 @@
 | 2 | 0.470240 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 3 | 0.450588 | `get_azure_storage_details` | ❌ |
 | 4 | 0.439142 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.419961 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.421076 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -1034,11 +1024,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.550071 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.538282 | `rename_azure_sql_databases` | ❌ |
-| 3 | 0.450003 | `create_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.447551 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.446845 | `edit_azure_sql_databases_and_servers` | ❌ |
+| 1 | 0.550050 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 2 | 0.538253 | `rename_azure_sql_databases` | ❌ |
+| 3 | 0.449947 | `create_azure_sql_databases_and_servers` | ❌ |
+| 4 | 0.447448 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.446772 | `edit_azure_sql_databases_and_servers` | ❌ |
 
 ---
 
@@ -1055,7 +1045,7 @@
 | 2 | 0.353887 | `edit_azure_databases` | ❌ |
 | 3 | 0.334742 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.272054 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.255201 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.255147 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1070,7 +1060,7 @@
 |------|-------|------|--------|
 | 1 | 0.496395 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.418769 | `edit_azure_databases` | ❌ |
-| 3 | 0.335256 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.335259 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.322093 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 5 | 0.316396 | `edit_azure_sql_databases_and_servers` | ❌ |
 
@@ -1088,7 +1078,7 @@
 | 1 | 0.411217 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.321958 | `edit_azure_databases` | ❌ |
 | 3 | 0.293602 | `rename_azure_sql_databases` | ❌ |
-| 4 | 0.243270 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.243209 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.234938 | `edit_azure_sql_databases_and_servers` | ❌ |
 
 ---
@@ -1104,7 +1094,7 @@
 |------|-------|------|--------|
 | 1 | 0.455154 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.397754 | `edit_azure_databases` | ❌ |
-| 3 | 0.341460 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.341439 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.319877 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 5 | 0.298417 | `create_azure_sql_databases_and_servers` | ❌ |
 
@@ -1123,7 +1113,7 @@
 | 2 | 0.319283 | `edit_azure_databases` | ❌ |
 | 3 | 0.284157 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.253452 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.224069 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.224061 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -1157,7 +1147,7 @@
 | 2 | 0.410568 | `get_azure_storage_details` | ❌ |
 | 3 | 0.393277 | `get_azure_container_details` | ❌ |
 | 4 | 0.379221 | `create_azure_storage` | ❌ |
-| 5 | 0.360666 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.331050 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -1170,11 +1160,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.521563 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.403940 | `rename_azure_sql_databases` | ❌ |
-| 3 | 0.372599 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.356285 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.353188 | `get_azure_storage_details` | ❌ |
+| 1 | 0.521537 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 2 | 0.403937 | `rename_azure_sql_databases` | ❌ |
+| 3 | 0.372579 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 4 | 0.353114 | `get_azure_storage_details` | ❌ |
+| 5 | 0.340541 | `get_azure_security_configurations` | ❌ |
 
 ---
 
@@ -1204,11 +1194,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.357640 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.282367 | `edit_azure_databases` | ❌ |
-| 3 | 0.276725 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 4 | 0.230752 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.228384 | `get_azure_ai_resources_details` | ❌ |
+| 1 | 0.357501 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 2 | 0.282346 | `edit_azure_databases` | ❌ |
+| 3 | 0.276540 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 4 | 0.230739 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.228187 | `get_azure_ai_resources_details` | ❌ |
 
 ---
 
@@ -1221,7 +1211,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.558434 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.558366 | `get_azure_database_admin_configuration_details` | ❌ |
 | 2 | 0.530329 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 3 | 0.486536 | `get_azure_app_config_settings` | ❌ |
 | 4 | 0.468156 | `edit_azure_databases` | ❌ |
@@ -1239,10 +1229,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.459302 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.424009 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.424000 | `get_azure_database_admin_configuration_details` | ❌ |
 | 3 | 0.422684 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 4 | 0.409588 | `create_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.386413 | `get_azure_capacity` | ❌ |
+| 5 | 0.396496 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -1257,7 +1247,7 @@
 |------|-------|------|--------|
 | 1 | 0.318903 | `edit_azure_databases` | ❌ |
 | 2 | 0.251389 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 3 | 0.215865 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.215877 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.168314 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.165104 | `create_azure_database_admin_configurations` | ❌ |
 
@@ -1292,7 +1282,7 @@
 | 1 | 0.404968 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.357185 | `edit_azure_databases` | ❌ |
 | 3 | 0.274336 | `create_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.270829 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.270884 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.264802 | `edit_azure_sql_databases_and_servers` | ❌ |
 
 ---
@@ -1308,7 +1298,7 @@
 |------|-------|------|--------|
 | 1 | 0.380591 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.354214 | `edit_azure_databases` | ❌ |
-| 3 | 0.274988 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.274990 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.253387 | `create_azure_sql_databases_and_servers` | ❌ |
 | 5 | 0.240477 | `delete_azure_database_admin_configurations` | ❌ |
 
@@ -1325,7 +1315,7 @@
 |------|-------|------|--------|
 | 1 | 0.424259 | `edit_azure_databases` | ❌ |
 | 2 | 0.345881 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 3 | 0.319072 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.318976 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.282061 | `get_azure_app_config_settings` | ❌ |
 | 5 | 0.252978 | `edit_azure_sql_databases_and_servers` | ❌ |
 
@@ -1341,7 +1331,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.396395 | `edit_azure_databases` | ❌ |
-| 2 | 0.305067 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.305000 | `get_azure_database_admin_configuration_details` | ❌ |
 | 3 | 0.302014 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 4 | 0.250062 | `get_azure_app_config_settings` | ❌ |
 | 5 | 0.214600 | `update_azure_managed_lustre_filesystems` | ❌ |
@@ -1361,7 +1351,7 @@
 | 2 | 0.380264 | `get_azure_storage_details` | ❌ |
 | 3 | 0.377338 | `get_azure_container_details` | ❌ |
 | 4 | 0.351073 | `create_azure_storage` | ❌ |
-| 5 | 0.327822 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.325368 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
@@ -1378,7 +1368,7 @@
 | 2 | 0.481986 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 3 | 0.458807 | `get_azure_storage_details` | ❌ |
 | 4 | 0.444953 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.430545 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.431831 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -1395,7 +1385,7 @@
 | 2 | 0.380341 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.368375 | `get_azure_data_explorer_kusto_details` | ❌ |
 | 4 | 0.340381 | `get_azure_storage_details` | ❌ |
-| 5 | 0.336644 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.336643 | `add_azure_app_service_database` | ❌ |
 
 ---
 
@@ -1408,11 +1398,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.549664 | `get_azure_database_admin_configuration_details` | ❌ |
-| 2 | 0.500276 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.549599 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.500933 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.493713 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.489035 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 5 | 0.464348 | `get_azure_app_config_settings` | ❌ |
+| 4 | 0.490565 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.489035 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
 
@@ -1426,7 +1416,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.430729 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.415590 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.415495 | `get_azure_database_admin_configuration_details` | ❌ |
 | 3 | 0.354815 | `edit_azure_databases` | ❌ |
 | 4 | 0.343500 | `get_azure_data_explorer_kusto_details` | ❌ |
 | 5 | 0.336660 | `rename_azure_sql_databases` | ❌ |
@@ -1479,7 +1469,7 @@
 | 1 | 0.511745 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.461477 | `edit_azure_databases` | ❌ |
 | 3 | 0.365358 | `create_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.364350 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.364272 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.353379 | `browse_azure_marketplace_products` | ❌ |
 
 ---
@@ -1497,7 +1487,7 @@
 | 2 | 0.332482 | `edit_azure_databases` | ❌ |
 | 3 | 0.277752 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.247838 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.245580 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.245490 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1512,7 +1502,7 @@
 |------|-------|------|--------|
 | 1 | 0.469057 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.433648 | `edit_azure_databases` | ❌ |
-| 3 | 0.360426 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.360364 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.343503 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 5 | 0.339133 | `browse_azure_marketplace_products` | ❌ |
 
@@ -1527,11 +1517,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.382863 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 1 | 0.383189 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 2 | 0.314466 | `edit_azure_databases` | ❌ |
-| 3 | 0.225336 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.224832 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.221369 | `get_azure_best_practices` | ❌ |
+| 3 | 0.225610 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 4 | 0.224830 | `rename_azure_sql_databases` | ❌ |
+| 5 | 0.221419 | `get_azure_best_practices` | ❌ |
 
 ---
 
@@ -1544,11 +1534,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.343844 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.284626 | `edit_azure_databases` | ❌ |
-| 3 | 0.214230 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.201567 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.199864 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.344385 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 2 | 0.284782 | `edit_azure_databases` | ❌ |
+| 3 | 0.214431 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 4 | 0.201470 | `rename_azure_sql_databases` | ❌ |
+| 5 | 0.200118 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1565,7 +1555,7 @@
 | 2 | 0.335190 | `edit_azure_databases` | ❌ |
 | 3 | 0.262481 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.256053 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.249102 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.248928 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1578,11 +1568,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.375836 | `get_azure_databases_details` | ✅ **EXPECTED** |
-| 2 | 0.311404 | `edit_azure_databases` | ❌ |
-| 3 | 0.230790 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.226153 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.224314 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.375595 | `get_azure_databases_details` | ✅ **EXPECTED** |
+| 2 | 0.310370 | `edit_azure_databases` | ❌ |
+| 3 | 0.230608 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 4 | 0.225953 | `rename_azure_sql_databases` | ❌ |
+| 5 | 0.223967 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1599,7 +1589,7 @@
 | 2 | 0.238900 | `get_azure_databases_details` | ✅ **EXPECTED** |
 | 3 | 0.202957 | `delete_azure_database_admin_configurations` | ❌ |
 | 4 | 0.202122 | `create_azure_database_admin_configurations` | ❌ |
-| 5 | 0.192494 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.192344 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -1629,11 +1619,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.520385 | `rename_azure_sql_databases` | ❌ |
-| 2 | 0.513431 | `create_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
-| 3 | 0.384182 | `add_azure_app_service_database` | ❌ |
-| 4 | 0.381023 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.376654 | `create_azure_database_admin_configurations` | ❌ |
+| 1 | 0.520646 | `rename_azure_sql_databases` | ❌ |
+| 2 | 0.513516 | `create_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
+| 3 | 0.384104 | `add_azure_app_service_database` | ❌ |
+| 4 | 0.381160 | `edit_azure_sql_databases_and_servers` | ❌ |
+| 5 | 0.376755 | `create_azure_database_admin_configurations` | ❌ |
 
 ---
 
@@ -1667,7 +1657,7 @@
 | 2 | 0.448354 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.429547 | `edit_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.414021 | `edit_azure_databases` | ❌ |
-| 5 | 0.390212 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.390204 | `add_azure_app_service_database` | ❌ |
 
 ---
 
@@ -1682,7 +1672,7 @@
 |------|-------|------|--------|
 | 1 | 0.502365 | `create_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
 | 2 | 0.468619 | `create_azure_database_admin_configurations` | ❌ |
-| 3 | 0.424715 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.424808 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.411480 | `edit_azure_sql_databases_and_servers` | ❌ |
 | 5 | 0.411012 | `rename_azure_sql_databases` | ❌ |
 
@@ -1701,7 +1691,7 @@
 | 2 | 0.485689 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.442793 | `create_azure_database_admin_configurations` | ❌ |
 | 4 | 0.407416 | `edit_azure_databases` | ❌ |
-| 5 | 0.391782 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.391741 | `add_azure_app_service_database` | ❌ |
 
 ---
 
@@ -1714,11 +1704,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.794416 | `rename_azure_sql_databases` | ✅ **EXPECTED** |
-| 2 | 0.541638 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 3 | 0.505153 | `edit_azure_databases` | ❌ |
-| 4 | 0.475451 | `create_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.437195 | `create_azure_database_admin_configurations` | ❌ |
+| 1 | 0.794632 | `rename_azure_sql_databases` | ✅ **EXPECTED** |
+| 2 | 0.541921 | `edit_azure_sql_databases_and_servers` | ❌ |
+| 3 | 0.505707 | `edit_azure_databases` | ❌ |
+| 4 | 0.475553 | `create_azure_sql_databases_and_servers` | ❌ |
+| 5 | 0.437481 | `create_azure_database_admin_configurations` | ❌ |
 
 ---
 
@@ -1765,11 +1755,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.530935 | `delete_azure_database_admin_configurations` | ❌ |
-| 2 | 0.524563 | `edit_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
-| 3 | 0.470808 | `rename_azure_sql_databases` | ❌ |
-| 4 | 0.453765 | `create_azure_database_admin_configurations` | ❌ |
-| 5 | 0.417285 | `edit_azure_data_analytics_resources` | ❌ |
+| 1 | 0.530932 | `delete_azure_database_admin_configurations` | ❌ |
+| 2 | 0.524407 | `edit_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
+| 3 | 0.470752 | `rename_azure_sql_databases` | ❌ |
+| 4 | 0.453689 | `create_azure_database_admin_configurations` | ❌ |
+| 5 | 0.417277 | `edit_azure_data_analytics_resources` | ❌ |
 
 ---
 
@@ -1850,11 +1840,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.447788 | `rename_azure_sql_databases` | ❌ |
-| 2 | 0.446405 | `edit_azure_databases` | ❌ |
-| 3 | 0.444369 | `edit_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
-| 4 | 0.434542 | `create_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.348544 | `get_azure_databases_details` | ❌ |
+| 1 | 0.447543 | `rename_azure_sql_databases` | ❌ |
+| 2 | 0.446459 | `edit_azure_databases` | ❌ |
+| 3 | 0.444263 | `edit_azure_sql_databases_and_servers` | ✅ **EXPECTED** |
+| 4 | 0.434377 | `create_azure_sql_databases_and_servers` | ❌ |
+| 5 | 0.348517 | `get_azure_databases_details` | ❌ |
 
 ---
 
@@ -1887,7 +1877,7 @@
 | 1 | 0.340843 | `edit_azure_databases` | ✅ **EXPECTED** |
 | 2 | 0.250565 | `create_azure_database_admin_configurations` | ❌ |
 | 3 | 0.234603 | `get_azure_databases_details` | ❌ |
-| 4 | 0.220308 | `add_azure_app_service_database` | ❌ |
+| 4 | 0.220379 | `add_azure_app_service_database` | ❌ |
 | 5 | 0.212755 | `delete_azure_database_admin_configurations` | ❌ |
 
 ---
@@ -1935,11 +1925,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.510833 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.472122 | `create_azure_monitor_webtests` | ❌ |
-| 3 | 0.459627 | `update_azure_monitor_webtests` | ❌ |
-| 4 | 0.426727 | `get_azure_capacity` | ❌ |
-| 5 | 0.381483 | `get_azure_load_testing_details` | ❌ |
+| 1 | 0.510827 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 2 | 0.472245 | `create_azure_monitor_webtests` | ❌ |
+| 3 | 0.459723 | `update_azure_monitor_webtests` | ❌ |
+| 4 | 0.438668 | `get_azure_capacity` | ❌ |
+| 5 | 0.381326 | `get_azure_load_testing_details` | ❌ |
 
 ---
 
@@ -1952,11 +1942,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.345032 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.345277 | `get_azure_messaging_service_details` | ❌ |
 | 2 | 0.302173 | `get_azure_storage_details` | ❌ |
-| 3 | 0.285925 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 4 | 0.272938 | `get_azure_load_testing_details` | ❌ |
-| 5 | 0.271450 | `get_azure_capacity` | ❌ |
+| 3 | 0.289476 | `get_azure_capacity` | ❌ |
+| 4 | 0.285925 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 5 | 0.276066 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -1969,11 +1959,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.314111 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.257445 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.253789 | `get_azure_virtual_desktop_details` | ❌ |
-| 4 | 0.244128 | `get_azure_load_testing_details` | ❌ |
-| 5 | 0.239832 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.314030 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 2 | 0.257651 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.253620 | `get_azure_virtual_desktop_details` | ❌ |
+| 4 | 0.244006 | `get_azure_load_testing_details` | ❌ |
+| 5 | 0.239936 | `get_azure_signalr_details` | ❌ |
 
 ---
 
@@ -1986,11 +1976,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.374257 | `get_azure_capacity` | ❌ |
+| 1 | 0.380856 | `get_azure_capacity` | ❌ |
 | 2 | 0.338439 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 3 | 0.336667 | `get_azure_storage_details` | ❌ |
 | 4 | 0.325422 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 5 | 0.305299 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.312349 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -2005,8 +1995,8 @@
 |------|-------|------|--------|
 | 1 | 0.486070 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.406567 | `create_azure_monitor_webtests` | ❌ |
-| 3 | 0.389526 | `get_azure_capacity` | ❌ |
-| 4 | 0.385006 | `update_azure_monitor_webtests` | ❌ |
+| 3 | 0.405853 | `get_azure_capacity` | ❌ |
+| 4 | 0.384944 | `update_azure_monitor_webtests` | ❌ |
 | 5 | 0.375039 | `create_azure_load_testing` | ❌ |
 
 ---
@@ -2021,10 +2011,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.508303 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.487675 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.487631 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.384016 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.380883 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.379399 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.379623 | `publish_azure_eventgrid_events` | ❌ |
 
 ---
 
@@ -2058,7 +2048,7 @@
 | 2 | 0.449685 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 3 | 0.445863 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.438518 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.423144 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.432854 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -2091,8 +2081,8 @@
 | 1 | 0.400161 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.356965 | `get_azure_load_testing_details` | ❌ |
 | 3 | 0.349385 | `get_azure_virtual_desktop_details` | ❌ |
-| 4 | 0.321621 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.318657 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.343187 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.318702 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -2106,9 +2096,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.514546 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.487976 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.488013 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.381633 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.372535 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.372903 | `publish_azure_eventgrid_events` | ❌ |
 | 5 | 0.371822 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
@@ -2122,11 +2112,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.429580 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.418506 | `get_azure_workbooks_details` | ❌ |
-| 3 | 0.398756 | `create_azure_workbooks` | ❌ |
-| 4 | 0.393661 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.376718 | `get_azure_databases_details` | ❌ |
+| 1 | 0.429517 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 2 | 0.418441 | `get_azure_workbooks_details` | ❌ |
+| 3 | 0.398664 | `create_azure_workbooks` | ❌ |
+| 4 | 0.393598 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 5 | 0.376632 | `get_azure_databases_details` | ❌ |
 
 ---
 
@@ -2140,9 +2130,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.525913 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.482171 | `get_azure_storage_details` | ❌ |
-| 3 | 0.479549 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.478110 | `get_azure_capacity` | ❌ |
+| 2 | 0.514752 | `get_azure_capacity` | ❌ |
+| 3 | 0.482171 | `get_azure_storage_details` | ❌ |
+| 4 | 0.480031 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.465854 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 
 ---
@@ -2159,7 +2149,7 @@
 | 1 | 0.474724 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.430555 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.423122 | `get_azure_best_practices` | ❌ |
-| 4 | 0.407439 | `update_azure_monitor_webtests` | ❌ |
+| 4 | 0.407367 | `update_azure_monitor_webtests` | ❌ |
 | 5 | 0.368902 | `create_azure_monitor_webtests` | ❌ |
 
 ---
@@ -2176,8 +2166,8 @@
 | 1 | 0.531640 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.453872 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.439990 | `get_azure_ai_resources_details` | ❌ |
-| 4 | 0.416257 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.416176 | `get_azure_capacity` | ❌ |
+| 4 | 0.418057 | `get_azure_capacity` | ❌ |
+| 5 | 0.416257 | `get_azure_security_configurations` | ❌ |
 
 ---
 
@@ -2193,8 +2183,8 @@
 | 1 | 0.340942 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.293858 | `get_azure_load_testing_details` | ❌ |
 | 3 | 0.279505 | `get_azure_virtual_desktop_details` | ❌ |
-| 4 | 0.269796 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.260043 | `get_azure_capacity` | ❌ |
+| 4 | 0.269020 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.267492 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2210,7 +2200,7 @@
 | 1 | 0.348670 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.247328 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.246532 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.235710 | `update_azure_monitor_webtests` | ❌ |
+| 4 | 0.235685 | `update_azure_monitor_webtests` | ❌ |
 | 5 | 0.235128 | `get_azure_app_resource_details` | ❌ |
 
 ---
@@ -2227,8 +2217,8 @@
 | 1 | 0.330121 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.264069 | `get_azure_virtual_desktop_details` | ❌ |
 | 3 | 0.253364 | `get_azure_load_testing_details` | ❌ |
-| 4 | 0.252579 | `get_azure_capacity` | ❌ |
-| 5 | 0.245564 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.252330 | `get_azure_capacity` | ❌ |
+| 5 | 0.245600 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -2242,8 +2232,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.558407 | `get_azure_storage_details` | ❌ |
-| 2 | 0.430781 | `get_azure_capacity` | ❌ |
-| 3 | 0.405616 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.447481 | `get_azure_capacity` | ❌ |
+| 3 | 0.407697 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.403095 | `create_azure_storage` | ❌ |
 | 5 | 0.390433 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 
@@ -2259,10 +2249,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.496308 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.467641 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.467743 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.424333 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.392392 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.387040 | `get_azure_app_resource_details` | ❌ |
+| 4 | 0.392324 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.390496 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2278,8 +2268,8 @@
 | 1 | 0.508215 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.492356 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.464604 | `get_azure_best_practices` | ❌ |
-| 4 | 0.421210 | `get_azure_capacity` | ❌ |
-| 5 | 0.418559 | `create_azure_monitor_webtests` | ❌ |
+| 4 | 0.418559 | `create_azure_monitor_webtests` | ❌ |
+| 5 | 0.413326 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2310,10 +2300,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.472052 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.434889 | `update_azure_monitor_webtests` | ❌ |
+| 2 | 0.434828 | `update_azure_monitor_webtests` | ❌ |
 | 3 | 0.411997 | `evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.398711 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.396968 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.396961 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -2327,10 +2317,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.478758 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.467913 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.468817 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.445424 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.435005 | `get_azure_app_resource_details` | ❌ |
-| 5 | 0.427813 | `get_azure_capacity` | ❌ |
+| 4 | 0.438080 | `get_azure_capacity` | ❌ |
+| 5 | 0.435005 | `get_azure_app_resource_details` | ❌ |
 
 ---
 
@@ -2361,9 +2351,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.575009 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.488089 | `get_azure_capacity` | ❌ |
+| 2 | 0.499791 | `get_azure_capacity` | ❌ |
 | 3 | 0.475264 | `get_azure_virtual_desktop_details` | ❌ |
-| 4 | 0.473441 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.474203 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.471465 | `get_azure_security_configurations` | ❌ |
 
 ---
@@ -2379,9 +2369,9 @@
 |------|-------|------|--------|
 | 1 | 0.311450 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.230296 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.209276 | `get_azure_capacity` | ❌ |
-| 4 | 0.201724 | `get_azure_virtual_desktop_details` | ❌ |
-| 5 | 0.193404 | `audit_azure_resources_compliance` | ❌ |
+| 3 | 0.201724 | `get_azure_virtual_desktop_details` | ❌ |
+| 4 | 0.193404 | `audit_azure_resources_compliance` | ❌ |
+| 5 | 0.190307 | `create_azure_monitor_webtests` | ❌ |
 
 ---
 
@@ -2394,11 +2384,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.494538 | `get_azure_storage_details` | ❌ |
-| 2 | 0.403753 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 3 | 0.395192 | `create_azure_storage` | ❌ |
-| 4 | 0.368143 | `get_azure_capacity` | ❌ |
-| 5 | 0.339448 | `get_azure_security_configurations` | ❌ |
+| 1 | 0.494473 | `get_azure_storage_details` | ❌ |
+| 2 | 0.403725 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 3 | 0.395150 | `create_azure_storage` | ❌ |
+| 4 | 0.371528 | `get_azure_capacity` | ❌ |
+| 5 | 0.339439 | `get_azure_security_configurations` | ❌ |
 
 ---
 
@@ -2431,8 +2421,8 @@
 | 1 | 0.464430 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.365333 | `get_azure_virtual_desktop_details` | ❌ |
 | 3 | 0.333899 | `get_azure_load_testing_details` | ❌ |
-| 4 | 0.332443 | `get_azure_capacity` | ❌ |
-| 5 | 0.329728 | `get_azure_workbooks_details` | ❌ |
+| 4 | 0.329728 | `get_azure_workbooks_details` | ❌ |
+| 5 | 0.327688 | `get_azure_signalr_details` | ❌ |
 
 ---
 
@@ -2464,9 +2454,9 @@
 |------|-------|------|--------|
 | 1 | 0.398557 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.354368 | `get_azure_virtual_desktop_details` | ❌ |
-| 3 | 0.346010 | `get_azure_load_testing_details` | ❌ |
-| 4 | 0.321110 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.316100 | `get_azure_cache_for_redis_details` | ❌ |
+| 3 | 0.347808 | `get_azure_cache_for_redis_details` | ❌ |
+| 4 | 0.346010 | `get_azure_load_testing_details` | ❌ |
+| 5 | 0.324679 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2516,7 +2506,7 @@
 | 1 | 0.299595 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.250948 | `get_azure_app_resource_details` | ❌ |
 | 3 | 0.212919 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.205952 | `add_azure_app_service_database` | ❌ |
+| 4 | 0.205979 | `add_azure_app_service_database` | ❌ |
 | 5 | 0.201566 | `get_azure_signalr_details` | ❌ |
 
 ---
@@ -2530,8 +2520,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.421696 | `get_azure_capacity` | ❌ |
-| 2 | 0.404977 | `get_azure_virtual_desktop_details` | ❌ |
+| 1 | 0.404977 | `get_azure_virtual_desktop_details` | ❌ |
+| 2 | 0.381848 | `get_azure_capacity` | ❌ |
 | 3 | 0.380088 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.377460 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 5 | 0.363367 | `get_azure_signalr_details` | ❌ |
@@ -2549,9 +2539,9 @@
 |------|-------|------|--------|
 | 1 | 0.519763 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
 | 2 | 0.415402 | `create_azure_monitor_webtests` | ❌ |
-| 3 | 0.411633 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.410211 | `update_azure_monitor_webtests` | ❌ |
-| 5 | 0.397417 | `get_azure_capacity` | ❌ |
+| 3 | 0.411354 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.410131 | `update_azure_monitor_webtests` | ❌ |
+| 5 | 0.409756 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2565,8 +2555,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.505430 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.423077 | `get_azure_capacity` | ❌ |
-| 3 | 0.412065 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.411932 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.408064 | `get_azure_capacity` | ❌ |
 | 4 | 0.389687 | `get_azure_virtual_desktop_details` | ❌ |
 | 5 | 0.382850 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
@@ -2582,10 +2572,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.274285 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.256635 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.256350 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.237971 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.226131 | `get_azure_capacity` | ❌ |
-| 5 | 0.225301 | `get_azure_container_details` | ❌ |
+| 4 | 0.225301 | `get_azure_container_details` | ❌ |
+| 5 | 0.224471 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -2598,11 +2588,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.437195 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
-| 2 | 0.395986 | `get_azure_capacity` | ❌ |
-| 3 | 0.371019 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.369677 | `create_azure_load_testing` | ❌ |
-| 5 | 0.363915 | `create_azure_monitor_webtests` | ❌ |
+| 1 | 0.438760 | `get_azure_resource_and_app_health_status` | ✅ **EXPECTED** |
+| 2 | 0.399002 | `get_azure_capacity` | ❌ |
+| 3 | 0.371290 | `get_azure_signalr_details` | ❌ |
+| 4 | 0.370369 | `create_azure_load_testing` | ❌ |
+| 5 | 0.363028 | `create_azure_monitor_webtests` | ❌ |
 
 ---
 
@@ -2616,10 +2606,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.640058 | `deploy_azure_resources_and_applications` | ✅ **EXPECTED** |
-| 2 | 0.507616 | `execute_azure_deployments` | ❌ |
-| 3 | 0.479918 | `get_azure_best_practices` | ❌ |
-| 4 | 0.461377 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.454870 | `add_azure_app_service_database` | ❌ |
+| 2 | 0.479918 | `get_azure_best_practices` | ❌ |
+| 3 | 0.461377 | `create_azure_monitor_webtests` | ❌ |
+| 4 | 0.454825 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.453039 | `design_azure_architecture` | ❌ |
 
 ---
 
@@ -2632,11 +2622,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.578541 | `deploy_azure_resources_and_applications` | ✅ **EXPECTED** |
-| 2 | 0.505622 | `execute_azure_deployments` | ❌ |
-| 3 | 0.428397 | `add_azure_app_service_database` | ❌ |
-| 4 | 0.410766 | `get_azure_best_practices` | ❌ |
-| 5 | 0.372703 | `generate_azure_cli_commands` | ❌ |
+| 1 | 0.578477 | `deploy_azure_resources_and_applications` | ✅ **EXPECTED** |
+| 2 | 0.428250 | `add_azure_app_service_database` | ❌ |
+| 3 | 0.410719 | `get_azure_best_practices` | ❌ |
+| 4 | 0.409389 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.372647 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
@@ -2649,11 +2639,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.562465 | `execute_azure_deployments` | ❌ |
-| 2 | 0.522934 | `deploy_azure_resources_and_applications` | ✅ **EXPECTED** |
-| 3 | 0.442200 | `get_azure_resource_and_app_health_status` | ❌ |
-| 4 | 0.402454 | `get_azure_app_resource_details` | ❌ |
-| 5 | 0.392628 | `get_azure_app_config_settings` | ❌ |
+| 1 | 0.522934 | `deploy_azure_resources_and_applications` | ✅ **EXPECTED** |
+| 2 | 0.442200 | `get_azure_resource_and_app_health_status` | ❌ |
+| 3 | 0.402454 | `get_azure_app_resource_details` | ❌ |
+| 4 | 0.392628 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.385063 | `get_azure_container_details` | ❌ |
 
 ---
 
@@ -2676,7 +2666,7 @@
 
 ## Test 131
 
-**Expected Tool:** `execute_azure_deployments`  
+**Expected Tool:** `deploy_azure_ai_models`  
 **Prompt:** Deploy a GPT4o instance on my resource <resource-name>  
 
 ### Results
@@ -2685,9 +2675,9 @@
 |------|-------|------|--------|
 | 1 | 0.307463 | `deploy_azure_resources_and_applications` | ❌ |
 | 2 | 0.299302 | `create_azure_load_testing` | ❌ |
-| 3 | 0.240425 | `edit_azure_databases` | ❌ |
-| 4 | 0.236281 | `get_azure_best_practices` | ❌ |
-| 5 | 0.234060 | `execute_azure_deployments` | ✅ **EXPECTED** |
+| 3 | 0.281815 | `deploy_azure_ai_models` | ✅ **EXPECTED** |
+| 4 | 0.240425 | `edit_azure_databases` | ❌ |
+| 5 | 0.236281 | `get_azure_best_practices` | ❌ |
 
 ---
 
@@ -2703,8 +2693,8 @@
 | 1 | 0.549804 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
 | 2 | 0.418698 | `lock_unlock_azure_app_config_settings` | ❌ |
 | 3 | 0.401422 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.388838 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.378481 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.388733 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.379923 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -2721,7 +2711,7 @@
 | 2 | 0.469735 | `lock_unlock_azure_app_config_settings` | ❌ |
 | 3 | 0.413315 | `edit_azure_app_config_settings` | ❌ |
 | 4 | 0.323275 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.310582 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.310593 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -2734,11 +2724,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.492475 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
-| 2 | 0.374798 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 3 | 0.344491 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.292927 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.275008 | `get_azure_key_vault_items` | ❌ |
+| 1 | 0.492499 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
+| 2 | 0.375253 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 3 | 0.345143 | `edit_azure_app_config_settings` | ❌ |
+| 4 | 0.293230 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.274244 | `get_azure_key_vault_items` | ❌ |
 
 ---
 
@@ -2753,9 +2743,9 @@
 |------|-------|------|--------|
 | 1 | 0.517123 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
 | 2 | 0.397359 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 3 | 0.350017 | `add_azure_app_service_database` | ❌ |
+| 3 | 0.350023 | `add_azure_app_service_database` | ❌ |
 | 4 | 0.318242 | `edit_azure_app_config_settings` | ❌ |
-| 5 | 0.300071 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.299920 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -2770,9 +2760,9 @@
 |------|-------|------|--------|
 | 1 | 0.564754 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
 | 2 | 0.445478 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 3 | 0.410372 | `add_azure_app_service_database` | ❌ |
+| 3 | 0.410403 | `add_azure_app_service_database` | ❌ |
 | 4 | 0.382377 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.377430 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.377241 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -2788,7 +2778,7 @@
 | 1 | 0.619236 | `get_azure_app_config_settings` | ✅ **EXPECTED** |
 | 2 | 0.496884 | `lock_unlock_azure_app_config_settings` | ❌ |
 | 3 | 0.413994 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.320934 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.320917 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.318437 | `get_azure_key_vault_secret_values` | ❌ |
 
 ---
@@ -2823,7 +2813,7 @@
 | 2 | 0.419225 | `lock_unlock_azure_app_config_settings` | ❌ |
 | 3 | 0.386233 | `get_azure_app_config_settings` | ❌ |
 | 4 | 0.246854 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.245595 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.245528 | `add_azure_app_service_database` | ❌ |
 
 ---
 
@@ -2836,11 +2826,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.454235 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 2 | 0.420016 | `get_azure_app_config_settings` | ❌ |
-| 3 | 0.418392 | `edit_azure_app_config_settings` | ✅ **EXPECTED** |
-| 4 | 0.282997 | `update_azure_managed_lustre_filesystems` | ❌ |
-| 5 | 0.270549 | `add_azure_app_service_database` | ❌ |
+| 1 | 0.454141 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 2 | 0.419890 | `get_azure_app_config_settings` | ❌ |
+| 3 | 0.418151 | `edit_azure_app_config_settings` | ✅ **EXPECTED** |
+| 4 | 0.282688 | `update_azure_managed_lustre_filesystems` | ❌ |
+| 5 | 0.270519 | `add_azure_app_service_database` | ❌ |
 
 ---
 
@@ -2856,7 +2846,7 @@
 | 1 | 0.523446 | `lock_unlock_azure_app_config_settings` | ✅ **EXPECTED** |
 | 2 | 0.367924 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.324653 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.243923 | `add_azure_app_service_database` | ❌ |
+| 4 | 0.243851 | `add_azure_app_service_database` | ❌ |
 | 5 | 0.238376 | `update_azure_managed_lustre_filesystems` | ❌ |
 
 ---
@@ -2874,7 +2864,7 @@
 | 2 | 0.393938 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.339108 | `edit_azure_app_config_settings` | ❌ |
 | 4 | 0.276616 | `get_azure_key_vault_secret_values` | ❌ |
-| 5 | 0.242957 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.242903 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3006,8 +2996,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546941 | `audit_azure_resources_compliance` | ✅ **EXPECTED** |
-| 2 | 0.541006 | `get_azure_capacity` | ❌ |
+| 1 | 0.557893 | `get_azure_capacity` | ❌ |
+| 2 | 0.546941 | `audit_azure_resources_compliance` | ✅ **EXPECTED** |
 | 3 | 0.500223 | `browse_azure_marketplace_products` | ❌ |
 | 4 | 0.477388 | `get_azure_best_practices` | ❌ |
 | 5 | 0.474918 | `get_azure_resource_and_app_health_status` | ❌ |
@@ -3026,7 +3016,7 @@
 | 1 | 0.536483 | `audit_azure_resources_compliance` | ✅ **EXPECTED** |
 | 2 | 0.511039 | `get_azure_best_practices` | ❌ |
 | 3 | 0.490293 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.476949 | `get_azure_capacity` | ❌ |
+| 4 | 0.487381 | `get_azure_capacity` | ❌ |
 | 5 | 0.463219 | `deploy_azure_resources_and_applications` | ❌ |
 
 ---
@@ -3042,8 +3032,8 @@
 |------|-------|------|--------|
 | 1 | 0.592611 | `audit_azure_resources_compliance` | ✅ **EXPECTED** |
 | 2 | 0.508765 | `get_azure_best_practices` | ❌ |
-| 3 | 0.492553 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.490633 | `get_azure_capacity` | ❌ |
+| 3 | 0.502901 | `get_azure_capacity` | ❌ |
+| 4 | 0.492553 | `browse_azure_marketplace_products` | ❌ |
 | 5 | 0.455630 | `deploy_azure_resources_and_applications` | ❌ |
 
 ---
@@ -3057,11 +3047,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.559532 | `create_azure_storage` | ❌ |
-| 2 | 0.490462 | `get_azure_storage_details` | ❌ |
-| 3 | 0.486254 | `generate_azure_cli_commands` | ✅ **EXPECTED** |
-| 4 | 0.428312 | `install_azure_cli_extensions` | ❌ |
-| 5 | 0.417789 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.559527 | `create_azure_storage` | ❌ |
+| 2 | 0.490440 | `get_azure_storage_details` | ❌ |
+| 3 | 0.486197 | `generate_azure_cli_commands` | ✅ **EXPECTED** |
+| 4 | 0.428212 | `install_azure_cli_extensions` | ❌ |
+| 5 | 0.417777 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3075,7 +3065,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.505461 | `generate_azure_cli_commands` | ✅ **EXPECTED** |
-| 2 | 0.466697 | `install_azure_cli_extensions` | ❌ |
+| 2 | 0.466689 | `install_azure_cli_extensions` | ❌ |
 | 3 | 0.460094 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.439158 | `browse_azure_marketplace_products` | ❌ |
 | 5 | 0.433504 | `get_azure_virtual_desktop_details` | ❌ |
@@ -3108,11 +3098,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.734114 | `get_azure_security_configurations` | ✅ **EXPECTED** |
-| 2 | 0.460374 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.414713 | `get_azure_database_admin_configuration_details` | ❌ |
-| 4 | 0.356351 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.341765 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.734080 | `get_azure_security_configurations` | ✅ **EXPECTED** |
+| 2 | 0.460399 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.414687 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.365074 | `get_azure_capacity` | ❌ |
+| 5 | 0.356352 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
@@ -3127,9 +3117,9 @@
 |------|-------|------|--------|
 | 1 | 0.702749 | `get_azure_security_configurations` | ✅ **EXPECTED** |
 | 2 | 0.485211 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.431017 | `get_azure_database_admin_configuration_details` | ❌ |
-| 4 | 0.388410 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.357972 | `get_azure_capacity` | ❌ |
+| 3 | 0.431073 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.400579 | `get_azure_capacity` | ❌ |
+| 5 | 0.388410 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
@@ -3142,11 +3132,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.533833 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.508789 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.465713 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.426342 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.393933 | `get_azure_app_config_settings` | ❌ |
+| 1 | 0.533821 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.508482 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.465773 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.426168 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.393742 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3159,11 +3149,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.459981 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.447387 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.393272 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.343733 | `create_azure_key_vault_secrets` | ❌ |
-| 5 | 0.342376 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.459787 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.447147 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.393173 | `get_azure_app_config_settings` | ❌ |
+| 4 | 0.343627 | `create_azure_key_vault_secrets` | ❌ |
+| 5 | 0.342336 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -3227,11 +3217,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.510037 | `get_azure_app_config_settings` | ❌ |
-| 2 | 0.469247 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.446870 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.391544 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 5 | 0.377218 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.509964 | `get_azure_app_config_settings` | ❌ |
+| 2 | 0.469179 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.446761 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.391479 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 5 | 0.377164 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3380,11 +3370,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.526748 | `import_azure_key_vault_certificates` | ❌ |
-| 2 | 0.521132 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.458697 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.449969 | `get_azure_key_vault_secret_values` | ❌ |
-| 5 | 0.352703 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.526739 | `import_azure_key_vault_certificates` | ❌ |
+| 2 | 0.521127 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.458662 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.449940 | `get_azure_key_vault_secret_values` | ❌ |
+| 5 | 0.352644 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3465,11 +3455,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.543492 | `import_azure_key_vault_certificates` | ❌ |
-| 2 | 0.508166 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.454602 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.453808 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.386522 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.543362 | `import_azure_key_vault_certificates` | ❌ |
+| 2 | 0.508426 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.454583 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.453867 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.386384 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3482,11 +3472,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552937 | `import_azure_key_vault_certificates` | ❌ |
-| 2 | 0.535104 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.480107 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.475447 | `get_azure_key_vault_secret_values` | ❌ |
-| 5 | 0.430616 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.552928 | `import_azure_key_vault_certificates` | ❌ |
+| 2 | 0.535077 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.480063 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.475424 | `get_azure_key_vault_secret_values` | ❌ |
+| 5 | 0.430555 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3499,11 +3489,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.527499 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.490655 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.460251 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.432964 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.409334 | `get_azure_app_config_settings` | ❌ |
+| 1 | 0.527455 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.490672 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.460248 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.432966 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.409324 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3516,11 +3506,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.480327 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.471396 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.426126 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.395013 | `create_azure_key_vault_secrets` | ❌ |
-| 5 | 0.377245 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.480223 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.471361 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.426201 | `get_azure_app_config_settings` | ❌ |
+| 4 | 0.394979 | `create_azure_key_vault_secrets` | ❌ |
+| 5 | 0.377132 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -3533,11 +3523,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.464726 | `get_azure_key_vault_secret_values` | ❌ |
-| 2 | 0.449853 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.407815 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.399191 | `import_azure_key_vault_certificates` | ❌ |
-| 5 | 0.379916 | `create_azure_key_vault_items` | ❌ |
+| 1 | 0.464736 | `get_azure_key_vault_secret_values` | ❌ |
+| 2 | 0.449713 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.407701 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.399319 | `import_azure_key_vault_certificates` | ❌ |
+| 5 | 0.379740 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
@@ -3584,11 +3574,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.595761 | `create_azure_key_vault_secrets` | ❌ |
-| 2 | 0.581393 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.517120 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 4 | 0.434361 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.427298 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.595751 | `create_azure_key_vault_secrets` | ❌ |
+| 2 | 0.581382 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.517138 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 4 | 0.434379 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.427291 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -3618,11 +3608,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.551081 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 2 | 0.543959 | `create_azure_key_vault_secrets` | ❌ |
-| 3 | 0.534076 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.520839 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.484809 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.551036 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 2 | 0.543936 | `create_azure_key_vault_secrets` | ❌ |
+| 3 | 0.534063 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.520805 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.484768 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -3635,11 +3625,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.622269 | `create_azure_key_vault_secrets` | ❌ |
-| 2 | 0.581377 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.564774 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 4 | 0.495588 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.438784 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.622270 | `create_azure_key_vault_secrets` | ❌ |
+| 2 | 0.581477 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.564796 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 4 | 0.495618 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.438877 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
@@ -3652,11 +3642,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498669 | `get_azure_app_config_settings` | ❌ |
-| 2 | 0.468556 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.448361 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 4 | 0.444399 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
-| 5 | 0.409423 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.498642 | `get_azure_app_config_settings` | ❌ |
+| 2 | 0.468577 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.448342 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 4 | 0.444459 | `get_azure_key_vault_items` | ✅ **EXPECTED** |
+| 5 | 0.409443 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -3669,11 +3659,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.586421 | `get_azure_key_vault_secret_values` | ✅ **EXPECTED** |
-| 2 | 0.526749 | `get_azure_key_vault_items` | ❌ |
-| 3 | 0.517989 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.440736 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.389603 | `create_azure_key_vault_items` | ❌ |
+| 1 | 0.586366 | `get_azure_key_vault_secret_values` | ✅ **EXPECTED** |
+| 2 | 0.526985 | `get_azure_key_vault_items` | ❌ |
+| 3 | 0.518051 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.440667 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.389702 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
@@ -3720,11 +3710,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.542793 | `get_azure_key_vault_secret_values` | ✅ **EXPECTED** |
-| 2 | 0.507689 | `get_azure_key_vault_items` | ❌ |
-| 3 | 0.493634 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.432729 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.375435 | `create_azure_key_vault_items` | ❌ |
+| 1 | 0.542116 | `get_azure_key_vault_secret_values` | ✅ **EXPECTED** |
+| 2 | 0.507830 | `get_azure_key_vault_items` | ❌ |
+| 3 | 0.493688 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.433356 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.375736 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
@@ -3771,11 +3761,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.527822 | `create_azure_key_vault_secrets` | ❌ |
-| 2 | 0.506017 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.417486 | `import_azure_key_vault_certificates` | ❌ |
-| 4 | 0.354703 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.330867 | `get_azure_key_vault_secret_values` | ❌ |
+| 1 | 0.527766 | `create_azure_key_vault_secrets` | ❌ |
+| 2 | 0.505954 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.417468 | `import_azure_key_vault_certificates` | ❌ |
+| 4 | 0.354704 | `get_azure_key_vault_items` | ❌ |
+| 5 | 0.330865 | `get_azure_key_vault_secret_values` | ❌ |
 
 ---
 
@@ -3822,11 +3812,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.545276 | `create_azure_key_vault_secrets` | ❌ |
-| 2 | 0.534559 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.437082 | `import_azure_key_vault_certificates` | ❌ |
-| 4 | 0.391019 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.372312 | `get_azure_key_vault_secret_values` | ❌ |
+| 1 | 0.545338 | `create_azure_key_vault_secrets` | ❌ |
+| 2 | 0.534535 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.437054 | `import_azure_key_vault_certificates` | ❌ |
+| 4 | 0.390812 | `get_azure_key_vault_items` | ❌ |
+| 5 | 0.372207 | `get_azure_key_vault_secret_values` | ❌ |
 
 ---
 
@@ -3890,10 +3880,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.555686 | `import_azure_key_vault_certificates` | ❌ |
-| 2 | 0.554286 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
-| 3 | 0.500237 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.410230 | `get_azure_key_vault_items` | ❌ |
+| 1 | 0.555645 | `import_azure_key_vault_certificates` | ❌ |
+| 2 | 0.554305 | `create_azure_key_vault_items` | ✅ **EXPECTED** |
+| 3 | 0.500254 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.410218 | `get_azure_key_vault_items` | ❌ |
 | 5 | 0.325473 | `get_azure_key_vault_secret_values` | ❌ |
 
 ---
@@ -3924,11 +3914,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.629763 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
-| 2 | 0.479387 | `create_azure_key_vault_items` | ❌ |
-| 3 | 0.407897 | `get_azure_key_vault_secret_values` | ❌ |
-| 4 | 0.391544 | `import_azure_key_vault_certificates` | ❌ |
-| 5 | 0.363090 | `append_azure_confidential_ledger_entries` | ❌ |
+| 1 | 0.629675 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
+| 2 | 0.479338 | `create_azure_key_vault_items` | ❌ |
+| 3 | 0.407829 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.391533 | `import_azure_key_vault_certificates` | ❌ |
+| 5 | 0.363103 | `append_azure_confidential_ledger_entries` | ❌ |
 
 ---
 
@@ -3958,11 +3948,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.572358 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
-| 2 | 0.454589 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.415391 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.387428 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.357411 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 1 | 0.572357 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
+| 2 | 0.454539 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.415396 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.387475 | `get_azure_key_vault_items` | ❌ |
+| 5 | 0.357474 | `lock_unlock_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -3975,10 +3965,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.588795 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
-| 2 | 0.475056 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.452602 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.402382 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.588807 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
+| 2 | 0.475024 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.452599 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.402378 | `import_azure_key_vault_certificates` | ❌ |
 | 5 | 0.395541 | `get_azure_key_vault_items` | ❌ |
 
 ---
@@ -3992,11 +3982,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.514668 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
-| 2 | 0.453316 | `get_azure_key_vault_secret_values` | ❌ |
-| 3 | 0.390764 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.376214 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.365562 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 1 | 0.514684 | `create_azure_key_vault_secrets` | ✅ **EXPECTED** |
+| 2 | 0.453288 | `get_azure_key_vault_secret_values` | ❌ |
+| 3 | 0.390780 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.376210 | `get_azure_key_vault_items` | ❌ |
+| 5 | 0.365541 | `lock_unlock_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -4060,11 +4050,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.630975 | `import_azure_key_vault_certificates` | ✅ **EXPECTED** |
-| 2 | 0.464828 | `create_azure_key_vault_items` | ❌ |
-| 3 | 0.419529 | `get_azure_key_vault_items` | ❌ |
-| 4 | 0.390232 | `get_azure_key_vault_secret_values` | ❌ |
-| 5 | 0.388920 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.630847 | `import_azure_key_vault_certificates` | ✅ **EXPECTED** |
+| 2 | 0.464585 | `create_azure_key_vault_items` | ❌ |
+| 3 | 0.419381 | `get_azure_key_vault_items` | ❌ |
+| 4 | 0.390178 | `get_azure_key_vault_secret_values` | ❌ |
+| 5 | 0.388744 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
@@ -4097,8 +4087,8 @@
 | 1 | 0.735005 | `get_azure_best_practices` | ✅ **EXPECTED** |
 | 2 | 0.524465 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.439480 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.436925 | `get_azure_capacity` | ❌ |
-| 5 | 0.436798 | `browse_azure_marketplace_products` | ❌ |
+| 4 | 0.436798 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.435782 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -4114,7 +4104,7 @@
 | 1 | 0.690117 | `get_azure_best_practices` | ✅ **EXPECTED** |
 | 2 | 0.539669 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.508718 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.483779 | `get_azure_capacity` | ❌ |
+| 4 | 0.478557 | `get_azure_capacity` | ❌ |
 | 5 | 0.460726 | `get_azure_storage_details` | ❌ |
 
 ---
@@ -4128,11 +4118,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.713406 | `get_azure_best_practices` | ✅ **EXPECTED** |
-| 2 | 0.529617 | `deploy_azure_resources_and_applications` | ❌ |
-| 3 | 0.470109 | `design_azure_architecture` | ❌ |
-| 4 | 0.437561 | `generate_azure_cli_commands` | ❌ |
-| 5 | 0.435613 | `browse_azure_marketplace_products` | ❌ |
+| 1 | 0.713392 | `get_azure_best_practices` | ✅ **EXPECTED** |
+| 2 | 0.529580 | `deploy_azure_resources_and_applications` | ❌ |
+| 3 | 0.470093 | `design_azure_architecture` | ❌ |
+| 4 | 0.437567 | `generate_azure_cli_commands` | ❌ |
+| 5 | 0.435577 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
@@ -4147,9 +4137,9 @@
 |------|-------|------|--------|
 | 1 | 0.683437 | `get_azure_best_practices` | ✅ **EXPECTED** |
 | 2 | 0.614180 | `deploy_azure_resources_and_applications` | ❌ |
-| 3 | 0.475963 | `execute_azure_deployments` | ❌ |
-| 4 | 0.465496 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.450131 | `get_azure_capacity` | ❌ |
+| 3 | 0.465496 | `browse_azure_marketplace_products` | ❌ |
+| 4 | 0.446368 | `get_azure_capacity` | ❌ |
+| 5 | 0.427992 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
@@ -4166,7 +4156,7 @@
 | 2 | 0.557930 | `get_azure_app_resource_details` | ❌ |
 | 3 | 0.505735 | `deploy_azure_resources_and_applications` | ❌ |
 | 4 | 0.443359 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.431202 | `get_azure_capacity` | ❌ |
+| 5 | 0.432776 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -4183,7 +4173,7 @@
 | 2 | 0.499419 | `get_azure_app_resource_details` | ❌ |
 | 3 | 0.480287 | `deploy_azure_resources_and_applications` | ❌ |
 | 4 | 0.425068 | `generate_azure_cli_commands` | ❌ |
-| 5 | 0.410038 | `execute_azure_deployments` | ❌ |
+| 5 | 0.397939 | `design_azure_architecture` | ❌ |
 
 ---
 
@@ -4196,11 +4186,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.675326 | `get_azure_best_practices` | ✅ **EXPECTED** |
-| 2 | 0.570982 | `deploy_azure_resources_and_applications` | ❌ |
-| 3 | 0.537910 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.460530 | `execute_azure_deployments` | ❌ |
-| 5 | 0.415282 | `browse_azure_marketplace_products` | ❌ |
+| 1 | 0.675358 | `get_azure_best_practices` | ✅ **EXPECTED** |
+| 2 | 0.571007 | `deploy_azure_resources_and_applications` | ❌ |
+| 3 | 0.537884 | `get_azure_app_resource_details` | ❌ |
+| 4 | 0.415218 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.413866 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -4217,7 +4207,7 @@
 | 2 | 0.518435 | `deploy_azure_resources_and_applications` | ❌ |
 | 3 | 0.424667 | `browse_azure_marketplace_products` | ❌ |
 | 4 | 0.418814 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.417729 | `execute_azure_deployments` | ❌ |
+| 5 | 0.417600 | `get_azure_app_resource_details` | ❌ |
 
 ---
 
@@ -4267,8 +4257,8 @@
 | 1 | 0.628027 | `get_azure_best_practices` | ✅ **EXPECTED** |
 | 2 | 0.475164 | `get_azure_app_resource_details` | ❌ |
 | 3 | 0.453910 | `deploy_azure_resources_and_applications` | ❌ |
-| 4 | 0.380736 | `execute_azure_deployments` | ❌ |
-| 5 | 0.379701 | `get_azure_capacity` | ❌ |
+| 4 | 0.378761 | `get_azure_capacity` | ❌ |
+| 5 | 0.363076 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
@@ -4335,8 +4325,8 @@
 | 1 | 0.342485 | `browse_azure_marketplace_products` | ❌ |
 | 2 | 0.289308 | `design_azure_architecture` | ✅ **EXPECTED** |
 | 3 | 0.276203 | `deploy_azure_resources_and_applications` | ❌ |
-| 4 | 0.251655 | `add_azure_app_service_database` | ❌ |
-| 5 | 0.236505 | `execute_azure_deployments` | ❌ |
+| 4 | 0.251719 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.231297 | `get_azure_app_resource_details` | ❌ |
 
 ---
 
@@ -4349,11 +4339,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.323447 | `upload_azure_storage_blobs` | ❌ |
-| 2 | 0.305869 | `create_azure_storage` | ❌ |
-| 3 | 0.296671 | `design_azure_architecture` | ✅ **EXPECTED** |
-| 4 | 0.261376 | `get_azure_storage_details` | ❌ |
-| 5 | 0.235389 | `update_azure_managed_lustre_filesystems` | ❌ |
+| 1 | 0.323311 | `upload_azure_storage_blobs` | ❌ |
+| 2 | 0.305813 | `create_azure_storage` | ❌ |
+| 3 | 0.296166 | `design_azure_architecture` | ✅ **EXPECTED** |
+| 4 | 0.261114 | `get_azure_storage_details` | ❌ |
+| 5 | 0.235001 | `update_azure_managed_lustre_filesystems` | ❌ |
 
 ---
 
@@ -4366,11 +4356,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.609585 | `get_azure_load_testing_details` | ✅ **EXPECTED** |
-| 2 | 0.568056 | `create_azure_load_testing` | ❌ |
+| 1 | 0.609260 | `get_azure_load_testing_details` | ✅ **EXPECTED** |
+| 2 | 0.567757 | `create_azure_load_testing` | ❌ |
 | 3 | 0.448056 | `update_azure_load_testing_configurations` | ❌ |
-| 4 | 0.366497 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 5 | 0.353481 | `create_azure_monitor_webtests` | ❌ |
+| 4 | 0.366305 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 5 | 0.353288 | `create_azure_monitor_webtests` | ❌ |
 
 ---
 
@@ -4400,11 +4390,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.612755 | `create_azure_load_testing` | ❌ |
-| 2 | 0.592683 | `get_azure_load_testing_details` | ✅ **EXPECTED** |
-| 3 | 0.421766 | `update_azure_load_testing_configurations` | ❌ |
-| 4 | 0.362418 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.349180 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 1 | 0.612800 | `create_azure_load_testing` | ❌ |
+| 2 | 0.592725 | `get_azure_load_testing_details` | ✅ **EXPECTED** |
+| 3 | 0.421873 | `update_azure_load_testing_configurations` | ❌ |
+| 4 | 0.362425 | `create_azure_monitor_webtests` | ❌ |
+| 5 | 0.349117 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
 
@@ -4420,8 +4410,8 @@
 | 1 | 0.669717 | `get_azure_load_testing_details` | ✅ **EXPECTED** |
 | 2 | 0.609875 | `create_azure_load_testing` | ❌ |
 | 3 | 0.493520 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.426767 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.421963 | `get_azure_capacity` | ❌ |
+| 4 | 0.427548 | `get_azure_capacity` | ❌ |
+| 5 | 0.426809 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -4438,7 +4428,7 @@
 | 2 | 0.491654 | `create_azure_monitor_webtests` | ❌ |
 | 3 | 0.431906 | `get_azure_load_testing_details` | ❌ |
 | 4 | 0.425527 | `update_azure_load_testing_configurations` | ❌ |
-| 5 | 0.409332 | `update_azure_monitor_webtests` | ❌ |
+| 5 | 0.409288 | `update_azure_monitor_webtests` | ❌ |
 
 ---
 
@@ -4472,7 +4462,7 @@
 | 2 | 0.496772 | `update_azure_load_testing_configurations` | ❌ |
 | 3 | 0.460907 | `get_azure_load_testing_details` | ❌ |
 | 4 | 0.420018 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.334626 | `update_azure_monitor_webtests` | ❌ |
+| 5 | 0.334546 | `update_azure_monitor_webtests` | ❌ |
 
 ---
 
@@ -4485,11 +4475,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.577283 | `update_azure_load_testing_configurations` | ✅ **EXPECTED** |
-| 2 | 0.501245 | `create_azure_load_testing` | ❌ |
-| 3 | 0.443796 | `get_azure_load_testing_details` | ❌ |
-| 4 | 0.369079 | `update_azure_monitor_webtests` | ❌ |
-| 5 | 0.360601 | `rename_azure_sql_databases` | ❌ |
+| 1 | 0.577419 | `update_azure_load_testing_configurations` | ✅ **EXPECTED** |
+| 2 | 0.501316 | `create_azure_load_testing` | ❌ |
+| 3 | 0.443800 | `get_azure_load_testing_details` | ❌ |
+| 4 | 0.369297 | `update_azure_monitor_webtests` | ❌ |
+| 5 | 0.360753 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
@@ -4504,9 +4494,9 @@
 |------|-------|------|--------|
 | 1 | 0.599211 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.449921 | `get_azure_signalr_details` | ❌ |
-| 3 | 0.425558 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.418851 | `get_azure_virtual_desktop_details` | ❌ |
-| 5 | 0.418790 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.443802 | `get_azure_cache_for_redis_details` | ❌ |
+| 4 | 0.429913 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.425558 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
 
@@ -4519,11 +4509,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.659122 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 2 | 0.646614 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.486623 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.442045 | `get_azure_app_resource_details` | ❌ |
-| 5 | 0.441523 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.659138 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 2 | 0.646622 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 3 | 0.486694 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.442025 | `get_azure_app_resource_details` | ❌ |
+| 5 | 0.441556 | `get_azure_signalr_details` | ❌ |
 
 ---
 
@@ -4538,7 +4528,7 @@
 |------|-------|------|--------|
 | 1 | 0.600909 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.585328 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.440329 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.440398 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.437073 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.416989 | `get_azure_app_resource_details` | ❌ |
 
@@ -4570,11 +4560,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.521566 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.521635 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 2 | 0.510202 | `evaluate_azure_ai_foundry_agents` | ❌ |
 | 3 | 0.502701 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 4 | 0.498204 | `connect_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.362174 | `use_azure_openai_models` | ❌ |
+| 4 | 0.498233 | `connect_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.406924 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -4587,11 +4577,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.562287 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.448496 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.440588 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.412586 | `connect_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.394938 | `execute_azure_deployments` | ❌ |
+| 1 | 0.579535 | `deploy_azure_ai_models` | ❌ |
+| 2 | 0.562287 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 3 | 0.448518 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.440588 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.412607 | `connect_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -4605,10 +4595,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.504981 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.403945 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.398748 | `use_azure_openai_models` | ❌ |
-| 4 | 0.397053 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.367885 | `connect_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.482742 | `deploy_azure_ai_models` | ❌ |
+| 3 | 0.403986 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.398748 | `use_azure_openai_models` | ❌ |
+| 5 | 0.397053 | `evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -4622,10 +4612,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.579817 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.406256 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.405825 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.403903 | `connect_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.396690 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.418960 | `deploy_azure_ai_models` | ❌ |
+| 3 | 0.406256 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.405825 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.403897 | `connect_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -4641,8 +4631,8 @@
 | 1 | 0.603264 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.498031 | `use_azure_openai_models` | ❌ |
 | 3 | 0.484432 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.456947 | `get_azure_capacity` | ❌ |
-| 5 | 0.435210 | `generate_azure_cli_commands` | ❌ |
+| 4 | 0.443802 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.435368 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -4656,7 +4646,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.534733 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.453699 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.454264 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.444086 | `browse_azure_marketplace_products` | ❌ |
 | 4 | 0.419389 | `get_azure_app_resource_details` | ❌ |
 | 5 | 0.416112 | `get_azure_signalr_details` | ❌ |
@@ -4675,7 +4665,7 @@
 | 1 | 0.482325 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.398786 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 3 | 0.364422 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.357199 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.357577 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.356614 | `get_azure_security_configurations` | ❌ |
 
 ---
@@ -4692,7 +4682,7 @@
 | 1 | 0.667963 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.621099 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.450304 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.444213 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.444408 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.401759 | `get_azure_databases_details` | ❌ |
 
 ---
@@ -4709,7 +4699,7 @@
 | 1 | 0.531138 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.448783 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.337241 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.322260 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.323032 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.320822 | `get_azure_container_details` | ❌ |
 
 ---
@@ -4726,8 +4716,8 @@
 | 1 | 0.515763 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.410647 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 3 | 0.404503 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.396550 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.366440 | `use_azure_openai_models` | ❌ |
+| 4 | 0.396554 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.395810 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -4742,7 +4732,7 @@
 |------|-------|------|--------|
 | 1 | 0.654111 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.615349 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.446649 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.446627 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.422491 | `get_azure_data_explorer_kusto_details` | ❌ |
 | 5 | 0.416060 | `get_azure_signalr_details` | ❌ |
 
@@ -4759,7 +4749,7 @@
 |------|-------|------|--------|
 | 1 | 0.453376 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.433866 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.321039 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.321611 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.300443 | `get_azure_container_details` | ❌ |
 | 5 | 0.295001 | `get_azure_signalr_details` | ❌ |
 
@@ -4777,7 +4767,7 @@
 | 1 | 0.507589 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.425742 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 3 | 0.309441 | `get_azure_resource_and_app_health_status` | ❌ |
-| 4 | 0.298713 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.298698 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 5 | 0.291702 | `use_azure_openai_models` | ❌ |
 
 ---
@@ -4791,11 +4781,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.552427 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.462315 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.458855 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.435445 | `use_azure_openai_models` | ❌ |
-| 5 | 0.425410 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.599374 | `deploy_azure_ai_models` | ❌ |
+| 2 | 0.552427 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 3 | 0.462343 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.458855 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.435445 | `use_azure_openai_models` | ❌ |
 
 ---
 
@@ -4826,10 +4816,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.588933 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.472651 | `connect_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.467078 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.463356 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.424608 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 2 | 0.510164 | `deploy_azure_ai_models` | ❌ |
+| 3 | 0.472600 | `connect_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.467078 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.463365 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -4842,11 +4832,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546302 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.534388 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.546352 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.534425 | `connect_azure_ai_foundry_agents` | ❌ |
 | 3 | 0.530860 | `evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.525204 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 5 | 0.421105 | `use_azure_openai_models` | ❌ |
+| 5 | 0.429424 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -4859,11 +4849,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.522598 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.509261 | `use_azure_openai_models` | ❌ |
-| 3 | 0.460083 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.459774 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.408332 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.555128 | `deploy_azure_ai_models` | ❌ |
+| 2 | 0.522598 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 3 | 0.509261 | `use_azure_openai_models` | ❌ |
+| 4 | 0.460129 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.459774 | `evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -4879,7 +4869,7 @@
 | 1 | 0.543850 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.507116 | `browse_azure_marketplace_products` | ❌ |
 | 3 | 0.468386 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 4 | 0.447907 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.448711 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.425779 | `get_azure_app_resource_details` | ❌ |
 
 ---
@@ -4893,11 +4883,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.494181 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 1 | 0.494174 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.450784 | `get_azure_signalr_details` | ❌ |
-| 3 | 0.422378 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.417792 | `get_azure_app_resource_details` | ❌ |
-| 5 | 0.406409 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 3 | 0.423479 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.417724 | `get_azure_app_resource_details` | ❌ |
+| 5 | 0.406388 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -4913,7 +4903,7 @@
 | 1 | 0.470270 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.407167 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 3 | 0.378470 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.372832 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.373514 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.360971 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
@@ -4929,8 +4919,8 @@
 |------|-------|------|--------|
 | 1 | 0.496619 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.435586 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.309789 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.302510 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.310044 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.302527 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 5 | 0.290298 | `get_azure_container_details` | ❌ |
 
 ---
@@ -4946,7 +4936,7 @@
 |------|-------|------|--------|
 | 1 | 0.685811 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.620774 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.463222 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.463308 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.439438 | `get_azure_data_explorer_kusto_details` | ❌ |
 | 5 | 0.410728 | `get_azure_signalr_details` | ❌ |
 
@@ -4963,7 +4953,7 @@
 |------|-------|------|--------|
 | 1 | 0.557843 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.456176 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.376595 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.377134 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.337980 | `get_azure_container_details` | ❌ |
 | 5 | 0.327510 | `get_azure_data_explorer_kusto_details` | ❌ |
 
@@ -4978,11 +4968,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.502676 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.463915 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 3 | 0.445706 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.423761 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 5 | 0.406387 | `use_azure_openai_models` | ❌ |
+| 1 | 0.502671 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 2 | 0.463948 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.445783 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.423817 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 5 | 0.406434 | `use_azure_openai_models` | ❌ |
 
 ---
 
@@ -4997,7 +4987,7 @@
 |------|-------|------|--------|
 | 1 | 0.417775 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.373515 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.281319 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.282160 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.261925 | `get_azure_container_details` | ❌ |
 | 5 | 0.256054 | `get_azure_signalr_details` | ❌ |
 
@@ -5012,11 +5002,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.642192 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 2 | 0.627001 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.459537 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.420278 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.417829 | `get_azure_resource_and_app_health_status` | ❌ |
+| 1 | 0.642314 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 2 | 0.626649 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 3 | 0.459611 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.420373 | `get_azure_signalr_details` | ❌ |
+| 5 | 0.417992 | `get_azure_resource_and_app_health_status` | ❌ |
 
 ---
 
@@ -5029,11 +5019,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.465907 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 1 | 0.465949 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 2 | 0.459306 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.362531 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.321876 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.307885 | `get_azure_container_details` | ❌ |
+| 3 | 0.363115 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.321897 | `get_azure_signalr_details` | ❌ |
+| 5 | 0.307899 | `get_azure_container_details` | ❌ |
 
 ---
 
@@ -5046,11 +5036,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.442176 | `use_azure_openai_models` | ❌ |
-| 2 | 0.414312 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
-| 3 | 0.364747 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.351248 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.350036 | `execute_azure_deployments` | ❌ |
+| 1 | 0.454384 | `deploy_azure_ai_models` | ❌ |
+| 2 | 0.442176 | `use_azure_openai_models` | ❌ |
+| 3 | 0.414312 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
+| 4 | 0.364747 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.351290 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -5065,9 +5055,9 @@
 |------|-------|------|--------|
 | 1 | 0.478034 | `get_azure_ai_resources_details` | ✅ **EXPECTED** |
 | 2 | 0.412935 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 3 | 0.324853 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.324788 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.323317 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.343793 | `deploy_azure_ai_models` | ❌ |
+| 4 | 0.324853 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.324788 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -5082,9 +5072,9 @@
 |------|-------|------|--------|
 | 1 | 0.566491 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.464178 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.312268 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.312344 | `get_azure_messaging_service_details` | ❌ |
 | 4 | 0.305023 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.304985 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.304988 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -5099,9 +5089,9 @@
 |------|-------|------|--------|
 | 1 | 0.564315 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.477702 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.330673 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.330689 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.327179 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.321587 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.321705 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -5116,8 +5106,8 @@
 |------|-------|------|--------|
 | 1 | 0.516858 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.465631 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.353651 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.324671 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.353677 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.324901 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.306547 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
@@ -5131,11 +5121,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.669285 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
-| 2 | 0.561779 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.450678 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.412118 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.390813 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 1 | 0.669464 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
+| 2 | 0.561928 | `get_azure_ai_resources_details` | ❌ |
+| 3 | 0.450609 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.412094 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.390953 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -5150,7 +5140,7 @@
 |------|-------|------|--------|
 | 1 | 0.524146 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.399606 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.322797 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.322840 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.267991 | `evaluate_azure_ai_foundry_agents` | ❌ |
 | 5 | 0.264021 | `get_azure_data_explorer_kusto_details` | ❌ |
 
@@ -5167,9 +5157,9 @@
 |------|-------|------|--------|
 | 1 | 0.691488 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
 | 2 | 0.627605 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.462042 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.462028 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.421014 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.415222 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.414851 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -5182,11 +5172,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.530839 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
-| 2 | 0.439695 | `get_azure_ai_resources_details` | ❌ |
-| 3 | 0.308871 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.285910 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.282944 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 1 | 0.530883 | `retrieve_azure_ai_knowledge_base_content` | ✅ **EXPECTED** |
+| 2 | 0.439737 | `get_azure_ai_resources_details` | ❌ |
+| 3 | 0.308946 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.286399 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.282951 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
@@ -5200,10 +5190,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.389976 | `use_azure_openai_models` | ✅ **EXPECTED** |
-| 2 | 0.254256 | `send_azure_communication_messages` | ❌ |
+| 2 | 0.254263 | `send_azure_communication_messages` | ❌ |
 | 3 | 0.205840 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.184631 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.150665 | `connect_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.184587 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.150659 | `connect_azure_ai_foundry_agents` | ❌ |
 
 ---
 
@@ -5216,11 +5206,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.517427 | `generate_azure_cli_commands` | ❌ |
-| 2 | 0.472325 | `use_azure_openai_models` | ✅ **EXPECTED** |
-| 3 | 0.390310 | `execute_azure_deployments` | ❌ |
-| 4 | 0.388807 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.377388 | `browse_azure_marketplace_products` | ❌ |
+| 1 | 0.517506 | `generate_azure_cli_commands` | ❌ |
+| 2 | 0.472396 | `use_azure_openai_models` | ✅ **EXPECTED** |
+| 3 | 0.388792 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.377460 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.367700 | `install_azure_cli_extensions` | ❌ |
 
 ---
 
@@ -5233,11 +5223,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.682124 | `use_azure_openai_models` | ✅ **EXPECTED** |
-| 2 | 0.414187 | `recognize_speech_from_audio` | ❌ |
-| 3 | 0.403186 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
-| 4 | 0.401946 | `generate_azure_cli_commands` | ❌ |
-| 5 | 0.385329 | `get_azure_ai_resources_details` | ❌ |
+| 1 | 0.682093 | `use_azure_openai_models` | ✅ **EXPECTED** |
+| 2 | 0.414225 | `recognize_speech_from_audio` | ❌ |
+| 3 | 0.403170 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
+| 4 | 0.401921 | `generate_azure_cli_commands` | ❌ |
+| 5 | 0.398779 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -5267,11 +5257,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.575213 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.514602 | `connect_azure_ai_foundry_agents` | ✅ **EXPECTED** |
+| 1 | 0.575247 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.514647 | `connect_azure_ai_foundry_agents` | ✅ **EXPECTED** |
 | 3 | 0.510270 | `evaluate_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.495795 | `get_azure_ai_resources_details` | ❌ |
-| 5 | 0.385756 | `use_azure_openai_models` | ❌ |
+| 5 | 0.392199 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -5285,10 +5275,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.596620 | `evaluate_azure_ai_foundry_agents` | ❌ |
-| 2 | 0.590123 | `query_and_evaluate_azure_ai_foundry_agents` | ✅ **EXPECTED** |
-| 3 | 0.423635 | `connect_azure_ai_foundry_agents` | ❌ |
+| 2 | 0.590134 | `query_and_evaluate_azure_ai_foundry_agents` | ✅ **EXPECTED** |
+| 3 | 0.423700 | `connect_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.383588 | `get_azure_ai_resources_details` | ❌ |
-| 5 | 0.319233 | `use_azure_openai_models` | ❌ |
+| 5 | 0.365679 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
@@ -5301,11 +5291,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.426012 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.425995 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 2 | 0.364688 | `evaluate_azure_ai_foundry_agents` | ✅ **EXPECTED** |
 | 3 | 0.262513 | `get_azure_resource_and_app_health_status` | ❌ |
 | 4 | 0.249584 | `get_azure_ai_resources_details` | ❌ |
-| 5 | 0.238878 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.239002 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -5320,9 +5310,9 @@
 |------|-------|------|--------|
 | 1 | 0.623815 | `get_azure_storage_details` | ✅ **EXPECTED** |
 | 2 | 0.475469 | `get_azure_app_config_settings` | ❌ |
-| 3 | 0.430956 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.426398 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.422049 | `create_azure_storage` | ❌ |
+| 3 | 0.433314 | `get_azure_cache_for_redis_details` | ❌ |
+| 4 | 0.430956 | `get_azure_app_resource_details` | ❌ |
+| 5 | 0.427589 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -5369,11 +5359,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.497314 | `get_azure_storage_details` | ✅ **EXPECTED** |
-| 2 | 0.463770 | `upload_azure_storage_blobs` | ❌ |
-| 3 | 0.458536 | `create_azure_storage` | ❌ |
-| 4 | 0.338651 | `get_azure_container_details` | ❌ |
-| 5 | 0.309725 | `get_azure_security_configurations` | ❌ |
+| 1 | 0.497304 | `get_azure_storage_details` | ✅ **EXPECTED** |
+| 2 | 0.463738 | `upload_azure_storage_blobs` | ❌ |
+| 3 | 0.458514 | `create_azure_storage` | ❌ |
+| 4 | 0.338640 | `get_azure_container_details` | ❌ |
+| 5 | 0.309742 | `get_azure_security_configurations` | ❌ |
 
 ---
 
@@ -5387,10 +5377,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.611409 | `get_azure_storage_details` | ✅ **EXPECTED** |
-| 2 | 0.444366 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.441300 | `create_azure_storage` | ❌ |
-| 4 | 0.428352 | `get_azure_capacity` | ❌ |
-| 5 | 0.400577 | `browse_azure_marketplace_products` | ❌ |
+| 2 | 0.455104 | `get_azure_capacity` | ❌ |
+| 3 | 0.444366 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.441300 | `create_azure_storage` | ❌ |
+| 5 | 0.401717 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -5407,7 +5397,7 @@
 | 2 | 0.577262 | `create_azure_storage` | ❌ |
 | 3 | 0.573528 | `get_azure_storage_details` | ✅ **EXPECTED** |
 | 4 | 0.432052 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 5 | 0.421279 | `get_azure_capacity` | ❌ |
+| 5 | 0.417417 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
@@ -5423,7 +5413,7 @@
 | 1 | 0.605946 | `update_azure_managed_lustre_filesystems` | ❌ |
 | 2 | 0.596710 | `create_azure_storage` | ❌ |
 | 3 | 0.593813 | `get_azure_storage_details` | ✅ **EXPECTED** |
-| 4 | 0.435301 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.436583 | `get_azure_messaging_service_details` | ❌ |
 | 5 | 0.431655 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
@@ -5441,7 +5431,7 @@
 | 2 | 0.541443 | `update_azure_managed_lustre_filesystems` | ❌ |
 | 3 | 0.531024 | `create_azure_storage` | ❌ |
 | 4 | 0.463214 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.435044 | `get_azure_capacity` | ❌ |
+| 5 | 0.412477 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -5456,9 +5446,9 @@
 |------|-------|------|--------|
 | 1 | 0.493767 | `get_azure_storage_details` | ✅ **EXPECTED** |
 | 2 | 0.426243 | `create_azure_storage` | ❌ |
-| 3 | 0.388186 | `get_azure_capacity` | ❌ |
-| 4 | 0.384612 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.381052 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.384612 | `get_azure_security_configurations` | ❌ |
+| 4 | 0.382781 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.377358 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -5509,7 +5499,7 @@
 | 2 | 0.449230 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.419483 | `create_azure_storage` | ❌ |
 | 4 | 0.419250 | `get_azure_container_details` | ❌ |
-| 5 | 0.414316 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.417457 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
@@ -5522,11 +5512,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.546667 | `get_azure_storage_details` | ✅ **EXPECTED** |
-| 2 | 0.457238 | `upload_azure_storage_blobs` | ❌ |
-| 3 | 0.439803 | `create_azure_storage` | ❌ |
-| 4 | 0.405897 | `get_azure_container_details` | ❌ |
-| 5 | 0.348646 | `get_azure_app_config_settings` | ❌ |
+| 1 | 0.546641 | `get_azure_storage_details` | ✅ **EXPECTED** |
+| 2 | 0.457241 | `upload_azure_storage_blobs` | ❌ |
+| 3 | 0.439747 | `create_azure_storage` | ❌ |
+| 4 | 0.405931 | `get_azure_container_details` | ❌ |
+| 5 | 0.348687 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
@@ -5543,7 +5533,7 @@
 | 2 | 0.450881 | `create_azure_storage` | ❌ |
 | 3 | 0.434495 | `get_azure_container_details` | ❌ |
 | 4 | 0.398764 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.368711 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.373892 | `get_azure_capacity` | ❌ |
 
 ---
 
@@ -5559,8 +5549,8 @@
 | 1 | 0.512980 | `get_azure_storage_details` | ✅ **EXPECTED** |
 | 2 | 0.430206 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 3 | 0.425170 | `create_azure_storage` | ❌ |
-| 4 | 0.397401 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.385193 | `get_azure_security_configurations` | ❌ |
+| 4 | 0.401776 | `get_azure_capacity` | ❌ |
+| 5 | 0.397521 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
@@ -5573,11 +5563,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.584136 | `get_azure_storage_details` | ✅ **EXPECTED** |
-| 2 | 0.543122 | `create_azure_storage` | ❌ |
-| 3 | 0.527934 | `update_azure_managed_lustre_filesystems` | ❌ |
-| 4 | 0.421820 | `get_azure_capacity` | ❌ |
-| 5 | 0.332218 | `generate_azure_cli_commands` | ❌ |
+| 1 | 0.584062 | `get_azure_storage_details` | ✅ **EXPECTED** |
+| 2 | 0.543203 | `create_azure_storage` | ❌ |
+| 3 | 0.528023 | `update_azure_managed_lustre_filesystems` | ❌ |
+| 4 | 0.382127 | `get_azure_capacity` | ❌ |
+| 5 | 0.331802 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
@@ -5593,8 +5583,8 @@
 | 1 | 0.574214 | `get_azure_storage_details` | ✅ **EXPECTED** |
 | 2 | 0.504246 | `update_azure_managed_lustre_filesystems` | ❌ |
 | 3 | 0.472221 | `create_azure_storage` | ❌ |
-| 4 | 0.393120 | `get_azure_capacity` | ❌ |
-| 5 | 0.316611 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.368401 | `get_azure_capacity` | ❌ |
+| 5 | 0.316710 | `publish_azure_eventgrid_events` | ❌ |
 
 ---
 
@@ -5661,7 +5651,7 @@
 | 1 | 0.521592 | `create_azure_storage` | ✅ **EXPECTED** |
 | 2 | 0.483638 | `create_azure_sql_databases_and_servers` | ❌ |
 | 3 | 0.468735 | `get_azure_storage_details` | ❌ |
-| 4 | 0.406117 | `get_azure_capacity` | ❌ |
+| 4 | 0.369974 | `get_azure_capacity` | ❌ |
 | 5 | 0.356649 | `create_azure_load_testing` | ❌ |
 
 ---
@@ -5679,7 +5669,7 @@
 | 2 | 0.626919 | `create_azure_storage` | ✅ **EXPECTED** |
 | 3 | 0.533351 | `get_azure_storage_details` | ❌ |
 | 4 | 0.363841 | `create_azure_sql_databases_and_servers` | ❌ |
-| 5 | 0.339901 | `get_azure_capacity` | ❌ |
+| 5 | 0.318408 | `create_azure_load_testing` | ❌ |
 
 ---
 
@@ -5692,11 +5682,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.532843 | `create_azure_storage` | ✅ **EXPECTED** |
-| 2 | 0.487514 | `upload_azure_storage_blobs` | ❌ |
-| 3 | 0.440567 | `get_azure_storage_details` | ❌ |
-| 4 | 0.345015 | `create_azure_key_vault_secrets` | ❌ |
-| 5 | 0.326599 | `get_azure_container_details` | ❌ |
+| 1 | 0.532844 | `create_azure_storage` | ✅ **EXPECTED** |
+| 2 | 0.487471 | `upload_azure_storage_blobs` | ❌ |
+| 3 | 0.440527 | `get_azure_storage_details` | ❌ |
+| 4 | 0.345035 | `create_azure_key_vault_secrets` | ❌ |
+| 5 | 0.326507 | `get_azure_container_details` | ❌ |
 
 ---
 
@@ -5726,11 +5716,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.664565 | `update_azure_managed_lustre_filesystems` | ✅ **EXPECTED** |
-| 2 | 0.449482 | `create_azure_storage` | ❌ |
-| 3 | 0.368632 | `get_azure_storage_details` | ❌ |
-| 4 | 0.327263 | `edit_azure_databases` | ❌ |
-| 5 | 0.323886 | `edit_azure_workbooks` | ❌ |
+| 1 | 0.664019 | `update_azure_managed_lustre_filesystems` | ✅ **EXPECTED** |
+| 2 | 0.448808 | `create_azure_storage` | ❌ |
+| 3 | 0.368488 | `get_azure_storage_details` | ❌ |
+| 4 | 0.327730 | `edit_azure_databases` | ❌ |
+| 5 | 0.323192 | `edit_azure_workbooks` | ❌ |
 
 ---
 
@@ -5753,176 +5743,6 @@
 
 ## Test 312
 
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** List all access policies in the Redis Cache <cache_name>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.598205 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.335003 | `get_azure_security_configurations` | ❌ |
-| 3 | 0.304910 | `get_azure_database_admin_configuration_details` | ❌ |
-| 4 | 0.290564 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.267608 | `get_azure_container_details` | ❌ |
-
----
-
-## Test 313
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** List all databases in the Redis Cluster <cluster_name>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.470698 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.389069 | `get_azure_databases_details` | ❌ |
-| 3 | 0.387732 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.296636 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.280567 | `get_azure_container_details` | ❌ |
-
----
-
-## Test 314
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** List all Redis Caches in my subscription  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.580574 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.364804 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.340629 | `get_azure_databases_details` | ❌ |
-| 4 | 0.321291 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.310751 | `browse_azure_marketplace_products` | ❌ |
-
----
-
-## Test 315
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** List all Redis Clusters in my subscription  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.567687 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.435563 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 3 | 0.414456 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.396583 | `get_azure_container_details` | ❌ |
-| 5 | 0.364785 | `get_azure_messaging_service_details` | ❌ |
-
----
-
-## Test 316
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me my Redis Caches  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.520310 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.290240 | `get_azure_databases_details` | ❌ |
-| 3 | 0.261870 | `get_azure_container_details` | ❌ |
-| 4 | 0.252356 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.246602 | `browse_azure_marketplace_products` | ❌ |
-
----
-
-## Test 317
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me my Redis Clusters  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.498314 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.354127 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 3 | 0.342390 | `get_azure_container_details` | ❌ |
-| 4 | 0.298268 | `get_azure_databases_details` | ❌ |
-| 5 | 0.272676 | `get_azure_database_admin_configuration_details` | ❌ |
-
----
-
-## Test 318
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me the access policies in the Redis Cache <cache_name>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.600094 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.322512 | `get_azure_database_admin_configuration_details` | ❌ |
-| 3 | 0.316775 | `get_azure_security_configurations` | ❌ |
-| 4 | 0.309470 | `get_azure_key_vault_items` | ❌ |
-| 5 | 0.305487 | `get_azure_app_config_settings` | ❌ |
-
----
-
-## Test 319
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me the databases in the Redis Cluster <cluster_name>  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.456878 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.379510 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 3 | 0.372182 | `get_azure_databases_details` | ❌ |
-| 4 | 0.280782 | `get_azure_container_details` | ❌ |
-| 5 | 0.277615 | `rename_azure_sql_databases` | ❌ |
-
----
-
-## Test 320
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me the Redis Caches in my subscription  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.553755 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.360815 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.335247 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.333570 | `get_azure_databases_details` | ❌ |
-| 5 | 0.308733 | `get_azure_container_details` | ❌ |
-
----
-
-## Test 321
-
-**Expected Tool:** `get_azure_cache_for_redis_details`  
-**Prompt:** Show me the Redis Clusters in my subscription  
-
-### Results
-
-| Rank | Score | Tool | Status |
-|------|-------|------|--------|
-| 1 | 0.538723 | `get_azure_cache_for_redis_details` | ✅ **EXPECTED** |
-| 2 | 0.424900 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 3 | 0.415817 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.400228 | `get_azure_container_details` | ❌ |
-| 5 | 0.364169 | `get_azure_databases_details` | ❌ |
-
----
-
-## Test 322
-
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Get details about marketplace product <product_name>  
 
@@ -5933,12 +5753,12 @@
 | 1 | 0.424825 | `browse_azure_marketplace_products` | ✅ **EXPECTED** |
 | 2 | 0.376519 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.359701 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.324404 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.310262 | `get_azure_storage_details` | ❌ |
+| 4 | 0.324878 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.323149 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 323
+## Test 313
 
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Search for Microsoft products in the marketplace  
@@ -5955,7 +5775,7 @@
 
 ---
 
-## Test 324
+## Test 314
 
 **Expected Tool:** `browse_azure_marketplace_products`  
 **Prompt:** Show me marketplace products from publisher <publisher_name>  
@@ -5965,14 +5785,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.492651 | `browse_azure_marketplace_products` | ✅ **EXPECTED** |
-| 2 | 0.225495 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.226351 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.218384 | `get_azure_ai_resources_details` | ❌ |
 | 4 | 0.215330 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 | 5 | 0.210581 | `get_azure_workbooks_details` | ❌ |
 
 ---
 
-## Test 325
+## Test 315
 
 **Expected Tool:** `get_azure_capacity`  
 **Prompt:** Check usage information for <resource_type> in region <region>  
@@ -5981,15 +5801,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.484871 | `get_azure_capacity` | ✅ **EXPECTED** |
+| 1 | 0.530253 | `get_azure_capacity` | ✅ **EXPECTED** |
 | 2 | 0.397452 | `get_azure_storage_details` | ❌ |
 | 3 | 0.353830 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.350140 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.350026 | `get_azure_virtual_desktop_details` | ❌ |
+| 4 | 0.353146 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.350349 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 326
+## Test 316
 
 **Expected Tool:** `get_azure_capacity`  
 **Prompt:** Show me the available regions for these resource types <resource_types>  
@@ -5998,15 +5818,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.398404 | `get_azure_capacity` | ✅ **EXPECTED** |
+| 1 | 0.430316 | `get_azure_capacity` | ✅ **EXPECTED** |
 | 2 | 0.332100 | `get_azure_load_testing_details` | ❌ |
 | 3 | 0.326530 | `get_azure_storage_details` | ❌ |
-| 4 | 0.322856 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.313365 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.322400 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.317967 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 327
+## Test 317
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>  
@@ -6015,7 +5835,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.549915 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.550433 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 2 | 0.537248 | `edit_azure_data_analytics_resources` | ❌ |
 | 3 | 0.417076 | `get_azure_signalr_details` | ❌ |
 | 4 | 0.413392 | `get_azure_app_config_settings` | ❌ |
@@ -6023,7 +5843,7 @@
 
 ---
 
-## Test 328
+## Test 318
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>  
@@ -6032,15 +5852,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.554775 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 2 | 0.510810 | `edit_azure_data_analytics_resources` | ❌ |
-| 3 | 0.453455 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.423322 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.415404 | `get_azure_app_resource_details` | ❌ |
+| 1 | 0.555243 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.510649 | `edit_azure_data_analytics_resources` | ❌ |
+| 3 | 0.453511 | `get_azure_signalr_details` | ❌ |
+| 4 | 0.423299 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.415266 | `get_azure_app_resource_details` | ❌ |
 
 ---
 
-## Test 329
+## Test 319
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Get the details of my namespace <namespace_name> in my resource group <resource_group_name>  
@@ -6049,15 +5869,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.508903 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 2 | 0.468746 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.451446 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.432774 | `get_azure_signalr_details` | ❌ |
-| 5 | 0.429765 | `get_azure_storage_details` | ❌ |
+| 1 | 0.509618 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.468594 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.458941 | `get_azure_cache_for_redis_details` | ❌ |
+| 4 | 0.450924 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.432453 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 330
+## Test 320
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>  
@@ -6067,14 +5887,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.552301 | `edit_azure_data_analytics_resources` | ❌ |
-| 2 | 0.469857 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.470393 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 3 | 0.379261 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.360262 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.360237 | `publish_azure_eventgrid_events` | ❌ |
 | 5 | 0.338916 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 331
+## Test 321
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Grid subscriptions in subscription <subscription>  
@@ -6083,15 +5903,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.445063 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 2 | 0.431684 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.414496 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.350456 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.335742 | `edit_azure_data_analytics_resources` | ❌ |
+| 1 | 0.445663 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.431671 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.414508 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.350435 | `get_azure_security_configurations` | ❌ |
+| 5 | 0.335767 | `edit_azure_data_analytics_resources` | ❌ |
 
 ---
 
-## Test 332
+## Test 322
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Grid topics in my subscription  
@@ -6100,15 +5920,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.514030 | `publish_azure_eventgrid_events` | ❌ |
-| 2 | 0.510686 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.514479 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.511417 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 3 | 0.433919 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.380839 | `browse_azure_marketplace_products` | ❌ |
 | 5 | 0.375303 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 333
+## Test 323
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>  
@@ -6118,14 +5938,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.517196 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.473028 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.440138 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.473204 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.440107 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.367530 | `edit_azure_data_analytics_resources` | ❌ |
 | 5 | 0.337400 | `get_azure_load_testing_details` | ❌ |
 
 ---
 
-## Test 334
+## Test 324
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Grid topics in subscription <subscription>  
@@ -6134,15 +5954,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.484028 | `publish_azure_eventgrid_events` | ❌ |
-| 2 | 0.473797 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.484235 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.474480 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 3 | 0.397469 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.335248 | `edit_azure_data_analytics_resources` | ❌ |
 | 5 | 0.329802 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 335
+## Test 325
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Hubs in my namespace <namespace_name>  
@@ -6152,14 +5972,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.538223 | `edit_azure_data_analytics_resources` | ❌ |
-| 2 | 0.489438 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.381085 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.490081 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.381229 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.361397 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.332270 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 336
+## Test 326
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List all Event Hubs namespaces in my subscription  
@@ -6168,15 +5988,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.517141 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.517926 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 2 | 0.508146 | `edit_azure_data_analytics_resources` | ❌ |
 | 3 | 0.415741 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.373001 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.366739 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.366988 | `publish_azure_eventgrid_events` | ❌ |
 
 ---
 
-## Test 337
+## Test 327
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List Event Grid subscriptions for subscription <subscription> in location <location>  
@@ -6186,14 +6006,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.443596 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.439593 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.413135 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.440872 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.412665 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.352198 | `get_azure_storage_details` | ❌ |
 | 5 | 0.351500 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 338
+## Test 328
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name>  
@@ -6203,14 +6023,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.499123 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.494205 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.473537 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.494840 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.473120 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.366263 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.347265 | `edit_azure_data_analytics_resources` | ❌ |
 
 ---
 
-## Test 339
+## Test 329
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** List Event Grid subscriptions for topic <topic_name> in subscription <subscription>  
@@ -6219,15 +6039,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.472417 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 2 | 0.469761 | `publish_azure_eventgrid_events` | ❌ |
+| 1 | 0.473535 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.469527 | `publish_azure_eventgrid_events` | ❌ |
 | 3 | 0.422468 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.341614 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.319377 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 340
+## Test 330
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show all Event Grid subscriptions in my subscription  
@@ -6236,15 +6056,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.480398 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 2 | 0.470532 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.453705 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.429371 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.402515 | `browse_azure_marketplace_products` | ❌ |
+| 1 | 0.481543 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 2 | 0.470487 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.453733 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.429263 | `get_azure_security_configurations` | ❌ |
+| 5 | 0.402453 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 341
+## Test 331
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>  
@@ -6254,14 +6074,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.566739 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 2 | 0.483011 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.406254 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.483454 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.405819 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.383949 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.375086 | `edit_azure_data_analytics_resources` | ❌ |
 
 ---
 
-## Test 342
+## Test 332
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show me all Event Grid subscriptions for topic <topic_name>  
@@ -6270,15 +6090,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498244 | `publish_azure_eventgrid_events` | ❌ |
-| 2 | 0.475101 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.498127 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.476345 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 3 | 0.404707 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.344019 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.337543 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 343
+## Test 333
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show me the details of service bus <service_bus_name> queue <queue_name>  
@@ -6287,15 +6107,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.577545 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.577320 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 2 | 0.422716 | `get_azure_signalr_details` | ❌ |
 | 3 | 0.384758 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.365590 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.365499 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.364952 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
-## Test 344
+## Test 334
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show me the details of service bus <service_bus_name> subscription <subscription_name>  
@@ -6304,7 +6124,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.565484 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.565533 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 2 | 0.432405 | `get_azure_signalr_details` | ❌ |
 | 3 | 0.397741 | `get_azure_app_resource_details` | ❌ |
 | 4 | 0.380696 | `get_azure_subscriptions_and_resource_groups` | ❌ |
@@ -6312,7 +6132,7 @@
 
 ---
 
-## Test 345
+## Test 335
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show me the details of service bus <service_bus_name> topic <topic_name>  
@@ -6321,15 +6141,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.568951 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 1 | 0.569639 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
 | 2 | 0.408956 | `get_azure_signalr_details` | ❌ |
 | 3 | 0.375835 | `get_azure_app_resource_details` | ❌ |
 | 4 | 0.363340 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.347442 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.347870 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 346
+## Test 336
 
 **Expected Tool:** `get_azure_messaging_service_details`  
 **Prompt:** Show me the Event Grid topics in my subscription  
@@ -6338,15 +6158,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.528995 | `publish_azure_eventgrid_events` | ❌ |
-| 2 | 0.519422 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
-| 3 | 0.444005 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.417523 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.364752 | `get_azure_security_configurations` | ❌ |
+| 1 | 0.529422 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.520326 | `get_azure_messaging_service_details` | ✅ **EXPECTED** |
+| 3 | 0.444029 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.417590 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.364815 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 347
+## Test 337
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>  
@@ -6356,14 +6176,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.567860 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.401880 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.380930 | `publish_azure_eventgrid_events` | ❌ |
+| 2 | 0.401665 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.380821 | `publish_azure_eventgrid_events` | ❌ |
 | 4 | 0.343917 | `create_azure_key_vault_secrets` | ❌ |
 | 5 | 0.334668 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
-## Test 348
+## Test 338
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>  
@@ -6372,15 +6192,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.537246 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.420610 | `publish_azure_eventgrid_events` | ❌ |
-| 3 | 0.400466 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.365714 | `create_azure_key_vault_secrets` | ❌ |
-| 5 | 0.364259 | `create_azure_key_vault_items` | ❌ |
+| 1 | 0.537219 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
+| 2 | 0.420484 | `publish_azure_eventgrid_events` | ❌ |
+| 3 | 0.400204 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.365801 | `create_azure_key_vault_secrets` | ❌ |
+| 5 | 0.364315 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
-## Test 349
+## Test 339
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Create an new namespace <namespace_name> in my resource group <resource_group_name>  
@@ -6389,15 +6209,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.381243 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.380652 | `create_azure_key_vault_secrets` | ❌ |
-| 3 | 0.352027 | `create_azure_key_vault_items` | ❌ |
-| 4 | 0.329775 | `create_azure_load_testing` | ❌ |
-| 5 | 0.324124 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.380823 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
+| 2 | 0.380229 | `create_azure_key_vault_secrets` | ❌ |
+| 3 | 0.351558 | `create_azure_key_vault_items` | ❌ |
+| 4 | 0.329203 | `create_azure_load_testing` | ❌ |
+| 5 | 0.323437 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 350
+## Test 340
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>  
@@ -6407,14 +6227,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.669651 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.382770 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.330235 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.311527 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.305503 | `edit_azure_workbooks` | ❌ |
+| 2 | 0.383213 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.330286 | `edit_azure_app_config_settings` | ❌ |
+| 4 | 0.311518 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.305524 | `edit_azure_workbooks` | ❌ |
 
 ---
 
-## Test 351
+## Test 341
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>  
@@ -6423,15 +6243,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.658804 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.371664 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.359810 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.356070 | `edit_azure_app_config_settings` | ❌ |
-| 5 | 0.340097 | `edit_azure_workbooks` | ❌ |
+| 1 | 0.658817 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
+| 2 | 0.371998 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.359687 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.356153 | `edit_azure_app_config_settings` | ❌ |
+| 5 | 0.340131 | `edit_azure_workbooks` | ❌ |
 
 ---
 
-## Test 352
+## Test 342
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Delete my namespace <namespace_name> in my resource group <resource_group_name>  
@@ -6448,7 +6268,7 @@
 
 ---
 
-## Test 353
+## Test 343
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>  
@@ -6458,14 +6278,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.738618 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
-| 2 | 0.439270 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.386803 | `update_azure_managed_lustre_filesystems` | ❌ |
+| 2 | 0.439672 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.386800 | `update_azure_managed_lustre_filesystems` | ❌ |
 | 4 | 0.373932 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.362897 | `edit_azure_workbooks` | ❌ |
+| 5 | 0.362896 | `edit_azure_workbooks` | ❌ |
 
 ---
 
-## Test 354
+## Test 344
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>  
@@ -6476,13 +6296,13 @@
 |------|-------|------|--------|
 | 1 | 0.708436 | `edit_azure_data_analytics_resources` | ✅ **EXPECTED** |
 | 2 | 0.440297 | `update_azure_managed_lustre_filesystems` | ❌ |
-| 3 | 0.431338 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.423791 | `publish_azure_eventgrid_events` | ❌ |
+| 3 | 0.431754 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.423825 | `publish_azure_eventgrid_events` | ❌ |
 | 5 | 0.389301 | `edit_azure_workbooks` | ❌ |
 
 ---
 
-## Test 355
+## Test 345
 
 **Expected Tool:** `edit_azure_data_analytics_resources`  
 **Prompt:** Update my namespace <namespace_name> in my resource group <resource_group_name>  
@@ -6499,7 +6319,7 @@
 
 ---
 
-## Test 356
+## Test 346
 
 **Expected Tool:** `publish_azure_eventgrid_events`  
 **Prompt:** Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>  
@@ -6508,15 +6328,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.732200 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
-| 2 | 0.364422 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.327560 | `edit_azure_data_analytics_resources` | ❌ |
-| 4 | 0.289079 | `get_azure_best_practices` | ❌ |
-| 5 | 0.286527 | `send_azure_communication_messages` | ❌ |
+| 1 | 0.732024 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
+| 2 | 0.365389 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.327559 | `edit_azure_data_analytics_resources` | ❌ |
+| 4 | 0.289012 | `get_azure_best_practices` | ❌ |
+| 5 | 0.286585 | `send_azure_communication_messages` | ❌ |
 
 ---
 
-## Test 357
+## Test 347
 
 **Expected Tool:** `publish_azure_eventgrid_events`  
 **Prompt:** Publish event to my Event Grid topic <topic_name> with the following events <event_data>  
@@ -6525,15 +6345,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.647380 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
-| 2 | 0.381287 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.647400 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
+| 2 | 0.382138 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.352434 | `edit_azure_data_analytics_resources` | ❌ |
-| 4 | 0.297256 | `send_azure_communication_messages` | ❌ |
+| 4 | 0.297312 | `send_azure_communication_messages` | ❌ |
 | 5 | 0.294962 | `upload_azure_storage_blobs` | ❌ |
 
 ---
 
-## Test 358
+## Test 348
 
 **Expected Tool:** `publish_azure_eventgrid_events`  
 **Prompt:** Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>  
@@ -6542,15 +6362,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.594047 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
-| 2 | 0.386591 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.593921 | `publish_azure_eventgrid_events` | ✅ **EXPECTED** |
+| 2 | 0.386869 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.369923 | `edit_azure_data_analytics_resources` | ❌ |
-| 4 | 0.295586 | `send_azure_communication_messages` | ❌ |
+| 4 | 0.295613 | `send_azure_communication_messages` | ❌ |
 | 5 | 0.289053 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 
 ---
 
-## Test 359
+## Test 349
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** List all Data Explorer clusters in my subscription  
@@ -6562,12 +6382,12 @@
 | 1 | 0.589762 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.413814 | `get_azure_databases_details` | ❌ |
 | 3 | 0.398499 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.385167 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.379203 | `get_azure_container_details` | ❌ |
+| 4 | 0.379203 | `get_azure_container_details` | ❌ |
+| 5 | 0.379108 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 360
+## Test 350
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** List all databases in the Data Explorer cluster <cluster_name>  
@@ -6578,13 +6398,13 @@
 |------|-------|------|--------|
 | 1 | 0.546030 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.462094 | `get_azure_databases_details` | ❌ |
-| 3 | 0.337694 | `get_azure_cache_for_redis_details` | ❌ |
-| 4 | 0.304208 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.295340 | `get_azure_container_details` | ❌ |
+| 3 | 0.304208 | `rename_azure_sql_databases` | ❌ |
+| 4 | 0.295340 | `get_azure_container_details` | ❌ |
+| 5 | 0.281556 | `add_azure_app_service_database` | ❌ |
 
 ---
 
-## Test 361
+## Test 351
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** List all tables in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -6595,13 +6415,13 @@
 |------|-------|------|--------|
 | 1 | 0.526929 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.410927 | `get_azure_databases_details` | ❌ |
-| 3 | 0.305623 | `get_azure_cache_for_redis_details` | ❌ |
-| 4 | 0.256124 | `get_azure_container_details` | ❌ |
-| 5 | 0.244911 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.256124 | `get_azure_container_details` | ❌ |
+| 4 | 0.244911 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.243279 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
-## Test 362
+## Test 352
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>  
@@ -6614,11 +6434,11 @@
 | 2 | 0.313016 | `get_azure_databases_details` | ❌ |
 | 3 | 0.263223 | `get_azure_confidential_ledger_entries` | ❌ |
 | 4 | 0.248948 | `get_azure_container_details` | ❌ |
-| 5 | 0.242279 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.229602 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 363
+## Test 353
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>  
@@ -6635,7 +6455,7 @@
 
 ---
 
-## Test 364
+## Test 354
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me my Data Explorer clusters  
@@ -6647,12 +6467,12 @@
 | 1 | 0.533350 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.337173 | `get_azure_databases_details` | ❌ |
 | 3 | 0.337078 | `get_azure_container_details` | ❌ |
-| 4 | 0.315555 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.305856 | `browse_azure_marketplace_products` | ❌ |
+| 4 | 0.305856 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.288691 | `get_azure_resource_and_app_health_status` | ❌ |
 
 ---
 
-## Test 365
+## Test 355
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me the Data Explorer clusters in my subscription  
@@ -6661,15 +6481,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.584974 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
-| 2 | 0.420030 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.415732 | `get_azure_databases_details` | ❌ |
-| 4 | 0.404725 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.400086 | `get_azure_container_details` | ❌ |
+| 1 | 0.584941 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
+| 2 | 0.420000 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.415745 | `get_azure_databases_details` | ❌ |
+| 4 | 0.404683 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.400036 | `get_azure_container_details` | ❌ |
 
 ---
 
-## Test 366
+## Test 356
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me the databases in the Data Explorer cluster <cluster_name>  
@@ -6680,13 +6500,13 @@
 |------|-------|------|--------|
 | 1 | 0.535152 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.443460 | `get_azure_databases_details` | ❌ |
-| 3 | 0.327990 | `get_azure_cache_for_redis_details` | ❌ |
-| 4 | 0.301627 | `get_azure_container_details` | ❌ |
-| 5 | 0.295149 | `rename_azure_sql_databases` | ❌ |
+| 3 | 0.301627 | `get_azure_container_details` | ❌ |
+| 4 | 0.295149 | `rename_azure_sql_databases` | ❌ |
+| 5 | 0.293066 | `add_azure_app_service_database` | ❌ |
 
 ---
 
-## Test 367
+## Test 357
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me the details of the Data Explorer cluster <cluster_name>  
@@ -6697,13 +6517,13 @@
 |------|-------|------|--------|
 | 1 | 0.603734 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.416961 | `get_azure_container_details` | ❌ |
-| 3 | 0.382586 | `get_azure_cache_for_redis_details` | ❌ |
-| 4 | 0.365816 | `get_azure_databases_details` | ❌ |
+| 3 | 0.365816 | `get_azure_databases_details` | ❌ |
+| 4 | 0.363498 | `get_azure_cache_for_redis_details` | ❌ |
 | 5 | 0.363158 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 368
+## Test 358
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -6712,15 +6532,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.475347 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
-| 2 | 0.367386 | `get_azure_databases_details` | ❌ |
-| 3 | 0.251481 | `get_azure_best_practices` | ❌ |
-| 4 | 0.242454 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.242382 | `design_azure_architecture` | ❌ |
+| 1 | 0.475232 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
+| 2 | 0.367299 | `get_azure_databases_details` | ❌ |
+| 3 | 0.251410 | `get_azure_best_practices` | ❌ |
+| 4 | 0.242322 | `design_azure_architecture` | ❌ |
+| 5 | 0.241889 | `publish_azure_eventgrid_events` | ❌ |
 
 ---
 
-## Test 369
+## Test 359
 
 **Expected Tool:** `get_azure_data_explorer_kusto_details`  
 **Prompt:** Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>  
@@ -6731,13 +6551,13 @@
 |------|-------|------|--------|
 | 1 | 0.521279 | `get_azure_data_explorer_kusto_details` | ✅ **EXPECTED** |
 | 2 | 0.401926 | `get_azure_databases_details` | ❌ |
-| 3 | 0.301626 | `get_azure_cache_for_redis_details` | ❌ |
-| 4 | 0.271168 | `get_azure_container_details` | ❌ |
-| 5 | 0.258457 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.271168 | `get_azure_container_details` | ❌ |
+| 4 | 0.258235 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.253747 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 370
+## Test 360
 
 **Expected Tool:** `create_azure_database_admin_configurations`  
 **Prompt:** Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name>  
@@ -6749,12 +6569,12 @@
 | 1 | 0.619667 | `create_azure_database_admin_configurations` | ✅ **EXPECTED** |
 | 2 | 0.497535 | `delete_azure_database_admin_configurations` | ❌ |
 | 3 | 0.339582 | `edit_azure_databases` | ❌ |
-| 4 | 0.339238 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.339334 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.310935 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
-## Test 371
+## Test 361
 
 **Expected Tool:** `create_azure_database_admin_configurations`  
 **Prompt:** Create a firewall rule for my Azure SQL server <server_name>  
@@ -6763,15 +6583,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.769949 | `create_azure_database_admin_configurations` | ✅ **EXPECTED** |
-| 2 | 0.659650 | `delete_azure_database_admin_configurations` | ❌ |
-| 3 | 0.476833 | `edit_azure_databases` | ❌ |
-| 4 | 0.455132 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.452335 | `create_azure_sql_databases_and_servers` | ❌ |
+| 1 | 0.769894 | `create_azure_database_admin_configurations` | ✅ **EXPECTED** |
+| 2 | 0.659595 | `delete_azure_database_admin_configurations` | ❌ |
+| 3 | 0.476817 | `edit_azure_databases` | ❌ |
+| 4 | 0.455047 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.452299 | `create_azure_sql_databases_and_servers` | ❌ |
 
 ---
 
-## Test 372
+## Test 362
 
 **Expected Tool:** `create_azure_database_admin_configurations`  
 **Prompt:** Create a new firewall rule named <rule_name> for SQL server <server_name>  
@@ -6784,11 +6604,11 @@
 | 2 | 0.546667 | `delete_azure_database_admin_configurations` | ❌ |
 | 3 | 0.409535 | `create_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.399140 | `rename_azure_sql_databases` | ❌ |
-| 5 | 0.370061 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.370078 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
-## Test 373
+## Test 363
 
 **Expected Tool:** `delete_azure_database_admin_configurations`  
 **Prompt:** Delete a firewall rule from my Azure SQL server <server_name>  
@@ -6800,12 +6620,12 @@
 | 1 | 0.725925 | `delete_azure_database_admin_configurations` | ✅ **EXPECTED** |
 | 2 | 0.684225 | `create_azure_database_admin_configurations` | ❌ |
 | 3 | 0.507485 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.446832 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.446796 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.434498 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
-## Test 374
+## Test 364
 
 **Expected Tool:** `delete_azure_database_admin_configurations`  
 **Prompt:** Delete firewall rule <rule_name> for SQL server <server_name>  
@@ -6817,12 +6637,12 @@
 | 1 | 0.691123 | `delete_azure_database_admin_configurations` | ✅ **EXPECTED** |
 | 2 | 0.657272 | `create_azure_database_admin_configurations` | ❌ |
 | 3 | 0.411100 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.410580 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.410644 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.398776 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
-## Test 375
+## Test 365
 
 **Expected Tool:** `delete_azure_database_admin_configurations`  
 **Prompt:** Remove the firewall rule <rule_name> from SQL server <server_name>  
@@ -6834,12 +6654,12 @@
 | 1 | 0.662278 | `delete_azure_database_admin_configurations` | ✅ **EXPECTED** |
 | 2 | 0.610044 | `create_azure_database_admin_configurations` | ❌ |
 | 3 | 0.374118 | `edit_azure_sql_databases_and_servers` | ❌ |
-| 4 | 0.368243 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.368223 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.351139 | `rename_azure_sql_databases` | ❌ |
 
 ---
 
-## Test 376
+## Test 366
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** List all elastic pools in SQL server <server_name>  
@@ -6848,7 +6668,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.550794 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 1 | 0.550801 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 2 | 0.437477 | `get_azure_databases_details` | ❌ |
 | 3 | 0.418188 | `create_azure_sql_databases_and_servers` | ❌ |
 | 4 | 0.411871 | `rename_azure_sql_databases` | ❌ |
@@ -6856,7 +6676,7 @@
 
 ---
 
-## Test 377
+## Test 367
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** List all firewall rules for SQL server <server_name>  
@@ -6867,13 +6687,13 @@
 |------|-------|------|--------|
 | 1 | 0.659544 | `create_azure_database_admin_configurations` | ❌ |
 | 2 | 0.635949 | `delete_azure_database_admin_configurations` | ❌ |
-| 3 | 0.509163 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 3 | 0.509175 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 4 | 0.344890 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.332632 | `get_azure_databases_details` | ❌ |
 
 ---
 
-## Test 378
+## Test 368
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** List Microsoft Entra ID administrators for SQL server <server_name>  
@@ -6882,7 +6702,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498356 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 1 | 0.498412 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 2 | 0.362041 | `create_azure_database_admin_configurations` | ❌ |
 | 3 | 0.358939 | `get_azure_security_configurations` | ❌ |
 | 4 | 0.343594 | `get_azure_databases_details` | ❌ |
@@ -6890,7 +6710,7 @@
 
 ---
 
-## Test 379
+## Test 369
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** Show me the elastic pools configured for SQL server <server_name>  
@@ -6899,7 +6719,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.602459 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 1 | 0.602455 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 2 | 0.445269 | `create_azure_sql_databases_and_servers` | ❌ |
 | 3 | 0.424559 | `get_azure_databases_details` | ❌ |
 | 4 | 0.414641 | `edit_azure_databases` | ❌ |
@@ -6907,7 +6727,7 @@
 
 ---
 
-## Test 380
+## Test 370
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** Show me the Entra ID administrators configured for SQL server <server_name>  
@@ -6916,15 +6736,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.498316 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 1 | 0.498397 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 2 | 0.325040 | `create_azure_database_admin_configurations` | ❌ |
-| 3 | 0.300436 | `add_azure_app_service_database` | ❌ |
+| 3 | 0.300449 | `add_azure_app_service_database` | ❌ |
 | 4 | 0.299005 | `get_azure_databases_details` | ❌ |
 | 5 | 0.294052 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 381
+## Test 371
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** Show me the firewall rules for SQL server <server_name>  
@@ -6935,13 +6755,13 @@
 |------|-------|------|--------|
 | 1 | 0.659102 | `create_azure_database_admin_configurations` | ❌ |
 | 2 | 0.611917 | `delete_azure_database_admin_configurations` | ❌ |
-| 3 | 0.486395 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 3 | 0.486410 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 4 | 0.361115 | `edit_azure_databases` | ❌ |
 | 5 | 0.322908 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 382
+## Test 372
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** What elastic pools are available in my SQL server <server_name>?  
@@ -6950,15 +6770,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.515299 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
-| 2 | 0.442723 | `create_azure_sql_databases_and_servers` | ❌ |
-| 3 | 0.412957 | `edit_azure_databases` | ❌ |
-| 4 | 0.411657 | `get_azure_databases_details` | ❌ |
-| 5 | 0.380417 | `get_azure_capacity` | ❌ |
+| 1 | 0.515387 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 2 | 0.442752 | `create_azure_sql_databases_and_servers` | ❌ |
+| 3 | 0.412941 | `edit_azure_databases` | ❌ |
+| 4 | 0.411655 | `get_azure_databases_details` | ❌ |
+| 5 | 0.370955 | `get_azure_capacity` | ❌ |
 
 ---
 
-## Test 383
+## Test 373
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** What firewall rules are configured for my SQL server <server_name>?  
@@ -6969,13 +6789,13 @@
 |------|-------|------|--------|
 | 1 | 0.657075 | `create_azure_database_admin_configurations` | ❌ |
 | 2 | 0.595199 | `delete_azure_database_admin_configurations` | ❌ |
-| 3 | 0.493189 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 3 | 0.493185 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
 | 4 | 0.358803 | `edit_azure_databases` | ❌ |
 | 5 | 0.329180 | `edit_azure_sql_databases_and_servers` | ❌ |
 
 ---
 
-## Test 384
+## Test 374
 
 **Expected Tool:** `get_azure_database_admin_configuration_details`  
 **Prompt:** What Microsoft Entra ID administrators are set up for my SQL server <server_name>?  
@@ -6984,15 +6804,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.451827 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
-| 2 | 0.340144 | `add_azure_app_service_database` | ❌ |
+| 1 | 0.451771 | `get_azure_database_admin_configuration_details` | ✅ **EXPECTED** |
+| 2 | 0.340143 | `add_azure_app_service_database` | ❌ |
 | 3 | 0.332608 | `create_azure_database_admin_configurations` | ❌ |
 | 4 | 0.331531 | `edit_azure_sql_databases_and_servers` | ❌ |
 | 5 | 0.331515 | `create_azure_sql_databases_and_servers` | ❌ |
 
 ---
 
-## Test 385
+## Test 375
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>  
@@ -7001,15 +6821,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.591315 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.489551 | `get_azure_virtual_desktop_details` | ❌ |
-| 3 | 0.461100 | `get_azure_database_admin_configuration_details` | ❌ |
-| 4 | 0.438929 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.434421 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.591451 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.489539 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.461238 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.439012 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.434254 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 386
+## Test 376
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Get the configuration of AKS cluster <cluster-name>  
@@ -7020,13 +6840,13 @@
 |------|-------|------|--------|
 | 1 | 0.525642 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.515594 | `get_azure_app_config_settings` | ❌ |
-| 3 | 0.423935 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.423830 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.384930 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 5 | 0.379742 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.373640 | `lock_unlock_azure_app_config_settings` | ❌ |
 
 ---
 
-## Test 387
+## Test 377
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List all AKS clusters in my subscription  
@@ -7043,7 +6863,7 @@
 
 ---
 
-## Test 388
+## Test 378
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List all Azure Container Registries in my subscription  
@@ -7060,7 +6880,7 @@
 
 ---
 
-## Test 389
+## Test 379
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List all container registry repositories in my subscription  
@@ -7073,11 +6893,11 @@
 | 2 | 0.394679 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 3 | 0.385192 | `get_azure_storage_details` | ❌ |
 | 4 | 0.351749 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.349969 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.345305 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 390
+## Test 380
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List container registries in resource group <resource_group_name>  
@@ -7089,12 +6909,12 @@
 | 1 | 0.489483 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.382508 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 3 | 0.365207 | `get_azure_storage_details` | ❌ |
-| 4 | 0.356837 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.349921 | `get_azure_load_testing_details` | ❌ |
+| 4 | 0.349921 | `get_azure_load_testing_details` | ❌ |
+| 5 | 0.338102 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 391
+## Test 381
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List nodepools for AKS cluster <cluster-name> in <resource-group>  
@@ -7103,15 +6923,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.542296 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.417414 | `get_azure_virtual_desktop_details` | ❌ |
-| 3 | 0.385553 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.372743 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.371410 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 1 | 0.542243 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.417443 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.385526 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.371461 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 5 | 0.362639 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
-## Test 392
+## Test 382
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** List repositories in the container registry <registry_name>  
@@ -7120,15 +6940,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.452303 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.285101 | `get_azure_cache_for_redis_details` | ❌ |
-| 3 | 0.277147 | `get_azure_storage_details` | ❌ |
-| 4 | 0.265399 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.261745 | `create_azure_storage` | ❌ |
+| 1 | 0.452265 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.277163 | `get_azure_storage_details` | ❌ |
+| 3 | 0.265440 | `get_azure_security_configurations` | ❌ |
+| 4 | 0.261770 | `create_azure_storage` | ❌ |
+| 5 | 0.260828 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 393
+## Test 383
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me my Azure Container Registries  
@@ -7141,11 +6961,11 @@
 | 2 | 0.419226 | `browse_azure_marketplace_products` | ❌ |
 | 3 | 0.395307 | `get_azure_storage_details` | ❌ |
 | 4 | 0.390515 | `get_azure_security_configurations` | ❌ |
-| 5 | 0.384917 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.378209 | `get_azure_databases_details` | ❌ |
 
 ---
 
-## Test 394
+## Test 384
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me my Azure Kubernetes Service clusters  
@@ -7162,7 +6982,7 @@
 
 ---
 
-## Test 395
+## Test 385
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me my container registry repositories  
@@ -7175,11 +6995,11 @@
 | 2 | 0.310577 | `get_azure_security_configurations` | ❌ |
 | 3 | 0.310265 | `get_azure_storage_details` | ❌ |
 | 4 | 0.294726 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.293685 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.292917 | `create_azure_storage` | ❌ |
 
 ---
 
-## Test 396
+## Test 386
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>  
@@ -7188,15 +7008,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.516160 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.442585 | `get_azure_database_admin_configuration_details` | ❌ |
-| 3 | 0.410309 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.394415 | `get_azure_virtual_desktop_details` | ❌ |
-| 5 | 0.360302 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.516023 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.442551 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.410279 | `get_azure_app_config_settings` | ❌ |
+| 4 | 0.394278 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.360171 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 397
+## Test 387
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the container registries in my subscription  
@@ -7205,15 +7025,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.547872 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.432956 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.391672 | `get_azure_storage_details` | ❌ |
-| 4 | 0.385551 | `browse_azure_marketplace_products` | ❌ |
-| 5 | 0.361321 | `get_azure_messaging_service_details` | ❌ |
+| 1 | 0.547796 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.433036 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 3 | 0.391606 | `get_azure_storage_details` | ❌ |
+| 4 | 0.385491 | `browse_azure_marketplace_products` | ❌ |
+| 5 | 0.362622 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 398
+## Test 388
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the container registries in resource group <resource_group_name>  
@@ -7224,13 +7044,13 @@
 |------|-------|------|--------|
 | 1 | 0.510429 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.431510 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 3 | 0.355156 | `get_azure_cache_for_redis_details` | ❌ |
+| 3 | 0.357940 | `get_azure_cache_for_redis_details` | ❌ |
 | 4 | 0.353883 | `get_azure_storage_details` | ❌ |
-| 5 | 0.343124 | `get_azure_load_testing_details` | ❌ |
+| 5 | 0.346827 | `get_azure_capacity` | ❌ |
 
 ---
 
-## Test 399
+## Test 389
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the details of AKS cluster <cluster-name> in resource group <resource-group>  
@@ -7242,12 +7062,12 @@
 | 1 | 0.579908 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.459131 | `get_azure_signalr_details` | ❌ |
 | 3 | 0.444584 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.424458 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.424320 | `get_azure_virtual_desktop_details` | ❌ |
+| 4 | 0.424320 | `get_azure_virtual_desktop_details` | ❌ |
+| 5 | 0.422049 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 400
+## Test 390
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the network configuration for AKS cluster <cluster-name>  
@@ -7259,12 +7079,12 @@
 | 1 | 0.452245 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.375014 | `get_azure_app_config_settings` | ❌ |
 | 3 | 0.357934 | `get_azure_signalr_details` | ❌ |
-| 4 | 0.343230 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.343177 | `get_azure_database_admin_configuration_details` | ❌ |
 | 5 | 0.322237 | `get_azure_data_explorer_kusto_details` | ❌ |
 
 ---
 
-## Test 401
+## Test 391
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>  
@@ -7276,12 +7096,12 @@
 | 1 | 0.542863 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.412997 | `get_azure_virtual_desktop_details` | ❌ |
 | 3 | 0.387109 | `get_azure_data_explorer_kusto_details` | ❌ |
-| 4 | 0.378755 | `get_azure_cache_for_redis_details` | ❌ |
-| 5 | 0.373530 | `get_azure_database_admin_configuration_details` | ❌ |
+| 4 | 0.373553 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.363902 | `get_azure_security_configurations` | ❌ |
 
 ---
 
-## Test 402
+## Test 392
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** Show me the repositories in the container registry <registry_name>  
@@ -7291,14 +7111,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.463224 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.287737 | `get_azure_cache_for_redis_details` | ❌ |
-| 3 | 0.277348 | `browse_azure_marketplace_products` | ❌ |
-| 4 | 0.273850 | `get_azure_storage_details` | ❌ |
-| 5 | 0.267446 | `get_azure_key_vault_items` | ❌ |
+| 2 | 0.277348 | `browse_azure_marketplace_products` | ❌ |
+| 3 | 0.273850 | `get_azure_storage_details` | ❌ |
+| 4 | 0.267446 | `get_azure_key_vault_items` | ❌ |
+| 5 | 0.258361 | `get_azure_databases_details` | ❌ |
 
 ---
 
-## Test 403
+## Test 393
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** What AKS clusters do I have?  
@@ -7315,7 +7135,7 @@
 
 ---
 
-## Test 404
+## Test 394
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** What are the details of my AKS cluster <cluster-name> in <resource-group>?  
@@ -7332,7 +7152,7 @@
 
 ---
 
-## Test 405
+## Test 395
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?  
@@ -7343,13 +7163,13 @@
 |------|-------|------|--------|
 | 1 | 0.489130 | `get_azure_container_details` | ✅ **EXPECTED** |
 | 2 | 0.347326 | `get_azure_virtual_desktop_details` | ❌ |
-| 3 | 0.338797 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.338923 | `get_azure_database_admin_configuration_details` | ❌ |
 | 4 | 0.317925 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.315321 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
-## Test 406
+## Test 396
 
 **Expected Tool:** `get_azure_container_details`  
 **Prompt:** What nodepools do I have for AKS cluster <cluster-name> in <resource-group>  
@@ -7358,15 +7178,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.532501 | `get_azure_container_details` | ✅ **EXPECTED** |
-| 2 | 0.389162 | `get_azure_virtual_desktop_details` | ❌ |
-| 3 | 0.362346 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.358739 | `get_azure_database_admin_configuration_details` | ❌ |
-| 5 | 0.355086 | `get_azure_signalr_details` | ❌ |
+| 1 | 0.532532 | `get_azure_container_details` | ✅ **EXPECTED** |
+| 2 | 0.389232 | `get_azure_virtual_desktop_details` | ❌ |
+| 3 | 0.362397 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.358841 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.355124 | `get_azure_signalr_details` | ❌ |
 
 ---
 
-## Test 407
+## Test 397
 
 **Expected Tool:** `get_azure_virtual_desktop_details`  
 **Prompt:** List all host pools in my subscription  
@@ -7375,15 +7195,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.550232 | `get_azure_virtual_desktop_details` | ✅ **EXPECTED** |
-| 2 | 0.453703 | `get_azure_database_admin_configuration_details` | ❌ |
-| 3 | 0.442934 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.412970 | `get_azure_container_details` | ❌ |
-| 5 | 0.396066 | `get_azure_capacity` | ❌ |
+| 1 | 0.550251 | `get_azure_virtual_desktop_details` | ✅ **EXPECTED** |
+| 2 | 0.453600 | `get_azure_database_admin_configuration_details` | ❌ |
+| 3 | 0.442910 | `get_azure_subscriptions_and_resource_groups` | ❌ |
+| 4 | 0.412967 | `get_azure_container_details` | ❌ |
+| 5 | 0.394678 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 408
+## Test 398
 
 **Expected Tool:** `get_azure_virtual_desktop_details`  
 **Prompt:** List all session hosts in host pool <hostpool_name>  
@@ -7393,14 +7213,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.607532 | `get_azure_virtual_desktop_details` | ✅ **EXPECTED** |
-| 2 | 0.364628 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.364740 | `get_azure_database_admin_configuration_details` | ❌ |
 | 3 | 0.319120 | `get_azure_security_configurations` | ❌ |
 | 4 | 0.312479 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.307420 | `get_azure_container_details` | ❌ |
 
 ---
 
-## Test 409
+## Test 399
 
 **Expected Tool:** `get_azure_virtual_desktop_details`  
 **Prompt:** List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>  
@@ -7410,14 +7230,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.611133 | `get_azure_virtual_desktop_details` | ✅ **EXPECTED** |
-| 2 | 0.335733 | `get_azure_database_admin_configuration_details` | ❌ |
+| 2 | 0.335895 | `get_azure_database_admin_configuration_details` | ❌ |
 | 3 | 0.313084 | `get_azure_security_configurations` | ❌ |
 | 4 | 0.283932 | `get_azure_signalr_details` | ❌ |
 | 5 | 0.265858 | `get_azure_container_details` | ❌ |
 
 ---
 
-## Test 410
+## Test 400
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>  
@@ -7427,14 +7247,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.711335 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.438870 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.438790 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.387114 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.370390 | `edit_azure_data_analytics_resources` | ❌ |
-| 5 | 0.363831 | `get_azure_capacity` | ❌ |
+| 4 | 0.373297 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.370390 | `edit_azure_data_analytics_resources` | ❌ |
 
 ---
 
-## Test 411
+## Test 401
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** Get information about my SignalR runtime <signalr_name> in <resource_group_name>  
@@ -7444,14 +7264,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.729127 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.467032 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.467563 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.452790 | `get_azure_app_resource_details` | ❌ |
 | 4 | 0.447727 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 5 | 0.433126 | `get_azure_app_config_settings` | ❌ |
 
 ---
 
-## Test 412
+## Test 402
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** List all SignalRs in my subscription  
@@ -7461,14 +7281,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.497376 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.390874 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.391290 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.360482 | `get_azure_subscriptions_and_resource_groups` | ❌ |
 | 4 | 0.336211 | `get_azure_security_configurations` | ❌ |
 | 5 | 0.314121 | `browse_azure_marketplace_products` | ❌ |
 
 ---
 
-## Test 413
+## Test 403
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** Show all the SignalRs information in <resource_group_name>  
@@ -7478,14 +7298,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.641102 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.499456 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.500333 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.461902 | `get_azure_subscriptions_and_resource_groups` | ❌ |
-| 4 | 0.420390 | `get_azure_virtual_desktop_details` | ❌ |
-| 5 | 0.410032 | `get_azure_capacity` | ❌ |
+| 4 | 0.433484 | `get_azure_cache_for_redis_details` | ❌ |
+| 5 | 0.420390 | `get_azure_virtual_desktop_details` | ❌ |
 
 ---
 
-## Test 414
+## Test 404
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** Show me the details of SignalR <signalr_name>  
@@ -7495,14 +7315,14 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.605571 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.427490 | `get_azure_messaging_service_details` | ❌ |
+| 2 | 0.428387 | `get_azure_messaging_service_details` | ❌ |
 | 3 | 0.388473 | `get_azure_app_config_settings` | ❌ |
 | 4 | 0.379322 | `get_azure_app_resource_details` | ❌ |
-| 5 | 0.322423 | `get_azure_data_explorer_kusto_details` | ❌ |
+| 5 | 0.362474 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 415
+## Test 405
 
 **Expected Tool:** `get_azure_signalr_details`  
 **Prompt:** Show me the network information of SignalR runtime <signalr_name>  
@@ -7511,15 +7331,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.639174 | `get_azure_signalr_details` | ✅ **EXPECTED** |
-| 2 | 0.331031 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.321752 | `get_azure_app_resource_details` | ❌ |
-| 4 | 0.317910 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.290120 | `get_azure_database_admin_configuration_details` | ❌ |
+| 1 | 0.639126 | `get_azure_signalr_details` | ✅ **EXPECTED** |
+| 2 | 0.332452 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.321748 | `get_azure_app_resource_details` | ❌ |
+| 4 | 0.317889 | `get_azure_app_config_settings` | ❌ |
+| 5 | 0.293598 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 416
+## Test 406
 
 **Expected Tool:** `get_azure_confidential_ledger_entries`  
 **Prompt:** Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>  
@@ -7532,11 +7352,11 @@
 | 2 | 0.478164 | `append_azure_confidential_ledger_entries` | ❌ |
 | 3 | 0.212123 | `get_azure_key_vault_secret_values` | ❌ |
 | 4 | 0.171645 | `get_azure_app_config_settings` | ❌ |
-| 5 | 0.141934 | `get_azure_database_admin_configuration_details` | ❌ |
+| 5 | 0.141977 | `get_azure_database_admin_configuration_details` | ❌ |
 
 ---
 
-## Test 417
+## Test 407
 
 **Expected Tool:** `get_azure_confidential_ledger_entries`  
 **Prompt:** Get transaction <transaction_id> from ledger <ledger_name>  
@@ -7548,12 +7368,12 @@
 | 1 | 0.398313 | `get_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
 | 2 | 0.394587 | `append_azure_confidential_ledger_entries` | ❌ |
 | 3 | 0.154670 | `get_azure_app_config_settings` | ❌ |
-| 4 | 0.140497 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.137021 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.140490 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.137979 | `get_azure_cache_for_redis_details` | ❌ |
 
 ---
 
-## Test 418
+## Test 408
 
 **Expected Tool:** `append_azure_confidential_ledger_entries`  
 **Prompt:** Append {"hello": "from mcp"} to my confidential ledger <ledger_name> in collection <collection_id>  
@@ -7562,15 +7382,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.521661 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
-| 2 | 0.358961 | `get_azure_confidential_ledger_entries` | ❌ |
-| 3 | 0.217303 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.216503 | `update_azure_managed_lustre_filesystems` | ❌ |
-| 5 | 0.204009 | `edit_azure_app_config_settings` | ❌ |
+| 1 | 0.521636 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
+| 2 | 0.358953 | `get_azure_confidential_ledger_entries` | ❌ |
+| 3 | 0.217335 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.216388 | `update_azure_managed_lustre_filesystems` | ❌ |
+| 5 | 0.204048 | `edit_azure_app_config_settings` | ❌ |
 
 ---
 
-## Test 419
+## Test 409
 
 **Expected Tool:** `append_azure_confidential_ledger_entries`  
 **Prompt:** Append an entry to my ledger <ledger_name> with data {"key": "value"}  
@@ -7579,15 +7399,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.456236 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
-| 2 | 0.290162 | `get_azure_confidential_ledger_entries` | ❌ |
-| 3 | 0.214449 | `create_azure_key_vault_secrets` | ❌ |
-| 4 | 0.197784 | `create_azure_key_vault_items` | ❌ |
-| 5 | 0.193367 | `import_azure_key_vault_certificates` | ❌ |
+| 1 | 0.456250 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
+| 2 | 0.289949 | `get_azure_confidential_ledger_entries` | ❌ |
+| 3 | 0.214352 | `create_azure_key_vault_secrets` | ❌ |
+| 4 | 0.197816 | `create_azure_key_vault_items` | ❌ |
+| 5 | 0.193278 | `import_azure_key_vault_certificates` | ❌ |
 
 ---
 
-## Test 420
+## Test 410
 
 **Expected Tool:** `append_azure_confidential_ledger_entries`  
 **Prompt:** Create an immutable ledger entry in <ledger_name> with content {"audit": "log"}  
@@ -7596,15 +7416,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.440219 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
-| 2 | 0.370010 | `get_azure_confidential_ledger_entries` | ❌ |
-| 3 | 0.194427 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.185735 | `audit_azure_resources_compliance` | ❌ |
-| 5 | 0.184506 | `create_azure_key_vault_items` | ❌ |
+| 1 | 0.440329 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
+| 2 | 0.370414 | `get_azure_confidential_ledger_entries` | ❌ |
+| 3 | 0.195062 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.186084 | `audit_azure_resources_compliance` | ❌ |
+| 5 | 0.184154 | `create_azure_key_vault_items` | ❌ |
 
 ---
 
-## Test 421
+## Test 411
 
 **Expected Tool:** `append_azure_confidential_ledger_entries`  
 **Prompt:** Write a tamper-proof entry to ledger <ledger_name> containing {"transaction": "data"}  
@@ -7613,15 +7433,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.538122 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
-| 2 | 0.440073 | `get_azure_confidential_ledger_entries` | ❌ |
-| 3 | 0.195454 | `edit_azure_app_config_settings` | ❌ |
-| 4 | 0.181017 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.179716 | `create_azure_key_vault_secrets` | ❌ |
+| 1 | 0.538340 | `append_azure_confidential_ledger_entries` | ✅ **EXPECTED** |
+| 2 | 0.440278 | `get_azure_confidential_ledger_entries` | ❌ |
+| 3 | 0.195564 | `edit_azure_app_config_settings` | ❌ |
+| 4 | 0.181246 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.179857 | `create_azure_key_vault_secrets` | ❌ |
 
 ---
 
-## Test 422
+## Test 412
 
 **Expected Tool:** `append_azure_confidential_ledger_entries`  
 **Prompt:** Write an entry to confidential ledger <ledger_name>  
@@ -7638,7 +7458,7 @@
 
 ---
 
-## Test 423
+## Test 413
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send an email from my communication service to <email-address>  
@@ -7647,15 +7467,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.500055 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.199503 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.196433 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.186640 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.500057 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.197359 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.196910 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.186658 | `connect_azure_ai_foundry_agents` | ❌ |
 | 5 | 0.167947 | `recognize_speech_from_audio` | ❌ |
 
 ---
 
-## Test 424
+## Test 414
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send an email to <email-address> with subject <subject>  
@@ -7664,15 +7484,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.310898 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.159353 | `publish_azure_eventgrid_events` | ❌ |
-| 3 | 0.126573 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.117898 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.112037 | `edit_azure_app_config_settings` | ❌ |
+| 1 | 0.310846 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.159858 | `publish_azure_eventgrid_events` | ❌ |
+| 3 | 0.126443 | `generate_azure_cli_commands` | ❌ |
+| 4 | 0.117853 | `upload_azure_storage_blobs` | ❌ |
+| 5 | 0.111964 | `edit_azure_app_config_settings` | ❌ |
 
 ---
 
-## Test 425
+## Test 415
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send an email with BCC recipients  
@@ -7681,7 +7501,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.351224 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.351177 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.168924 | `append_azure_confidential_ledger_entries` | ❌ |
 | 3 | 0.162872 | `upload_azure_storage_blobs` | ❌ |
 | 4 | 0.156211 | `import_azure_key_vault_certificates` | ❌ |
@@ -7689,7 +7509,7 @@
 
 ---
 
-## Test 426
+## Test 416
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send an SMS message to <phone-number> saying "Hello"  
@@ -7698,15 +7518,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.349463 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.349510 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.135823 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.127312 | `use_azure_openai_models` | ❌ |
 | 4 | 0.103749 | `lock_unlock_azure_app_config_settings` | ❌ |
-| 5 | 0.101985 | `get_azure_messaging_service_details` | ❌ |
+| 5 | 0.099666 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 427
+## Test 417
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send an SMS with delivery receipt tracking  
@@ -7715,15 +7535,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.553583 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.228899 | `append_azure_confidential_ledger_entries` | ❌ |
-| 3 | 0.179812 | `get_azure_messaging_service_details` | ❌ |
-| 4 | 0.167901 | `publish_azure_eventgrid_events` | ❌ |
-| 5 | 0.166382 | `create_azure_load_testing` | ❌ |
+| 1 | 0.553571 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.228969 | `append_azure_confidential_ledger_entries` | ❌ |
+| 3 | 0.177229 | `get_azure_messaging_service_details` | ❌ |
+| 4 | 0.168556 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.166446 | `create_azure_load_testing` | ❌ |
 
 ---
 
-## Test 428
+## Test 418
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send broadcast SMS to <phone-number-1> and <phone-number-2> saying "Urgent notification"  
@@ -7732,15 +7552,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.368350 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.139528 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.120068 | `publish_azure_eventgrid_events` | ❌ |
-| 4 | 0.118927 | `create_azure_database_admin_configurations` | ❌ |
-| 5 | 0.114379 | `lock_unlock_azure_app_config_settings` | ❌ |
+| 1 | 0.368364 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.136766 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.120215 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.118743 | `create_azure_database_admin_configurations` | ❌ |
+| 5 | 0.114166 | `delete_azure_database_admin_configurations` | ❌ |
 
 ---
 
-## Test 429
+## Test 419
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send email to multiple recipients: <email-address-1>, <email-address-2>  
@@ -7749,15 +7569,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.329704 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.087973 | `edit_azure_databases` | ❌ |
+| 1 | 0.329715 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.087988 | `edit_azure_databases` | ❌ |
 | 3 | 0.083453 | `import_azure_key_vault_certificates` | ❌ |
-| 4 | 0.077818 | `create_azure_workbooks` | ❌ |
-| 5 | 0.076587 | `use_azure_openai_models` | ❌ |
+| 4 | 0.077784 | `create_azure_workbooks` | ❌ |
+| 5 | 0.076582 | `use_azure_openai_models` | ❌ |
 
 ---
 
-## Test 430
+## Test 420
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send email with CC to <email-address-1> and <email-address-2>  
@@ -7766,15 +7586,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.344742 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.107004 | `import_azure_key_vault_certificates` | ❌ |
-| 3 | 0.086249 | `create_azure_database_admin_configurations` | ❌ |
-| 4 | 0.085420 | `append_azure_confidential_ledger_entries` | ❌ |
-| 5 | 0.084922 | `upload_azure_storage_blobs` | ❌ |
+| 1 | 0.344829 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.107081 | `import_azure_key_vault_certificates` | ❌ |
+| 3 | 0.086260 | `create_azure_database_admin_configurations` | ❌ |
+| 4 | 0.085471 | `append_azure_confidential_ledger_entries` | ❌ |
+| 5 | 0.084815 | `upload_azure_storage_blobs` | ❌ |
 
 ---
 
-## Test 431
+## Test 421
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send email with custom sender name <sender-name>  
@@ -7783,15 +7603,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.267893 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.267887 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.159272 | `rename_azure_sql_databases` | ❌ |
 | 3 | 0.128130 | `edit_azure_databases` | ❌ |
 | 4 | 0.116966 | `create_azure_database_admin_configurations` | ❌ |
-| 5 | 0.112978 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.113303 | `publish_azure_eventgrid_events` | ❌ |
 
 ---
 
-## Test 432
+## Test 422
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send email with reply-to address set to <email-address>  
@@ -7800,7 +7620,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.258001 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.258019 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.145024 | `edit_azure_app_config_settings` | ❌ |
 | 3 | 0.139142 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.118904 | `edit_azure_databases` | ❌ |
@@ -7808,7 +7628,7 @@
 
 ---
 
-## Test 433
+## Test 423
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send HTML-formatted email to <email-address> with subject <subject>  
@@ -7817,15 +7637,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.240441 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.121727 | `publish_azure_eventgrid_events` | ❌ |
-| 3 | 0.093090 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.092966 | `create_azure_monitor_webtests` | ❌ |
-| 5 | 0.081317 | `use_azure_openai_models` | ❌ |
+| 1 | 0.240446 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.122166 | `publish_azure_eventgrid_events` | ❌ |
+| 3 | 0.093117 | `generate_azure_cli_commands` | ❌ |
+| 4 | 0.092980 | `create_azure_monitor_webtests` | ❌ |
+| 5 | 0.081360 | `use_azure_openai_models` | ❌ |
 
 ---
 
-## Test 434
+## Test 424
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send SMS from my communication service to <phone-number-1>  
@@ -7834,15 +7654,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.502800 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.193922 | `get_azure_messaging_service_details` | ❌ |
-| 3 | 0.171065 | `connect_azure_ai_foundry_agents` | ❌ |
+| 1 | 0.502877 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.190918 | `get_azure_messaging_service_details` | ❌ |
+| 3 | 0.171099 | `connect_azure_ai_foundry_agents` | ❌ |
 | 4 | 0.160623 | `use_azure_openai_models` | ❌ |
-| 5 | 0.141429 | `add_azure_app_service_database` | ❌ |
+| 5 | 0.141456 | `add_azure_app_service_database` | ❌ |
 
 ---
 
-## Test 435
+## Test 425
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send SMS message with custom tracking tag "campaign1"  
@@ -7851,7 +7671,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.450507 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.450517 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.149276 | `append_azure_confidential_ledger_entries` | ❌ |
 | 3 | 0.136341 | `use_azure_openai_models` | ❌ |
 | 4 | 0.134519 | `create_azure_load_testing` | ❌ |
@@ -7859,7 +7679,7 @@
 
 ---
 
-## Test 436
+## Test 426
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send SMS to <phone-number-2> from <phone-number-1> with message "Test message"  
@@ -7868,7 +7688,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.397812 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.397926 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.160968 | `create_azure_load_testing` | ❌ |
 | 3 | 0.140980 | `rename_azure_sql_databases` | ❌ |
 | 4 | 0.136239 | `create_azure_monitor_webtests` | ❌ |
@@ -7876,7 +7696,7 @@
 
 ---
 
-## Test 437
+## Test 427
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send SMS to multiple recipients: <phone-number-1>, <phone-number-2>  
@@ -7885,15 +7705,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.432791 | `send_azure_communication_messages` | ✅ **EXPECTED** |
-| 2 | 0.107868 | `edit_azure_databases` | ❌ |
-| 3 | 0.105406 | `use_azure_openai_models` | ❌ |
-| 4 | 0.098377 | `create_azure_database_admin_configurations` | ❌ |
-| 5 | 0.093660 | `install_azure_cli_extensions` | ❌ |
+| 1 | 0.432998 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 2 | 0.107918 | `edit_azure_databases` | ❌ |
+| 3 | 0.105595 | `use_azure_openai_models` | ❌ |
+| 4 | 0.098489 | `create_azure_database_admin_configurations` | ❌ |
+| 5 | 0.093663 | `install_azure_cli_extensions` | ❌ |
 
 ---
 
-## Test 438
+## Test 428
 
 **Expected Tool:** `send_azure_communication_messages`  
 **Prompt:** Send SMS with delivery reporting enabled  
@@ -7902,15 +7722,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.508960 | `send_azure_communication_messages` | ✅ **EXPECTED** |
+| 1 | 0.508975 | `send_azure_communication_messages` | ✅ **EXPECTED** |
 | 2 | 0.198925 | `audit_azure_resources_compliance` | ❌ |
 | 3 | 0.182134 | `create_azure_monitor_webtests` | ❌ |
-| 4 | 0.181769 | `get_azure_messaging_service_details` | ❌ |
-| 5 | 0.180810 | `publish_azure_eventgrid_events` | ❌ |
+| 4 | 0.180919 | `publish_azure_eventgrid_events` | ❌ |
+| 5 | 0.179284 | `get_azure_messaging_service_details` | ❌ |
 
 ---
 
-## Test 439
+## Test 429
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Convert speech to text from audio file <file_path> using endpoint <endpoint>  
@@ -7922,12 +7742,12 @@
 | 1 | 0.536383 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.242680 | `use_azure_openai_models` | ❌ |
 | 3 | 0.208042 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.186061 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.169609 | `upload_azure_storage_blobs` | ❌ |
+| 4 | 0.194268 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.186059 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 
 ---
 
-## Test 440
+## Test 430
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API"  
@@ -7939,12 +7759,12 @@
 | 1 | 0.527723 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.447401 | `use_azure_openai_models` | ❌ |
 | 3 | 0.438006 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.357169 | `send_azure_communication_messages` | ❌ |
+| 4 | 0.357181 | `send_azure_communication_messages` | ❌ |
 | 5 | 0.327587 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 
 ---
 
-## Test 441
+## Test 431
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Convert speech to text with detailed output format from audio file <file_path>  
@@ -7953,15 +7773,15 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.512611 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
-| 2 | 0.209831 | `generate_azure_cli_commands` | ❌ |
-| 3 | 0.177099 | `use_azure_openai_models` | ❌ |
-| 4 | 0.156153 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.133213 | `get_azure_ai_resources_details` | ❌ |
+| 1 | 0.512680 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
+| 2 | 0.209836 | `generate_azure_cli_commands` | ❌ |
+| 3 | 0.177107 | `use_azure_openai_models` | ❌ |
+| 4 | 0.156184 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.133229 | `get_azure_ai_resources_details` | ❌ |
 
 ---
 
-## Test 442
+## Test 432
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Convert this audio file to text using Azure Speech Services  
@@ -7974,11 +7794,11 @@
 | 2 | 0.405604 | `use_azure_openai_models` | ❌ |
 | 3 | 0.393590 | `generate_azure_cli_commands` | ❌ |
 | 4 | 0.376904 | `upload_azure_storage_blobs` | ❌ |
-| 5 | 0.371942 | `send_azure_communication_messages` | ❌ |
+| 5 | 0.371891 | `send_azure_communication_messages` | ❌ |
 
 ---
 
-## Test 443
+## Test 433
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Recognize speech from <file_path> with phrase hints for better accuracy  
@@ -7990,12 +7810,12 @@
 | 1 | 0.397874 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.257631 | `use_azure_openai_models` | ❌ |
 | 3 | 0.253810 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.217914 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.217932 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
 | 5 | 0.183380 | `retrieve_azure_ai_knowledge_base_content` | ❌ |
 
 ---
 
-## Test 444
+## Test 434
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Recognize speech from my audio file with language detection  
@@ -8006,13 +7826,13 @@
 |------|-------|------|--------|
 | 1 | 0.493098 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.245003 | `use_azure_openai_models` | ❌ |
-| 3 | 0.222843 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 4 | 0.172007 | `generate_azure_cli_commands` | ❌ |
-| 5 | 0.165060 | `evaluate_azure_ai_foundry_agents` | ❌ |
+| 3 | 0.222850 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 4 | 0.183681 | `deploy_azure_ai_models` | ❌ |
+| 5 | 0.172007 | `generate_azure_cli_commands` | ❌ |
 
 ---
 
-## Test 445
+## Test 435
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning"  
@@ -8024,12 +7844,12 @@
 | 1 | 0.539450 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.453170 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.451471 | `use_azure_openai_models` | ❌ |
-| 4 | 0.361207 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.346335 | `get_azure_ai_resources_details` | ❌ |
+| 4 | 0.361161 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.348465 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
-## Test 446
+## Test 436
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Transcribe audio with raw profanity output from file <file_path>  
@@ -8041,12 +7861,12 @@
 | 1 | 0.359302 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.194397 | `generate_azure_cli_commands` | ❌ |
 | 3 | 0.170664 | `use_azure_openai_models` | ❌ |
-| 4 | 0.146733 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.132184 | `get_azure_key_vault_secret_values` | ❌ |
+| 4 | 0.146774 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.134187 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
-## Test 447
+## Test 437
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Transcribe speech from audio file <file_path> with profanity filtering  
@@ -8058,12 +7878,12 @@
 | 1 | 0.380445 | `recognize_speech_from_audio` | ✅ **EXPECTED** |
 | 2 | 0.188454 | `use_azure_openai_models` | ❌ |
 | 3 | 0.170544 | `generate_azure_cli_commands` | ❌ |
-| 4 | 0.161213 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
-| 5 | 0.116660 | `create_azure_database_admin_configurations` | ❌ |
+| 4 | 0.161234 | `query_and_evaluate_azure_ai_foundry_agents` | ❌ |
+| 5 | 0.124053 | `deploy_azure_ai_models` | ❌ |
 
 ---
 
-## Test 448
+## Test 438
 
 **Expected Tool:** `recognize_speech_from_audio`  
 **Prompt:** Transcribe the audio file <file_path> in Spanish language  
@@ -8082,29 +7902,29 @@
 
 ## Summary
 
-**Total Prompts Tested:** 448  
-**Analysis Execution Time:** 124.3936740s  
+**Total Prompts Tested:** 438  
+**Analysis Execution Time:** 85.3316282s  
 
 ### Success Rate Metrics
 
-**Top Choice Success:** 77.5% (347/448 tests)  
+**Top Choice Success:** 76.3% (334/438 tests)  
 
 #### Confidence Level Distribution
 
-**💪 Very High Confidence (≥0.8):** 0.0% (0/448 tests)  
-**🎯 High Confidence (≥0.7):** 3.1% (14/448 tests)  
-**✅ Good Confidence (≥0.6):** 17.9% (80/448 tests)  
-**👍 Fair Confidence (≥0.5):** 59.4% (266/448 tests)  
-**👌 Acceptable Confidence (≥0.4):** 87.1% (390/448 tests)  
-**❌ Low Confidence (<0.4):** 12.9% (58/448 tests)  
+**💪 Very High Confidence (≥0.8):** 0.0% (0/438 tests)  
+**🎯 High Confidence (≥0.7):** 3.2% (14/438 tests)  
+**✅ Good Confidence (≥0.6):** 18.0% (79/438 tests)  
+**👍 Fair Confidence (≥0.5):** 59.4% (260/438 tests)  
+**👌 Acceptable Confidence (≥0.4):** 87.0% (381/438 tests)  
+**❌ Low Confidence (<0.4):** 13.0% (57/438 tests)  
 
 #### Top Choice + Confidence Combinations
 
-**💪 Top Choice + Very High Confidence (≥0.8):** 0.0% (0/448 tests)  
-**🎯 Top Choice + High Confidence (≥0.7):** 3.1% (14/448 tests)  
-**✅ Top Choice + Good Confidence (≥0.6):** 17.0% (76/448 tests)  
-**👍 Top Choice + Fair Confidence (≥0.5):** 50.9% (228/448 tests)  
-**👌 Top Choice + Acceptable Confidence (≥0.4):** 69.0% (309/448 tests)  
+**💪 Top Choice + Very High Confidence (≥0.8):** 0.0% (0/438 tests)  
+**🎯 Top Choice + High Confidence (≥0.7):** 3.2% (14/438 tests)  
+**✅ Top Choice + Good Confidence (≥0.6):** 17.1% (75/438 tests)  
+**👍 Top Choice + Fair Confidence (≥0.5):** 50.0% (219/438 tests)  
+**👌 Top Choice + Acceptable Confidence (≥0.4):** 67.8% (297/438 tests)  
 
 ### Success Rate Analysis
 

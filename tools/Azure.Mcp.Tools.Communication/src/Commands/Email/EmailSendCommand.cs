@@ -40,7 +40,7 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
         Destructive = false,
         ReadOnly = true,
         OpenWorld = true,
-        Idempotent = true,
+        Idempotent = false,
         Secret = false,
         LocalRequired = false
     };

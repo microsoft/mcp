@@ -987,7 +987,7 @@
       "description": "Send SMS and email messages to one or more recipients using Azure Communication Services with delivery status tracking.",
       "toolMetadata": {
         "destructive": false,
-        "idempotent": true,
+        "idempotent": false,
         "openWorld": true,
         "readOnly": true,
         "secret": false,

@@ -34,5 +34,5 @@ public sealed class ConsolidatedToolDefinition
     /// Gets or sets the list of tool names that are mapped to this consolidated tool.
     /// </summary>
     [JsonPropertyName("mappedToolList")]
-    public required List<string> MappedToolList { get; init; }
+    public required HashSet<string> MappedToolList { get; init; }
 }
