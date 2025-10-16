@@ -53,11 +53,11 @@ jobs:
 
         $imageName = $serverInfo.dockerImageName
         Write-Host "Setting variable DockerImageName to $imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
 
         $version = $serverInfo.version
         Write-Host "Setting variable DockerImageVersion to $version"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version"
 
         $cliName = $serverInfo.cliName
         $extension = $serverInfo.extension
