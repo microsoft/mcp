@@ -147,14 +147,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Configures logging using standard ASP.NET Core configuration.
     /// Sets up console logging with appropriate levels based on command line options and environment variables.
     /// </summary>
-    private static void ConfigureLogging(ILoggingBuilder logging, ServiceStartOptions serverOptions, bool isStdioMode)
+    private static void ConfigureLogging(Microsoft.Extensions.Configuration.IConfiguration configuration, ILoggingBuilder logging, ServiceStartOptions serverOptions, bool isStdioMode)
     {
         logging.ClearProviders();
         logging.ConfigureOpenTelemetryLogger();
         logging.AddEventSourceLogger();
 
-        // Determine effective log level from options
-        var effectiveLogLevel = GetEffectiveLogLevel(serverOptions);
+        // Determine effective log level from options and configuration
+        var effectiveLogLevel = GetEffectiveLogLevel(configuration, serverOptions);
         
         if (isStdioMode)
         {
@@ -182,10 +182,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             simple.TimestampFormat = "[HH:mm:ss] ";
         });
 
-        // Add file logging if specified
-        if (!string.IsNullOrEmpty(serverOptions.LogFile))
+        // Resolve log file path using ASP.NET Core configuration precedence
+        var logFilePath = GetEffectiveLogFilePath(configuration, serverOptions);
+        if (!string.IsNullOrEmpty(logFilePath))
         {
-            logging.AddFile(serverOptions.LogFile);
+            logging.AddFile(logFilePath);
         }
 
         // Set minimum level - this works with standard ASP.NET Core configuration
@@ -196,25 +197,62 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Determines the effective log level based on command line options and environment variables.
-    /// Priority: --log-level > --debug > default (Information)
+    /// Determines the effective log level using ASP.NET Core configuration precedence.
+    /// Priority: --log-level > --debug > AZMCP_LOG_LEVEL env var > appsettings.json > default (Information)
     /// </summary>
-    private static LogLevel GetEffectiveLogLevel(ServiceStartOptions serverOptions)
+    private static LogLevel GetEffectiveLogLevel(Microsoft.Extensions.Configuration.IConfiguration configuration, ServiceStartOptions serverOptions)
     {
-        // Priority 1: Explicit --log-level option
         if (!string.IsNullOrEmpty(serverOptions.LogLevel))
         {
             return ParseLogLevel(serverOptions.LogLevel);
         }
 
-        // Priority 2: --debug flag
         if (serverOptions.Debug)
         {
             return LogLevel.Debug;
         }
 
-        // Priority 3: Default
+        var envLogLevel = Environment.GetEnvironmentVariable("AZMCP_LOG_LEVEL")
+                         ?? Environment.GetEnvironmentVariable("LOGGING__LOGLEVEL__DEFAULT");
+        if (!string.IsNullOrEmpty(envLogLevel))
+        {
+            return ParseLogLevel(envLogLevel);
+        }
+
+        var configLogLevel = configuration["Logging:LogLevel:Default"];
+        if (!string.IsNullOrEmpty(configLogLevel))
+        {
+            return ParseLogLevel(configLogLevel);
+        }
+
         return LogLevel.Information;
+    }
+
+    /// <summary>
+    /// Determines the effective log file path using ASP.NET Core configuration precedence.
+    /// Priority: --log-file > AZMCP_LOG_FILE env var > appsettings.json > none
+    /// </summary>
+    private static string? GetEffectiveLogFilePath(Microsoft.Extensions.Configuration.IConfiguration configuration, ServiceStartOptions serverOptions)
+    {
+        if (!string.IsNullOrEmpty(serverOptions.LogFile))
+        {
+            return serverOptions.LogFile;
+        }
+
+        var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE") 
+                        ?? Environment.GetEnvironmentVariable("LOGGING__FILE__PATH");
+        if (!string.IsNullOrEmpty(envLogFile))
+        {
+            return envLogFile;
+        }
+
+        var configLogFile = configuration["Logging:File:Path"];
+        if (!string.IsNullOrEmpty(configLogFile))
+        {
+            return configLogFile;
+        }
+
+        return null;
     }
 
     /// <summary>
@@ -409,7 +447,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
         return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging => ConfigureLogging(logging, serverOptions, isStdioMode: true))
+            .ConfigureLogging((context, logging) => ConfigureLogging(context.Configuration, logging, serverOptions, isStdioMode: true))
             .ConfigureServices(services =>
             {
                 ConfigureServices(services);
@@ -426,7 +464,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
         return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging => ConfigureLogging(logging, serverOptions, isStdioMode: false))
+            .ConfigureLogging((context, logging) => ConfigureLogging(context.Configuration, logging, serverOptions, isStdioMode: false))
             .ConfigureWebHostDefaults(webBuilder =>
             {
                 webBuilder.ConfigureServices(services =>

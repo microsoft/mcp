@@ -69,7 +69,6 @@ internal sealed class FileLoggerProvider : ILoggerProvider
             Directory.CreateDirectory(directory);
         }
 
-        // Create StreamWriter with AutoFlush for immediate writes without frequent file open/close
         _streamWriter = new StreamWriter(filePath, append: true)
         {
             AutoFlush = true
