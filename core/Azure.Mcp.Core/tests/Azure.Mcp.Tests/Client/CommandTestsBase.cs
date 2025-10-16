@@ -219,7 +219,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         if (_testMode is TestMode.Playback)
         {
             Console.WriteLine($"Starting playback for test '{fileName}.{testName}.json' with file path '{fileName} and assetsPath {assetsName}'");
-            //await Proxy.Client.StopPlaybackAsync(null).ConfigureAwait(false);
+            await Proxy.Client.StopPlaybackAsync("placeholder-igored").ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
@@ -239,11 +239,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
         if (_testMode is TestMode.Playback)
         {
-            // await Proxy.Client.StopPlaybackAsync(null).ConfigureAwait(false);
+            await Proxy.Client.StopPlaybackAsync("placeholder-igored").ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
-            // Proxy.Client.StopRecord(null, new Dictionary<string, string>());
+            // todo: handle variables being sent to recording
+            Proxy.Client.StopRecord("placeholder-ignored", new Dictionary<string, string>());
         }
         await Task.CompletedTask;
     }
