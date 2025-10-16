@@ -156,29 +156,27 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
+- To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+-  Configure the `mcp.json` file with the following:
 
--   To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
--   Configure your `mcp.json` file with the following:
-
-        ```json
-        {
-            "mcpServers": {
-                "azure-mcp-server": {
-                "command": "npx",
-                "args": [
-                    "-y",
-                    "@azure/mcp@latest",
-                    "server",
-                    "start"
-                    ]
-                }
+    ```json
+    {
+        "mcpServers": {
+            "azure-mcp-server": {
+            "command": "npx",
+            "args": [
+                "-y",
+                "@azure/mcp@latest",
+                "server",
+                "start"
+                ]
             }
         }
-        ```
-
-    <!-- remove-section: end remove_node_config_sub_section -->
-
-    **Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
+    }
+    ```
+<!-- remove-section: end remove_node_config_sub_section -->
+<!-- remove-section: start nuget remove_custom_client_config_table -->
+**Note:** When manually configuring Visual Studio and Visual Studio Code, use `servers` instead of `mcpServers` as the root object.
 
 **Client-Specific Configuration**
 | IDE | File Location | Documentation Link |
