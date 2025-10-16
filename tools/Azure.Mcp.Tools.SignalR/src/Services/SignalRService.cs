@@ -39,7 +39,7 @@ public sealed class SignalRService(
         AuthMethod? authMethod = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
@@ -86,7 +86,7 @@ public sealed class SignalRService(
         }
         else
         {
-            ValidateRequiredParameters(signalRName, resourceGroup);
+            ValidateRequiredParameters((nameof(signalRName), signalRName), (nameof(resourceGroup), resourceGroup));
             var cacheKey = string.IsNullOrEmpty(tenant)
                 ? $"{subscription}_{resourceGroup}_{signalRName}"
                 : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";

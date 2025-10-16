@@ -37,7 +37,7 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         string? profanity = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(endpoint, filePath);
+        ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
         if (!File.Exists(filePath))
         {
@@ -415,9 +415,9 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
 
             if (!string.IsNullOrEmpty(jsonProperty))
             {
-                var jsonResult = JsonDocument.Parse(jsonProperty);
+                using var jsonDoc = JsonDocument.Parse(jsonProperty);
 
-                if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
+                if (jsonDoc.RootElement.TryGetProperty("NBest", out var nbestArray))
                 {
                     foreach (var item in nbestArray.EnumerateArray())
                     {

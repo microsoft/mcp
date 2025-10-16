@@ -283,13 +283,28 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 }
 ```
 
+**Specific Tool Mode** (expose only specific tools):
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
+    }
+  }
+}
+```
+
 > **Server Mode Summary:**
 >
 > - **Default Mode**: No additional parameters - exposes all tools individually
 > - **Namespace Mode**: `--namespace <service-name>` - expose specific services
 > - **Namespace Proxy Mode**: `--mode namespace` - collapse tools by namespace (useful for VS Code's 128 tool limit)
 > - **Single Tool Mode**: `--mode single` - single "azure" tool with internal routing
-> - **Combined Mode**: Both `--namespace` and `--mode` can be used together
+> - **Specific Tool Mode**: `--tool <tool-name>` - expose only specific tools by name (finest granularity)
+> - **Combined Mode**: Multiple options can be used together (`--namespace` + `--mode` etc.)
 
 #### Start from IDE
 
@@ -406,7 +421,7 @@ This section assumes that the necessary Azure resources for live tests are alrea
 
 To debug the Azure MCP Server (`azmcp`) when running live tests in VS Code:
 
-1. Build the package with debug symbols: `./eng/scripts/Build-Local.ps1 -DebugBuild`
+1. Build the package with debug symbols: `./eng/scripts/Build-Local.ps1`
 2. Set a breakpoint in a command file (e.g., [`KeyValueListCommand.ExecuteAsync`](https://github.com/microsoft/mcp/blob/4ed650a0507921273acc7b382a79049809ef39c1/src/Commands/AppConfig/KeyValue/KeyValueListCommand.cs#L48))
 3. In VS Code, navigate to a test method (e.g., [`AppConfigCommandTests::Should_list_appconfig_kvs()`](https://github.com/microsoft/mcp/blob/4ed650a0507921273acc7b382a79049809ef39c1/tests/Client/AppConfigCommandTests.cs#L56)), add a breakpoint to `CallToolAsync` call in the test method, then right-click and select **Debug Test**
 4. Find the `azmcp` process ID:
@@ -509,6 +524,20 @@ Supported comment annotations:
   - **Purpose:** Insert a chunk of text into a line for a specified package type. 
   - **Example:**
   `<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->`
+
+You can verify that your README.md was annotated correctly using the `Validate-PackageReadme` function:
+```
+& "eng\scripts\Process-PackageReadMe.ps1" -Command "validate" -InputReadMePath "<README.md Path>"
+```
+
+To extract README.md for a specific package, run the `Extract-PackageSpecificReadMe` function:
+```
+& "eng\scripts\Process-PackageReadMe.ps1" -Command "extract" `
+    -InputReadMePath "<README.md Path>" `
+    -OutputDirectory "<Output Directory for the package specific README.md>" `
+    -PackageType "<npm, nuget, or vsix>" `
+    -InsertPayload "<Package specific content to be inserted>"
+```
 
 ## Advanced Configuration
 

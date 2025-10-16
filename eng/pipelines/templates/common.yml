@@ -5,10 +5,7 @@ parameters:
 - name: PublishTarget
   type: string
   default: none
-  values:
-  - internal
-  - public
-  - none
+  values: [none, internal, public ]
 - name: RunLiveTests
   type: boolean
   default: false
@@ -48,8 +45,10 @@ extends:
       jobs:
       - template: /eng/pipelines/templates/jobs/initialize.yml
         parameters:
-          DynamicPrereleaseVersion: ${{ or(ne(parameters.PublishTarget, 'public'), parameters.IsTestPipeline) }}
           ServerName: ${{ parameters.ServerName }}
+          PublishTarget: ${{ parameters.PublishTarget }}
+          IncludeNative: ${{ parameters.IncludeNative }}
+          IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
     - stage: Build
       dependsOn:
@@ -61,24 +60,18 @@ extends:
       variables:
       - template: /eng/pipelines/templates/variables/image.yml
       - template: /eng/pipelines/templates/variables/globals.yml
-      - name: VersionSuffix
-        value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
       jobs:
       - template: /eng/pipelines/templates/jobs/analyze.yml
-        parameters:
-          ServerName: ${{ parameters.ServerName }}
-      - template: /eng/common/pipelines/templates/jobs/generate-job-matrix.yml
-        parameters:
-          SparseCheckout: false
-          JobTemplatePath: /eng/pipelines/templates/jobs/build.yml
-          AdditionalParameters:
-            TestTimeoutInMinutes: 10
+
+      - ${{ each os in split('linux|windows|macOS', '|') }}:
+        - template: /eng/pipelines/templates/jobs/build.yml
+          parameters:
+            TestTimeoutInMinutes: 30
             ServerName: ${{ parameters.ServerName }}
-          MatrixConfigs:
-            - Name: build_matrix
-              Path: eng/pipelines/build-matrix.json
-              Selection: all
-              GenerateVMJobs: true
+            PublishTarget: ${{ parameters.PublishTarget }}
+            OSName: ${{ os }}
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
+            MaxParallel: 4
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
@@ -94,6 +87,10 @@ extends:
         - template: /eng/pipelines/templates/variables/globals.yml
         jobs:
         - template: /eng/pipelines/templates/jobs/live-test.yml
+          parameters:
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
+            MaxParallel: 10
+            TimeoutInMinutes: 75
 
     - ${{ if ne(parameters.PublishTarget, 'none') }}:
       # We only sign if we're going to publish
@@ -109,8 +106,6 @@ extends:
         variables:
         - template: /eng/pipelines/templates/variables/image.yml
         - template: /eng/pipelines/templates/variables/globals.yml
-        - name: VersionSuffix
-          value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
@@ -128,8 +123,6 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
-          - name: VersionSuffix
-            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/release.yml
             parameters:
@@ -150,9 +143,5 @@ extends:
           variables:
           - template: /eng/pipelines/templates/variables/image.yml
           - template: /eng/pipelines/templates/variables/globals.yml
-          - name: VersionSuffix
-            value: $[ stageDependencies.Initialize.Initialize.outputs['GetVersion.VersionSuffix'] ]
           jobs:
           - template: /eng/pipelines/templates/jobs/integration.yml
-            parameters:
-              ServerName: ${{ parameters.ServerName }}

@@ -16,6 +16,7 @@
 - [ ] For MCP tool changes:
     - [ ] **One tool per PR**: This PR adds or modifies only one MCP tool for faster review cycles
     - [ ] Updated `servers/Azure.Mcp.Server/README.md` and/or `servers/Fabric.Mcp.Server/README.md` documentation
+    - [ ] Validate README.md changes using script at `eng/scripts/Process-PackageReadMe.ps1`. See [Package README](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#package-readme)
     - [ ] Updated command list in `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and/or `/docs/fabric-commands.md`
     - [ ] For new or modified tool descriptions, ran [`ToolDescriptionEvaluator`](https://github.com/microsoft/mcp/blob/main/eng/tools/ToolDescriptionEvaluator/Quickstart.md) and obtained a score of `0.4` or more and a top 3 ranking for all related test prompts
     - [ ] For new tools associated with Azure services or publicly available tools/APIs/products, add URL to documentation in the PR description

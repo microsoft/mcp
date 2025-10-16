@@ -9,10 +9,12 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -140,6 +142,9 @@ public sealed class NamespaceToolLoader(
         string? command = null;
         bool learn = false;
 
+        // In namespace mode, the name of the tool is also its IAreaSetup name.
+        Activity.Current?.AddTag(TagName.ToolArea, tool);
+
         if (args != null)
         {
             if (args.TryGetValue("intent", out var intentElem) && intentElem.ValueKind == JsonValueKind.String)
@@ -165,6 +170,8 @@ public sealed class NamespaceToolLoader(
         {
             if (learn && string.IsNullOrEmpty(command))
             {
+                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
+
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -605,15 +612,15 @@ public sealed class NamespaceToolLoader(
 
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value) ?? new Dictionary<string, JsonElement>();
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value.Clone()) ?? new Dictionary<string, JsonElement>();
                 }
             }
 

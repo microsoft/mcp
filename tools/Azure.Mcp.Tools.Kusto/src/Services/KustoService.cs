@@ -73,9 +73,9 @@ public sealed class KustoService(
             var cluster = await ExecuteSingleResourceQueryAsync(
                         "Microsoft.Kusto/clusters",
                         resourceGroup: null, // all resource groups
-                        subscriptionId,
-                        retryPolicy,
-                        ConvertToClusterModel,
+                        subscription: subscriptionId,
+                        retryPolicy: retryPolicy,
+                        converter: ConvertToClusterModel,
                         additionalFilter: $"name =~ '{EscapeKqlString(clusterName)}'");
 
             if (cluster == null)
@@ -115,7 +115,7 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri);
+        ValidateRequiredParameters((nameof(clusterUri), clusterUri));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant).ConfigureAwait(false);
         var kustoResult = await kustoClient.ExecuteControlCommandAsync(
@@ -149,7 +149,7 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName);
+        ValidateRequiredParameters((nameof(clusterUri), clusterUri), (nameof(databaseName), databaseName));
 
         var kustoClient = await GetOrCreateKustoClientAsync(clusterUri, tenant);
         var kustoResult = await kustoClient.ExecuteControlCommandAsync(
@@ -224,16 +224,19 @@ public sealed class KustoService(
         AuthMethod? authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(clusterUri, databaseName, query);
+        ValidateRequiredParameters(
+            (nameof(clusterUri), clusterUri),
+            (nameof(databaseName), databaseName),
+            (nameof(query), query));
 
         var cslQueryProvider = await GetOrCreateCslQueryProviderAsync(clusterUri, tenant);
         var result = new List<JsonElement>();
         var kustoResult = await cslQueryProvider.ExecuteQueryCommandAsync(databaseName, query, CancellationToken.None);
-        if (kustoResult.JsonDocument is null)
+        if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
         {
             return result;
         }
-        var root = kustoResult.JsonDocument.RootElement;
+        var root = kustoResult.RootElement;
         if (!root.TryGetProperty("Tables", out var tablesElement) || tablesElement.ValueKind != JsonValueKind.Array || tablesElement.GetArrayLength() == 0)
         {
             return result;
@@ -251,7 +254,10 @@ public sealed class KustoService(
 
         var columnsDictJson = "{" + string.Join(",", columnsDict.Select(kvp =>
                     $"\"{JsonEncodedText.Encode(kvp.Key)}\":\"{JsonEncodedText.Encode(kvp.Value)}\"")) + "}";
-        result.Add(JsonDocument.Parse(columnsDictJson).RootElement);
+        using (var jsonDoc = JsonDocument.Parse(columnsDictJson))
+        {
+            result.Add(jsonDoc.RootElement.Clone());
+        }
 
         if (!table.TryGetProperty("Rows", out var items) || items.ValueKind != JsonValueKind.Array)
         {
@@ -260,7 +266,10 @@ public sealed class KustoService(
         foreach (var item in items.EnumerateArray())
         {
             var json = item.ToString();
-            result.Add(JsonDocument.Parse(json).RootElement);
+            using (var jsonDoc = JsonDocument.Parse(json))
+            {
+                result.Add(jsonDoc.RootElement.Clone());
+            }
         }
 
         return result;
@@ -269,11 +278,11 @@ public sealed class KustoService(
     private List<string> KustoResultToStringList(KustoResult kustoResult)
     {
         var result = new List<string>();
-        if (kustoResult.JsonDocument is null)
+        if (kustoResult.RootElement.ValueKind == JsonValueKind.Null)
         {
             return result;
         }
-        var root = kustoResult.JsonDocument.RootElement;
+        var root = kustoResult.RootElement;
         if (!root.TryGetProperty("Tables", out var tablesElement) || tablesElement.ValueKind != JsonValueKind.Array || tablesElement.GetArrayLength() == 0)
         {
             return result;

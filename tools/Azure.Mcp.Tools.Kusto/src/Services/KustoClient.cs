@@ -7,7 +7,7 @@ using Azure.Mcp.Core.Services.Http;
 
 namespace Azure.Mcp.Tools.Kusto.Services;
 
-public class KustoClient(
+public sealed class KustoClient(
     string clusterUri,
     TokenCredential tokenCredential,
     string userAgent,

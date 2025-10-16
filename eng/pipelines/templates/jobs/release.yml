@@ -16,19 +16,31 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download packages_npm
-    artifact: packages_npm
+    displayName: "Download binaries_signed_zipped"
+    artifact: binaries_signed_zipped
+
+  - download: current
+    displayName: "Download build_info"
+    artifact: build_info
 
   - template: /eng/common/pipelines/templates/steps/retain-run.yml
 
   - pwsh: |
-      $serverName = '${{ parameters.ServerName }}'
-      $versionSuffix = $env:VERSIONSUFFIX
-      $version = ./eng/scripts/Get-Version.ps1 -ServerName $serverName
-      $tag = "$serverName-$version$versionSuffix"
+      $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
+      $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 
-      gh release create $tag --title "$serverName $version$versionSuffix"
-      gh release upload $tag $(Pipeline.Workspace)/packages_npm/*/*/*.tgz
+      $serverName = '${{ parameters.ServerName }}'
+      $server = $buildInfo.servers | Where-Object { $_.name -eq $serverName } | Select-Object -First 1
+      if (-not $server) {
+        Write-Error "Server '$serverName' not found in build info."
+        exit 1
+      }
+
+      $version = $server.version
+      $tag = $server.releaseTag
+
+      gh release create $tag --title "$serverName $version"
+      gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)

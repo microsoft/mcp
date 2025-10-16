@@ -1,14 +1,7 @@
-parameters:
-- name: TimeoutInMinutes
-  type: number
-  default: 120
-- name: ServerName
-  type: string
-
 jobs:
 - job: Analyze
   condition: and(succeededOrFailed(), ne(variables['Skip.Analyze'], 'true'))
-  timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
+  timeoutInMinutes: 120
   dependsOn: []
   steps:
   - checkout: self
@@ -40,7 +33,7 @@ jobs:
       sourceDirectory: $(Build.SourcesDirectory)
 
   - template: /eng/common/pipelines/templates/steps/check-spelling.yml
-  
+
   - template: /eng/common/pipelines/templates/steps/verify-links.yml
     parameters:
       Condition: succeededOrFailed()
@@ -51,8 +44,7 @@ jobs:
 
   - pwsh: |
       # Verify that the package README.md files do not contain invalid headers or comment annotations
-      . $(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1
-      $hasFailures = Validate-All-PackageReadmes
+      $hasFailures = & "$(Build.SourcesDirectory)/eng/scripts/Process-PackageReadMe.ps1" -Command "validate-all"
       if ($hasFailures) {
         exit 1
       }

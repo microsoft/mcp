@@ -28,7 +28,7 @@ public sealed class FunctionAppService(
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null)
     {
-        ValidateRequiredParameters(subscription);
+        ValidateRequiredParameters((nameof(subscription), subscription));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
         var functionApps = new List<FunctionAppInfo>();
@@ -69,7 +69,9 @@ public sealed class FunctionAppService(
         }
         else
         {
-            ValidateRequiredParameters(functionAppName, resourceGroup);
+            ValidateRequiredParameters(
+                (nameof(functionAppName), functionAppName),
+                (nameof(resourceGroup), resourceGroup));
 
             var cacheKey = string.IsNullOrEmpty(tenant)
                 ? $"{subscription}_{resourceGroup}_{functionAppName}"

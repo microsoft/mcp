@@ -5,6 +5,7 @@ using System.CommandLine;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.ConfidentialLedger.Options;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
 using Microsoft.Extensions.Logging;
@@ -39,7 +40,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content);
+        command.Options.Add(ConfidentialLedgerOptionDefinitions.Content.AsRequired());
         command.Options.Add(ConfidentialLedgerOptionDefinitions.CollectionId);
     }
 
@@ -59,14 +60,6 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         }
 
         var options = BindOptions(parseResult);
-
-        // Additional defensive validation (in case of external invocation bypassing parser requirements)
-        if (string.IsNullOrWhiteSpace(options.LedgerName) || string.IsNullOrWhiteSpace(options.Content))
-        {
-            context.Response.Status = System.Net.HttpStatusCode.BadRequest;
-            context.Response.Message = "Missing Required options: --ledger, --content";
-            return context.Response;
-        }
 
         try
         {

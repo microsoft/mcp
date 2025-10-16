@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
@@ -126,6 +128,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         {
             if (learn && string.IsNullOrEmpty(command))
             {
+                Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, false);
+
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -469,15 +473,15 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             Dictionary<string, object?> parameters = [];
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value) ?? [];
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value.Clone()) ?? [];
                 }
             }
             if (commandName != null && commandName != "Unknown")
