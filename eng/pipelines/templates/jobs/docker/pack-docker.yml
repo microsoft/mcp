@@ -14,9 +14,12 @@ jobs:
     os: linux
 
   steps:
-  - download: current
-    artifact: binaries_signed
-    displayName: "Download signed MCP server binaries"
+  - task: DownloadPipelineArtifact@2
+    displayName: "Download signed packages"
+    inputs:
+      buildType: current
+      artifactName: binaries_signed
+      targetPath: $(Build.ArtifactStagingDirectory)
 
   - task: CopyFiles@2
     displayName: "Copy Dockerfile"
