@@ -132,7 +132,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
+        Activity.Current?.SetTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
 
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {

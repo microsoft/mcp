@@ -72,7 +72,7 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Hidden = true,
-        Description = "Enable insecure transport",
+        Description = "Enables insecure, unauthenticated transport over streamable HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
         DefaultValueFactory = _ => false
     };
 
