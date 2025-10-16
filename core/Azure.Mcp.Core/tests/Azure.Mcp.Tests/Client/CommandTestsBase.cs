@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -8,8 +9,6 @@ using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
-using System.Reflection;
-using System.ClientModel;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -26,6 +25,15 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
     private string[]? _customArguments;
     private TestMode _testMode = TestMode.Live;
 
+    // Recording path support (lightweight) ----------------------------------
+    private static readonly RecordingPathResolver _pathResolver = new();
+
+    // TODO: grab asyncncess of the test. Given that it is good practice to separate sync and async tests, this may
+    // not be necessary?
+    protected virtual bool IsAsync => false;
+
+    // TODO: do I need to worry about service version? Adding a versionQualifier here just in case. Feedback on PR will clean it out possibly.
+    protected virtual string? VersionQualifier => null;
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -48,7 +56,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         }
         else
         {
-            // Provide a placeholder settings object to satisfy consumers silently
             Settings = new LiveTestSettings();
         }
 
@@ -184,9 +191,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
             {
                 disposable.Dispose();
             }
-
-            // Dispose proxy at end of test class lifetime
-            Proxy?.Dispose();
         }
 
         // Failure output may contain request and response details that should be output for failed tests.
@@ -212,19 +216,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         }
 
         var testName = TryGetCurrentTestName();
-        var fileName = "";
-        var assetsName = "";
-
+        var sessionFilePath = GetSessionFilePathInternal(testName);
 
         if (_testMode is TestMode.Playback)
         {
-            Console.WriteLine($"Starting playback for test '{fileName}.{testName}.json' with file path '{fileName} and assetsPath {assetsName}'");
-            await Proxy.Client.StopPlaybackAsync("placeholder-igored").ConfigureAwait(false);
+            Output.WriteLine($"[Playback] Session file: {sessionFilePath}");
+            // TODO: Replace placeholder with real playback start once proxy API is defined.
+            await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
-            Console.WriteLine($"Starting record for test '{fileName}.{testName}.json' with file path '{fileName}' and assetsPath {assetsName}");
-            //Proxy.Client.StopRecord(null, new Dictionary<string, string>());
+            Output.WriteLine($"[Record] Session file: {sessionFilePath}");
+            // TODO: Replace placeholder with real record start once proxy API is defined.
+            // Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
         }
 
         await Task.CompletedTask;
@@ -239,12 +243,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
         if (_testMode is TestMode.Playback)
         {
-            await Proxy.Client.StopPlaybackAsync("placeholder-igored").ConfigureAwait(false);
+            await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
-            // todo: handle variables being sent to recording
-            Proxy.Client.StopRecord("placeholder-ignored", new Dictionary<string, string>());
+            // TODO: feed variables / metadata to proxy stop.
+            Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
         }
         await Task.CompletedTask;
     }
@@ -258,14 +262,25 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
     private static string TryGetCurrentTestName()
     {
-        // Prefer xUnit v3 TestContext (works for parameterized and async tests, no stack walking)
         var name = TestContext.Current?.Test?.TestCase.TestCaseDisplayName;
-
-        if (String.IsNullOrWhiteSpace(name))
+        if (string.IsNullOrWhiteSpace(name))
         {
-            throw new InvalidOperationException("Test name is not available. This is NOT supported when recording is enabled.");
+            throw new InvalidOperationException("Test name is not available. Recording requires a valid test name.");
         }
-
         return name;
     }
+
+    // New lightweight path building (replaces NUnit-based helpers)
+    private string GetSessionFilePathInternal(string displayName)
+    {
+        var sanitized = RecordingPathResolver.Sanitize(displayName);
+        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null); // TODO: supply variant suffix if needed
+        Directory.CreateDirectory(dir); // Ensure exists
+        var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
+        var fullPath = Path.Combine(dir, fileName);
+        return fullPath;
+    }
+
+    // Legacy public method kept for potential external calls. TODO: remove or redirect all usages then make internal.
+    protected internal string GetSessionFilePath() => GetSessionFilePathInternal(TryGetCurrentTestName());
 }
