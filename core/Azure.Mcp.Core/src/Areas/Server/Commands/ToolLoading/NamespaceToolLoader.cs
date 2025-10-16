@@ -178,6 +178,32 @@ public sealed class NamespaceToolLoader(
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // We no longer spawn new processes to handle child tool invocations.
+                // So, we have to update ToolName to represent the namespace's child tool name
+                // rather than what is exposed to the user. The following inputs would
+                // be routed here.  In both examples, the end-user's MCP client sees that we expose
+                // a tool called "storage" and would invoke our "storage" tool.
+                //
+                // A) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": [ "--name", "foo", "--subscription-id", "bar" ]
+                //    }
+                //
+                // This is the case where the LLM knows what tool should be executed, so it passes
+                // in all the parameters required to execute the underlying Storage tool.
+                //
+                // B) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": []
+                //       "learn": true
+                //    }
+                //
+                // This command atttempts to learn what the command "blob_list" entails by
+                // invoking it with no parameters and "learn" == "true".  The command will
+                // generally fail, providing the LLM with extra information it needs to pass
+                // in for the command to succeed the next time.
                 activity?.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(command));
 
                 var toolParams = GetParametersFromArgs(args);
