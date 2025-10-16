@@ -30,7 +30,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = false,
         OpenWorld = false,
         ReadOnly = false,

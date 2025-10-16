@@ -108,6 +108,35 @@ azmcp server start \
     [--read-only]
 ```
 
+#### Consolidated Mode
+
+Exposes carefully curated tools that group related Azure operations together based on common user workflows and tasks. This mode provides the optimal balance between discoverability and usability by organizing consolidated tools that combine multiple related operations.
+
+Each consolidated tool groups operations that are commonly used together:
+- **Resource management**: Groups operations by resource type and action (get, create, edit, delete)
+- **Workflow-based**: Organizes tools around common tasks (deployment, monitoring, security)
+- **Metadata-aligned**: Only groups commands with exactly the same toolMetadata values (destructive, idempotent, readOnly, etc.)
+
+**Benefits:**
+- **Better for AI agents**: Reduces decision complexity by presenting meaningful tool groupings
+- **Optimized tool count**: Well under VS Code's 128-tool limit
+- **Task-oriented**: Tools are named after user intents (e.g., `get_azure_databases_details`, `deploy_azure_resources_and_applications`)
+- **Maintains functionality**: All individual commands are still accessible through the consolidated tools
+
+```bash
+# Start MCP Server with consolidated mode
+azmcp server start \
+    --mode consolidated \
+    [--transport <transport>] \
+    [--namespace <namespace>] \
+    [--read-only]
+```
+
+**Configuration file location**: The consolidated tool definitions are maintained in `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json`. Each definition includes:
+- Tool name and description optimized for AI agent selection
+- List of mapped individual commands
+- Matching toolMetadata (destructive, idempotent, readOnly, secret, etc.)
+
 #### Namespace Mode (Default)
 
 Collapses all tools within each namespace into a single tool (e.g., all storage operations become one "storage" tool with internal routing). This mode is particularly useful when working with MCP clients that have tool limits - for example, VS Code only supports a maximum of 128 tools across all registered MCP servers.
@@ -146,8 +175,8 @@ The `azmcp server start` command supports the following options:
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
 | `--transport` | No | `stdio` | Transport mechanism to use (currently only `stdio` is supported) |
-| `--mode` | No | `namespace` | Server mode: `namespace` (default), `all`, or `single` |
-| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated) |
+| `--mode` | No | `namespace` | Server mode: `namespace` (default), `consolidated`, `all`, or `single` |
+| `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |

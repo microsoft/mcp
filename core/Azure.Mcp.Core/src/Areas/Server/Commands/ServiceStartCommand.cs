@@ -178,12 +178,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
-            mode == ModeTypes.All)
+            mode == ModeTypes.All ||
+            mode == ModeTypes.ConsolidatedProxy)
         {
             return; // Success
         }
 
-        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
     }
 
     /// <summary>

@@ -10,6 +10,7 @@ public class CommandGroup(string name, string description)
     public List<CommandGroup> SubGroup { get; } = [];
     public Dictionary<string, IBaseCommand> Commands { get; } = [];
     public Command Command { get; } = new Command(name, description);
+    public ToolMetadata? ToolMetadata { get; set; }
 
     public void AddCommand(string path, IBaseCommand command)
     {

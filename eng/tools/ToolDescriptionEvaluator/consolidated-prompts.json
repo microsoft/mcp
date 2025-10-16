@@ -9,6 +9,20 @@
     "What subscriptions do I have?"
   ],
   "get_azure_app_resource_details": [
+    "Describe the function app <function_app_name> in resource group <resource_group_name>",
+    "Get configuration for function app <function_app_name>",
+    "Get function app status for <function_app_name>",
+    "Get information about my function app <function_app_name> in <resource_group_name>",
+    "List all function apps in my subscription",
+    "Retrieve host name and status of function app <function_app_name>",
+    "Show function app details for <function_app_name> in <resource_group_name>",
+    "Show me my Azure function apps",
+    "Show me the details for the function app <function_app_name>",
+    "Show plan and region for function app <function_app_name>",
+    "What function apps do I have?",
+    "What is the status of function app <function_app_name>?"
+  ],
+  "add_azure_app_service_database": [
     "Add a CosmosDB database to app service <app_name>",
     "Add a database connection to my app service <app_name> in resource group <resource_group>",
     "Add a MySQL database to app service <app_name>",
@@ -17,19 +31,7 @@
     "Add database <database_name> with retry policy to app service <app_name>",
     "Configure a SQL Server database for app service <app_name>",
     "Configure tenant <tenant> for database <database_name> in app service <app_name>",
-    "Describe the function app <function_app_name> in resource group <resource_group_name>",
-    "Get configuration for function app <function_app_name>",
-    "Get function app status for <function_app_name>",
-    "Get information about my function app <function_app_name> in <resource_group_name>",
-    "List all function apps in my subscription",
-    "Retrieve host name and status of function app <function_app_name>",
-    "Set connection string for database <database_name> in app service <app_name>",
-    "Show function app details for <function_app_name> in <resource_group_name>",
-    "Show me my Azure function apps",
-    "Show me the details for the function app <function_app_name>",
-    "Show plan and region for function app <function_app_name>",
-    "What function apps do I have?",
-    "What is the status of function app <function_app_name>?"
+    "Set connection string for database <database_name> in app service <app_name>"
   ],
   "get_azure_databases_details": [
     "Display the properties of SQL server <server_name>",
@@ -72,6 +74,28 @@
     "Show me the tables in the PostgreSQL database <database> in server <server>",
     "Show me the value of connection timeout in seconds in my MySQL server <server>"
   ],
+  "create_azure_sql_databases_and_servers": [
+    "Create a new Azure SQL server named <server_name> in resource group <resource_group_name>",
+    "Create a new database called <database_name> on SQL server <server_name> in resource group <resource_group_name>",
+    "Create a new SQL database named <database_name> in server <server_name>",
+    "Create a SQL database <database_name> with Basic tier in server <server_name>",
+    "Create an Azure SQL server with name <server_name> in location <location> with admin user <admin_user>",
+    "Set up a new SQL server called <server_name> in my resource group <resource_group_name>"
+  ],
+  "rename_azure_sql_databases": [
+    "Rename my Azure SQL database <database_name> to <new_database_name> on server <server_name>",
+    "Rename the SQL database <database_name> on server <server_name> to <new_database_name>"
+  ],
+  "edit_azure_sql_databases_and_servers": [
+    "Delete SQL server <server_name> permanently",
+    "Delete the Azure SQL server <server_name> from resource group <resource_group_name>",
+    "Delete the database called <database_name> on server <server_name>",
+    "Delete the SQL database <database_name> from server <server_name>",
+    "Remove database <database_name> from SQL server <server_name> in resource group <resource_group_name>",
+    "Remove the SQL server <server_name> from my subscription",
+    "Scale SQL database <database_name> on server <server_name> to use <sku_name> SKU",
+    "Update the performance tier of SQL database <database_name> on server <server_name>"
+  ],
   "edit_azure_databases": [
     "Enable replication for my PostgreSQL server <server>",
     "Set connection timeout to 20 seconds for my MySQL server <server>"
@@ -83,23 +107,28 @@
     "Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals",
     "Get the availability status for resource <resource_name>",
     "Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period>",
+    "List active service health events in my subscription",
     "List all available table types in the Log Analytics workspace <workspace_name>",
     "List all Azure Managed Grafana in one subscription",
     "List all Log Analytics workspaces in my subscription",
     "List all monitored resources in the Datadog resource <resource_name>",
+    "List all service health events in my subscription",
     "List all tables in the Log Analytics workspace <workspace_name>",
     "List availability status for all resources in my subscription",
     "List code optimization recommendations across my Application Insights components",
     "List profiler recommendations for Application Insights in resource group <resource_group_name>",
+    "List the activity logs of the last month for <resource_name>",
     "Please help me diagnose issues with my app using app lens",
     "Query the <metric_name> metric for <resource_type> <resource_name> for the last <time_period>",
     "Show me all available metrics and their definitions for storage account <account_name>",
+    "Show me Azure service health events for subscription <subscription_id>",
     "Show me code optimization recommendations for all Application Insights resources in my subscription",
     "Show me my Log Analytics workspaces",
     "Show me performance improvement recommendations from Application Insights",
+    "Show me planned maintenance events for my Azure services",
     "Show me the available table types in the Log Analytics workspace <workspace_name>",
     "Show me the health status of all my Azure resources",
-    "Show me the health status of entity <entity_id> in the Log Analytics workspace <workspace_name>",
+    "Show me the health status of entity <entity_id> using the health model <health_model_name>",
     "Show me the health status of the storage account <storage_account_name>",
     "Show me the Log Analytics workspaces in my subscription",
     "Show me the logs for the past hour for the resource <resource_name> in the Log Analytics workspace <workspace_name>",
@@ -111,18 +140,24 @@
     "What is the availability status of virtual machine <vm_name> in resource group <resource_group_name>?",
     "What metric definitions are available for the Application Insights resource <resource_name>",
     "What resources in resource group <resource_group_name> have health issues?",
+    "What service issues have occurred in the last 30 days?",
     "What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period>"
   ],
-  "deploy_resources_and_applications_to_azure": [
+  "create_azure_monitor_webtests": [],
+  "update_azure_monitor_webtests": [],
+  "deploy_azure_resources_and_applications": [
     "Create a plan to deploy this application to azure",
     "How can I create a CI/CD pipeline to deploy this app to Azure?",
     "Show me the log of the application deployed by azd",
     "Show me the rules to generate bicep scripts"
   ],
-  "execute_azure_developer_cli": [],
+  "deploy_azure_ai_models": [
+    "Deploy a GPT4o instance on my resource <resource-name>"
+  ],
   "get_azure_app_config_settings": [
     "List all App Configuration stores in my subscription",
     "List all key-value settings in App Configuration store <app_config_store_name>",
+    "List all key-value settings with key name starting with 'prod-' in App Configuration store <app_config_store_name>",
     "Show me my App Configuration stores",
     "Show me the App Configuration stores in my subscription",
     "Show me the key-value settings in App Configuration store <app_config_store_name>",
@@ -154,17 +189,23 @@
     "Provide compliance recommendations for my current Azure subscription",
     "Scan my Azure subscription for compliance recommendations"
   ],
-  "execute_azure_cli": [],
+  "generate_azure_cli_commands": [
+    "Get Azure CLI command to create a Storage account with name <storage_account_name>",
+    "Show me how to use Azure CLI to list all virtual machines in my subscription",
+    "Show me the details of the storage account <account_name> with Azure CLI commands"
+  ],
+  "install_azure_cli_extensions": [],
   "get_azure_security_configurations": [
     "List all available role assignments in my subscription",
     "Show me the available role assignments in my subscription"
   ],
-  "get_azure_key_vault": [
+  "get_azure_key_vault_items": [
     "Display the certificate details for <certificate_name> in vault <key_vault_account_name>",
     "Display the key details for <key_name> in vault <key_vault_account_name>",
     "Enumerate certificates in key vault <key_vault_account_name>",
     "Enumerate keys in key vault <key_vault_account_name>",
     "Enumerate secrets in key vault <key_vault_account_name>",
+    "Get the account settings for my key vault <key_vault_account_name>",
     "Get the certificate <certificate_name> from vault <key_vault_account_name>",
     "Get the key <key_name> from vault <key_vault_account_name>",
     "List all certificates in the key vault <key_vault_account_name>",
@@ -177,6 +218,7 @@
     "Retrieve key metadata for <key_name> in vault <key_vault_account_name>",
     "Show certificate names in the key vault <key_vault_account_name>",
     "Show key names in the key vault <key_vault_account_name>",
+    "Show me the account settings for managed HSM keyvault <key_vault_account_name>",
     "Show me the certificate <certificate_name> in the key vault <key_vault_account_name>",
     "Show me the certificates in the key vault <key_vault_account_name>",
     "Show me the details of the certificate <certificate_name> in the key vault <key_vault_account_name>",
@@ -187,13 +229,19 @@
     "Show secrets names in the key vault <key_vault_account_name>",
     "What certificates are in the key vault <key_vault_account_name>?",
     "What keys are in the key vault <key_vault_account_name>?",
-    "What secrets are in the key vault <key_vault_account_name>?"
+    "What secrets are in the key vault <key_vault_account_name>?",
+    "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
+  ],
+  "get_azure_key_vault_secret_values": [
+    "Display the secret details for <secret_name> in vault <key_vault_account_name>",
+    "Get the secret <secret_name> from vault <key_vault_account_name>",
+    "Retrieve secret metadata for <secret_name> in vault <key_vault_account_name>",
+    "Show me the details of the secret <secret_name> in the key vault <key_vault_account_name>",
+    "Show me the secret <secret_name> in the key vault <key_vault_account_name>"
   ],
   "create_azure_key_vault_items": [
-    "Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name>",
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
     "Create a new key called <key_name> with the RSA type in the key vault <key_vault_account_name>",
-    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>",
     "Create an EC key with name <key_name> in the vault <key_vault_account_name>",
     "Create an oct key in the vault <key_vault_account_name>",
     "Create an RSA key in the vault <key_vault_account_name> with name <key_name>",
@@ -201,7 +249,11 @@
     "Generate a key <key_name> with type <key_type> in vault <key_vault_account_name>",
     "Issue a certificate <certificate_name> in key vault <key_vault_account_name>",
     "Provision a new key vault certificate <certificate_name> in vault <key_vault_account_name>",
-    "Request creation of certificate <certificate_name> in the key vault <key_vault_account_name>",
+    "Request creation of certificate <certificate_name> in the key vault <key_vault_account_name>"
+  ],
+  "create_azure_key_vault_secrets": [
+    "Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name>",
+    "Create a new secret called <secret_name> with value <secret_value> in the key vault <key_vault_account_name>",
     "Set a secret named <secret_name> with value <secret_value> in key vault <key_vault_account_name>",
     "Store secret <secret_name> value <secret_value> in the key vault <key_vault_account_name>",
     "Update secret <secret_name> to value <secret_value> in the key vault <key_vault_account_name>"
@@ -247,29 +299,62 @@
   "update_azure_load_testing_configurations": [
     "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
   ],
-  "search_microsoft_docs": [],
   "get_azure_ai_resources_details": [
+    "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>",
+    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
+    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
     "Get the schema configuration for knowledge index <index-name>",
+    "List all agents in my AI Foundry project",
     "List all AI Foundry model deployments",
     "List all AI Foundry models",
+    "List all AI Foundry resources in my subscription",
+    "List all available OpenAI models in my Azure resource",
     "List all Cognitive Search services in my subscription",
     "List all indexes in the Cognitive Search service <service-name>",
+    "List all knowledge bases in the Azure AI Search service <service-name>",
+    "List all knowledge bases in the search service <service-name>",
     "List all knowledge indexes in my AI Foundry project",
+    "List all knowledge sources in the Azure AI Search service <service-name>",
+    "List all knowledge sources in the search service <service-name>",
     "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>",
     "Show me all AI Foundry model deployments",
     "Show me my Cognitive Search services",
+    "Show me the AI Foundry resources in resource group <resource_group_name>",
+    "Show me the available agents in my AI Foundry project",
     "Show me the available AI Foundry models",
     "Show me the Cognitive Search services in my subscription",
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
     "Show me the indexes in the Cognitive Search service <service-name>",
+    "Show me the knowledge base <agent-name> in search service <service-name>",
+    "Show me the knowledge bases in the Azure AI Search service <service-name>",
+    "Show me the knowledge bases in the search service <service-name>",
     "Show me the knowledge indexes in my AI Foundry project",
+    "Show me the knowledge source <source-name> in search service <service-name>",
+    "Show me the knowledge sources in the Azure AI Search service <service-name>",
+    "Show me the knowledge sources in the search service <service-name>",
+    "Show me the OpenAI model deployments",
     "Show me the schema for knowledge index <index-name> in my AI Foundry project"
   ],
-  "deploy_azure_ai_models": [
-    "Deploy a GPT4o instance on my resource <resource-name>"
+  "retrieve_azure_ai_knowledge_base_content": [
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Find information about <query> using knowledge base <agent-name> in search service <service-name>",
+    "Query knowledge base <agent-name> in search service <service-name> about <query>",
+    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
+    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
+    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
+    "What does knowledge base <agent-name> in search service <service-name> know about <query>"
+  ],
+  "use_azure_openai_models": [
+    "Create a chat completion with the message \"Hello, how are you today?\"",
+    "Create a completion with the prompt \"What is Azure?\"",
+    "Create vector embeddings for my text using Azure OpenAI",
+    "Generate embeddings for the text \"Azure OpenAI Service\""
   ],
   "connect_azure_ai_foundry_agents": [
     "Query an agent in my AI foundry project"
+  ],
+  "query_and_evaluate_azure_ai_foundry_agents": [
+    "Query and evaluate an agent in my AI Foundry project for task_adherence"
   ],
   "evaluate_azure_ai_foundry_agents": [
     "Evaluate the full query and response I got from my agent for task_adherence"
@@ -282,38 +367,33 @@
     "List all storage accounts in my subscription including their location and SKU",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
-    "List the Azure Managed Lustre SKUs available in <location>",
+    "List the Azure Managed Lustre SKUs available in location <location>",
     "Show me my storage accounts with whether hierarchical namespace (HNS) is enabled",
     "Show me the blobs in the blob container <container> in the storage account <account>",
     "Show me the containers in the storage account <account>",
     "Show me the details for my storage account <account>",
     "Show me the properties for blob <blob> in container <container> in storage account <account>",
     "Show me the properties of the storage container <container> in the storage account <account>",
-    "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings"
+    "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
+    "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>",
+    "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
   "create_azure_storage": [
     "Create a new blob container named documents with container public access in storage account <account>",
     "Create a new storage account called testaccount123 in East US region",
     "Create a new storage account with Data Lake Storage Gen2 enabled",
     "Create a storage account with premium performance and LRS replication",
+    "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>",
     "Create the container using blob public access in storage account <account>",
     "Create the storage container mycontainer in storage account <account>"
+  ],
+  "update_azure_managed_lustre_filesystems": [
+    "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "upload_azure_storage_blobs": [
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
-  "get_azure_cache_for_redis_details": [
-    "List all access policies in the Redis Cache <cache_name>",
-    "List all databases in the Redis Cluster <cluster_name>",
-    "List all Redis Caches in my subscription",
-    "List all Redis Clusters in my subscription",
-    "Show me my Redis Caches",
-    "Show me my Redis Clusters",
-    "Show me the access policies in the Redis Cache <cache_name>",
-    "Show me the databases in the Redis Cluster <cluster_name>",
-    "Show me the Redis Caches in my subscription",
-    "Show me the Redis Clusters in my subscription"
-  ],
+  "get_azure_cache_for_redis_details": [],
   "browse_azure_marketplace_products": [
     "Get details about marketplace product <product_name>",
     "Search for Microsoft products in the marketplace",
@@ -321,14 +401,19 @@
   ],
   "get_azure_capacity": [
     "Check usage information for <resource_type> in region <region>",
-    "Show me the available regions for these resource types <resource_types>",
-    "Tell me how many IP addresses I need for <filesystem_size> of <amlfs_sku>"
+    "Show me the available regions for these resource types <resource_types>"
   ],
   "get_azure_messaging_service_details": [
+    "Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
+    "Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
+    "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>",
+    "List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>",
     "List all Event Grid subscriptions in subscription <subscription>",
     "List all Event Grid topics in my subscription",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>",
     "List all Event Grid topics in subscription <subscription>",
+    "List all Event Hubs in my namespace <namespace_name>",
+    "List all Event Hubs namespaces in my subscription",
     "List Event Grid subscriptions for subscription <subscription> in location <location>",
     "List Event Grid subscriptions for topic <topic_name> in resource group <resource_group_name>",
     "List Event Grid subscriptions for topic <topic_name> in subscription <subscription>",
@@ -339,6 +424,22 @@
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>",
     "Show me the details of service bus <service_bus_name> topic <topic_name>",
     "Show me the Event Grid topics in my subscription"
+  ],
+  "edit_azure_data_analytics_resources": [
+    "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
+    "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
+    "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
+    "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
+    "Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
+    "Delete my namespace <namespace_name> in my resource group <resource_group_name>",
+    "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
+    "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
+    "Update my namespace <namespace_name> in my resource group <resource_group_name>"
+  ],
+  "publish_azure_eventgrid_events": [
+    "Publish an event to Event Grid topic <topic_name> using <event_schema> with the following data <event_data>",
+    "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
+    "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
   ],
   "get_azure_data_explorer_kusto_details": [
     "List all Data Explorer clusters in my subscription",
@@ -402,5 +503,54 @@
     "List all host pools in my subscription",
     "List all session hosts in host pool <hostpool_name>",
     "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
+  ],
+  "get_azure_signalr_details": [
+    "Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>",
+    "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
+    "List all SignalRs in my subscription",
+    "Show all the SignalRs information in <resource_group_name>",
+    "Show me the details of SignalR <signalr_name>",
+    "Show me the network information of SignalR runtime <signalr_name>"
+  ],
+  "get_azure_confidential_ledger_entries": [
+    "Get entry from Confidential Ledger for transaction <transaction_id> on ledger <ledger_name>",
+    "Get transaction <transaction_id> from ledger <ledger_name>"
+  ],
+  "append_azure_confidential_ledger_entries": [
+    "Append {\"hello\": \"from mcp\"} to my confidential ledger <ledger_name> in collection <collection_id>",
+    "Append an entry to my ledger <ledger_name> with data {\"key\": \"value\"}",
+    "Create an immutable ledger entry in <ledger_name> with content {\"audit\": \"log\"}",
+    "Write a tamper-proof entry to ledger <ledger_name> containing {\"transaction\": \"data\"}",
+    "Write an entry to confidential ledger <ledger_name>"
+  ],
+  "send_azure_communication_messages": [
+    "Send an email from my communication service to <email-address>",
+    "Send an email to <email-address> with subject <subject>",
+    "Send an email with BCC recipients",
+    "Send an SMS message to <phone-number> saying \"Hello\"",
+    "Send an SMS with delivery receipt tracking",
+    "Send broadcast SMS to <phone-number-1> and <phone-number-2> saying \"Urgent notification\"",
+    "Send email to multiple recipients: <email-address-1>, <email-address-2>",
+    "Send email with CC to <email-address-1> and <email-address-2>",
+    "Send email with custom sender name <sender-name>",
+    "Send email with reply-to address set to <email-address>",
+    "Send HTML-formatted email to <email-address> with subject <subject>",
+    "Send SMS from my communication service to <phone-number-1>",
+    "Send SMS message with custom tracking tag \"campaign1\"",
+    "Send SMS to <phone-number-2> from <phone-number-1> with message \"Test message\"",
+    "Send SMS to multiple recipients: <phone-number-1>, <phone-number-2>",
+    "Send SMS with delivery reporting enabled"
+  ],
+  "recognize_speech_from_audio": [
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Transcribe audio with raw profanity output from file <file_path>",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Transcribe the audio file <file_path> in Spanish language"
   ]
 }
