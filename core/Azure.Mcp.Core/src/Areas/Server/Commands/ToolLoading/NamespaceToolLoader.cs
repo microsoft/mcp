@@ -200,7 +200,7 @@ public sealed class NamespaceToolLoader(
                 //       "learn": true
                 //    }
                 //
-                // This command atttempts to learn what the command "blob_list" entails by
+                // This command attempts to learn what the command "blob_list" entails by
                 // invoking it with no parameters and "learn" == "true".  The command will
                 // generally fail, providing the LLM with extra information it needs to pass
                 // in for the command to succeed the next time.
