@@ -1,5 +1,11 @@
 # Release History
 
+## 0.9.2 (2025-10-15)
+
+### Fixed
+
+- Fixed retained-buffer leaks across services (Kusto, EventGrid, AppLens, Speech, Cosmos, Foundry, NetworkResourceProvider) and tool loaders (BaseToolLoader, ServerToolLoader, NamespaceToolLoader, SingleProxyToolLoader) by disposing `JsonDocument`/`HttpResponseMessage` instances and cloning returned `JsonElements`. ([#817](https://github.com/microsoft/mcp/pull/817))
+
 ## 0.9.1 (2025-10-14)
 
 ### Fixed
@@ -8,7 +14,7 @@
 
 ### Changed
 
-- MCP server start options are now included in logs. ([#794](https://github.com/microsoft/mcp/pull/794))
+- MCP server start options are now included in telemetry logs. ([#794](https://github.com/microsoft/mcp/pull/794))
 - Updated the description of the following Workbook commands to decrease ambiguity and increase selection accuracy by LLMs: [[#787](https://github.com/microsoft/mcp/pull/787)]
   - `azmcp_workbook_show`
   - `azmcp_workbook_update`
