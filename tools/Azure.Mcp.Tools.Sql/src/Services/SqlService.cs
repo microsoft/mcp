@@ -1109,4 +1109,68 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             EndIpAddress: firewallRule.Properties?.EndIPAddress
         );
     }
+
+    private static SqlServerConnectionPolicy ConvertToSqlServerConnectionPolicyModel(JsonElement item)
+    {
+        var nameValue = item.GetProperty("name").GetString() ?? "Unknown";
+        var idValue = item.GetProperty("id").GetString() ?? "Unknown";
+        var typeValue = item.GetProperty("type").GetString() ?? "Unknown";
+        var connectionTypeValue = "Default";
+
+        if (item.TryGetProperty("properties", out var properties))
+        {
+            if (properties.TryGetProperty("connectionType", out var connectionType))
+            {
+                connectionTypeValue = connectionType.GetString() ?? "Default";
+            }
+        }
+
+        return new SqlServerConnectionPolicy(
+            Name: nameValue,
+            Id: idValue,
+            Type: typeValue,
+            ConnectionType: connectionTypeValue);
+    }
+
+    /// <summary>
+    /// Retrieves the connection policy for an Azure SQL Server.
+    /// The connection policy determines how clients connect to the SQL server (Default, Proxy, or Redirect).
+    /// </summary>
+    /// <param name="serverName">The name of the SQL server to get the connection policy for</param>
+    /// <param name="resourceGroup">The name of the resource group containing the server</param>
+    /// <param name="subscription">The subscription ID or name</param>
+    /// <param name="retryPolicy">Optional retry policy configuration for resilient operations</param>
+    /// <param name="cancellationToken">Token to observe for cancellation requests</param>
+    /// <returns>The SQL server connection policy information</returns>
+    /// <exception cref="ArgumentException">Thrown when required parameters are null or empty</exception>
+    public async Task<SqlServerConnectionPolicy> GetServerConnectionPolicyAsync(
+        string serverName,
+        string resourceGroup,
+        string subscription,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
+
+        // Use Resource Graph to query connection policy
+        var result = await ExecuteSingleResourceQueryAsync(
+            "Microsoft.Sql/servers/connectionPolicies",
+            resourceGroup: resourceGroup,
+            subscription: subscription,
+            retryPolicy: retryPolicy,
+            converter: ConvertToSqlServerConnectionPolicyModel,
+            additionalFilter: $"name =~ '{EscapeKqlString(serverName)}/default'",
+            cancellationToken: cancellationToken);
+
+        if (result == null)
+        {
+            throw new KeyNotFoundException($"Connection policy not found for SQL server '{serverName}' in resource group '{resourceGroup}'.");
+        }
+
+        return result;
+    }
 }
