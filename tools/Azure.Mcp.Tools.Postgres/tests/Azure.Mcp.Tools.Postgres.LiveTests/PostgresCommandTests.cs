@@ -13,8 +13,7 @@ namespace Azure.Mcp.Tools.Postgres.LiveTests;
 
 public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
-    private const string TestDatabaseName = "testdb";
-
+    private string TestDatabaseName => Settings.DeploymentOutputs["TESTDATABASENAME"];
     private string ServerName => Settings.DeploymentOutputs["POSTGRESSERVERNAME"];
     private string ServerFqdn => Settings.DeploymentOutputs["POSTGRESSERVERFQDN"];
     private string AdminUsername => Settings.PrincipalName ?? string.Empty;
@@ -61,7 +60,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         var options = new DefaultAzureCredentialOptions
         {
             TenantId = Settings.TenantId,
-            ExcludeManagedIdentityCredential = true,  // We don't want to use ADO build machine identity
+            ExcludeManagedIdentityCredential = true,  // We don't want to use ADO build server identity
         };
         var tokenCredential = new DefaultAzureCredential(options);
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
@@ -414,7 +413,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "query", "DELETE FROM employees WHERE id = 1;" }
             });
 
-        // no exception is thrown and response is not propagated here to check the following:
+        // No exception is thrown and response is not propagated here to check the following:
         // "status": 400,
         // "message": "Only single read-only SELECT statements are allowed.",
         Assert.Null(result);
@@ -423,13 +422,15 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_HandleInvalidServerName_Gracefully()
     {
+        string serverName = Guid.NewGuid().ToString(); // <-- nonexistent_server
+
         JsonElement? result = await CallToolAsync(
                 "azmcp_postgres_database_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
-                    { "server", Guid.NewGuid().ToString() }, // <-- nonexistent_server
+                    { "server", serverName },
                     { "database", TestDatabaseName },
                     { "user", AdminUsername }
                 });
@@ -450,7 +451,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_HandleInvalidDatabaseName_Gracefully()
     {
-        string nonexistentDatabase = Guid.NewGuid().ToString();
+        string databaseName = Guid.NewGuid().ToString(); // <-- nonexistent_database
 
         JsonElement? result = await CallToolAsync(
                 "azmcp_postgres_table_list",
@@ -459,19 +460,20 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "subscription", Settings.SubscriptionId },
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
-                    { "database", nonexistentDatabase },
+                    { "database", databaseName },
                     { "user", AdminUsername }
                 });
 
-        // Should handle the error gracefully
         JsonElement errorMessageProperty = result.Value.GetProperty("message");
         Assert.Equal(JsonValueKind.String, errorMessageProperty.ValueKind);
-        Assert.Contains($"\"{nonexistentDatabase}\" does not exist", errorMessageProperty.GetString());
+        Assert.Contains($"\"{databaseName}\" does not exist", errorMessageProperty.GetString());
     }
 
     [Fact]
     public async Task Should_HandleInvalidTableName_Gracefully()
     {
+        string tableName = Guid.NewGuid().ToString(); // <-- nonexistent_table
+
         JsonElement? result = await CallToolAsync(
             "azmcp_postgres_table_schema_get",
             new()
@@ -481,7 +483,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "server", ServerName },
                     { "database", TestDatabaseName },
                     { "user", AdminUsername },
-                    { "table", Guid.NewGuid().ToString() } // <-- nonexistent_table
+                    { "table", tableName }
             });
 
         JsonElement schema = result.AssertProperty("Schema");
