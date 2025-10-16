@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -316,6 +317,67 @@ public sealed class NamespaceToolLoader(
             {
                 _logger.LogError("Command {Command} found in tools but missing from namespace {Namespace} commands.", command, namespaceName);
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
+            }
+
+            // Check if this tool requires elicitation for sensitive data
+            var metadata = cmd.Metadata;
+            if (metadata.Secret)
+            {
+                // Check if elicitation is disabled by insecure option
+                if (_options.Value.InsecureDisableElicitation)
+                {
+                    _logger.LogWarning("Tool '{Namespace} {Command}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", namespaceName, command);
+                }
+                else
+                {
+                    // If client doesn't support elicitation, treat as rejected and don't execute
+                    if (!request.Server.SupportsElicitation())
+                    {
+                        _logger.LogWarning("Tool '{Namespace} {Command}' handles sensitive data but client does not support elicitation. Operation rejected.", namespaceName, command);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                            IsError = true
+                        };
+                    }
+
+                    try
+                    {
+                        _logger.LogInformation("Tool '{Namespace} {Command}' handles sensitive data. Requesting user confirmation via elicitation.", namespaceName, command);
+
+                        // Create the elicitation request using our custom model
+                        var elicitationRequest = new ElicitationRequestParams
+                        {
+                            Message = $"⚠️ SECURITY WARNING: The tool '{namespaceName} {command}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                            RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                        };
+
+                        // Use our extension method to handle the elicitation
+                        var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                        if (elicitationResponse.Action != ElicitationAction.Accept)
+                        {
+                            _logger.LogInformation("User {Action} the elicitation for tool '{Namespace} {Command}'. Operation not executed.",
+                                elicitationResponse.Action.ToString().ToLower(), namespaceName, command);
+                            return new CallToolResult
+                            {
+                                Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                                IsError = true
+                            };
+                        }
+
+                        _logger.LogInformation("User accepted elicitation for tool '{Namespace} {Command}'. Proceeding with execution.", namespaceName, command);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during elicitation for tool '{Namespace} {Command}': {Error}", namespaceName, command, ex.Message);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{namespaceName} {command}': {ex.Message}. Operation not executed for security." }],
+                            IsError = true
+                        };
+                    }
+                }
             }
 
             var commandContext = new CommandContext(_serviceProvider, Activity.Current);
