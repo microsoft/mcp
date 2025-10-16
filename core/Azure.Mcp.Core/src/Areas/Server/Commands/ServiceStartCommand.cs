@@ -6,8 +6,8 @@ using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
-using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Logging;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -155,7 +155,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Determine effective log level from options and configuration
         var effectiveLogLevel = GetEffectiveLogLevel(configuration, serverOptions);
-        
+
         if (isStdioMode)
         {
             // For STDIO mode, send logs to STDERR to keep STDOUT clean for MCP protocol
@@ -191,7 +191,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         // Set minimum level - this works with standard ASP.NET Core configuration
         logging.SetMinimumLevel(effectiveLogLevel);
-        
+
         // Configure console provider filter
         logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", effectiveLogLevel);
     }
@@ -239,7 +239,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             return serverOptions.LogFile;
         }
 
-        var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE") 
+        var envLogFile = Environment.GetEnvironmentVariable("AZMCP_LOG_FILE")
                         ?? Environment.GetEnvironmentVariable("LOGGING__FILE__PATH");
         if (!string.IsNullOrEmpty(envLogFile))
         {

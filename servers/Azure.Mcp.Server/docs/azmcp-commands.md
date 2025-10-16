@@ -218,6 +218,7 @@ azmcp server start
 - `AZMCP_LOG_LEVEL`: Set log level (Trace, Debug, Information, Warning, Error, Critical)
 - `AZMCP_LOG_FILE`: File path for log output
 - `LOGGING__LOGLEVEL__DEFAULT`: Set default log level using standard ASP.NET Core format
+- `LOGGING__FILE__PATH`: File path for log output using standard ASP.NET Core format
 
 ### Azure AI Foundry Operations
 
