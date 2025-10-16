@@ -47,7 +47,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
-        var args = $"start -u --storage-location=\"{storageLocation}\"";
+        var args = $"start --storage-location=\"{storageLocation}\"";
 
         var isDll = ExecutablePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
         ProcessStartInfo psi;
@@ -64,17 +64,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         psi.RedirectStandardOutput = true;
         psi.RedirectStandardError = true;
         psi.UseShellExecute = false;
-
-        if (_debug)
-        {
-            psi.EnvironmentVariables["Logging__LogLevel__Azure.Sdk.Tools.TestProxy"] = "Debug";
-            psi.EnvironmentVariables["Logging__LogLevel__Default"] = "Information";
-        }
-        else
-        {
-            psi.EnvironmentVariables["Logging__LogLevel__Azure.Sdk.Tools.TestProxy"] = "Error";
-            psi.EnvironmentVariables["Logging__LogLevel__Default"] = "Error";
-        }
         psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
 
         _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");

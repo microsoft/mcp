@@ -42,6 +42,10 @@ namespace Azure.Mcp.Tests.Client
 
         public ValueTask DisposeAsync()
         {
+            if (Proxy is not null)
+            {
+                Proxy.Dispose();
+            }
             return ValueTask.CompletedTask;
         }
     }
