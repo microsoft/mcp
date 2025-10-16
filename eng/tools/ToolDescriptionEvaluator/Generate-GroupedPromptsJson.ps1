@@ -9,7 +9,7 @@ Modes:
     Both         - Produces both outputs in a single run.
 
 Reads:
-    - consolidated-tools.json (contains consolidated_azure_tools array; each tool has an available_commands list)
+    - consolidated-tools.json (contains consolidated_tools array; each tool has an mappedToolList list)
     - namespace-tools.json (contains top-level namespaces with recursive subcommands)
     - tools.json (optional for future enrichment / validation)
     - prompts.json (maps individual command keys to prompt examples; e.g. command "azmcp acr registry list" => key "azmcp_acr_registry_list")
@@ -45,17 +45,17 @@ Overwrite existing output file(s).
 Emit detailed warnings for unmatched commands.
 
 .EXAMPLES
-pwsh ./Generate-ConsolidatedPrompts.ps1 -Mode Consolidated                              # Consolidated only
-pwsh ./Generate-ConsolidatedPrompts.ps1 -Mode Namespace                                 # Namespace only
-pwsh ./Generate-ConsolidatedPrompts.ps1 -Mode Both                                      # Both files, overwrite if exist
-pwsh ./Generate-ConsolidatedPrompts.ps1 -Mode Namespace -NamespaceToolsPath ./namespace-tools.json -OutputPath ./namespace-prompts.json
+pwsh ./Generate-GroupedPromptsJson.ps1 -Mode Consolidated                              # Consolidated only
+pwsh ./Generate-GroupedPromptsJson.ps1 -Mode Namespace                                 # Namespace only
+pwsh ./Generate-GroupedPromptsJson.ps1 -Mode Both                                      # Both files, overwrite if exist
+pwsh ./Generate-GroupedPromptsJson.ps1 -Mode Namespace -NamespaceToolsPath ./namespace-tools.json -OutputPath ./namespace-prompts.json
 
 .NOTES
 Idempotent. Safe to re-run. Designed to be executed from repo root or script directory.
 #>
 param(
     [Parameter(Mandatory)][ValidateSet('Consolidated','Namespace','Both')][string]$Mode,
-    [string]$ConsolidatedToolsPath = "./consolidated-tools.json",
+    [string]$ConsolidatedToolsPath = "../../../core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json",
     [string]$NamespaceToolsPath = "./namespace-tools.json",
     [string]$PromptsPath = "./prompts.json",
     [string]$ToolsPath = "./tools.json",
@@ -182,15 +182,15 @@ function Invoke-ConsolidatedGeneration {
 
     if (-not (Test-Path $ConsolidatedToolsPath)) { throw "Consolidated tools file not found: $ConsolidatedToolsPath" }
     $consolidatedJson = Get-Content -Raw -Path $ConsolidatedToolsPath | ConvertFrom-Json
-    if (-not $consolidatedJson.consolidated_azure_tools) { throw "Input consolidated tools JSON missing 'consolidated_azure_tools' array" }
+    if (-not $consolidatedJson.consolidated_tools) { throw "Input consolidated tools JSON missing 'consolidated_tools' array" }
 
     $warnings = @()
     $outputMap = [ordered]@{}
-    foreach ($tool in $consolidatedJson.consolidated_azure_tools) {
+    foreach ($tool in $consolidatedJson.consolidated_tools) {
         if (-not $tool.name) { continue }
         $toolName = $tool.name
         $available = @()
-        if ($tool.available_commands) { $available = $tool.available_commands }
+        if ($tool.mappedToolList) { $available = $tool.mappedToolList }
 
         $commandStrings = @()
         foreach ($cmdEntry in $available) {

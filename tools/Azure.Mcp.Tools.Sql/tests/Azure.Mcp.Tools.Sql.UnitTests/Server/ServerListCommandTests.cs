@@ -54,7 +54,7 @@ public class ServerListCommandTests
         var metadata = _command.Metadata;
         Assert.False(metadata.Destructive);
         Assert.True(metadata.Idempotent);
-        Assert.True(metadata.OpenWorld);
+        Assert.False(metadata.OpenWorld);
         Assert.True(metadata.ReadOnly);
         Assert.False(metadata.LocalRequired);
         Assert.False(metadata.Secret);

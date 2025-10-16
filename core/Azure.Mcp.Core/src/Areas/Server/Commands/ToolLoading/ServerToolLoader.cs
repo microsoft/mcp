@@ -84,6 +84,17 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 InputSchema = ToolSchema,
             };
 
+            if (metadata.ToolMetadata != null)
+            {
+                tool.Annotations = new ToolAnnotations
+                {
+                    DestructiveHint = metadata.ToolMetadata.Destructive,
+                    IdempotentHint = metadata.ToolMetadata.Idempotent,
+                    OpenWorldHint = metadata.ToolMetadata.OpenWorld,
+                    ReadOnlyHint = metadata.ToolMetadata.ReadOnly,
+                };
+            }
+
             allToolsResponse.Tools.Add(tool);
         }
 

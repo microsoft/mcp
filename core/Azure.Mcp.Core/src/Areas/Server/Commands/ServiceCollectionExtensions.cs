@@ -82,6 +82,7 @@ public static class AzureMcpServiceCollectionExtensions
         services.AddSingleton<CommandGroupDiscoveryStrategy>();
         services.AddSingleton<CompositeDiscoveryStrategy>();
         services.AddSingleton<RegistryDiscoveryStrategy>();
+        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register MCP runtimes
         services.AddSingleton<IMcpRuntime, McpRuntime>();
@@ -104,6 +105,20 @@ public static class AzureMcpServiceCollectionExtensions
         else if (serviceStartOptions.Mode == ModeTypes.NamespaceProxy)
         {
             services.AddSingleton<IMcpDiscoveryStrategy, RegistryDiscoveryStrategy>();
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IMcpDiscoveryStrategy>(sp =>
+            {
+                var discoveryStrategies = new List<IMcpDiscoveryStrategy>
+                {
+                    sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                    sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>(),
+                };
+
+                var logger = sp.GetRequiredService<ILogger<CompositeDiscoveryStrategy>>();
+                return new CompositeDiscoveryStrategy(discoveryStrategies, logger);
+            });
         }
 
         // Configure tool loading based on mode
@@ -152,6 +167,10 @@ public static class AzureMcpServiceCollectionExtensions
 
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
+        }
+        else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
+        {
+            services.AddSingleton<IToolLoader, ServerToolLoader>();
         }
         else if (serviceStartOptions.Mode == ModeTypes.All)
         {

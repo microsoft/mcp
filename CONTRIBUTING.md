@@ -141,7 +141,22 @@ If you are contributing significant changes, or if the issue is already assigned
 
 6. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
 
-7. **Create Pull Request**:
+7. **Add new tool to consolidated mode**:
+   - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
+   - Paste the follow prompt for Copilot to generate the change to add the new tool:
+      ```txt 
+      I have this list of tools which haven't been matched with any consolidated tools in this file. Help me add them to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tools where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
+
+      <Add new tool name here>
+      ```
+   - Use the following command to find out the correct tool name for your new tool
+      ```
+      cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+      ./azmcp[.exe] tools list --name --namespace <tool_area>
+      ```
+   - Commit the change.
+
+8. **Create Pull Request**:
    - Reference the issue you created
    - Include tests in the `/tests` folder
    - Ensure all tests pass
@@ -269,7 +284,22 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 }
 ```
 
-**Combined Mode** (filter namespaces with proxy mode):
+**Consolidated Mode** (grouped related operations):
+It honors both --read-only and --namespace switches.
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start", "--mode", "consolidated"]
+    }
+  }
+}
+```
+
+**Combined Mode** (filter namespaces with any mode):
 
 ```json
 {
@@ -299,9 +329,11 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
 
 > **Server Mode Summary:**
 >
-> - **Default Mode**: No additional parameters - exposes all tools individually
+> - **Default Mode (Namespace)**: No additional parameters - collapses tools by namespace (current default)
+> - **Consolidated Mode**: `--mode consolidated` - exposes consolidated tools grouping related operations, optimized for AI agents.
 > - **Namespace Mode**: `--namespace <service-name>` - expose specific services
 > - **Namespace Proxy Mode**: `--mode namespace` - collapse tools by namespace (useful for VS Code's 128 tool limit)
+> - **All Tools Mode**: `--mode all` - expose all ~800+ individual tools
 > - **Single Tool Mode**: `--mode single` - single "azure" tool with internal routing
 > - **Specific Tool Mode**: `--tool <tool-name>` - expose only specific tools by name (finest granularity)
 > - **Combined Mode**: Multiple options can be used together (`--namespace` + `--mode` etc.)
