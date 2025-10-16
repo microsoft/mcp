@@ -19,7 +19,7 @@ resource postgresServer 'Microsoft.DBforPostgreSQL/flexibleServers@2025-06-01-pr
     tier: 'Burstable'
   }
   properties: {
-    version: '15'
+    version: '17'
     storage: {
       storageSizeGB: 32
       iops: 120
