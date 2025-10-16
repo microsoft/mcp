@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added consolidated mode [[#784](https://github.com/microsoft/mcp/pull/784)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
