@@ -168,14 +168,18 @@ public sealed class NamespaceToolLoader(
 
         try
         {
+            var activity = Activity.Current;
+
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
+                activity?.SetTag(TagName.IsServerCommandInvoked, false);
 
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                activity?.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(command));
+
                 var toolParams = GetParametersFromArgs(args);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
