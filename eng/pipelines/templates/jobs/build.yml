@@ -43,6 +43,9 @@ jobs:
 
   - checkout: self
 
+  # Need to authenticate so our pipeline can update packages in the feed.
+  - task: NuGetAuthenticate@1
+
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
