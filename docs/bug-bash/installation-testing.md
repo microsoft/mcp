@@ -720,9 +720,9 @@ az login
 
 ## Related Resources
 
-- [Main Bug Bash Guide](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/README.md)
+- [Main Bug Bash Guide](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/README.md)
 - [Troubleshooting Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
 - [Installation Guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md#installation)
 - [Report Issues](https://github.com/microsoft/mcp/issues)
 
-**Next Steps**: After completing installation testing, proceed to [Scenario Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios).
+**Next Steps**: After completing installation testing, proceed to [Scenario Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios).
