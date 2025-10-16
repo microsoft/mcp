@@ -7,21 +7,30 @@ jobs:
   displayName: "Pack Nuget"
   dependsOn: ${{ parameters.DependsOn }}
   timeoutInMinutes: 120
+  pool:
+    # On linux, we'd need mono to run nuget, so just use windows
+    name: $(WINDOWSPOOL)
+    image: $(WINDOWSVMIMAGE)
+    os: windows
   steps:
   - checkout: self
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
 
   - download: current
     displayName: Download binaries_signed
     artifact: binaries_signed
 
-  - script: |
-      brew update
-      brew install mono
-      curl -o /usr/local/bin/nuget.exe https://dist.nuget.org/win-x86-commandline/latest/nuget.exe
-      echo '#!/bin/bash' > /usr/local/bin/nuget
-      echo 'mono /usr/local/bin/nuget.exe "$@"' >> /usr/local/bin/nuget
-      chmod +x /usr/local/bin/nuget
-    displayName: 'Install Mono and Setup NuGet Command'
+  - task: UseDotNet@2
+    displayName: "Use .NET SDK from global.json"
+    retryCountOnTaskFailure: 3
+    inputs:
+      useGlobalJson: true
+
+  - task: NuGetToolInstaller@1
+    displayName: "Install NuGet"
 
   - task: Powershell@2
     displayName: "Pack modules for Nuget"
@@ -29,12 +38,9 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Nuget.ps1
       arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
-        -OutputPath '$(Build.ArtifactStagingDirectory)/packed'
-        -VersionSuffix '$(VersionSuffix)'
-        -RepoUrl '$(Build.Repository.Uri)'
-        -CommitSha '$(Build.SourceVersion)'
-        -Branch '$(Build.SourceBranch)'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
 
   - task: EsrpCodeSigning@5
     displayName: 'CodeSign Nuget Packages'
@@ -46,7 +52,7 @@ jobs:
       EsrpClientId: "5e796b8d-3c4d-4e28-93f6-12a44f4368a0"
       AuthAKVName: 'kv-azuresdk-codesign'
       AuthSignCertName: 'azure-sdk-esrp-signing-certificate'
-      FolderPath: '$(Build.ArtifactStagingDirectory)/packed/nuget'
+      FolderPath: '$(Build.ArtifactStagingDirectory)'
       Pattern: '*.nupkg'
       signConfigType: inlineSignParams
       inlineOperation: |
@@ -69,6 +75,6 @@ jobs:
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
-      ArtifactPath: $(Build.ArtifactStagingDirectory)/packed/nuget
+      ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: packages_nuget_signed
       SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}

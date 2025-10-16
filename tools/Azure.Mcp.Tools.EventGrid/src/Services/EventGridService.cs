@@ -175,7 +175,7 @@ public class EventGridService(ISubscriptionService subscriptionService, ITenantS
         try
         {
             // Parse the JSON data
-            var jsonDocument = JsonDocument.Parse(eventData);
+            using var jsonDocument = JsonDocument.Parse(eventData);
 
             IEnumerable<Models.EventGridEventSchema> events;
 

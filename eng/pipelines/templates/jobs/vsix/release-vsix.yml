@@ -8,10 +8,10 @@ parameters:
   default:
     - linux-x64
     - linux-arm64
-    - osx-x64
-    - osx-arm64
-    - win-x64
-    - win-arm64
+    - macos-x64
+    - macos-arm64
+    - windows-x64
+    - windows-arm64
 
 
 jobs:
@@ -46,8 +46,8 @@ jobs:
               workingDirectory: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/${{ VsixTarget }}
               inlineScript: |
                 Write-Host "Publishing VSIX for ${{ VsixTarget }}"
-                $baseName = Get-ChildItem *.vsix | Select-Object -First 1 | ForEach-Object { $_.BaseName }
+                $baseName = Get-ChildItem *.vsix | Select-Object -ExpandProperty BaseName -First 1
                 Write-Host "VSIX baseName: $baseName"
                 npm install -g @vscode/vsce
-                echo "vsce publish --azure-credential --packagePath ""$($baseName).vsix"" --manifestPath ""$($baseName).manifest"" --signaturePath ""$($baseName).signature.p7s"""
-                vsce publish --azure-credential --packagePath "$($baseName).vsix" --manifestPath "$($baseName).manifest" --signaturePath "$($baseName).signature.p7s"
+                echo "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`""
+                vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"

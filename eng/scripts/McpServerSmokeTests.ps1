@@ -3,56 +3,109 @@
 
 [CmdletBinding()]
 param(
-    [string] $ServerName,
+    [string] $BuildInfoPath,
     [string] $ArtifactsDirectory,
+    [string] $ServerName,
     [string] $TargetOs,
     [string] $TargetArch,
-    [string] $WorkingDirectory,
-    [string] $DockerLocalTag
+    [string] $DockerLocalTag,
+    [switch] $CI
 )
 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-$projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
 
-function Validate-Nuget-Packages {
-    param (
-        [string] $ServerName,
-        [string] $ArtifactsPath,
-        [string] $ExeName
-    )
+$exitCode = 0
+$isPipelineRun = $CI -or $env:TF_BUILD -eq "true"
+$ignoreMissingArtifacts = -not $isPipelineRun
 
-    $hasFailures = $false
-    $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
-    $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$ServerName.csproj"
-    foreach ($wrapperDir in $wrapperDirs) {
-        $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
-        Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
-        if (Test-Path $platformDir) {
-            Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
-            Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
-            Write-Host "Validating NuGet package for server $ServerName"
+$tempDirectory = "$RepoRoot/.work/temp"
 
-            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- $ExeName tools list
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
-            } else {
-                Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                Write-Host $output
-                $hasFailures = $true
-            }
-        }
-    }
-    return $hasFailures
+if (!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-function Validate-Npm-Packages {
+if (!$ArtifactsDirectory) {
+    $ArtifactsDirectory = "$RepoRoot/.work"
+}
+
+if (!$TargetOs) {
+    $osPlatform = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
+    $TargetOs = switch -Regex ($osPlatform) {
+        "Windows" { "windows" }
+        "Linux"   { "linux" }
+        "Darwin"  { "macOs" }
+        default { LogError "Unknown OS Platform: $osPlatform"; $exitCode = 1}
+    }
+}
+
+if (!$TargetArch) {
+    $archPlatform = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    $TargetArch = switch ($archPlatform) {
+        "X64" { "x64" }
+        "Arm64" { "arm64" }
+        default { LogError "Unknown Architecture Platform: $archPlatform"; $exitCode = 1}
+    }
+}
+
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
+}
+
+if (!(Test-Path $ArtifactsDirectory)) {
+    LogError "Artifacts directory $ArtifactsDirectory does not exist."
+    $exitCode = 1
+}
+
+if ($exitCode -ne 0) {
+    Write-Host "Exiting with code $exitCode"
+    exit $exitCode
+}
+
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+function Test-NugetPackages {
     param (
-        [string] $ArtifactsPath,
-        [string] $TargetOs,
-        [string] $TargetArch,
-        [string] $WorkingDirectory,
-        [string] $ExeName
+        [hashtable] $Server
+    )
+
+    Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDirectory | Out-Null
+
+    $artifactsPath = "$ArtifactsDirectory/packages_dnx/$($Server.artifactPath)"
+    if( -not (Test-Path $artifactsPath) ) {
+        $message = "Artifacts path $artifactsPath does not exist."
+        if ($ignoreMissingArtifacts) {
+            LogWarning $message
+            return $true
+        } else {
+            LogError $message
+            return $false
+        }
+    }
+
+    Copy-Item -Path (Join-Path $artifactsPath '*') -Destination $tempDirectory -Recurse -Force
+
+    Write-Host "Copied from $artifactsPath to $tempDirectory"
+    Write-Host "Validating NuGet package for server $($Server.name)"
+
+    $output = dnx $server.dnxPackageId -y --source $tempDirectory --prerelease -- $server.dnxToolCommandName tools list
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Server tools list command completed successfully for server $($Server.name)."
+    } else {
+        Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+        Write-Host $output
+        return $false
+    }
+
+    return $true
+}
+
+function Test-NpmPackages {
+    param (
+        [hashtable] $Server
     )
 
     switch ($TargetOs) {
@@ -62,84 +115,96 @@ function Validate-Npm-Packages {
         default { throw "Unknown TargetOs: $TargetOs" }
     }
 
-    Push-Location $WorkingDirectory
-    $hasFailures = $false
-    try {
-        $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
-        foreach ($wrapperDir in $wrapperDirs) {
-            $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
-            Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
-            if (Test-Path $platformDir) {
-                Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
-                Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
+    Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDirectory | Out-Null
 
-                $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
-                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
-
-                if ($mainPackage -and $platformPackage -and (Test-Path $mainPackage.FullName) -and (Test-Path $platformPackage.FullName)) {
-                    Write-Host "Installing Platform Package: $($platformPackage.FullName)"
-                    npm install $platformPackage.FullName | Out-Null
-                    
-                    Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
-                    npm install $mainPackage.FullName | Out-Null
-
-                    $output = npx $ExeName tools list
-                    if ($LASTEXITCODE -eq 0) {
-                        Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
-                    } else {
-                        Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                        Write-Host $output
-                        $hasFailures = $true
-                    }
-                }
-                else {
-                    Write-Host "Either main package or platform package is missing. Skipping tools list command."
-                }
-            }
+    $artifactsPath = "$ArtifactsDirectory/packages_npm/$($Server.artifactPath)"
+    if( -not (Test-Path $artifactsPath) ) {
+        $message = "Artifacts path $artifactsPath does not exist."
+        if ($ignoreMissingArtifacts) {
+            LogWarning $message
+            return $true
+        } else {
+            LogError $message
+            return $false
         }
-    } finally {
-        Pop-Location
     }
-    return $hasFailures
-}
 
-function Validate-Docker-Images {
-    param (
-        [string] $ServerName,
-        [string] $ArtifactsPath,
-        [string] $DockerLocalTag,
-        [string] $ExeName
-    )
+    $mainPackage = Get-ChildItem -Path $artifactsPath -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
+    $platformPackage = Get-ChildItem -Path $artifactsPath -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
 
-    $hasFailures = $false
-    $imageTar = Join-Path $ArtifactsPath "image.tar"
-    Write-Host "Verifying Docker image"
-    if (Test-Path $imageTar) {
-        docker load -i $imageTar | Out-Null
+    $originalLocation = Get-Location
+    Set-Location $tempDirectory
+    try {
+        Write-Host "Installing Platform Package: $($platformPackage.FullName)"
+        npm install $platformPackage.FullName | Out-Null
 
-        $output = docker run --rm --entrypoint ./$ExeName $DockerLocalTag tools list 2>&1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install platform package $($platformPackage.FullName) with exit code $LASTEXITCODE"
+            return $false
+        }
+
+        Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
+        npm install $mainPackage.FullName | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install platform package $($platformPackage.FullName) with exit code $LASTEXITCODE"
+            return $false
+        }
+
+        $output = npx --no $server.cliName tools list
         if ($LASTEXITCODE -eq 0) {
-            Write-Host "Server tools list command completed successfully for server $ServerName."
+            Write-Host "Server tools list command completed successfully for $($server.name)"
         } else {
             Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
             Write-Host $output
-            $hasFailures = $true
+            return $false
+        }
+    } finally {
+        Set-Location $originalLocation
+    }
+
+    return $true
+}
+
+function Test-Docker-Images {
+    param (
+        [hashtable] $Server,
+        [string] $DockerLocalTag
+    )
+
+    $hasFailures = $false
+    $imageTar = "$ArtifactsDirectory/docker_output/image.tar"
+    Write-Host "Validating Docker image for server $($Server.name)"
+    if (Test-Path $imageTar) {
+        docker load -i $imageTar | Out-Null
+
+        $output = docker run --rm --entrypoint $server.cliName $DockerLocalTag tools list
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Server tools list command completed successfully for server $($Server.name)."
+        } else {
+            Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+            Write-Host $output
+            return $false
         }
     }
     return $hasFailures
 }
 
-switch ($ServerName) {
-    "Azure.Mcp.Server" { $ExeName = "azmcp" }
-    "Fabric.Mcp.Server"   { $ExeName = "fabmcp" }
-    "Template.Mcp.Server"   { $ExeName = "tmpmcp" }
-    default { throw "Unknown server name: $ServerName" }
+$servers = $buildInfo.servers
+if ($ServerName) {
+    $servers = $servers | Where-Object { $_.name -eq $ServerName }
 }
 
-$nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed" -ExeName $ExeName
-$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory -ExeName $ExeName
-$dockerHasFailures = Validate-Docker-Images -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/docker_output" -DockerLocalTag $DockerLocalTag -ExeName $ExeName
+foreach($server in $servers) {
+    Write-Host "Validating packages for server $($server.name) version $($server.version) for OS $TargetOs and Arch $TargetArch"
 
-if ($nugetHasFailures -or $npmHasFailures -or $dockerHasFailures) {
-    exit 1
+    $nugetValid = Test-NugetPackages -Server $server
+    $npmValid = Test-NpmPackages -Server $server
+    $dockerValid = Test-Docker-Images -Server $server -DockerLocalTag $DockerLocalTag
+
+    if (!$nugetValid -or !$npmValid -or !$dockerValid) {
+        $exitCode = 1
+    }
 }
+
+exit $exitCode

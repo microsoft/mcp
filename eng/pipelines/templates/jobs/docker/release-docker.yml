@@ -16,6 +16,10 @@ jobs:
   templateContext:
     type: releaseJob
     isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: docker_output
+      targetPath: $(Pipeline.Workspace)/drop
   environment: package-publish
   timeoutInMinutes: 120
   pool:
@@ -26,10 +30,6 @@ jobs:
     runOnce:
       deploy:
         steps:
-        - download: current
-          artifact: docker_output
-          displayName: Download built image .tar
-
         - task: AzureCLI@2
           displayName: Login to ${{ parameters.ContainerRegistry }}
           inputs:

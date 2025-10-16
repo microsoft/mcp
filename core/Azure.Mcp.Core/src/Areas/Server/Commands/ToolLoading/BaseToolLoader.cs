@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -21,7 +22,15 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
     /// <summary>
     /// Cached empty JSON object to avoid repeated parsing.
     /// </summary>
-    protected static readonly JsonElement EmptyJsonObject = JsonDocument.Parse("{}").RootElement;
+    protected static readonly JsonElement EmptyJsonObject;
+
+    static BaseToolLoader()
+    {
+        using (var jsonDoc = JsonDocument.Parse("{}"))
+        {
+            EmptyJsonObject = jsonDoc.RootElement.Clone();
+        }
+    }
 
     private bool _disposed = false;
 

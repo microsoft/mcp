@@ -1,4 +1,5 @@
-﻿using Azure.Mcp.Core.Services.Http;
+﻿using System.Text.Json;
+using Azure.Mcp.Core.Services.Http;
 using Microsoft.Extensions.Logging;
 
 namespace Fabric.Mcp.Tools.PublicApi.Services
@@ -22,10 +23,12 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
                 using var requestMessage = new HttpRequestMessage(HttpMethod.Get, downloadUrl.GetString());
                 requestMessage.Headers.Add("User-Agent", "request");
 
-                var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage);
-                httpResponse.EnsureSuccessStatusCode();
+                using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage))
+                {
+                    httpResponse.EnsureSuccessStatusCode();
 
-                return await httpResponse.Content.ReadAsStringAsync();
+                    return await httpResponse.Content.ReadAsStringAsync();
+                }
             }
 
             throw new FileNotFoundException($"Resource {resourceName} was not found.");
@@ -54,10 +57,16 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, resourceName);
             requestMessage.Headers.Add("User-Agent", "request");
 
-            var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage);
-            httpResponse.EnsureSuccessStatusCode();
+            using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage))
+            {
+                httpResponse.EnsureSuccessStatusCode();
 
-            return JsonDocument.Parse(await httpResponse.Content.ReadAsStringAsync()).RootElement;
+                await using var content = await httpResponse.Content.ReadAsStreamAsync();
+                using (var jsonDoc = await JsonDocument.ParseAsync(content))
+                {
+                    return jsonDoc.RootElement.Clone();
+                }
+            }
         }
 
         private async Task<JsonElement[]> GetGithubContentArrayAsync(string? requestUrl)
@@ -65,11 +74,18 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             using var requestMessage = new HttpRequestMessage(HttpMethod.Get, requestUrl);
             requestMessage.Headers.Add("User-Agent", "request");
 
-            var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage);
-            httpResponse.EnsureSuccessStatusCode();
+            using (var httpResponse = await _httpClientService.DefaultClient.SendAsync(requestMessage))
+            {
+                httpResponse.EnsureSuccessStatusCode();
 
-            var jsonDoc = JsonDocument.Parse(await httpResponse.Content.ReadAsStringAsync());
-            return [.. jsonDoc.RootElement.EnumerateArray()];
+                await using var content = await httpResponse.Content.ReadAsStreamAsync();
+                using (var jsonDoc = await JsonDocument.ParseAsync(content))
+                {
+                    return jsonDoc.RootElement.EnumerateArray()
+                        .Select(element => element.Clone())
+                        .ToArray();
+                }
+            }
         }
     }
 }

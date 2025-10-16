@@ -32,7 +32,7 @@ try {
             Write-Host "✅ Spell check did not detect any issues."
         }
     }
-    
+
     # Run tool description evaluation
     & "$PSScriptRoot/Test-ToolSelection.ps1"
 

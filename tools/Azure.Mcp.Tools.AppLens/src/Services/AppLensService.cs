@@ -96,12 +96,12 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
                 CancellationToken.None);
 
             // Call the AppLens token endpoint
-            var request = new HttpRequestMessage(HttpMethod.Get,
+            using var request = new HttpRequestMessage(HttpMethod.Get,
                 $"https://management.azure.com/{resourceId}/detectors/GetToken-db48586f-7d94-45fc-88ad-b30ccd3b571c?api-version=2015-08-01");
 
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
-            var response = await _httpClientService.DefaultClient.SendAsync(request);
+            using var response = await _httpClientService.DefaultClient.SendAsync(request);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -283,7 +283,7 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
 
     private static AppLensSession ParseGetTokenResponse(string rawResponse)
     {
-        JsonDocument jsonResponse = JsonDocument.Parse(rawResponse);
+        using var jsonDoc = JsonDocument.Parse(rawResponse);
 
         AppLensSession? session = null;
 
@@ -292,11 +292,11 @@ public class AppLensService(IHttpClientService httpClientService, ISubscriptionS
         const int TokenColumnIndex = 1;
         const int ExpiresInColumnIndex = 2;
 
-        if (!jsonResponse.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
+        if (!jsonDoc.RootElement.TryGetProperty("properties", out JsonElement propertiesElement))
         {
-            if (jsonResponse.RootElement.ValueKind == JsonValueKind.Object)
+            if (jsonDoc.RootElement.ValueKind == JsonValueKind.Object)
             {
-                IEnumerable<string> propertyNames = jsonResponse.RootElement.EnumerateObject().Select(property => property.Name);
+                IEnumerable<string> propertyNames = jsonDoc.RootElement.EnumerateObject().Select(property => property.Name);
                 string joinedPropertyNames = string.Join(", ", propertyNames);
                 throw new Exception($"The top-level property named 'properties' not found. The actual top-level properties are: {joinedPropertyNames}.");
             }

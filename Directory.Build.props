@@ -14,18 +14,22 @@
     <_RelativeProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)').Replace($([System.IO.Path]::GetFullPath('$(RepoRoot)')), ''))</_RelativeProjectDir>
     <IsServerProject Condition="'$(IsServerProject)' == '' and $(_RelativeProjectDir.StartsWith('servers')) and $(_RelativeProjectDir.EndsWith('src'))">true</IsServerProject>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(BuildNative)' == 'true'">
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
+
     <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">
     <ControlFlowGuard>Guard</ControlFlowGuard>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsServerProject)' == 'true'">
     <!-- .NET Tool Package settings -->
     <IsPackable>true</IsPackable>
     <PackAsTool>true</PackAsTool>
     <PackageType>McpServer</PackageType>
+    <PackageIcon>$(RepoRoot)eng/images/microsofticon.png</PackageIcon>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <!-- Keep these aligned with OS + arch build-matrix.json. -->
@@ -34,9 +38,11 @@
     <DebugSymbols>true</DebugSymbols>
     <CopyOutputSymbolsToPublishDirectory>true</CopyOutputSymbolsToPublishDirectory>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(RuntimeIdentifier)' == ''">
-    <McpServerJsonTemplateFile>$(RepoRoot)/eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
+    <McpServerJsonTemplateFile>$(RepoRoot)eng/dnx/.mcp/server.json</McpServerJsonTemplateFile>
   </PropertyGroup>
+
   <PropertyGroup Condition="'$(IsServerProject)' == 'true' and '$(BuildNative)' == 'true'">
     <!-- AOT native build flags -->
     <IsAotCompatible>true</IsAotCompatible>

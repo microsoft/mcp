@@ -1,12 +1,12 @@
 {
-    "name": "vscode-azure-mcp-server",
-    "displayName": "Azure MCP Server",
-    "description": "Provides Model Context Protocol (MCP) integration and tooling for Azure in Visual Studio Code.",
-    "version": "0.1.0-alpha.1",
+    "name": "vscode-extension-replace",
+    "displayName": "REPLACE WITH NAME FROM SERVER PROJECT",
+    "description": "REPLACE WITH DESCRIPTION FROM SERVER PROJECT",
+    "version": "0.0.0-replace",
     "license": "MIT",
-    "icon": "resources/azure-color.png",
+    "icon": "resources/package-icon.png",
     "preview": true,
-    "publisher": "ms-azuretools",
+    "publisher": "replace",
     "aiKey": "0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255",
     "engines": {
         "vscode": "^1.101.0"

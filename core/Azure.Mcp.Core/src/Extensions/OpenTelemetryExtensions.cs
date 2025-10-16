@@ -31,10 +31,14 @@ public static class OpenTelemetryExtensions
                     options.Version = assemblyName.Version.ToString();
                 }
 
+#if RELEASE
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
                 options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry)
                     || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+#else
+                options.IsTelemetryEnabled = false;
+#endif
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();

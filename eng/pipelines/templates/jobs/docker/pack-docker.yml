@@ -1,8 +1,8 @@
 parameters:
-- name: ServerName
-  type: string
 - name: DependsOn
   type: object
+- name: ServerName
+  type: string
 
 jobs:
 - job: BuildDockerImage
@@ -14,36 +14,54 @@ jobs:
     os: linux
 
   steps:
-  - task: DownloadPipelineArtifact@2
-    displayName: "Download signed packages"
-    inputs:
-      buildType: current
-      artifactName: binaries_signed
-      targetPath: $(Build.ArtifactStagingDirectory)
+  - checkout: self
 
-  - task: CopyFiles@2
-    displayName: "Copy Dockerfile"
-    inputs:
-      Contents: Dockerfile
-      TargetFolder: $(Build.ArtifactStagingDirectory)
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - download: current
+    displayName: Download binaries_signed
+    artifact: binaries_signed
 
   - task: Powershell@2
-    displayName: "Set Docker Variables"
+    displayName: "Prepare files for Docker"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Prepare-Docker.ps1
+      arguments: >
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
+
+  - task: Powershell@2
+    displayName: 'Set Docker Variables'
     name: SetVariables
     inputs:
-      targetType: inline
+      targetType: 'inline'
       script: |
-        $properties = ./eng/scripts/Get-ProjectProperties.ps1 -ProjectName "${{parameters.ServerName}}.csproj"
-        $imageName = $properties.DockerImageName
-        $version = $properties.Version
+        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/build_info.json" | ConvertFrom-Json
+        $serverInfo = $buildInfo.servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
+
+        if (-not $serverInfo) {
+            Write-Error "Server with name '$env:SERVER_NAME' not found in buildInfo.json"
+            exit 1
+        }
+
+        $imageName = $serverInfo.dockerImageName
+        Write-Host "Setting variable DockerImageName to $imageName"
         Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version$VersionSuffix"
-        # Set DockerLocalTag both as a local and an output variable.
-        $dockerLocalTag = "$(Build.Repository.Name)/server:$(Build.BuildId)"
+
+        $version = $serverInfo.version
+        Write-Host "Setting variable DockerImageVersion to $version"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+
+        $dockerLocalTag = "$imageName:$(Build.BuildId)"
+        Write-Host "Setting variable DockerLocalTag to $dockerLocalTag."
         Write-Host "##vso[task.setvariable variable=DockerLocalTag]$dockerLocalTag"
         Write-Host "##vso[task.setvariable variable=DockerLocalTag;isOutput=true]$dockerLocalTag"
     env:
-      VERSION_SUFFIX: "$(VersionSuffix)"
+      SERVER_NAME: ${{ parameters.ServerName }}
 
   - task: 1ES.BuildContainerImage@1
     displayName: Build Docker Image
@@ -51,7 +69,7 @@ jobs:
       path: "$(Build.ArtifactStagingDirectory)"
       image: "$(DockerLocalTag)"
       buildArguments: |
-        --build-arg PUBLISH_DIR="${{parameters.ServerName}}/linux-x64/dist"
+        --build-arg PUBLISH_DIR="${{ parameters.ServerName }}/linux-x64/dist"
       enableNetwork: true
       useBuildKit: true
   
@@ -72,7 +90,6 @@ jobs:
     displayName: Capture image digest and save as .tar
 
   - task: 1ES.PublishPipelineArtifact@1
-    displayName: "Publish docker staging artifact"
     inputs:
       path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_output
+      artifact: docker_staged

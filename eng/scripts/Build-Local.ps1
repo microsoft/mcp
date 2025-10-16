@@ -4,13 +4,13 @@
 [CmdletBinding(DefaultParameterSetName='none')]
 param(
     [string] $ServerName,
-    [switch] $Trimmed,
+    [switch] $NoTrimmed,
     [switch] $NoSelfContained,
     [switch] $NoUsePaths,
     [switch] $AllPlatforms,
     [switch] $VerifyNpx,
-    [switch] $DebugBuild,
-    [switch] $BuildNative
+    [switch] $ReleaseBuild,
+    [switch] $IncludeNative
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,60 +19,54 @@ $ErrorActionPreference = 'Stop'
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $buildOutputPath = "$RepoRoot/.work/build"
-$packageOutputPath = "$RepoRoot/.work/package"
-
-$prereleaseLabel = 'alpha'
-$prereleaseNumber = [int]::Parse((Get-Date -UFormat %s))
-$versionSuffix = "-$prereleaseLabel.$prereleaseNumber"
-
-function Build($os, $arch) {
-    & "$RepoRoot/eng/scripts/Build-Code.ps1" `
-        -ServerName $ServerName `
-        -VersionSuffix $versionSuffix `
-        -OperatingSystem $os `
-        -Architecture $arch `
-        -SelfContained:(!$NoSelfContained) `
-        -Trimmed:$Trimmed `
-        -OutputPath $buildOutputPath `
-        -DebugBuild:$DebugBuild `
-        -BuildNative:$BuildNative
-
-    if ($LastExitCode -ne 0) {
-        exit $LastExitCode
-    }
-}
+$packageOutputPath = "$RepoRoot/.work/packages_npm"
 
 Remove-Item -Path $buildOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 Remove-Item -Path $packageOutputPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-if($AllPlatforms) {
-    Build -os linux -arch x64
-    Build -os windows -arch x64
-    Build -os windows -arch arm64
-    Build -os macos -arch x64
-    Build -os macos -arch arm64
-}
-else {
-    $runtime = $([System.Runtime.InteropServices.RuntimeInformation]::RuntimeIdentifier)
-    $parts = $runtime.Split('-')
-    $os = $parts[0]
-    $arch = $parts[1]
+& "$RepoRoot/eng/scripts/New-BuildInfo.ps1" `
+    -ServerName $ServerName `
+    -PublishTarget none `
+    -BuildId 12345 `
+    -IncludeNative:$IncludeNative
 
-    if($os -eq 'win') {
-        $os = 'windows'
-    } elseif($os -eq 'osx') {
-        $os = 'macos'
+& "$RepoRoot/eng/scripts/Build-Code.ps1" `
+    -SelfContained:(!$NoSelfContained) `
+    -Trimmed:(!$NoTrimmed) `
+    -ReleaseBuild:$ReleaseBuild `
+    -AllPlatforms:$AllPlatforms
+
+if ($LastExitCode -ne 0) {
+    exit $LastExitCode
+}
+
+if ($IncludeNative) {
+    & "$RepoRoot/eng/scripts/Build-Code.ps1" `
+        -ReleaseBuild:$ReleaseBuild `
+        -AllPlatforms:$AllPlatforms `
+        -Native
+}
+
+# build_info.json is initialized with all buildable platforms, native and not
+# Trim the platform lists to only built platforms
+$buildInfoPath = "$RepoRoot/.work/build_info.json"
+$buildInfo = Get-Content $buildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+foreach($server in $buildInfo.servers) {
+    $built = @()
+    foreach($platform in $server.platforms) {
+        if (Test-Path "$buildOutputPath/$($platform.artifactPath)") {
+            $built += $platform
+        }
     }
-
-    Build -os $os -arch $arch
+    $server.platforms = $built
 }
 
-& "$RepoRoot/eng/scripts/Pack-Npm.ps1" `
-    -ArtifactsPath $buildOutputPath `
-    -UsePaths:(!$NoUsePaths) `
-    -OutputPath $packageOutputPath
+$buildInfo | ConvertTo-Json -Depth 10 | Set-Content -Path $buildInfoPath
 
-if ($VerifyNpx) {
+& "$RepoRoot/eng/scripts/Pack-Npm.ps1" -UsePaths:(!$NoUsePaths)
+
+if ($VerifyNpx -and !$NoUsePaths) {
     $tgzFiles = Get-ChildItem -Path $packageOutputPath -Filter '*.tgz'
     | Where-Object { $_.Directory.Name -eq 'wrapper' }
 
