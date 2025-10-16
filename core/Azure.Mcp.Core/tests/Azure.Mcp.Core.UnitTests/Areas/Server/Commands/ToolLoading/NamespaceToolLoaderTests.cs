@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
+using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.UnitTests.Areas.Server;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -443,6 +446,105 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         // Cache clearing is internal, but disposal should complete successfully
     }
 
+    // Elicitation Handler Tests (ported from BaseToolLoaderTests)
+
+    [Fact]
+    public void CreateClientOptions_WithElicitationCapability_ReturnsOptionsWithElicitationHandler()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.NotNull(options.Handlers);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+    }
+
+    [Fact]
+    public void CreateClientOptions_WithNoElicitationCapability_ReturnsOptionsWithoutElicitationHandler()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        mockServer.ClientCapabilities.Returns(new ClientCapabilities());
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+
+        // Assert
+        Assert.NotNull(options);
+        Assert.NotNull(options.Handlers);
+        Assert.Null(options.Handlers.ElicitationHandler);
+    }
+
+    [Fact]
+    public async Task CreateClientOptions_ElicitationHandler_DelegatesToServerSendRequestAsync()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        var elicitationRequest = new ElicitRequestParams
+        {
+            Message = "Please enter your password:"
+        };
+
+        var mockResponse = new JsonRpcResponse
+        {
+            Id = new RequestId(1),
+            Result = JsonSerializer.SerializeToNode(new ElicitResult { Action = "accept" })
+        };
+
+        mockServer.SendRequestAsync(Arg.Any<JsonRpcRequest>(), Arg.Any<CancellationToken>())
+                  .Returns(Task.FromResult(mockResponse));
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+
+        await options.Handlers.ElicitationHandler(elicitationRequest, CancellationToken.None);
+
+        // Assert - verify SendRequestAsync was called with elicitation method
+        await mockServer.Received(1).SendRequestAsync(
+            Arg.Is<JsonRpcRequest>(req => req.Method == "elicitation/create"),
+            Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task CreateClientOptions_ElicitationHandler_ValidatesRequestAndThrowsOnNull()
+    {
+        // Arrange
+        var loader = new NamespaceToolLoader(_commandFactory, _options, _serviceProvider, _logger);
+        var mockServer = Substitute.For<ModelContextProtocol.Server.McpServer>();
+        var capabilities = new ClientCapabilities
+        {
+            Elicitation = new ElicitationCapability()
+        };
+        mockServer.ClientCapabilities.Returns(capabilities);
+
+        // Act
+        var options = CallCreateClientOptions(loader, mockServer);
+        Assert.NotNull(options.Handlers.ElicitationHandler);
+
+        // Assert - verify handler validates null request
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
+            await options.Handlers.ElicitationHandler.Invoke(null!, CancellationToken.None));
+    }
+
     // Helper methods
 
     private string GetFirstAvailableNamespace()
@@ -498,6 +600,23 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         };
     }
 
+    private static ModelContextProtocol.Client.McpClientOptions CallCreateClientOptions(
+        NamespaceToolLoader loader,
+        ModelContextProtocol.Server.McpServer server)
+    {
+        // Use reflection to call the protected CreateClientOptions method
+        var method = typeof(BaseToolLoader).GetMethod(
+            "CreateClientOptions",
+            System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
+        if (method == null)
+        {
+            throw new InvalidOperationException("CreateClientOptions method not found on BaseToolLoader");
+        }
+
+        var result = method.Invoke(loader, [server]);
+        return (ModelContextProtocol.Client.McpClientOptions)result!;
+    }
     public void Dispose()
     {
         _serviceProvider?.Dispose();
