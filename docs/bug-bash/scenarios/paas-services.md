@@ -192,4 +192,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Storage Operations Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/storage-operations.md)
+**Next**: [Storage Operations Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/storage-operations.md)

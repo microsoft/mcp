@@ -408,4 +408,4 @@ When logging issues, include:
 
 ---
 
-**Next**: [Deployment Scenarios Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/deployment.md)
+**Next**: [Deployment Scenarios Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/deployment.md)
