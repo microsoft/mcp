@@ -11,6 +11,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
+- Fixed `IsServerCommandInvoked` always appearing to be true. [[#837](https://github.com/microsoft/mcp/pull/837)]
+- Fixed `ToolName` always showing up as the tool area even if an MCP tool was invoked. [[#837](https://github.com/microsoft/mcp/pull/837)]
 
 ### Other Changes
 
