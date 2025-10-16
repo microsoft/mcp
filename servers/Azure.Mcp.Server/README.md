@@ -226,10 +226,21 @@ npm install @azure/mcp@latest
 npm install @azure/mcp@<version>
 ```
 
-**Run without installing (using npx):**
+**Run a command without installing (using npx):**
 
 ```bash
+npx -y @azure/mcp@latest [command]
+```
+For example,
+
+Start a server
+```bash
 npx -y @azure/mcp@latest server start
+```
+
+List tools
+```bash
+npx -y @azure/mcp@latest tools list
 ```
 
 <details>
