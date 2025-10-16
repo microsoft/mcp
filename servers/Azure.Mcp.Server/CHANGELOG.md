@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
+
 ### Other Changes
 
 - Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
