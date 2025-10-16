@@ -248,8 +248,8 @@ npx -y @azure/mcp@latest tools list
 
 **When to use local vs global installation:**
 
--   **Local (recommended):** Install in the project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration
--   **Global:** Install system-wide to run `azmcp` commands directly from any terminal
+-   **Local (recommended):** Install in the project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration.
+-   **Global:** Install system-wide to run `azmcp` commands directly from any terminal.
 
 **Troubleshooting:**
 To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (or respective binaries) installation, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md).
