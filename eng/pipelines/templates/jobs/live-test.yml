@@ -66,8 +66,6 @@ jobs:
     env:
       AZURE_TEST_MODE: 'live'
       SYSTEM_ACCESSTOKEN: $(System.AccessToken)
-      AZMCP_LOG_LEVEL: 'Debug'
-      AZMCP_LOG_FILE: '$(Build.ArtifactStagingDirectory)/logs/mcp-server-$(PathToTest)-{timestamp}.log'
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
     inputs:
       azureSubscription: azure-sdk-tests-public
