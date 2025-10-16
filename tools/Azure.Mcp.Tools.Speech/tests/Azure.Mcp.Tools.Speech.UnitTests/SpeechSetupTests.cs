@@ -15,7 +15,6 @@ public class SpeechSetupTests
     public void Constructor_ShouldCreateInstance()
     {
         // Arrange & Act
-        //test
         var setup = new SpeechSetup();
 
         // Assert
