@@ -68,6 +68,7 @@ jobs:
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
+      Servers: ${{ fromJSON(stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.AllServerDetails']) }}
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"

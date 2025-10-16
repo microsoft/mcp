@@ -7,6 +7,8 @@ parameters:
   type: string
 - name: DependsOn
   type: object
+- name: Servers
+  type: object
 
 jobs:
 - job: PublishACR
@@ -15,74 +17,73 @@ jobs:
   dependsOn: ${{ parameters.DependsOn }}
 
   templateContext:
+    type: releaseJob
+    isProduction: true
     inputs:
     - input: pipelineArtifact
       artifactName: build_info
       targetPath: $(Pipeline.Workspace)/build_info
     - input: pipelineArtifact
-      artifactName: docker_staged
-      targetPath: $(Pipeline.Workspace)/docker_staged
-
-    outputs:
-    - output: containerImage
-      image: image:tag
-      remoteImage:
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:$(DockerImageVersion)
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:latest
+      artifactName: docker_output
+      targetPath: $(Pipeline.Workspace)/docker_output
 
   timeoutInMinutes: 120
+  environment: package-publish
   pool:
     name: azsdk-pool
     image: ubuntu-24.04
     os: linux
 
-  steps:
-  - task: Powershell@2
-    displayName: 'Set Docker Variables'
-    name: SetVariables
-    inputs:
-      targetType: 'inline'
-      script: |
-        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/build_info.json" | ConvertFrom-Json
-        $serverInfo = $buildInfo.servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureCLI@2
+          condition: succeeded()
+          displayName: Login to ${{ parameters.ContainerRegistry }}
+          inputs:
+            azureSubscription: "Azure SDK Engineering System"
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              az acr login --name ${{ parameters.ContainerRegistry }}
 
-        if (-not $serverInfo) {
-            Write-Error "Server with name '$env:SERVER_NAME' not found in buildInfo.json"
-            exit 1
-        }
+        - ${{ each server in parameters.Servers }}:
+          - ${{ if ne(parameters.ServerName, server.name) }}:
+            - script: |
+                echo "Skipping image publish for ${{ server.name }}"
+              displayName: "Skip image publish for ${{ server.name }}"
+          - ${{ elseif eq(parameters.ServerName, server.name) }}:
+            - script: |
+                echo "Loading image..."
+                docker load -i $(Pipeline.Workspace)/docker_output/${{ server.cliName }}-image.tar
+                docker image inspect "$(DockerLocalTag-${{ server.cliName }})" >/dev/null 2>&1 || { echo "Local tag $(DockerLocalTag-${{ server.cliName }}) not found after load"; exit 1; }
+              displayName: Load image
 
-        $imageName = $serverInfo.dockerImageName
-        Write-Host "Setting variable DockerImageName to $imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$imageName"
+            - script: |
+                if [ -z "$(DockerImageVersion-${{ server.cliName }})" ] || [ -z "$(DockerImageName-${{ server.cliName }})" ]; then
+                  echo "ERROR: Required tag components missing (version='$(DockerImageVersion-${{ server.cliName }})', name='$(DockerImageName-${{ server.cliName }})')" >&2
+                  exit 1
+                fi
 
-        $version = $serverInfo.version
-        Write-Host "Setting variable DockerImageVersion to $version"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+                BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(DockerImageName-${{ server.cliName }})"
 
-        $cliName = $serverInfo.cliName
-        $extension = $serverInfo.extension
-        $executableName = "$cliName$extension"
-        Write-Host "Setting variable DockerExecutableName to $executableName"
-        Write-Host "##vso[task.setvariable variable=DockerExecutableName]$executableName"
-    env:
-      SERVER_NAME: ${{ parameters.ServerName }}
+                echo "Base repository: $BASE_REPO"
 
-  - task: AzureCLI@2
-    condition: succeeded()
-    displayName: Login to ${{ parameters.ContainerRegistry }}
-    inputs:
-      azureSubscription: "Azure SDK Engineering System"
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        az acr login --name ${{ parameters.ContainerRegistry }}
+                VERSIONED_TAG="$BASE_REPO:$(DockerImageVersion-${{ server.cliName }})"
+                LATEST_TAG="$BASE_REPO:latest"
 
-  - task: 1ES.BuildContainerImage@1
-    displayName: Build Docker Image
-    inputs:
-      path: '$(Pipeline.Workspace)/docker_staged/${{ parameters.ServerName }}/linux-x64'
-      image: image:tag
-      buildArguments: >
-        --build-arg PUBLISH_DIR="dist"
-      enableNetwork: true
-      useBuildKit: true
+                echo "Tagging $(DockerLocalTag-${{ server.cliName }}) as:"
+                echo "  Versioned tag: $VERSIONED_TAG"
+                echo "  Latest tag: $LATEST_TAG"
+
+                docker tag "$(DockerLocalTag-${{ server.cliName }})" "$VERSIONED_TAG"
+                docker tag "$(DockerLocalTag-${{ server.cliName }})" "$LATEST_TAG"
+
+                echo "Pushing versioned tag..."
+                docker push "$VERSIONED_TAG"
+                echo "Pushing latest tag..."
+                docker push "$LATEST_TAG"
+
+                echo "Done."
+              displayName: Push image to ACR

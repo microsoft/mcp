@@ -400,7 +400,6 @@ Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $matrices = Get-BuildMatrices $serverDetails
-
     $pathsToTest = @(Get-PathsToTest)
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
 
@@ -431,6 +430,9 @@ try {
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
+        
+        $serverDetailsJson = $serverDetails | ConvertTo-Json -Compress -Depth 5
+        Write-Host "##vso[task.setvariable variable=AllServerDetails;isOutput=true]$serverDetailsJson"
     }
 }
 finally {
