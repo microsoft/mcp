@@ -43,16 +43,24 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             var assembly = Assembly.GetExecutingAssembly();
             var resourceName = "Azure.Mcp.Core.Areas.Server.Resources.consolidated-tools.json";
             using var stream = assembly.GetManifestResourceStream(resourceName);
-            if (stream != null)
+            if (stream == null)
             {
-                using var reader = new StreamReader(stream);
-                var json = reader.ReadToEnd();
-                var jsonDoc = JsonDocument.Parse(json);
-                if (jsonDoc.RootElement.TryGetProperty("consolidated_tools", out var toolsArray))
-                {
-                    consolidatedTools = JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
-                }
+                var errorMessage = $"Failed to load embedded resource '{resourceName}'";
+                _logger.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
             }
+
+            using var reader = new StreamReader(stream);
+            var json = reader.ReadToEnd();
+            using var jsonDoc = JsonDocument.Parse(json);
+            if (!jsonDoc.RootElement.TryGetProperty("consolidated_tools", out var toolsArray))
+            {
+                var errorMessage = "Property 'consolidated_tools' not found in consolidated-tools.json";
+                _logger.LogError(errorMessage);
+                throw new InvalidOperationException(errorMessage);
+            }
+
+            consolidatedTools = JsonSerializer.Deserialize(toolsArray.GetRawText(), ServerJsonContext.Default.ListConsolidatedToolDefinition) ?? new List<ConsolidatedToolDefinition>();
         }
         catch (Exception ex)
         {
@@ -99,6 +107,28 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             {
                 continue;
             }
+
+#if DEBUG
+            // In debug mode, validate that all tools in MappedToolList found a match when conditions are met
+            if (_options.Value.ReadOnly == false && (_options.Value.Namespace == null || _options.Value.Namespace.Length == 0))
+            {
+                if (consolidatedTool.MappedToolList != null)
+                {
+                    var matchedToolNames = new HashSet<string>(matchingCommands.Select(mc => mc.Key), StringComparer.OrdinalIgnoreCase);
+                    var unmatchedToolsInList = consolidatedTool.MappedToolList
+                        .Where(toolName => !matchedToolNames.Contains(toolName))
+                        .ToList();
+
+                    if (unmatchedToolsInList.Count > 0)
+                    {
+                        var unmatchedToolsList = string.Join(", ", unmatchedToolsInList);
+                        var errorMessage = $"Consolidated tool '{consolidatedTool.Name}' has {unmatchedToolsInList.Count} tools in MappedToolList that didn't find a match in filteredCommands: {unmatchedToolsList}";
+                        _logger.LogError(errorMessage);
+                        // throw new InvalidOperationException(errorMessage);
+                    }
+                }
+            }
+#endif
 
             // Create a new CommandGroup and add the matching commands
             var commandGroup = new CommandGroup(consolidatedTool.Name, consolidatedTool.Description);

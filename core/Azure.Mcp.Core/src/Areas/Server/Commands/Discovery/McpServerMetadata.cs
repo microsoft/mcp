@@ -29,6 +29,9 @@ public sealed class McpServerMetadata(string id = "", string name = "", string d
     /// </summary>
     public string Description { get; set; } = description;
 
+    /// <summary>
+    /// Gets or sets the tool metadata for this server, containing tool-specific information.
+    /// </summary>
     public ToolMetadata? ToolMetadata { get; set; }
 }
 

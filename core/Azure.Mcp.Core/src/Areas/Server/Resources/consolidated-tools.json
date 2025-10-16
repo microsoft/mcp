@@ -227,8 +227,8 @@
       ]
     },
     {
-      "name": "execute_azure_deployments",
-      "description": "Execute Azure deployments for applications and AI models. Run Azure Developer CLI (azd) commands for cloud-native application development workflows including project initialization, environment provisioning, application deployment, monitoring setup, and cleanup. Deploy AI models to Azure AI Foundry. Essential for cloud-native development teams using azd templates and Infrastructure as Code patterns with integrated CI/CD pipeline automation.",
+      "name": "deploy_azure_ai_models",
+      "description": "Deploy AI models to Azure AI Foundry for machine learning inference and production use.",
       "toolMetadata": {
         "destructive": true,
         "idempotent": false,
@@ -238,7 +238,6 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_extension_azd",
         "azmcp_foundry_models_deploy"
       ]
     },
@@ -733,7 +732,7 @@
     },
     {
       "name": "get_azure_cache_for_redis_details",
-      "description": "Get details about Azure Cache for Redis resources including cache instances, clusters, access policies, and database configurations. List and manage Redis caches and clusters.",
+      "description": "Get details about Azure Redis resources including Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -743,11 +742,7 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "azmcp_redis_list",
-        "azmcp_redis_cache_list",
-        "azmcp_redis_cluster_list",
-        "azmcp_redis_cache_accesspolicy_list",
-        "azmcp_redis_cluster_database_list"
+        "azmcp_redis_list"
       ]
     },
     {
@@ -768,7 +763,7 @@
     },
     {
       "name": "get_azure_capacity",
-      "description": "Check Azure resource capacity, quotas, available regions, usage limits, and high-performance computing infrastructure",
+      "description": "Check Azure resource capacity, quotas, available regions, and usage limits",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -779,8 +774,7 @@
       },
       "mappedToolList": [
         "azmcp_quota_region_availability_list",
-        "azmcp_quota_usage_check",
-        "azmcp_managedlustre_filesystem_required-subnet-size"
+        "azmcp_quota_usage_check"
       ]
     },
     {
@@ -922,9 +916,7 @@
       "mappedToolList": [
         "azmcp_acr_registry_list",
         "azmcp_acr_registry_repository_list",
-        "azmcp_aks_cluster_list",
         "azmcp_aks_cluster_get",
-        "azmcp_aks_nodepool_list",
         "azmcp_aks_nodepool_get"
       ]
     },
