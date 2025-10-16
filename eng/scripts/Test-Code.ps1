@@ -10,7 +10,8 @@ param(
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
     [switch] $OpenReport,
-    [switch] $TestNativeBuild
+    [switch] $TestNativeBuild,
+    [switch] $OnlyBuild
 )
 
 $ErrorActionPreference = 'Stop'
@@ -253,6 +254,12 @@ try {
             Write-Host "Error retrieving Azure CLI context: $($_.Exception.Message)" -ForegroundColor Red
         }
         Write-Host "`n`n"
+    }
+
+    if($OnlyBuild) {
+        Write-Host "Just building the test projects, not running tests." -ForegroundColor Yellow
+        Invoke-LoggedCommand "dotnet build '$solutionPath' --configuration 'Debug'" -AllowedExitCodes @(0)
+        exit $LastExitCode
     }
 
     $coverageArg = $CollectCoverage ? "--collect:'XPlat Code Coverage'" : ""

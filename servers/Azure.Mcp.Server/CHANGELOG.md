@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.2 (Unreleased)
+## 0.9.3 (Unreleased)
 
 ### Features Added
 
@@ -12,6 +12,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
+  - `azmcp_communication_email_send`
+  - `azmcp_communication_sms_send`
+
+## 0.9.2 (2025-10-15)
+
+### Bugs Fixed
+
+- Fixed retained-buffer leaks across services (Kusto, EventGrid, AppLens, Speech, Cosmos, Foundry, NetworkResourceProvider) and tool loaders (BaseToolLoader, ServerToolLoader, NamespaceToolLoader, SingleProxyToolLoader) by disposing `JsonDocument`/`HttpResponseMessage` instances and cloning returned `JsonElements`. ([#817](https://github.com/microsoft/mcp/pull/817))
+
 ## 0.9.1 (2025-10-14)
 
 ### Bugs Fixed
@@ -20,7 +30,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- MCP server start options are now included in logs. ([#794](https://github.com/microsoft/mcp/pull/794))
+- MCP server start options are now included in telemetry logs. ([#794](https://github.com/microsoft/mcp/pull/794))
 - Updated the description of the following Workbook commands to decrease ambiguity and increase selection accuracy by LLMs: [[#787](https://github.com/microsoft/mcp/pull/787)]
   - `azmcp_workbook_show`
   - `azmcp_workbook_update`

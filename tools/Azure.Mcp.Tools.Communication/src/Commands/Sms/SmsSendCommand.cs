@@ -25,7 +25,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 
     public override string Description =>
         """
-        Sends SMS messages to one or more recipients using Azure Communication Services.
+        Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.
         Returns message IDs and delivery status for each sent message.
         """;
 
