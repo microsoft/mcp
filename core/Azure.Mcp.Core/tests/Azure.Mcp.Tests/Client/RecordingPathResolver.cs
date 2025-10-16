@@ -17,7 +17,7 @@ internal sealed class RecordingPathResolver
 
     public RecordingPathResolver()
     {
-        _repoRoot = ResolveRepositoryRoot() ?? Directory.GetCurrentDirectory(); // TODO: fallback strategy refinement
+        _repoRoot = ResolveRepositoryRoot() ?? Directory.GetCurrentDirectory();
     }
 
     /// <summary>
@@ -25,22 +25,19 @@ internal sealed class RecordingPathResolver
     /// </summary>
     private static string? ResolveRepositoryRoot()
     {
-        try
+        var dir = new DirectoryInfo(Assembly.GetExecutingAssembly().Location).Parent;
+        while (dir != null)
         {
-            var dir = new DirectoryInfo(Assembly.GetExecutingAssembly().Location).Parent;
-            while (dir != null)
+            if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
+                File.Exists(Path.Combine(dir.FullName, ".git")) ||
+                File.Exists(Path.Combine(dir.FullName, "global.json")))
             {
-                if (Directory.Exists(Path.Combine(dir.FullName, ".git")) ||
-                    File.Exists(Path.Combine(dir.FullName, ".git")) ||
-                    File.Exists(Path.Combine(dir.FullName, "global.json")))
-                {
-                    return dir.FullName;
-                }
-                dir = dir.Parent;
+                return dir.FullName;
             }
+            dir = dir.Parent;
         }
-        catch { }
-        return null; // TODO: consider throwing if not found
+        
+        throw new InvalidOperationException("Unable to locate repository root. Ensure tests are running in a cloned repository.");
     }
 
     public string RepositoryRoot => _repoRoot;
@@ -61,13 +58,14 @@ internal sealed class RecordingPathResolver
     }
 
     /// <summary>
-    /// Builds the session directory path: <repoRoot>/SessionRecords/<TestClassName>
-    /// TODO: Align with previous Azure.Core layout if/when needed.
+    /// Builds the session directory path: <path-to-project>/SessionRecords/<TestClassName>
     /// </summary>
     public string GetSessionDirectory(Type testType, string? variantSuffix = null)
     {
         var className = testType.Name;
         var suffix = string.IsNullOrWhiteSpace(variantSuffix) ? className : $"{className}({variantSuffix})";
+
+
 
         // todo: clarify this. We don't want to pass an absolute path, this should be a relative path within the repo.
         // right now it's just the test class name + test name + optional suffix. Need to add some structure reflecting

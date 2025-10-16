@@ -222,7 +222,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         {
             Output.WriteLine($"[Playback] Session file: {sessionFilePath}");
             // TODO: Replace placeholder with real playback start once proxy API is defined.
-            await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
+            await Proxy.Client.StartPlaybackAsync(null).ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
