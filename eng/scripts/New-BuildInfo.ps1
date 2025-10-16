@@ -149,7 +149,7 @@ function Get-PathsToTest {
         # For example, updating a markdown file in a service path will still trigger tests for that path.
         # Updating a file outside of the defined paths will be seen as a change to the core path.
         $changedPaths = @($changedFiles
-        | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[1] ? $Matches[1] : 'core/Microsoft.Mcp.Core' }
+        | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
         | Sort-Object -Unique)
 
         <# This makes $changedPaths = @(
