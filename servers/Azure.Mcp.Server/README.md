@@ -156,7 +156,7 @@ To verify the .NET version, run the following command in the terminal: `dotnet -
 <!-- remove-section: start nuget remove_node_config_sub_section -->
 <!-- remove-section: start npm remove_node_config_sub_header -->
 #### Option 2: Configure using Node.js (npm/npx)<!-- remove-section: end remove_node_config_sub_header -->
-- To use Azure MCP server from node you must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
+- To use Azure MCP server from node one must have Node.js (LTS) installed and available on your system PATH — this provides both `npm` and `npx`. We recommend Node.js 20 LTS or later. To verify your installation run: `node --version`, `npm --version`, and `npx --version`.
 -  Configure the `mcp.json` file with the following:
 
     ```json
@@ -238,7 +238,7 @@ npx -y @azure/mcp@latest server start
 **When to use local vs global installation:**
 
 -   **Local (recommended):** Install in the project directory for project-specific tooling, CI/CD pipelines, or when using mcp.json configuration
--   **Global:** Install system-wide if you want to run `azmcp` commands directly from any terminal
+-   **Global:** Install system-wide to run `azmcp` commands directly from any terminal
 
 **Troubleshooting:**
 To troubleshoot [@azure/mcp](https://www.npmjs.com/package/@azure/mcp) package (or respective binaries) installation, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/eng/npm/TROUBLESHOOTING.md).
@@ -265,9 +265,9 @@ AZURE_CLIENT_ID={YOUR_AZURE_CLIENT_ID}
 AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 ```
 
-#### Configure your MCP client to use Docker
+#### Configure MCP client to use Docker
 
-2. Add or update existing `mcp.json`.  Replace `/full/path/to/your/.env` with the actual `.env` file path.
+2. Add or update existing `mcp.json`.  Replace `/full/path/to/.env` with the actual `.env` file path.
 
 ```json
    {
@@ -279,7 +279,7 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
                "-i",
                "--rm",
                "--env-file",
-               "/full/path/to/your/.env",
+               "/full/path/to/.env",
                "mcr.microsoft.com/azure-sdk/azure-mcp:latest"
             ]
          }
