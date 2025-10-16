@@ -32,9 +32,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     public TestProxyClient Client { get; private set; } = default!;
     public TestProxyAdminClient AdminClient { get; private set; } = default!;
 
-    /// <summary>
-    /// Start the proxy process if not already started.
-    /// </summary>
     public void Start(string repositoryRoot)
     {
         if (_process != null)
@@ -47,7 +44,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
 
         var storageLocation = Environment.GetEnvironmentVariable("TEST_PROXY_STORAGE") ?? repositoryRoot;
-        var args = $"start --storage-location=\"{storageLocation}\"";
+        var args = $"start --http-proxy --storage-location=\"{storageLocation}\"";
 
         var isDll = ExecutablePath.EndsWith(".dll", StringComparison.OrdinalIgnoreCase);
         ProcessStartInfo psi;

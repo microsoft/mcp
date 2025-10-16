@@ -9,6 +9,7 @@ using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
 using System.Reflection;
+using System.ClientModel;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -37,12 +38,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
     public virtual async ValueTask InitializeAsync()
     {
-        // Initialize settings
-        var settingsFixture = new LiveTestSettingsFixture();
-        await settingsFixture.InitializeAsync();
-        Settings = settingsFixture.Settings;
-
         _testMode = GetTestMode();
+
+        if (_testMode is TestMode.Live)
+        {
+            var settingsFixture = new LiveTestSettingsFixture();
+            await settingsFixture.InitializeAsync();
+            Settings = settingsFixture.Settings;
+        }
+        else
+        {
+            // Provide a placeholder settings object to satisfy consumers silently
+            Settings = new LiveTestSettings();
+        }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
@@ -74,6 +82,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         Client = await McpClient.CreateAsync(clientTransport);
 
         Output.WriteLine("MCP client initialized successfully");
+
+        await StartRecordOrPlayback();
     }
 
     protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
@@ -190,76 +200,71 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
     // overrides should still call base.DisposeAsyncCore()
     protected virtual async ValueTask DisposeAsyncCore()
     {
+        await StopRecordOrPlayback();
         await Client.DisposeAsync().ConfigureAwait(false);
-        Proxy?.Dispose();
     }
 
-    // Hook into per-test execution boundaries: call start/stop around test body.
-    // Consumers should call these manually if they override test invocation pattern. Otherwise utilize xUnit lifecycle via BeforeAfter (future) or direct base usage in test methods.
-    protected void BeginTest() => StartRecordPlaybackSessionIfNeeded();
-    protected Task BeginTestAsync()
+    private async Task StartRecordOrPlayback()
     {
-        StartRecordPlaybackSessionIfNeeded();
-        return Task.CompletedTask;
-    }
-    protected Task EndTestAsync() => StopRecordPlaybackSessionAsync();
-    protected void EndTest() => EndTestAsync().GetAwaiter().GetResult();
-
-    // Simple placeholders for future record/playback support. Currently no-op to satisfy build.
-    private bool _recordPlaybackSessionStarted;
-    private void StartRecordPlaybackSessionIfNeeded()
-    {
-        if (_recordPlaybackSessionStarted) return;
-        // In the future: inspect environment variables to decide whether to record or playback.
-        // e.g. AZURE_MCP_TEST_RECORD or AZURE_MCP_TEST_PLAYBACK, integrate with a proxy.
-        _recordPlaybackSessionStarted = true;
-        if (ShouldUseProxy())
+        if (Proxy is null)
         {
-            Output.WriteLine($"Begin test session with proxy ({_testMode})");
+            throw new InvalidOperationException("Test proxy is not initialized.");
         }
+
+        var testName = TryGetCurrentTestName();
+        var fileName = "";
+        var assetsName = "";
+
+
+        if (_testMode is TestMode.Playback)
+        {
+            Console.WriteLine($"Starting playback for test '{fileName}.{testName}.json' with file path '{fileName} and assetsPath {assetsName}'");
+            //await Proxy.Client.StopPlaybackAsync(null).ConfigureAwait(false);
+        }
+        else if (_testMode is TestMode.Record)
+        {
+            Console.WriteLine($"Starting record for test '{fileName}.{testName}.json' with file path '{fileName}' and assetsPath {assetsName}");
+            //Proxy.Client.StopRecord(null, new Dictionary<string, string>());
+        }
+
+        await Task.CompletedTask;
     }
 
-    private Task StopRecordPlaybackSessionAsync()
+    private async Task StopRecordOrPlayback()
     {
-        if (!_recordPlaybackSessionStarted) return Task.CompletedTask;
-        _recordPlaybackSessionStarted = false;
-        // In the future: flush recordings / dispose proxy.
-        if (ShouldUseProxy())
+        if (Proxy is null)
         {
-            Output.WriteLine("End test session (proxy active)");
+            throw new InvalidOperationException("Test proxy is not initialized.");
         }
-        return Task.CompletedTask;
-    }
 
-    private (Type? DeclaringType, string? MethodName) GetCurrentMethod()
-    {
-        // Fallback: unable to access richer xUnit v3 metadata in current reference set.
-        // We can attempt to read the current stack and locate the first test method in this assembly.
-        try
+        if (_testMode is TestMode.Playback)
         {
-            var stack = new System.Diagnostics.StackTrace();
-            var thisAsm = typeof(CommandTestsBase).Assembly;
-            for (int i = 0; i < stack.FrameCount; i++)
-            {
-                var m = stack.GetFrame(i)?.GetMethod();
-                if (m?.DeclaringType?.Assembly == thisAsm && m.GetCustomAttributes(typeof(FactAttribute), inherit: true).Length > 0)
-                {
-                    return (m.DeclaringType, m.Name);
-                }
-            }
+            // await Proxy.Client.StopPlaybackAsync(null).ConfigureAwait(false);
         }
-        catch { }
-        return (null, null);        
+        else if (_testMode is TestMode.Record)
+        {
+            // Proxy.Client.StopRecord(null, new Dictionary<string, string>());
+        }
+        await Task.CompletedTask;
     }
 
     private TestMode GetTestMode()
     {
-        var mode = Environment.GetEnvironmentVariable("AZURE_MCP_TEST_MODE");
+        var mode = Environment.GetEnvironmentVariable("AZURE_RECORD_MODE");
         if (string.IsNullOrWhiteSpace(mode)) return TestMode.Live;
         return Enum.TryParse<TestMode>(mode, ignoreCase: true, out var parsed) ? parsed : TestMode.Live;
     }
 
-    private bool ShouldUseProxy() => _testMode is TestMode.Record or TestMode.Playback ||
-        string.Equals(Environment.GetEnvironmentVariable("USE_TEST_PROXY"), "true", StringComparison.OrdinalIgnoreCase);
+    private static string TryGetCurrentTestName()
+    {
+        // Prefer xUnit v3 TestContext (works for parameterized and async tests, no stack walking)
+        var name = TestContext.Current?.Test?.TestCase.TestCaseDisplayName;
 
+        if (String.IsNullOrWhiteSpace(name))
+        {
+            throw new InvalidOperationException("Test name is not available. This is NOT supported when recording is enabled.");
+        }
+
+        return name;
+    }
 }
