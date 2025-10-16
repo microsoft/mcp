@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using ModelContextProtocol.Protocol;
 using Npgsql;
 using Xunit;
 
@@ -401,8 +402,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_RejectNonSelectQuery_WithValidationError()
     {
-        JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_database_query",
+        JsonElement error = await this.CallToolAsyncWithErrorExpected("azmcp_postgres_database_query",
             new()
             {
                     { "subscription", Settings.SubscriptionId },
@@ -413,10 +413,11 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "query", "DELETE FROM employees WHERE id = 1;" }
             });
 
-        // No exception is thrown and response is not propagated here to check the following:
-        // "status": 400,
-        // "message": "Only single read-only SELECT statements are allowed.",
-        Assert.Null(result);
+        int errorStatus = error.GetProperty("status").GetInt32();
+        Assert.Equal(400, errorStatus);
+
+        string errorMessage = error.GetProperty("message").GetString()!;
+        Assert.Equal("Only single read-only SELECT statements are allowed.", errorMessage);
     }
 
     [Fact]
@@ -424,7 +425,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         string serverName = Guid.NewGuid().ToString(); // <-- nonexistent_server
 
-        JsonElement? result = await CallToolAsync(
+        JsonElement error = await this.CallToolAsyncWithErrorExpected(
                 "azmcp_postgres_database_list",
                 new()
                 {
@@ -435,15 +436,12 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "user", AdminUsername }
                 });
 
-        // Should handle the error gracefully
-        JsonElement errorMessageProperty = result.Value.GetProperty("message");
-        Assert.Equal(JsonValueKind.String, errorMessageProperty.ValueKind);
+        int errorStatus = error.GetProperty("status").GetInt32();
+        Assert.Equal(500, errorStatus);
 
-        string? errorMessage = errorMessageProperty.GetString();
-        Assert.NotNull(errorMessage);
-        Assert.NotEmpty(errorMessage);
-
-        bool isExpectedError = errorMessage.Contains("No such host is known") ||
+        string errorMessage = error.GetProperty("message").GetString()!;
+        bool isExpectedError =
+            errorMessage.Contains("No such host is known") ||
             errorMessage.Contains("Name or service not known");
         Assert.True(isExpectedError, $"Error message should indicate unknown host, but was: {errorMessage}");
     }
@@ -453,7 +451,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         string databaseName = Guid.NewGuid().ToString(); // <-- nonexistent_database
 
-        JsonElement? result = await CallToolAsync(
+        JsonElement error = await this.CallToolAsyncWithErrorExpected(
                 "azmcp_postgres_table_list",
                 new()
                 {
@@ -464,9 +462,11 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "user", AdminUsername }
                 });
 
-        JsonElement errorMessageProperty = result.Value.GetProperty("message");
-        Assert.Equal(JsonValueKind.String, errorMessageProperty.ValueKind);
-        Assert.Contains($"\"{databaseName}\" does not exist", errorMessageProperty.GetString());
+        int errorStatus = error.GetProperty("status").GetInt32();
+        Assert.Equal(500, errorStatus);
+
+        string errorMessage = error.GetProperty("message").GetString()!;
+        Assert.Contains($"\"{databaseName}\" does not exist", errorMessage);
     }
 
     [Fact]
@@ -492,5 +492,22 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         // Schema should be empty for nonexistent table
         List<JsonElement> schemaList = schema.EnumerateArray().ToList();
         Assert.Empty(schemaList);
+    }
+
+    private async Task<JsonElement> CallToolAsyncWithErrorExpected(string command, Dictionary<string, object?> parameters)
+    {
+        CallToolResult result = await Client.CallToolAsync(command, parameters);
+        Assert.NotNull(result);
+        Assert.True(result.IsError, $"Command {command} should have failed but succeeded.");
+
+        Assert.NotNull(result.Content);
+        Assert.Single(result.Content);
+
+        var textContent = (TextContentBlock)result.Content.Single();
+        Assert.NotNull(textContent.Text);
+        Assert.NotEmpty(textContent.Text);
+
+        JsonElement errorContent = JsonSerializer.Deserialize<JsonElement>(textContent.Text);
+        return errorContent;
     }
 }
