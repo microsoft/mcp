@@ -113,7 +113,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var result = await client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
+        var result = await client.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
@@ -136,7 +136,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         await using var client = await CreateClientAsync("server", "start");
 
         // Act
-        var result = await client.CallToolAsync("azmcp_group_list", new Dictionary<string, object?> { },
+        var result = await client.CallToolAsync("group_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
@@ -752,7 +752,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     public async Task ToolMode_AutomaticallyChangesToAllMode()
     {
         // Arrange - Test that --tool switch automatically changes mode to "all"
-        await using var client = await CreateClientAsync("server", "start", "--tool", "azmcp_group_list", "--tool", "azmcp_subscription_list");
+        await using var client = await CreateClientAsync("server", "start", "--tool", "group_list", "--tool", "subscription_list");
 
         // Act
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -764,15 +764,15 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Should only include the specified tools
         Assert.Equal(2, toolNames.Count);
-        Assert.Contains("azmcp_group_list", toolNames);
-        Assert.Contains("azmcp_subscription_list", toolNames);
+        Assert.Contains("group_list", toolNames);
+        Assert.Contains("subscription_list", toolNames);
     }
 
     [Fact]
     public async Task ToolMode_OverridesExplicitNamespaceMode()
     {
         // Arrange - Test that --tool switch overrides --mode namespace
-        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "azmcp_group_list");
+        await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "group_list");
 
         // Act
         var listResult = await client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
@@ -784,7 +784,7 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Should only include the specified tool, mode should be automatically changed to "all"
         Assert.Single(toolNames);
-        Assert.Contains("azmcp_group_list", toolNames);
+        Assert.Contains("group_list", toolNames);
     }
 
     #endregion
