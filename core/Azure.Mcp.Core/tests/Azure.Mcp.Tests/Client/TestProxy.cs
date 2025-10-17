@@ -68,8 +68,15 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         _ = Task.Run(() => PumpAsync(_process.StandardError, _stderr, _cts.Token));
         _ = Task.Run(() => PumpAsync(_process.StandardOutput, _stdout, _cts.Token));
 
-        // parse port
-        _httpPort = WaitForHttpPort(TimeSpan.FromSeconds(15));
+        if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
+        {
+            _httpPort = 5000;
+        }
+        else
+        {
+            _httpPort = WaitForHttpPort(TimeSpan.FromSeconds(15));
+        }
+            
         if (_httpPort is null)
         {
             throw new InvalidOperationException($"Failed to detect test-proxy HTTP port. Output: {_stdout}\nErrors: {_stderr}");
