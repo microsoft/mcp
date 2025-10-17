@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
+- Remove `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
+
 ### Bugs Fixed
 
 - Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
