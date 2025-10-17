@@ -1,14 +1,16 @@
 parameters:
 - name: DependsOn
   type: object
-- name: Servers
+- name: ServerBuildMatrix
   type: object
 
 jobs:
 - job: BuildDockerImages
   displayName: "Build Docker Images"
   dependsOn: ${{ parameters.DependsOn }}
-  condition: and(succeeded(), ne(${{ parameters.Servers }}, '{}'))
+  condition: and(succeeded(), ne(${{ parameters.ServerBuildMatrix }}, '{}'))
+  strategy:
+    matrix: $[ ${{ parameters.ServerBuildMatrix }}]
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
@@ -18,50 +20,35 @@ jobs:
   - checkout: self
 
   - download: current
-    displayName: Download build_info
-    artifact: build_info
+    displayName: Download docker staging
+    artifact: docker_staging
 
-  - download: current
-    displayName: Download binaries_signed
-    artifact: binaries_signed
-
-  - task: Powershell@2
-    displayName: "Prepare files for Docker"
+  - task: 1ES.BuildContainerImage@1
+    displayName: "Building Docker image for $(CliName)"
     inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Prepare-Docker.ps1
-      arguments: >
-        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
-        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
-        -OutputPath '$(Build.ArtifactStagingDirectory)'
+      path: "$(Pipeline.Workspace)/docker_staging"
+      image: "$(DockerLocalTag-$(CliName))"
+      buildArguments: |
+        --build-arg PUBLISH_DIR="$(ArtifactPath)/linux-x64/dist"
+        --build-arg EXECUTABLE_NAME=$(DockerExecutableName-$(CliName))
+      enableNetwork: true
+      useBuildKit: true
 
-  - ${{ each server in parameters.Servers }}:
-    - task: 1ES.BuildContainerImage@1
-      displayName: "Building Docker image for ${{ server.cliName }}"
-      inputs:
-        path: "$(Build.ArtifactStagingDirectory)"
-        image: "$(DockerLocalTag-${{ server.cliName }})"
-        buildArguments: |
-          --build-arg PUBLISH_DIR="${{ server.artifactPath }}/linux-x64/dist"
-          --build-arg EXECUTABLE_NAME=$(DockerExecutableName-${{ server.cliName }})
-        enableNetwork: true
-        useBuildKit: true
-    
-    - script: |
-        set -euo pipefail
-        echo "Capturing image digest for $(DockerLocalTag-${{ server.cliName }})"
-        digest="$(docker inspect --format='{{index .Id}}' "$(DockerLocalTag-${{ server.cliName }})")"
-        if [ -z "$digest" ]; then
-          echo "ERROR: Could not resolve image ID for $(DockerLocalTag-${{ server.cliName }})" >&2
-          docker images | head
-          exit 1
-        fi
-        echo "Image digest: $digest"
-        echo "##vso[task.setvariable variable=DockerImageDigest-${{ server.cliName }};isOutput=true]$digest"
-        echo "Saving image"
-        docker save "$(DockerLocalTag-${{ server.cliName }})" -o "$(Build.ArtifactStagingDirectory)/${{ server.cliName }}-image.tar"
-        ls -lh "$(Build.ArtifactStagingDirectory)/${{ server.cliName }}-image.tar"
-      displayName: Capture image digest and save as .tar
+  - script: |
+      set -euo pipefail
+      echo "Capturing image digest for $(DockerLocalTag-$(CliName))"
+      digest="$(docker inspect --format='{{index .Id}}' "$(DockerLocalTag-$(CliName))")"
+      if [ -z "$digest" ]; then
+        echo "ERROR: Could not resolve image ID for $(DockerLocalTag-$(CliName))" >&2
+        docker images | head
+        exit 1
+      fi
+      echo "Image digest: $digest"
+      echo "##vso[task.setvariable variable=DockerImageDigest-$(CliName);isOutput=true]$digest"
+      echo "Saving image"
+      docker save "$(DockerLocalTag-$(CliName))" -o "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
+      ls -lh "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
+    displayName: Capture image digest and save as .tar
 
   - task: 1ES.PublishPipelineArtifact@1
     displayName: Publish Docker artifacts

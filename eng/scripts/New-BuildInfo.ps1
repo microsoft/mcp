@@ -181,7 +181,7 @@ function Get-PathsToTest {
             'tools/Azure.Mcp.Tools.Storage',
             'tools/Azure.Mcp.Tools.Monitoring',
             'core/Microsoft.Mcp.Core',
-            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's canary list
+            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core'server canary list
         ) #>
     }
 
@@ -430,9 +430,20 @@ try {
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
-        
-        $serverDetailsJson = $serverDetails | ConvertTo-Json -Compress -Depth 5
-        Write-Host "##vso[task.setvariable variable=AllServerDetails;isOutput=true]$serverDetailsJson"
+
+        $serverMatrix = [ordered]@{}
+        foreach ($server in $serverDetails) {
+            $serverMatrix[$server.name] = [ordered]@{
+                ServerName = $server.name
+                CliName = $server.cliName
+                ArtifactPath = $server.artifactPath
+                Version = $server.version
+                ImageName = $server.dockerImageName
+            }
+        }
+
+        $serverMatrixJson = $serverMatrix | ConvertTo-Json -Compress
+        Write-Host "##vso[task.setvariable variable=ServerBuildMatrix;isOutput=true]$serverMatrixJson"
     }
 }
 finally {

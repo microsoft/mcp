@@ -56,7 +56,6 @@ Push-Location $RepoRoot
 try {
     $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
     $platformName = "linux-x64"
-    $cliNames = @()
     foreach($server in $buildInfo.servers) {
         $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
         $platformOutputPath = "$OutputPath/$($server.artifactPath)/$platformName"
@@ -88,22 +87,24 @@ try {
         # Example: DockerImageName-azmcp, DockerImageVersion-azmcp, DockerExecutableName-azmcp, DockerLocalTag-azmcp
         $imageName = $server.dockerImageName
         Write-Host "Setting variable DockerImageName-$($server.cliName) to $imageName"
+        Write-Host "##vso[task.setvariable variable=DockerImageName-$($server.cliName)]$imageName"
         Write-Host "##vso[task.setvariable variable=DockerImageName-$($server.cliName);isOutput=true]$imageName"
 
         $version = $server.version
         Write-Host "Setting variable DockerImageVersion-$($server.cliName) to $version"
+        Write-Host "##vso[task.setvariable variable=DockerImageVersion-$($server.cliName)]$version"
         Write-Host "##vso[task.setvariable variable=DockerImageVersion-$($server.cliName);isOutput=true]$version"
 
         $cliName = $server.cliName
-        $cliNames += $cliName
-        $extension = $server.extension
-        $executableName = "$cliName$extension"
+        $executableExtension = $platform.extension
+        if (-not $executableExtension) { $executableExtension = '' }
+        $executableName = "$cliName$executableExtension"
         Write-Host "Setting variable DockerExecutableName-$($server.cliName) to $executableName"
+        Write-Host "##vso[task.setvariable variable=DockerExecutableName-$($server.cliName)]$executableName"
         Write-Host "##vso[task.setvariable variable=DockerExecutableName-$($server.cliName);isOutput=true]$executableName"
 
         $dockerLocalTag = "$(Build.Repository.Name)/$($server.cliName):$(Build.BuildId)"
         Write-Host "Setting variable DockerLocalTag-$($server.cliName) to $dockerLocalTag"
-        # Need this also as a local variable for the next steps in the template
         Write-Host "##vso[task.setvariable variable=DockerLocalTag-$($server.cliName)]$dockerLocalTag"
         Write-Host "##vso[task.setvariable variable=DockerLocalTag-$($server.cliName);isOutput=true]$dockerLocalTag"
     }

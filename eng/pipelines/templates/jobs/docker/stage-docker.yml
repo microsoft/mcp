@@ -1,0 +1,46 @@
+parameters:
+- name: DependsOn
+  type: object
+- name: ServerBuildMatrix
+  type: object
+
+jobs:
+- job: StageDocker
+  displayName: "Stage Docker"
+  dependsOn: ${{ parameters.DependsOn }}
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - download: current
+    displayName: Download binaries_signed
+    artifact: binaries_signed
+
+  - task: Powershell@2
+    name: PrepareFilesForDocker
+    displayName: "Prepare files for Docker"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Prepare-Docker.ps1
+      arguments: >
+        -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -OutputPath '$(Build.ArtifactStagingDirectory)'
+
+  - task: 1ES.PublishPipelineArtifact@1
+    displayName: Publish docker staging
+    inputs:
+      path: $(Build.ArtifactStagingDirectory)
+      artifact: docker_staging
+
+- template: /eng/pipelines/templates/jobs/docker/build-docker.yml
+  parameters:
+    DependsOn: StageDocker
+    ServerBuildMatrix: ${{ parameters.ServerBuildMatrix }}

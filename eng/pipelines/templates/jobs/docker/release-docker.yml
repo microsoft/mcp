@@ -5,85 +5,55 @@ parameters:
   type: string
 - name: ServerName
   type: string
+  default: ''
 - name: DependsOn
   type: object
-- name: Servers
+- name: ServerBuildMatrix  # Object (map) of server entries matching build-docker matrix
   type: object
 
 jobs:
 - job: PublishACR
-  displayName: "Publish to ACR"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
+  displayName: "Publish Docker Images to ACR"
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'), or(eq('${{ parameters.ServerName }}',''), eq(variables['ServerName'], '${{ parameters.ServerName }}')))
   dependsOn: ${{ parameters.DependsOn }}
-
-  templateContext:
-    type: releaseJob
-    isProduction: true
-    inputs:
-    - input: pipelineArtifact
-      artifactName: build_info
-      targetPath: $(Pipeline.Workspace)/build_info
-    - input: pipelineArtifact
-      artifactName: docker_output
-      targetPath: $(Pipeline.Workspace)/docker_output
-
   timeoutInMinutes: 120
   environment: package-publish
   pool:
     name: azsdk-pool
     image: ubuntu-24.04
     os: linux
-
   strategy:
-    runOnce:
-      deploy:
-        steps:
-        - task: AzureCLI@2
-          condition: succeeded()
-          displayName: Login to ${{ parameters.ContainerRegistry }}
-          inputs:
-            azureSubscription: "Azure SDK Engineering System"
-            scriptType: pscore
-            scriptLocation: inlineScript
-            inlineScript: |
-              az acr login --name ${{ parameters.ContainerRegistry }}
-
-        - ${{ each server in parameters.Servers }}:
-          - ${{ if ne(parameters.ServerName, server.name) }}:
-            - script: |
-                echo "Skipping image publish for ${{ server.name }}"
-              displayName: "Skip image publish for ${{ server.name }}"
-          - ${{ elseif eq(parameters.ServerName, server.name) }}:
-            - script: |
-                echo "Loading image..."
-                docker load -i $(Pipeline.Workspace)/docker_output/${{ server.cliName }}-image.tar
-                docker image inspect "$(DockerLocalTag-${{ server.cliName }})" >/dev/null 2>&1 || { echo "Local tag $(DockerLocalTag-${{ server.cliName }}) not found after load"; exit 1; }
-              displayName: Load image
-
-            - script: |
-                if [ -z "$(DockerImageVersion-${{ server.cliName }})" ] || [ -z "$(DockerImageName-${{ server.cliName }})" ]; then
-                  echo "ERROR: Required tag components missing (version='$(DockerImageVersion-${{ server.cliName }})', name='$(DockerImageName-${{ server.cliName }})')" >&2
-                  exit 1
-                fi
-
-                BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(DockerImageName-${{ server.cliName }})"
-
-                echo "Base repository: $BASE_REPO"
-
-                VERSIONED_TAG="$BASE_REPO:$(DockerImageVersion-${{ server.cliName }})"
-                LATEST_TAG="$BASE_REPO:latest"
-
-                echo "Tagging $(DockerLocalTag-${{ server.cliName }}) as:"
-                echo "  Versioned tag: $VERSIONED_TAG"
-                echo "  Latest tag: $LATEST_TAG"
-
-                docker tag "$(DockerLocalTag-${{ server.cliName }})" "$VERSIONED_TAG"
-                docker tag "$(DockerLocalTag-${{ server.cliName }})" "$LATEST_TAG"
-
-                echo "Pushing versioned tag..."
-                docker push "$VERSIONED_TAG"
-                echo "Pushing latest tag..."
-                docker push "$LATEST_TAG"
-
-                echo "Done."
-              displayName: Push image to ACR
+    matrix: $[ ${{ parameters.ServerBuildMatrix }}]
+  steps:
+  - task: AzureCLI@2
+    displayName: Login to ${{ parameters.ContainerRegistry }}
+    inputs:
+      azureSubscription: "Azure SDK Engineering System"
+      scriptType: pscore
+      scriptLocation: inlineScript
+      inlineScript: |
+        az acr login --name ${{ parameters.ContainerRegistry }}
+  - script: |
+      set -euo pipefail
+      echo "Loading image tar for $(CliName)"
+      docker load -i $(Pipeline.Workspace)/docker_output/$(CliName)-image.tar
+      docker image inspect "$(DockerLocalTag-$(CliName))" >/dev/null 2>&1 || { echo "Local tag $(DockerLocalTag-$(CliName)) not found after load"; exit 1; }
+    displayName: Load image
+  - script: |
+      set -euo pipefail
+      if [ -z "$(DockerImageVersion-$(CliName))" ] || [ -z "$(DockerImageName-$(CliName))" ]; then
+        echo "ERROR: Required tag components missing (version='$(DockerImageVersion-$(CliName))', name='$(DockerImageName-$(CliName))')" >&2
+        exit 1
+      fi
+      BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(DockerImageName-$(CliName))"
+      VERSIONED_TAG="$BASE_REPO:$(DockerImageVersion-$(CliName))"
+      LATEST_TAG="$BASE_REPO:latest"
+      echo "Tagging $(DockerLocalTag-$(CliName)) as:"
+      echo "  Versioned tag: $VERSIONED_TAG"
+      echo "  Latest tag:    $LATEST_TAG"
+      docker tag "$(DockerLocalTag-$(CliName))" "$VERSIONED_TAG"
+      docker tag "$(DockerLocalTag-$(CliName))" "$LATEST_TAG"
+      echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
+      echo "Pushing latest tag...";   docker push "$LATEST_TAG"
+      echo "Publish complete for ${{ parameters.ServerName }}"
+    displayName: Tag and push image

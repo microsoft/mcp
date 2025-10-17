@@ -130,10 +130,10 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/docker/build-docker.yml
+- template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
   parameters:
     DependsOn: Sign
-    Servers: ${{ fromJSON(stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.AllServerDetails']) }}
+    ServerBuildMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.ServerBuildMatrix']
 
 - ${{ each os in split('linux|windows|macOS', '|') }}:
   - template: /eng/pipelines/templates/jobs/verify-packages.yml
