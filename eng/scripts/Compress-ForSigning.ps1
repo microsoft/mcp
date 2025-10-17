@@ -111,6 +111,14 @@ foreach ($server in $buildInfo.servers) {
 }
 
 if($env:TF_BUILD) {
+    $signingPatterns = $buildInfo.servers
+    | Select-Object -ExpandProperty cliName -Unique
+    | ForEach-Object { "**/windows-*/**/$_.dll", "**/windows-*/**/$_.exe" }
+    | Join-String -Separator "`n"
+
+    Write-Host "Setting WindowsSigningPatterns variable to:`n$signingPatterns"
+    Write-Host "##vso[task.setvariable variable=WindowsSigningPatterns]$signingPatterns"
+
     Write-Host "`n##[group] Output Path Contents:"
     Get-ChildItem -Path $OutputPath -File -Recurse | Select-Object -ExpandProperty FullName | Out-Host
     Write-Host "##[endgroup]`n"

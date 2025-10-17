@@ -23,11 +23,6 @@
     <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>fabric,mcp</DnxPackageTags>
-
-    <!-- vsix settings -->
-    <VsixPackagePrefix>vscode-fabric-mcp</VsixPackagePrefix>
-    <VsixDescription></VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>

@@ -3,8 +3,8 @@ parameters:
   type: object
 
 jobs:
-- job: SignAndPackVSIX
-  displayName: "Sign and Pack VSIX"
+- job: PackAndSignVSIX
+  displayName: "Pack and Sign VSIX"
   dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['NoPackagesChanged'], 'true'))
   steps:
@@ -47,7 +47,7 @@ jobs:
 
 - job: VerifyVSIXSigning
   displayName: "Verify VSIX Signing"
-  dependsOn: SignAndPackVSIX
+  dependsOn: PackAndSignVSIX
   pool:
     name: $(WINDOWSPOOL) # Signing verification must happen on windows
     image: $(WINDOWSVMIMAGE)
