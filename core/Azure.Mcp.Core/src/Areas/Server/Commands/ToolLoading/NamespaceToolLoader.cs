@@ -380,7 +380,8 @@ public sealed class NamespaceToolLoader(
                 }
             }
 
-            var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+            var currentActivity = Activity.Current;
+            var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
@@ -394,6 +395,11 @@ public sealed class NamespaceToolLoader(
             }
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
+
+            // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
+            // The logic above performs sampling to try and get a correct command name.  "blob_get" in
+            // this case, which will be executed.
+            currentActivity?.SetTag(TagName.ToolName, command);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
