@@ -55,7 +55,7 @@
     <PackageVersion Include="Azure.ResourceManager.Search" Version="1.3.0" />
     <PackageVersion Include="Azure.ResourceManager.SignalR" Version="1.1.4" />
     <PackageVersion Include="Azure.ResourceManager.Storage" Version="1.4.4" />
-    <PackageVersion Include="Azure.ResourceManager.ResourceGraph" Version="1.1.0-beta.4" />
+    <PackageVersion Include="Azure.ResourceManager.ResourceGraph" Version="1.1.0" />
     <PackageVersion Include="Microsoft.Azure.Kusto.Data" Version="13.0.2" />
     <PackageVersion Include="Microsoft.Identity.Client.Broker" Version="4.72.1" />
     <PackageVersion Include="Microsoft.Extensions.AI.Abstractions" Version="9.9.1" />
