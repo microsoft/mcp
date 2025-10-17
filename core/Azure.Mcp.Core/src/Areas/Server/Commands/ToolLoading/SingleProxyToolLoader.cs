@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -132,8 +133,6 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        Activity.Current?.SetTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
-
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
@@ -206,6 +205,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = await GetRootToolsJsonAsync();
         var learnResponse = new CallToolResult
         {
@@ -236,6 +236,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = await GetToolListJsonAsync(request, tool);
         if (string.IsNullOrEmpty(toolsJson))
         {
@@ -272,6 +273,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         McpClient? client;
 
         try
