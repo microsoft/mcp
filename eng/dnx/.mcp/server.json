@@ -1,22 +1,24 @@
 {
-  "$schema": "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json",
   "description": "$(PackageDescription)",
-  "name": "io.github.microsoft/mcp/$(ServerName)",
+  "name": "com.microsoft/$(ServerName)",
+  "version": "$(PackageVersion)",
   "packages": [
     {
-      "registry_name": "nuget",
-      "name": "$(PackageId)",
+      "registryType": "nuget",
+      "identifier": "$(PackageId)",
       "version": "$(PackageVersion)",
-      "package_arguments": [
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
         {
           "type": "positional",
-          "value": "server",
-          "value_hint": "server"
+          "value": "server"
         },
         {
           "type": "positional",
-          "value": "start",
-          "value_hint": "start"
+          "value": "start"
         }
       ]
     }
@@ -24,8 +26,5 @@
   "repository": {
     "url": "$(RepositoryUrl)",
     "source": "github"
-  },
-  "version_detail": {
-    "version": "$(PackageVersion)"
   }
 }
