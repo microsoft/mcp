@@ -2,19 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.4 (Unreleased)
+## 0.9.4 (2025-10-17)
 
 ### Features Added
 
-- Added consolidated mode [[#784](https://github.com/microsoft/mcp/pull/784)]
+- Added a new server startup "consolidated" mode, which groups Azure MCP tools by tasks and actions tools conduct. This can be enabled by using the `--consolidated` flag. [[#784](https://github.com/microsoft/mcp/pull/784)]
 
 ### Breaking Changes
 
-- Remove `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
-
-### Bugs Fixed
+- Removes the `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
 
 ### Other Changes
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
+  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
+  - Azure.Core: `1.48.0` → `1.49.0`
 
 ## 0.9.3 (2025-10-16)
 
@@ -30,12 +34,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_communication_email_send`
   - `azmcp_communication_sms_send`
 - Improved the description of the `--enable-insecure-transports` server startup option. [[#839](https://github.com/microsoft/mcp/pull/839)]
-
-#### Dependency Updates
-
-- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
-  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
-  - Azure.Core: `1.48.0` → `1.49.0`
 
 ## 0.9.2 (2025-10-15)
 

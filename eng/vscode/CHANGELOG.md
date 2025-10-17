@@ -1,5 +1,15 @@
 # Release History
 
+## 0.9.4 (2025-10-17)
+
+### Features Added
+
+- Added a new server startup "consolidated" mode, which groups Azure MCP tools by tasks and actions tools conduct. This can be enabled by using the `--consolidated` flag. [[#784](https://github.com/microsoft/mcp/pull/784)]
+
+### Breaking Changes
+
+- Removes the `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
+
 ## 0.9.3 (2025-10-16)
 
 ### Changed
