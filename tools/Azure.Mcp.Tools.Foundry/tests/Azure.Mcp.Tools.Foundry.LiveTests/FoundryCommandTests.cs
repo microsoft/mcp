@@ -17,7 +17,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     public async Task Should_list_foundry_models()
     {
         var result = await CallToolAsync(
-            "azmcp_foundry_models_list",
+            "foundry_models_list",
             new()
             {
                 { "search-for-free-playground", "true" }
@@ -34,7 +34,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "azmcp_foundry_models_deployments_list",
+            "foundry_models_deployments_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -51,7 +51,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
     {
         var deploymentName = $"test-deploy-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         var result = await CallToolAsync(
-            "azmcp_foundry_models_deploy",
+            "foundry_models_deploy",
             new()
             {
                 { "deployment", deploymentName },
@@ -73,7 +73,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
         var accounts = Settings.ResourceBaseName;
         var result = await CallToolAsync(
-            "azmcp_foundry_knowledge_index_list",
+            "foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}" },
@@ -97,7 +97,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         // First get list of indexes to find one to test with
         var listResult = await CallToolAsync(
-            "azmcp_foundry_knowledge_index_list",
+            "foundry_knowledge_index_list",
             new()
             {
                 { "endpoint", endpoint },
@@ -111,7 +111,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
             var indexName = firstIndex.GetProperty("name").GetString();
 
             var result = await CallToolAsync(
-                "azmcp_foundry_knowledge_index_schema",
+                "foundry_knowledge_index_schema",
                 new()
                 {
                     { "endpoint", endpoint },
@@ -137,7 +137,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("OPENAIACCOUNTRESOURCEGROUP", "static-test-resources");
         var subscriptionId = Settings.SubscriptionId;
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_create-completion",
+            "foundry_openai_create-completion",
             new()
             {
                 { "subscription", subscriptionId },
@@ -184,7 +184,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var inputText = "Generate embeddings for this test text using Azure OpenAI.";
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_embeddings-create",
+            "foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -276,7 +276,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var dimensions = 512; // Test with reduced dimensions if supported
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_embeddings-create",
+            "foundry_openai_embeddings-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -327,7 +327,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_models-list",
+            "foundry_openai_models-list",
             new()
             {
                 { "subscription", subscriptionId },
@@ -437,7 +437,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_connect",
+            "foundry_agents_connect",
             new()
             {
                 { "agent-id", agentId },
@@ -467,7 +467,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         await CreateAgent(agentName, endpoint, "gpt-4o");
 
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_list",
+            "foundry_agents_list",
             new()
             {
                 { "endpoint", endpoint }
@@ -495,7 +495,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
         var agentId = await CreateAgent(agentName, endpoint, "gpt-4o");
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_query-and-evaluate",
+            "foundry_agents_query-and-evaluate",
             new()
             {
                 { "agent-id", agentId },
@@ -544,7 +544,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var azureOpenAIEndpoint = $"https://{accounts}.cognitiveservices.azure.com";
         var azureOpenAIDeployment = "gpt-4o";
         var result = await CallToolAsync(
-            "azmcp_foundry_agents_evaluate",
+            "foundry_agents_evaluate",
             new()
             {
                 { "evaluator", evaluatorName },
@@ -588,7 +588,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_chat-completions-create",
+            "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -675,7 +675,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         });
 
         var result = await CallToolAsync(
-            "azmcp_foundry_openai_chat-completions-create",
+            "foundry_openai_chat-completions-create",
             new()
             {
                 { "subscription", subscriptionId },
@@ -760,7 +760,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_resource_get",
+            "foundry_resource_get",
             new()
             {
                 { "subscription", subscriptionId },
@@ -818,7 +818,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var resourceGroup = Settings.ResourceGroupName;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_resource_get",
+            "foundry_resource_get",
             new()
             {
                 { "subscription", subscriptionId },
@@ -849,7 +849,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var resourceName = Settings.ResourceBaseName;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_resource_get",
+            "foundry_resource_get",
             new()
             {
                 { "subscription", subscriptionId },
@@ -952,7 +952,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var subscriptionId = Settings.SubscriptionId;
 
         var result = await CallToolAsync(
-            "azmcp_foundry_resource_get",
+            "foundry_resource_get",
             new()
             {
                 { "subscription", subscriptionId },

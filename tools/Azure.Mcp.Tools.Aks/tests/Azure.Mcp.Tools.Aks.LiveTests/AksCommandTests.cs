@@ -16,7 +16,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_list_aks_clusters_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -96,7 +96,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", "" }
@@ -110,7 +110,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_handle_invalid_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", "invalid-subscription" }
@@ -127,7 +127,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     [Fact]
     public async Task Should_validate_required_subscription_parameter()
     {
-        var result = await CallToolAsync("azmcp_aks_cluster_get", []);
+        var result = await CallToolAsync("aks_cluster_get", []);
 
         // Should return error response for missing subscription (no results)
         Assert.False(result.HasValue);
@@ -138,7 +138,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     {
         // First, get a list of clusters to find one we can test against
         var listResult = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -154,7 +154,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
 
         // Now test the get command
         var getResult = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -206,7 +206,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     public async Task Should_handle_nonexistent_cluster_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -227,7 +227,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
     {
         // Test missing resource-group
         var result1 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -237,7 +237,7 @@ public sealed class AksCommandTests(ITestOutputHelper output)
 
         // Test missing subscription
         var result2 = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "resource-group", "test-rg" },

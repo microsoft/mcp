@@ -22,7 +22,7 @@ public class LoadTestingCommandTests : CommandTestsBase
     {
         // Arrange
         var result = await CallToolAsync(
-            "azmcp_loadtesting_testresource_list",
+            "loadtesting_testresource_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

@@ -51,7 +51,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     // public async Task Should_list_monitor_tables()
     // {
     //     var result = await CallToolAsync(
-    //         "azmcp_monitor_table_list",
+    //         "monitor_table_list",
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -70,7 +70,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     // public async Task Should_list_monitor_workspaces()
     // {
     //     var result = await CallToolAsync(
-    //         "azmcp_monitor_workspace_list",
+    //         "monitor_workspace_list",
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId }
@@ -89,7 +89,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
     //     var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
     //     await QueryForLogsAsync(
-    //         async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
+    //         async args => await CallToolAsync("monitor_workspace_log_query", args),
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -115,7 +115,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     var resourceGroup = Settings.DeploymentOutputs.GetValueOrDefault("staticResourceGroup", "static-test-resources");
     //     var workspace = Settings.DeploymentOutputs.GetValueOrDefault("staticWorkspace", "monitor-query-ws");
     //     await QueryForLogsAsync(
-    //         async args => await CallToolAsync("azmcp_monitor_workspace_log_query", args),
+    //         async args => await CallToolAsync("monitor_workspace_log_query", args),
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -138,7 +138,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     // public async Task Should_list_monitor_table_types()
     // {
     //     var result = await CallToolAsync(
-    //         "azmcp_monitor_table_type_list",
+    //         "monitor_table_type_list",
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -162,7 +162,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     var storageResourceId = $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.Storage/storageAccounts/{storageAccountName}";
 
     //     await QueryForLogsAsync(
-    //         async args => await CallToolAsync("azmcp_monitor_resource_log_query", args),
+    //         async args => await CallToolAsync("monitor_resource_log_query", args),
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -263,7 +263,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     string resourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";
 
     //     var result = await CallToolAsync(
-    //         "azmcp_monitor_metrics_definitions",
+    //         "monitor_metrics_definitions",
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -334,7 +334,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     string resourceId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Storage/storageAccounts/{_storageAccountName}";
 
     //     var result = await CallToolAsync(
-    //         "azmcp_monitor_metrics_query",
+    //         "monitor_metrics_query",
     //         new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
@@ -394,7 +394,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //     try
     //     {
     //         // First, generate basic activity (creates metrics)
-    //         var listResult = await CallToolAsync("azmcp_storage_blob_container_list", new()
+    //         var listResult = await CallToolAsync("storage_blob_container_list", new()
     //         {
     //             { "subscription", Settings.SubscriptionId },
     //             { "account", _storageAccountName }
@@ -409,7 +409,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     //             var firstContainer = containersArray.Value.EnumerateArray().First();
     //             if (firstContainer.TryGetProperty("name", out var containerName))
     //             {
-    //                 var blobListResult = await CallToolAsync("azmcp_storage_blob_list", new()
+    //                 var blobListResult = await CallToolAsync("storage_blob_list", new()
     //                 {
     //                     { "subscription", Settings.SubscriptionId },
     //                     { "account", _storageAccountName },
@@ -457,7 +457,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_List_WebTests()
     {
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_list",
+            "monitor_webtests_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -486,7 +486,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_List_WebTests_ByResourceGroup()
     {
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_list",
+            "monitor_webtests_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -522,7 +522,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var webTestName = _bingWebTestName;
 
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_get",
+            "monitor_webtests_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -555,7 +555,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     public async Task Should_Return400_WithInvalidWebTestInput(string args)
     {
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_get",
+            "monitor_webtests_get",
             new()
             {
                 { "args", args }
@@ -572,7 +572,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var appInsightsComponentId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.Insights/components/{_appInsightsName}";
 
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_create",
+            "monitor_webtests_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -610,7 +610,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var webTestName = _bingWebTestName;
 
         var result = await CallToolAsync(
-            "azmcp_monitor_webtests_update",
+            "monitor_webtests_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

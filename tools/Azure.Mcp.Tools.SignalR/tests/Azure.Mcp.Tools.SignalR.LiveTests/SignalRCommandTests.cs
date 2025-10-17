@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         public async Task Should_get_signalr_runtimes_by_subscription_id()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionId } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -36,7 +36,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         {
             // Empty subscription should trigger validation failure (400) -> null results
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", "" } });
 
             Assert.Null(result);
@@ -47,7 +47,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         {
             // Invalid identifier should reach execution and return structured error details (HasValue)
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new()
                 {
                     { "subscription", "invalid-subscription" }
@@ -62,7 +62,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         public async Task Should_get_signalr_runtimes_by_subscription_name()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -74,7 +74,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         public async Task Should_get_signalr_runtimes_by_subscription_name_with_tenant_id()
         {
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantId } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -88,7 +88,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName }, { "tenant", Settings.TenantName } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -102,7 +102,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
             Assert.SkipWhen(Settings.IsServicePrincipal, TenantNameReason);
 
             var result = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new() { { "subscription", Settings.SubscriptionName }, { "resource-group", Settings.ResourceGroupName } });
 
             var runtimes = result.AssertProperty("runtimes");
@@ -114,7 +114,7 @@ namespace Azure.Mcp.Tools.SignalR.LiveTests
         public async Task Should_get_signalr_runtime_detail()
         {
             var getResult = await CallToolAsync(
-                "azmcp_signalr_runtime_get",
+                "signalr_runtime_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },

@@ -80,7 +80,7 @@ public class ToolsListCommandTests
             Assert.False(string.IsNullOrWhiteSpace(command.Description), "Command description should not be empty");
             Assert.False(string.IsNullOrWhiteSpace(command.Command), "Command path should not be empty");
 
-            Assert.StartsWith("azmcp ", command.Command);
+            Assert.False(command.Command.StartsWith("azmcp "));
 
             if (command.Options != null && command.Options.Count > 0)
             {
@@ -264,10 +264,10 @@ public class ToolsListCommandTests
         Assert.True(appConfigCommands.Count > 0, $"Expected appconfig commands. All commands: {string.Join(", ", allCommands)}");
 
         // Verify specific known commands exist
-        Assert.Contains(result, cmd => cmd.Command == "azmcp subscription list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp keyvault key list");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account get");
-        Assert.Contains(result, cmd => cmd.Command == "azmcp appconfig account list");
+        Assert.Contains(result, cmd => cmd.Command == "subscription list");
+        Assert.Contains(result, cmd => cmd.Command == "keyvault key list");
+        Assert.Contains(result, cmd => cmd.Command == "storage account get");
+        Assert.Contains(result, cmd => cmd.Command == "appconfig account list");
 
         // Verify that each command has proper structure
         foreach (var cmd in result.Take(4))

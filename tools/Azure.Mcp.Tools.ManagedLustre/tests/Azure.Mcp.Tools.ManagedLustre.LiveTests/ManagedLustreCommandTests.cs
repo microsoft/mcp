@@ -14,7 +14,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_list_filesystems_by_subscription()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_filesystem_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -45,7 +45,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_calculate_required_subnet_size()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_ask",
+            "managedlustre_filesystem_subnetsize_ask",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -62,7 +62,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_filesystem_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -76,7 +76,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info_zonal_support()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_filesystem_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -95,7 +95,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_get_sku_info_no_zonal_support()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_sku_get",
+            "managedlustre_filesystem_sku_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -129,7 +129,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
         var hsmLogContainerId = Environment.GetEnvironmentVariable("HSM_LOGS_CONTAINER_ID");
 
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_create",
+            "managedlustre_filesystem_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -173,7 +173,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     {
         // Update maintenance window for existing filesystem
         var updateResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_update",
+            "managedlustre_filesystem_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -188,7 +188,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
 
         // Verify via list
         var listResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_filesystem_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -226,7 +226,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_check_subnet_size_and_succeed()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_validate",
+            "managedlustre_filesystem_subnetsize_validate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -245,7 +245,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     public async Task Should_check_subnet_size_and_fail()
     {
         var result = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_subnetsize_validate",
+            "managedlustre_filesystem_subnetsize_validate",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -265,7 +265,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     {
         // Update root squash settings for existing filesystem
         var updateResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_update",
+            "managedlustre_filesystem_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -293,7 +293,7 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
 
         // Verify via list
         var listResult = await CallToolAsync(
-            "azmcp_managedlustre_filesystem_list",
+            "managedlustre_filesystem_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
