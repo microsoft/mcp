@@ -34,6 +34,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Fixed retained-buffer leaks across services (Kusto, EventGrid, AppLens, Speech, Cosmos, Foundry, NetworkResourceProvider) and tool loaders (BaseToolLoader, ServerToolLoader, NamespaceToolLoader, SingleProxyToolLoader) by disposing `JsonDocument`/`HttpResponseMessage` instances and cloning returned `JsonElements`. ([#817](https://github.com/microsoft/mcp/pull/817))
 
+### Other Changes
+
+- Telemetry capture is disabled in non-release builds. ([#783](https://github.com/microsoft/mcp/pull/783))
+
 ## 0.9.1 (2025-10-14)
 
 ### Bugs Fixed
