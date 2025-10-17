@@ -33,6 +33,8 @@ jobs:
         -ArtifactsPath '$(Pipeline.Workspace)/binaries_signed'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
+        -RepositoryName '$(Build.Repository.Name)'
+        -BuildId '$(Build.BuildId)'
 
   - task: 1ES.PublishPipelineArtifact@1
     displayName: Publish docker staging

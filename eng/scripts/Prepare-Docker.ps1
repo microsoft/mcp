@@ -6,6 +6,8 @@ param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
     [string] $OutputPath,
+    [string] $RepositoryName,
+    [string] $BuildId,
     [switch] $CI
 )
 
@@ -103,7 +105,7 @@ try {
         Write-Host "##vso[task.setvariable variable=DockerExecutableName-$($server.cliName)]$executableName"
         Write-Host "##vso[task.setvariable variable=DockerExecutableName-$($server.cliName);isOutput=true]$executableName"
 
-        $dockerLocalTag = "$(Build.Repository.Name)/$($server.cliName):$(Build.BuildId)"
+        $dockerLocalTag = "$RepositoryName/$($server.cliName):$BuildId"
         Write-Host "Setting variable DockerLocalTag-$($server.cliName) to $dockerLocalTag"
         Write-Host "##vso[task.setvariable variable=DockerLocalTag-$($server.cliName)]$dockerLocalTag"
         Write-Host "##vso[task.setvariable variable=DockerLocalTag-$($server.cliName);isOutput=true]$dockerLocalTag"
