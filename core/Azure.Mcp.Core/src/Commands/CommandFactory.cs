@@ -316,8 +316,7 @@ public class CommandFactory
     /// - B1_C2
     /// - B2
     /// </summary>
-    /// <param name="node">Node to begin traversal.</param>
-    /// <param name="prefix">Prefix. If prefix is an empty string, the name of the current node is used.</param>
+    /// <param name="rootNode">Node to begin traversal.</param>
     internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
     {
         const string rootPrefix = "";
