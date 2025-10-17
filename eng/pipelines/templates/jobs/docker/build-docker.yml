@@ -29,8 +29,7 @@ jobs:
       path: "$(Pipeline.Workspace)/docker_staging"
       image: "$(DockerLocalTag-$(CliName))"
       buildArguments: |
-        --build-arg PUBLISH_DIR="$(ArtifactPath)/linux-x64/dist"
-        --build-arg EXECUTABLE_NAME=$(DockerExecutableName-$(CliName))
+        --build-arg PUBLISH_DIR="$(ArtifactPath)/linux-x64/dist" --build-arg EXECUTABLE_NAME=$(DockerExecutableName-$(CliName))
       enableNetwork: true
       useBuildKit: true
 
