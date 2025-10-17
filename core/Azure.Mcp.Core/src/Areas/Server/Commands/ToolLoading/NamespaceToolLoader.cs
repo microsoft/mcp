@@ -205,7 +205,7 @@ public sealed class NamespaceToolLoader(
                 // invoking it with no parameters and "learn" == "true".  The command will
                 // generally fail, providing the LLM with extra information it needs to pass
                 // in for the command to succeed the next time.
-                activity?.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(command));
+                activity?.SetTag(TagName.ToolName, command);
 
                 var toolParams = GetParametersFromArgs(args);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
