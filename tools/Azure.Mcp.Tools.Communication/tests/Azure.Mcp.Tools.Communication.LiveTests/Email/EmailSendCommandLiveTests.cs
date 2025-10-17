@@ -39,7 +39,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
         Assert.SkipWhen(string.IsNullOrEmpty(testEmail), "Test recipient email not configured for live testing");
 
         var result = await CallToolAsync(
-            "azmcp_communication_email_send",
+            "communication_email_send",
             new()
             {
                 { "endpoint", endpoint },
@@ -112,7 +112,7 @@ public class EmailSendCommandLiveTests : CommandTestsBase
     public async Task Should_Return400_WithInvalidInput(string args)
     {
         var result = await CallToolAsync(
-            "azmcp_communication_email_send",
+            "communication_email_send",
             new()
             {
                 { "args", args }
