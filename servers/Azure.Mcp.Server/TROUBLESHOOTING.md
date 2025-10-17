@@ -292,7 +292,7 @@ When elicitation isn't supported, you may experience:
 - Missing interactive prompts when tools request additional information
 - Error messages indicating elicitation is unsupported by the client
 
-![Elicitation error message](elicitation_not_supported.png)
+![Elicitation error message](images/elicitation_not_supported.png)
 
 #### Solution
 Update VS Code to version 1.102 or newer:
