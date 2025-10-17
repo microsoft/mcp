@@ -90,7 +90,7 @@ function Convert-CommandToPromptKey {
 # Shared helper: given a set of command strings, aggregate matching prompts
 function Resolve-PromptsForCommands {
     param(
-        [Parameter(Mandatory)][string[]]$CommandStrings,
+        [Parameter(Mandatory)][AllowEmptyCollection()][string[]]$CommandStrings,
         [Parameter(Mandatory)]$PromptsJson,
         [Parameter(Mandatory)][string[]]$AllPromptKeys,
         [switch]$VerboseWarnings,
@@ -231,7 +231,7 @@ function Invoke-NamespaceGeneration {
     foreach ($ns in $namespaceJson.results) {
     if (-not $ns.name) { continue }
 
-        $commandStrings = Get-NamespaceCommandStrings -Node $ns -AllPromptKeys $AllPromptKeys
+        $commandStrings = @(Get-NamespaceCommandStrings -Node $ns -AllPromptKeys $AllPromptKeys)
 
         # Determine aggregation key: namespace entries get 'azmcp_<ns>', surfaced leaf commands keep their converted key
         $isNamespace = $ns.command -match '^(azmcp)\s+([^\s]+)$'
