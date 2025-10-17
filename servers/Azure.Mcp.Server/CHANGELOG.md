@@ -22,6 +22,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - `azmcp_communication_email_send`
   - `azmcp_communication_sms_send`
 
+#### Dependency Updates
+
+- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
+  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
+  - Azure.Core: `1.48.0` → `1.49.0`
+
 ## 0.9.2 (2025-10-15)
 
 ### Bugs Fixed
