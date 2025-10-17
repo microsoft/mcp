@@ -15,7 +15,14 @@ public static class ManagedLustreOptionDefinitions
     public const string zone = "zone";
     public const string hsmContainer = "hsm-container";
     public const string hsmLogContainer = "hsm-log-container";
-    public const string importPrefix = "import-prefix";
+    // Import job / file system constants (added during AzureManagedLustre -> ManagedLustre rename)
+    public const string fileSystem = "file-system";
+    public const string importPrefixes = "import-prefixes";
+    public const string conflictResolutionMode = "conflict-resolution-mode";
+    public const string maximumErrors = "maximum-errors";
+    public const string adminStatus = "admin-status";
+    public const string jobName = "name"; // aligning with prior 'name' option intent for job naming
+    public const string importPrefix = "import-prefix"; // kept for backwards compatibility where singular prefix still used
     public const string maintenanceDay = "maintenance-day";
     public const string maintenanceTime = "maintenance-time";
     public const string rootSquashMode = "root-squash-mode";
@@ -65,6 +72,15 @@ public static class ManagedLustreOptionDefinitions
     {
         Required = true,
         Description = "The AMLFS resource name. Must be DNS-friendly (letters, numbers, hyphens). Example: --name amlfs-001"
+    };
+
+    // File system option (previously AzureManagedLustreOptionDefinitions.FileSystemOption)
+    public static readonly Option<string> FileSystemOption = new(
+        $"--{fileSystem}"
+    )
+    {
+        Required = true,
+        Description = "Target Managed Lustre file system name. Example: --file-system fs1"
     };
 
     public static readonly Option<string> SubnetIdOption = new(
@@ -198,5 +214,47 @@ public static class ManagedLustreOptionDefinitions
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();
     public static readonly Option<string> OptionalMaintenanceTimeOption = MaintenanceTimeOption.AsOptional();
+
+    public static readonly Option<string[]> ImportPrefixesOption = new(
+        $"--{importPrefixes}"
+    )
+    {
+        Description = "List of path prefixes in the linked HSM/Blob container to import. Provide multiple prefixes separated by spaces. If omitted, the entire container may be considered depending on service defaults.",
+        Required = false,
+        AllowMultipleArgumentsPerToken = true
+    };
+
+    public static readonly Option<string> ConflictResolutionModeOption = new(
+        $"--{conflictResolutionMode}"
+    )
+    {
+        Description = "How to handle conflicts during import. Allowed values: Fail, Skip. Default: Skip.",
+        Required = false
+    };
+
+    public static readonly Option<int?> MaximumErrorsOption = new(
+        $"--{maximumErrors}"
+    )
+    {
+        Description = "Maximum number of errors before the import job fails fast. Default: 0 (fail on first error).",
+        Required = false
+    };
+
+    public static readonly Option<string> AdminStatusOption = new(
+        $"--{adminStatus}"
+    )
+    {
+        Description = "Administrative status of the job. Usually 'Active'.",
+        Required = false
+    };
+
+    public static readonly Option<string> JobNameOption = new(
+        $"--{jobName}"
+    )
+    {
+        Description = "An optional name for the HSM job. If omitted a timestamp-based name will be generated.",
+        Required = false
+    };
+
 }
 

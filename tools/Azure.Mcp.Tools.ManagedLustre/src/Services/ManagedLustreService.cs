@@ -488,4 +488,78 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         }
     }
+
+    public async Task<ImportJobInfo> CreateImportJobAsync(
+    string subscription,
+    string resourceGroup,
+    string name,
+    string? jobName = null,
+    IList<string>? importPrefixes = null,
+    string conflictResolutionMode = "Skip",
+    int? maximumErrors = 0,
+    string? tenant = null,
+    RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(name), name));
+
+        // NOTE: The StorageCache SDK (as of current version) does not expose an import job create API.
+        // Placeholder implementation constructs a job object. Wire up REST call when SDK/REST details available.
+        jobName ??= $"import-job-{DateTime.UtcNow:yyyyMMddHHmmss}";
+        // Ensure default import prefix list is a single root path when none provided OR provided empty
+        if (importPrefixes == null || importPrefixes.Count == 0)
+        {
+            importPrefixes = new List<string> { "/" };
+        }
+
+        try
+        {
+            // Resolve to ensure file system exists
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+                ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+            // NOTE: GetAmlFileSystemAsync returns a Response<AmlFileSystemResource> in this SDK version.
+            // The concrete Response<T> here does NOT implement IDisposable (compiler error if used in a using statement),
+            // so no explicit disposal is required. If a future azure-core version makes it disposable, wrap in a using.
+            var fsResponse = await rg.GetAmlFileSystemAsync(name);
+            var fsResource = fsResponse.Value;
+            var jobs = fsResource.GetStorageCacheImportJobs();
+
+            // Import job configuration data
+            StorageCacheImportJobData data = new StorageCacheImportJobData(fsResource.Data.Location)
+            {
+                ConflictResolutionMode = conflictResolutionMode,
+                MaximumErrors = maximumErrors
+            };
+            // ImportPrefixes is read-only, so add items to the collection instead of assigning
+            foreach (var prefix in importPrefixes)
+            {
+                data.ImportPrefixes.Add(prefix);
+            }
+
+            var operation = await jobs.CreateOrUpdateAsync(WaitUntil.Completed, jobName, data);
+            var created = operation.Value;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create import job '{jobName}' for AMLFS '{name}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create import job '{jobName}' for AMLFS '{name}': {ex.Message}", ex);
+        }
+
+        return new ImportJobInfo(
+            jobName!,
+            name,
+            resourceGroup,
+            subscription,
+            "Submitted (placeholder)",
+            conflictResolutionMode,
+            maximumErrors,
+            "Active",
+            importPrefixes);
+    }
 }
