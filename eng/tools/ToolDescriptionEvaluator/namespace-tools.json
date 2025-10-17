@@ -9,7 +9,7 @@
     },
     {
       "name": "aks",
-      "description": "Azure Kubernetes Service operations - Commands for managing Azure Kubernetes Service (AKS) cluster resources. Includes operations for listing clusters, retrieving cluster configurations, and managing Kubernetes environments in Azure.",
+      "description": "Azure Kubernetes Service operations - Manage and query Azure Kubernetes Service (AKS) resources across subscriptions. Use when you need subscription-scoped visibility into AKS cluster and node pool metadata—including Azure resource IDs, networking endpoints, identity configuration, and provisioning state—for governance or automation. Requires Azure subscription context. Not for kubectl execution, pod lifecycle changes, or in-cluster application deployments—use Kubernetes-native tooling for those tasks.",
       "command": "azmcp aks"
     },
     {
@@ -33,11 +33,6 @@
       "command": "azmcp appservice"
     },
     {
-      "name": "azuremanagedlustre",
-      "description": "Azure Managed Lustre operations - Commands for listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads.",
-      "command": "azmcp azuremanagedlustre"
-    },
-    {
       "name": "azureterraformbestpractices",
       "description": "Returns Terraform best practices for Azure. Call this before generating Terraform code for Azure Providers. \r\n            If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
       "command": "azmcp azureterraformbestpractices"
@@ -51,6 +46,16 @@
       "name": "cloudarchitect",
       "description": "Cloud Architecture operations - Commands for generating Azure architecture designs and recommendations based on requirements.",
       "command": "azmcp cloudarchitect"
+    },
+    {
+      "name": "communication",
+      "description": "Communication services operations - Commands for managing Azure Communication Services - supports sending SMS",
+      "command": "azmcp communication"
+    },
+    {
+      "name": "confidentialledger",
+      "description": "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.",
+      "command": "azmcp confidentialledger"
     },
     {
       "name": "cosmos",
@@ -73,6 +78,11 @@
       "command": "azmcp eventgrid"
     },
     {
+      "name": "eventhubs",
+      "description": "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes CRUD operations Event Hubs service resources.",
+      "command": "azmcp eventhubs"
+    },
+    {
       "name": "foundry",
       "description": "Foundry service operations - Commands for listing and managing services and resources in AI Foundry.",
       "command": "azmcp foundry"
@@ -81,6 +91,11 @@
       "name": "functionapp",
       "description": "Function App operations - Commands for managing and accessing Azure Function App resources.",
       "command": "azmcp functionapp"
+    },
+    {
+      "name": "get_bestpractices",
+      "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. Only call this function \r\n            when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
+      "command": "azmcp get_bestpractices"
     },
     {
       "name": "grafana",
@@ -106,6 +121,11 @@
       "name": "loadtesting",
       "description": "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.",
       "command": "azmcp loadtesting"
+    },
+    {
+      "name": "managedlustre",
+      "description": "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.",
+      "command": "azmcp managedlustre"
     },
     {
       "name": "marketplace",
@@ -134,7 +154,7 @@
     },
     {
       "name": "redis",
-      "description": "Redis Cache operations - Commands for managing Azure Redis Cache and Azure Managed Redis resources. Includes operations for listing cache instances, managing clusters and databases, configuring access policies, and working with both traditional Redis Cache and Managed Redis services.",
+      "description": "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services.",
       "command": "azmcp redis"
     },
     {
@@ -149,13 +169,23 @@
     },
     {
       "name": "search",
-      "description": "Search operations - Commands for Azure AI Search (formerly known as \\\"Azure Cognitive Search\\\") services and\r\nsearch indexes. Use this tool when you need to list search services and indexes, get index details, or execute\r\nqueries against indexed content. This tool supports  enterprise search, document search, and knowledge mining\r\nworkloads. Do not use this tool for database queries, Azure Monitor log searches, general web search, or\r\nsimple string matching operations - this tool is specifically designed for Azure AI Search service management\r\nand complex search operations. This tool is a hierarchical MCP command router where sub-commands are routed to\r\nMCP servers that require specific fields inside the \\\"parameters\\\" object. To invoke a command, set\r\n\\\"command\\\" and wrap its arguments in \\\"parameters\\\". Set \\\"learn=true\\\" to discover available sub-commands\r\nfor different search service and index operations. Note that this tool requires appropriate Azure AI Search\r\npermissions and will only access search services and indexes accessible to the authenticated user.",
+      "description": "Search operations - Commands for Azure AI Search (formerly known as \\\"Azure Cognitive Search\\\") services,\r\nsearch indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,\r\nsearch indexes, or introspect search services and their components. This tool supports enterprise search,\r\ndocument search, and knowledge mining. Do not use this tool for database queries or Azure Monitor\r\nlogs, this tool is specifically designed for Azure AI Search. This tool is a hierarchical MCP command\r\nrouter where sub-commands are routed to MCP servers that require specific fields inside the \\\"parameters\\\"\r\nobject. To invoke a command, set \\\"command\\\" and wrap its arguments in \\\"parameters\\\". Set \\\"learn=true\\\"\r\nto discover available sub-commands for different search service and index operations. Note that this tool\r\nrequires appropriate Azure AI Search permissions and will only access search resources accessible to the\r\nauthenticated user.",
       "command": "azmcp search"
     },
     {
       "name": "servicebus",
       "description": "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.",
       "command": "azmcp servicebus"
+    },
+    {
+      "name": "signalr",
+      "description": "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.",
+      "command": "azmcp signalr"
+    },
+    {
+      "name": "speech",
+      "description": "Speech operations - Commands for Azure AI Services Speech functionality including speech-to-text (STT) \r\nrecognition, audio processing, and language detection. Use this tool when you need to convert spoken \r\naudio to text, process audio files, or work with speech recognition services. This tool supports \r\nmultiple audio formats, configurable recognition languages, profanity filtering options, and both \r\nsimple and detailed output formats. This tool is a hierarchical MCP command router where sub-commands \r\nare routed to MCP servers that require specific fields inside the \"parameters\" object. To invoke a \r\ncommand, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available \r\nsub-commands for different Azure AI Services Speech operations. Note that this tool requires Azure AI \r\nServices Speech endpoints and will only access speech resources accessible to the authenticated user.",
+      "command": "azmcp speech"
     },
     {
       "name": "sql",
@@ -186,12 +216,7 @@
       "name": "azqr",
       "description": "Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.\r\nThis tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.\r\nRequires a subscription id and optionally a resource group name. Returns the generated report file's path.\r\nNote that Azure Quick Review CLI (azqr) is different from Azure CLI (az).",
       "command": "azmcp extension azqr"
-    },
-    {
-      "name": "get",
-      "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
-      "command": "azmcp get_bestpractices get"
     }
   ],
-  "duration": 27
+  "duration": 12
 }

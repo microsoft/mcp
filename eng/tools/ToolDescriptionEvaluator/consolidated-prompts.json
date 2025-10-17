@@ -106,6 +106,7 @@
     "Get metric definitions for <resource_type> <resource_name> from the namespace",
     "Get the <aggregation_type> <metric_name> metric for <resource_type> <resource_name> over the last <time_period> with intervals",
     "Get the availability status for resource <resource_name>",
+    "Get Web Test details for <webtest_resource_name> in my subscription in <resource_group>",
     "Investigate error rates and failed requests for Application Insights resource <resource_name> for the last <time_period>",
     "List active service health events in my subscription",
     "List all available table types in the Log Analytics workspace <workspace_name>",
@@ -114,6 +115,8 @@
     "List all monitored resources in the Datadog resource <resource_name>",
     "List all service health events in my subscription",
     "List all tables in the Log Analytics workspace <workspace_name>",
+    "List all Web Test resources in my subscription",
+    "List all Web Test resources in my subscription in <resource_group>",
     "List availability status for all resources in my subscription",
     "List code optimization recommendations across my Application Insights components",
     "List profiler recommendations for Application Insights in resource group <resource_group_name>",
@@ -143,8 +146,12 @@
     "What service issues have occurred in the last 30 days?",
     "What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period>"
   ],
-  "create_azure_monitor_webtests": [],
-  "update_azure_monitor_webtests": [],
+  "create_azure_monitor_webtests": [
+    "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  ],
+  "update_azure_monitor_webtests": [
+    "Update an existing Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>"
+  ],
   "deploy_azure_resources_and_applications": [
     "Create a plan to deploy this application to azure",
     "How can I create a CI/CD pipeline to deploy this app to Azure?",
@@ -181,7 +188,7 @@
   "get_azure_workbooks_details": [
     "Get information about the workbook with resource ID <workbook_resource_id>",
     "List all workbooks in my resource group <resource_group_name>",
-    "Show me the workbook with display name <workbook_display_name>",
+    "Show me the workbook with resource ID <workbook_resource_id>",
     "What workbooks do I have in resource group <resource_group_name>?"
   ],
   "audit_azure_resources_compliance": [
@@ -194,7 +201,11 @@
     "Show me how to use Azure CLI to list all virtual machines in my subscription",
     "Show me the details of the storage account <account_name> with Azure CLI commands"
   ],
-  "install_azure_cli_extensions": [],
+  "install_azure_cli_extensions": [
+    "Get Azure CLI installation instructions",
+    "How to install azd",
+    "What is Azure Functions Core tools and how to install it"
+  ],
   "get_azure_security_configurations": [
     "List all available role assignments in my subscription",
     "Show me the available role assignments in my subscription"
@@ -393,7 +404,13 @@
   "upload_azure_storage_blobs": [
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
-  "get_azure_cache_for_redis_details": [],
+  "get_azure_cache_for_redis_details": [
+    "Get Redis clusters",
+    "List all Redis resources in my subscription",
+    "Show me my Redis caches",
+    "Show me my Redis resources",
+    "Show me the Redis resources in my subscription"
+  ],
   "browse_azure_marketplace_products": [
     "Get details about marketplace product <product_name>",
     "Search for Microsoft products in the marketplace",
@@ -404,10 +421,8 @@
     "Show me the available regions for these resource types <resource_types>"
   ],
   "get_azure_messaging_service_details": [
-    "Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>",
-    "List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>",
     "List all Event Grid subscriptions in subscription <subscription>",
     "List all Event Grid topics in my subscription",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>",
@@ -426,13 +441,10 @@
     "Show me the Event Grid topics in my subscription"
   ],
   "edit_azure_data_analytics_resources": [
-    "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
-    "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Delete my namespace <namespace_name> in my resource group <resource_group_name>",
-    "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
   ],
