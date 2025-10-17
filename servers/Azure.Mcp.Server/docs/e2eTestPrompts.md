@@ -128,10 +128,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
-| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI|
+| azmcp_extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
 | azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-| azmcp_extension_cli_install | Get Azure CLI installation instructions |
+| azmcp_extension_cli_install | <uninstall az cli on your machine and run test prompts for azmcp_extension_cli_generate> |
 | azmcp_extension_cli_install | How to install azd |
 | azmcp_extension_cli_install | What is Azure Functions Core tools and how to install it |
 
