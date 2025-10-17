@@ -10,7 +10,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Breaking Changes
 
-- Remove `azmcp_` prefix from all commands.
+- Remove `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
 
 ### Bugs Fixed
 

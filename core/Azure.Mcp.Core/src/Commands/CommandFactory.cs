@@ -47,7 +47,7 @@ public class CommandFactory
         }
     }
 
-    internal const string RootCommandGroupName = "Root";
+    internal const string RootCommandGroupName = "azmcp";
 
     public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
     {
