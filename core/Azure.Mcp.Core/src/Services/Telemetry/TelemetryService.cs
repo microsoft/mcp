@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
@@ -42,10 +40,10 @@ internal class TelemetryService : ITelemetryService
         ILogger<TelemetryService> logger)
     {
         _isEnabled = options.Value.IsTelemetryEnabled;
-        _tagsList = new List<KeyValuePair<string, object?>>()
-        {
+        _tagsList =
+        [
             new(TagName.AzureMcpVersion, options.Value.Version),
-        };
+        ];
 
         if (serverOptions?.Value != null)
         {
@@ -68,7 +66,7 @@ internal class TelemetryService : ITelemetryService
         }
 
         CheckInitialization();
-        return _tagsList.ToImmutableList();
+        return [.. _tagsList];
     }
 
     /// <summary>
