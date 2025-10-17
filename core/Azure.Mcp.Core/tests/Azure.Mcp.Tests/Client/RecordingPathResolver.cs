@@ -36,7 +36,6 @@ internal sealed class RecordingPathResolver
             }
             dir = dir.Parent;
         }
-        
         throw new InvalidOperationException("Unable to locate repository root. Ensure tests are running in a cloned repository.");
     }
 
@@ -58,19 +57,53 @@ internal sealed class RecordingPathResolver
     }
 
     /// <summary>
-    /// Builds the session directory path: <path-to-project>/SessionRecords/<TestClassName>
+    /// Builds the session directory path: <relative path to test project>/SessionRecords/<TestClassName or variant>
+    /// Example: tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/SessionRecords/RecordedKeyVaultCommandTests
     /// </summary>
     public string GetSessionDirectory(Type testType, string? variantSuffix = null)
     {
-        var className = testType.Name;
-        var suffix = string.IsNullOrWhiteSpace(variantSuffix) ? className : $"{className}({variantSuffix})";
+        // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
+        var projectDir = GetProjectDirectory(testType);
 
+        // Compute relative path from repo root.
+        var relativeProjectPath = Path.GetRelativePath(_repoRoot, projectDir)
+            .Replace('\\', '/'); // Normalize separators for consistency.
 
+        // Append SessionRecords and suffix.
+        var sessionDir = Path.Combine(relativeProjectPath, "SessionRecords")
+            .Replace('\\', '/');
 
-        // todo: clarify this. We don't want to pass an absolute path, this should be a relative path within the repo.
-        // right now it's just the test class name + test name + optional suffix. Need to add some structure reflecting
-        // the path to the test project within the repo.
-        return Path.Combine("SessionRecords", suffix);
+        // TODO: Consider caching projectDir per assembly for performance if needed.
+        return sessionDir;
+    }
+
+    private static string GetProjectDirectory(Type testType)
+    {
+        // Locate the test project directory by ascending from the assembly location until a matching *.csproj exists.
+        var assemblyDir = Path.GetDirectoryName(testType.Assembly.Location)!;
+        var projectDir = FindProjectDirectory(assemblyDir, testType);
+
+        return projectDir;
+    }
+
+    private static string FindProjectDirectory(string startDirectory, Type testType)
+    {
+        var current = new DirectoryInfo(startDirectory);
+        var expectedProjectName = testType.Assembly.GetName().Name; // Typically matches .csproj file name.
+
+        while (current != null)
+        {
+            // Look for any .csproj; prefer one matching assembly name.
+            var csprojFiles = current.GetFiles("*.csproj", SearchOption.TopDirectoryOnly);
+            if (csprojFiles.Length > 0)
+            {
+                var matching = csprojFiles.FirstOrDefault(f => Path.GetFileNameWithoutExtension(f.Name) == expectedProjectName);
+                return (matching ?? csprojFiles.First()).Directory!.FullName;
+            }
+            current = current.Parent;
+        }
+
+        throw new InvalidOperationException($"Unable to locate project directory for test type {testType.FullName} starting from {startDirectory}.");
     }
 
     /// <summary>
@@ -87,9 +120,19 @@ internal sealed class RecordingPathResolver
     /// <summary>
     /// Attempts to find a nearest assets.json walking upwards.
     /// </summary>
-    public static string? TryLocateAssetsJson(string startDirectory)
+    public string? GetAssetsJson(Type testType)
     {
-        // todo: implement this based on what we have when running a test.
+        var projectDir = GetProjectDirectory(testType);
+
+        var current = new DirectoryInfo(projectDir);
+
+        var assetsFile = Path.Combine(current.FullName, "assets.json");
+
+        if (File.Exists(assetsFile))
+        {
+            return assetsFile;
+        }
+
         return null;
     }
 }

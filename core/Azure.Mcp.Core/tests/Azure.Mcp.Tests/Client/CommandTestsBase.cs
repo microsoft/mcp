@@ -216,19 +216,30 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         }
 
         var testName = TryGetCurrentTestName();
-        var sessionFilePath = GetSessionFilePathInternal(testName);
+        var pathToRecording = GetSessionFilePath(testName);
+        var assetsPath = _pathResolver.GetAssetsJson(GetType());
+
+        var recordOptions = new Dictionary<string, string>
+            {
+                { "x-recording-file", pathToRecording },
+            };
+
+        if (!string.IsNullOrWhiteSpace(assetsPath))
+        {
+            recordOptions["x-recording-assets"] = assetsPath;
+        }
+        // todo: replace after regenerating using Azure.Core instead of System.ClientModel
+        var bodyContent = BinaryContentHelper.FromObject(recordOptions);
 
         if (_testMode is TestMode.Playback)
         {
-            Output.WriteLine($"[Playback] Session file: {sessionFilePath}");
-            // TODO: Replace placeholder with real playback start once proxy API is defined.
-            await Proxy.Client.StartPlaybackAsync(null).ConfigureAwait(false);
+            Output.WriteLine($"[Playback] Session file: {pathToRecording}");
+            await Proxy.Client.StartPlaybackAsync(bodyContent).ConfigureAwait(false);
         }
         else if (_testMode is TestMode.Record)
         {
-            Output.WriteLine($"[Record] Session file: {sessionFilePath}");
-            // TODO: Replace placeholder with real record start once proxy API is defined.
-            // Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
+            Output.WriteLine($"[Record] Session file: {pathToRecording}");
+            Proxy.Client.StartRecord(bodyContent);
         }
 
         await Task.CompletedTask;
@@ -270,17 +281,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         return name;
     }
 
-    // New lightweight path building (replaces NUnit-based helpers)
-    private string GetSessionFilePathInternal(string displayName)
+    private string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
         var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null); // TODO: supply variant suffix if needed
-        Directory.CreateDirectory(dir); // Ensure exists
         var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
-        var fullPath = Path.Combine(dir, fileName);
+        var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
     }
-
-    // Legacy public method kept for potential external calls. TODO: remove or redirect all usages then make internal.
-    protected internal string GetSessionFilePath() => GetSessionFilePathInternal(TryGetCurrentTestName());
 }
