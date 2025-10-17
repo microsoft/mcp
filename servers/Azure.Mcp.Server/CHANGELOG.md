@@ -25,7 +25,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 #### Dependency Updates
 
 - Updated the following dependencies:
-  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
+  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0` [[864](https://github.com/microsoft/mcp/pull/864)]
 
 ## 0.9.2 (2025-10-15)
 
