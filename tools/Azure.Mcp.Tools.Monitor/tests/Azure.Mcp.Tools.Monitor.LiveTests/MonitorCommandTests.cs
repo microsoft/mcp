@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -38,13 +39,13 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
-        var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
-        var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
+        var tenantService = new TenantService(ITokenCredentialProvider.Default, cacheService);
+        var subscriptionService = new SubscriptionService(ITokenCredentialProvider.Default, cacheService, tenantService);
+        var resourceGroupService = new ResourceGroupService(ITokenCredentialProvider.Default, cacheService, subscriptionService);
+        var resourceResolverService = new ResourceResolverService(ITokenCredentialProvider.Default, subscriptionService, tenantService);
         var httpClientOptions = new HttpClientOptions();
         var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
-        return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
+        return new MonitorService(ITokenCredentialProvider.Default, subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
     }
 
     // [Fact]

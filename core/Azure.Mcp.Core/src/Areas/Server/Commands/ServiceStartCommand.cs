@@ -3,9 +3,12 @@
 
 using System.CommandLine.Parsing;
 using System.Net;
+using Azure.Mcp.Core.Areas.Server.Authentication.HttpHost;
+using Azure.Mcp.Core.Areas.Server.Configuration;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -67,6 +70,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+        command.Options.Add(ServiceOptionDefinitions.ConfigFilePath);
         command.Validators.Add(commandResult =>
         {
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
@@ -76,6 +80,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
+            ValidateServerConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.ConfigFilePath), commandResult);
         });
     }
 
@@ -104,7 +109,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
+            ServerConfiguration = ServerConfiguration.LoadFromFileOrDefault(parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.ConfigFilePath.Name)),
         };
         return options;
     }
@@ -242,6 +248,22 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
     }
 
+    /// Validates if the server configuration file is valid.
+    /// </summary>
+    /// <param name="configFilePath">The path to the configuration file to validate.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateServerConfiguration(string? configFilePath, CommandResult commandResult)
+    {
+        try
+        {
+            ServerConfiguration.LoadFromFileOrDefault(configFilePath);
+        }
+        catch (Exception e)
+        {
+            commandResult.AddError($"Failed to load server configuration from '{configFilePath}': {e.Message}");
+        }
+    }
+
     /// <summary>
     /// Provides custom error messages for specific exception types to improve user experience.
     /// </summary>
@@ -325,6 +347,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
+        Console.WriteLine(serverOptions.ServerConfiguration!.ToString());
+        var authConfig = HttpHostAuthSetupFactory.Create(serverOptions.ServerConfiguration);
+
         return Host.CreateDefaultBuilder()
             .ConfigureLogging(logging =>
             {
@@ -347,17 +372,27 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                         });
                     });
 
+                    authConfig.SetupServices(services);
                     ConfigureServices(services);
+                    var outboundType = serverOptions.ServerConfiguration!.OutboundAuthentication.Type;
+                    if (outboundType == OutboundAuthenticationType.JwtPassthrough ||
+                        outboundType == OutboundAuthenticationType.JwtObo)
+                    {
+                        services.AddSingleton<ICacheService, NoCacheService>();
+                    }
                     ConfigureMcpServer(services, serverOptions);
                 });
 
                 webBuilder.Configure(app =>
                 {
                     app.UseCors("AllowAll");
+
+                    authConfig.SetupMiddleware(app);
                     app.UseRouting();
                     app.UseEndpoints(endpoints =>
                     {
-                        endpoints.MapMcp();
+                        var mcpEndpoints = endpoints.MapMcp();
+                        authConfig.SetupEndpoints(mcpEndpoints);
                     });
                 });
 

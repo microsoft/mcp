@@ -7,12 +7,13 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
-public abstract class BaseAzureService(ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
+public abstract class BaseAzureService(ITokenCredentialProvider tokenCredentialProvider, ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
 {
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
@@ -22,6 +23,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     private ArmClient? _armClient;
     private string? _lastArmClientTenantId;
     private RetryPolicyOptions? _lastRetryPolicy;
+    private readonly ITokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
     private readonly ITenantService? _tenantService = tenantService;
     private readonly ILoggerFactory? _loggerFactory = loggerFactory;
 
@@ -65,6 +67,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     protected async Task<TokenCredential> GetCredential(string? tenant = null)
+    {
+        if (_tokenCredentialProvider != ITokenCredentialProvider.Default)
+        {
+            return await _tokenCredentialProvider.CreateAsync(tenant);
+        }
+        return await GetDefaultCredential(tenant);
+    }
+
+    private async Task<TokenCredential> GetDefaultCredential(string? tenant = null)
     {
         var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
 
@@ -139,6 +150,20 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, ArmClientOptions? armClientOptions = null)
     {
         var tenantId = await ResolveTenantIdAsync(tenant);
+        if (_tokenCredentialProvider != ITokenCredentialProvider.Default)
+        {
+            try
+            {
+                var credential = await GetCredential(tenantId);
+                var options = new ArmClientOptions();
+                ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
+                return new ArmClient(credential, default, options);
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
+            }
+        }
 
         // Return cached client if parameters match
         if (_armClient != null &&
@@ -220,5 +245,60 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
         }
+    }
+
+    /// <summary>
+    /// Gets a cached Entra ID token or fetches a new one if not cached or expired.
+    /// All Azure tokens come from Entra ID, so we use a consistent "entra-token" prefix.
+    /// </summary>
+    /// <param name="cacheService">The cache service to use for storing tokens</param>
+    /// <param name="cacheGroup">The cache group (e.g., "mysql", "postgres", "marketplace")</param>
+    /// <param name="tokenScope">The token scope (e.g., "https://management.azure.com/.default")</param>
+    /// <param name="tenant">Optional tenant ID for multi-tenant scenarios</param>
+    /// <param name="tokenCacheKeyPrefix">Cache key prefix for the token. Use different prefixes when the same service needs to cache multiple tokens for different scopes to prevent cache key collisions. Default: "entra-token"</param>
+    /// <returns>The cached or newly fetched token</returns>
+    protected async Task<string> GetEntraIdAccessTokenAsync(
+        ICacheService cacheService,
+        string cacheGroup,
+        string tokenScope,
+        string? tenant = null,
+        string tokenCacheKeyPrefix = "entra-token")
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(tokenCacheKeyPrefix, nameof(tokenCacheKeyPrefix));
+
+        var cacheKey = string.IsNullOrEmpty(tenant)
+            ? tokenCacheKeyPrefix
+            : $"{tokenCacheKeyPrefix}_{tenant}";
+
+        // Try to get from cache first
+        var cachedToken = await cacheService.GetAsync<string>(cacheGroup, cacheKey);
+        if (cachedToken != null)
+        {
+            return cachedToken;
+        }
+
+        // Fetch new token
+        var tokenRequestContext = new TokenRequestContext([tokenScope]);
+        var tokenCredential = await GetCredential(tenant);
+        var accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
+            .ConfigureAwait(false);
+
+        // Calculate cache duration with 60-second safety buffer
+        var expiryTime = accessToken.ExpiresOn.AddSeconds(-60);
+        var cacheDuration = expiryTime - DateTimeOffset.UtcNow;
+
+        // Only cache if there's meaningful time left
+        if (cacheDuration > TimeSpan.Zero)
+        {
+            await cacheService.SetAsync(cacheGroup, cacheKey, accessToken.Token, cacheDuration);
+        }
+
+        return accessToken.Token;
+    }
+
+    private bool IsDefaultCredentialProvider()
+    {
+        return _tokenCredentialProvider == ITokenCredentialProvider.Default;
     }
 }
