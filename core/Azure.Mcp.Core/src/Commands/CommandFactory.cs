@@ -47,7 +47,7 @@ public class CommandFactory
         }
     }
 
-    internal const string RootCommandGroupName = "azmcp";
+    internal const string RootCommandGroupName = "Root";
 
     public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
     {
@@ -56,7 +56,7 @@ public class CommandFactory
         _logger = logger;
         _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
         _rootCommand = CreateRootCommand();
-        _commandMap = CreateCommandDictionary(_rootGroup, string.Empty);
+        _commandMap = CreateCommandDictionary(_rootGroup);
         _telemetryService = telemetryService;
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
         {
@@ -86,7 +86,7 @@ public class CommandFactory
             {
                 if (string.Equals(group.Name, groupName, StringComparison.OrdinalIgnoreCase))
                 {
-                    var commandsInGroup = CreateCommandDictionary(group, string.Empty);
+                    var commandsInGroup = CreateCommandDictionaryInner(group, string.Empty);
                     foreach (var (key, value) in commandsInGroup)
                     {
                         commandsFromGroups[key] = value;
@@ -139,7 +139,7 @@ public class CommandFactory
             var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
             tempRoot.AddSubGroup(commandTree);
 
-            var commandDictionary = CreateCommandDictionary(tempRoot, string.Empty);
+            var commandDictionary = CreateCommandDictionary(tempRoot);
 
             if (_logger.IsEnabled(LogLevel.Debug))
             {
@@ -277,29 +277,7 @@ public class CommandFactory
     }
 
     /// <summary>
-    /// Removes <see cref="RootCommandGroupName"/> from a command name.
-    /// </summary>
-    public string RemoveRootGroupFromCommandName(string fullCommandName)
-    {
-        var split = fullCommandName.Split(Separator, 2);
-
-        if (split.Length < 2)
-        {
-            return fullCommandName;
-        }
-
-        if (string.Equals(RootCommandGroupName, split[0]))
-        {
-            return split[1];
-        }
-        else
-        {
-            return fullCommandName;
-        }
-    }
-
-    /// <summary>
-    /// Gets the service area given the full command name (i.e. 'storage_account_list' or 'azmcp_storage_account_get' would return 'storage').
+    /// Gets the service area given the full command name (i.e. 'storage_account_list' would return 'storage').
     /// </summary>
     /// <param name="fullCommandName">Name of the command.</param>
     public string? GetServiceArea(string fullCommandName)
@@ -313,22 +291,81 @@ public class CommandFactory
         {
             return area.Name;
         }
-
-        // If it starts with azmcp, then it is already the full command name.
-        if (fullCommandName.StartsWith(RootCommandGroupName, StringComparison.OrdinalIgnoreCase))
+        else
         {
             return null;
         }
-
-        // Else, it means that the command could be from namespace mode where the IAreaSetup.Name 
-        // is the root of the command tree.
-        var rootPrefixAppended = string.Join(Separator, RootCommandGroupName, fullCommandName);
-        return _commandNamesToArea.TryGetValue(rootPrefixAppended, out var area2)
-            ? area2.Name
-            : null;
     }
 
-    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup node, string prefix)
+    /// <summary>
+    /// Creates a command dictionary. Each sibling and child of the root node is created without using its name as a prefix.
+    ///
+    /// Node: RootNode
+    /// * Siblings: A11, A12
+    /// * Children (Subgroups): B1, B2
+    ///
+    /// Node: B1
+    /// * Siblings: B11
+    /// * Children: C1, C2
+    ///
+    /// The command dictionary would be output:
+    /// - A11
+    /// - A12
+    /// - B1_B11
+    /// - B1_C1
+    /// - B1_C2
+    /// - B2
+    /// </summary>
+    /// <param name="node">Node to begin traversal.</param>
+    /// <param name="prefix">Prefix. If prefix is an empty string, the name of the current node is used.</param>
+    internal static Dictionary<string, IBaseCommand> CreateCommandDictionary(CommandGroup rootNode)
+    {
+        const string rootPrefix = "";
+        var aggregated = new Dictionary<string, IBaseCommand>();
+
+        // Add any immediate commands from root group.
+        foreach (var kvp in rootNode.Commands)
+        {
+            aggregated.Add(kvp.Key, kvp.Value);
+        }
+
+        // Add any sub commands.
+        foreach (var command in rootNode.SubGroup)
+        {
+            var temp = CreateCommandDictionaryInner(command, rootPrefix);
+
+            foreach (var kvp in temp)
+            {
+                aggregated.Add(kvp.Key, kvp.Value);
+            }
+        }
+
+        return aggregated;
+    }
+
+    /// <summary>
+    /// Creates a command dictionary. Each direct node and descendent is created with its parent's name as
+    /// its first prefix.  For example, given the tree:
+    ///
+    /// Node: A1
+    /// * Siblings: A11, A12
+    /// * Children (Subgroups): B1, B2
+    ///
+    /// Node: B1
+    /// * Siblings: B11
+    /// * Children: C1, C2
+    ///
+    /// The command dictionary would be output:
+    /// - A1_A11
+    /// - A1_A12
+    /// - A1_B1_B11
+    /// - A1_B1_C1
+    /// - A1_B1_C2
+    /// - A1_B2
+    /// </summary>
+    /// <param name="node">Node to begin traversal.</param>
+    /// <param name="prefix">Prefix. If prefix is an empty string, the name of the current node is used.</param>
+    internal static Dictionary<string, IBaseCommand> CreateCommandDictionaryInner(CommandGroup node, string prefix)
     {
         var aggregated = new Dictionary<string, IBaseCommand>();
         var updatedPrefix = GetPrefix(prefix, node.Name);
@@ -349,7 +386,7 @@ public class CommandFactory
 
         foreach (var command in node.SubGroup)
         {
-            var subcommandsDictionary = CreateCommandDictionary(command, updatedPrefix);
+            var subcommandsDictionary = CreateCommandDictionaryInner(command, updatedPrefix);
             foreach (var item in subcommandsDictionary)
             {
                 aggregated.Add(item.Key, item.Value);
