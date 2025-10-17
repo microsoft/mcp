@@ -62,6 +62,9 @@
 # PRLabel: %tools-AppService
 /tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
 
+# ServiceLabel: %tools-AppService
+# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft 
+
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @microsoft/azure-mcp
 
@@ -76,6 +79,9 @@
 
 # PRLabel: %tools-Communication
 /tools/Azure.Mcp.Tools.Communication/         @KarishmaGhiya @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Communication
+# ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
