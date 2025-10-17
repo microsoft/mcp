@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.3 (Unreleased)
+## 0.9.4 (Unreleased)
 
 ### Features Added
 
@@ -14,7 +14,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
+### Other Changes
+
+## 0.9.3 (2025-10-16)
+
+### Bugs Fixed
+
+- Fixed a bug where user confirmation (elicitation) stopped working between versions `0.8.5` and `0.9.2`. [[#824](https://github.com/microsoft/mcp/issues/824)]
 - Fixed `IsServerCommandInvoked` always appearing to be true. [[#837](https://github.com/microsoft/mcp/pull/837)]
 - Fixed `ToolName` always showing up as the tool area even if an MCP tool was invoked. [[#837](https://github.com/microsoft/mcp/pull/837)]
 
@@ -23,6 +29,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
   - `azmcp_communication_email_send`
   - `azmcp_communication_sms_send`
+- Improved the description of the `--enable-insecure-transports` server startup option. [[#839](https://github.com/microsoft/mcp/pull/839)]
 
 #### Dependency Updates
 
