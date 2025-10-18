@@ -1,4 +1,4 @@
-#!/bin/env pwsh
+#!/usr/bin/env pwsh
 #Requires -Version 7
 
 <#
@@ -19,12 +19,7 @@
 
 .PARAMETER RootPrefix
     The root command prefix that is prepended to all tool names (default: "azmcp")
-
-.EXAMPLE
-    ./ToolNameLength.ps1
-
-.EXAMPLE
-    ./ToolNameLength.ps1 -MaxLength 50
+    
 #>
 
 param(
@@ -46,29 +41,23 @@ $serverBinPath = "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net9.0"
 $executableName = if ($IsWindows) { "azmcp.exe" } else { "azmcp" }
 $executablePath = Join-Path $serverBinPath $executableName
 
-# Build the server if not already built
+# Check if the executable exists (build should have happened before this script runs)
 if (-not (Test-Path $executablePath)) {
-    Write-Host "Building Azure MCP Server..."
-    Push-Location "$RepoRoot/servers/Azure.Mcp.Server/src"
-    try {
-        dotnet build --configuration Debug --verbosity quiet
-        if ($LASTEXITCODE -ne 0) {
-            Write-Host "Failed to build Azure MCP Server"
-            exit 1
-        }
-    }
-    finally {
-        Pop-Location
-    }
+    Write-Error "azmcp executable not found at: $executablePath. Please build the solution first using 'dotnet build'."
+    exit 1
 }
 
 # Get all tools using the 'tools list' command
 Write-Host "Loading tools from Azure MCP Server"
-$toolsJson = & $executablePath tools list 2>&1 | Out-String
+$toolsJson = & $executablePath tools list | Out-String
 
 if ($LASTEXITCODE -ne 0) {
-    Write-Host "Failed to list tools from Azure MCP Server"
-    Write-Host $toolsJson
+    Write-Error "Failed to list tools from Azure MCP Server (exit code: $LASTEXITCODE)"
+    exit 1
+}
+
+if ([string]::IsNullOrWhiteSpace($toolsJson)) {
+    Write-Error "No output received from 'azmcp tools list' command"
     exit 1
 }
 
@@ -77,8 +66,14 @@ try {
     $tools = $toolsResult.results
 }
 catch {
-    Write-Host "Failed to parse tools JSON output"
+    Write-Error "Failed to parse tools JSON output: $_"
+    Write-Host "Raw output:"
     Write-Host $toolsJson
+    exit 1
+}
+
+if ($null -eq $tools -or $tools.Count -eq 0) {
+    Write-Error "No tools found in the output"
     exit 1
 }
 
