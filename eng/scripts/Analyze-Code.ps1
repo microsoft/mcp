@@ -42,6 +42,16 @@ try {
         Write-Host "✅ Tool description evaluation did not detect any issues."
     }
 
+    # Run tool name length validation
+    & "$PSScriptRoot/Test-ToolNameLength.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Tool name length validation failed"
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Tool name length validation passed."
+    }
+
     if($hasErrors) {
         exit 1
     }

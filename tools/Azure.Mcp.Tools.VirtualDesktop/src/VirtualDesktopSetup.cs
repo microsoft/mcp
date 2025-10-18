@@ -31,7 +31,7 @@ public class VirtualDesktopSetup : IAreaSetup
         var hostpool = new CommandGroup("hostpool", "Hostpool operations - Commands for listing and managing Hostpools, including listing and changing settings on hostpools.");
         desktop.AddSubGroup(hostpool);
 
-        var sessionhost = new CommandGroup("sessionhost", "Sessionhost operations - Commands for listing and managing session hosts inside a host pool.");
+        var sessionhost = new CommandGroup("session", "Sessionhost operations - Commands for listing and managing session hosts inside a host pool.");
         hostpool.AddSubGroup(sessionhost);
 
         // Register AVD commands

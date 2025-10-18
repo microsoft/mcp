@@ -147,7 +147,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -245,3 +245,9 @@
 
 # ServiceLabel: %tools-ConfidentialLedger
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
+
+# PRLabel: %tools-EventGrid
+/tools/Azure.Mcp.Tools.ResourceHealth/      @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResourceHealth
+# ServiceOwners:                       @microsoft/azure-mcp

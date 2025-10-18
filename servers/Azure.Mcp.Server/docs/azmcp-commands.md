@@ -1386,7 +1386,7 @@ azmcp monitor workspace log query --subscription <subscription> \
 ```bash
 # Get the health of an entity
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp monitor healthmodels entity gethealth --subscription <subscription> \
+azmcp monitor healthmodels entity get --subscription <subscription> \
                                             --resource-group <resource-group> \
                                             --health-model <health-model-name> \
                                             --entity <entity-id>
@@ -1516,12 +1516,12 @@ azmcp monitor webtests update --subscription <subscription> \
 ```bash
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem list --subscription <subscription> \
+azmcp managedlustre file list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
 # Create an Azure Managed Lustre filesystem
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem create --subscription <subscription> \
+azmcp managedlustre file create --subscription <subscription> \
                                            --sku <sku> \
                                            --size <filesystem-size-in-tib> \
                                            --subnet-id <subnet-id> \
@@ -1542,7 +1542,7 @@ azmcp managedlustre filesystem create --subscription <subscription> \
 
 # Update an existing Azure Managed Lustre filesystem
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem update --subscription <subscription> \
+azmcp managedlustre file update --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --name <filesystem-name> \
                                            [--maintenance-day <maintenance-day>] \
@@ -1554,13 +1554,13 @@ azmcp managedlustre filesystem update --subscription <subscription> \
 
 # Returns the required number of IP addresses for a specific Azure Managed Lustre SKU and filesystem size
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem subnetsize ask --subscription <subscription> \
+azmcp managedlustre file subnetsize ask --subscription <subscription> \
                                                    --sku <azure-managed-lustre-sku> \
                                                    --size <filesystem-size-in-tib>
 
 # Checks if a subnet has enough available IP addresses for the specified Azure Managed Lustre SKU and filesystem size
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem subnetsize validate --subscription <subscription> \
+azmcp managedlustre file subnetsize validate --subscription <subscription> \
                                                         --subnet-id <subnet-resource-id> \
                                                         --sku <azure-managed-lustre-sku> \
                                                         --size <filesystem-size-in-tib> \
@@ -1568,7 +1568,7 @@ azmcp managedlustre filesystem subnetsize validate --subscription <subscription>
 
 # Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp managedlustre filesystem sku get --subscription <subscription> \
+azmcp managedlustre file sku get --subscription <subscription> \
                                             --location <location>
 ```
 
@@ -1652,7 +1652,7 @@ azmcp resourcehealth availability-status list --subscription <subscription> \
 
 # List service health events in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp resourcehealth service-health-events list --subscription <subscription> \
+azmcp resourcehealth health-events list --subscription <subscription> \
                                                 [--event-type <event-type>] \
                                                 [--status <status>] \
                                                 [--query-start-time <start-time>] \
@@ -1905,13 +1905,13 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 
 # List session hosts in a host pool
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool session list --subscription <subscription> \
                                                [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                [--resource-group <resource-group>]
 
 # List user sessions on a session host
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost usersession-list --subscription <subscription> \
+azmcp virtualdesktop hostpool session user_list --subscription <subscription> \
                                                            [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                            --sessionhost <sessionhost-name> \
                                                            [--resource-group <resource-group>]

@@ -774,10 +774,10 @@
   "azmcp_virtualdesktop_hostpool_list": [
     "List all host pools in my subscription"
   ],
-  "azmcp_virtualdesktop_hostpool_sessionhost_list": [
+  "azmcp_virtualdesktop_hostpool_session_list": [
     "List all session hosts in host pool <hostpool_name>"
   ],
-  "azmcp_virtualdesktop_hostpool_sessionhost_usersession-list": [
+  "azmcp_virtualdesktop_hostpool_session_user_list": [
     "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
   ],
   "azmcp_workbooks_create": [
