@@ -413,13 +413,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_managedlustre_file_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
-| azmcp_managedlustre_file_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
-| azmcp_managedlustre_file_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_managedlustre_file_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
-| azmcp_managedlustre_file_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| azmcp_managedlustre_file_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| azmcp_managedlustre_file_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
+| azmcp_managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
+| azmcp_managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
+| azmcp_managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
 ## Azure Marketplace
 
