@@ -2,19 +2,39 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.3 (Unreleased)
+## 0.9.5 (Unreleased)
 
 ### Features Added
 
-- Added consolidated mode [[#784](https://github.com/microsoft/mcp/pull/784)]
-
 ### Breaking Changes
-
-- Remove `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
 
 ### Bugs Fixed
 
-- Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
+### Other Changes
+
+## 0.9.4 (2025-10-17)
+
+### Features Added
+
+- Added a new server startup "consolidated" mode, which groups Azure MCP tools by tasks and actions tools conduct. This can be enabled by using the `--consolidated` flag. [[#784](https://github.com/microsoft/mcp/pull/784)]
+
+### Breaking Changes
+
+- Removes the `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
+
+### Other Changes
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
+  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
+  - Azure.Core: `1.48.0` → `1.49.0`
+
+## 0.9.3 (2025-10-16)
+
+### Bugs Fixed
+
+- Fixed a bug where user confirmation (elicitation) stopped working between versions `0.8.5` and `0.9.2`. [[#824](https://github.com/microsoft/mcp/issues/824)]
 - Fixed `IsServerCommandInvoked` always appearing to be true. [[#837](https://github.com/microsoft/mcp/pull/837)]
 - Fixed `ToolName` always showing up as the tool area even if an MCP tool was invoked. [[#837](https://github.com/microsoft/mcp/pull/837)]
 
@@ -23,12 +43,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
   - `azmcp_communication_email_send`
   - `azmcp_communication_sms_send`
-
-#### Dependency Updates
-
-- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
-  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
-  - Azure.Core: `1.48.0` → `1.49.0`
+- Improved the description of the `--enable-insecure-transports` server startup option. [[#839](https://github.com/microsoft/mcp/pull/839)]
 
 ## 0.9.2 (2025-10-15)
 
