@@ -246,7 +246,7 @@
 # ServiceLabel: %tools-ConfidentialLedger
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
 
-# PRLabel: %tools-EventGrid
+# PRLabel: %tools-ResourceHealth
 /tools/Azure.Mcp.Tools.ResourceHealth/      @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ResourceHealth
