@@ -39,8 +39,8 @@ public class ResourceHealthSetup : IAreaSetup
             "Resource availability status operations - Commands for retrieving current and historical availability status of Azure resources.");
         resourceHealth.AddSubGroup(availabilityStatus);
 
-        // Create service-health-events subgroup
-        var serviceHealthEvents = new CommandGroup("service-health-events",
+        // Create health-events subgroup
+        var serviceHealthEvents = new CommandGroup("health-events",
             "Service health events operations - Commands for retrieving Azure service health events affecting Azure services and subscriptions.");
         resourceHealth.AddSubGroup(serviceHealthEvents);
 
