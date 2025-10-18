@@ -11,7 +11,6 @@
     
     Tool name format: {root}_{area}_{resource}_{operation}
     Example: "azmcp_managedlustre_filesystem_subnetsize_validate" = 52 chars (EXCEEDS)
-    
     The limit does NOT include the MCP server prefix (e.g., "AzureMCP-AllTools-").
 
 .PARAMETER MaxLength
@@ -33,18 +32,27 @@ Set-StrictMode -Version 3.0
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 Write-Host "Validating tool name length"
-Write-Host "Max length: $MaxLength characters (including root prefix)"
-Write-Host "Root prefix: '${RootPrefix}_' ($($RootPrefix.Length + 1) chars)"
+Write-Host "Max length: $MaxLength characters (including root prefix: '${RootPrefix}_' ($($RootPrefix.Length + 1) chars))"
 Write-Host ""
 
 $serverBinPath = "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net9.0"
 $executableName = if ($IsWindows) { "azmcp.exe" } else { "azmcp" }
 $executablePath = Join-Path $serverBinPath $executableName
 
-# Check if the executable exists (build should have happened before this script runs)
+# Build the server if not already built
 if (-not (Test-Path $executablePath)) {
-    Write-Error "azmcp executable not found at: $executablePath. Please build the solution first using 'dotnet build'."
-    exit 1
+    Write-Host "Building Azure MCP Server..."
+    Push-Location "$RepoRoot/servers/Azure.Mcp.Server/src"
+    try {
+        dotnet build --configuration Debug --verbosity quiet
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to build Azure MCP Server"
+            exit 1
+        }
+    }
+    finally {
+        Pop-Location
+    }
 }
 
 # Get all tools using the 'tools list' command
