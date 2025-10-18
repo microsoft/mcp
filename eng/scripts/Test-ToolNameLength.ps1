@@ -37,7 +37,7 @@ Set-StrictMode -Version 3.0
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
-Write-Host "Validating tool name lengths-"
+Write-Host "Validating tool name length"
 Write-Host "Max length: $MaxLength characters (including root prefix)"
 Write-Host "Root prefix: '${RootPrefix}_' ($($RootPrefix.Length + 1) chars)"
 Write-Host ""
@@ -91,13 +91,9 @@ $maxToolNameLength = 0
 $longestFullToolName = ""
 
 foreach ($tool in $tools) {
-    # The 'command' field contains the full path with spaces (e.g., "subscription list")
-    # Convert spaces to underscores to get the tokenized name
     $toolName = $tool.command -replace ' ', '_'
     
-    # Build full tool name with root prefix: azmcp_{toolName}
     $fullToolName = "${RootPrefix}_${toolName}"
-    Write-Host "Checking tool: $fullToolName"
     $fullLength = $fullToolName.Length
     
     if ($fullLength -gt $maxToolNameLength) {
