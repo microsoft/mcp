@@ -17,3 +17,5 @@ Only call this tool when you are sure the user is discussing Azure; do not call 
 - Plan before editing files for Azure web apps: When generating code for Azure Functions and Azure Static Web App, 
 always create a plan and explain the plan to the user before editing any file. Proceed with editing the files 
 after getting consent from the user.
+- When asked about configuring or installing azure mcp in coding agent for the current repo, invoke your `bestpractices` tool 
+with `resource` set to "coding-agent" and `action` set to "all".

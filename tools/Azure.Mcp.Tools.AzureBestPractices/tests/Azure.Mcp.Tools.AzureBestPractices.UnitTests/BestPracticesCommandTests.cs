@@ -132,6 +132,24 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
+    public async Task ExecuteAsync_CodingAgentAll_ReturnsAzureBestPractices()
+    {
+        var args = _commandDefinition.Parse(["--resource", "coding-agent", "--action", "all"]);
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var json = JsonSerializer.Serialize(response.Results);
+        var result = JsonSerializer.Deserialize<string[]>(json);
+
+        Assert.NotNull(result);
+        Assert.Contains("azd coding-agent config", result[0]);
+    }
+
+    [Fact]
     public async Task ExecuteAsync_InvalidResource_ReturnsBadRequest()
     {
         var args = _commandDefinition.Parse(["--resource", "invalid", "--action", "code-generation"]);
@@ -153,6 +171,18 @@ public class BestPracticesCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("The 'static-web-app' resource only supports 'all' action", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_CodingAgentWithInvalidAction_ReturnsBadRequest()
+    {
+        var args = _commandDefinition.Parse(["--resource", "coding-agent", "--action", "code-generation"]);
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("The 'coding-agent' resource only supports 'all' action", response.Message);
     }
 
     [Fact]
