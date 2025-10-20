@@ -50,3 +50,28 @@ jobs:
       }
     displayName: 'Validate Package README.md files'
     condition: succeededOrFailed()
+
+  - task: Powershell@2
+    displayName: "Build Azure MCP Server for metadata verification"
+    inputs:
+      pwsh: true
+      workingDirectory: $(Build.SourcesDirectory)
+      targetType: inline
+      script: |
+        Write-Host "Building Azure.Mcp.Server for metadata verification..."
+        dotnet build "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/Azure.Mcp.Server.csproj" -c Debug
+        if ($LASTEXITCODE -ne 0) {
+          Write-Error "Build failed"
+          exit $LASTEXITCODE
+        }
+    condition: succeededOrFailed()
+
+  - task: Powershell@2
+    displayName: "Verify AzCommands Metadata is up-to-date"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-AzCommandsMetadata.ps1
+      arguments: >
+        -AzmcpPath "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe"
+        -DocsPath "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/docs/azmcp-commands.md"
+    condition: succeededOrFailed()
