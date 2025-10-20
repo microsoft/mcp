@@ -169,14 +169,42 @@ public sealed class NamespaceToolLoader(
 
         try
         {
+            var activity = Activity.Current;
+
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
-
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // We no longer spawn new processes to handle child tool invocations.
+                // So, we have to update ToolName to represent the namespace's child tool name
+                // rather than what is exposed to the user. The following inputs would
+                // be routed here.  In both examples, the end-user's MCP client sees that we expose
+                // a tool called "storage" and would invoke our "storage" tool.
+                //
+                // A) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": [ "--name", "foo", "--subscription-id", "bar" ]
+                //    }
+                //
+                // This is the case where the LLM knows what tool should be executed, so it passes
+                // in all the parameters required to execute the underlying Storage tool.
+                //
+                // B) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": []
+                //       "learn": true
+                //    }
+                //
+                // This command attempts to learn what the command "blob_list" entails by
+                // invoking it with no parameters and "learn" == "true".  The command will
+                // generally fail, providing the LLM with extra information it needs to pass
+                // in for the command to succeed the next time.
+                activity?.SetTag(TagName.ToolName, command);
+
                 var toolParams = GetParametersFromArgs(args);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -241,6 +269,7 @@ public sealed class NamespaceToolLoader(
             };
         }
 
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -350,7 +379,8 @@ public sealed class NamespaceToolLoader(
                 }
             }
 
-            var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+            var currentActivity = Activity.Current;
+            var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
@@ -364,6 +394,11 @@ public sealed class NamespaceToolLoader(
             }
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
+
+            // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
+            // The logic above performs sampling to try and get a correct command name.  "blob_get" in
+            // this case, which will be executed.
+            currentActivity?.SetTag(TagName.ToolName, command);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
@@ -430,6 +465,7 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult

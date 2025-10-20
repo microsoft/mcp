@@ -94,7 +94,7 @@ We encourage you to test the following areas:
 
 ### Server Mode Testing
 
-See [Server Mode Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md#server-mode-testing) for detailed instructions.
+See [Server Mode Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/installation-testing.md#server-mode-testing) for detailed instructions.
 
 - [ ] **Namespace mode** (default) - Tools grouped by Azure service (~40-50 tools)
 - [ ] **All mode** - All tools exposed individually (100+ tools)
@@ -110,18 +110,45 @@ See [Server Mode Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/
 
 ## How to Report Issues
 
-When you find a bug or issue, please report it on GitHub:
+When you find a bug or issue, please report it on GitHub using one of these methods:
 
-### Report Issues Here: [https://github.com/microsoft/mcp/issues](https://github.com/microsoft/mcp/issues)
+### Option 1: File Issue on GitHub Directly
+Report the Issues here at [Create Azure MCP Bash Issue](https://github.com/microsoft/mcp/issues/new?template=01_bug_bash_mcp_report.yml)
 
-**Steps to Report:**
+### Option 2: Use GitHub MCP Server (AI-Assisted)
 
-1. Go to the [issues page](https://github.com/microsoft/mcp/issues)
-2. Click **"New Issue"**
-3. Select **"Azure MCP - Bug Bash Report"** template
-4. Fill in the following information:
+**Setup Instructions:**
 
-**Required Information:**
+1. **Add GitHub MCP server to your mcp.json configuration:**
+
+```json
+{
+  "servers": {
+    "github": {
+      "type": "http",
+      "url": "https://api.githubcopilot.com/mcp/"
+    }  
+  }
+}
+```
+
+2. **Add these instructions to your copilot-instructions file:**
+   
+   Learn how to create a copilot-instructions file: [Configure Custom Instructions for GitHub Copilot](https://docs.github.com/en/copilot/how-tos/configure-custom-instructions/add-repository-instructions)
+
+```markdown
+## Reporting Issues
+
+- All issues MUST be reported to `microsoft/mcp` repository when using the GitHub MCP server.
+- MUST use the issue template provided in https://raw.githubusercontent.com/microsoft/mcp/refs/heads/main/.github/ISSUE_TEMPLATE/01_bug_bash_mcp_report.yml for bug reports.
+```
+
+3. **Use prompts like:** *"Create a bug bash issue for [describe the problem]"*
+
+**Video Tutorial:** [Watch how to report issues with GitHub MCP Server](https://microsoft.sharepoint.com/:v:/t/AzureDeveloperExperience/ERne_pqoSVNAi0Decdnqt_MBU7kg4kLGb62yuAtJqdf1lA?e=dhWufr)
+
+
+### Required Information:
 - **Platform**: Windows/macOS/Linux (include version)
 - **IDE/Client**: VS Code/Visual Studio/IntelliJ/Claude Desktop/Cursor/Windsurf/Amazon Q/Claude Code (include version)
 - **Azure MCP Server Version**: Found in extension details or `azmcp --version`
@@ -139,14 +166,14 @@ We've prepared detailed testing guides for common scenarios:
 
 ### Scenario Guides
 
-1. **[Installation Testing](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md)** - Test installation across different platforms and IDEs
-2. **[Infrastructure as Code](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/infra-as-code.md)** - Generate and deploy Azure infrastructure
-3. **[PaaS Services](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/paas-services.md)** - Work with App Service, Container Apps, and Functions
-4. **[Storage Operations](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/storage-operations.md)** - Test blob storage and file operations
-5. **[Database Operations](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/database-operations.md)** - Work with Cosmos DB, PostgreSQL, and Azure SQL
-6. **[Deployment Scenarios](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/deployment.md)** - Deploy resources and applications
-7. **[Full Stack Applications](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/full-stack-apps.md)** - Build complete apps with database backends
-8. **[Agent Building](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios/agent-building.md)** - Create and deploy Azure Foundry agents
+1. **[Installation Testing](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/installation-testing.md)** - Test installation across different platforms and IDEs
+2. **[Infrastructure as Code](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/infra-as-code.md)** - Generate and deploy Azure infrastructure
+3. **[PaaS Services](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/paas-services.md)** - Work with App Service, Container Apps, and Functions
+4. **[Storage Operations](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/storage-operations.md)** - Test blob storage and file operations
+5. **[Database Operations](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/database-operations.md)** - Work with Cosmos DB, PostgreSQL, and Azure SQL
+6. **[Deployment Scenarios](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/deployment.md)** - Deploy resources and applications
+7. **[Full Stack Applications](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/full-stack-apps.md)** - Build complete apps with database backends
+8. **[Agent Building](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/agent-building.md)** - Create and deploy Azure Foundry agents
 
 ### Quick Start Scenarios
 
@@ -175,13 +202,13 @@ If you're short on time, try these quick scenarios:
   - `"List all containers in database <name> in cosmosdb account <name>"`
 
 **30 minutes: End-to-End Scenario**
-- Follow one of the [detailed scenario guides](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios) like Storage Operations or Database Operations
+- Follow one of the [detailed scenario guides](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios) like Storage Operations or Database Operations
 
 ## Resources
 
 ### Bug Bash Documentation
-- [Installation Testing Guide](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/installation-testing.md) - Test installation across platforms and IDEs
-- [Testing Scenarios](https://github.com/g2vinay/mcp/tree/add-bug-bash-docs/docs/bug-bash/scenarios) - Detailed end-to-end testing scenarios
+- [Installation Testing Guide](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/installation-testing.md) - Test installation across platforms and IDEs
+- [Testing Scenarios](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios) - Detailed end-to-end testing scenarios
 
 ### Azure MCP Server Documentation
 - [Azure MCP Server Documentation](https://learn.microsoft.com/azure/developer/azure-mcp-server/)

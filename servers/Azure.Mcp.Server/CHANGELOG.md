@@ -2,27 +2,63 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.3 (Unreleased)
+## 0.9.5 (Unreleased)
 
 ### Features Added
+
+- Added instructions on configuring Azure MCP for GitHub coding agent. [[#888](https://github.com/microsoft/mcp/pull/888)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
-- Fixed the bug where user confirmation (elicitation) stopped working between versions 0.8.5 and 0.9.2. ([#824](https://github.com/microsoft/mcp/issues/824))
+### Other Changes
+
+- Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+
+## 0.9.4 (2025-10-17)
+
+### Features Added
+
+- Added a new server startup "consolidated" mode, which groups Azure MCP tools by tasks and actions tools conduct. This can be enabled by using the `--consolidated` flag. [[#784](https://github.com/microsoft/mcp/pull/784)]
+
+### Breaking Changes
+
+- Removes the `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
+
+### Other Changes
+
+#### Dependency Updates
+
+- Updated the following dependencies: [[864](https://github.com/microsoft/mcp/pull/864)]
+  - Azure.ResourceManager.ResourceGraph: `1.1.0-beta.4` → `1.1.0`
+  - Azure.Core: `1.48.0` → `1.49.0`
+
+## 0.9.3 (2025-10-16)
+
+### Bugs Fixed
+
+- Fixed a bug where user confirmation (elicitation) stopped working between versions `0.8.5` and `0.9.2`. [[#824](https://github.com/microsoft/mcp/issues/824)]
+- Fixed `IsServerCommandInvoked` always appearing to be true. [[#837](https://github.com/microsoft/mcp/pull/837)]
+- Fixed `ToolName` always showing up as the tool area even if an MCP tool was invoked. [[#837](https://github.com/microsoft/mcp/pull/837)]
+- Update the `server.json` in the NuGet distribution to match the 2025-09-29 server.json schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
 
 ### Other Changes
 
 - Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
   - `azmcp_communication_email_send`
   - `azmcp_communication_sms_send`
+- Improved the description of the `--enable-insecure-transports` server startup option. [[#839](https://github.com/microsoft/mcp/pull/839)]
 
 ## 0.9.2 (2025-10-15)
 
 ### Bugs Fixed
 
 - Fixed retained-buffer leaks across services (Kusto, EventGrid, AppLens, Speech, Cosmos, Foundry, NetworkResourceProvider) and tool loaders (BaseToolLoader, ServerToolLoader, NamespaceToolLoader, SingleProxyToolLoader) by disposing `JsonDocument`/`HttpResponseMessage` instances and cloning returned `JsonElements`. ([#817](https://github.com/microsoft/mcp/pull/817))
+
+### Other Changes
+
+- Telemetry capture is disabled in non-release builds. ([#783](https://github.com/microsoft/mcp/pull/783))
 
 ## 0.9.1 (2025-10-14)
 
