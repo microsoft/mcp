@@ -18,6 +18,8 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : S
     private const string CommandTitle = "List Redis Resources";
     private readonly ILogger<ResourceListCommand> _logger = logger;
 
+    public override string Id => "eded7479-4187-4742-957f-d7778e03a69d";
+
     public override string Name => "list";
 
     public override string Description =>

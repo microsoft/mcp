@@ -17,6 +17,8 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
     private const string CommandTitle = "Get Azure AI Search Knowledge Source Details";
     private readonly ILogger<KnowledgeSourceGetCommand> _logger = logger;
 
+    public override string Id => "efc985cd-5381-4547-8ffb-89ffe992ea41";
+
     public override string Name => "get";
 
     public override string Title => CommandTitle;
