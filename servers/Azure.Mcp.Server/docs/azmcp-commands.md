@@ -1905,13 +1905,13 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 
 # List session hosts in a host pool
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool session list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                [--resource-group <resource-group>]
 
 # List user sessions on a session host
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool session user_list --subscription <subscription> \
+azmcp virtualdesktop hostpool host user-list --subscription <subscription> \
                                                            [--hostpool <hostpool-name> | --hostpool-resource-id <hostpool-resource-id>] \
                                                            --sessionhost <sessionhost-name> \
                                                            [--resource-group <resource-group>]
@@ -1942,18 +1942,18 @@ azmcp virtualdesktop hostpool list --subscription <subscription> \
 ```bash
 # Standard usage - enumerates all host pools in subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool <hostpool-name>
 
 # Optimized usage - direct resource group access
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool <hostpool-name> \
                                                 --resource-group <resource-group>
 
 # Alternative with resource ID (no resource group needed)
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp virtualdesktop hostpool sessionhost list --subscription <subscription> \
+azmcp virtualdesktop hostpool host list --subscription <subscription> \
                                                 --hostpool-resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/Microsoft.DesktopVirtualization/hostPools/<pool>
 ```
 

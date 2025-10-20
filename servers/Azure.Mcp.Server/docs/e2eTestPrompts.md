@@ -654,8 +654,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_virtualdesktop_hostpool_list | List all host pools in my subscription |
-| azmcp_virtualdesktop_hostpool_session_list | List all session hosts in host pool <hostpool_name> |
-| azmcp_virtualdesktop_hostpool_session_user_list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
+| azmcp_virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
+| azmcp_virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
 ## Azure Workbooks
 

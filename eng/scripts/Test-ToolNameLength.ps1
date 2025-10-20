@@ -9,21 +9,17 @@
     This script validates that tool name length (including root command prefix)
     doesn't exceed 48 characters.
     
-    Tool name format: {root}_{area}_{resource}_{operation}
-    Example: "azmcp_managedlustre_filesystem_subnetsize_validate" = 52 chars (EXCEEDS)
+    Tool name format: {area}_{resource}_{operation}
+    Example: "managedlustre_filesystem_subnetsize_validate-length" = 50 chars (EXCEEDS)
     The limit does NOT include the MCP server prefix (e.g., "AzureMCP-AllTools-").
 
 .PARAMETER MaxLength
     Maximum allowed length for tool names including root prefix (default: 48)
-
-.PARAMETER RootPrefix
-    The root command prefix that is prepended to all tool names (default: "azmcp")
     
 #>
 
 param(
-    [int]$MaxLength = 48,
-    [string]$RootPrefix = "azmcp"
+    [int]$MaxLength = 48
 )
 
 $ErrorActionPreference = 'Stop'
@@ -32,7 +28,7 @@ Set-StrictMode -Version 3.0
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 Write-Host "Validating tool name length"
-Write-Host "Max length: $MaxLength characters (including root prefix: '${RootPrefix}_' ($($RootPrefix.Length + 1) chars))"
+Write-Host "Max length: $MaxLength characters"
 Write-Host ""
 
 $serverBinPath = "$RepoRoot/servers/Azure.Mcp.Server/src/bin/Debug/net9.0"
@@ -95,19 +91,16 @@ $longestFullToolName = ""
 
 foreach ($tool in $tools) {
     $toolName = $tool.command -replace ' ', '_'
-    
-    $fullToolName = "${RootPrefix}_${toolName}"
-    $fullLength = $fullToolName.Length
+    $fullLength = $toolName.Length
     
     if ($fullLength -gt $maxToolNameLength) {
         $maxToolNameLength = $fullLength
-        $longestFullToolName = $fullToolName
+        $longestFullToolName = $toolName
     }
     
     if ($fullLength -gt $MaxLength) {
         $violations += [PSCustomObject]@{
             ToolName = $toolName
-            FullToolName = $fullToolName
             Command = $tool.command
             Length = $fullLength
             Excess = $fullLength - $MaxLength
@@ -118,12 +111,17 @@ foreach ($tool in $tools) {
 # Report results
 Write-Host "Analysis Results:"
 Write-Host "Longest full tool name: $maxToolNameLength characters"
-Write-Host "Tool: '$longestFullToolName'"
 Write-Host ""
+
+# Prepare return object
+$result = [PSCustomObject]@{
+    MaxAllowed     = $MaxLength
+    ViolationCount = $violations.Count
+}
 
 if ($violations.Count -eq 0) {
     Write-Host "All $($tools.Count) tool names are within the $MaxLength character limit!"
-    Write-Host "(including '${RootPrefix}_' prefix)"
+    $result
     exit 0
 }
 else {
@@ -131,13 +129,13 @@ else {
     Write-Host ""
     
     $violations | Sort-Object -Property Length -Descending | ForEach-Object {
-        Write-Host "    $($_.FullToolName)"
+        Write-Host "      Tool: $($_.ToolName)"
         Write-Host "      Command: $($_.Command)"
         Write-Host "      Length: $($_.Length) characters (exceeds by $($_.Excess))"
         Write-Host ""
     }
 
     Write-Host ""
-    
+    $result
     exit 1
 }

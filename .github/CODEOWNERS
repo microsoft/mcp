@@ -247,7 +247,7 @@
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
 
 # PRLabel: %tools-ResourceHealth
-/tools/Azure.Mcp.Tools.ResourceHealth/      @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ResourceHealth/      @ pkaza-msft @microsoft/azure-mcp
 
 # ServiceLabel: %tools-ResourceHealth
-# ServiceOwners:                       @microsoft/azure-mcp
+# ServiceOwners:                       @ pkaza-msft @microsoft/azure-mcp

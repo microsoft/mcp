@@ -43,13 +43,15 @@ try {
     }
 
     # Run tool name length validation
-    & "$PSScriptRoot/Test-ToolNameLength.ps1"
+    $toolNameResult = & "$PSScriptRoot/Test-ToolNameLength.ps1"
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Tool name length validation failed"
+        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Check above for details."
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool name length validation passed."
+        Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit."
     }
 
     if($hasErrors) {
