@@ -75,7 +75,7 @@ function CheckVariable($name) {
             $script:exitCode = 1
             return ""
         } else {
-            return  "Missing-$name"
+            return "Missing-$name"
         }
     }
     return $value
