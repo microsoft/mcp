@@ -47,7 +47,7 @@ try {
 
     if ($LASTEXITCODE -ne 0) {
         Write-Host "❌ Tool name length validation failed"
-        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Check above for details."
+        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Review the above output for details."
         $hasErrors = $true
     } else {
         Write-Host "✅ Tool name length validation passed."
