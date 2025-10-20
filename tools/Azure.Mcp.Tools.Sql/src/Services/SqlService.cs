@@ -441,7 +441,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 administrators.Add(new SqlServerEntraAdministrator(
                     Name: admin.Data.Name,
                     Id: admin.Data.Id.ToString(),
-                    Type: admin.Data.ResourceType.ToString() ?? "Unknown",
+                    Type: admin.Data.ResourceType.ToString(),
                     AdministratorType: admin.Data.AdministratorType?.ToString(),
                     Login: admin.Data.Login,
                     Sid: admin.Data.Sid?.ToString(),
