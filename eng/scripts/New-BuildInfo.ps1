@@ -75,8 +75,7 @@ function CheckVariable($name) {
             $script:exitCode = 1
             return ""
         } else {
-            $substitute = "Missing `$env:$name"
-            return $substitute
+            return  "Missing-$name"
         }
     }
     return $value
