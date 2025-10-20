@@ -16,6 +16,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 {
     private const string CommandTitle = "Create OpenAI Completion";
 
+    public override string Id => "c42f95c1-7744-48da-852d-c50444c3c35c";
+
     public override string Name => "create-completion";
 
     public override string Description =>

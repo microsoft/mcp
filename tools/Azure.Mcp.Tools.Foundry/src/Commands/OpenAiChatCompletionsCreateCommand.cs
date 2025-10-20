@@ -17,6 +17,8 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 {
     private const string CommandTitle = "Create OpenAI Chat Completions";
 
+    public override string Id => "aa674825-1463-464d-9b2c-f8315f778d0d";
+
     public override string Name => "chat-completions-create";
 
     public override string Description =>

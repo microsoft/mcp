@@ -21,6 +21,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
     private readonly ILogger<AzqrCommand> _logger = logger;
     private readonly int _processTimeoutSeconds = processTimeoutSeconds;
     private static string? _cachedAzqrPath;
+    public override string Id => "e7ef18a3-2730-4300-bad3-dc766f47dd2a";
 
     public override string Name => "azqr";
 
