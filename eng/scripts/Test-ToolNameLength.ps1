@@ -116,7 +116,7 @@ foreach ($serverInfo in $serversToTest) {
         $toolsJson = & $executablePath tools list 2>&1 | Out-String
 
         if ($LASTEXITCODE -ne 0) {
-            Write-Warning "$currentServerName does not support 'tools list' command - skipping"
+            Write-Warning "$currentServerName 'tools list' command failed with exit code $LASTEXITCODE (may have no tools) - skipping"
             $skippedServers++
             Write-Host ""
             continue
