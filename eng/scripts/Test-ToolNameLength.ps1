@@ -6,15 +6,14 @@
     Validates that all tool names don't exceed the maximum length
 
 .DESCRIPTION
-    This script validates that tool name length (including root command prefix)
-    doesn't exceed 48 characters.
+    This script validates that tool name length doesn't exceed 48 characters.
     
     Tool name format: {area}_{resource}_{operation}
     Example: "managedlustre_filesystem_subnetsize_validate-length" = 50 chars (EXCEEDS)
     The limit does NOT include the MCP server prefix (e.g., "AzureMCP-AllTools-").
 
 .PARAMETER MaxLength
-    Maximum allowed length for tool names including root prefix (default: 48)
+    Maximum allowed length for tool names (default: 48)
     
 #>
 
@@ -84,7 +83,7 @@ if ($null -eq $tools -or $tools.Count -eq 0) {
 Write-Host "Loaded $($tools.Count) tools"
 Write-Host ""
 
-# Validate tool name lengths (including root prefix)
+# Validate tool name lengths
 $violations = @()
 $maxToolNameLength = 0
 $longestFullToolName = ""
