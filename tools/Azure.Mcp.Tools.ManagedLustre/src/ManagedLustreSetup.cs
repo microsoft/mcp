@@ -23,12 +23,16 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<SubnetSizeAskCommand>();
         services.AddSingleton<SubnetSizeValidateCommand>();
         services.AddSingleton<SkuGetCommand>();
+        services.AddSingleton<FileSystemImportJobCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var managedLustre = new CommandGroup(Name,
-            "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.");
+            """
+            Azure Managed Lustre operations - Azure Managed Lustre file systems (AMLFS) interaction for high-performance computing workloads.
+            Use this tool to list and manage Azure Managed Lustre file systems, including creating import jobs to hydrate the file system namespace.
+            """);
 
         var fileSystem = new CommandGroup("filesystem", "Azure Managed Lustre file system operations - Commands for listing managed Lustre file systems.");
         managedLustre.AddSubGroup(fileSystem);
@@ -56,6 +60,12 @@ public class ManagedLustreSetup : IAreaSetup
 
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
+
+        var importJob = new CommandGroup("importjob", "Azure Managed Lustre file system import job operations - Create manual import jobs to hydrate the file system namespace.");
+        fileSystem.AddSubGroup(importJob);
+
+        var importJobCreate = serviceProvider.GetRequiredService<FileSystemImportJobCreateCommand>();
+        importJob.AddCommand(importJobCreate.Name, importJobCreate);
 
         return managedLustre;
     }

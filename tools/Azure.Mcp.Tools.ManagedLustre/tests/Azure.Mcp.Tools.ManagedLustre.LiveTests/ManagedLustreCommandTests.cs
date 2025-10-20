@@ -332,4 +332,27 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
 
         Assert.True(found, $"Expected filesystem '{Settings.ResourceBaseName}' to be present after root squash update.");
     }
+
+    [Fact]
+    public async Task Should_create_import_job()
+    {
+        var result = await CallToolAsync(
+            "azmcp_managedlustre_filesystem_importjob_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "file-system", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var importJob = result.AssertProperty("importJob");
+        Assert.Equal(JsonValueKind.Object, importJob.ValueKind);
+        // The import job response currently returns the job name under 'name'
+        Assert.True(importJob.TryGetProperty("name", out var jobNameProp));
+        Assert.False(string.IsNullOrWhiteSpace(jobNameProp.GetString()));
+        // The filesystem the job targets is under 'fileSystemName'
+        Assert.True(importJob.TryGetProperty("fileSystemName", out var fsNameProp));
+        Assert.Equal(Settings.ResourceBaseName, fsNameProp.GetString());
+    }
 }

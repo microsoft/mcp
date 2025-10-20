@@ -77,5 +77,16 @@ public interface IManagedLustreService
         long? squashGid = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<ImportJobInfo> CreateImportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        string? jobName = null,
+        IList<string>? importPrefixes = null,
+        string conflictResolutionMode = "Skip",
+        int? maximumErrors = 0,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
 

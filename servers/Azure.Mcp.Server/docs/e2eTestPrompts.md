@@ -420,6 +420,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_managedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | azmcp_managedlustre_filesystem_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | azmcp_managedlustre_filesystem_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_azuremanagedlustre_filesystem_importjob_create | Create an import job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| azmcp_azuremanagedlustre_filesystem_importjob_create | Start a filesystem import job for AMLFS <filesystem_name> with prefixes <prefixes> |
 
 ## Azure Marketplace
 
