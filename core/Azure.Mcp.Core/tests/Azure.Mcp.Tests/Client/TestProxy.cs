@@ -19,8 +19,8 @@ namespace Azure.Mcp.Tests.Client;
 public sealed class TestProxy(bool debug = false) : IDisposable
 {
     private readonly bool _debug = debug;
-    private readonly StringBuilder _stderr = new();
-    private readonly StringBuilder _stdout = new();
+    public readonly StringBuilder stderr = new();
+    public readonly StringBuilder stdout = new();
     private Process? _process;
     private CancellationTokenSource? _cts;
     private int? _httpPort;
@@ -65,8 +65,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
         _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
         _cts = new CancellationTokenSource(); //todo: put this in as filler, I feel like I should be pulling a cancellation token from somewhere else
-        _ = Task.Run(() => PumpAsync(_process.StandardError, _stderr, _cts.Token));
-        _ = Task.Run(() => PumpAsync(_process.StandardOutput, _stdout, _cts.Token));
+        _ = Task.Run(() => PumpAsync(_process.StandardError, stderr, _cts.Token));
+        _ = Task.Run(() => PumpAsync(_process.StandardOutput, stdout, _cts.Token));
 
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
         {
@@ -79,7 +79,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             
         if (_httpPort is null)
         {
-            throw new InvalidOperationException($"Failed to detect test-proxy HTTP port. Output: {_stdout}\nErrors: {_stderr}");
+            throw new InvalidOperationException($"Failed to detect test-proxy HTTP port. Output: {stdout}\nErrors: {stderr}");
         }
 
         Client = new TestProxyClient(new Uri(BaseUri), new TestProxyClientOptions());
@@ -109,9 +109,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         while ((DateTime.UtcNow - start) < timeout)
         {
             string text;
-            lock (_stdout)
+            lock (stdout)
             {
-                text = _stdout.ToString();
+                text = stdout.ToString();
             }
             foreach (var line in text.Split('\n'))
             {
@@ -182,9 +182,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
     public string? SnapshotStdErr()
     {
-        lock (_stderr)
+        lock (stderr)
         {
-            return _stderr.Length == 0 ? null : _stderr.ToString();
+            return stderr.Length == 0 ? null : stderr.ToString();
         }
     }
 

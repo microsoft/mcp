@@ -11,7 +11,6 @@ namespace Azure.Mcp.Tests.Client
     {
         private string DetermineRepositoryRoot()
         {
-            // Heuristic: walk up from assembly location until we find a .git folder or reach root.
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
             while (!string.IsNullOrEmpty(path))
             {

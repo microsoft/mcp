@@ -1,3 +1,4 @@
+.assets/
 .dist/
 .work/
 tests/test-cmds.txt

@@ -7,7 +7,7 @@ This document will eventually contain a guide to enable Record/Playback for an e
 - [x] Identify necessary implementation details
 - [x] Add test-proxy class fixture that handles auto-start/stop of the test-proxy per class definition.
 - [x] Add start/stop playback and recording to `InitializeAsync` and `Dispose`
-- [ ] The current generated client looks like it's using System.ClientModel instead of Azure.Core. Not a huge deal but need to examine further
+- [x] The current generated client looks like it's using System.ClientModel instead of Azure.Core. Not a huge deal but need to examine further
       to see if we can go around this. Currently we're calling with placeholder values when we should be discovering the file path for the test class
 - [ ] Update test-proxy typespec to reflect --http-proxy mode and utilize so we don't have to call with placeholder recordingIds
 - [x] Abstract location of assets.json

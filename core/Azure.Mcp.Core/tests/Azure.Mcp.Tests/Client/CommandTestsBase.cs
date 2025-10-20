@@ -226,7 +226,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
         if (!string.IsNullOrWhiteSpace(assetsPath))
         {
-            recordOptions["x-recording-assets"] = assetsPath;
+            recordOptions["x-recording-assets-file"] = assetsPath;
         }
         // todo: replace after regenerating using Azure.Core instead of System.ClientModel
         var bodyContent = BinaryContentHelper.FromObject(recordOptions);
