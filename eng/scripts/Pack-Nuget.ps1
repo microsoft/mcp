@@ -86,26 +86,27 @@ function ExportServerJson {
     )
 
     $output = [ordered]@{
-        '$schema' = "https://modelcontextprotocol.io/schemas/draft/2025-07-09/server.json"
+        '$schema' = "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
         description = $Description
-        name = "io.github.microsoft/mcp/$CommandName"
+        name = "com.microsoft/$CommandName"
+        version = $Version
         packages = @(
             [ordered]@{
-                registry_name = "nuget"
-                name = $PackageId
+                registryType = "nuget"
+                identifier = $PackageId
                 version = $Version
-                package_arguments = @(
-                    [ordered]@{ type = "positional"; value = "server"; value_hint = "server" },
-                    [ordered]@{ type = "positional"; value = "start"; value_hint = "start" }
+                transport = [ordered]@{
+                    type = "stdio"
+                }
+                packageArguments = @(
+                    [ordered]@{ type = "positional"; value = "server" },
+                    [ordered]@{ type = "positional"; value = "start" }
                 )
             }
         )
         repository = [ordered]@{
             url = $RepositoryUrl
             source = "github"
-        }
-        version_detail = [ordered]@{
-            version = $Version
         }
     }
 
