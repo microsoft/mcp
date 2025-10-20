@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
+using Azure.Mcp.Tools.Speech.Commands.Tts;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +24,7 @@ public class SpeechSetup : IAreaSetup
         services.AddSingleton<IRealtimeTranscriptionRecognizer, RealtimeTranscriptionRecognizer>();
         services.AddSingleton<ISpeechService, SpeechService>();
         services.AddSingleton<SttRecognizeCommand>();
+        services.AddSingleton<TtsSynthesizeCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -48,6 +50,16 @@ public class SpeechSetup : IAreaSetup
         stt.AddCommand(sttRecognize.Name, sttRecognize);
 
         speech.AddSubGroup(stt);
+
+        var tts = new CommandGroup(
+            name: "tts",
+            description: "Text-to-speech operations - Commands for converting text to spoken audio using Azure AI Services Speech synthesis.");
+
+        var ttsSynthesize = serviceProvider.GetRequiredService<TtsSynthesizeCommand>();
+        tts.AddCommand(ttsSynthesize.Name, ttsSynthesize);
+
+        speech.AddSubGroup(tts);
+
         return speech;
     }
 }

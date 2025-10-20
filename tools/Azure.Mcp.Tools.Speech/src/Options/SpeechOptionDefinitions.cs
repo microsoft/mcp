@@ -11,6 +11,9 @@ public static class SpeechOptionDefinitions
     public const string PhrasesName = "phrases";
     public const string FormatName = "format";
     public const string ProfanityName = "profanity";
+    public const string TextName = "text";
+    public const string VoiceName = "voice";
+    public const string EndpointIdName = "endpointId";
 
     public static readonly Option<string> Endpoint = new(
         $"--{EndpointName}")
@@ -49,5 +52,24 @@ public static class SpeechOptionDefinitions
         $"--{ProfanityName}")
     {
         Description = "Profanity filter: masked, removed, or raw. Default is masked."
+    };
+
+    public static readonly Option<string> Text = new(
+        $"--{TextName}")
+    {
+        Description = "The text to convert to speech.",
+        Required = true
+    };
+
+    public static readonly Option<string?> Voice = new(
+        $"--{VoiceName}")
+    {
+        Description = "The voice to use for speech synthesis (e.g., en-US-JennyNeural). If not specified, the default voice for the language will be used."
+    };
+
+    public static readonly Option<string?> EndpointId = new(
+        $"--{EndpointIdName}")
+    {
+        Description = "The endpoint ID of a custom voice model for speech synthesis."
     };
 }

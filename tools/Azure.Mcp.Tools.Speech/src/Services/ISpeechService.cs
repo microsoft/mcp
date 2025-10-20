@@ -16,4 +16,14 @@ public interface ISpeechService
         string? format = null,
         string? profanity = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<Models.SynthesisResult> SynthesizeSpeechToFile(
+        string endpoint,
+        string text,
+        string outputFilePath,
+        string? language = null,
+        string? voice = null,
+        string? format = null,
+        string? endpointId = null,
+        RetryPolicyOptions? retryPolicy = null);
 }
