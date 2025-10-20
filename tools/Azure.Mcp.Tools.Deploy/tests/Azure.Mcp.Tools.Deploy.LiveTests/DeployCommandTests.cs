@@ -25,7 +25,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // act
         var result = await CallToolMessageAsync(
-            "azmcp_deploy_plan_get",
+            "deploy_plan_get",
             new()
             {
                 { "workspace-folder", "C:/" },
@@ -43,7 +43,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // act
         var result = await CallToolMessageAsync(
-            "azmcp_deploy_iac_rules_get",
+            "deploy_iac_rules_get",
             new()
             {
                 { "deployment-tool", "azd" },
@@ -59,7 +59,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // act
         var result = await CallToolMessageAsync(
-            "azmcp_deploy_iac_rules_get",
+            "deploy_iac_rules_get",
             new()
             {
                 { "deployment-tool", "azd" },
@@ -76,7 +76,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // act
         var result = await CallToolMessageAsync(
-            "azmcp_deploy_pipeline_guidance_get",
+            "deploy_pipeline_guidance_get",
             new()
             {
                 { "subscription", _subscriptionId },
@@ -92,7 +92,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // act
         var result = await CallToolMessageAsync(
-            "azmcp_deploy_pipeline_guidance_get",
+            "deploy_pipeline_guidance_get",
             new()
             {
                 { "subscription", _subscriptionId },
@@ -112,7 +112,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     // {
     //     // act
     //     var result = await CallToolMessageAsync(
-    //         "azmcp_deploy_app_logs_get",
+    //         "deploy_app_logs_get",
     //         new()
     //         {
     //             { "subscription", _subscriptionId },

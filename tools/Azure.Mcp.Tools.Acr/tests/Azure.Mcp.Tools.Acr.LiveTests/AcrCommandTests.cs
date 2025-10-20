@@ -20,7 +20,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     {
         // Arrange & Act
         var result = await CallToolAsync(
-            "azmcp_acr_registry_list",
+            "acr_registry_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -36,7 +36,7 @@ public class AcrCommandTests(ITestOutputHelper output)
         {
             // Fallback: attempt with resource group filter (test RG hosts the registry via bicep)
             var rgResult = await CallToolAsync(
-                "azmcp_acr_registry_list",
+                "acr_registry_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -85,7 +85,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     public async Task Should_list_repositories_for_registries(AuthMethod authMethod)
     {
         var result = await CallToolAsync(
-            "azmcp_acr_registry_repository_list",
+            "acr_registry_repository_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -114,7 +114,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     {
         // Empty subscription should trigger validation failure (400) -> null results
         var result = await CallToolAsync(
-            "azmcp_acr_registry_list",
+            "acr_registry_list",
             new()
             {
                 { "subscription", "" }
@@ -128,7 +128,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     {
         // Invalid identifier should reach execution and return structured error details (HasValue)
         var result = await CallToolAsync(
-            "azmcp_acr_registry_list",
+            "acr_registry_list",
             new()
             {
                 { "subscription", "invalid-subscription" }
@@ -143,7 +143,7 @@ public class AcrCommandTests(ITestOutputHelper output)
     public async Task Should_validate_required_subscription_parameter()
     {
         // Missing subscription option entirely should behave like other areas (validation -> null)
-        var result = await CallToolAsync("azmcp_acr_registry_list", []);
+        var result = await CallToolAsync("acr_registry_list", []);
 
         Assert.Null(result);
     }

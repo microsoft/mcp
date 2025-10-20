@@ -15,7 +15,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_ListNamespaces_Successfully()
     {
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_get",
+            "eventhubs_namespace_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -57,7 +57,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     {
         // Test getting a single namespace by name and resource group
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_get",
+            "eventhubs_namespace_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -132,7 +132,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             await CallToolAsync(
-                "azmcp_eventhubs_namespace_delete",
+                "eventhubs_namespace_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -147,7 +147,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Create the namespace
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_update",
+            "eventhubs_namespace_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -171,7 +171,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             await CallToolAsync(
-                "azmcp_eventhubs_namespace_delete",
+                "eventhubs_namespace_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -190,7 +190,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     {
         // Update the existing test namespace
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_update",
+            "eventhubs_namespace_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -214,7 +214,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Try to delete a non-existent namespace - should succeed gracefully
         var result = await CallToolAsync(
-            "azmcp_eventhubs_namespace_delete",
+            "eventhubs_namespace_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -234,7 +234,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
     public async Task Should_ListEventHubs_Successfully()
     {
         var result = await CallToolAsync(
-            "azmcp_eventhubs_eventhub_get",
+            "eventhubs_eventhub_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -279,7 +279,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             await CallToolAsync(
-                "azmcp_eventhubs_eventhub_delete",
+                "eventhubs_eventhub_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -295,7 +295,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Create the event hub
         var result = await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -320,7 +320,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             await CallToolAsync(
-                "azmcp_eventhubs_eventhub_delete",
+                "eventhubs_eventhub_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -342,7 +342,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // First create an event hub to get
         await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -357,7 +357,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         {
             // Get the specific event hub
             var result = await CallToolAsync(
-                "azmcp_eventhubs_eventhub_get",
+                "eventhubs_eventhub_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -402,7 +402,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_delete",
+                    "eventhubs_eventhub_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -425,7 +425,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // Try to delete a non-existent event hub - should succeed gracefully
         var result = await CallToolAsync(
-            "azmcp_eventhubs_eventhub_delete",
+            "eventhubs_eventhub_delete",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -449,7 +449,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // First create an event hub for consumer groups
         await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -463,7 +463,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         try
         {
             var result = await CallToolAsync(
-                "azmcp_eventhubs_eventhub_consumergroup_get",
+                "eventhubs_eventhub_consumergroup_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -509,7 +509,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_delete",
+                    "eventhubs_eventhub_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -533,7 +533,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // First create an event hub for the consumer group
         await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -550,7 +550,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_consumergroup_delete",
+                    "eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -567,7 +567,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
             // Create the consumer group
             var result = await CallToolAsync(
-                "azmcp_eventhubs_eventhub_consumergroup_update",
+                "eventhubs_eventhub_consumergroup_update",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -592,7 +592,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_consumergroup_delete",
+                    "eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -613,7 +613,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_delete",
+                    "eventhubs_eventhub_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -637,7 +637,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // First create an event hub for the consumer group
         await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -652,7 +652,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         {
             // Create a consumer group to get
             await CallToolAsync(
-                "azmcp_eventhubs_eventhub_consumergroup_update",
+                "eventhubs_eventhub_consumergroup_update",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -665,7 +665,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
             // Get the specific consumer group
             var result = await CallToolAsync(
-                "azmcp_eventhubs_eventhub_consumergroup_get",
+                "eventhubs_eventhub_consumergroup_get",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -712,7 +712,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_consumergroup_delete",
+                    "eventhubs_eventhub_consumergroup_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -733,7 +733,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_delete",
+                    "eventhubs_eventhub_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -757,7 +757,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
 
         // First create an event hub for the consumer group test
         await CallToolAsync(
-            "azmcp_eventhubs_eventhub_update",
+            "eventhubs_eventhub_update",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -772,7 +772,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
         {
             // Try to delete a non-existent consumer group - should succeed gracefully
             var result = await CallToolAsync(
-                "azmcp_eventhubs_eventhub_consumergroup_delete",
+                "eventhubs_eventhub_consumergroup_delete",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -798,7 +798,7 @@ public class EventHubsCommandTests(ITestOutputHelper output)
             try
             {
                 await CallToolAsync(
-                    "azmcp_eventhubs_eventhub_delete",
+                    "eventhubs_eventhub_delete",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },

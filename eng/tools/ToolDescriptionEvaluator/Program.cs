@@ -713,7 +713,7 @@ class Program
                         if (string.IsNullOrWhiteSpace(toolName) || string.IsNullOrWhiteSpace(prompt))
                             continue;
 
-                        // Filter by tool name prefix(es) (e.g., azmcp_keyvault, azmcp_storage)
+                        // Filter by tool name prefix(es) (e.g., keyvault, storage)
                         if (!string.IsNullOrEmpty(areaFilter))
                         {
                             // Support multiple areas separated by commas
@@ -722,15 +722,8 @@ class Program
                                                    .Where(a => !string.IsNullOrEmpty(a))
                                                    .ToList();
 
-                            // Auto-add azmcp_ prefix if not already present for each area
-                            var prefixesToMatch = areas.Select(area =>
-                                area.StartsWith("azmcp_", StringComparison.OrdinalIgnoreCase)
-                                    ? area
-                                    : $"azmcp_{area}"
-                            ).ToList();
-
                             // Check if tool name starts with any of the area filters
-                            if (!prefixesToMatch.Any(prefix => toolName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                            if (!areas.Any(prefix => toolName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
                             {
                                 // Skip this tool as it doesn't match any prefix
                                 continue;
@@ -750,10 +743,7 @@ class Program
             // If area filter was specified but no prompts found, provide feedback
             if (!string.IsNullOrEmpty(areaFilter) && prompts.Count == 0 && !isCiMode)
             {
-                var actualPrefix = areaFilter.StartsWith("azmcp_", StringComparison.OrdinalIgnoreCase)
-                    ? areaFilter
-                    : $"azmcp_{areaFilter}";
-                Console.WriteLine($"⚠️  No prompts found for prefix '{actualPrefix}'. Use service names like 'keyvault', 'storage', 'functionapp', etc.");
+                Console.WriteLine($"⚠️  No prompts found for prefix '{areaFilter}'. Use service names like 'keyvault', 'storage', 'functionapp', etc.");
             }
 
             return prompts.Count > 0 ? prompts : null;
@@ -1201,7 +1191,7 @@ class Program
         Console.WriteLine("  --ci                          Run in CI mode (graceful failures)");
         Console.WriteLine("  --tools-file <path>           Use a custom JSON file for tools instead of dynamic loading from docs .md");
         Console.WriteLine("  --prompts-file <path>         Use custom prompts file (supported formats: .md or .json)");
-        Console.WriteLine("  --area <area>                 Filter prompts by tool name prefix(es) (e.g., \"keyvault\", \"storage,functionapp\", \"azmcp_keyvault\")");
+        Console.WriteLine("  --area <area>                 Filter prompts by tool name prefix(es) (e.g., \"keyvault\", \"storage,functionapp\")");
         Console.WriteLine("  --output-file-name <name>     Custom output file name (no extension)");
         Console.WriteLine("  --text-results                Output results in .txt format");
         Console.WriteLine("  --top <N>                     Number of results to display per test (default 5)");
@@ -1216,10 +1206,10 @@ class Program
         Console.WriteLine("  ToolDescriptionEvaluator                                          # Use dynamic tool loading (default)");
         Console.WriteLine("  ToolDescriptionEvaluator --tools-file my-tools.json               # Use custom tools file");
         Console.WriteLine("  ToolDescriptionEvaluator --prompts-file my-prompts.md             # Use custom prompts file");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault\"                       # Test only Key Vault prompts (auto-prefixed to azmcp_keyvault)");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"storage\"                        # Test only Storage prompts (auto-prefixed to azmcp_storage)");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault,storage\"               # Test Key Vault and Storage prompts (multiple areas)");
-        Console.WriteLine("  ToolDescriptionEvaluator --area \"azmcp_functionapp\"              # Test only Function App prompts (explicit prefix)");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault\"                      # Test only Key Vault prompts");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"storage\"                       # Test only Storage prompts");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"keyvault,storage\"              # Test Key Vault and Storage prompts (multiple areas)");
+        Console.WriteLine("  ToolDescriptionEvaluator --area \"functionapp\"                   # Test only Function App prompts");
         Console.WriteLine("  ToolDescriptionEvaluator --output-file-name my-results            # Use custom output file name (don't include extension)");
         Console.WriteLine("  ToolDescriptionEvaluator --text-results                           # Output in text format");
         Console.WriteLine("  ToolDescriptionEvaluator --ci --tools-file tools.json             # CI mode with JSON file");
