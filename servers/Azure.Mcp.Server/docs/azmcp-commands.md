@@ -460,6 +460,8 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+```
+
 ### Azure App Service Operations
 
 ```bash
