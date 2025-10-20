@@ -155,11 +155,11 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 Packaging scripts create distributable packages from the output of `Build-Code.ps1`, using the metadata collected in `build_info.json`.  Each packaging script targets a specific package format, such as npm, Docker, or VSIX. `build_info.json` lists an `artifactPath` for each server / platform combination.  This is the path that the packing scripts use to locate the files to package.
 
 Packing scripts currently include:
-- [eng/scripts/Pack-Npm.ps1](scripts/Pack-Npm.ps1) for creating [npm packages for use with `npx`](https://docs.npmjs.com/cli/v9/commands/npx?v=true)
-- [eng/scripts/Pack-Nuget.ps1](scripts/Pack-Nuget.ps1) for creating [NuGet packages for use with `dnx`](https://learn.microsoft.com/en-us/dotnet/core/tools/dotnet-tool-exec)
-- [eng/scripts/Pack-Vsix.ps1](scripts/Pack-Vsix.ps1) for creating [VS Code VSIX packages](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#packaging-extensions)
-- [eng/scripts/Pack-Zip.ps1](scripts/Pack-Zip.ps1) for creating ZIP archives
-- [eng/scripts/Prepare-Docker.ps1](scripts/Prepare-Docker.ps1) for staging the contents of Docker images
+- [eng/scripts/Pack-Npm.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Npm.ps1) for creating [npm packages for use with `npx`](https://docs.npmjs.com/cli/v9/commands/npx?v=true)
+- [eng/scripts/Pack-Nuget.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Nuget.ps1) for creating [NuGet packages for use with `dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec)
+- [eng/scripts/Pack-Vsix.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Vsix.ps1) for creating [VS Code VSIX packages](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#packaging-extensions)
+- [eng/scripts/Pack-Zip.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Zip.ps1) for creating ZIP archives
+- [eng/scripts/Prepare-Docker.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Prepare-Docker.ps1) for staging the contents of Docker images
 
 
 
