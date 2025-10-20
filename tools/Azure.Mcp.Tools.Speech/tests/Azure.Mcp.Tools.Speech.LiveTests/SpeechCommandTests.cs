@@ -519,6 +519,280 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
     #endregion
 
+    #region TTS Synthesize Tests
+
+    [Fact]
+    public async Task Should_synthesize_speech_to_file_with_text()
+    {
+        // Test basic TTS synthesis with text input
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{Guid.NewGuid()}.wav");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", "Hello, this is a test of text to speech synthesis." },
+                    { "file", outputFile },
+                    { "language", "en-US" }
+                });
+
+            // Verify successful response
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+
+            // Parse and validate the JSON result
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+            // Verify file path
+            Assert.True(resultProperty.TryGetProperty("filePath", out var filePathProperty));
+            Assert.Equal(outputFile, filePathProperty.GetString());
+
+            // Verify duration and audio length are present
+            Assert.True(resultProperty.TryGetProperty("duration", out var durationProperty));
+            Assert.True(durationProperty.GetInt64() > 0);
+
+            Assert.True(resultProperty.TryGetProperty("audioLength", out var audioLengthProperty));
+            Assert.True(audioLengthProperty.GetInt64() > 0);
+
+            // Verify the output file was created and has content
+            Assert.True(File.Exists(outputFile), $"Output file not created at: {outputFile}");
+            var fileInfo = new FileInfo(outputFile);
+            Assert.True(fileInfo.Length > 0, "Output file should not be empty");
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("en-US", "en-US-JennyNeural")]
+    [InlineData("zh-CN", "zh-CN-XiaoxiaoNeural")]
+    [InlineData("ja-JP", "ja-JP-NanamiNeural")]
+    public async Task Should_synthesize_speech_with_different_voices(string language, string voice)
+    {
+        // Test TTS synthesis with different language/voice combinations
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{language}-{Guid.NewGuid()}.wav");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", "Hello world" },
+                    { "file", outputFile },
+                    { "language", language },
+                    { "voice", voice }
+                });
+
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+            // Verify voice was used
+            Assert.True(resultProperty.TryGetProperty("voice", out var voiceProperty));
+            Assert.Equal(voice, voiceProperty.GetString());
+
+            // Verify language
+            Assert.True(resultProperty.TryGetProperty("language", out var languageProperty));
+            Assert.Equal(language, languageProperty.GetString());
+
+            // Verify file exists
+            Assert.True(File.Exists(outputFile));
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData("Riff8Khz16BitMonoPcm")]
+    [InlineData("Riff24Khz16BitMonoPcm")]
+    [InlineData("Audio16Khz32KBitRateMonoMp3")]
+    public async Task Should_synthesize_speech_with_different_formats(string format)
+    {
+        // Test TTS synthesis with different audio formats
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var extension = format.Contains("Mp3") ? ".mp3" : ".wav";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-{format}-{Guid.NewGuid()}{extension}");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", "Testing different audio formats" },
+                    { "file", outputFile },
+                    { "language", "en-US" },
+                    { "format", format }
+                });
+
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+            // Verify format
+            Assert.True(resultProperty.TryGetProperty("format", out var formatProperty));
+            Assert.Equal(format, formatProperty.GetString());
+
+            // Verify file exists and has content
+            Assert.True(File.Exists(outputFile));
+            var fileInfo = new FileInfo(outputFile);
+            Assert.True(fileInfo.Length > 0);
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_invalid_text_input()
+    {
+        // Test error handling for empty text
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-{Guid.NewGuid()}.wav");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", "" }, // Empty text should fail validation
+                    { "file", outputFile },
+                    { "language", "en-US" }
+                });
+
+            // Should return error response
+            Assert.Null(result);
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_invalid_language_format()
+    {
+        // Test error handling for invalid language format
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-invalid-lang-{Guid.NewGuid()}.wav");
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", "Hello world" },
+                    { "file", outputFile },
+                    { "language", "invalid-format" } // Invalid language format
+                });
+
+            // Should return error response
+            Assert.Null(result);
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    [Fact]
+    public async Task Should_handle_large_text_input()
+    {
+        // Test TTS with larger text to verify streaming works correctly
+        var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
+        var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-large-{Guid.NewGuid()}.wav");
+
+        // Create a longer text (around 500 words)
+        var largeText = string.Join(" ", Enumerable.Repeat(
+            "This is a test of text to speech synthesis with a longer input to verify that streaming works correctly.",
+            50));
+
+        try
+        {
+            var result = await CallToolAsync(
+                "speech_tts_synthesize",
+                new()
+                {
+                    { "subscription", Settings.SubscriptionId },
+                    { "endpoint", aiServicesEndpoint },
+                    { "text", largeText },
+                    { "file", outputFile },
+                    { "language", "en-US" }
+                });
+
+            Assert.NotNull(result);
+            var resultText = result.ToString();
+            Assert.NotNull(resultText);
+
+            var jsonResult = JsonDocument.Parse(resultText);
+            var resultObject = jsonResult.RootElement;
+            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+
+            // Verify file exists and is significantly larger than a short phrase
+            Assert.True(File.Exists(outputFile));
+            var fileInfo = new FileInfo(outputFile);
+            Assert.True(fileInfo.Length > 50000, "Large text should produce a substantial audio file");
+        }
+        finally
+        {
+            if (File.Exists(outputFile))
+            {
+                File.Delete(outputFile);
+            }
+        }
+    }
+
+    #endregion
+
     /// <summary>
     /// Create a WAV file with given duration (seconds).
     /// If durationSeconds = 0, generates an empty WAV file with header only.

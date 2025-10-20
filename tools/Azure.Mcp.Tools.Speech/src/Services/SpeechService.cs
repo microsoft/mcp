@@ -333,7 +333,168 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
     }
 
     /// <summary>
+    /// Synthesizes speech from text and returns the audio data as a byte array.
+    /// This method uses push stream to collect audio data during synthesis for efficient memory management.
+    /// </summary>
+    /// <param name="endpoint">Azure AI Services endpoint</param>
+    /// <param name="text">The text to convert to speech</param>
+    /// <param name="language">Language for synthesis (default: en-US)</param>
+    /// <param name="voice">Voice name to use (e.g., en-US-JennyNeural)</param>
+    /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
+    /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
+    /// <returns>Tuple containing audio data, actual voice used, and duration in ticks</returns>
+    private async Task<(byte[] AudioData, string Voice, long Duration)> SynthesizeSpeechToStream(
+        string endpoint,
+        string text,
+        string? language = null,
+        string? voice = null,
+        string? format = null,
+        string? endpointId = null)
+    {
+        // Get Azure AD credential and token
+        var credential = await GetCredential();
+
+        // Get access token for Cognitive Services with proper scope
+        var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
+        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+
+        // Configure Speech SDK with endpoint
+        var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
+
+        // Set the authorization token
+        config.AuthorizationToken = accessToken.Token;
+
+        // Set language (default to en-US)
+        var synthesisLanguage = language ?? "en-US";
+        config.SpeechSynthesisLanguage = synthesisLanguage;
+
+        // Set voice if provided
+        string? actualVoice = voice;
+        if (!string.IsNullOrEmpty(voice))
+        {
+            config.SpeechSynthesisVoiceName = voice;
+        }
+
+        // Set output format (default to Riff24Khz16BitMonoPcm)
+        var outputFormat = ParseOutputFormat(format);
+        config.SetSpeechSynthesisOutputFormat(outputFormat);
+
+        // Set custom endpoint ID if provided
+        if (!string.IsNullOrEmpty(endpointId))
+        {
+            config.EndpointId = endpointId;
+        }
+
+        // Create a memory stream to collect audio data via push stream
+        var audioStream = new MemoryStream();
+        using var pushStream = AudioOutputStream.CreatePushStream(new PushAudioStreamCallback(audioStream, _logger));
+        using var audioConfig = AudioConfig.FromStreamOutput(pushStream);
+        using var synthesizer = new SpeechSynthesizer(config, audioConfig);
+
+        // Track synthesis progress
+        var taskCompletionSource = new TaskCompletionSource<bool>();
+        SpeechSynthesisCancellationDetails? cancellationDetails = null;
+
+        // Subscribe to synthesis events
+        synthesizer.SynthesisStarted += (s, e) =>
+        {
+            _logger.LogInformation("Speech synthesis started for text length: {Length} characters", text.Length);
+        };
+
+        synthesizer.Synthesizing += (s, e) =>
+        {
+            if (e.Result.AudioData.Length > 0)
+            {
+                _logger.LogDebug("Received audio chunk: {ChunkSize} bytes", e.Result.AudioData.Length);
+            }
+        };
+
+        synthesizer.SynthesisCompleted += (s, e) =>
+        {
+            _logger.LogInformation("Speech synthesis completed");
+            taskCompletionSource.TrySetResult(true);
+        };
+
+        synthesizer.SynthesisCanceled += (s, e) =>
+        {
+            var details = SpeechSynthesisCancellationDetails.FromResult(e.Result);
+            _logger.LogError("Speech synthesis canceled: Reason={Reason}, ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
+                details.Reason, details.ErrorCode, details.ErrorDetails);
+            cancellationDetails = details;
+            taskCompletionSource.TrySetResult(false);
+        };
+
+        // Start synthesis
+        var startTime = DateTime.UtcNow;
+        await synthesizer.SpeakTextAsync(text);
+
+        // Wait for synthesis to complete
+        var success = await taskCompletionSource.Task;
+        var duration = (DateTime.UtcNow - startTime).Ticks;
+
+        // Check if synthesis was successful
+        if (!success && cancellationDetails != null)
+        {
+            if (IsSynthesisInvalidEndpointError(cancellationDetails))
+            {
+                throw new InvalidOperationException(
+                    $"Invalid endpoint or connectivity issue. Reason: {cancellationDetails.Reason}, ErrorCode: {cancellationDetails.ErrorCode}, Details: {cancellationDetails.ErrorDetails}");
+            }
+
+            throw new InvalidOperationException(
+                $"Speech synthesis failed: {cancellationDetails.Reason} - {cancellationDetails.ErrorDetails}");
+        }
+
+        if (!success)
+        {
+            throw new InvalidOperationException("Speech synthesis failed for unknown reason");
+        }
+
+        // Get the collected audio data from the stream
+        var audioData = audioStream.ToArray();
+        
+        _logger.LogInformation(
+            "Speech synthesized successfully. Total audio length: {AudioLength} bytes",
+            audioData.Length);
+
+        // Get actual voice used (either specified or default)
+        if (string.IsNullOrEmpty(actualVoice))
+        {
+            actualVoice = voice ?? "default";
+        }
+
+        return (audioData, actualVoice, duration);
+    }
+
+    /// <summary>
+    /// Push stream callback that writes audio data to a memory stream as it arrives.
+    /// This allows for efficient collection of audio data during synthesis without blocking.
+    /// </summary>
+    private sealed class PushAudioStreamCallback(MemoryStream targetStream, ILogger logger) : PushAudioOutputStreamCallback
+    {
+        private readonly MemoryStream _targetStream = targetStream;
+        private readonly ILogger _logger = logger;
+
+        public override uint Write(byte[] dataBuffer)
+        {
+            if (dataBuffer != null && dataBuffer.Length > 0)
+            {
+                _targetStream.Write(dataBuffer, 0, dataBuffer.Length);
+                _logger.LogDebug("Wrote {BytesWritten} bytes to audio stream", dataBuffer.Length);
+                return (uint)dataBuffer.Length;
+            }
+            return 0;
+        }
+
+        public override void Close()
+        {
+            _logger.LogDebug("Push stream closed, total bytes collected: {TotalBytes}", _targetStream.Length);
+        }
+    }
+
+    /// <summary>
     /// Synthesizes speech from text and saves it to an audio file using Azure AI Services Speech.
+    /// Uses streaming synthesis to handle large texts efficiently and avoid memory issues.
     /// </summary>
     /// <param name="endpoint">Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/)</param>
     /// <param name="text">The text to convert to speech</param>
@@ -363,99 +524,46 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
 
         try
         {
-            // Get Azure AD credential and token
-            var credential = await GetCredential();
+            // Use the reusable streaming synthesis method
+            var (audioData, actualVoice, duration) = await SynthesizeSpeechToStream(
+                endpoint, text, language, voice, format, endpointId);
 
-            // Get access token for Cognitive Services with proper scope
-            var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-            var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+            // Write the complete audio data to file
+            await File.WriteAllBytesAsync(outputFilePath, audioData);
 
-            // Configure Speech SDK with endpoint
-            var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
+            _logger.LogInformation(
+                "Speech synthesized and saved to file: {OutputFile}, Audio length: {AudioLength} bytes",
+                outputFilePath,
+                audioData.Length);
 
-            // Set the authorization token
-            config.AuthorizationToken = accessToken.Token;
-
-            // Set language (default to en-US)
-            var synthesisLanguage = language ?? "en-US";
-            config.SpeechSynthesisLanguage = synthesisLanguage;
-
-            // Set voice if provided
-            string? actualVoice = voice;
-            if (!string.IsNullOrEmpty(voice))
+            return new SynthesisResult
             {
-                config.SpeechSynthesisVoiceName = voice;
-            }
-
-            // Set output format (default to Riff24Khz16BitMonoPcm)
-            var outputFormat = ParseOutputFormat(format);
-            config.SetSpeechSynthesisOutputFormat(outputFormat);
-
-            // Set custom endpoint ID if provided
-            if (!string.IsNullOrEmpty(endpointId))
-            {
-                config.EndpointId = endpointId;
-            }
-
-            // Create audio configuration for file output
-            using var audioConfig = AudioConfig.FromWavFileOutput(outputFilePath);
-            using var synthesizer = new SpeechSynthesizer(config, audioConfig);
-
-            // Perform synthesis
-            var startTime = DateTime.UtcNow;
-            var result = await synthesizer.SpeakTextAsync(text);
-            var duration = (DateTime.UtcNow - startTime).Ticks;
-
-            // Check result
-            if (result.Reason == ResultReason.SynthesizingAudioCompleted)
-            {
-                _logger.LogInformation(
-                    "Speech synthesized successfully. Output file: {OutputFile}, Audio length: {AudioLength} bytes",
-                    outputFilePath,
-                    result.AudioData.Length);
-
-                // Get actual voice used (either specified or default)
-                if (string.IsNullOrEmpty(actualVoice))
-                {
-                    // The voice name might not be easily retrievable from result properties
-                    // Set to a default or leave as is
-                    actualVoice = voice ?? "default";
-                }
-
-                return new SynthesisResult
-                {
-                    FilePath = outputFilePath,
-                    Duration = duration,
-                    AudioLength = result.AudioData.Length,
-                    Format = format ?? "Riff24Khz16BitMonoPcm",
-                    Voice = actualVoice,
-                    Language = synthesisLanguage
-                };
-            }
-            else if (result.Reason == ResultReason.Canceled)
-            {
-                var cancellation = SpeechSynthesisCancellationDetails.FromResult(result);
-                _logger.LogError(
-                    "Speech synthesis canceled: Reason={Reason}, ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
-                    cancellation.Reason,
-                    cancellation.ErrorCode,
-                    cancellation.ErrorDetails);
-
-                if (IsSynthesisInvalidEndpointError(cancellation))
-                {
-                    throw new InvalidOperationException(
-                        $"Invalid endpoint or connectivity issue. Reason: {cancellation.Reason}, ErrorCode: {cancellation.ErrorCode}, Details: {cancellation.ErrorDetails}");
-                }
-
-                throw new InvalidOperationException(
-                    $"Speech synthesis failed: {cancellation.Reason} - {cancellation.ErrorDetails}");
-            }
-
-            throw new InvalidOperationException($"Speech synthesis failed with reason: {result.Reason}");
+                FilePath = outputFilePath,
+                Duration = duration,
+                AudioLength = audioData.Length,
+                Format = format ?? "Riff24Khz16BitMonoPcm",
+                Voice = actualVoice,
+                Language = language ?? "en-US"
+            };
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error during speech synthesis.");
+            
+            // Clean up partial file on error
+            if (File.Exists(outputFilePath))
+            {
+                try
+                {
+                    File.Delete(outputFilePath);
+                    _logger.LogInformation("Cleaned up partial output file after error: {OutputFile}", outputFilePath);
+                }
+                catch (Exception cleanupEx)
+                {
+                    _logger.LogWarning(cleanupEx, "Failed to clean up partial output file: {OutputFile}", outputFilePath);
+                }
+            }
+            
             throw;
         }
     }

@@ -74,9 +74,14 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             {
                 // Validate file extension
                 var extension = Path.GetExtension(fileValue).ToLowerInvariant();
-                if (extension != ".wav")
+                var supportedExtensions = new HashSet<string>
                 {
-                    commandResult.AddError($"Output file must have .wav extension. Got: {extension}");
+                    ".wav", ".mp3", ".ogg", ".raw"
+                };
+
+                if (!supportedExtensions.Contains(extension))
+                {
+                    commandResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
                 }
             }
 
