@@ -77,10 +77,10 @@ class Program
             string repoRoot = FindRepoRoot(exeDir);
             string toolDir = FindToolDir(repoRoot, exeDir);
 
-            // Check if user wants to validate specific tool descriptions
-            var validateMode = args.Contains("--validate");
+            // Check if user wants to test a specific tool description
+            var testSingleToolMode = args.Contains("--test-single-tool");
 
-            if (validateMode)
+            if (testSingleToolMode)
             {
                 // Collect tool description and prompts
                 string? toolDescription = null;
@@ -92,7 +92,7 @@ class Program
                     {
                         if (toolDescription != null)
                         {
-                            Console.WriteLine("❌ Error: --validate mode accepts only one --tool-description argument");
+                            Console.WriteLine("❌ Error: --test-single-tool mode accepts only one --tool-description argument");
                             Console.WriteLine("Use multiple --prompt arguments to test the same description against different prompts");
                             Environment.Exit(1);
                         }
@@ -106,12 +106,12 @@ class Program
 
                 if (string.IsNullOrEmpty(toolDescription) || prompts.Count == 0)
                 {
-                    Console.WriteLine("❌ Error: --validate mode requires exactly one --tool-description and at least one --prompt argument");
+                    Console.WriteLine("❌ Error: --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument");
                     Console.WriteLine("Examples:");
                     Console.WriteLine("  # Single prompt validation:");
-                    Console.WriteLine("  --validate --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\"");
+                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\"");
                     Console.WriteLine("  # Multiple prompt validation:");
-                    Console.WriteLine("  --validate --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\" --prompt \"list my storage accounts\" --prompt \"what storage accounts do I have\"");
+                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\" --prompt \"list my storage accounts\" --prompt \"what storage accounts do I have\"");
                     Environment.Exit(1);
                 }
 
@@ -1184,7 +1184,7 @@ class Program
         Console.WriteLine();
         Console.WriteLine("MODES:");
         Console.WriteLine("  Default mode         Run full analysis on all tools and prompts");
-        Console.WriteLine("  --validate           Test a specific tool description against one or more prompts");
+        Console.WriteLine("  --test-single-tool           Test a specific tool description against one or more prompts");
         Console.WriteLine();
         Console.WriteLine("OPTIONS:");
         Console.WriteLine("  --help, -h                    Show this help message");
@@ -1195,8 +1195,8 @@ class Program
         Console.WriteLine("  --output-file-name <name>     Custom output file name (no extension)");
         Console.WriteLine("  --text-results                Output results in .txt format");
         Console.WriteLine("  --top <N>                     Number of results to display per test (default 5)");
-        Console.WriteLine("  --tool-description <text>     A single tool description to test (used with --validate)");
-        Console.WriteLine("  --prompt <text>               Test prompt (used with --validate, can be repeated)");
+        Console.WriteLine("  --tool-description <text>     A single tool description to test (used with --test-single-tool)");
+        Console.WriteLine("  --prompt <text>               Test prompt (used with --test-single-tool, can be repeated)");
         Console.WriteLine();
         Console.WriteLine("ENVIRONMENT VARIABLES:");
         Console.WriteLine("  AOAI_ENDPOINT           Azure OpenAI endpoint URL");
@@ -1214,13 +1214,13 @@ class Program
         Console.WriteLine("  ToolDescriptionEvaluator --text-results                           # Output in text format");
         Console.WriteLine("  ToolDescriptionEvaluator --ci --tools-file tools.json             # CI mode with JSON file");
         Console.WriteLine();
-        Console.WriteLine("  # Validate a tool description against a single prompt:");
-        Console.WriteLine("  ToolDescriptionEvaluator --validate \\");
+        Console.WriteLine("  # Test a single tool description against a single prompt:");
+        Console.WriteLine("  ToolDescriptionEvaluator --test-single-tool \\");
         Console.WriteLine("    --tool-description \"Lists all storage accounts in a subscription\" \\");
         Console.WriteLine("    --prompt \"show me my storage accounts\"");
         Console.WriteLine();
-        Console.WriteLine("  # Validate a tool description against multiple prompts:");
-        Console.WriteLine("  ToolDescriptionEvaluator --validate \\");
+        Console.WriteLine("  # Test a tool description against multiple prompts:");
+        Console.WriteLine("  ToolDescriptionEvaluator --test-single-tool \\");
         Console.WriteLine("    --tool-description \"Lists storage accounts\" \\");
         Console.WriteLine("    --prompt \"show me storage accounts\" \\");
         Console.WriteLine("    --prompt \"list my storage accounts\" \\");

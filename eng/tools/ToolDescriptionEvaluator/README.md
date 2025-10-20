@@ -38,18 +38,18 @@ Runs comprehensive analysis on all tools and prompts:
 dotnet run
 ```
 
-### 2. Validation Mode
+### 2. Test Single Tool Mode
 
 Tests a specific tool description against one or more prompts:
 
 ```bash
-# Single prompt validation
-dotnet run -- --validate \
+# Single prompt
+dotnet run -- --test-single-tool \
   --tool-description "Lists all storage accounts in a subscription" \
   --prompt "show me my storage accounts"
 
-# Multiple prompt validation
-dotnet run -- --validate \
+# Multiple prompts
+dotnet run -- --test-single-tool \
   --tool-description "Lists storage accounts" \
   --prompt "show me storage accounts" \
   --prompt "list my storage accounts" \
