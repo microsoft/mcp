@@ -540,7 +540,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 firewallRules.Add(new SqlServerFirewallRule(
                     Name: firewallRule.Data.Name,
                     Id: firewallRule.Data.Id.ToString(),
-                    Type: firewallRule.Data.ResourceType.ToString() ?? "Unknown",
+                    Type: firewallRule.Data.ResourceType.ToString(),
                     StartIpAddress: firewallRule.Data.StartIPAddress,
                     EndIpAddress: firewallRule.Data.EndIPAddress
                 ));
