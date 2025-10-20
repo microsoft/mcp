@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Linq;
 using System.Text.Json;
 using ToolSelection.Models;
 using ToolSelection.Services;
@@ -42,6 +41,11 @@ class Program
             string? customOutputFileName = null; // Optional custom output file name
             string? areaFilter = null; // Optional area filter for prompts
 
+            // Single tool test mode options
+            bool testSingleToolMode = false; // Optional mode to test a single tool description
+            string? testToolDescription = null; // Optional tool description for single tool testing
+            var testPrompts = new List<string>(); // Optional prompts for single tool testing
+
             for (int i = 0; i < args.Length; i++)
             {
                 if (args[i] == "--top" && i + 1 < args.Length)
@@ -71,54 +75,29 @@ class Program
                 {
                     areaFilter = args[i + 1];
                 }
+                else if (args[i] == "--test-single-tool" && i + 1 < args.Length)
+                {
+                    testSingleToolMode = args.Contains("--test-single-tool");
+                }
+                else if (args[i] == "--tool-description" && i + 1 < args.Length)
+                {
+                    testToolDescription = args[i + 1];
+                }
+                else if (args[i] == "--prompt" && i + 1 < args.Length)
+                {
+                    testPrompts.Add(args[i + 1]);
+                }
+            }
+
+            if ((!string.IsNullOrEmpty(testToolDescription) || testPrompts.Count > 0) && !testSingleToolMode)
+            {
+                Console.WriteLine("❌  Error: --tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
+                Environment.Exit(1);
             }
 
             string exeDir = AppContext.BaseDirectory;
             string repoRoot = FindRepoRoot(exeDir);
             string toolDir = FindToolDir(repoRoot, exeDir);
-
-            // Check if user wants to test a specific tool description
-            var testSingleToolMode = args.Contains("--test-single-tool");
-
-            if (testSingleToolMode)
-            {
-                // Collect tool description and prompts
-                string? toolDescription = null;
-                var prompts = new List<string>();
-
-                for (int i = 0; i < args.Length; i++)
-                {
-                    if (args[i] == "--tool-description" && i + 1 < args.Length)
-                    {
-                        if (toolDescription != null)
-                        {
-                            Console.WriteLine("❌ Error: --test-single-tool mode accepts only one --tool-description argument");
-                            Console.WriteLine("Use multiple --prompt arguments to test the same description against different prompts");
-                            Environment.Exit(1);
-                        }
-                        toolDescription = args[i + 1];
-                    }
-                    else if (args[i] == "--prompt" && i + 1 < args.Length)
-                    {
-                        prompts.Add(args[i + 1]);
-                    }
-                }
-
-                if (string.IsNullOrEmpty(toolDescription) || prompts.Count == 0)
-                {
-                    Console.WriteLine("❌ Error: --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument");
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine("  # Single prompt validation:");
-                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\"");
-                    Console.WriteLine("  # Multiple prompt validation:");
-                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\" --prompt \"list my storage accounts\" --prompt \"what storage accounts do I have\"");
-                    Environment.Exit(1);
-                }
-
-                await RunValidationModeAsync(toolDir, toolDescription, prompts, isCiMode);
-
-                return;
-            }
 
             // Load environment variables from .env file if it exists
             await LoadDotEnvFile(toolDir);
@@ -235,10 +214,33 @@ class Program
                 Console.WriteLine("📝 Using default prompts (e2eTestPrompts.md)");
             }
 
-            if (!string.IsNullOrEmpty(areaFilter))
+            if (testSingleToolMode)
+            {
+                if (!string.IsNullOrEmpty(areaFilter))
+                {
+                    Console.WriteLine("⚠️  Warning: --test-single-tool and --area are mutually exclusive; --area will be ignored.");
+                }
+
+                if (string.IsNullOrEmpty(testToolDescription) || testPrompts.Count == 0)
+                {
+                    Console.WriteLine("❌ Error: --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument");
+                    Console.WriteLine("Examples:");
+                    Console.WriteLine("  # Single prompt:");
+                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\"");
+                    Console.WriteLine("  # Multiple prompts:");
+                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\" --prompt \"list my storage accounts\" --prompt \"what storage accounts do I have\"");
+                    Environment.Exit(1);
+                }
+
+                await TestSingleToolAsync(toolDir, testToolDescription, testPrompts, isCiMode, embeddingService, db, maxResultsPerTest);
+
+                return;
+            }
+            else if (!string.IsNullOrEmpty(areaFilter))
             {
                 var areaCount = areaFilter.Split(',', StringSplitOptions.RemoveEmptyEntries).Length;
                 var areaLabel = areaCount > 1 ? "areas" : "area";
+
                 Console.WriteLine($"🎯 Filtering prompts to {areaLabel}: {areaFilter}");
             }
 
@@ -1028,15 +1030,15 @@ class Program
 
             if (overallScore >= 90)
             {
-                await writer.WriteLineAsync("🟢 **Excellent** - The tool selection system is performing very well.");
+                await writer.WriteLineAsync("🟢 **Excellent** - The tool selection system is performing exceptionally well.");
             }
             else if (overallScore >= 75)
             {
-                await writer.WriteLineAsync("🟡 **Good** - The tool selection system is performing adequately but has room for improvement.");
+                await writer.WriteLineAsync("🟡 **Good** - The tool selection system is performing well.");
             }
             else if (overallScore >= 50)
             {
-                await writer.WriteLineAsync("🟠 **Fair** - The tool selection system needs significant improvement.");
+                await writer.WriteLineAsync("🟠 **Fair** - The tool selection system is performing adequately but has room for improvement.");
             }
             else
             {
@@ -1082,7 +1084,7 @@ class Program
         Console.WriteLine($"   ⭐ Top + acceptable confidence (≥0.4): {metricsForConsole.TopChoiceAcceptableConfidencePercentage:F1}%");
     }
 
-    private static async Task<SuccessRateMetrics> CalculateSuccessRateAsync(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService)
+    private static async Task<SuccessRateMetrics> CalculateSuccessRateAsync(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, int maxResultsPerTest = 5)
     {
         var metrics = new SuccessRateMetrics();
 
@@ -1092,7 +1094,10 @@ class Program
             {
                 metrics.TotalTests++;
                 var vector = await embeddingService.CreateEmbeddingsAsync(prompt);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: 10)); // Metrics calculation keeps fixed TopK for consistency
+                // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
+                // If user requests more than 10, expand TopK accordingly so we have enough rows.
+                var topK = Math.Max(10, maxResultsPerTest);
+                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
 
                 if (queryResults.Count > 0)
                 {
@@ -1227,9 +1232,9 @@ class Program
         Console.WriteLine("    --prompt \"what storage accounts do I have\"");
     }
 
-    private static async Task RunValidationModeAsync(string toolDir, string toolDescription, List<string> testPrompts, bool isCiMode)
+    private static async Task TestSingleToolAsync(string toolDir, string toolDescription, List<string> testPrompts, bool isCiMode, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest)
     {
-        Console.WriteLine("🔧 Tool Description Validation Mode");
+        Console.WriteLine("🔧 Testing Single Tool Description");
         Console.WriteLine($"📋 Tool Description: {toolDescription}");
         Console.WriteLine($"❓ Test Prompts: {testPrompts.Count}");
 
@@ -1242,55 +1247,6 @@ class Program
 
         try
         {
-            // Load environment variables from .env file if it exists
-            await LoadDotEnvFile(toolDir);
-
-            // Get configuration values
-            var endpoint = Environment.GetEnvironmentVariable("AOAI_ENDPOINT");
-
-            if (string.IsNullOrEmpty(endpoint))
-            {
-                if (isCiMode)
-                {
-                    Console.WriteLine("⏭️  Skipping validation in CI - AOAI_ENDPOINT not configured");
-
-                    Environment.Exit(0);
-                }
-
-                Console.WriteLine("❌ Error: AOAI_ENDPOINT environment variable is required");
-                Console.WriteLine("💡 Tip: This validation requires Azure OpenAI configuration");
-                Console.WriteLine("   Set AOAI_ENDPOINT and TEXT_EMBEDDING_API_KEY environment variables");
-                Console.WriteLine("   or create a .env file with these values");
-
-                Environment.Exit(1);
-            }
-
-            var apiKey = GetApiKey(isCiMode);
-
-            if (apiKey == null && isCiMode)
-            {
-                Console.WriteLine("⏭️  Skipping validation in CI - API key not available");
-
-                Environment.Exit(0);
-            }
-
-            var embeddingService = new EmbeddingService(HttpClient, endpoint, apiKey!);
-
-            // Load existing tools for comparison
-            var listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode) ?? await LoadToolsFromJsonAsync("tools.json", isCiMode);
-
-            if (listToolsResult == null)
-            {
-                if (isCiMode)
-                {
-                    Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
-                    Environment.Exit(0);
-                }
-
-                Console.WriteLine("❌ Error: No tools found for processing");
-                Environment.Exit(1);
-            }
-
             // Create test tools with the provided description
             var testTools = new List<Tool>
             {
@@ -1301,34 +1257,7 @@ class Program
                 }
             };
 
-            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedTools;
-
-            if (tools == null || tools.Count == 0)
-            {
-                if (isCiMode)
-                {
-                    Console.WriteLine("⏭️  Skipping validation in CI - tools data not available");
-                    Environment.Exit(0);
-                }
-
-                Console.WriteLine("❌ Error: No tools found for processing");
-                Environment.Exit(1);
-            }
-
-            // Create vector database with existing tools + test tools
-            var allTools = new List<Tool>(tools);
-
-            allTools.AddRange(testTools);
-
-            var db = new VectorDB(new CosineSimilarity());
-            var stopwatch = Stopwatch.StartNew();
-
-            await PopulateDatabaseAsync(db, allTools, embeddingService);
-
-            stopwatch.Stop();
-
-            Console.WriteLine($"⚡ Loaded {allTools.Count} tools ({allTools.Count - testTools.Count} existing + {testTools.Count} test) in {stopwatch.Elapsed.TotalSeconds:F2}s");
-            Console.WriteLine();
+            await PopulateDatabaseAsync(db, testTools, embeddingService);
 
             // Test each prompt against all tools
             var testNumber = 1;
@@ -1339,7 +1268,10 @@ class Program
                 Console.WriteLine();
 
                 var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: 10));
+                // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
+                // If user requests more than 10, expand TopK accordingly so we have enough rows.
+                var topK = Math.Max(10, maxResultsPerTest);
+                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
 
                 // Find test tool rankings
                 var testToolResults = new List<(int rank, float score, string toolName)>();
@@ -1362,7 +1294,7 @@ class Program
                     var (rank, score, toolName) = testToolResults.First();
                     var quality = rank == 1 ? "✅ Excellent" :
                                   rank <= 3 ? "🟡 Good" :
-                                  rank <= 10 ? "🟠 Fair" : "🔴 Poor";
+                                  rank <= 5 ? "🟠 Fair" : "🔴 Poor";
                     var confidence = score >= 0.8 ? "💪 Very high confidence" :
                                      score >= 0.7 ? "🎯 High confidence" :
                                      score >= 0.6 ? "✅ Good confidence" :
@@ -1434,7 +1366,10 @@ class Program
             foreach (var testPrompt in testPrompts)
             {
                 var vector = await embeddingService.CreateEmbeddingsAsync(testPrompt);
-                var queryResults = db.Query(vector, new QueryOptions(TopK: 10));
+                // Query a little more than requested so confidence metrics (which currently assume TopK=10) remain stable.
+                // If user requests more than 10, expand TopK accordingly so we have enough rows.
+                var topK = Math.Max(10, maxResultsPerTest);
+                var queryResults = db.Query(vector, new QueryOptions(TopK: topK));
                 var testToolId = $"{TestToolIdPrefix}1";
                 var rank = queryResults.FindIndex(r => r.Entry.Id == testToolId) + 1;
 
