@@ -1,14 +1,10 @@
 # Build Scripts
 
-### [eng/scripts/New-BuildInfo.ps1](scripts/New-BuildInfo.ps1)
+### [eng/scripts/New-BuildInfo.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/New-BuildInfo.ps1)
 
 To simplify the work of collection server and platform metadata in build scripts, we use the common metadata file `build_info.json`. `New-BuildInfo.ps1` creates the `build_info.json` file containing server details, along with a list of projects that should be tested in a CI/PR build and matrices for CI build and test stages.
 
-```powershell
-.\eng\scripts\New-BuildInfo.ps1
-```
-
-produces `.work/build_info.json` with contents like:
+`./eng/scripts/New-BuildInfo.ps1` produces `.work/build_info.json` with contents like:
 ```json
 {
   "buildId": 99999,
@@ -131,7 +127,7 @@ produces `.work/build_info.json` with contents like:
 }
 ```
 
-### [eng/scripts/Build-Code.ps1](scripts/Build-Code.ps1)
+### [eng/scripts/Build-Code.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Build-Code.ps1)
 `Build-Code.ps1` is a common build script that compiles server projects in the repository, using the metadata collected in `build_info.json`. It supports building for multiple platforms, including native builds, and can be used in both local and CI environments.
 
 Build-Code.ps1 defaults to:
@@ -144,7 +140,7 @@ For more production-like builds, you can enable the switches: `-SelfContained -S
 
 So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed in `build_info.json` for the local platform as framework-dependent, non-trimmed, non-single-file applications, outputting them to the default path `.work/build`.
 
-### [eng/scripts/Compress-ForSigning.ps1](scripts/Compress-ForSigning.ps1)
+### [eng/scripts/Compress-ForSigning.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Compress-ForSigning.ps1)
 
 `Compress-ForSigning.ps1` collects the build output from `Build-Code.ps1`, organizes it into a standardized folder structure, and compresses Mac binaries into ZIP archives suitable for signing. This script uses the metadata in `build_info.json` to determine the correct paths and naming conventions for the ZIP files.
 
@@ -155,11 +151,11 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 Packaging scripts create distributable packages from the output of `Build-Code.ps1`, using the metadata collected in `build_info.json`.  Each packaging script targets a specific package format, such as npm, Docker, or VSIX. `build_info.json` lists an `artifactPath` for each server / platform combination.  This is the path that the packing scripts use to locate the files to package.
 
 Packing scripts currently include:
-- [eng/scripts/Pack-Npm.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Npm.ps1) for creating [npm packages for use with `npx`](https://docs.npmjs.com/cli/v9/commands/npx?v=true)
-- [eng/scripts/Pack-Nuget.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Nuget.ps1) for creating [NuGet packages for use with `dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec)
-- [eng/scripts/Pack-Vsix.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Vsix.ps1) for creating [VS Code VSIX packages](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#packaging-extensions)
-- [eng/scripts/Pack-Zip.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Pack-Zip.ps1) for creating ZIP archives
-- [eng/scripts/Prepare-Docker.ps1](https://github.com/microsoft/mcp/blob/main/scripts/Prepare-Docker.ps1) for staging the contents of Docker images
+- [eng/scripts/Pack-Npm.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Npm.ps1) for creating [npm packages for use with `npx`](https://docs.npmjs.com/cli/v9/commands/npx?v=true)
+- [eng/scripts/Pack-Nuget.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Nuget.ps1) for creating [NuGet packages for use with `dnx`](https://learn.microsoft.com/dotnet/core/tools/dotnet-tool-exec)
+- [eng/scripts/Pack-Vsix.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Vsix.ps1) for creating [VS Code VSIX packages](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#packaging-extensions)
+- [eng/scripts/Pack-Zip.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Pack-Zip.ps1) for creating ZIP archives
+- [eng/scripts/Prepare-Docker.ps1](https://github.com/microsoft/mcp/blob/main/eng/scripts/Prepare-Docker.ps1) for staging the contents of Docker images
 
 
 
