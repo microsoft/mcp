@@ -6,12 +6,15 @@ param(
     [string] $BuildInfoPath,
     [string] $ArtifactsPath,
     [string] $ArtifactPrefix,
-    [string] $OutputPath
+    [string] $OutputPath,
+    [switch] $CI
 )
 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $exitCode = 0
+
+$isPipelineRun = $env:TF_BUILD -eq 'true' -or $CI
 
 if(!$ArtifactsPath) {
     $ArtifactsPath = "$RepoRoot/.work"
@@ -53,7 +56,7 @@ $artifactDirectories = Get-ChildItem -Path $ArtifactsPath -Directory
 New-Item -ItemType Directory -Force -Path $OutputPath | Out-Null
 $OutputPath = (Resolve-Path $OutputPath).Path.Replace('\', '/')
 
-if($env:TF_BUILD) {
+if($isPipelineRun) {
     foreach ($artifactDirectory in $artifactDirectories) {
         Write-Host "`n##[group] Artifact directory '$artifactDirectory' contents:"
         Get-ChildItem -Path $artifactDirectory -File -Recurse | Select-Object -ExpandProperty FullName | Out-Host
@@ -77,6 +80,18 @@ foreach ($server in $buildInfo.servers) {
         | ForEach-Object { "$_/$artifactPath".Replace('\','/') }
         | Where-Object { Test-Path -Path $_ -PathType Container }
         | Select-Object -First 1
+
+        if (-not $platformSourcePath) {
+            $message = "Could not find artifact for $($server.name) at expected path '$artifactPath' in any artifact directory."
+            if ($isPipelineRun) {
+                LogError $message
+                $exitCode = 1
+            } else {
+                # We skip missing artifacts when running locally
+                Write-Warning $message
+            }
+            continue
+        }
 
         New-Item -Path (Split-Path -Path $platformOutputPath -Parent) -ItemType Directory -Force | Out-Null
 
@@ -110,11 +125,11 @@ foreach ($server in $buildInfo.servers) {
     }
 }
 
-if($env:TF_BUILD) {
+if($isPipelineRun) {
     $signingPatterns = $buildInfo.servers
     | Select-Object -ExpandProperty cliName -Unique
     | ForEach-Object { "**/windows-*/**/$_.dll", "**/windows-*/**/$_.exe" }
-    | Join-String -Separator "`n"
+    | ConvertTo-Json -AsArray -Compress
 
     Write-Host "Setting WindowsSigningPatterns variable to:`n$signingPatterns"
     Write-Host "##vso[task.setvariable variable=WindowsSigningPatterns]$signingPatterns"
