@@ -2,13 +2,11 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.5 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 0.9.5 (2025-10-20)
 
 ### Bugs Fixed
+
+- Update the `server.json` file in the NuGet distribution to match the `2025-09-29` schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
 
 ### Other Changes
 
