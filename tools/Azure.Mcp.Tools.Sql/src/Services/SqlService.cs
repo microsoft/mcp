@@ -1116,19 +1116,4 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     StorageMB: null
                 );
     }
-
-    private static SqlServerFirewallRule ConvertToSqlFirewallRuleModel(JsonElement item)
-    {
-        Models.SqlFirewallRuleData? firewallRule = Models.SqlFirewallRuleData.FromJson(item);
-        if (firewallRule == null)
-            throw new InvalidOperationException("Failed to parse SQL firewall rule data");
-
-        return new SqlServerFirewallRule(
-            Name: firewallRule.ResourceName ?? "Unknown",
-            Id: firewallRule.ResourceId ?? "Unknown",
-            Type: firewallRule.ResourceType ?? "Unknown",
-            StartIpAddress: firewallRule.Properties?.StartIPAddress,
-            EndIpAddress: firewallRule.Properties?.EndIPAddress
-        );
-    }
 }
