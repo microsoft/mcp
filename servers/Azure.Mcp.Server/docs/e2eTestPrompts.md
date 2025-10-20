@@ -441,6 +441,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_get_bestpractices_get | Get the latest Azure Functions best practices |
 | azmcp_get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
 | azmcp_get_bestpractices_get | What are azure function best practices? |
+| azmcp_get_bestpractices_get | configure azure mcp in coding agent for my repo |
 
 ## Azure Monitor
 
