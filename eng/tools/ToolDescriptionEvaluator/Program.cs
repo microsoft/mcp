@@ -91,8 +91,7 @@ class Program
 
             if ((!string.IsNullOrEmpty(testToolDescription) || testPrompts.Count > 0) && !testSingleToolMode)
             {
-                Console.WriteLine("❌  Error: --tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
-                Environment.Exit(1);
+                throw new InvalidOperationException("--tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
             }
 
             string exeDir = AppContext.BaseDirectory;
@@ -223,13 +222,16 @@ class Program
 
                 if (string.IsNullOrEmpty(testToolDescription) || testPrompts.Count == 0)
                 {
-                    Console.WriteLine("❌ Error: --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument");
-                    Console.WriteLine("Examples:");
-                    Console.WriteLine("  # Single prompt:");
-                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\"");
-                    Console.WriteLine("  # Multiple prompts:");
-                    Console.WriteLine("  --test-single-tool --tool-description \"Lists all storage accounts\" --prompt \"show me my storage accounts\" --prompt \"list my storage accounts\" --prompt \"what storage accounts do I have\"");
-                    Environment.Exit(1);
+                    string errorMessage = """
+                        --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument.
+
+                        Examples:
+                        # Single prompt:
+                            --test-single-tool --tool-description "Lists all storage accounts" --prompt "Show me my storage accounts"
+                        # Multiple prompts:
+                            --test-single-tool --tool-description "Lists all storage accounts" --prompt "Show me my storage accounts" --prompt "List my storage accounts" --prompt "What storage accounts do I have"
+                        """;
+                    throw new InvalidOperationException(errorMessage);
                 }
 
                 await TestSingleToolAsync(toolDir, testToolDescription, testPrompts, isCiMode, embeddingService, db, maxResultsPerTest);
@@ -279,9 +281,7 @@ class Program
                 }
                 else
                 {
-                    // Try to infer format or default to markdown
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode, areaFilter) ??
-                                        await LoadPromptsFromJsonAsync(customPromptsFileResolved, isCiMode);
+                    throw new InvalidOperationException("Custom prompts file must be either a .md or .json file.");
                 }
             }
             else
