@@ -14,6 +14,7 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
 {
     private const string _commandTitle = "Test Resource List";
     private readonly ILogger<TestResourceListCommand> _logger = logger;
+    public override string Id => "eb44ef6c-93dc-4fa1-949c-a5e8939d5052";
     public override string Name => "list";
     public override string Description =>
         $"""
