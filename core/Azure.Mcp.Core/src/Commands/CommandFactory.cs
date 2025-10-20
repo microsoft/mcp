@@ -175,7 +175,7 @@ public class CommandFactory
 
     private void ConfigureCommandHandler(Command command, IBaseCommand implementation)
     {
-        command.SetAction(async (ParseResult parseResult, CancellationToken ct) =>
+        command.SetAction(async (parseResult, ct) =>
         {
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 

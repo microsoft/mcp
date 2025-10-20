@@ -173,8 +173,6 @@ public sealed class NamespaceToolLoader(
 
             if (learn && string.IsNullOrEmpty(command))
             {
-                activity?.SetTag(TagName.IsServerCommandInvoked, false);
-
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -271,6 +269,7 @@ public sealed class NamespaceToolLoader(
             };
         }
 
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -466,6 +465,7 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult

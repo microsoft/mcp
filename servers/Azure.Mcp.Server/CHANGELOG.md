@@ -12,6 +12,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+
 ## 0.9.4 (2025-10-17)
 
 ### Features Added
