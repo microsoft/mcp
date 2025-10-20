@@ -64,14 +64,39 @@ jobs:
           Write-Error "Build failed"
           exit $LASTEXITCODE
         }
+        
+        # Determine the correct executable name based on OS
+        $exeName = if ($IsWindows) { "azmcp.exe" } else { "azmcp" }
+        $exePath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/$exeName"
+        
+        Write-Host "Checking for executable at: $exePath"
+        if (-not (Test-Path $exePath)) {
+          Write-Error "Executable not found at expected path: $exePath"
+          Get-ChildItem "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin" -Recurse | Select-Object FullName
+          exit 1
+        }
+        Write-Host "✓ Executable found at: $exePath"
     condition: succeededOrFailed()
 
   - task: Powershell@2
     displayName: "Verify AzCommands Metadata is up-to-date"
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-AzCommandsMetadata.ps1
-      arguments: >
-        -AzmcpPath "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe"
-        -DocsPath "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/docs/azmcp-commands.md"
+      workingDirectory: $(Build.SourcesDirectory)
+      targetType: inline
+      script: |
+        # Determine the correct executable name based on OS
+        $exeName = if ($IsWindows) { "azmcp.exe" } else { "azmcp" }
+        $azmcpPath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/$exeName"
+        $docsPath = "$(Build.SourcesDirectory)/servers/Azure.Mcp.Server/docs/azmcp-commands.md"
+        
+        Write-Host "Running verification with:"
+        Write-Host "  AzmcpPath: $azmcpPath"
+        Write-Host "  DocsPath: $docsPath"
+        
+        & "$(Build.SourcesDirectory)/eng/scripts/Verify-AzCommandsMetadata.ps1" -AzmcpPath $azmcpPath -DocsPath $docsPath
+        
+        if ($LASTEXITCODE -ne 0) {
+          exit $LASTEXITCODE
+        }
     condition: succeededOrFailed()
