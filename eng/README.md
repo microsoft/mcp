@@ -146,7 +146,7 @@ So, a parameterless `./eng/scripts/Build-Code.ps1` will build all servers listed
 
 ### [eng/scripts/Compress-ForSigning.ps1](scripts/Compress-ForSigning.ps1)
 
-`Compress-ForSigning.ps1` collect the build output from `Build-Code.ps1`, organizes it into a standardized folder structure, and compresses Mac binaries into ZIP archives suitable for signing. This script uses the metadata in `build_info.json` to determine the correct paths and naming conventions for the ZIP files.
+`Compress-ForSigning.ps1` collects the build output from `Build-Code.ps1`, organizes it into a standardized folder structure, and compresses Mac binaries into ZIP archives suitable for signing. This script uses the metadata in `build_info.json` to determine the correct paths and naming conventions for the ZIP files.
 
 `Compress-ForSigning.ps1` doesn't have any use in local development other than to test that its output is correct for later signing in a CI pipeline.
 
