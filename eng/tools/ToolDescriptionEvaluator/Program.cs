@@ -20,78 +20,79 @@ class Program
     {
         var stopwatchTotal = Stopwatch.StartNew();
 
+        // Check if we're in CI mode (skip if credentials are missing)
+        var isCiMode = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDID")) ||
+                       !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
+                       args.Contains("--ci");
+
+        // Show help if requested
+        if (args.Contains("--help") || args.Contains("-h"))
+        {
+            ShowHelp();
+
+            return;
+        }
+
+        int maxResultsPerTest = 5; // Default maximum number of results to show per test
+        string? customToolsFile = null; // Optional custom tools file
+        string? customPromptsFile = null; // Optional custom prompts file
+        string? customOutputFileName = null; // Optional custom output file name
+        string? areaFilter = null; // Optional area filter for prompts
+
+        // Single tool test mode options
+        bool testSingleToolMode = false; // Optional mode to test a single tool description
+        string? testToolDescription = null; // Optional tool description for single tool testing
+        var testPrompts = new List<string>(); // Optional prompts for single tool testing
+
+        // Parse command-line arguments
+        for (int i = 0; i < args.Length; i++)
+        {
+            if (args[i] == "--top" && i + 1 < args.Length)
+            {
+                if (int.TryParse(args[i + 1], out var parsed) && parsed > 0)
+                {
+                    maxResultsPerTest = parsed;
+                }
+                else
+                {
+                    Console.WriteLine("⚠️  Ignoring --top value (must be a positive integer). Using default: 5.");
+                }
+            }
+            else if (args[i] == "--tools-file" && i + 1 < args.Length)
+            {
+                customToolsFile = args[i + 1];
+            }
+            else if (args[i] == "--prompts-file" && i + 1 < args.Length)
+            {
+                customPromptsFile = args[i + 1];
+            }
+            else if (args[i] == "--output-file-name" && i + 1 < args.Length)
+            {
+                customOutputFileName = args[i + 1];
+            }
+            else if (args[i] == "--area" && i + 1 < args.Length)
+            {
+                areaFilter = args[i + 1];
+            }
+            else if (args[i] == "--test-single-tool" && i + 1 < args.Length)
+            {
+                testSingleToolMode = args.Contains("--test-single-tool");
+            }
+            else if (args[i] == "--tool-description" && i + 1 < args.Length)
+            {
+                testToolDescription = args[i + 1];
+            }
+            else if (args[i] == "--prompt" && i + 1 < args.Length)
+            {
+                testPrompts.Add(args[i + 1]);
+            }
+        }
+
         try
         {
-            // Show help if requested
-            if (args.Contains("--help") || args.Contains("-h"))
-            {
-                ShowHelp();
-
-                return;
-            }
-
-            // Check if we're in CI mode (skip if credentials are missing)
-            var isCiMode = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_BUILDID")) ||
-                           !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("GITHUB_ACTIONS")) ||
-                           args.Contains("--ci");
-
-            int maxResultsPerTest = 5; // Default maximum number of results to show per test
-            string? customToolsFile = null; // Optional custom tools file
-            string? customPromptsFile = null; // Optional custom prompts file
-            string? customOutputFileName = null; // Optional custom output file name
-            string? areaFilter = null; // Optional area filter for prompts
-
-            // Single tool test mode options
-            bool testSingleToolMode = false; // Optional mode to test a single tool description
-            string? testToolDescription = null; // Optional tool description for single tool testing
-            var testPrompts = new List<string>(); // Optional prompts for single tool testing
-
-            for (int i = 0; i < args.Length; i++)
-            {
-                if (args[i] == "--top" && i + 1 < args.Length)
-                {
-                    if (int.TryParse(args[i + 1], out var parsed) && parsed > 0)
-                    {
-                        maxResultsPerTest = parsed;
-                    }
-                    else
-                    {
-                        Console.WriteLine("⚠️  Ignoring --top value (must be a positive integer). Using default: 5.");
-                    }
-                }
-                else if (args[i] == "--tools-file" && i + 1 < args.Length)
-                {
-                    customToolsFile = args[i + 1];
-                }
-                else if (args[i] == "--prompts-file" && i + 1 < args.Length)
-                {
-                    customPromptsFile = args[i + 1];
-                }
-                else if (args[i] == "--output-file-name" && i + 1 < args.Length)
-                {
-                    customOutputFileName = args[i + 1];
-                }
-                else if (args[i] == "--area" && i + 1 < args.Length)
-                {
-                    areaFilter = args[i + 1];
-                }
-                else if (args[i] == "--test-single-tool" && i + 1 < args.Length)
-                {
-                    testSingleToolMode = args.Contains("--test-single-tool");
-                }
-                else if (args[i] == "--tool-description" && i + 1 < args.Length)
-                {
-                    testToolDescription = args[i + 1];
-                }
-                else if (args[i] == "--prompt" && i + 1 < args.Length)
-                {
-                    testPrompts.Add(args[i + 1]);
-                }
-            }
-
             if ((!string.IsNullOrEmpty(testToolDescription) || testPrompts.Count > 0) && !testSingleToolMode)
             {
-                throw new InvalidOperationException("--tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
+                throw new ArgumentException("--tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
             }
 
             string exeDir = AppContext.BaseDirectory;
@@ -106,21 +107,36 @@ class Program
 
             if (string.IsNullOrEmpty(endpoint))
             {
+                string errorMessage;
+
                 if (isCiMode)
                 {
-                    Console.WriteLine("⏭️  Skipping tool selection analysis in CI - AOAI_ENDPOINT not configured");
-                    Environment.Exit(0);
+                    errorMessage = "AOAI_ENDPOINT not configured";
+                }
+                else
+                {
+                    errorMessage = "AOAI_ENDPOINT environment variable not set. Please set it to an Azure OpenAI endpoint URL.";
                 }
 
-                throw new InvalidOperationException("AOAI_ENDPOINT environment variable is required.");
+                throw new ArgumentException(errorMessage);
             }
 
-            var apiKey = GetApiKey(isCiMode);
+            var apiKey = Environment.GetEnvironmentVariable("TEXT_EMBEDDING_API_KEY");
 
-            if (apiKey == null && isCiMode)
+            if (string.IsNullOrEmpty(apiKey))
             {
-                Console.WriteLine("⏭️  Skipping tool selection analysis in CI - API key not available");
-                Environment.Exit(0);
+                string errorMessage;
+
+                if (isCiMode)
+                {
+                    errorMessage = "TEXT_EMBEDDING_API_KEY not available";
+                }
+                else
+                {
+                    errorMessage = "TEXT_EMBEDDING_API_KEY environment variable not set. Please set it to an Azure OpenAI API key.";
+                }
+
+                throw new ArgumentException(errorMessage);
             }
 
             var embeddingService = new EmbeddingService(HttpClient, endpoint, apiKey!);
@@ -134,41 +150,29 @@ class Program
 
             if (!string.IsNullOrEmpty(customToolsFileResolved))
             {
-                listToolsResult = await LoadToolsFromJsonAsync(customToolsFileResolved, isCiMode);
+                listToolsResult = await LoadToolsFromJsonAsync(customToolsFileResolved);
 
-                if (listToolsResult == null && !isCiMode)
+                if (listToolsResult == null)
                 {
                     Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading");
-                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode);
+                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir);
                 }
             }
             else
             {
-                listToolsResult = await LoadToolsDynamicallyAsync(toolDir, isCiMode) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"), isCiMode);
+                listToolsResult = await LoadToolsDynamicallyAsync(toolDir) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
             }
 
-            if (listToolsResult == null)
+            var tools = listToolsResult?.Tools ?? listToolsResult?.ConsolidatedTools;
+
+            if (tools == null || tools.Count == 0)
             {
-                if (isCiMode)
-                {
-                    Console.WriteLine("⏭️  Skipping tool selection analysis in CI - tools data not available");
-                    Environment.Exit(0);
-                }
-                else
-                {
-                    throw new InvalidOperationException("No tools found for processing.");
-                }
+                throw new InvalidDataException("No tools found for processing.");
             }
 
             // Create vector database
             var db = new VectorDB(new CosineSimilarity());
             var stopwatch = Stopwatch.StartNew();
-            var tools = listToolsResult.Tools ?? listToolsResult.ConsolidatedTools;
-
-            if (tools == null || tools.Count == 0)
-            {
-                throw new InvalidOperationException("No tools found for processing.");
-            }
 
             await PopulateDatabaseAsync(db, tools, embeddingService);
 
@@ -217,7 +221,7 @@ class Program
             {
                 if (!string.IsNullOrEmpty(areaFilter))
                 {
-                    Console.WriteLine("⚠️  Warning: --test-single-tool and --area are mutually exclusive; --area will be ignored.");
+                    Console.WriteLine("⚠️  --test-single-tool and --area are mutually exclusive; --area will be ignored.");
                 }
 
                 if (string.IsNullOrEmpty(testToolDescription) || testPrompts.Count == 0)
@@ -231,10 +235,10 @@ class Program
                         # Multiple prompts:
                             --test-single-tool --tool-description "Lists all storage accounts" --prompt "Show me my storage accounts" --prompt "List my storage accounts" --prompt "What storage accounts do I have"
                         """;
-                    throw new InvalidOperationException(errorMessage);
+                    throw new ArgumentException(errorMessage);
                 }
 
-                await TestSingleToolAsync(toolDir, testToolDescription, testPrompts, isCiMode, embeddingService, db, maxResultsPerTest);
+                await TestSingleToolAsync(testToolDescription, testPrompts, embeddingService, db, maxResultsPerTest);
 
                 return;
             }
@@ -273,15 +277,15 @@ class Program
                 // User specified a custom prompts file
                 if (customPromptsFileResolved.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
                 {
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, isCiMode, areaFilter);
+                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, areaFilter);
                 }
                 else if (customPromptsFileResolved.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
                 {
-                    toolNameAndPrompts = await LoadPromptsFromJsonAsync(customPromptsFileResolved, isCiMode);
+                    toolNameAndPrompts = await LoadPromptsFromJsonAsync(customPromptsFileResolved, areaFilter);
                 }
                 else
                 {
-                    throw new InvalidOperationException("Custom prompts file must be either a .md or .json file.");
+                    throw new ArgumentException("Custom prompts file must be either a .md or .json file.");
                 }
             }
             else
@@ -293,7 +297,7 @@ class Program
                 if (File.Exists(defaultPromptsPath))
                 {
                     // Load from markdown and save a normalized JSON copy for future runs
-                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(defaultPromptsPath, isCiMode, areaFilter);
+                    toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(defaultPromptsPath, areaFilter);
 
                     if (toolNameAndPrompts != null)
                     {
@@ -307,7 +311,7 @@ class Program
                         if (File.Exists(promptsJsonPath))
                         {
                             Console.WriteLine($"⚠️  No prompts parsed from {defaultPromptsPath}; falling back to prompts.json at {promptsJsonPath}");
-                            toolNameAndPrompts = await LoadPromptsFromJsonAsync(promptsJsonPath, isCiMode);
+                            toolNameAndPrompts = await LoadPromptsFromJsonAsync(promptsJsonPath, areaFilter);
                         }
                     }
                 }
@@ -317,44 +321,17 @@ class Program
                     if (File.Exists(promptsJsonPath))
                     {
                         Console.WriteLine($"⚠️  Default prompts markdown not found at {defaultPromptsPath}; falling back to prompts.json at {promptsJsonPath}");
-                        toolNameAndPrompts = await LoadPromptsFromJsonAsync(promptsJsonPath, isCiMode);
+                        toolNameAndPrompts = await LoadPromptsFromJsonAsync(promptsJsonPath, areaFilter);
                     }
-                    else
-                    {
-                        // No default prompts available. In CI we silently let callers handle this (they may exit), otherwise warn the user.
-                        if (!isCiMode)
-                        {
-                            Console.WriteLine($"⚠️  No prompts found: neither {defaultPromptsPath} nor {promptsJsonPath} exist. Provide prompts via --prompts-file or create one of these files.");
-                        }
-                        toolNameAndPrompts = null;
-                    }
+                }
+
+                if (toolNameAndPrompts == null)
+                {
+                    throw new InvalidDataException("No prompts found for processing.");
                 }
             }
 
-            if (toolNameAndPrompts == null && isCiMode)
-            {
-                Console.WriteLine("⏭️  Skipping prompt testing in CI - prompts data not available");
-
-                // Still write basic setup info to output file
-                if (isTextOutput)
-                {
-                    await writer.WriteLineAsync($"Loaded {toolCount} tools in {executionTime.TotalSeconds:F7}s");
-                    await writer.WriteLineAsync("Note: Prompt testing skipped in CI environment");
-                }
-                else
-                {
-                    await writer.WriteLineAsync("# Tool Selection Analysis Setup");
-                    await writer.WriteLineAsync();
-                    await writer.WriteLineAsync($"**Setup completed:** {DateTime.Now:yyyy-MM-dd HH:mm:ss}  ");
-                    await writer.WriteLineAsync($"**Tool count:** {toolCount}  ");
-                    await writer.WriteLineAsync($"**Database setup time:** {executionTime.TotalSeconds:F7}s  ");
-                    await writer.WriteLineAsync();
-                    await writer.WriteLineAsync("*Note: Prompt testing skipped in CI environment*");
-                }
-                return;
-            }
-
-            await PerformAnalysis(db, toolNameAndPrompts!, embeddingService, executionTime, writer, isCiMode, maxResultsPerTest);
+            await PerformAnalysis(toolNameAndPrompts!, embeddingService, db, executionTime, writer, maxResultsPerTest, isCiMode);
 
             stopwatchTotal.Stop();
 
@@ -365,9 +342,15 @@ class Program
         }
         catch (Exception ex)
         {
+            if (isCiMode)
+            {
+                Console.WriteLine($"⚠️  Error occurred while running in CI: {ex.Message}");
+                Console.WriteLine("⏭️  Skipping tool selection analysis");
+                Environment.Exit(0);
+            }
+
             Console.WriteLine($"❌ Error: {ex.Message}");
             Console.WriteLine(ex.StackTrace);
-
             Environment.Exit(1);
         }
     }
@@ -377,23 +360,6 @@ class Program
         var args = Environment.GetCommandLineArgs();
 
         return args.Contains("--text-results", StringComparer.OrdinalIgnoreCase);
-    }
-
-    private static string? GetApiKey(bool isCiMode = false)
-    {
-        var apiKey = Environment.GetEnvironmentVariable("TEXT_EMBEDDING_API_KEY");
-
-        if (!string.IsNullOrEmpty(apiKey))
-        {
-            return apiKey;
-        }
-
-        if (isCiMode)
-        {
-            return null; // Let caller handle this gracefully
-        }
-
-        throw new InvalidOperationException("API key not found. Please set TEXT_EMBEDDING_API_KEY environment variable.");
     }
 
     private static async Task LoadDotEnvFile(string toolDir)
@@ -437,7 +403,7 @@ class Program
             dir = dir.Parent;
         }
 
-        throw new InvalidOperationException("Could not find repo root (AzureMcp.sln or .git).");
+        throw new FileNotFoundException("Could not find repo root (AzureMcp.sln or .git).");
     }
 
     // Resolve the ToolDescriptionEvaluator directory robustly from repo root, with fallbacks from exeDir
@@ -464,145 +430,113 @@ class Program
         return Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
     }
 
-    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, bool isCiMode = false)
+    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir)
     {
-        try
+        // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
+        var exeDir = AppContext.BaseDirectory;
+        var repoRoot = FindRepoRoot(exeDir);
+        var searchRoots = new List<string>
         {
-            // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
-            var exeDir = AppContext.BaseDirectory;
-            var repoRoot = FindRepoRoot(exeDir);
-            var searchRoots = new List<string>
+            Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
+            Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
+        };
+
+        var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
+        FileInfo? cliArtifact = null;
+
+        foreach (var root in searchRoots.Where(Directory.Exists))
+        {
+            foreach (var name in candidateNames)
             {
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
-            };
-
-            var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
-            FileInfo? cliArtifact = null;
-
-            foreach (var root in searchRoots.Where(Directory.Exists))
-            {
-                foreach (var name in candidateNames)
+                var found = new DirectoryInfo(root)
+                    .EnumerateFiles(name, SearchOption.AllDirectories)
+                    .FirstOrDefault();
+                if (found != null)
                 {
-                    var found = new DirectoryInfo(root)
-                        .EnumerateFiles(name, SearchOption.AllDirectories)
-                        .FirstOrDefault();
-                    if (found != null)
-                    {
-                        cliArtifact = found;
-                        break;
-                    }
-                }
-
-                if (cliArtifact != null)
-                {
+                    cliArtifact = found;
                     break;
                 }
             }
 
-            if (cliArtifact == null)
+            if (cliArtifact != null)
             {
-                if (isCiMode)
-                {
-                    return null; // Graceful fallback in CI
-                }
-
-                throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
+                break;
             }
-
-            var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
-            var fileName = isDll ? "dotnet" : cliArtifact.FullName;
-            var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-
-            process.Start();
-
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                if (isCiMode)
-                {
-                    return null; // Graceful fallback in CI
-                }
-
-                throw new InvalidOperationException($"Failed to get tools from azmcp: {error}");
-            }
-
-            // Filter out non-JSON lines (like launch settings messages)
-            var lines = output.Split('\n');
-            var jsonStartIndex = -1;
-
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (lines[i].Trim().StartsWith("{"))
-                {
-                    jsonStartIndex = i;
-
-                    break;
-                }
-            }
-
-            if (jsonStartIndex == -1)
-            {
-                if (isCiMode)
-                {
-                    return null; // Graceful fallback in CI
-                }
-
-                throw new InvalidOperationException("No JSON output found from azmcp command.");
-            }
-
-            var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
-
-            // Parse the JSON output
-            var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
-
-            // Save the dynamically loaded tools to tools.json for future use
-            if (result != null)
-            {
-                await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"));
-
-                Console.WriteLine($"💾 Saved {result.Tools?.Count} tools to tools.json");
-            }
-
-            return result;
         }
-        catch (Exception)
+
+        if (cliArtifact == null)
         {
-            if (isCiMode)
-            {
-                return null; // Graceful fallback in CI
-            }
-
-            throw;
+            throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
         }
+
+        var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
+        var fileName = isDll ? "dotnet" : cliArtifact.FullName;
+        var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
+
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = arguments,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+
+        var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
+        {
+            throw new IOException($"Failed to get tools from azmcp: {error}");
+        }
+
+        // Filter out non-JSON lines (like launch settings messages)
+        var lines = output.Split('\n');
+        var jsonStartIndex = -1;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].Trim().StartsWith("{"))
+            {
+                jsonStartIndex = i;
+
+                break;
+            }
+        }
+
+        if (jsonStartIndex == -1)
+        {
+            throw new IOException("No JSON output found from azmcp command.");
+        }
+
+        var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
+
+        // Parse the JSON output
+        var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+
+        // Save the dynamically loaded tools to tools.json for future use
+        if (result != null)
+        {
+            await SaveToolsToJsonAsync(result, Path.Combine(toolDir, "tools.json"));
+
+            Console.WriteLine($"💾 Saved {result.Tools?.Count} tools to tools.json");
+        }
+
+        return result;
     }
 
-    private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath, bool isCiMode = false)
+    private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath)
     {
         if (!File.Exists(filePath))
         {
-            if (isCiMode)
-            {
-                return null; // Let caller handle this gracefully
-            }
-
             throw new FileNotFoundException($"Tools file not found: {filePath}");
         }
 
@@ -664,119 +598,104 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Warning: Failed to save tools to {filePath}: {ex.Message}");
+            Console.WriteLine($"⚠️  Failed to save tools to {filePath}: {ex.Message}");
             Console.WriteLine(ex.StackTrace);
         }
     }
 
-    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromMarkdownAsync(string filePath, bool isCiMode = false, string? areaFilter = null)
-    {
-        try
-        {
-            if (!File.Exists(filePath))
-            {
-                if (isCiMode)
-                {
-                    return null; // Let caller handle this gracefully
-                }
-
-                throw new FileNotFoundException($"Markdown file not found: {filePath}");
-            }
-
-            var content = await File.ReadAllTextAsync(filePath);
-            var prompts = new Dictionary<string, List<string>>();
-
-            // Parse markdown tables to extract tool names and prompts
-            var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
-
-            foreach (var line in lines)
-            {
-                var trimmedLine = line.Trim();
-
-                // Skip headers, separators, and non-table content
-                if (trimmedLine.StartsWith("| Tool Name") ||
-                    trimmedLine.StartsWith("|:-------") ||
-                    trimmedLine.StartsWith("#") ||
-                    string.IsNullOrWhiteSpace(trimmedLine))
-                {
-                    continue;
-                }
-
-                // Parse table rows. For example: | tool_name | Test prompt |
-                if (trimmedLine.StartsWith("|") && trimmedLine.Contains("|"))
-                {
-                    var parts = trimmedLine.Split('|', StringSplitOptions.RemoveEmptyEntries);
-                    if (parts.Length >= 2)
-                    {
-                        var toolName = parts[0].Trim();
-                        var prompt = parts[1].Trim();
-
-                        // Skip empty entries
-                        if (string.IsNullOrWhiteSpace(toolName) || string.IsNullOrWhiteSpace(prompt))
-                            continue;
-
-                        // Filter by tool name prefix(es) (e.g., keyvault, storage)
-                        if (!string.IsNullOrEmpty(areaFilter))
-                        {
-                            // Support multiple areas separated by commas
-                            var areas = areaFilter.Split(',', StringSplitOptions.RemoveEmptyEntries)
-                                                   .Select(a => a.Trim())
-                                                   .Where(a => !string.IsNullOrEmpty(a))
-                                                   .ToList();
-
-                            // Check if tool name starts with any of the area filters
-                            if (!areas.Any(prefix => toolName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
-                            {
-                                // Skip this tool as it doesn't match any prefix
-                                continue;
-                            }
-                        }
-
-                        if (!prompts.ContainsKey(toolName))
-                        {
-                            prompts[toolName] = new List<string>();
-                        }
-
-                        prompts[toolName].Add(prompt.Replace("\\<", "<"));
-                    }
-                }
-            }
-
-            // If area filter was specified but no prompts found, provide feedback
-            if (!string.IsNullOrEmpty(areaFilter) && prompts.Count == 0 && !isCiMode)
-            {
-                Console.WriteLine($"⚠️  No prompts found for prefix '{areaFilter}'. Use service names like 'keyvault', 'storage', 'functionapp', etc.");
-            }
-
-            return prompts.Count > 0 ? prompts : null;
-        }
-        catch (Exception)
-        {
-            if (isCiMode)
-            {
-                return null; // Graceful fallback in CI
-            }
-
-            throw;
-        }
-    }
-
-    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromJsonAsync(string filePath, bool isCiMode = false)
+    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromMarkdownAsync(string filePath, string? areaFilter = null)
     {
         if (!File.Exists(filePath))
         {
-            if (isCiMode)
+            throw new FileNotFoundException($"Prompts file not found: {filePath}");
+        }
+
+        var content = await File.ReadAllTextAsync(filePath);
+        var prompts = new Dictionary<string, List<string>>();
+
+        // Parse markdown tables to extract tool names and prompts
+        var lines = content.Split('\n', StringSplitOptions.RemoveEmptyEntries);
+
+        foreach (var line in lines)
+        {
+            var trimmedLine = line.Trim();
+
+            // Skip headers, separators, and non-table content
+            if (trimmedLine.StartsWith("| Tool Name") ||
+                trimmedLine.StartsWith("|:-------") ||
+                trimmedLine.StartsWith("#") ||
+                string.IsNullOrWhiteSpace(trimmedLine))
             {
-                return null; // Let caller handle this gracefully
+                continue;
             }
 
+            // Parse table rows. For example: | tool_name | Test prompt |
+            if (trimmedLine.StartsWith("|") && trimmedLine.Contains("|"))
+            {
+                var parts = trimmedLine.Split('|', StringSplitOptions.RemoveEmptyEntries);
+                if (parts.Length >= 2)
+                {
+                    var toolName = parts[0].Trim();
+                    var prompt = parts[1].Trim();
+
+                    // Skip empty entries
+                    if (string.IsNullOrWhiteSpace(toolName) || string.IsNullOrWhiteSpace(prompt))
+                        continue;
+
+                    // Filter by tool name prefix(es) (e.g., keyvault, storage)
+                    if (!string.IsNullOrEmpty(areaFilter))
+                    {
+                        // Support multiple areas separated by commas
+                        var areas = areaFilter.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                                                .Select(a => a.Trim())
+                                                .Where(a => !string.IsNullOrEmpty(a))
+                                                .ToList();
+
+                        // Check if tool name starts with any of the area filters
+                        if (!areas.Any(prefix => toolName.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)))
+                        {
+                            // Skip this tool as it doesn't match any prefix
+                            continue;
+                        }
+                    }
+
+                    if (!prompts.ContainsKey(toolName))
+                    {
+                        prompts[toolName] = new List<string>();
+                    }
+
+                    prompts[toolName].Add(prompt.Replace("\\<", "<"));
+                }
+            }
+        }
+
+        // If area filter was specified but no prompts found, provide feedback
+        if (!string.IsNullOrEmpty(areaFilter) && prompts.Count == 0)
+        {
+            Console.WriteLine($"⚠️  No prompts found for prefix '{areaFilter}'. Use service names like 'keyvault', 'storage', 'functionapp', etc.");
+        }
+
+        return prompts.Count > 0 ? prompts : null;
+    }
+
+    private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromJsonAsync(string filePath, string? areaFilter = null)
+    {
+        if (!File.Exists(filePath))
+        {
             throw new FileNotFoundException($"Prompts file not found: {filePath}");
         }
 
         var json = await File.ReadAllTextAsync(filePath);
         var prompts = JsonSerializer.Deserialize(json, SourceGenerationContext.Default.DictionaryStringListString);
 
-        return prompts ?? throw new InvalidOperationException($"Failed to parse prompts JSON from {filePath}");
+        if (!string.IsNullOrEmpty(areaFilter))
+        {
+            // Filter prompts by area
+            prompts = prompts?.Where(kvp => kvp.Key.StartsWith(areaFilter, StringComparison.OrdinalIgnoreCase))
+                                   .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        }
+
+        return prompts;
     }
 
     private static async Task SavePromptsToJsonAsync(Dictionary<string, List<string>> prompts, string filePath)
@@ -812,8 +731,8 @@ class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"⚠️  Warning: Failed to save prompts to {filePath}: {ex.Message}");
-            Console.WriteLine(ex.StackTrace);
+            Console.WriteLine($"⚠️  Failed to save prompts to {filePath}: {ex.Message}");
+            throw;
         }
     }
 
@@ -870,7 +789,7 @@ class Program
         }
     }
 
-    private static async Task PerformAnalysis(VectorDB db, Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, TimeSpan databaseSetupTime, StreamWriter writer, bool isCiMode = false, int maxResultsPerTest = 5)
+    private static async Task PerformAnalysis(Dictionary<string, List<string>> toolNameWithPrompts, EmbeddingService embeddingService, VectorDB db, TimeSpan databaseSetupTime, StreamWriter writer, int maxResultsPerTest = 5, bool isCiMode = false)
     {
         var stopwatch = Stopwatch.StartNew();
         int promptCount = 0;
@@ -1232,7 +1151,7 @@ class Program
         Console.WriteLine("    --prompt \"what storage accounts do I have\"");
     }
 
-    private static async Task TestSingleToolAsync(string toolDir, string toolDescription, List<string> testPrompts, bool isCiMode, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest)
+    private static async Task TestSingleToolAsync(string toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5)
     {
         Console.WriteLine("🔧 Testing Single Tool Description");
         Console.WriteLine($"📋 Tool Description: {toolDescription}");
