@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added instructions on configuring Azure MCP for GitHub coding agent. [[#888](https://github.com/microsoft/mcp/pull/888)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
