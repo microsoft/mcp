@@ -2,7 +2,7 @@
 
 ### [eng/scripts/New-BuildInfo.ps1](scripts/New-BuildInfo.ps1)
 
-To simplify the work of collection server and platform metadata in build scripts, we use the common metadata file `build_info.json`. `New-BuildInfo.ps1` creates the `build_info.json` file containing server details, along with a list of projects that should be tested in a CI/PR build amd matrices for CI build and test stages.
+To simplify the work of collection server and platform metadata in build scripts, we use the common metadata file `build_info.json`. `New-BuildInfo.ps1` creates the `build_info.json` file containing server details, along with a list of projects that should be tested in a CI/PR build and matrices for CI build and test stages.
 
 ```powershell
 .\eng\scripts\New-BuildInfo.ps1
