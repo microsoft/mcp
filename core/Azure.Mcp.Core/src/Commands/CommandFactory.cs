@@ -226,7 +226,7 @@ public class CommandFactory
             }
             finally
             {
-                _logger.LogTrace("Finished running '{Command}'.", command.Name); 
+                _logger.LogTrace("Finished running '{Command}'.", command.Name);
             }
         });
     }
