@@ -3,10 +3,7 @@
 
 [CmdletBinding()]
 param(
-    [parameter(Mandatory)]
-    [ValidateSet('none', 'internal', 'public')]
     [string] $PublishTarget,
-    [parameter(Mandatory)]
     [int] $BuildId,
     [string] $OutputPath,
     [string] $ServerName,
@@ -36,6 +33,20 @@ $nativePlatforms = @(
 #     $nativePlatforms = @('linux-x64-native')
 # }
 
+if ($BuildId -eq 0) {
+    if ($isPipelineRun) {
+        LogError 'A non-zero BuildId is required when running in a pipeline.'
+        $exitCode = 1
+    } else {
+        $BuildId = 99999
+    }
+}
+
+if ($isPipelineRun -and !$PublishTarget) {
+    LogError 'PublishTarget parameter is required when running in a pipeline.'
+    $exitCode = 1
+}
+
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build_info.json"
 }
@@ -64,8 +75,7 @@ function CheckVariable($name) {
             $script:exitCode = 1
             return ""
         } else {
-            $substitute = "Missing-$name"
-            LogWarning "Environment variable $name is not set. Using substitute value '$substitute'." -ForegroundColor Yellow
+            $substitute = "Missing `$env:$name"
             return $substitute
         }
     }
@@ -219,7 +229,6 @@ function Get-TestMatrix {
             # We can't use the name 'Path' here because it would override the Path environment variable in matrix based jobs
             pathToTest = $path.Path
         }
-
 
         if ($TestType -eq 'Live') {
             if (!$path.HasLiveTests -or !$path.HasTestResources) {
