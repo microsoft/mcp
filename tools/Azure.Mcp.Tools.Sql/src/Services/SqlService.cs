@@ -432,8 +432,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Use ARM client directly for list operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
 
             var administrators = new List<SqlServerEntraAdministrator>();
             await foreach (var admin in sqlServerResource.Value.GetSqlServerAzureADAdministrators().GetAllAsync(cancellationToken))
@@ -441,7 +441,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 administrators.Add(new SqlServerEntraAdministrator(
                     Name: admin.Data.Name,
                     Id: admin.Data.Id.ToString(),
-                    Type: admin.Data.ResourceType.ToString(),
+                    Type: admin.Data.ResourceType.ToString() ?? "Unknown",
                     AdministratorType: admin.Data.AdministratorType?.ToString(),
                     Login: admin.Data.Login,
                     Sid: admin.Data.Sid?.ToString(),
@@ -531,8 +531,8 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             // Use ARM client directly for list operations
             var armClient = await CreateArmClientAsync(null, retryPolicy);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
-            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName, cancellationToken: cancellationToken);
 
             var firewallRules = new List<SqlServerFirewallRule>();
             await foreach (var firewallRule in sqlServerResource.Value.GetSqlFirewallRules().GetAllAsync(cancellationToken))
@@ -540,7 +540,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                 firewallRules.Add(new SqlServerFirewallRule(
                     Name: firewallRule.Data.Name,
                     Id: firewallRule.Data.Id.ToString(),
-                    Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
+                    Type: firewallRule.Data.ResourceType.ToString() ?? "Unknown",
                     StartIpAddress: firewallRule.Data.StartIPAddress,
                     EndIpAddress: firewallRule.Data.EndIPAddress
                 ));
