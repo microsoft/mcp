@@ -496,15 +496,37 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
+        ValidateRequiredParameters(
+            (nameof(serverName), serverName),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(subscription), subscription)
+        );
+
         try
         {
-            return await ExecuteResourceQueryAsync(
-                "Microsoft.Sql/servers/firewallRules",
-                resourceGroup,
-                subscription,
-                retryPolicy,
-                ConvertToSqlFirewallRuleModel,
-                cancellationToken: cancellationToken);
+            // Use ARM client directly for list operations
+            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var sqlServerResource = await resourceGroupResource.Value.GetSqlServers().GetAsync(serverName);
+
+            var firewallRules = new List<SqlServerFirewallRule>();
+            await foreach (var firewallRule in sqlServerResource.Value.GetSqlFirewallRules().GetAllAsync(cancellationToken))
+            {
+                firewallRules.Add(new SqlServerFirewallRule(
+                    Name: firewallRule.Data.Name,
+                    Id: firewallRule.Data.Id.ToString(),
+                    Type: firewallRule.Data.ResourceType?.ToString() ?? "Unknown",
+                    StartIpAddress: firewallRule.Data.StartIPAddress,
+                    EndIpAddress: firewallRule.Data.EndIPAddress
+                ));
+            }
+
+            _logger.LogInformation(
+                "Successfully listed SQL server firewall rules. Server: {Server}, ResourceGroup: {ResourceGroup}, Count: {Count}",
+                serverName, resourceGroup, firewallRules.Count);
+
+            return firewallRules;
         }
         catch (Exception ex)
         {
