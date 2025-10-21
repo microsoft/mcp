@@ -215,12 +215,12 @@ class Program
                 if (listToolsResult == null)
                 {
                     Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading");
-                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir, server, serverExePath);
+                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir, serverName, serverExePath);
                 }
             }
             else
             {
-                listToolsResult = await LoadToolsDynamicallyAsync(toolDir, server, serverExePath) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
+                listToolsResult = await LoadToolsDynamicallyAsync(toolDir, serverName, serverExePath) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
             }
 
             var tools = listToolsResult?.Tools ?? listToolsResult?.ConsolidatedTools;
@@ -514,7 +514,7 @@ class Program
             {
                 foreach (var name in candidateNames)
                 {
-                    FileInfo found = new DirectoryInfo(root)
+                    FileInfo? found = new DirectoryInfo(root)
                         .EnumerateFiles(serverExe + name, SearchOption.AllDirectories)
                         .FirstOrDefault();
                     if (found != null)
