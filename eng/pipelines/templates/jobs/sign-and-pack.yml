@@ -1,3 +1,11 @@
+parameters:
+- name: ServerName
+  type: string
+- name: PackageDocker
+  type: boolean
+- name: PackageVSIX
+  type: boolean
+
 jobs:
 - job: Sign
   timeoutInMinutes: 120
@@ -106,13 +114,15 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
-  parameters:
-    DependsOn: Sign
+- ${{ if parameters.PackageVSIX }}:
+  - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+    parameters:
+      DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
-  parameters:
-    DependsOn: Sign
+- ${{ if parameters.PackageDocker }}:
+  - template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
+    parameters:
+      DependsOn: Sign
 
 - ${{ each os in split('linux|windows|macOS', '|') }}:
   - template: /eng/pipelines/templates/jobs/verify-packages.yml
