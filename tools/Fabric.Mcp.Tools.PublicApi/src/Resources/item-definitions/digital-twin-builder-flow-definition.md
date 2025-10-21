@@ -73,10 +73,3 @@ The DigitalTwinBuilderFlow gets deleted when DigitalTwinBuilder is deleted.
   "IsOnDemand": true
 }
 ```
- 
-## PlatformDetails
-
-The platform part is a file that contains the environment metadata information.
-* [Create Item](/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided
-* [Get Item](/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, but only if you set a new URL parameter `updateMetadata=true`.

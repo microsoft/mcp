@@ -46,7 +46,7 @@ The JSON file describing the KQL database has the following properties:
 
 ## Example of DatabaseSchema.kql part decoded from Base64
 
-The KQL database schema is a KQL script that defines the [tables](https://learn.microsoft.com/kusto/management/tables?view=microsoft-fabric&preserve-view=true), [functions](https://learn.microsoft.com/kusto/management/functions?view=microsoft-fabric&preserve-view=true), [materialized views](/kusto/management/materialized-views/materialized-view-overview?view=microsoft-fabric&preserve-view=true), and more.
+The KQL database schema is a KQL script that defines the [tables](https://learn.microsoft.com/kusto/management/tables?view=microsoft-fabric&preserve-view=true), [functions](https://learn.microsoft.com/kusto/management/functions?view=microsoft-fabric&preserve-view=true), [materialized views](https://learn.microsoft.com/kusto/management/materialized-views/materialized-view-overview?view=microsoft-fabric&preserve-view=true), and more.
 
 
 ```kusto
