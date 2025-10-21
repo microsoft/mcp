@@ -128,7 +128,7 @@ foreach ($server in $buildInfo.servers) {
 if($isPipelineRun) {
     $signingPatterns = $buildInfo.servers
     | Select-Object -ExpandProperty cliName -Unique
-    | ForEach-Object { "**/windows-*/$_.exe" }
+    | ForEach-Object { "**/windows-*/$_.exe", "**/windows-*/$_.dll" }
     | Join-String -Separator '%0D%0A' # URL encoded newlines
 
     Write-Host "Setting WindowsSigningPatterns variable to:`n$signingPatterns"
