@@ -98,8 +98,9 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
 ---
 
 # Available Tools
-Use the server's CLI to query embedded data and examples. Commands are organized under a `publicapis` command group in code.
+Use the server's CLI to query embedded data and examples. Commands are organized under command groups in code.
 
+## Public APIs (`publicapis`)
 | Command | Purpose | Implementation |
 |---|---|---|
 | `publicapis list` | List supported workload names (e.g. notebook, report) | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/PublicApis/ListWorkloadsCommand.cs |
@@ -108,6 +109,11 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | `publicapis bestpractices get --workload-type <workload>` | Retrieve best-practice guidance for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetBestPracticesCommand.cs |
 | `publicapis examples get --workload-type <workload>` | Retrieve example request/response files for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetExamplesCommand.cs |
 | `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
+
+## OneLake (`onelake`)
+| Command | Purpose | Implementation |
+|---|---|---|
+| *Commands coming soon* | OneLake data lake operations | tools/Fabric.Mcp.Tools.OneLake/src/Commands/ |
 
 > Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
 
