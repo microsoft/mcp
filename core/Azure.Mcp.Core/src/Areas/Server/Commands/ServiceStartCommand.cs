@@ -130,10 +130,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
             await InitializeServicesAsync(host.Services);
 
+            await host.StartAsync(CancellationToken.None);
+
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogStartTelemetry(telemetryService, options);
 
-            await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
 
             return context.Response;
