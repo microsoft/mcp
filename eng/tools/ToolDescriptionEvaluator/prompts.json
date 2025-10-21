@@ -116,6 +116,18 @@
     "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
     "Transcribe audio with raw profanity output from file <file_path>"
   ],
+  "speech_tts_synthesize": [
+    "Convert text to speech and save to output.wav",
+    "Synthesize speech from \"Hello, welcome to Azure\" and save to welcome.wav",
+    "Generate speech audio from text \"Hello world\" using Azure Speech Services",
+    "Convert text to speech with Spanish language and save to spanish-audio.wav",
+    "Synthesize speech with voice en-US-JennyNeural from text \"Azure AI Services\"",
+    "Create MP3 audio file from text \"Welcome to Azure\" with high quality format",
+    "Generate speech with custom voice model using endpoint ID <endpoint-id>",
+    "Convert text to OGG/Opus format audio file",
+    "Synthesize long text content to audio file with streaming",
+    "Create audio file from text in French language with appropriate voice"
+  ],
   "appconfig_account_list": [
     "List all App Configuration stores in my subscription",
     "Show me the App Configuration stores in my subscription",
