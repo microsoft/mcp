@@ -204,6 +204,249 @@
           }
         }
       }
+    },
+    "DataflowParameters": {
+      "description": "A list of Dataflow parameters.",
+      "type": "object",
+      "required": [ "value" ],
+      "properties": {
+        "value": {
+          "description": "A list of parameters defined in the Dataflow.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/DataflowParameter"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "DataflowParameter": {
+      "description": "Base type for a Dataflow parameter that contains the corresponding properties for all parameters.",
+      "type": "object",
+      "discriminator": "type",
+      "required": [ "name", "type", "isRequired", "description" ],
+      "properties": {
+        "name": {
+          "description": "The name of the parameter.",
+          "type": "string"
+        },
+        "description": {
+          "description": "A description of the parameter.",
+          "type": "string"
+        },
+        "isRequired": {
+          "description": "Indicates whether the parameter is required.",
+          "type": "boolean"
+        },
+        "type": {
+          "description": "The type of the parameter. Additional type types may be added over time.",
+          "type": "string",
+          "enum": [ "String", "Boolean", "Integer", "Number", "DateTime", "DateTimeZone", "Date", "Time", "Duration" ],
+          "x-ms-enum": {
+            "name": "ParameterType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "String",
+                "description": "The parameter value is of type string."
+              },
+              {
+                "value": "Boolean",
+                "description": "The parameter value is of type boolean."
+              },
+              {
+                "value": "Integer",
+                "description": "The parameter value is of type long."
+              },
+              {
+                "value": "Number",
+                "description": "The parameter value is of type double."
+              },
+              {
+                "value": "DateTime",
+                "description": "The parameter value is of type DateTime. The time is in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+              },
+              {
+                "value": "DateTimeZone",
+                "description": "The parameter value is of type DateTimeZone. String in the format `yyyy-MM-ddTHH:mm:sszzz`."
+              },
+              {
+                "value": "Date",
+                "description": "The parameter value is of type Date. String in the format `yyyy-MM-dd`."
+              },
+              {
+                "value": "Time",
+                "description": "The parameter value is of type Time. String in the format `HH:mm:ss`."
+              },
+              {
+                "value": "Duration",
+                "description": "The parameter value is of type Duration. String in the format `\\Pd\\DTH\\Hm\\Ms\\S`."
+              }
+            ]
+          }
+        }
+      }
+    },
+    "DataflowStringParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type String.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow .",
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "String"
+    },
+    "DataflowBooleanParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type Boolean.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "boolean"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "Boolean"
+    },
+    "DataflowIntegerParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type Long.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "integer",
+          "format": "int64"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "Integer"
+    },
+    "DataflowNumberParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type double.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "number",
+          "format": "double"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "Number"
+    },
+    "DataflowDateTimeParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type DateTime. String in the format `yyyy-MM-ddTHH:mm:ss.xxxZ` (Example: `2025-09-15T21:45:00.000Z`).",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "DateTime"
+    },
+    "DataflowDateTimeZoneParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type DateTimeZone. String in the format `yyyy-MM-ddTHH:mm:sszzz` (Example: `2025-09-15T21:45:00+02:00`). Use \"Automatic\" type to override this type of parameter when executing the dataflow.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "DateTimeZone"
+    },
+    "DataflowDateParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type Date. String in the format `yyyy-MM-dd` (Example: `2025-09-15` for the date Sep 15, 2025). Use \"Automatic\" type to override this type of parameter when executing the dataflow.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "Date"
+    },
+    "DataflowTimeParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type Time. String in the format `HH:mm:ss` (Example: `21:45:00` for 9:45 PM). Use \"Automatic\" type to override this type of parameter when executing the dataflow.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+        }
+      ],
+      "x-ms-discriminator-value": "Time"
+    },
+    "DataflowDurationParameter": {
+      "type": "object",
+      "description": "A Dataflow parameter of type Duration. String in the format `\\Pd\\DTH\\Hm\\Ms\\S` (Example: `P5DT14H35M30S` for 5 days, 14 hours, 35 minutes and 30 seconds). Use \"Automatic\" type to override this type of parameter when executing the dataflow.",
+      "required": [ "defaultValue" ],
+      "properties": {
+        "defaultValue": {
+          "description": "The value with which the parameter will be refreshed if none is provided when executing the dataflow.",
+          "type": "string"
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "#/definitions/DataflowParameter"
+
+        }
+      ],
+      "x-ms-discriminator-value": "Duration"
     }
   }
 }

@@ -13,6 +13,8 @@ public class MarketplaceSetup : IAreaSetup
 {
     public string Name => "marketplace";
 
+    public string Title => "Azure Marketplace";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMarketplaceService, MarketplaceService>();
@@ -24,7 +26,7 @@ public class MarketplaceSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Marketplace command group
-        var marketplace = new CommandGroup(Name, "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.");
+        var marketplace = new CommandGroup(Name, "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.", Title);
 
         // Create Product subgroup
         var product = new CommandGroup("product", "Marketplace product operations - Commands for retrieving and managing marketplace products.");

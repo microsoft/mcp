@@ -824,6 +824,10 @@
                 "credentialDetails": {
                     "description": "The credential details of the connection.",
                     "$ref": "#/definitions/CreateCredentialDetails"
+                },
+                "allowConnectionUsageInGateway": {
+                    "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
+                    "type": "boolean"
                 }
             }
         },
@@ -912,6 +916,10 @@
                 "credentialDetails": {
                     "description": "The credential details of the connection.",
                     "$ref": "#/definitions/UpdateCredentialDetails"
+                },
+                "allowConnectionUsageInGateway": {
+                    "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
+                    "type": "boolean"
                 }
             }
         },
@@ -927,12 +935,18 @@
                 "credentialDetails": {
                     "description": "The credential details of the connection.",
                     "$ref": "#/definitions/UpdateCredentialDetails"
+                },
+                "allowConnectionUsageInGateway": {
+                    "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
+                    "type": "boolean"
                 }
             }
         },
         "Connection": {
             "required": ["id", "connectivityType", "connectionDetails"],
             "type": "object",
+            "description": "The base object of a connection.",
+            "discriminator": "connectivityType",
             "properties": {
                 "id": {
                     "description": "The object ID of the connection.",
@@ -942,11 +956,6 @@
                 "displayName": {
                     "description": "The display name of the connection.",
                     "type": "string"
-                },
-                "gatewayId": {
-                    "description": "The gateway object ID of the connection.",
-                    "type": "string",
-                    "format": "uuid"
                 },
                 "connectivityType": {
                     "description": "The connectivity type of the connection.",
@@ -965,6 +974,89 @@
                     "$ref": "#/definitions/ListCredentialDetails"
                 }
             }
+        },
+        "ShareableCloudConnection": {
+            "type": "object",
+            "description": "A connection that connects through the cloud.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "allowConnectionUsageInGateway": {
+                    "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
+                    "type": "boolean"
+                }
+            },
+            "x-ms-discriminator-value": "ShareableCloud"
+        },
+        "PersonalCloudConnection": {
+            "type": "object",
+            "description": "A connection that connects through the cloud and cannot be shared.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "allowConnectionUsageInGateway": {
+                    "description": "Allow this connection to be utilized with either on-premises data gateways or VNet data gateways.",
+                    "type": "boolean"
+                }
+            },
+            "x-ms-discriminator-value": "PersonalCloud"
+        },
+        "OnPremisesGatewayConnection": {
+            "type": "object",
+            "description": "A connection that connects through on-premises data gateway.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "x-ms-discriminator-value": "OnPremisesGateway"
+        },
+        "OnPremisesGatewayPersonalConnection": {
+            "type": "object",
+            "description": "A connection that connects through a personal on-premises data gateway.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "x-ms-discriminator-value": "OnPremisesGatewayPersonal"
+        },
+        "VirtualNetworkGatewayConnection": {
+            "type": "object",
+            "description": "A connection that connects through a virtual network data gateway.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Connection"
+                }
+            ],
+            "properties": {
+                "gatewayId": {
+                    "description": "The gateway object ID of the connection.",
+                    "type": "string",
+                    "format": "uuid"
+                }
+            },
+            "x-ms-discriminator-value": "VirtualNetworkGateway"
         },
         "ListConnectionsResponse": {
             "required": ["value"],

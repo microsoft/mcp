@@ -9,7 +9,10 @@
         "200": {
             "body": {
                 "id": "d889df97-7061-45f6-98b8-c53a83c2cf68",
-                "displayName": "Tag's new name."
+                "displayName": "Tag's new name.",
+                "scope": {
+                    "type": "Tenant"
+                }
             }
         }
     }

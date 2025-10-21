@@ -1,0 +1,171 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "AnomalyDetector data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "AnomalyDetector": {
+            "description": "A AnomalyDetector object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The AnomalyDetector properties.",
+                    "$ref": "#/definitions/AnomalyDetectorProperties"
+                }
+            }
+        },
+        "AnomalyDetectorProperties": {
+            "description": "The AnomalyDetector properties.",
+            "type": "object",
+            "required": ["oneLakeRootPath"],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the AnomalyDetector root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "AnomalyDetectors": {
+            "description": "A list of Collection Names.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Collection Names.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AnomalyDetector"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateAnomalyDetectorRequest": {
+            "description": "Create AnomalyDetector request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The AnomalyDetector display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The AnomalyDetector description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the AnomalyDetector is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The AnomalyDetector definition.",
+                    "$ref": "#/definitions/AnomalyDetectorDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateAnomalyDetectorDefinitionRequest": {
+            "description": "Update AnomalyDetector definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/AnomalyDetectorDefinition"
+                }
+            }
+        },
+        "AnomalyDetectorDefinitionResponse": {
+            "description": "AnomalyDetector definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/AnomalyDetectorDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "AnomalyDetectorDefinition" : {
+            "description": "AnomalyDetector definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details on how to craft a AnomalyDetector public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "AnomalyDetectorV1"
+                        ],
+                        "x-ms-enum": {
+                        "name": "AnomalyDetectorDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                            "value": "AnomalyDetectorV1",
+                            "description": "Custom format for the AnomalyDetector definition, specifically designed to support CI/CD scenarios in Fabric. see [AnomalyDetector - AnomalyDetectorV1 specification](/rest/api/fabric/articles/item-management/definitions/anomalydetector-definition) for more details."
+                            }
+                        ]
+                        },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/AnomalyDetectorDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "AnomalyDetectorDefinitionPart": {
+            "description": "AnomalyDetector definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The AnomalyDetector definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The AnomalyDetector definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateAnomalyDetectorRequest": {
+            "description": "Update AnomalyDetector request.",
+            "properties": {
+                "displayName": {
+                    "description": "The AnomalyDetector display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The AnomalyDetector description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}
