@@ -13,6 +13,8 @@ public class CosmosSetup : IAreaSetup
 {
     public string Name => "cosmos";
 
+    public string Title => "Azure Cosmos DB";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ICosmosService, CosmosService>();
@@ -26,7 +28,7 @@ public class CosmosSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Cosmos command group
-        var cosmos = new CommandGroup(Name, "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for databases, containers, and document queries.");
+        var cosmos = new CommandGroup(Name, "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for databases, containers, and document queries.", Title);
 
         // Create Cosmos subgroups
         var databases = new CommandGroup("database", "Cosmos DB database operations - Commands for listing, creating, and managing database within your Cosmos DB accounts.");

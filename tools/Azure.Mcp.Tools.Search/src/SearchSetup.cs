@@ -15,6 +15,8 @@ public class SearchSetup : IAreaSetup
 {
     public string Name => "search";
 
+    public string Title => "Azure AI Search";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ISearchService, SearchService>();
@@ -41,7 +43,7 @@ public class SearchSetup : IAreaSetup
         to discover available sub-commands for different search service and index operations. Note that this tool
         requires appropriate Azure AI Search permissions and will only access search resources accessible to the
         authenticated user.
-        """);
+        """, Title);
 
         var service = new CommandGroup("service", "Azure AI Search (formerly known as \"Azure Cognitive Search\") service operations - Commands for listing and managing search services in your Azure subscription.");
         search.AddSubGroup(service);

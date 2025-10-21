@@ -120,6 +120,10 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                Annotations = new ToolAnnotations()
+                {
+                    Title = group.Title ?? namespaceName,
+                },
             };
 
             allToolsResponse.Tools.Add(tool);

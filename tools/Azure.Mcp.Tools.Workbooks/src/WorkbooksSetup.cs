@@ -13,6 +13,8 @@ public class WorkbooksSetup : IAreaSetup
 {
     public string Name => "workbooks";
 
+    public string Title => "Azure Workbooks";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IWorkbooksService, WorkbooksService>();
@@ -26,7 +28,7 @@ public class WorkbooksSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var workbooks = new CommandGroup(Name, "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.");
+        var workbooks = new CommandGroup(Name, "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.", Title);
 
         var workbooksList = serviceProvider.GetRequiredService<ListWorkbooksCommand>();
         workbooks.AddCommand(workbooksList.Name, workbooksList);

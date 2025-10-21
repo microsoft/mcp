@@ -14,6 +14,8 @@ public class ApplicationInsightsSetup : IAreaSetup
 {
     public string Name => "applicationinsights";
 
+    public string Title => "Azure Application Insights";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClientServices(options =>
@@ -31,7 +33,7 @@ public class ApplicationInsightsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var group = new CommandGroup(Name, "Application Insights operations - Commands for listing and managing Application Insights components.");
+        var group = new CommandGroup(Name, "Application Insights operations - Commands for listing and managing Application Insights components.", Title);
 
         var recommendation = new CommandGroup("recommendation", "Application Insights recommendation operations - list recommendation targets (components).");
         group.AddSubGroup(recommendation);

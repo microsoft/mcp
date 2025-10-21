@@ -14,6 +14,8 @@ public sealed class ExtensionSetup : IAreaSetup
 {
     public string Name => "extension";
 
+    public string Title => "Azure VM Extensions";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClientServices();
@@ -26,7 +28,7 @@ public sealed class ExtensionSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var extension = new CommandGroup(Name, "Extension commands for additional Azure tooling functionality. Includes running Azure Quick Review (azqr) commands directly from the MCP server to get service recommendations, generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.");
+        var extension = new CommandGroup(Name, "Extension commands for additional Azure tooling functionality. Includes running Azure Quick Review (azqr) commands directly from the MCP server to get service recommendations, generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.", Title);
 
         // Azure CLI and Azure Developer CLI tools are hidden
         // extension.AddCommand("az", new AzCommand(loggerFactory.CreateLogger<AzCommand>()));

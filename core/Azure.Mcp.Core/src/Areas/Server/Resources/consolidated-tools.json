@@ -164,7 +164,7 @@
         "datadog_monitoredresources_list",
         "monitor_workspace_list",
         "monitor_activitylog_list",
-        "monitor_healthmodels_entity_gethealth",
+        "monitor_healthmodels_entity_get",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
@@ -175,7 +175,7 @@
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
         "resourcehealth_availability-status_list",
-        "resourcehealth_service-health-events_list"
+        "resourcehealth_health-events_list"
       ]
     },
     {
@@ -674,13 +674,13 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "managedlustre_filesystem_list",
-        "managedlustre_filesystem_sku_get",
+        "managedlustre_fs_list",
+        "managedlustre_fs_sku_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
-        "managedlustre_filesystem_subnetsize_ask",
-        "managedlustre_filesystem_subnetsize_validate"
+        "managedlustre_fs_subnetsize_ask",
+        "managedlustre_fs_subnetsize_validate"
       ]
     },
     {
@@ -697,7 +697,7 @@
       "mappedToolList": [
         "storage_account_create",
         "storage_blob_container_create",
-        "managedlustre_filesystem_create"
+        "managedlustre_fs_create"
       ]
     },
     {
@@ -712,7 +712,7 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "managedlustre_filesystem_update"
+        "managedlustre_fs_update"
       ]
     },
     {
@@ -933,8 +933,8 @@
       },
       "mappedToolList": [
         "virtualdesktop_hostpool_list",
-        "virtualdesktop_hostpool_sessionhost_list",
-        "virtualdesktop_hostpool_sessionhost_usersession-list"
+        "virtualdesktop_hostpool_host_list",
+        "virtualdesktop_hostpool_host_user-list"
       ]
     },
     {
