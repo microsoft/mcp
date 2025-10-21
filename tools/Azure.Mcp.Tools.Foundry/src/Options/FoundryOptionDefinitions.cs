@@ -49,7 +49,7 @@ public static class FoundryOptionDefinitions
         $"--{Endpoint}"
     )
     {
-        Description = "The endpoint URL for the Azure AI service.",
+        Description = "The Azure AI Foundry project endpoint URL (e.g., https://<resource-name>.services.ai.azure.com/api/projects/<project-name>). Only project endpoints are valid, not service-level endpoints.",
         Required = true
     };
 
