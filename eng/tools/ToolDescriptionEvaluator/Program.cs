@@ -232,16 +232,18 @@ class Program
 
             if (!string.IsNullOrEmpty(customToolsFileResolved))
             {
+                Console.WriteLine($"📄 Attempting to use custom tools file: {customToolsFileResolved}");
                 listToolsResult = await LoadToolsFromJsonAsync(customToolsFileResolved);
 
                 if (listToolsResult == null)
                 {
-                    Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading");
+                    Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading from {serverName}.Mcp.Server executable");
                     listToolsResult = await LoadToolsDynamicallyAsync(toolDir, serverName, serverExePath);
                 }
             }
             else
             {
+                Console.WriteLine($"🔄 Loading tools dynamically from {serverName}.Mcp.Server executable");
                 listToolsResult = await LoadToolsDynamicallyAsync(toolDir, serverName, serverExePath) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
             }
 
@@ -281,24 +283,6 @@ class Program
             Console.WriteLine("🔍 Running tool selection analysis...");
             Console.WriteLine($"✅ Loaded {toolCount} tools in {executionTime.TotalSeconds:F2}s");
 
-            if (!string.IsNullOrEmpty(customToolsFile))
-            {
-                Console.WriteLine($"📄 Using custom tools file: {customToolsFile}");
-            }
-            else
-            {
-                Console.WriteLine($"🔄 Loading tools dynamically from {serverName}.Mcp.Server executable");
-            }
-
-            if (!string.IsNullOrEmpty(customPromptsFile))
-            {
-                Console.WriteLine($"📝 Using custom prompts file: {customPromptsFile}");
-            }
-            else
-            {
-                Console.WriteLine($"📝 Using default prompts file (e2eTestPrompts.md) for {serverName}.Mcp.Server");
-            }
-
             if (testSingleToolMode)
             {
                 await TestSingleToolAsync(testToolDescription, testPrompts, embeddingService, db, maxResultsPerTest);
@@ -337,7 +321,7 @@ class Program
 
             if (!string.IsNullOrEmpty(customPromptsFileResolved))
             {
-                // User specified a custom prompts file
+                Console.WriteLine($"📝 Using custom prompts file: {customPromptsFileResolved}");
                 if (customPromptsFileResolved.EndsWith(".md", StringComparison.OrdinalIgnoreCase))
                 {
                     toolNameAndPrompts = await LoadPromptsFromMarkdownAsync(customPromptsFileResolved, areaFilter);
@@ -346,12 +330,16 @@ class Program
                 {
                     toolNameAndPrompts = await LoadPromptsFromJsonAsync(customPromptsFileResolved, areaFilter);
                 }
+
+                if (toolNameAndPrompts == null)
+                {
+                    Console.WriteLine($"⚠️  Failed to load prompts from {customPromptsFileResolved}, falling back to loading from default prompts file (e2eTestPrompts.md) for {serverName}.Mcp.Server");
+                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir, serverName, serverExePath);
+                }
             }
             else
             {
-                // Use default fallback logic
-                Console.WriteLine($"⚠️  No custom prompts file specified; using fallback prompts file for {serverName}.Mcp.Server");
-
+                Console.WriteLine($"📝 Using default prompts file (e2eTestPrompts.md) for {serverName}.Mcp.Server");
                 var defaultPromptsPath = Path.Combine(repoRoot, "servers", $"{serverName}.Mcp.Server", "docs", "e2eTestPrompts.md");
                 var promptsJsonPath = Path.Combine(toolDir, "prompts.json");
 
@@ -363,7 +351,6 @@ class Program
                     if (toolNameAndPrompts != null)
                     {
                         await SavePromptsToJsonAsync(toolNameAndPrompts, promptsJsonPath);
-
                         Console.WriteLine($"💾 Saved prompts to prompts.json");
                     }
                     else
