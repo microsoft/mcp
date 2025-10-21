@@ -6,6 +6,8 @@ param(
     [string] $BuildInfoPath,
     [string] $ArtifactsDirectory,
     [string] $ServerName,
+    [string] $RepositoryName,
+    [string] $BuildId,
     [string] $TargetOs,
     [string] $TargetArch,
     [switch] $CI
@@ -165,6 +167,73 @@ function Test-NpmPackages {
     return $true
 }
 
+function Test-DockerImages {
+    param (
+        [hashtable] $Server,
+        [string] $RepositoryName,
+        [string] $BuildId
+    )
+
+    $artifactsPath = "$ArtifactsDirectory/docker_output"
+    if( -not (Test-Path $artifactsPath) ) {
+        $message = "Artifacts path $artifactsPath does not exist."
+        if ($ignoreMissingArtifacts) {
+            LogWarning $message
+            return $true
+        } else {
+            LogError $message
+            return $false
+        }
+    }
+
+    $imageTar = Get-ChildItem -Path $artifactsPath -Filter "$($Server.cliName)-image.tar" -ErrorAction SilentlyContinue | Select-Object -First 1
+    Write-Host "Verifying Docker image for $($Server.name)"
+    
+    if (-not $imageTar) {
+        LogError "Docker image tar file $($Server.cliName)-image.tar not found in $artifactsPath"
+        return $false
+    }
+
+    Write-Host "Loading Docker image from $($imageTar.FullName)"
+    $loadOutput = docker load -i $imageTar.FullName 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        LogError "Failed to load Docker image with exit code $LASTEXITCODE"
+        Write-Host $loadOutput
+        return $false
+    }
+    Write-Host "Image loaded: $loadOutput"
+
+    $dockerLocalTag = "$RepositoryName/$($Server.cliName):$BuildId"
+    
+    # Verify the image exists after loading
+    $imageExists = docker image inspect $dockerLocalTag 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        LogError "Docker image $dockerLocalTag not found after loading"
+        Write-Host $imageExists
+        return $false
+    }
+    Write-Host "Verified image exists: $dockerLocalTag"
+
+    # Run the smoke test command
+    Write-Host "Running smoke test: docker run --rm --entrypoint ./$($Server.cliName) $dockerLocalTag tools list"
+    $output = docker run --rm --entrypoint ./$($Server.cliName) $dockerLocalTag tools list 2>&1
+    
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Server tools list command completed successfully for $($Server.name)"
+        Write-Host "Output: $output"
+    } else {
+        LogError "Server tools list command failed with exit code $LASTEXITCODE"
+        Write-Host "Output: $output"
+        return $false
+    }
+
+    # Cleanup: Remove the loaded image to save space
+    Write-Host "Cleaning up Docker image $dockerLocalTag"
+    docker rmi $dockerLocalTag 2>&1 | Out-Null
+
+    return $true
+}
+
 $servers = $buildInfo.servers
 if ($ServerName) {
     $servers = $servers | Where-Object { $_.name -eq $ServerName }
@@ -175,8 +244,9 @@ foreach($server in $servers) {
 
     $nugetValid = Test-NugetPackages -Server $server
     $npmValid = Test-NpmPackages -Server $server
+    $dockerValid = Test-DockerImages -Server $server -RepositoryName $RepositoryName -BuildId $BuildId
 
-    if (!$nugetValid -or !$npmValid) {
+    if (!$nugetValid -or !$npmValid -or !$dockerValid) {
         $exitCode = 1
     }
 }
