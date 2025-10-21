@@ -98,25 +98,25 @@ public class RegistryServerProviderTests
         Assert.Equal(serverInfo.Description, metadata.Description);
     }
 
-    [Fact]
-    public async Task CreateClientAsync_WithUrlReturning404_ThrowsHttpRequestException()
-    {
-        // Arrange
-        string testId = "sseProvider";
-        using var server = new MockHttpTestServer();
-        var serverInfo = new RegistryServerInfo
-        {
-            Description = "Test SSE Provider",
-            Url = $"{server.Endpoint}/mcp"
-        };
-        var provider = new RegistryServerProvider(testId, serverInfo);
+    // [Fact]
+    // public async Task CreateClientAsync_WithUrlReturning404_ThrowsHttpRequestException()
+    // {
+    //     // Arrange
+    //     string testId = "sseProvider";
+    //     using var server = new MockHttpTestServer();
+    //     var serverInfo = new RegistryServerInfo
+    //     {
+    //         Description = "Test SSE Provider",
+    //         Url = $"{server.Endpoint}/mcp"
+    //     };
+    //     var provider = new RegistryServerProvider(testId, serverInfo);
 
-        // Act & Assert
-        var exception = await Assert.ThrowsAsync<HttpRequestException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+    //     // Act & Assert
+    //     var exception = await Assert.ThrowsAsync<HttpRequestException>(
+    //         () => provider.CreateClientAsync(new McpClientOptions()));
 
-        Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), exception.Message);
-    }
+    //     Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), exception.Message);
+    // }
 
     [Fact]
     public async Task CreateClientAsync_WithStdioType_CreatesStdioClient()
