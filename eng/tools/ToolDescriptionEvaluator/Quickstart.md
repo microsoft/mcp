@@ -34,15 +34,56 @@ Or copy `.env.example` to `.env` and fill in your credentials.
 ### Typical Workflow
 
 1. Add or update a tool description in the project
-2. Add test prompts for your tool to `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+2. Add test prompts for your tool to the appropriate server's test prompts file:
+   - For Azure tools: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+   - For Fabric tools: `servers/Fabric.Mcp.Server/docs/e2eTestPrompts.md`
 3. Run the analyzer using PowerShell
 
     ```pwsh
+    # For Azure MCP Server (default)
     ./Run-ToolDescriptionEvaluator.ps1
+
+    # For Fabric MCP Server
+    ./Run-ToolDescriptionEvaluator.ps1 -Server "Fabric"
+
+    # For a specific server executable
+    ./Run-ToolDescriptionEvaluator.ps1 -ServerExe "./path/to/azmcp.exe"
     ```
 
 4. Check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`
 5. Refine the description if needed and try again
+
+## Additional Usage Options
+
+### Testing Different Servers
+
+By default, the tool tests Azure MCP Server tools. To test other servers:
+
+```bash
+# Test Fabric MCP Server tools
+dotnet run -- --server "Fabric"
+
+# Use a specific executable path (useful for custom builds)
+dotnet run -- --server-exe "./path/to/fabmcp.dll"
+```
+
+### Filtering by Service Area
+
+Test specific service tools by using the `--area` parameter:
+
+```bash
+# Test only Azure Storage tools
+dotnet run -- --area "storage"
+
+# Test only Azure Key Vault tools
+dotnet run -- --area "keyvault"
+
+# Test multiple services
+dotnet run -- --area "storage,keyvault,sql"
+
+# Combine server selection with area filtering
+dotnet run -- --server "Fabric" --area "workspace"
+```
 
 ## Why Use This Tool?
 
