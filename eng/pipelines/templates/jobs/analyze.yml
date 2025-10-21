@@ -50,4 +50,3 @@ jobs:
       }
     displayName: 'Validate Package README.md files'
     condition: succeededOrFailed()
-
