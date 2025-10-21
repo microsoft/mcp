@@ -44,7 +44,7 @@ class Program
         string? customPromptsFile = null; // Optional custom prompts file
         string? customOutputFileName = null; // Optional custom output file name
         string? areaFilter = null; // Optional area filter for prompts
-        string? serverName = "Azure"; // Optional server name. Defaults to "Azure".
+        string serverName = "Azure"; // Optional server name. Defaults to "Azure".
         string? serverExePath = null; // Optional server executable path. Supercedes server name if provided.
 
         // Single tool test mode options
@@ -492,8 +492,8 @@ class Program
         var repoRoot = FindRepoRoot(exeDir);
         var searchRoots = new List<string>
         {
-            Path.Combine(repoRoot, "servers", server, "Mcp.Server", "src", "bin", "Debug"),
-            Path.Combine(repoRoot, "servers", server, "Mcp.Server", "src", "bin", "Release")
+            Path.Combine(repoRoot, "servers", server + ".Mcp.Server", "src", "bin", "Debug"),
+            Path.Combine(repoRoot, "servers", server + ".Mcp.Server", "src", "bin", "Release")
         };
 
         FileInfo? cliArtifact = null;
