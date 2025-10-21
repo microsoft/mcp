@@ -14,57 +14,28 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: end remove_install_links -->
 
 ## Table of Contents
-- [ Azure MCP Server ](#-azure-mcp-server-)
-  - [Table of Contents](#table-of-contents)
 - [Overview](#overview)
-- [Installation](#installation)
-  - [IDE](#ide)
-    - [VS Code (Recommended)](#vs-code-recommended)
-    - [Visual Studio 2022](#visual-studio-2022)
-    - [IntelliJ IDEA](#intellij-idea)
-    - [Manual Setup](#manual-setup)
-      - [Option 1: Configure using .NET tool (dnx)](#option-1-configure-using-net-tool-dnx)
-      - [Option 2: Configure using Node.js (npm/npx)](#option-2-configure-using-nodejs-npmnpx)
-  - [Package Manager](#package-manager)
-    - [NuGet](#nuget)
-    - [NPM](#npm)
-    - [Docker](#docker)
-      - [Create an env file with Azure credentials](#create-an-env-file-with-azure-credentials)
-      - [Configure your MCP client to use Docker](#configure-your-mcp-client-to-use-docker)
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
+    - [IDE](#ide)
+        - [VS Code (Recommended)](#vs-code-recommended)
+        - [Visual Studio 2022](#visual-studio-2022)
+        - [IntelliJ IDEA](#intellij-idea)
+        - [Manual Setup](#manual-setup)
+    - [Package Manager](#package-manager)
+        - [NuGet](#nuget)
+        - [NPM](#npm)
+        - [Docker](#docker)<!-- remove-section: end remove_installatiion_sub_sections -->
 - [Usage](#usage)
-  - [Getting Started](#getting-started)
-  - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
-    - [🧮 Azure AI Foundry](#-azure-ai-foundry)
-    - [🔎 Azure AI Search](#-azure-ai-search)
-    - [🎤 Azure AI Services Speech](#-azure-ai-services-speech)
-    - [⚙️ Azure App Configuration](#️-azure-app-configuration)
-    - [⚙️ Azure App Lens](#️-azure-app-lens)
-    - [🕸️ Azure App Service](#️-azure-app-service)
-    - [🖥️ Azure CLI Generate](#️-azure-cli-generate)
-    - [🖥️ Azure CLI Install](#️-azure-cli-install)
-    - [📞 Azure Communication Services](#-azure-communication-services)
-    - [📦 Azure Container Apps](#-azure-container-apps)
-    - [🔐 Azure Confidential Ledger](#-azure-confidential-ledger)
-    - [📦 Azure Container Registry (ACR)](#-azure-container-registry-acr)
-    - [📊 Azure Cosmos DB](#-azure-cosmos-db)
-    - [🧮 Azure Data Explorer](#-azure-data-explorer)
-    - [📣 Azure Event Grid](#-azure-event-grid)
-    - [🔑 Azure Key Vault](#-azure-key-vault)
-    - [☸️ Azure Kubernetes Service (AKS)](#️-azure-kubernetes-service-aks)
-    - [⚡ Azure Managed Lustre](#-azure-managed-lustre)
-    - [📊 Azure Monitor](#-azure-monitor)
-    - [🔧 Azure Resource Management](#-azure-resource-management)
-    - [🗄️ Azure SQL Database](#️-azure-sql-database)
-    - [💾 Azure Storage](#-azure-storage)
-  - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
+    - [Getting Started](#getting-started)
+    - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
+    - [Complete List of Supported Azure Services](#complete-list-of-supported-azure-services)
 - [Support and Reference](#support-and-reference)
-  - [Documentation](#documentation)
-  - [Feedback and Support](#feedback-and-support)
-  - [Security](#security)
-  - [Data Collection](#data-collection)
-    - [Telemetry Configuration](#telemetry-configuration)
-  - [Contributing](#contributing)
-  - [Code of Conduct](#code-of-conduct)
+    - [Documentation](#documentation)
+    - [Feedback and Support](#feedback-and-support)
+    - [Security](#security)
+    - [Data Collection](#data-collection)
+    - [Contributing](#contributing)
+    - [Code of Conduct](#code-of-conduct)
 
 # Overview
 
@@ -80,24 +51,24 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- insert-section: vsix {{   2. Search for `chat.mcp.autostart`.}} -->
 <!-- insert-section: vsix {{   3. Select **newAndOutdated** to automatically start MCP servers without manual refresh.}} -->
 <!-- insert-section: vsix {{   4. You can also set this from the **refresh icon tooltip** in the Chat view, which also shows which servers will auto-start.}} -->
-<!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ToolTip.png)}}-->
+<!-- insert-section: vsix {{      ![VS Code MCP Autostart Tooltip](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ToolTip.png)}}-->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   #### **Manual Start (if autostart is off)**}} -->
 <!-- insert-section: vsix {{   1. Open Command Palette (`Ctrl+Shift+P` / `Cmd+Shift+P`).}} -->
 <!-- insert-section: vsix {{   2. Run `MCP: List Servers`.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/ListServers.png)}} -->
+<!-- insert-section: vsix {{      ![List Servers](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/ListServers.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   3. Select `Azure MCP Server ext`, then click **Start Server**.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/SelectServer.png)}} -->
-<!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/StartServer.png)}} -->
+<!-- insert-section: vsix {{      ![Select Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/SelectServer.png)}} -->
+<!-- insert-section: vsix {{      ![Start Server](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/StartServer.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{   4. **Check That It's Running**}} -->
 <!-- insert-section: vsix {{      - Go to the **Output** tab in VS Code.}} -->
 <!-- insert-section: vsix {{      - Look for log messages confirming the server started successfully.}} -->
 <!-- insert-section: vsix {{    }} -->
-<!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/servers/Azure.Mcp.Server/docs/resources/Walkthrough/Output.png)}} -->
+<!-- insert-section: vsix {{      ![Output](https://raw.githubusercontent.com/microsoft/mcp/main/eng/vscode/resources/Walkthrough/Output.png)}} -->
 <!-- insert-section: vsix {{    }} -->
 <!-- insert-section: vsix {{- (Optional) Configure tools and behavior}} -->
 <!-- insert-section: vsix {{    - Full options: control how tools are exposed and whether mutations are allowed:}} -->
@@ -236,7 +207,7 @@ Install the .NET Tool: [Azure.Mcp](https://www.nuget.org/packages/Azure.Mcp).
 ```bash
 dotnet tool install Azure.Mcp
 ```
-or
+or 
 ```bash
 dotnet tool install Azure.Mcp --version <version>
 ```
@@ -358,7 +329,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * List foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
-
+  
 ### 🔎 Azure AI Search
 
 * "What indexes do I have in my Azure AI Search service 'mysvc'?"
