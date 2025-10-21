@@ -4,8 +4,9 @@
         "updateDomainRequest": {
             "displayName": "Domain's new name",
             "description": "Domain's new description",
-            "contributorsScope": "SpecificUsersAndGroups"
-        }
+            "defaultLabelId": "d9a6c724-a08f-429d-9fa9-9659c5181b7f"
+        },
+        "preview": "false"
     },
     "responses": {
         "200": {
@@ -14,7 +15,7 @@
                 "displayName": "Domain's new name",
                 "description": "Domain's new description",
                 "parentDomainId": null,
-                "contributorsScope": "SpecificUsersAndGroups"
+                "defaultLabelId": "d9a6c724-a08f-429d-9fa9-9659c5181b7f"
             }
         }
     }

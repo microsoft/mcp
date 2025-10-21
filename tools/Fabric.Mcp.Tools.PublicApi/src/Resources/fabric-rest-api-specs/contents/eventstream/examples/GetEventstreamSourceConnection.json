@@ -6,13 +6,15 @@
     },
     "responses": {
         "200": {
-            "fullyQualifiedNamespace": "namespace.servicebus.windows.net",
-            "eventHubName": "eventhub",
-            "accessKeys": {
-                "primaryKey": "key1",
-                "secondaryKey": "key2",
-                "primaryConnectionString": "connectionString1",
-                "secondaryConnectionString": "connectionString2"
+            "body": {
+                "fullyQualifiedNamespace": "namespace.servicebus.windows.net",
+                "eventHubName": "eventhub",
+                "accessKeys": {
+                    "primaryKey": "key1",
+                    "secondaryKey": "key2",
+                    "primaryConnectionString": "connectionString1",
+                    "secondaryConnectionString": "connectionString2"
+                }
             }
         }
     }
