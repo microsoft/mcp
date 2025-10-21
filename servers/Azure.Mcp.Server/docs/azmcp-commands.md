@@ -616,7 +616,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 ```bash
 # SMS message using Azure Communication Services
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string <connection-string> \
+azmcp communication sms send --endpoint <endpoint> \
                              --from <sender-phone-number> \
                              --to <recipient-phone-number> \
                              --message <message-text> \
@@ -626,14 +626,14 @@ azmcp communication sms send --connection-string <connection-string> \
 # Examples:
 # Send SMS to single recipient
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
                              --from "+1234567890" \
                              --to "+1234567891" \
                              --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
 # ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..."
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
                              --from "+1234567890" \
                              --to "+1234567891,+1234567892" \
                              --message "Broadcast message" \
@@ -642,7 +642,7 @@ azmcp communication sms send --connection-string "endpoint=https://mycomms.commu
 ```
 
 **Options:**
--   `--connection-string`: Azure Communication Services connection string (required)
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
 -   `--from`: SMS-enabled phone number in E.164 format (required)
 -   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
 -   `--message`: SMS message content (required)
