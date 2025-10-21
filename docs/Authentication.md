@@ -2,9 +2,38 @@
 
 This document provides comprehensive guidance for Azure MCP Server authentication and related security considerations in enterprise environments. While the core focus is authentication, it also covers network and security configurations that commonly affect authentication in enterprise scenarios.
 
+## Overview
+
+Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity library for .NET](https://learn.microsoft.com/dotnet/azure/sdk/authentication/).
+
+> [!TIP]
+> In VS Code, after installing the Azure MCP Server extension, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac), then run "Azure: Sign In" to authenticate quickly.
+
+Here is an overview of how authentication works:
+
+```mermaid
+flowchart TD
+    C{"Broker mode?"} -- yes --> D["OS broker"]
+    C -- no --> E["EnvironmentCredential"]
+    E -- failed --> n8["VisualStudioCredential"]
+    E -- succeeded --> n17["Authenticated to Azure"]
+    n8 -- failed --> n12["AzureCliCredential"]
+    n8 -- succeeded --> n17
+    n12 -- failed --> n13["AzurePowerShellCredential"]
+    n12 -- succeeded --> n17
+    n13 -- failed --> n14["AzureDeveloperCliCredential"]
+    n13 -- succeeded --> n17
+    n14 -- failed --> n15["InteractiveBrowserCredential"]
+    n14 -- succeeded --> n17
+    n15 -- failed --> n16["Authentication failed"]
+    n15 -- succeeded --> n17
+    n17@{ shape: event }
+    n16@{ shape: event }
+```
+
 ## Authentication Fundamentals
 
-Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity library for .NET](https://learn.microsoft.com/dotnet/azure/sdk/authentication/). If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
+If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
 
 - Set to `true`, a broker-enabled instance of `InteractiveBrowserCredential` is used to authenticate. On Windows, the broker is Web Account Manager. If a broker isn't supported on your operating system, the credential degrades gracefully to a browser-based login experience. For more information on this approach, see [Interactive brokered authentication](https://learn.microsoft.com/dotnet/azure/sdk/authentication/additional-methods#interactive-brokered-authentication).
 - Not set, a custom [chain of credentials](https://learn.microsoft.com/dotnet/azure/sdk/authentication/credential-chains?tabs=dac#how-a-chained-credential-works) is used to authenticate. The chain is designed to support many environments, along with the most common authentication flows and developer tools. When one credential fails to acquire a token, the chain attempts the next credential. In Azure MCP Server, the chain is configured as follows by default:
