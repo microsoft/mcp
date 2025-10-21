@@ -31,7 +31,7 @@ public class CommandMetadataSyncTests
         // Determine the executable path (OS-specific)
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
         var azmcpPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0", exeName);
-        
+
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath} after build");
 
         // Get the original content before running the update script
@@ -43,12 +43,12 @@ public class CommandMetadataSyncTests
             $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"",
             _repoRoot);
 
-        Assert.True(updateResult.ExitCode == 0, 
+        Assert.True(updateResult.ExitCode == 0,
             $"Update script failed with exit code {updateResult.ExitCode}. Output: {updateResult.Output}. Error: {updateResult.Error}");
 
         // Assert - Check if the file was modified
         var updatedContent = File.ReadAllText(docsPath);
-        
+
         Assert.True(originalContent == updatedContent,
             "The azmcp-commands.md file is out of sync with tool metadata.\n\n" +
             "To fix this issue:\n" +
@@ -107,7 +107,7 @@ public class CommandMetadataSyncTests
 
         while (dir != null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "global.json")) && 
+            if (File.Exists(Path.Combine(dir.FullName, "global.json")) &&
                 Directory.Exists(Path.Combine(dir.FullName, "servers")))
             {
                 return dir.FullName;
