@@ -187,7 +187,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
             var firstHostpool = hostpools[0].GetProperty("name").GetString()!;
 
             var result = await CallToolAsync(
-                "virtualdesktop_hostpool_sessionhost_list",
+                "virtualdesktop_hostpool_host_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -226,7 +226,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
             var firstHostpool = hostpools[0].GetProperty("name").GetString()!;
 
             var result = await CallToolAsync(
-                "virtualdesktop_hostpool_sessionhost_list",
+                "virtualdesktop_hostpool_host_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
@@ -266,7 +266,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Get session hosts for the first hostpool
             var sessionHostsResult = await CallToolAsync(
-                "virtualdesktop_hostpool_sessionhost_list",
+                "virtualdesktop_hostpool_host_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -279,7 +279,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
                 var firstSessionHost = sessionHosts.Value[0].GetProperty("name").GetString()!;
 
                 var result = await CallToolAsync(
-                    "virtualdesktop_hostpool_sessionhost_usersession_list",
+                    "virtualdesktop_hostpool_host_user_list",
                     new()
                     {
                         { "subscription", Settings.SubscriptionId },
@@ -325,7 +325,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
 
             // Get session hosts for the first hostpool
             var sessionHostsResult = await CallToolAsync(
-                "virtualdesktop_hostpool_sessionhost_list",
+                "virtualdesktop_hostpool_host_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionName },
@@ -338,7 +338,7 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
                 var firstSessionHost = sessionHosts.Value[0].GetProperty("name").GetString()!;
 
                 var result = await CallToolAsync(
-                    "virtualdesktop_hostpool_sessionhost_usersession_list",
+                    "virtualdesktop_hostpool_host_user_list",
                     new()
                     {
                         { "subscription", Settings.SubscriptionName },

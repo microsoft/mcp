@@ -12,7 +12,7 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
-    private const string CommandName = "gethealth";
+    private const string CommandName = "get";
     public override string Name => CommandName;
     public override string Description =>
     $"""
