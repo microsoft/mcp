@@ -117,7 +117,7 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --file {outputFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
@@ -176,7 +176,7 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --file {outputFile} --language {language} --voice {voice} --format {format} --endpointId {endpointId}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile} --language {language} --voice {voice} --format {format} --endpointId {endpointId}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
@@ -224,7 +224,7 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --file {outputFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
@@ -263,7 +263,7 @@ public class TtsSynthesizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --file {outputFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 

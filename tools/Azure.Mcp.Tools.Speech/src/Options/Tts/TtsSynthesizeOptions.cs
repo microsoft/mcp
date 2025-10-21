@@ -10,8 +10,8 @@ public class TtsSynthesizeOptions : BaseSpeechOptions
     [JsonPropertyName(SpeechOptionDefinitions.TextName)]
     public string? Text { get; set; }
 
-    [JsonPropertyName(SpeechOptionDefinitions.FileName)]
-    public string? File { get; set; }
+    [JsonPropertyName(SpeechOptionDefinitions.OutputAudioName)]
+    public string? OutputAudio { get; set; }
 
     [JsonPropertyName(SpeechOptionDefinitions.LanguageName)]
     public string? Language { get; set; }

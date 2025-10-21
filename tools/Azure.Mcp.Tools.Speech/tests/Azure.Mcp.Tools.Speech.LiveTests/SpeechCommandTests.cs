@@ -537,7 +537,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello, this is a test of text to speech synthesis." },
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", "en-US" }
                 });
 
@@ -596,7 +596,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello world" },
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", language },
                     { "voice", voice }
                 });
@@ -649,7 +649,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Testing different audio formats" },
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", "en-US" },
                     { "format", format }
                 });
@@ -696,7 +696,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "" }, // Empty text should fail validation
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", "en-US" }
                 });
 
@@ -728,7 +728,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", "Hello world" },
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", "invalid-format" } // Invalid language format
                 });
 
@@ -765,7 +765,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     { "subscription", Settings.SubscriptionId },
                     { "endpoint", aiServicesEndpoint },
                     { "text", largeText },
-                    { "file", outputFile },
+                    { "outputAudio", outputFile },
                     { "language", "en-US" }
                 });
 

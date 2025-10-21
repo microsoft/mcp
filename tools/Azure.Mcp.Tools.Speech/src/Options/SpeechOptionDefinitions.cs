@@ -7,6 +7,7 @@ public static class SpeechOptionDefinitions
 {
     public const string EndpointName = "endpoint";
     public const string FileName = "file";
+    public const string OutputAudioName = "outputAudio";
     public const string LanguageName = "language";
     public const string PhrasesName = "phrases";
     public const string FormatName = "format";
@@ -58,6 +59,13 @@ public static class SpeechOptionDefinitions
         $"--{TextName}")
     {
         Description = "The text to convert to speech.",
+        Required = true
+    };
+
+    public static readonly Option<string> OutputAudio = new(
+        $"--{OutputAudioName}")
+    {
+        Description = "Path where the synthesized audio file will be saved.",
         Required = true
     };
 

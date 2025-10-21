@@ -46,7 +46,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
         base.RegisterOptions(command);
 
         command.Options.Add(SpeechOptionDefinitions.Text);
-        command.Options.Add(SpeechOptionDefinitions.File);
+        command.Options.Add(SpeechOptionDefinitions.OutputAudio);
         command.Options.Add(SpeechOptionDefinitions.Language);
         command.Options.Add(SpeechOptionDefinitions.Voice);
         command.Options.Add(SpeechOptionDefinitions.Format);
@@ -63,7 +63,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
                 commandResult.AddError("Text cannot be empty or whitespace.");
             }
 
-            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File);
+            var fileValue = commandResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio);
 
             // Validate output file path
             if (string.IsNullOrWhiteSpace(fileValue))
@@ -102,7 +102,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
     {
         var options = base.BindOptions(parseResult);
         options.Text = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.Text.Name);
-        options.File = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.File.Name);
+        options.OutputAudio = parseResult.GetValueOrDefault<string>(SpeechOptionDefinitions.OutputAudio.Name);
         options.Language = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Language.Name);
         options.Voice = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Voice.Name);
         options.Format = parseResult.GetValueOrDefault<string?>(SpeechOptionDefinitions.Format.Name);
@@ -126,7 +126,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             var result = await speechService.SynthesizeSpeechToFile(
                 options.Endpoint!,
                 options.Text!,
-                options.File!,
+                options.OutputAudio!,
                 options.Language,
                 options.Voice,
                 options.Format,
@@ -147,7 +147,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error synthesizing speech to file: {File}", options.File);
+            _logger.LogError(ex, "Error synthesizing speech to file: {File}", options.OutputAudio);
             HandleException(context, ex);
         }
 
