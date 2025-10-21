@@ -46,7 +46,7 @@ public class SessionHostUserSessionListCommandTests
         var command = _command.GetCommand();
 
         // Assert
-        Assert.Equal("usersession-list", command.Name);
+        Assert.Equal("user-list", command.Name);
         Assert.NotNull(command.Description);
         Assert.NotEmpty(command.Description);
         Assert.Contains("List all user sessions on a specific session host", command.Description);
