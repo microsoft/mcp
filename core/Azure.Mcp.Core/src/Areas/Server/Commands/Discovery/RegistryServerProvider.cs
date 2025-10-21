@@ -26,7 +26,8 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         return new McpServerMetadata
         {
             Id = _id,
-            Name = _serverInfo.Title ?? _id,
+            Name = _id,
+            Title = _serverInfo.Title,
             Description = _serverInfo.Description ?? string.Empty
         };
     }

@@ -11,7 +11,7 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices;
 public class AzureTerraformBestPracticesSetup : IAreaSetup
 {
     public string Name => "azureterraformbestpractices";
-    
+
     public string Title => "Azure Terraform Best Practices";
 
     public void ConfigureServices(IServiceCollection services)

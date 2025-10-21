@@ -80,6 +80,7 @@ public sealed class CommandGroupServerProvider(CommandGroup commandGroup) : IMcp
         {
             Id = _commandGroup.Name,
             Name = _commandGroup.Name,
+            Title = _commandGroup.Title,
             Description = _commandGroup.Description
         };
     }
