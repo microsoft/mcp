@@ -15,6 +15,12 @@ class Program
 
     private const string SpaceReplacement = "_";
     private const string TestToolIdPrefix = $"test{SpaceReplacement}tool{SpaceReplacement}";
+    private static readonly IReadOnlyDictionary<string, string> ValidServers =
+        new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Azure"] = "azmcp",
+            ["Fabric"] = "fabmcp"
+        };
 
     static async Task Main(string[] args)
     {
@@ -38,6 +44,8 @@ class Program
         string? customPromptsFile = null; // Optional custom prompts file
         string? customOutputFileName = null; // Optional custom output file name
         string? areaFilter = null; // Optional area filter for prompts
+        string? serverName = "Azure"; // Optional server name. Defaults to "Azure".
+        string? serverExePath = null; // Optional server executable path. Supercedes server name if provided.
 
         // Single tool test mode options
         bool testSingleToolMode = false; // Optional mode to test a single tool description
@@ -61,18 +69,43 @@ class Program
             else if (args[i] == "--tools-file" && i + 1 < args.Length)
             {
                 customToolsFile = args[i + 1];
+
+                if (!File.Exists(customToolsFile))
+                {
+                    throw new FileNotFoundException($"The specified tools file does not exist: {customToolsFile}");
+                }
             }
             else if (args[i] == "--prompts-file" && i + 1 < args.Length)
             {
                 customPromptsFile = args[i + 1];
+
+                if (!customPromptsFile.EndsWith(".md", StringComparison.OrdinalIgnoreCase) && !customPromptsFile.EndsWith(".json", StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new ArgumentException("Custom prompts file must be either a .md or .json file.");
+                }
+
+                if (!File.Exists(customPromptsFile))
+                {
+                    throw new FileNotFoundException($"The specified prompts file does not exist: {customPromptsFile}");
+                }
             }
             else if (args[i] == "--output-file-name" && i + 1 < args.Length)
             {
                 customOutputFileName = args[i + 1];
+
+                if (string.IsNullOrWhiteSpace(customOutputFileName))
+                {
+                    throw new ArgumentException("The --output-file-name argument cannot be empty.");
+                }
             }
             else if (args[i] == "--area" && i + 1 < args.Length)
             {
                 areaFilter = args[i + 1];
+
+                if (string.IsNullOrWhiteSpace(areaFilter))
+                {
+                    throw new ArgumentException("The --area argument cannot be empty.");
+                }
             }
             else if (args[i] == "--test-single-tool" && i + 1 < args.Length)
             {
@@ -81,10 +114,37 @@ class Program
             else if (args[i] == "--tool-description" && i + 1 < args.Length)
             {
                 testToolDescription = args[i + 1];
+
+                if (string.IsNullOrWhiteSpace(testToolDescription))
+                {
+                    throw new ArgumentException("The --tool-description argument cannot be empty.");
+                }
             }
             else if (args[i] == "--prompt" && i + 1 < args.Length)
             {
                 testPrompts.Add(args[i + 1]);
+
+                if (string.IsNullOrWhiteSpace(args[i + 1]))
+                {
+                    throw new ArgumentException("A --prompt argument cannot be empty.");
+                }
+            }
+            else if (args[i] == "--server" && i + 1 < args.Length)
+            {
+                serverName = args[i + 1];
+
+                if (!ValidServers.ContainsKey(serverName))
+                {
+                    throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are 'Azure' or 'Fabric'.");
+                }
+            } else if (args[i] == "--server-exe")
+            {
+                serverExePath = args[i + 1];
+
+                if (!File.Exists(serverExePath))
+                {
+                    throw new FileNotFoundException($"The specified server executable path does not exist: {serverExePath}");
+                }
             }
         }
 
@@ -155,12 +215,12 @@ class Program
                 if (listToolsResult == null)
                 {
                     Console.WriteLine($"⚠️  Failed to load tools from {customToolsFileResolved}, falling back to dynamic loading");
-                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir);
+                    listToolsResult = await LoadToolsDynamicallyAsync(toolDir, server, serverExePath);
                 }
             }
             else
             {
-                listToolsResult = await LoadToolsDynamicallyAsync(toolDir) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
+                listToolsResult = await LoadToolsDynamicallyAsync(toolDir, server, serverExePath) ?? await LoadToolsFromJsonAsync(Path.Combine(toolDir, "tools.json"));
             }
 
             var tools = listToolsResult?.Tools ?? listToolsResult?.ConsolidatedTools;
@@ -283,15 +343,11 @@ class Program
                 {
                     toolNameAndPrompts = await LoadPromptsFromJsonAsync(customPromptsFileResolved, areaFilter);
                 }
-                else
-                {
-                    throw new ArgumentException("Custom prompts file must be either a .md or .json file.");
-                }
             }
             else
             {
                 // Use default fallback logic
-                var defaultPromptsPath = Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "docs", "e2eTestPrompts.md");
+                var defaultPromptsPath = Path.Combine(repoRoot, "servers", $"{serverName}.Mcp.Server", "docs", "e2eTestPrompts.md");
                 var promptsJsonPath = Path.Combine(toolDir, "prompts.json");
 
                 if (File.Exists(defaultPromptsPath))
@@ -388,22 +444,21 @@ class Program
         }
     }
 
-    // Traverse up from a starting directory to find the repo root (containing AzureMcp.sln or .git)
+    // Traverse up from a starting directory to find the repo root
     private static string FindRepoRoot(string startDir)
     {
         var dir = new DirectoryInfo(startDir);
 
         while (dir != null)
         {
-            if (File.Exists(Path.Combine(dir.FullName, "AzureMcp.sln")) ||
-                Directory.Exists(Path.Combine(dir.FullName, ".git")))
+            if (Directory.Exists(Path.Combine(dir.FullName, ".git")))
             {
                 return dir.FullName;
             }
             dir = dir.Parent;
         }
 
-        throw new FileNotFoundException("Could not find repo root (AzureMcp.sln or .git).");
+        throw new FileNotFoundException("Could not find repo root.");
     }
 
     // Resolve the ToolDescriptionEvaluator directory robustly from repo root, with fallbacks from exeDir
@@ -430,43 +485,55 @@ class Program
         return Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
     }
 
-    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir)
+    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, string server, string? serverExePath)
     {
-        // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
+        // Locate mcp server artifact across common build outputs (servers/core, Debug/Release)
         var exeDir = AppContext.BaseDirectory;
         var repoRoot = FindRepoRoot(exeDir);
         var searchRoots = new List<string>
         {
-            Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
-            Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
+            Path.Combine(repoRoot, "servers", server, "Mcp.Server", "src", "bin", "Debug"),
+            Path.Combine(repoRoot, "servers", server, "Mcp.Server", "src", "bin", "Release")
         };
 
-        var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
         FileInfo? cliArtifact = null;
-
-        foreach (var root in searchRoots.Where(Directory.Exists))
+        if (!string.IsNullOrEmpty(serverExePath))
         {
-            foreach (var name in candidateNames)
+            cliArtifact = new FileInfo(serverExePath);
+            if (!cliArtifact.Exists)
             {
-                var found = new DirectoryInfo(root)
-                    .EnumerateFiles(name, SearchOption.AllDirectories)
-                    .FirstOrDefault();
-                if (found != null)
+                throw new FileNotFoundException($"The specified server executable path does not exist: {serverExePath}");
+            }   
+        }
+        else
+        {
+            string serverExe = ValidServers[server];
+            string[] candidateNames = new[] { ".exe", "", ".dll" };
+
+            foreach (var root in searchRoots.Where(Directory.Exists))
+            {
+                foreach (var name in candidateNames)
                 {
-                    cliArtifact = found;
+                    FileInfo found = new DirectoryInfo(root)
+                        .EnumerateFiles(serverExe + name, SearchOption.AllDirectories)
+                        .FirstOrDefault();
+                    if (found != null)
+                    {
+                        cliArtifact = found;
+                        break;
+                    }
+                }
+
+                if (cliArtifact != null)
+                {
                     break;
                 }
             }
 
-            if (cliArtifact != null)
+            if (cliArtifact == null)
             {
-                break;
+                throw new FileNotFoundException($"Could not locate {serverExe} CLI artifact in Debug/Release outputs under servers.");
             }
-        }
-
-        if (cliArtifact == null)
-        {
-            throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
         }
 
         var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
@@ -495,7 +562,7 @@ class Program
 
         if (process.ExitCode != 0)
         {
-            throw new IOException($"Failed to get tools from azmcp: {error}");
+            throw new IOException($"Failed to get tools from {fileName}: {error}");
         }
 
         // Filter out non-JSON lines (like launch settings messages)
@@ -514,7 +581,7 @@ class Program
 
         if (jsonStartIndex == -1)
         {
-            throw new IOException("No JSON output found from azmcp command.");
+            throw new IOException("No JSON output found from 'tools list' command.");
         }
 
         var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
@@ -535,11 +602,6 @@ class Program
 
     private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath)
     {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"Tools file not found: {filePath}");
-        }
-
         var json = await File.ReadAllTextAsync(filePath);
 
         // Process the JSON
@@ -605,11 +667,6 @@ class Program
 
     private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromMarkdownAsync(string filePath, string? areaFilter = null)
     {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"Prompts file not found: {filePath}");
-        }
-
         var content = await File.ReadAllTextAsync(filePath);
         var prompts = new Dictionary<string, List<string>>();
 
@@ -680,11 +737,6 @@ class Program
 
     private static async Task<Dictionary<string, List<string>>?> LoadPromptsFromJsonAsync(string filePath, string? areaFilter = null)
     {
-        if (!File.Exists(filePath))
-        {
-            throw new FileNotFoundException($"Prompts file not found: {filePath}");
-        }
-
         var json = await File.ReadAllTextAsync(filePath);
         var prompts = JsonSerializer.Deserialize(json, SourceGenerationContext.Default.DictionaryStringListString);
 
@@ -1121,6 +1173,8 @@ class Program
         Console.WriteLine("  --top <N>                     Number of results to display per test (default 5)");
         Console.WriteLine("  --tool-description <text>     A single tool description to test (used with --test-single-tool)");
         Console.WriteLine("  --prompt <text>               Test prompt (used with --test-single-tool, can be repeated)");
+        Console.WriteLine("  --server <name>               Specify the server name (default: Azure). Valid options: Azure, Fabric");
+        Console.WriteLine("  --server-exe <path>           Specify the server executable path in the format (examples: ./azmcp.exe, ./azmcp, ./azmcp.dll). If both this and --server are provided, --server is ignored.");
         Console.WriteLine();
         Console.WriteLine("ENVIRONMENT VARIABLES:");
         Console.WriteLine("  AOAI_ENDPOINT           Azure OpenAI endpoint URL");
