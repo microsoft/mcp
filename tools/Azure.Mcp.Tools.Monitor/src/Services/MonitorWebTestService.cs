@@ -5,6 +5,7 @@ using System.Text.RegularExpressions;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -14,8 +15,8 @@ using Azure.ResourceManager.ApplicationInsights.Models;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorWebTestService(ISubscriptionService subscriptionService, ITenantService tenantService, IResourceGroupService resourceGroupService)
-    : BaseAzureService(tenantService), IMonitorWebTestService
+public class MonitorWebTestService(ITokenCredentialProvider tokenCredentialProvider, ISubscriptionService subscriptionService, ITenantService tenantService, IResourceGroupService resourceGroupService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IMonitorWebTestService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
