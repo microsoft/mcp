@@ -1,5 +1,15 @@
 # Release History
 
+## 0.9.5 (2025-10-20)
+
+### Bugs Fixed
+
+- Update the `server.json` file in the NuGet distribution to match the `2025-09-29` schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
+
+### Other Changes
+
+- Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+
 ## 0.9.4 (2025-10-17)
 
 ### Features Added
