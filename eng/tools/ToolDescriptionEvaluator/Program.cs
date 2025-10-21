@@ -44,7 +44,7 @@ class Program
         string? customPromptsFile = null; // Optional custom prompts file
         string? customOutputFileName = null; // Optional custom output file name
         string? areaFilter = null; // Optional area filter for prompts
-        string serverName = "Azure"; // Optional server name. Defaults to "Azure".
+        string? serverName = null; // Optional server name. Defaults to "Azure".
         string? serverExePath = null; // Optional server executable path. Supercedes server name if provided.
 
         // Single tool test mode options
@@ -107,7 +107,7 @@ class Program
                     throw new ArgumentException("The --area argument cannot be empty.");
                 }
             }
-            else if (args[i] == "--test-single-tool" && i + 1 < args.Length)
+            else if (args[i] == "--test-single-tool")
             {
                 testSingleToolMode = args.Contains("--test-single-tool");
             }
@@ -137,7 +137,7 @@ class Program
                 {
                     throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are 'Azure' or 'Fabric'.");
                 }
-            } else if (args[i] == "--server-exe")
+            } else if (args[i] == "--server-exe" && i + 1 < args.Length)
             {
                 serverExePath = args[i + 1];
 
@@ -150,9 +150,36 @@ class Program
 
         try
         {
-            if ((!string.IsNullOrEmpty(testToolDescription) || testPrompts.Count > 0) && !testSingleToolMode)
+            if (testSingleToolMode)
             {
-                throw new ArgumentException("--tool-description and --prompt arguments require --test-single-tool mode to be enabled.");
+                if (!string.IsNullOrEmpty(areaFilter))
+                {
+                    throw new ArgumentException("--test-single-tool and --area are mutually exclusive.");
+                }
+
+                if (!string.IsNullOrEmpty(serverName))
+                {
+                    throw new ArgumentException("--test-single-tool mode does not support the --server argument.");
+                }
+
+                if (!string.IsNullOrEmpty(serverExePath))
+                {
+                    throw new ArgumentException("--test-single-tool mode does not support the --server-exe argument.");
+                }
+
+                if (string.IsNullOrEmpty(testToolDescription))
+                {
+                    throw new ArgumentException("--test-single-tool mode requires exactly one --tool-description argument.");
+                }
+
+                if (testPrompts.Count == 0)
+                {
+                    throw new ArgumentException("--test-single-tool mode requires at least one --prompt argument.");
+                }
+            }
+            else if (!string.IsNullOrEmpty(testToolDescription) || testPrompts.Count > 0)
+            {
+                throw new ArgumentException("--tool-description and --prompt arguments are only valid in --test-single-tool mode.");
             }
 
             string exeDir = AppContext.BaseDirectory;
@@ -279,25 +306,6 @@ class Program
 
             if (testSingleToolMode)
             {
-                if (!string.IsNullOrEmpty(areaFilter))
-                {
-                    Console.WriteLine("⚠️  --test-single-tool and --area are mutually exclusive; --area will be ignored.");
-                }
-
-                if (string.IsNullOrEmpty(testToolDescription) || testPrompts.Count == 0)
-                {
-                    string errorMessage = """
-                        --test-single-tool mode requires exactly one --tool-description and at least one --prompt argument.
-
-                        Examples:
-                        # Single prompt:
-                            --test-single-tool --tool-description "Lists all storage accounts" --prompt "Show me my storage accounts"
-                        # Multiple prompts:
-                            --test-single-tool --tool-description "Lists all storage accounts" --prompt "Show me my storage accounts" --prompt "List my storage accounts" --prompt "What storage accounts do I have"
-                        """;
-                    throw new ArgumentException(errorMessage);
-                }
-
                 await TestSingleToolAsync(testToolDescription, testPrompts, embeddingService, db, maxResultsPerTest);
 
                 return;
@@ -485,11 +493,12 @@ class Program
         return Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
     }
 
-    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, string server, string? serverExePath)
+    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, string? server, string? serverExePath)
     {
         // Locate mcp server artifact across common build outputs (servers/core, Debug/Release)
         var exeDir = AppContext.BaseDirectory;
         var repoRoot = FindRepoRoot(exeDir);
+        server ??= "Azure";
         var searchRoots = new List<string>
         {
             Path.Combine(repoRoot, "servers", server + ".Mcp.Server", "src", "bin", "Debug"),
@@ -1205,7 +1214,7 @@ class Program
         Console.WriteLine("    --prompt \"what storage accounts do I have\"");
     }
 
-    private static async Task TestSingleToolAsync(string toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5)
+    private static async Task TestSingleToolAsync(string? toolDescription, List<string> testPrompts, EmbeddingService embeddingService, VectorDB db, int maxResultsPerTest = 5)
     {
         Console.WriteLine("🔧 Testing Single Tool Description");
         Console.WriteLine($"📋 Tool Description: {toolDescription}");
