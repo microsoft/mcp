@@ -152,20 +152,11 @@ class Program
         {
             if (testSingleToolMode)
             {
-                if (!string.IsNullOrEmpty(areaFilter))
-                {
-                    throw new ArgumentException("--test-single-tool and --area are mutually exclusive.");
-                }
-
-                if (!string.IsNullOrEmpty(serverName))
-                {
-                    throw new ArgumentException("--test-single-tool mode does not support the --server argument.");
-                }
-
-                if (!string.IsNullOrEmpty(serverExePath))
-                {
-                    throw new ArgumentException("--test-single-tool mode does not support the --server-exe argument.");
-                }
+                WarnArgumentIsIgnored(areaFilter, "--area", "--test-single-tool");
+                WarnArgumentIsIgnored(serverName, "--server", "--test-single-tool");
+                WarnArgumentIsIgnored(serverExePath, "--server-exe", "--test-single-tool");
+                WarnArgumentIsIgnored(customPromptsFile, "--prompts-file", "--test-single-tool");
+                WarnArgumentIsIgnored(customOutputFileName, "--output-file-name", "--test-single-tool");
 
                 if (string.IsNullOrEmpty(testToolDescription))
                 {
@@ -182,6 +173,7 @@ class Program
                 throw new ArgumentException("--tool-description and --prompt arguments are only valid in --test-single-tool mode.");
             }
 
+            serverName ??= "Azure";
             string exeDir = AppContext.BaseDirectory;
             string repoRoot = FindRepoRoot(exeDir);
             string toolDir = FindToolDir(repoRoot, exeDir);
@@ -292,7 +284,7 @@ class Program
             }
             else
             {
-                Console.WriteLine("🔄 Using dynamic tool loading");
+                Console.WriteLine($"🔄 Loading tools dynamically from {serverName}.Mcp.Server executable");
             }
 
             if (!string.IsNullOrEmpty(customPromptsFile))
@@ -301,7 +293,7 @@ class Program
             }
             else
             {
-                Console.WriteLine("📝 Using default prompts (e2eTestPrompts.md)");
+                Console.WriteLine($"📝 Using default prompts file (e2eTestPrompts.md) for {serverName}.Mcp.Server");
             }
 
             if (testSingleToolMode)
@@ -355,6 +347,8 @@ class Program
             else
             {
                 // Use default fallback logic
+                Console.WriteLine($"⚠️  No custom prompts file specified; using fallback prompts file for {serverName}.Mcp.Server");
+
                 var defaultPromptsPath = Path.Combine(repoRoot, "servers", $"{serverName}.Mcp.Server", "docs", "e2eTestPrompts.md");
                 var promptsJsonPath = Path.Combine(toolDir, "prompts.json");
 
@@ -426,6 +420,14 @@ class Program
         return args.Contains("--text-results", StringComparer.OrdinalIgnoreCase);
     }
 
+    private static void WarnArgumentIsIgnored(string? value, string ignoredArgument, string prioritizedArgument)
+    {
+        if (!string.IsNullOrEmpty(value))
+        {
+            Console.WriteLine($"⚠️  Ignoring {ignoredArgument} argument when using {prioritizedArgument}");
+        }
+    }
+
     private static async Task LoadDotEnvFile(string toolDir)
     {
         var envFilePath = Path.Combine(toolDir, ".env");
@@ -493,12 +495,11 @@ class Program
         return Path.GetFullPath(Path.Combine(exeDir, "..", "..", ".."));
     }
 
-    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, string? server, string? serverExePath)
+    private static async Task<ListToolsResult?> LoadToolsDynamicallyAsync(string toolDir, string server, string? serverExePath)
     {
         // Locate mcp server artifact across common build outputs (servers/core, Debug/Release)
         var exeDir = AppContext.BaseDirectory;
         var repoRoot = FindRepoRoot(exeDir);
-        server ??= "Azure";
         var searchRoots = new List<string>
         {
             Path.Combine(repoRoot, "servers", server + ".Mcp.Server", "src", "bin", "Debug"),
@@ -535,6 +536,7 @@ class Program
 
                 if (cliArtifact != null)
                 {
+                    Console.WriteLine($"Found {serverExe} CLI artifact: {cliArtifact.FullName}");
                     break;
                 }
             }
