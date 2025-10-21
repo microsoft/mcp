@@ -40,7 +40,9 @@ dotnet run
 
 ### 2. Test Single Tool Mode
 
-Tests a specific tool description against one or more prompts:
+Tests a specific tool description against one or more prompts. This mode is useful for testing new tool descriptions before adding them to the system.
+
+**Note:** In this mode, the following arguments are ignored: `--area`, `--server`, `--server-exe`, `--prompts-file`
 
 ```bash
 # Single prompt

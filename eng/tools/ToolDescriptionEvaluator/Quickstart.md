@@ -53,6 +53,26 @@ Or copy `.env.example` to `.env` and fill in your credentials.
 4. Check if your tool ranks in the top 3 for the prompts (ideally #1) and with a score of at least `0.4`
 5. Refine the description if needed and try again
 
+### Testing a Single Tool Description
+
+When developing a new tool, you can test its description directly without adding it to the system first:
+
+```bash
+# Test a single tool description against one prompt
+dotnet run -- --test-single-tool \
+  --tool-description "Lists all storage accounts in a subscription" \
+  --prompt "show me my storage accounts"
+
+# Test against multiple prompts
+dotnet run -- --test-single-tool \
+  --tool-description "Retrieves secrets from Azure Key Vault" \
+  --prompt "get my secret from Key Vault" \
+  --prompt "show me secrets in my vault" \
+  --prompt "what secrets do I have"
+```
+
+**Note:** In `--test-single-tool` mode, the following arguments are ignored: `--area`, `--server`, `--server-exe`, `--prompts-file`
+
 ## Additional Usage Options
 
 ### Testing Different Servers
