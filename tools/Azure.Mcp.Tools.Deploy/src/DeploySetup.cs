@@ -17,6 +17,8 @@ public sealed class DeploySetup : IAreaSetup
 {
     public string Name => "deploy";
 
+    public string Title => "Azure Deployment";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IDeployService, DeployService>();
@@ -35,7 +37,7 @@ public sealed class DeploySetup : IAreaSetup
             + "- iac rules get: offers guidelines for creating Bicep/Terraform files to deploy applications on Azure; "
             + "- app logs get: fetch logs from log analytics workspace for Container Apps, App Services, function apps that were deployed through azd; "
             + "- pipeline guidance get: guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure; "
-            + "- architecture diagram generate: generates an azure service architecture diagram for the application based on the provided app topology; ");
+            + "- architecture diagram generate: generates an azure service architecture diagram for the application based on the provided app topology; ", Title);
 
         // Application-specific commands
         // This command will be deprecated when 'azd cli' supports the same functionality

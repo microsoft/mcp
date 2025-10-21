@@ -413,13 +413,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| managedlustre_filesystem_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
-| managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
-| managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| managedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
-| managedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| managedlustre_filesystem_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| managedlustre_filesystem_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
+| managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
+| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
+| managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
+| managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
+| managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
 ## Azure Marketplace
 
@@ -441,13 +441,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | get_bestpractices_get | Get the latest Azure Functions best practices |
 | get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
 | get_bestpractices_get | What are azure function best practices? |
+| get_bestpractices_get | configure azure mcp in coding agent for my repo |
 
 ## Azure Monitor
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
 | monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
@@ -529,11 +530,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
-| resourcehealth_service-health-events_list | List all service health events in my subscription |
-| resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
-| resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
-| resourcehealth_service-health-events_list | List active service health events in my subscription |
-| resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
+| resourcehealth_health-events_list | List all service health events in my subscription |
+| resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
+| resourcehealth_health-events_list | List active service health events in my subscription |
+| resourcehealth_health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 
@@ -654,8 +655,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | virtualdesktop_hostpool_list | List all host pools in my subscription |
-| virtualdesktop_hostpool_sessionhost_list | List all session hosts in host pool <hostpool_name> |
-| virtualdesktop_hostpool_sessionhost_usersession-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
+| virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
+| virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
 ## Azure Workbooks
 
@@ -680,6 +681,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | cloudarchitect_design | Please help me design an architecture for a large-scale file upload, storage, and retrieval service |
-| cloudarchitect_design | Help me create a cloud service that will serve as ATM for users |
+| cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |

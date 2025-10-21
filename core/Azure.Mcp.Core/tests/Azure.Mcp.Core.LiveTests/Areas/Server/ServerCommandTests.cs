@@ -69,7 +69,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         // Default mode is now namespace mode, so should have namespace-level tools (not 60+ individual tools)
         Assert.True(toolNames.Count > 20, $"Expected more than 20 namespace tools, got {toolNames.Count}");
 
-        // Should include the documentation tool
+        // Should include the documentation tool (displayed by its title)
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
         // Log for debugging
@@ -275,7 +275,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         // In namespace mode without specific namespaces, should default to extension tools
         Assert.True(toolNames.Count > 20, "Should have more than 20 tools in namespace mode");
 
-        // Should include the documentation tool
+        // Should include the documentation tool (displayed by its title)
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
         Output.WriteLine($"Namespace proxy mode loaded {toolNames.Count} tools");
@@ -339,7 +339,7 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         var toolNames = listResult.Select(t => t.Name).ToList();
 
-        // Should contain the documentation tool plus utility tools
+        // Should contain the documentation tool (displayed by its title) plus utility tools
         Assert.Equal(3, listResult.Count());
         Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
         Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));

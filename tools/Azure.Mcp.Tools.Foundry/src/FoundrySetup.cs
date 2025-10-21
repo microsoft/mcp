@@ -14,6 +14,8 @@ public class FoundrySetup : IAreaSetup
 {
     public string Name => "foundry";
 
+    public string Title => "Azure AI Foundry";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IFoundryService, FoundryService>();
@@ -34,7 +36,7 @@ public class FoundrySetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var foundry = new CommandGroup(Name, "Foundry service operations - Commands for listing and managing services and resources in AI Foundry.");
+        var foundry = new CommandGroup(Name, "Foundry service operations - Commands for listing and managing services and resources in AI Foundry.", Title);
 
         var models = new CommandGroup("models", "Foundry models operations - Commands for listing and managing models in AI Foundry.");
         foundry.AddSubGroup(models);

@@ -1,0 +1,152 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "UserDataFunction data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "UserDataFunction": {
+            "description": "A UserDataFunction object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The UserDataFunction properties.",
+                    "$ref": "#/definitions/UserDataFunctionProperties"
+                }
+            }
+        },
+        "UserDataFunctionProperties": {
+            "description": "The UserDataFunction properties.",
+            "type": "object",
+            "required": ["oneLakeRootPath"],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the UserDataFunction root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "UserDataFunctions": {
+            "description": "A list of User Data Functions.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of User Data Functions.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserDataFunction"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateUserDataFunctionRequest": {
+            "description": "Create UserDataFunction request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The UserDataFunction display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The UserDataFunction description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The UserDataFunction public definition.",
+                    "$ref": "#/definitions/UserDataFunctionPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateUserDataFunctionDefinitionRequest": {
+            "description": "Update UserDataFunction public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/UserDataFunctionPublicDefinition"
+                }
+            }
+        },
+        "UserDataFunctionDefinitionResponse": {
+            "description": "UserDataFunction public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/UserDataFunctionPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "UserDataFunctionPublicDefinition" : {
+            "description": "UserDataFunction public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/user-data-function) for more details on how to craft a UserDataFunction public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/UserDataFunctionPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "UserDataFunctionPublicDefinitionPart": {
+            "description": "UserDataFunction definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The UserDataFunction public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The UserDataFunction public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateUserDataFunctionRequest": {
+            "description": "Update UserDataFunction request.",
+            "properties": {
+                "displayName": {
+                    "description": "The UserDataFunction display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The UserDataFunction description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}

@@ -3,10 +3,11 @@
 
 namespace Azure.Mcp.Core.Commands;
 
-public class CommandGroup(string name, string description)
+public class CommandGroup(string name, string description, string? title = null)
 {
     public string Name { get; } = name;
     public string Description { get; } = description;
+    public string? Title { get; } = title;
     public List<CommandGroup> SubGroup { get; } = [];
     public Dictionary<string, IBaseCommand> Commands { get; } = [];
     public Command Command { get; } = new Command(name, description);

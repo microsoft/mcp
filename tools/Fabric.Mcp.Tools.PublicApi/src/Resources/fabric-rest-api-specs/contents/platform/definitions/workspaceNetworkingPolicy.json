@@ -1,0 +1,73 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "v1",
+    "title": "Workspace Networking Communication Policy REST APIs"
+  },
+  "paths": {},
+  "definitions": {
+    "WorkspaceNetworkingCommunicationPolicy": {
+      "type": "object",
+      "description": "The networking communication policy for a workspace.",
+      "properties": {
+        "inbound": {
+          "description": "The inbound network communications properties for a workspace.",
+          "$ref": "#/definitions/InboundRules"
+        },
+        "outbound": {
+          "description": "The outbound network communications properties for a workspace.",
+          "$ref": "#/definitions/OutboundRules"
+        }
+      }
+    },
+    "InboundRules": {
+      "description": "The policy for all inbound communications to a workspace.",
+      "type": "object",
+      "properties": {
+        "publicAccessRules": {
+          "description": "The policy for inbound communications to a workspace from public networks.",
+          "$ref": "#/definitions/NetworkRules"
+        }
+      }
+    },
+    "OutboundRules": {
+      "description": "The policy for all outbound communications from a workspace.",
+      "type": "object",
+      "properties": {
+        "publicAccessRules": {
+          "description": "The policy for outbound communications to public networks from a workspace.",
+          "$ref": "#/definitions/NetworkRules"
+        }
+      }
+    },
+    "NetworkRules": {
+      "description": "The policy defining access to/from a workspace to/from public networks.",
+      "type": "object",
+      "properties": {
+        "defaultAction": {
+          "description": "Default policy for workspace access from public networks.",
+          "$ref": "#/definitions/DefaultAction"
+        }
+      }
+    },
+    "DefaultAction": {
+      "description": "The default option for a network communications policy. Additional network connection defaults may be added over time.",
+      "type": "string",
+      "enum": [ "Allow", "Deny" ],
+      "x-ms-enum": {
+        "name": "NetworkAccessRule",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Allow",
+            "description": "Allow all connections."
+          },
+          {
+            "value": "Deny",
+            "description": "Deny all connections."
+          }
+        ]
+      }
+    }
+  }
+}

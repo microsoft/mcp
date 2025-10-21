@@ -2,15 +2,30 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.5 (Unreleased)
+## 0.9.6 (Unreleased)
 
 ### Features Added
+
+- Added instructions on configuring Azure MCP for GitHub coding agent. [[#888](https://github.com/microsoft/mcp/pull/888)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
+- Convert ARG usage to .NET SDK method calls of GetEntraAdministratorsAsync and ListFirewallRulesAsync to resolve the related issues ([#779](https://github.com/microsoft/mcp/issues/779) and [#855](https://github.com/microsoft/mcp/issues/855)) in `azmcp_entra_administrator_list` and `azmcp_sql_server_firewall_rule_list` commands. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed `ServerStarted` telemetry event not being published. [[#905](https://github.com/microsoft/mcp/pull/905)]
 
 ### Other Changes
+
+## 0.9.5 (2025-10-20)
+
+### Bugs Fixed
+
+- Update the `server.json` file in the NuGet distribution to match the `2025-09-29` schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
+
+### Other Changes
+
+- Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+- Added tool name length validation to ensure all tool names stay within 48 character limit for compatibility with MCP clients. [[#881](https://github.com/microsoft/mcp/pull/881)]
 
 ## 0.9.4 (2025-10-17)
 

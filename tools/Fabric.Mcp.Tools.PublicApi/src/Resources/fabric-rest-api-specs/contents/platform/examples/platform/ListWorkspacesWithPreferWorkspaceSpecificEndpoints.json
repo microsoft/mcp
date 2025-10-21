@@ -1,0 +1,27 @@
+{
+    "parameters": {
+        "preferWorkspaceSpecificEndpoints" : true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "cfafbeb1-8037-4d0c-896e-a46fb27ff227",
+                        "displayName": "Alice's Workspace",
+                        "description": "A workspace for Alice",
+                        "type": "Workspace",
+                        "apiEndpoint": "https://cfafbeb180374d0c896ea46fb27ff227.zcf.w.api.fabric.microsoft.com"
+                    },
+                    {
+                        "id": "0c02a0cd-71bc-410f-aa05-5a7bc98765f7",
+                        "displayName": "Bob's Workspace",
+                        "description": "A workspace for Bob",
+                        "type": "Workspace",
+                        "apiEndpoint": "https://0c02a0cd71bc410faa055a7bc98765f7.z0c.w.api.fabric.microsoft.com"
+                    }
+                ]
+            }
+        }
+    }
+}
