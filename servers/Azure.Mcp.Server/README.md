@@ -91,6 +91,9 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
+> [!IMPORTANT]  
+> Be sure to be authenticated into Azure the environment where the Azure MCP server will run. See the [Authentication guide](../../docs/Authentication.md) for all the possible methods to authenticate and more information on how to do it.
+
 ## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
