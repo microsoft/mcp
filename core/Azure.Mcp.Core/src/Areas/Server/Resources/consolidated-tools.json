@@ -666,7 +666,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information including available SKUs, subnet size validation, and subnet size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -928,7 +928,7 @@
     },
     {
       "name": "get_azure_virtual_desktop_details",
-      "description": "Get details about Azure Virtual Desktop resources including host pools, session hosts, and user sessions.",
+      "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
