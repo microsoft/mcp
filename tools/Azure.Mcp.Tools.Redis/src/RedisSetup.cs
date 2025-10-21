@@ -13,7 +13,7 @@ public class RedisSetup : IAreaSetup
 {
     public string Name => "redis";
 
-    public string Title => "Azure Cache for Redis";
+    public string Title => "Azure Redis";
 
     public void ConfigureServices(IServiceCollection services)
     {
