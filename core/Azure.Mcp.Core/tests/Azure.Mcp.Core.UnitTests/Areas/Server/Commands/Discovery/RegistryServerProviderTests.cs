@@ -48,6 +48,7 @@ public class RegistryServerProviderTests
         Assert.NotNull(metadata);
         Assert.Equal(testId, metadata.Id);
         Assert.Equal(testId, metadata.Name);
+        Assert.Null(metadata.Title);
         Assert.Equal(serverInfo.Description, metadata.Description);
     }
 
@@ -69,7 +70,32 @@ public class RegistryServerProviderTests
         Assert.NotNull(metadata);
         Assert.Equal(testId, metadata.Id);
         Assert.Equal(testId, metadata.Name);
+        Assert.Null(metadata.Title); // No title specified
         Assert.Equal(string.Empty, metadata.Description);
+    }
+
+    [Fact]
+    public void CreateMetadata_WithTitle_ReturnsTitleInMetadata()
+    {
+        // Arrange
+        string testId = "testProvider";
+        string testTitle = "Test Provider Display Name";
+        var serverInfo = new RegistryServerInfo
+        {
+            Title = testTitle,
+            Description = "Test Description"
+        };
+        var provider = new RegistryServerProvider(testId, serverInfo);
+
+        // Act
+        var metadata = provider.CreateMetadata();
+
+        // Assert
+        Assert.NotNull(metadata);
+        Assert.Equal(testId, metadata.Id);
+        Assert.Equal(testId, metadata.Name);
+        Assert.Equal(testTitle, metadata.Title);
+        Assert.Equal(serverInfo.Description, metadata.Description);
     }
 
     [Fact]
