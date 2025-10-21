@@ -13,6 +13,8 @@ public sealed class AppLensSetup : IAreaSetup
 {
     public string Name => "applens";
 
+    public string Title => "Azure AppLens Diagnostics";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppLensService, AppLensService>();
@@ -36,7 +38,8 @@ public sealed class AppLensSetup : IAreaSetup
             Always use this tool if user asks to use App Lens in regards to their resource.
 
             This tool provides conversational AI-powered diagnostics that automatically detect issues, identify root causes, and suggest specific remediation steps. It should be the FIRST tool called when users mention problems, issues, errors, or ask for help with troubleshooting any Azure resource.
-            """);
+            """,
+            Title);
 
         // Resource commands
         var resourceGroup = new CommandGroup("resource", "Resource operations - Commands for diagnosing specific Azure resources.");

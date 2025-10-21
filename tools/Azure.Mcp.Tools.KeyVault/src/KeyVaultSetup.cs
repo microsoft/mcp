@@ -16,6 +16,8 @@ public class KeyVaultSetup : IAreaSetup
 {
     public string Name => "keyvault";
 
+    public string Title => "Azure Key Vault";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IKeyVaultService, KeyVaultService>();
@@ -38,7 +40,7 @@ public class KeyVaultSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.");
+        var keyVault = new CommandGroup(Name, "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.", Title);
 
         var keys = new CommandGroup("key", "Key Vault key operations - Commands for managing and accessing keys in Azure Key Vault.");
         keyVault.AddSubGroup(keys);

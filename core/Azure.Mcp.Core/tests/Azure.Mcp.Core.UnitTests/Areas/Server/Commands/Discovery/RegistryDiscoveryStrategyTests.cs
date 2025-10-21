@@ -52,13 +52,13 @@ public class RegistryDiscoveryStrategyTests
         // Assert
         Assert.NotEmpty(result);
 
-        // Should contain the 'learn' server from registry.json
-        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
+        // Should contain the 'documentation' server from registry.json
+        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "documentation");
         Assert.NotNull(documentationProvider);
 
         var metadata = documentationProvider.CreateMetadata();
         Assert.Equal("documentation", metadata.Id);
-        Assert.Equal("documentation", metadata.Name);
+        Assert.Equal("Microsoft Documentation Search", metadata.Name);
         Assert.Contains("documentation", metadata.Description, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -95,7 +95,7 @@ public class RegistryDiscoveryStrategyTests
             Assert.NotNull(metadata);
             Assert.NotEmpty(metadata.Name);
             Assert.NotEmpty(metadata.Id);
-            Assert.Equal(metadata.Name, metadata.Id); // Should be the same for registry providers
+            // Name should be the title (user-friendly), Id should be the registry key
             Assert.NotNull(metadata.Description);
             Assert.NotEmpty(metadata.Description);
         }
@@ -183,14 +183,14 @@ public class RegistryDiscoveryStrategyTests
 
         // Act
         var result = await strategy.DiscoverServersAsync();
-        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
+        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "documentation");
 
         // Assert
         Assert.NotNull(documentationProvider);
 
         var metadata = documentationProvider.CreateMetadata();
         Assert.Equal("documentation", metadata.Id);
-        Assert.Equal("documentation", metadata.Name);
+        Assert.Equal("Microsoft Documentation Search", metadata.Name);
         Assert.NotEmpty(metadata.Description);
 
         // Description should contain key terms related to Microsoft documentation
@@ -211,12 +211,19 @@ public class RegistryDiscoveryStrategyTests
         // Assert
         Assert.NotEmpty(result);
 
-        // For registry servers, Name should match Id (both are the key from registry.json)
-        Assert.All(result, provider =>
-        {
-            var metadata = provider.CreateMetadata();
-            Assert.Equal(metadata.Id, metadata.Name);
-        });
+        // For registry servers with titles, Name should be the title, Id should be the key
+        // Verify specific known servers
+        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "documentation");
+        Assert.NotNull(documentationProvider);
+        var docMetadata = documentationProvider.CreateMetadata();
+        Assert.Equal("documentation", docMetadata.Id);
+        Assert.Equal("Microsoft Documentation Search", docMetadata.Name);
+
+        var azdProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "azd");
+        Assert.NotNull(azdProvider);
+        var azdMetadata = azdProvider.CreateMetadata();
+        Assert.Equal("azd", azdMetadata.Id);
+        Assert.Equal("Azure Developer CLI", azdMetadata.Name);
     }
 
     [Fact]
@@ -250,7 +257,7 @@ public class RegistryDiscoveryStrategyTests
 
         // Act
         var result = await strategy.DiscoverServersAsync();
-        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
+        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "documentation");
 
         // Assert
         Assert.NotNull(documentationProvider);
@@ -262,7 +269,7 @@ public class RegistryDiscoveryStrategyTests
         // Should not throw when creating metadata
         var metadata = registryProvider.CreateMetadata();
         Assert.NotNull(metadata);
-        Assert.Equal("documentation", metadata.Name);
+        Assert.Equal("Microsoft Documentation Search", metadata.Name);
     }
 
     [Fact]
@@ -316,11 +323,11 @@ public class RegistryDiscoveryStrategyTests
         var result = (await strategy.DiscoverServersAsync()).ToList();
         Assert.NotEmpty(result);
         // Should contain the 'documentation' server from registry.json
-        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
+        var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Id == "documentation");
         Assert.NotNull(documentationProvider);
         var metadata = documentationProvider.CreateMetadata();
         Assert.Equal("documentation", metadata.Id);
-        Assert.Equal("documentation", metadata.Name);
+        Assert.Equal("Microsoft Documentation Search", metadata.Name);
         Assert.Contains("documentation", metadata.Description, StringComparison.OrdinalIgnoreCase);
     }
 

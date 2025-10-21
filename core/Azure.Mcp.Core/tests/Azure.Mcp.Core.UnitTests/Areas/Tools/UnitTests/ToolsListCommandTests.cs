@@ -342,7 +342,20 @@ public class ToolsListCommandTests
         {
             Assert.False(string.IsNullOrWhiteSpace(ns.Name));
             Assert.False(string.IsNullOrWhiteSpace(ns.Command));
-            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
+            
+            // For regular namespaces, Command equals Name
+            // For surfaced extension commands like "azqr", Command is "extension azqr" but Name is "azqr"
+            if (!ns.Command.Contains(' '))
+            {
+                // Regular namespace: Command == Name
+                Assert.Equal(ns.Name, ns.Command);
+            }
+            else
+            {
+                // Surfaced extension command: Command is "{namespace} {commandName}", Name is just "{commandName}"
+                Assert.EndsWith(ns.Name, ns.Command);
+            }
+            
             Assert.Equal(ns.Name, ns.Name.Trim());
             Assert.DoesNotContain(" ", ns.Name);
             // Namespace should not itself have options

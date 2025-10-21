@@ -11,6 +11,8 @@ namespace Azure.Mcp.Tools.AzureTerraformBestPractices;
 public class AzureTerraformBestPracticesSetup : IAreaSetup
 {
     public string Name => "azureterraformbestpractices";
+    
+    public string Title => "Azure Terraform Best Practices";
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -23,7 +25,7 @@ public class AzureTerraformBestPracticesSetup : IAreaSetup
         var azureTerraformBestPractices = new CommandGroup(
             Name,
             @"Returns Terraform best practices for Azure. Call this before generating Terraform code for Azure Providers. 
-            If this tool needs to be categorized, it belongs to the Azure Best Practices category."
+            If this tool needs to be categorized, it belongs to the Azure Best Practices category.", Title
         );
 
         var practices = serviceProvider.GetRequiredService<AzureTerraformBestPracticesGetCommand>();
