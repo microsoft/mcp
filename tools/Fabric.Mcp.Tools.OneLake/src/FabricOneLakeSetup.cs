@@ -14,6 +14,7 @@ namespace Fabric.Mcp.Tools.OneLake;
 public class FabricOneLakeSetup : IAreaSetup
 {
     public string Name => "onelake";
+    public string Title => "Microsoft Fabric OneLake";
 
     public void ConfigureServices(IServiceCollection services)
     {
