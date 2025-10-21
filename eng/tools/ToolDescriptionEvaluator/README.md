@@ -38,7 +38,7 @@ Runs comprehensive analysis on all tools and prompts:
 dotnet run
 ```
 
-### 2. Test Single Tool Mode
+### 2. Single Tool Test Mode
 
 Tests a specific tool description against one or more prompts. This mode is useful for testing new tool descriptions before adding them to the system.
 
