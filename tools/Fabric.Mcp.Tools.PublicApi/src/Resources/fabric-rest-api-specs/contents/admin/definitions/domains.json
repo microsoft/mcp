@@ -6,13 +6,12 @@
     },
     "paths": {},
     "definitions": {
-        "Domain": {
+        "DomainBase": {
             "type": "object",
             "description": "Represents a domain or subdomain.",
             "required": [
                 "id",
-                "displayName",
-                "contributorsScope"
+                "displayName"
             ],
             "properties": {
                 "id": {
@@ -32,10 +31,45 @@
                     "type": "string",
                     "description": "The domain parent object ID.",
                     "format": "uuid"
-                },
+                }
+            }
+        },
+        "DomainPreview": {
+            "properties": {
                 "contributorsScope": {
                     "description": "The domain contributors scope.",
                     "$ref": "#/definitions/ContributorsScopeType"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DomainBase"
+                }
+            ]
+        },
+        "Domain": {
+            "properties": {
+                "defaultLabelId": {
+                    "type": "string",
+                    "description": "The domain default sensitivity label.",
+                    "format": "uuid"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/DomainBase"
+                }
+            ]
+        },
+        "DomainsResponsePreview": {
+            "description": "This is a response wrapper for a list of all domains.",
+            "properties": {
+                "domains": {
+                    "type": "array",
+                    "description": "The list of domains.",
+                    "items": {
+                        "$ref": "#/definitions/DomainPreview"
+                    }
                 }
             }
         },
@@ -87,7 +121,8 @@
                 }
             ]
         },
-        "UpdateDomainRequest": {
+        "UpdateDomainRequestBase": {
+            "type": "object",
             "description": "The request payload for updating a domain.",
             "properties": {
                 "displayName": {
@@ -99,12 +134,35 @@
                     "type": "string",
                     "description": "The domain description.\nThe description cannot contain more than 256 characters.",
                     "readOnly": false
-                },
+                }
+            }
+        },
+        "UpdateDomainRequestPreview": {
+            "properties": {
                 "contributorsScope": {
                     "description": "The domain contributors scope.",
                     "$ref": "#/definitions/ContributorsScopeType"
                 }
-            }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateDomainRequestBase"
+                }
+            ]
+        },
+        "UpdateDomainRequest": {
+            "properties": {
+                "defaultLabelId": {
+                    "type": "string",
+                    "description": "The domain default sensitivity label.\n\nTo remove the defaultLabelId from a domain, set its value to an empty UUID in your request: \"00000000-0000-0000-0000-000000000000\".",
+                    "format": "uuid"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateDomainRequestBase"
+                }
+            ]
         },
         "DomainRoleUnassignmentRequest": {
             "description": "The request payload for unassigning domain members by principal.",
@@ -141,6 +199,18 @@
                     "items": {
                         "$ref": "../../common/definitions.json#/definitions/Principal"
                     }
+                }
+            }
+        },
+        "SyncRoleAssignmentsToSubdomainsRequest": {
+            "description": "The request payload for syncing domain members to subdomains.",
+            "required": [
+                "role"
+            ],
+            "properties": {
+                "role": {
+                    "description": "Specifies the role of members to be synchronized with subdomains.",
+                    "$ref": "#/definitions/DomainRole"
                 }
             }
         },
@@ -222,20 +292,20 @@
             "type": "string",
             "description": "Represents the domain members by the principal's request type. Additional request types may be added over time.",
             "enum": [
-                "Admins",
-                "Contributors"
+                "Admin",
+                "Contributor"
             ],
             "x-ms-enum": {
                 "name": "DomainRole",
                 "modelAsString": true,
                 "values": [
                     {
-                        "value": "Admins",
-                        "description": "Domain admins request type."
+                        "value": "Admin",
+                        "description": "Domain admin."
                     },
                     {
-                        "value": "Contributors",
-                        "description": "Domain contributors request type."
+                        "value": "Contributor",
+                        "description": "Domain contributor."
                     }
                 ]
             }
@@ -266,6 +336,41 @@
                     }
                 ]
             }
+        },
+        "DomainRoleAssignment": {
+            "type": "object",
+            "description": "Represents a domain role assignment.",
+            "required": [
+                "role",
+                "principal"
+            ],
+            "properties": {
+                "role": {
+                    "description": "The domain role of the principal.",
+                    "$ref": "#/definitions/DomainRole"
+                },
+                "principal": {
+                    "description": "The principal.",
+                    "$ref": "../../common/definitions.json#/definitions/Principal"
+                }
+            }
+        },
+        "DomainRoleAssignments": {
+            "description": "A response wrapper for a list of domain role assignments with a continuation token.",
+            "properties": {
+                "value": {
+                    "type": "array",
+                    "description": "The list of the domain role assignments.",
+                    "items": {
+                        "$ref": "#/definitions/DomainRoleAssignment"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
         }
     }
 }

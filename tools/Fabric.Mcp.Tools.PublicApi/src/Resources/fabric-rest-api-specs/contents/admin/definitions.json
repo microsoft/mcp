@@ -54,6 +54,12 @@
             "format": "uuid",
             "readOnly": true,
             "description": "The capacity ID of the workspace."
+          },
+          "domainId": {
+            "type": "string",
+            "format": "uuid",
+            "readOnly": true,
+            "description": "The domain ID of the workspace."
           }
         }
       },

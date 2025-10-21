@@ -12,7 +12,8 @@
                 "id": "33bae707-5fe7-4352-89bd-061a1318b60a",
                 "displayName": "Workspace New displayName",
                 "description": "Workspace New description",
-                "type": "Workspace"
+                "type": "Workspace",
+                "domainId": "686177b9-ef29-45e4-a5db-1786ca6dbb9f"
             }
         }
     }

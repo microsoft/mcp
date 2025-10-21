@@ -1,0 +1,9 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "8ce96c50-85a0-4db3-85c6-7ccc3ed46523",
+        "principalId": "a35d842b-90d5-59a1-c56a-5f8fcff0bf9d"
+    },
+    "responses": {
+        "200": {}
+    }
+}

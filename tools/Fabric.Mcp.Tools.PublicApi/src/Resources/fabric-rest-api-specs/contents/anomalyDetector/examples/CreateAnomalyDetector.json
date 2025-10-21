@@ -1,0 +1,42 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "createAnomalyDetectorRequest": {
+            "displayName": "AnomalyDetector 1",
+            "description": "A AnomalyDetector description.",
+            "definition": {
+                "format": "AnomalyDetectorV1",
+                "parts": [
+                    {
+                        "path": "Configurations.json",
+                        "payload": "eyANCiAgIiRpZCI6ICJodHRwczovL2RldmVsb3Blci5taWNyb3NvZnQuY29tL2pzb24tc2NoZW1hcy9mYWJyaWMvaXRlbS9hbm9tYWx5RGV0ZWN0b3IvZGVmaW5pdGlvbi8xLjAuMC9zY2hlbWEuanNvbiIsDQogICIkc2NoZW1hIjogImh0dHBzOi8vanNvbi1zY2hlbWEub3JnL2RyYWZ0LTA3L3NjaGVtYSMiLA0KICAidW5pdmFyaWF0ZUNvbmZpZ3VyYXRpb25zIjogWw0KICBdDQp9",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": ".platform",
+                        "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc=",
+                        "payloadType": "InlineBase64"
+                    }
+                ]
+            }
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "displayName": "AnomalyDetector 1",
+                "description": "A AnomalyDetector description.",
+                "type": "AnomalyDetector",
+                "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+                "id": "5b218778-e7a5-4d73-8187-f10824047715"
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+                "Retry-After": 30
+            }
+        }
+    }
+}

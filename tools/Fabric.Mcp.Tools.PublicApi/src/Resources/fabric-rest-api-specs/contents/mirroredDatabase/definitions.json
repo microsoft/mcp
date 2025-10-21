@@ -358,6 +358,11 @@
                     "format": "date-time",
                     "type": "string",
                     "description": "Last processed time of the table in in UTC, using the YYYY-MM-DDTHH:mm:ssZ format."
+                },
+                "lastSyncLatencyInSeconds": {
+                    "format": "int32",
+                    "type": "integer",
+                    "description": "Latency in seconds between source commit time and target commit time of last processed change. For sources whose source commit time is not available, this value is not returned."
                 }
             }
         }

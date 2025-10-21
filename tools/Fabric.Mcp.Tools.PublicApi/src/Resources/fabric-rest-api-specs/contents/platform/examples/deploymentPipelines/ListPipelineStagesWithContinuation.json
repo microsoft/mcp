@@ -1,0 +1,39 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "2e6f0272-e809-410a-be63-50e1d97ba75a",
+                        "order": 0,
+                        "displayName":"Development",
+                        "description":"Design, review, and revise your content in a development workspace. When it's ready to test and preview, deploy the content to the test stage.",
+                        "workspaceId": "4de5bcc4-2c88-4efe-b827-4ee7b289b496",
+                        "workspaceName": "Workpsace-Development",
+                        "isPublic": false
+                    },
+                    {
+                        "id": "d2056166-041c-4a56-8d37-ea90038bc0d6",
+                        "order": 1,
+                        "displayName":"Test",
+                        "description":"Test and verify your content in a preproduction workspace. When it's ready, deploy the content to the production stage.",
+                        "workspaceId": "44b499cf-1eeb-45e2-9ada-63b6ec9d516e",
+                        "isPublic": false
+                    },
+                    {
+                        "id": "4c3eb03b-fbbb-4605-9b1a-6fba1003679e",
+                        "order": 2,
+                        "displayName":"Production",
+                        "description":"Your content has been tested and is ready for your customers as an app or by access to the production workspace.",
+                        "isPublic": true
+                    }
+                ],
+                "continuationToken": "LDEsMTAwMDAwLDA%3D",
+                "continuationUri": "https://api.fabric.microsoft.com/v1/deploymentPipelines/a5ded933-57b7-41f4-b072-ed4c1f9d5824/stages?continuationToken=LDEsMTAwMDAwLDA%3D"
+            }
+        }
+    }
+}

@@ -13,7 +13,7 @@
             "properties": {
                 "paths": {
                     "type": "array",
-                    "description": "The path or list of paths that are to be externally shared. You can share up to 100 paths in each share. A valid path to an external data share must start with \"Files/\" or \"Tables/\". You can't share the root folder itself (Files or Tables).\n\nFor example, these paths are valid:\n\n* \"Files/MyFolder1\"\n\n* \"Tables/MyTable1\"",
+                    "description": "The path or list of paths that are to be externally shared. You can share up to 100 paths in each share. A valid path to an external data share must start with \"Files/\" or \"Tables/\". You can't share the root folder itself (Files or Tables).\n\nFor example, these paths are valid:\n\n* \"Files/MyFolder1\"\n\n* \"Tables/MySchema\"\n\n* \"Tables/MyTable1\"",
                     "items": {
                         "type": "string"
                     },

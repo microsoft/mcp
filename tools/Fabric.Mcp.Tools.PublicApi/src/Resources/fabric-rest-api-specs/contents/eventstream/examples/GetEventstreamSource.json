@@ -6,21 +6,23 @@
     },
     "responses": {
         "200": {
-            "id": "e2886002-d696-4c05-969c-51361365cc24",
-            "name": "AzureEventHubSource",
-            "type": "AzureEventHub",
-            "properties": {
-                "dataConnectionId": "9c500070-073f-4a88-b478-8fabe1941c52",
-                "consumerGroupName": "$Default",
-                "inputSerialization": {
-                    "type": "Json",
-                    "properties": {
-                        "encoding": "UTF8"
+            "body": {
+                "id": "e2886002-d696-4c05-969c-51361365cc24",
+                "name": "AzureEventHubSource",
+                "type": "AzureEventHub",
+                "properties": {
+                    "dataConnectionId": "9c500070-073f-4a88-b478-8fabe1941c52",
+                    "consumerGroupName": "$Default",
+                    "inputSerialization": {
+                        "type": "Json",
+                        "properties": {
+                            "encoding": "UTF8"
+                        }
                     }
-                }
-            },
-            "status": "Running",
-            "error": null
+                },
+                "status": "Running",
+                "error": null
+            }
         }
     }
 }

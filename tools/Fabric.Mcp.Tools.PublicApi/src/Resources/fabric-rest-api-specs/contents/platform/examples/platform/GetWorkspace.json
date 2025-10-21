@@ -9,6 +9,7 @@
                 "displayName": "New workspace",
                 "description": "New workspace description",
                 "type": "Workspace",
+                "domainId": "9ce364e0-8e9d-4605-887a-b599b3e8b123",
                 "capacityId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
                 "capacityAssignmentProgress": "Completed",
                 "workspaceIdentity": {

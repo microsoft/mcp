@@ -1,0 +1,44 @@
+{
+    "parameters": {
+        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb",
+        "bulkMoveItemsRequest": {
+            "items": ["cccccccc-2222-3333-4444-dddddddddddd", "dddddddd-3333-4444-5555-eeeeeeeeeeee"]
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "cccccccc-2222-3333-4444-dddddddddddd",
+                        "displayName": "MyLakehouse",
+                        "description": "A lakehouse used by the sales team.",
+                        "type": "Lakehouse",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "eeeeeeee-4444-5555-6666-ffffffffffff",
+                        "displayName": "MyLakehouse",
+                        "description": "A SQL endpoint who is the child of Lakehouse",
+                        "type": "SQLEndpoint",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "ffffffff-5555-6666-7777-aaaaaaaaaaaa",
+                        "displayName": "MyLakehouse",
+                        "description": "A Semantic model who is the child of SQLEndpoint",
+                        "type": "SemanticModel",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    },
+                    {
+                        "id": "dddddddd-3333-4444-5555-eeeeeeeeeeee",
+                        "displayName": "Notebook",
+                        "description": "A notebook for refining year 2024 sales data analysis through machine learning algorithms.",
+                        "type": "SynapseNotebook",
+                        "workspaceId": "aaaaaaaa-0000-1111-2222-bbbbbbbbbbbb"
+                    }
+                ]
+            }
+        }
+    }
+}

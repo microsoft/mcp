@@ -1,0 +1,11 @@
+{
+    "parameters": {
+        "domainId": "d27d5b23-4a7e-4185-b81e-ac2b20cdd9a8",
+        "syncRoleAssignmentsToSubdomainsRequest": {
+            "role": "Contributor"
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

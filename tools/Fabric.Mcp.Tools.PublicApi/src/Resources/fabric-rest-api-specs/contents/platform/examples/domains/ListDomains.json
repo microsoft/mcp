@@ -1,0 +1,23 @@
+{
+    "parameters": {},
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "id": "bd3df35d-eccf-4fb2-92e0-5425849fe89e",
+                        "displayName": "Finance",
+                        "description": "This domain is used for identifying financial data and reports.",
+                        "parentDomainId": "541488c9-eb1f-4ee1-8997-10bb2fe6d58c"
+                    },
+                    {
+                        "id": "6d632c47-a320-4aff-8286-8dde706d670f",
+                        "displayName": "Human resources",
+                        "description": "",
+                        "parentDomainId": null
+                    }
+                ]
+            }
+        }
+    }
+}

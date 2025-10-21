@@ -21,7 +21,8 @@
                         "displayName": "Finance",
                         "description": "A workspace used by the finance team",
                         "type": "Workspace",
-                        "capacityId": "171018af-1531-4e61-942a-74f024b7f9fd"
+                        "capacityId": "171018af-1531-4e61-942a-74f024b7f9fd",
+                        "domainId": "7c889f28-999b-4945-840d-54da3e3b5a29"
                     }
                 ]
             }

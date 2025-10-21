@@ -10,14 +10,78 @@
   "host": "api.fabric.microsoft.com",
   "basePath": "/v1",
   "paths": {
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?preview=true": {
       "get": {
         "tags": [
-          "SparkCompute"
+          "Staging"
         ],
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment staging spark compute.",
-        "description": "## Permissions\n\nRead permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "SparkCompute_GetStagingSettings",
+        "summary": "Get environment staging spark compute.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_Get_Spark_Compute_(preview)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId", 
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/get-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",            
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkComputePreview.json"
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/update-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Request and response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_Update_Spark_Compute_(preview)",
+        "consumes": [
+          "application/json"
+        ],
         "produces": [
           "application/json"
         ],
@@ -37,6 +101,154 @@
             "required": true,
             "type": "string",
             "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/update-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          },
+          {
+            "name": "updateEnvironmentSparkComputeRequest",
+            "in": "body",
+            "description": "Update environment spark compute request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentSparkComputeRequestPreview"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update environment staging spark compute example": {
+            "$ref": "./examples/UpdateEnvironmentSparkComputePreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?preview=true": {
+      "get": {
+        "tags": [
+          "Published"
+        ],
+        "summary": "Get environment spark compute.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/get-spark-compute). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nTo ensure compatibility, explicitly set the `preview` parameter to your desired value (`true` or `false`).\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response property `sparkProperties`'s type was changed from `object` to the list of `SparkProperty`.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Published_Get_Spark_Compute_(preview)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/get-spark-compute).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentSparkComputePreview"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment Spark compute example": {
+            "$ref": "./examples/GetEnvironmentSparkComputePreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/sparkcompute?preview=false": {
+      "get": {
+        "tags": [
+          "Staging"
+        ],
+        "summary": "Get environment staging spark compute.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**.\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_GetSparkCompute",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
           }
         ],
         "responses": {
@@ -61,11 +273,11 @@
       },
       "patch": {
         "tags": [
-          "SparkCompute"
+          "Staging"
         ],
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpdate environment staging spark compute. If you want to delete a spark property, set its value as null.",
-        "description": "## Permissions\n\nWrite permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "SparkCompute_UpdateStagingSettings",
+        "summary": "Update environment staging spark compute. If you want to delete a spark property, set its value as null.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Staging_UpdateSparkCompute",
         "consumes": [
           "application/json"
         ],
@@ -88,6 +300,19 @@
             "required": true,
             "type": "string",
             "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
           },
           {
             "name": "updateEnvironmentSparkComputeRequest",
@@ -116,18 +341,21 @@
         "x-ms-examples": {
           "Update environment staging spark compute example": {
             "$ref": "./examples/UpdateEnvironmentSparkCompute.json"
+          },
+          "Update environment staging spark compute instance pool using pool ID example": {
+            "$ref": "./examples/UpdateEnvironmentSparkComputeInstancePoolWithId.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/sparkcompute?preview=false": {
       "get": {
         "tags": [
-          "SparkCompute"
+          "Published"
         ],
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment spark compute.",
-        "description": "## Permissions\n\nRead permission to the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-        "operationId": "SparkCompute_GetPublishedSettings",
+        "summary": "Get environment spark compute.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "Published_GetSparkCompute",
         "produces": [
           "application/json"
         ],
@@ -147,6 +375,19 @@
             "required": true,
             "type": "string",
             "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
           }
         ],
         "responses": {
@@ -223,7 +464,7 @@
       },
       "post": {
         "summary": "Creates an environment in the specified workspace.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n This API does not support create a environment with definition.\n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create an environment, the workspace must be on a supported Fabric capacity.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create an environment, the workspace must be on a supported Fabric capacity.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -287,19 +528,22 @@
           }
         },
         "x-ms-examples": {
-          "Create a environment example": {
+          "Create an environment example": {
+            "$ref": "./examples/CreateEnvironmentWithoutDefinition.json"
+          },
+          "Create an environment with public definition example": {
             "$ref": "./examples/CreateEnvironment.json"
           }
         }
       }
     },
     "/workspaces/{workspaceId}/environments/{environmentId}": {
-      "get": {
+      "get": {        
         "summary": "Returns properties of the specified environment.",
         "description": "## Permissions\n\n The caller must have *read* permissions for the environment.\n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Item.Read.All or Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
-        ],
+        ],        
         "operationId": "Items_GetEnvironment",
         "produces": [
           "application/json"
@@ -320,11 +564,11 @@
             "type": "string",
             "format": "uuid",
             "required": true
-          }
+          }    
         ],
-        "responses": {
+        "responses": {            
           "200": {
-            "description": "Request completed successfully.",
+            "description": "Request completed successfully. Returns Environment object.",
             "schema": {
               "$ref": "./definitions.json#/definitions/Environment"
             }
@@ -448,14 +692,176 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries": {
-      "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet a list of libraries staged into environment.",
-        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+    "/workspaces/{workspaceId}/environments/{environmentId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified environment public definition.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a environment's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n\n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations\n\n This API is blocked for a environment with an encrypted sensitivity label.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Items"
         ],
-        "operationId": "SparkLibraries_GetStagingLibraries",
+        "operationId": "Items_GetEnvironmentDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the environment public definition.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a environment definition example": {
+            "$ref": "./examples/GetEnvironmentDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified environment.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the environment's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the environment. \n## Required Delegated Scopes \n\n Environment.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateEnvironmentDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "environmentId",
+            "description": "The environment ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateEnvironmentDefinitionRequest",
+            "description": "Update environment definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateEnvironmentDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a environment definition example": {
+            "$ref": "./examples/UpdateEnvironmentDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?preview=false": {
+      "get": {
+        "summary": "Get a list of libraries staged into environment.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],        
+        "operationId": "Staging_ListLibraries",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "libraries"
+        },
         "produces": [
           "application/json"
         ],
@@ -475,35 +881,57 @@
             "required": true,
             "type": "string",
             "format": "uuid"
-          }
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Token to retrieve the next page of results, if available.",
+            "type": "string",
+            "required": false
+          }       
         ],
         "responses": {
           "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref": "./definitions.json#/definitions/EnvironmentLibraries"
+              "$ref": "./definitions.json#/definitions/Libraries"
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging libraries.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
           }
-        },
+        },        
         "x-ms-examples": {
           "Get environment staging libraries example": {
             "$ref": "./examples/GetStagingLibraries.json"
           }
         }
-      },
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries": {
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpload spark library into environment.",
-        "description": "This API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml. \n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Upload spark library into environment.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/upload-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be added is now specified directly in the URL path.\n* The request now supports `application/octet-stream` as `Content-Type` instead of `multipart/form-data`.\n\nThis API allows one file upload at a time. The supported file formats are .jar, .py, .whl, .tar.gz, or environment.yml.\n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `multipart/form-data`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Staging"
         ],
-        "operationId": "SparkLibraries_UploadStagingLibrary",
+        "operationId": "Staging_Upload_Custom_Library_(preview)",
         "consumes": [
           "multipart/form-data"
         ],
@@ -541,20 +969,20 @@
         },
         "x-ms-examples": {
           "Upload environment staging libraries example": {
-            "$ref": "./examples/UploadStagingLibraries.json"
+            "$ref": "./examples/UploadCustomLibraryPreview.json"
           }
         }
       },
       "delete": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nDeletes a library from environment. It supports deleting one file at a time.",
-        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Deletes a library from environment. It supports deleting one file at a time.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/delete-custom-library).\nThe new version introduces breaking changes and is not backward compatible.**\n\n## Deprecation Notice\n\nIt is recommended to migrate your integration to use the Release version.\n\nThe following incompatible changes were introduced in the Release version:\n*  The request URL structure has changed: the library name to be removed is now specified directly in the URL path, rather than as a query parameter in the libraries collection.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Staging"
         ],
         "produces": [
           "application/json"
         ],
-        "operationId": "SparkLibraries_DeleteStagingLibrary",
+        "operationId": "Staging_Delete_Custom_Library_(preview)",
         "parameters": [
           {
             "name": "workspaceId",
@@ -593,19 +1021,253 @@
         },
         "x-ms-examples": {
           "Delete environment staging libraries example": {
-            "$ref": "./examples/DeleteStagingLibraries.json"
+            "$ref": "./examples/DeleteCustomLibraryPreview.json"
           }
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/libraries": {
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries?preview=true": {
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nGet environment published libraries.",
-        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Get environment staging libraries.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/staging/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Staging"
         ],
-        "operationId": "SparkLibraries_GetPublishedLibraries",
+        "operationId": "Staging_List_Libraries_(preview)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/staging/list-libraries).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment staging libraries example": {
+            "$ref": "./examples/GetStagingLibrariesPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/{libraryName}": {
+      "post": {
+        "summary": "Upload spark library into environment.",
+        "description": "This API allows one file upload at a time. The supported file formats are .jar, .py, .whl, and .tar.gz. \n\n## Limitations\n\nThe maximum request size allowed is 100MB.\n\nNetwork issues may impact the upload size and may result in timeouts.\n\n## Content-Type\n\nThe library file needs to be upload using `Content-Type` as `application/octet-stream`.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_UploadCustomLibrary",
+        "consumes": [
+          "application/octet-stream"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryName",
+            "in": "path",
+            "description": "The library name to be uploaded. The library name needs to include its extension, for example `samplefile.jar`.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a library with a valid format such as .jar, .py, .whl, .tar.gz.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging libraries example": {
+            "$ref": "./examples/UploadCustomLibrary.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a custom library from environment. It supports deleting one file at a time. The supported file formats are .jar, .py, .whl, and .tar.gz.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "operationId": "Staging_DeleteCustomLibrary",
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "libraryName",
+            "in": "path",
+            "description": "The library name to be deleted. The library name needs to include its extension if it is a custom library, for example `samplefile.jar`.",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a name of a valid library.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete environment staging libraries example": {
+            "$ref": "./examples/DeleteCustomLibrary.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/removeExternalLibrary": {
+      "post": {
+        "summary": "Delete a spark external library from an environment.",
+        "description": "\nThis API allows one library deletion at a time.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_RemoveExternalLibrary",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "removeExternalLibraryRequest",
+            "in": "body",
+            "description": "The external library request payload.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions.json#/definitions/RemoveExternalLibrariesRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid request",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete an external library from environment example": {
+            "$ref": "./examples/RemoveExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/importExternalLibraries": {
+      "post": {
+        "summary": "Upload spark external libraries as an `environment.yml` file into environment. It overrides the list of existing external libraries in environment.",
+        "description": "\nThis API allows file upload at a time. \n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ImportExternalLibraries",
+        "consumes": [
+          "application/octet-stream"
+        ],
         "produces": [
           "application/json"
         ],
@@ -629,13 +1291,131 @@
         ],
         "responses": {
           "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentValidationFailed - Provide a valid environment.yml.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Upload environment staging external libraries example": {
+            "$ref": "./examples/ImportExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/libraries/exportExternalLibraries": {
+      "get": {
+        "summary": "Export a set of external libraries saved in the environment in YML format.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Staging"
+        ],
+        "operationId": "Staging_ExportExternalLibraries",
+        "produces": [
+          "application/octet-stream"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staging external libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Export staging external libraries in environment.yml example": {
+            "$ref": "./examples/ExportStagingExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?preview=false": {
+      "get": {
+        "summary": "Get environment published libraries.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_ListLibraries",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri",
+          "itemName": "libraries"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "Token to retrieve the next page of results, if available.",
+            "type": "string",
+            "required": false
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref": "./definitions.json#/definitions/EnvironmentLibraries"
+              "$ref": "./definitions.json#/definitions/Libraries"
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any staged libraries.",
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -648,16 +1428,79 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish": {
-      "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nTrigger an environment publish operation.",
-        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries?preview=true": {
+      "get": {
+        "summary": "Get environment published libraries.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/published/list-libraries). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Different response format and schema structure\n*   Enhanced library properties in the response\n*   Updated field names and data types\n*   Improved error handling and messages\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Published"
         ],
-        "operationId": "SparkLibraries_PublishEnvironment",
+        "operationId": "Published_List_Libraries_(preview)",
         "produces": [
           "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/published/list-libraries).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/LibrariesPreview"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get environment published libraries example": {
+            "$ref": "./examples/GetPublishedLibrariesPreview.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/libraries/exportExternalLibraries": {
+      "get": {
+        "summary": "Export a set of external libraries published in the environment in `YML` format.",
+        "description": "## Permissions\n\nRead permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.Read.All or Item.ReadWrite.All or Environment.Read.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Published"
+        ],
+        "operationId": "Published_ExportExternalLibraries",
+        "produces": [
+          "application/octet-stream"
         ],
         "parameters": [
           {
@@ -679,21 +1522,88 @@
         ],
         "responses": {
           "200": {
-            "description": "Publish operation request has been submitted successfully.",
-            "schema": {
-              "$ref": "./definitions.json#/definitions/EnvironmentPublishInfo"
-            }
+            "description": "Request completed successfully."
           },
+          "default": {
+            "description": "Common error codes:\n\n* EnvironmentLibrariesNotFound - This environment does not have any published external libraries.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Export published external libraries in environment.yml example": {
+            "$ref": "./examples/ExportPublishedExternalLibraries.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?preview=false": {
+      "post": {
+        "summary": "Trigger an environment publish operation.",
+        "description": "> [!NOTE]\n> This API is a release version of a preview version due to be deprecated on March 1, 2026.\n**When calling this API - callers must set the query parameter `preview` to the value `false`**\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_PublishEnvironment",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `false` to use the release version.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
           "202": {
-            "description": "> [!NOTE]\n> This code is not available.\n\nRequest accepted, publish operation is in progress.",
+            "description": "Request accepted, publish operation is in progress. Returns the GA contract when `preview=false` (default after March 1, 2026).",
             "headers": {
               "Location": {
-                "description": "The URL to check the status of the publish operation.",
+                "description": "The URL of the operation status, which can be used to track the operation state.",
                 "type": "string"
               },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
               "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
                 "type": "integer"
               }
+            }
+          },
+          "200": {
+            "description": "Publish operation request has been submitted successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
             }
           },
           "default": {
@@ -710,14 +1620,77 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/environments/{environmentId}/staging/publish?preview=true": {
+      "post": {
+        "summary": "Trigger an environment publish operation.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. This preview API will be deprecated on **March 1, 2026**, and replaced by a stable version, available [here](/rest/api/fabric/environment/items/publish-environment). The new version introduces breaking changes and is not backward compatible.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n## Deprecation Notice\n\nA new query parameter `preview` has been introduced to facilitate this transition:\n*   The `preview` query parameter currently defaults to `true`.\n*   Set the value of the `preview` query parameter to `false` to use the stable Release version of this API.\n*   Starting March 1, 2026, the default value for `preview` will change to `false`.\n\nIt is recommended to migrate your integration to use the Release version as soon as possible by specifying `false` for the `preview` query parameter (**the default value for the `preview` query parameter will be set to `false` on API's deprecation date**).\n\nThe following incompatible changes were introduced in the Release version:\n*   Response is following [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation) pattern and HTTP response code 202 may be returned.\n\n## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_Publish_Environment_(preview)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "workspaceId",
+            "in": "path",
+            "description": "The workspace ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "environmentId",
+            "in": "path",
+            "description": "The environment ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "description": "This parameter specifies which version of the API to use. Set to `true` to use the preview version described on this page, or to `false` to use the Release version detailed [here](/rest/api/fabric/environment/items/publish-environment).\nStarting March 1, 2026, the default value for `preview` will change to `false`.",
+            "required": true,
+            "type": "boolean",
+            "x-ms-deprecation": {
+              "defaultChangeDate": "2026-03-01",
+              "currentDefault": true,
+              "newDefault": false,
+              "description": "The default value will change from `true` to `false` on **March 1, 2026**."
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Publish operation request has been submitted successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidEnvironmentPublish - Environment publish operation for version <*GUID* of the failed publish operation> failed due to error: Code = EnvironmentAnotherOngoingPublishProcess.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Publish environment example": {
+            "$ref": "./examples/PublishEnvironmentPreview.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/environments/{environmentId}/staging/cancelPublish": {
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nTrigger an environment publish cancellation.",
-        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nEnvironment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Trigger an environment publish cancellation.",
+        "description": "## Permissions\n\nWrite permission for the environment item. \n\n## Required Delegated Scopes\n\nItem.ReadWrite.All or Environment.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "SparkLibraries"
+          "Items"
         ],
-        "operationId": "SparkLibraries_CancelPublish",
+        "operationId": "Items_CancelPublishEnvironment",
         "produces": [
           "application/json"
         ],
@@ -743,7 +1716,7 @@
           "200": {
             "description": "Request completed successfully.",
             "schema": {
-              "$ref": "./definitions.json#/definitions/EnvironmentPublishInfo"
+              "$ref": "./definitions.json#/definitions/EnvironmentProperties"
             }
           },
           "default": {

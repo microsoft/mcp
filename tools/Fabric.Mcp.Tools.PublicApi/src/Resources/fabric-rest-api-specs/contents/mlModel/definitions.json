@@ -1,131 +1,450 @@
 {
   "swagger": "2.0",
   "info": {
-      "version": "v1",
-      "title": "MLModel data types"
+    "version": "v1",
+    "title": "MLModel data types"
   },
   "paths": {},
   "definitions": {
-      "MLModels": {
-          "description": "A list of machine learning models.",
+    "MLModels": {
+      "description": "A list of machine learning models.",
           "required": ["value"],
-          "type": "object",
-          "properties": {
-              "value": {
-                  "description": "A list of machine learning models.",
-                  "type": "array",
-                  "items": {
-                      "$ref": "#/definitions/MLModel"
-                  }
-              }
-          },
-          "allOf": [
-              {
-                  "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
-              }
-          ]
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of machine learning models.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MLModel"
+          }
+        }
       },
-      "MLModel": {
-          "description": "A machine learning model object.",
-          "type": "object",
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MLModel": {
+      "description": "A machine learning model object.",
+      "type": "object",
           "required": ["type"],
-          "allOf": [
-            {
-                "$ref": "../common/definitions.json#/definitions/Item"
-            }
-          ]
-      },
-      "CreateMLModelRequest": {
-          "description": "Create machine learning model request payload.",
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/Item"
+        }
+      ]
+    },
+    "CreateMLModelRequest": {
+      "description": "Create machine learning model request payload.",
           "required": ["displayName"],
-          "properties": {
-              "displayName": {
-                  "description": "The machine learning model display name. The display name must follow naming rules according to item type.",
-                  "type": "string",
-                  "readOnly": false
-              },
-              "description": {
-                  "description": "The machine learning model description. Maximum length is 256 characters.",
-                  "type": "string",
-                  "readOnly": false
-              },
-              "folderId": {
-                  "description": "The folder ID. If not specified or null, the machine learning model is created with the workspace as its folder.",
-                  "type": "string",
-                  "format": "uuid",
-                  "readOnly": false
-              }
-          }
-      },
-      "UpdateMLModelDefinitionRequest": {
-          "description": "Update machine learning model public definition request payload.",
-          "required": ["definition"],
-          "properties": {
-              "definition": {
-                  "$ref": "#/definitions/MLModelDefinition"
-              }
-          }
-      },
-      "MLModelDefinitionResponse": {
-          "description": "Machine learning model public definition response.",
-          "required": ["definition"],
-          "properties": {
-              "definition": {
-                  "$ref": "#/definitions/MLModelDefinition",
-                  "readOnly": true
-              }
-          }
-      },
-      "MLModelDefinition" : {
-          "description": "Machine learning model public definition object.",
-          "type": "object",
-          "required": ["parts"],
-          "properties": {
-              "format": {
-                  "description": "The format of the item definition.",
-                  "type": "string",
-                  "readOnly": false
-              },
-              "parts": {
-                  "description": "A list of definition parts.",
-                  "type": "array",
-                  "items": {
-                      "$ref": "#/definitions/MLModelDefinitionPart"
-                  },
-                  "readOnly": false
-              }
-          }
-      },
-      "MLModelDefinitionPart": {
-          "description": "Machine learning model definition part object.",
-          "type": "object",
-          "properties": {
-              "path": {
-                  "description": "The machine learning model part path.",
-                  "type": "string",
-                  "readOnly": false
-              },
-              "payload": {
-                  "description": "The machine learning model part payload.",
-                  "type": "string",
-                  "readOnly": false
-              },
-              "payloadType":{
-                  "description": "The payload type.",
-                  "$ref": "../common/definitions.json#/definitions/PayloadType",
-                  "readOnly": false
-              }
-          }
-      },
-      "UpdateMLModelRequest": {
-          "description": "Update machine learning model request.",
-          "properties": {
-              "description": {
-                  "description": "The machine learning model description. Maximum length is 256 characters.",
-                  "type": "string",
-                  "readOnly": false
-              }
-          }
+      "properties": {
+        "displayName": {
+          "description": "The machine learning model display name. The display name must follow naming rules according to item type.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The machine learning model description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "folderId": {
+            "description": "The folder ID. If not specified or null, the machine learning model is created with the workspace as its folder.",
+            "type": "string",
+            "format": "uuid",
+            "readOnly": false
+        }
       }
+    },
+    "UpdateMLModelDefinitionRequest": {
+      "description": "Update machine learning model public definition request payload.",
+          "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/MLModelDefinition"
+        }
+      }
+    },
+    "MLModelDefinitionResponse": {
+      "description": "Machine learning model public definition response.",
+          "required": ["definition"],
+      "properties": {
+        "definition": {
+          "$ref": "#/definitions/MLModelDefinition",
+          "readOnly": true
+        }
+      }
+    },
+      "MLModelDefinition" : {
+      "description": "Machine learning model public definition object.",
+      "type": "object",
+          "required": ["parts"],
+      "properties": {
+        "format": {
+          "description": "The format of the item definition.",
+          "type": "string",
+          "readOnly": false
+        },
+        "parts": {
+          "description": "A list of definition parts.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/MLModelDefinitionPart"
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "MLModelDefinitionPart": {
+      "description": "Machine learning model definition part object.",
+      "type": "object",
+      "properties": {
+        "path": {
+          "description": "The machine learning model part path.",
+          "type": "string",
+          "readOnly": false
+        },
+        "payload": {
+          "description": "The machine learning model part payload.",
+          "type": "string",
+          "readOnly": false
+        },
+              "payloadType":{
+          "description": "The payload type.",
+          "$ref": "../common/definitions.json#/definitions/PayloadType",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateMLModelRequest": {
+      "description": "Update machine learning model request.",
+      "properties": {
+        "description": {
+          "description": "The machine learning model description. Maximum length is 256 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "MLModelEndpoint": {
+      "description": "A machine learning model endpoint object.",
+      "required": [
+        "defaultVersionAssignmentBehavior",
+        "defaultVersionName",
+        "defaultVersionInfo"
+      ],
+      "type": "object",
+      "properties": {
+        "defaultVersionAssignmentBehavior": {
+          "$ref": "#/definitions/EndpointDefaultVersionConfigurationPolicy"
+        },
+        "defaultVersionName": {
+          "type": "string",
+          "description": "Default machine learning model endpoint version name."
+        },
+        "defaultVersionInfo": {
+          "$ref": "#/definitions/MLModelEndpointVersionInfo"
+        }
+      }
+    },
+    "EndpointDefaultVersionConfigurationPolicy": {
+      "type": "string",
+      "description": "The default version assignment behavior of a given machine learning model endpoint. Additional EndpointDefaultVersionConfigurationPolicy types may be added over time.",
+      "enum": [
+        "StaticallyConfigured",
+        "NotConfigured"
+      ],
+      "x-ms-enum": {
+        "name": "EndpointDefaultVersionConfigurationPolicy",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "StaticallyConfigured",
+            "description": "The default version is statically configured."
+          },
+          {
+            "value": "NotConfigured",
+            "description": "No default version has been configured."
+          }
+        ]
+      }
+    },
+    "MLModelEndpointVersions": {
+      "description": "All MLModel Versions Endpoints info.",
+      "required": [
+        "value"
+      ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "type": "array",
+          "description": "The information about all versions available as endpoint for this MLModel.",
+          "items": {
+            "$ref": "#/definitions/MLModelEndpointVersionInfo"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "MLModelEndpointVersionInfo": {
+      "description": "Machine Learning Model Endpoint version information.",
+      "required": [
+        "versionName",
+        "status"
+      ],
+      "type": "object",
+      "properties": {
+        "versionName": {
+          "type": "string",
+          "description": "The machine learning model version name",
+          "readOnly": true
+        },
+        "status": {
+          "$ref": "#/definitions/MLModelEndpointVersionStatus",
+          "readOnly": true
+        },
+        "inputSignature": {
+          "type": "array",
+          "description": "The input signature for this version of the machine learning model.",
+          "readOnly": true,
+          "items": {
+            "$ref": "#/definitions/MLModelDataSchema"
+          }
+        },
+        "outputSignature": {
+          "type": "array",
+          "description": "The output signature for this version of the machine learning model.",
+          "readOnly": true,
+          "items": {
+            "$ref": "#/definitions/MLModelDataSchema"
+          }
+        },
+        "scaleRule": {
+          "$ref": "#/definitions/ScaleRule"
+        }
+      }
+    },
+    "MLModelDataSchema": {
+      "description": "Machine learning model data schema.",
+      "required": [
+        "type",
+        "name",
+        "required"
+      ],
+      "type": "object",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "The type of the signature."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the signature."
+        },
+        "required": {
+          "type": "boolean",
+          "description": "The boolean value to indicate if the signature is required or no. True - Required, False - Not Required."
+        }
+      }
+    },
+    "MLModelEndpointVersionStatus": {
+      "type": "string",
+      "description": "The status of a given machine learning model endpoint version. Additional ModelEndpointVersionStatus types may be added over time.",
+      "enum": [
+        "Deactivated",
+        "Activating",
+        "Deactivating",
+        "Active",
+        "Failed"
+      ],
+      "x-ms-enum": {
+        "name": "ModelEndpointVersionStatus",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "Deactivated",
+            "description": "All resources are deactivated."
+          },
+          {
+            "value": "Activating",
+            "description": "Machine learning model endpoint activation is under progress."
+          },
+          {
+            "value": "Deactivating",
+            "description": "Machine learning model endpoint deactivation is in progress."
+          },
+          {
+            "value": "Active",
+            "description": "Machine learning model endpoint is available to serve score requests."
+          },
+          {
+            "value": "Failed",
+            "description": "Machine learning model endpoint is in failed state."
+          }
+        ]
+      }
+    },
+    "ScoreDataRequest": {
+      "description": "Machine learning model endpoint request to score the given input data.",
+      "type": "object",
+      "required": [
+        "inputs"
+      ],
+      "properties": {
+        "formatType": {
+          "$ref": "#/definitions/FormatType"
+        },
+        "orientation": {
+          "$ref": "#/definitions/Orientation"
+        },
+        "inputs": {
+          "type": "array",
+          "description": "Machine learning inputs to score in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans.",
+          "items": {
+            "type": "array",
+            "description": "Machine learning inputs to score in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans.",
+            "items": {
+              "type": "object",
+              "description": "Machine learning inputs to score in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans."
+            }
+          },
+          "readOnly": false
+        }
+      }
+    },
+    "ScoreDataResponse": {
+      "description": "Machine learning model endpoint response to score the given input data.",
+      "type": "object",
+      "required": [
+        "formatType",
+        "orientation",
+        "predictions"
+      ],
+      "properties": {
+        "formatType": {
+          "$ref": "#/definitions/FormatType"
+        },
+        "orientation": {
+          "$ref": "#/definitions/Orientation"
+        },
+        "predictions": {
+          "type": "array",
+          "description": "Machine learning predictions represented in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans.",
+          "items": {
+            "type": "array",
+            "description": "Machine learning predictions represented in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans.",
+            "items": {
+              "type": "object",
+              "description": "Machine learning predictions represented in the form of Pandas dataset arrays that can include strings, numbers, integers and booleans."
+            }
+          },
+          "readOnly": true
+        }
+      }
+    },
+    "UpdateMLModelEndpointRequest": {
+      "description": "Machine learning model endpoint request body to update Model Endpoint properties.",
+      "type": "object",
+      "properties": {
+        "defaultVersionName": {
+          "description": "Default machine learning model endpoint version name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "defaultVersionAssignmentBehavior": {
+          "$ref": "#/definitions/EndpointDefaultVersionConfigurationPolicy"
+        }
+      }
+    },
+    "UpdateMLModelEndpointVersionRequest": {
+      "description": "Machine learning model endpoint version configuration info.",
+      "type": "object",
+      "properties": {
+        "scaleRule": {
+          "$ref": "#/definitions/ScaleRule"
+        }
+      }
+    },
+    "ScaleRule": {
+      "description": "Machine learning model endpoint scale rule. Additional ScaleRule types may be added over time.",
+      "type": "string",
+      "enum": [
+        "AlwaysOn",
+        "AllowScaleToZero"
+      ],
+      "x-ms-enum": {
+        "name": "ScaleRule",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "AlwaysOn",
+            "description": "Machine learning model endpoint should be AlwaysOn."
+          },
+          {
+            "value": "AllowScaleToZero",
+            "description": "Machine learning model endpoint can be scaled to zero after a period of inactivity."
+          }
+        ]
+      }
+    },
+    "FormatType": {
+      "type": "string",
+      "description": "Format type of data. Additional Format types may be added over time.",
+      "enum": [
+        "dataframe"
+      ],
+      "x-ms-enum": {
+        "name": "FormatType",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "dataframe",
+            "description": "Dataframe format type."
+          }
+        ]
+      }
+    },
+    "Orientation": {
+      "type": "string",
+      "description": "Orientation of data. Additional Orientation types may be added over time.",
+      "enum": [
+        "split",
+        "values",
+        "record",
+        "index",
+        "table"
+      ],
+      "x-ms-enum": {
+        "name": "Orientation",
+        "modelAsString": true,
+        "values": [
+          {
+            "value": "split",
+            "description": "Split orientation."
+          },
+          {
+            "value": "values",
+            "description": "Values orientation."
+          },
+          {
+            "value": "record",
+            "description": "Record orientation."
+          },
+          {
+            "value": "index",
+            "description": "Index orientation."
+          },
+          {
+            "value": "table",
+            "description": "Table orientation."
+          }
+        ]
+      }
+    }
   }
 }

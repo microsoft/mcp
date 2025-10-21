@@ -1,7 +1,8 @@
 {
     "parameters": {
         "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
-        "environmentId": "707cfd07-cbf1-41da-aad7-dd157ddb8c11"
+        "environmentId": "707cfd07-cbf1-41da-aad7-dd157ddb8c11",
+        "preview": "false"
     },
     "responses": {
         "200": {
@@ -20,9 +21,12 @@
                     "minExecutors": 1,
                     "maxExecutors": 1
                 },
-                "sparkProperties": {
-                    "spark.acls.enable": "false"
-                },
+                "sparkProperties": [
+                    {
+                        "key": "spark.acls.enable",
+                        "value": "false"
+                    }
+                ],
                 "runtimeVersion": "1.2"
             }
         }

@@ -10,8 +10,7 @@
             "description": "Create managed private endpoint request payload.",
             "required": [
                 "name", 
-                "targetPrivateLinkResourceId", 
-                "targetSubresourceType"
+                "targetPrivateLinkResourceId"
             ],
             "properties": {
                 "name": {
@@ -32,6 +31,14 @@
                 "requestMessage": {
                     "description": "Message to approve private endpoint request. Should not be more than 140 characters.",
                     "type": "string",
+                    "readOnly": false
+                },
+                "targetFQDNs": {
+                    "description": "Fully qualified domain names (FQDNs) to be associated with the private endpoint. Should not be more than 20 FQDNs.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
                     "readOnly": false
                 }
             }
@@ -160,6 +167,24 @@
                     }
                 ]
             }
+        },
+        "ManagedPrivateEndpointTargetFQDNs":{
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of FQDNs in the managed private endpoints.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
         }
     }
 }
