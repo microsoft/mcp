@@ -53,10 +53,6 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
-    'VsixPackagePrefix',
-    'VsixDescription',
-    'VsixPublisher',
-
     'IsAotCompatible'
 )
 
