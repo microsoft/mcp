@@ -27,9 +27,9 @@ The definition of an Eventhouse item is constructed from two parts: the item par
 
 The platform payload is optional. The platform part is a file that contains the Eventhouse metadata information.
 
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
-* [Get Item](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
+* [Create Item](/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
+* [Get Item](/rest/api/fabric/core/items/get-item) definition always returns the platform file.
+* [Update Item](/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
 
 ## Example of EventhouseProperties.json definition part decoded from Base64
 

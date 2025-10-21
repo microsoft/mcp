@@ -22,33 +22,33 @@ Definition based APIs include `Get Item Definition`, `Update Item Definition`, a
 
 The platform file is a definition part that contains the item's metadata information.
 
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition - Respects the platform file if provided.
-* [Get Item Definition](https://learn.microsoft.com/rest/api/fabric/core/items/get-item-definition) - Always returns the platform file.
-* [Update Item Definition](https://learn.microsoft.com/rest/api/fabric/core/items/update-item-definition) - Accepts the platform file if provided, but only if you set a `updateMetadata=true` URL parameter.
+* [Create Item](/rest/api/fabric/core/items/create-item) with definition - Respects the platform file if provided.
+* [Get Item Definition](/rest/api/fabric/core/items/get-item-definition) - Always returns the platform file.
+* [Update Item Definition](/rest/api/fabric/core/items/update-item-definition) - Accepts the platform file if provided, but only if you set a `updateMetadata=true` URL parameter.
 
-For more information, see [Automatically generated system files](https://learn.microsoft.com/fabric/cicd/git-integration/source-code-format?tabs=v2#automatically-generated-system-files)
+For more information, see [Automatically generated system files](/fabric/cicd/git-integration/source-code-format?tabs=v2#automatically-generated-system-files)
 
 ### Definition Details for Supported Item Types
 
-* [Copy job definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/copyjob-definition)
-* [Dataflow definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/dataflow-definition)
-* [Eventhouse definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/eventhouse-definition)
-* [API for GraphQL definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/graphql-api-definition)
-* [Dataflow definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/dataflow-definition)
-* [DataPipeline definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/datapipeline-definition)
-* [HLSCohort definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/hlscohort-definition)
-* [KQL Database definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/kql-database-definition)
-* [KQL Dashboard definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/kql-dashboard-definition)
-* [KQL Queryset definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/kql-queryset-definition)
-* [Mirrored Azure Databricks Catalog definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/mirrored-azuredatabricks-unitycatalog-definition)
-* [Mirrored database definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/mirrored-database-definition)
-* [Mounted Data Factory definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/mounted-data-factory-definition)
-* [Environment definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/environment-definition)
-* [Notebook definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/notebook-definition)
-* [Report definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/report-definition)
-* [Semantic model definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/semantic-model-definition)
-* [KQL Dashboard definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/kql-dashboard-definition)
-* [Eventstream definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/eventstream-definition)
-* [Reflex definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/reflex-definition)
-* [Spark job definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/spark-job-definition)
-* [Variable Library definition](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/variable-library-definition)
+* [Copy job definition](copyjob-definition.md)
+* [Dataflow definition](dataflow-definition.md)
+* [Eventhouse definition](eventhouse-definition.md)
+* [API for GraphQL definition](graphql-api-definition.md)
+* [Dataflow definition](dataflow-definition.md)
+* [DataPipeline definition](datapipeline-definition.md)
+* [HLSCohort definition](hlscohort-definition.md)
+* [KQL Database definition](kql-database-definition.md)
+* [KQL Dashboard definition](kql-dashboard-definition.md)
+* [KQL Queryset definition](kql-queryset-definition.md)
+* [Mirrored Azure Databricks Catalog definition](mirrored-azuredatabricks-unitycatalog-definition.md)
+* [Mirrored database definition](mirrored-database-definition.md)
+* [Mounted Data Factory definition](mounted-data-factory-definition.md)
+* [Environment definition](environment-definition.md)
+* [Notebook definition](notebook-definition.md)
+* [Report definition](report-definition.md)
+* [Semantic model definition](semantic-model-definition.md)
+* [KQL Dashboard definition](kql-dashboard-definition.md)
+* [Eventstream definition](eventstream-definition.md)
+* [Reflex definition](reflex-definition.md)
+* [Spark job definition](spark-job-definition.md)
+* [Variable Library definition](variable-library-definition.md)

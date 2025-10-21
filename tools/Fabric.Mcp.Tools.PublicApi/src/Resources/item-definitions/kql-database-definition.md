@@ -47,13 +47,13 @@ The JSON file describing the KQL database has the following properties:
 
 The platform payload is optional. The platform part is a file that contains the Eventhouse metadata information.
 
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
-* [Get Item](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
+* [Create Item](/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
+* [Get Item](/rest/api/fabric/core/items/get-item) definition always returns the platform file.
+* [Update Item](/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
 
 ## Example of DatabaseSchema.kql part decoded from Base64
 
-The KQL database schema is a KQL script that defines the [tables](https://learn.microsoft.com/kusto/management/tables?view=microsoft-fabric&preserve-view=true), [functions](https://learn.microsoft.com/kusto/management/functions?view=microsoft-fabric&preserve-view=true), [materialized views](https://learn.microsoft.com/kusto/management/materialized-views/materialized-view-overview?view=microsoft-fabric&preserve-view=true), and more.
+The KQL database schema is a KQL script that defines the [tables](/kusto/management/tables?view=microsoft-fabric&preserve-view=true), [functions](/kusto/management/functions?view=microsoft-fabric&preserve-view=true), [materialized views](/kusto/management/materialized-views/materialized-view-overview?view=microsoft-fabric&preserve-view=true), and more.
 
 
 ```kusto

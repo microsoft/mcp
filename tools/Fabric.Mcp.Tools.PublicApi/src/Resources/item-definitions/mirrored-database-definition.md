@@ -115,7 +115,7 @@ Describes the type properties for the source table.
 
 ### `mirroring.json` example
 
-To see how to create a JSON file describing a mirrored database item for various sources, see [mirrored database definitions for various sources](https://learn.microsoft.com/fabric/database/mirrored-database/mirrored-database-rest-api#create-mirrored-database).
+To see how to create a JSON file describing a mirrored database item for various sources, see [mirrored database definitions for various sources](/fabric/database/mirrored-database/mirrored-database-rest-api#create-mirrored-database).
 
 ```json
 {
