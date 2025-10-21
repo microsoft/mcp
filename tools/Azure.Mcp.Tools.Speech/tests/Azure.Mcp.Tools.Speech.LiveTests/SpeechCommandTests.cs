@@ -747,7 +747,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
         var outputFile = Path.Combine(Path.GetTempPath(), $"tts-test-large-{Guid.NewGuid()}.wav");
 
-        // Create a longer text (around 500 words)
+        // Create a longer text (around 1000 words)
         var largeText = string.Join(" ", Enumerable.Repeat(
             "This is a test of text to speech synthesis with a longer input to verify that streaming works correctly.",
             50));
