@@ -9,6 +9,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 ### Bugs Fixed
+- Convert ARG usage to .NET SDK method calls of GetEntraAdministratorsAsync and ListFirewallRulesAsync to resolve the related issues ([#779](https://github.com/microsoft/mcp/issues/779) and [#855](https://github.com/microsoft/mcp/issues/855)) in `azmcp_entra_administrator_list` and `azmcp_sql_server_firewall_rule_list` commands. [[#891](https://github.com/microsoft/mcp/pull/891)]
 
 ### Other Changes
 
