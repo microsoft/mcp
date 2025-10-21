@@ -1,0 +1,82 @@
+{
+   "parameters": {
+      "workspaceId": "cf5fef71-f7f3-43f3-ae7f-3c427922bef1",
+      "modelId": "7e92a6fc-3ef5-40bf-96df-ddae3fcde313"
+   },
+   "responses": {
+      "200": {
+        "body": {
+          "value":[
+            {
+              "versionName": "1",
+              "status": "Active",
+              "inputSignature": [
+                {
+                  "type": "double",
+                  "name": "age",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "sex",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "bmi",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "bp",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s1",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s2",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s3",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s4",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s5",
+                  "required": true
+                },
+                {
+                  "type": "double",
+                  "name": "s6",
+                  "required": true
+                }
+              ],
+              "outputSignature": [
+                {
+                  "type": "double",
+                  "name": "target",
+                  "required": true
+                }
+              ],
+              "scaleRule": "AlwaysOn"
+            },
+            {
+              "versionName": "2",
+              "status": "Deactivated"
+            }
+          ]
+        }
+      }
+   }
+}

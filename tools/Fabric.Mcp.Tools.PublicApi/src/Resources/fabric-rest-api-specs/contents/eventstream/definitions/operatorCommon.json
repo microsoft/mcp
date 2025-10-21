@@ -384,10 +384,10 @@
             "type": "object",
             "description": "Represents an operation on a column.",
             "required": [
-                "operationType"
+                "type"
             ],
             "properties": {
-                "operationType": {
+                "type": {
                     "type": "string",
                     "description": "The operation type.",
                     "enum": [
@@ -396,7 +396,7 @@
                         "Rename"
                     ],
                     "x-ms-enum": {
-                        "name": "operationType",
+                        "name": "type",
                         "modelAsString": true,
                         "values": [
                             {
@@ -419,7 +419,7 @@
                     "description": "The alias of the operation."
                 }
             },
-            "discriminator": "operationType"
+            "discriminator": "type"
         },
         "ManageFieldsFunctionCallOperation": {
             "type": "object",
