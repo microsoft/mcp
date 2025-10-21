@@ -102,9 +102,9 @@ foreach ($server in $buildInfo.servers) {
             -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' } `
             -OutputDirectory $tempPath
 
-        Write-Host "Copying NOTICE.txt and LICENSE to $tempFolder"
-        Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempFolder -Force
-        Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempFolder -Force
+        Write-Host "Copying NOTICE.txt and LICENSE to $tempPath"
+        Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPath -Force
+        Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPath -Force
 
         # Skip native platforms for now
         $filteredPlatforms = $server.platforms | Where-Object { -not $_.native }
