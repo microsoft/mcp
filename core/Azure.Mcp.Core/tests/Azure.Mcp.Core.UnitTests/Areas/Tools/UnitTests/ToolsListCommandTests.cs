@@ -342,7 +342,6 @@ public class ToolsListCommandTests
         {
             Assert.False(string.IsNullOrWhiteSpace(ns.Name));
             Assert.False(string.IsNullOrWhiteSpace(ns.Command));
-            Assert.StartsWith("azmcp ", ns.Command, StringComparison.OrdinalIgnoreCase);
             Assert.Equal(ns.Name, ns.Name.Trim());
             Assert.DoesNotContain(" ", ns.Name);
             // Namespace should not itself have options

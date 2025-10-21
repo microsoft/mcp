@@ -148,7 +148,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, and manage web tests for application monitoring.",
+      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, manage web tests for application monitoring, and get health status of entities in Azure Monitor health models.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -164,6 +164,7 @@
         "datadog_monitoredresources_list",
         "monitor_workspace_list",
         "monitor_activitylog_list",
+        "monitor_healthmodels_entity_get",
         "monitor_healthmodels_entity_gethealth",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
@@ -175,6 +176,7 @@
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
         "resourcehealth_availability-status_list",
+        "resourcehealth_health-events_list",
         "resourcehealth_service-health-events_list"
       ]
     },
@@ -676,6 +678,10 @@
       "mappedToolList": [
         "managedlustre_filesystem_list",
         "managedlustre_filesystem_sku_get",
+        "managedlustre_fs_list",
+        "managedlustre_fs_sku_get",
+        "managedlustre_fs_subnetsize_ask",
+        "managedlustre_fs_subnetsize_validate",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
@@ -933,6 +939,8 @@
       },
       "mappedToolList": [
         "virtualdesktop_hostpool_list",
+        "virtualdesktop_hostpool_host_list",
+        "virtualdesktop_hostpool_host_user-list",
         "virtualdesktop_hostpool_sessionhost_list",
         "virtualdesktop_hostpool_sessionhost_usersession-list"
       ]
