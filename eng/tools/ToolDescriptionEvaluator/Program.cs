@@ -135,9 +135,10 @@ class Program
 
                 if (!ValidServers.ContainsKey(serverName))
                 {
-                    throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are {string.Join(", ", ValidServers.Select(kvp => $"'{kvp.Key}'"))} (case-insensitive)."); 
+                    throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are {string.Join(", ", ValidServers.Select(kvp => $"'{kvp.Key}'"))} (case-insensitive).");
                 }
-            } else if (args[i] == "--server-exe" && i + 1 < args.Length)
+            }
+            else if (args[i] == "--server-exe" && i + 1 < args.Length)
             {
                 serverExePath = args[i + 1];
 
