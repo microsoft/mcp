@@ -70,7 +70,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.True(toolNames.Count > 20, $"Expected more than 20 namespace tools, got {toolNames.Count}");
 
         // Should include the documentation tool (displayed by its title)
-        Assert.Contains("Microsoft Documentation Search", toolNames, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
         // Log for debugging
         Output.WriteLine($"Default mode (namespace) loaded {toolNames.Count} tools");
@@ -276,7 +276,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.True(toolNames.Count > 20, "Should have more than 20 tools in namespace mode");
 
         // Should include the documentation tool (displayed by its title)
-        Assert.Contains("Microsoft Documentation Search", toolNames, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
         Output.WriteLine($"Namespace proxy mode loaded {toolNames.Count} tools");
         foreach (var name in toolNames)
@@ -307,7 +307,7 @@ public class ServerCommandTests(ITestOutputHelper output)
         Assert.True(hasRelevantTools, "Should have tools related to specified namespaces");
 
         // Should not include documentation tool when explicit namespaces are specified
-        Assert.DoesNotContain("Microsoft Documentation Search", toolNames, StringComparer.OrdinalIgnoreCase);
+        Assert.DoesNotContain("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
 
         // Should contain exactly 4 tools: 2 specified namespaces + 2 utility tools (group_list, subscription_list)
         Assert.Equal(4, toolNames.Count);
@@ -341,7 +341,7 @@ public class ServerCommandTests(ITestOutputHelper output)
 
         // Should contain the documentation tool (displayed by its title) plus utility tools
         Assert.Equal(3, listResult.Count());
-        Assert.Contains("Microsoft Documentation Search", toolNames, StringComparer.OrdinalIgnoreCase);
+        Assert.Contains("documentation", toolNames, StringComparer.OrdinalIgnoreCase);
         Assert.Contains(toolNames, name => name.Contains("group", StringComparison.OrdinalIgnoreCase));
         Assert.Contains(toolNames, name => name.Contains("subscription", StringComparison.OrdinalIgnoreCase));
 

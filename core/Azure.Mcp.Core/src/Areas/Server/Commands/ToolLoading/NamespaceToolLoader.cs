@@ -122,7 +122,7 @@ public sealed class NamespaceToolLoader(
                 InputSchema = ToolSchema,
                 Annotations = new ToolAnnotations()
                 {
-                    Title = group.Title ?? namespaceName,
+                    Title = group.Title,
                 },
             };
 
