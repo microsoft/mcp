@@ -126,15 +126,13 @@ foreach ($server in $buildInfo.servers) {
 }
 
 if($isPipelineRun) {
-    if ($buildInfo.servers.Count -ne 1) {
-        LogError "Compress-ForSigning.ps1 only supports single-server builds in a pipeline context."
-        exit 1
-    }
+    $signingPatterns = $buildInfo.servers
+    | Select-Object -ExpandProperty cliName -Unique
+    | ForEach-Object { "**/windows-*/$_.exe" }
+    | Join-String -Separator '%0D%0A' # URL encoded newlines
 
-    $cliName = $buildInfo.servers[0].cliName
-
-    Write-Host "Setting CliName variable to:`n$cliName"
-    Write-Host "##vso[task.setvariable variable=CliName]$CliName"
+    Write-Host "Setting WindowsSigningPatterns variable to:`n$signingPatterns"
+    Write-Host "##vso[task.setvariable variable=WindowsSigningPatterns]$signingPatterns"
 
     Write-Host "`n##[group] Output Path Contents:"
     Get-ChildItem -Path $OutputPath -File -Recurse | Select-Object -ExpandProperty FullName | Out-Host

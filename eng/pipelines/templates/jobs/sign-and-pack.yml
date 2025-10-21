@@ -26,8 +26,10 @@ jobs:
     parameters:
       SigningKeyCode: 'CP-230012' # MS Cert
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      # The CliName variable is produced in Compress-ForSigning.ps1 based on build_info.json cliName properties.
-      BinaryPattern: '**/windows-*/$(CliName).exe'
+      # Note: Explicit binary patterns have been removed for maintainability.
+      # Signing patterns are now dynamically generated in Compress-ForSigning.ps1
+      # based on build_info.json cliName properties. See Compress-ForSigning.ps1 for details.
+      BinaryPattern: $(WindowsSigningPatterns)
 
   - template: pipelines/steps/azd-cli-mac-signing.yml@azure-sdk-build-tools
     parameters:
