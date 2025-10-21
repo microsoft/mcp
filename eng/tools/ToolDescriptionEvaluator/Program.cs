@@ -152,11 +152,14 @@ class Program
         {
             if (testSingleToolMode)
             {
-                WarnArgumentIsIgnored(areaFilter, "--area", "--test-single-tool");
-                WarnArgumentIsIgnored(serverName, "--server", "--test-single-tool");
-                WarnArgumentIsIgnored(serverExePath, "--server-exe", "--test-single-tool");
-                WarnArgumentIsIgnored(customPromptsFile, "--prompts-file", "--test-single-tool");
-                WarnArgumentIsIgnored(customOutputFileName, "--output-file-name", "--test-single-tool");
+                WarnArgumentsAreIgnored("--test-single-tool", new Dictionary<string, string?>
+                {
+                    {"--area", areaFilter},
+                    {"--server", serverName},
+                    {"--server-exe", serverExePath},
+                    {"--prompts-file", customPromptsFile},
+                    {"--output-file-name", customOutputFileName}
+                });
 
                 if (string.IsNullOrEmpty(testToolDescription))
                 {
@@ -420,11 +423,16 @@ class Program
         return args.Contains("--text-results", StringComparer.OrdinalIgnoreCase);
     }
 
-    private static void WarnArgumentIsIgnored(string? value, string ignoredArgument, string prioritizedArgument)
+    private static void WarnArgumentsAreIgnored(string prioritizedArgument, Dictionary<string, string?> ignoredArguments)
     {
-        if (!string.IsNullOrEmpty(value))
+        var argumentsWithValues = ignoredArguments
+            .Where(kvp => !string.IsNullOrEmpty(kvp.Value))
+            .Select(kvp => kvp.Key)
+            .ToList();
+
+        if (argumentsWithValues.Count > 0)
         {
-            Console.WriteLine($"⚠️  Ignoring {ignoredArgument} argument when using {prioritizedArgument}");
+            Console.WriteLine($"⚠️  Ignoring argument{(argumentsWithValues.Count > 1 ? "s" : "")} {string.Join(", ", argumentsWithValues)} when using {prioritizedArgument}");
         }
     }
 
@@ -510,10 +518,6 @@ class Program
         if (!string.IsNullOrEmpty(serverExePath))
         {
             cliArtifact = new FileInfo(serverExePath);
-            if (!cliArtifact.Exists)
-            {
-                throw new FileNotFoundException($"The specified server executable path does not exist: {serverExePath}");
-            }   
         }
         else
         {
@@ -576,29 +580,8 @@ class Program
             throw new IOException($"Failed to get tools from {fileName}: {error}");
         }
 
-        // Filter out non-JSON lines (like launch settings messages)
-        var lines = output.Split('\n');
-        var jsonStartIndex = -1;
-
-        for (int i = 0; i < lines.Length; i++)
-        {
-            if (lines[i].Trim().StartsWith("{"))
-            {
-                jsonStartIndex = i;
-
-                break;
-            }
-        }
-
-        if (jsonStartIndex == -1)
-        {
-            throw new IOException("No JSON output found from 'tools list' command.");
-        }
-
-        var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
-
         // Parse the JSON output
-        var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
+        var result = JsonSerializer.Deserialize(output, SourceGenerationContext.Default.ListToolsResult);
 
         // Save the dynamically loaded tools to tools.json for future use
         if (result != null)
