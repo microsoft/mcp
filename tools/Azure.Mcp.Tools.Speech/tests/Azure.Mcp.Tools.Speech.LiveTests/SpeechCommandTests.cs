@@ -555,11 +555,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.True(resultProperty.TryGetProperty("filePath", out var filePathProperty));
             Assert.Equal(outputFile, filePathProperty.GetString());
 
-            // Verify duration and audio length are present
-            Assert.True(resultProperty.TryGetProperty("duration", out var durationProperty));
-            Assert.True(durationProperty.GetInt64() > 0);
-
-            Assert.True(resultProperty.TryGetProperty("audioLength", out var audioLengthProperty));
+            Assert.True(resultProperty.TryGetProperty("audioSize", out var audioLengthProperty));
             Assert.True(audioLengthProperty.GetInt64() > 0);
 
             // Verify the output file was created and has content

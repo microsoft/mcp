@@ -64,12 +64,12 @@ public class TtsSynthesizeCommandTests
     }
 
     [Theory]
-    [InlineData("", false, "Missing Required options: --endpoint, --text, --file")]
-    [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --text, --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --text, --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello", false, "Missing Required options: --file")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --file output.txt", false, "Output file must have .wav extension")]
-    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --file output.wav --language invalid", false, "Language must be in format 'xx-XX'")]
+    [InlineData("", false, "Missing Required options: --endpoint, --text, --outputAudio")]
+    [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --text, --outputAudio")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/", false, "Missing Required options: --text, --outputAudio")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello", false, "Missing Required options: --outputAudio")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.txt", false, "Unsupported output file format")]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --text Hello --outputAudio output.wav --language invalid", false, "Language must be in format 'xx-XX'")]
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -96,8 +96,7 @@ public class TtsSynthesizeCommandTests
         var expectedResult = new SynthesisResult
         {
             FilePath = outputFile,
-            Duration = 1000000,
-            AudioLength = 48000,
+            AudioSize = 48000,
             Format = "Riff24Khz16BitMonoPcm",
             Voice = "en-US-JennyNeural",
             Language = "en-US"
@@ -129,7 +128,7 @@ public class TtsSynthesizeCommandTests
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.TtsSynthesizeCommandResult);
             Assert.NotNull(result);
             Assert.Equal(outputFile, result.Result.FilePath);
-            Assert.Equal(48000, result.Result.AudioLength);
+            Assert.Equal(48000, result.Result.AudioSize);
         }
         finally
         {
@@ -155,8 +154,7 @@ public class TtsSynthesizeCommandTests
         var expectedResult = new SynthesisResult
         {
             FilePath = outputFile,
-            Duration = 1000000,
-            AudioLength = 32000,
+            AudioSize = 32000,
             Format = format,
             Voice = voice,
             Language = language

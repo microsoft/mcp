@@ -342,8 +342,8 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
     /// <param name="voice">Voice name to use (e.g., en-US-JennyNeural)</param>
     /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
     /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
-    /// <returns>Tuple containing audio data, actual voice used, and duration in ticks</returns>
-    private async Task<(byte[] AudioData, string Voice, long Duration)> SynthesizeSpeechToStream(
+    /// <returns>Tuple containing audio data, actual voice used, and duration in seconds</returns>
+    private async Task<(byte[] AudioData, string Voice)> SynthesizeSpeechToStream(
         string endpoint,
         string text,
         string? language = null,
@@ -425,12 +425,10 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         };
 
         // Start synthesis
-        var startTime = DateTime.UtcNow;
         await synthesizer.SpeakTextAsync(text);
 
         // Wait for synthesis to complete
         var success = await taskCompletionSource.Task;
-        var duration = (DateTime.UtcNow - startTime).Ticks;
 
         // Check if synthesis was successful
         if (!success && cancellationDetails != null)
@@ -463,7 +461,7 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
             actualVoice = voice ?? "default";
         }
 
-        return (audioData, actualVoice, duration);
+        return (audioData, actualVoice);
     }
 
     /// <summary>
@@ -525,22 +523,21 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
         try
         {
             // Use the reusable streaming synthesis method
-            var (audioData, actualVoice, duration) = await SynthesizeSpeechToStream(
+            var (audioData, actualVoice) = await SynthesizeSpeechToStream(
                 endpoint, text, language, voice, format, endpointId);
 
             // Write the complete audio data to file
             await File.WriteAllBytesAsync(outputFilePath, audioData);
 
             _logger.LogInformation(
-                "Speech synthesized and saved to file: {OutputFile}, Audio length: {AudioLength} bytes",
+                "Speech synthesized and saved to file: {OutputFile}, Audio size: {AudioSize} bytes",
                 outputFilePath,
                 audioData.Length);
 
             return new SynthesisResult
             {
                 FilePath = outputFilePath,
-                Duration = duration,
-                AudioLength = audioData.Length,
+                AudioSize = audioData.Length,
                 Format = format ?? "Riff24Khz16BitMonoPcm",
                 Voice = actualVoice,
                 Language = language ?? "en-US"

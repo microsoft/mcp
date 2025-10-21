@@ -5,16 +5,13 @@ using System.Text.Json.Serialization;
 
 namespace Azure.Mcp.Tools.Speech.Models;
 
-public record SynthesisResult
+public class SynthesisResult
 {
     [JsonPropertyName("filePath")]
     public string? FilePath { get; set; }
 
-    [JsonPropertyName("duration")]
-    public long Duration { get; set; }
-
-    [JsonPropertyName("audioLength")]
-    public int AudioLength { get; set; }
+    [JsonPropertyName("audioSize")]
+    public long AudioSize { get; set; }
 
     [JsonPropertyName("format")]
     public string? Format { get; set; }

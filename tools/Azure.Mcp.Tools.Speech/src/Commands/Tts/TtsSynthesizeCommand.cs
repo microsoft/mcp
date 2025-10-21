@@ -134,9 +134,9 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
                 options.RetryPolicy);
 
             _logger.LogInformation(
-                "Successfully synthesized speech to file: {File}. Audio length: {Length} bytes, Voice: {Voice}",
+                "Successfully synthesized speech to file: {File}. Audio size: {Size} bytes, Voice: {Voice}",
                 result.FilePath,
-                result.AudioLength,
+                result.AudioSize,
                 result.Voice);
 
             context.Response.Status = HttpStatusCode.OK;
