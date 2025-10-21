@@ -144,7 +144,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListDatabases_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_database_list",
+            "postgres_database_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -171,7 +171,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListTables_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_table_list",
+            "postgres_table_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -198,7 +198,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_GetTableSchema_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_table_schema_get",
+            "postgres_table_schema_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -234,7 +234,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         // Test a simple SELECT query
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_database_query",
+            "postgres_database_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -264,7 +264,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         // Test a query with COUNT aggregation
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_database_query",
+            "postgres_database_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -289,7 +289,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         // Test a query with JOIN
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_database_query",
+            "postgres_database_query",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -316,7 +316,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListServerConfigs_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_server_config_get",
+            "postgres_server_config_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -358,7 +358,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     {
         // Get a specific server parameter (max_connections is a common one)
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_server_param_get",
+            "postgres_server_param_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -380,7 +380,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     public async Task Should_ListServers_Successfully()
     {
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_server_list",
+            "postgres_server_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -402,7 +402,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_RejectNonSelectQuery_WithValidationError()
     {
-        JsonElement error = await this.CallToolAsyncWithErrorExpected("azmcp_postgres_database_query",
+        JsonElement error = await this.CallToolAsyncWithErrorExpected("postgres_database_query",
             new()
             {
                     { "subscription", Settings.SubscriptionId },
@@ -426,7 +426,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         string serverName = Guid.NewGuid().ToString(); // <-- nonexistent_server
 
         JsonElement error = await this.CallToolAsyncWithErrorExpected(
-                "azmcp_postgres_database_list",
+                "postgres_database_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -452,7 +452,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         string databaseName = Guid.NewGuid().ToString(); // <-- nonexistent_database
 
         JsonElement error = await this.CallToolAsyncWithErrorExpected(
-                "azmcp_postgres_table_list",
+                "postgres_table_list",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -475,7 +475,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         string tableName = Guid.NewGuid().ToString(); // <-- nonexistent_table
 
         JsonElement? result = await CallToolAsync(
-            "azmcp_postgres_table_schema_get",
+            "postgres_table_schema_get",
             new()
             {
                     { "subscription", Settings.SubscriptionId },
