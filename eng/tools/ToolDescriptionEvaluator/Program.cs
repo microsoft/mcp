@@ -135,7 +135,7 @@ class Program
 
                 if (!ValidServers.ContainsKey(serverName))
                 {
-                    throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are 'Azure' or 'Fabric'.");
+                    throw new ArgumentException($"Invalid server name: {serverName}. Allowed values are {string.Join(", ", ValidServers.Select(kvp => $"'{kvp.Key}'"))} (case-insensitive)."); 
                 }
             } else if (args[i] == "--server-exe" && i + 1 < args.Length)
             {
