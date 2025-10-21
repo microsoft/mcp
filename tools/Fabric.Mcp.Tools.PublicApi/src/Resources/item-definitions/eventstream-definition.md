@@ -41,7 +41,7 @@ Describe the topology of Eventstream item.
 
 ## `eventstream.json` example
 
-To see how to create a JSON file describing an Eventstream item, see [Eventstream REST API](/fabric/real-time-intelligence/event-streams/eventstream-rest-api).
+To see how to create a JSON file describing an Eventstream item, see [Eventstream REST API](https://learn.microsoft.com/fabric/real-time-intelligence/event-streams/eventstream-rest-api).
 
 ```json
 {
@@ -182,14 +182,6 @@ Describe Eventstream metadata.
 }
 
 ```
-
-## Platform part
-
-The platform payload is optional. The platform part is a file that contains the Eventstream metadata information.
-
-* [Create Item](/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided.
-* [Get Item](/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, if you set a new URL parameter `updateMetadata=true`.
 
 ## Definition example
 

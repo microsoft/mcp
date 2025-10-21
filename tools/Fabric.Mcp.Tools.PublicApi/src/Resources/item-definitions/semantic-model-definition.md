@@ -20,13 +20,13 @@ Semantic Model items support the `TMSL` and `TMDL` formats.
 
 SematicModel has different parts that make up its definition:
 
-* [model.bim](/power-bi/developer/projects/projects-dataset#modelbim) or [\definition](/power-bi/developer/projects/projects-dataset#definition-folder) <sup>[1](#required1)</sup>
-* [definition.pbism](/power-bi/developer/projects/projects-dataset#definitionpbism) <sup>[1](#required1)</sup>
-* [diagramLayout.json](/power-bi/developer/projects/projects-dataset#diagramlayoutjson)
+* [model.bim](https://learn.microsoft.com/power-bi/developer/projects/projects-dataset#modelbim) or [\definition](https://learn.microsoft.com/power-bi/developer/projects/projects-dataset#definition-folder) <sup>[1](#required1)</sup>
+* [definition.pbism](https://learn.microsoft.com/power-bi/developer/projects/projects-dataset#definitionpbism) <sup>[1](#required1)</sup>
+* [diagramLayout.json](https://learn.microsoft.com/power-bi/developer/projects/projects-dataset#diagramlayoutjson)
 
 <a name="required1">1</a> - This file or folder is required.  
 
-For more information about the semantic model files, refer to the Power BI Project semantic model folder [documentation](/power-bi/developer/projects/projects-dataset).
+For more information about the semantic model files, refer to the Power BI Project semantic model folder [documentation](https://learn.microsoft.com/power-bi/developer/projects/projects-dataset).
 
 
 ## Definition payload example using TMSL
