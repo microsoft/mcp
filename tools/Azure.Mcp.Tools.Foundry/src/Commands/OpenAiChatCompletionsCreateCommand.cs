@@ -21,9 +21,10 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 
     public override string Description =>
         $"""
-        Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational 
-        inputs with message history and system instructions to generate contextual responses. Returns chat 
-        response as JSON. Requires resource-name, deployment-name, and message-array.
+        Create chat completions with conversational AI models. Send messages to a chat model and receive AI-generated 
+        responses. Supports multi-turn conversations with message history, system instructions, and response customization. 
+        Use this when you need to chat with an AI, get conversational responses, or build interactive dialogues. 
+        Requires resource-name, deployment-name, and message-array.
         """;
 
     public override string Title => CommandTitle;

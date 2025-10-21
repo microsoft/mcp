@@ -25,8 +25,8 @@ public class OpenAiChatCompletionsCreateCommandTests
         var command = new OpenAiChatCompletionsCreateCommand();
 
         // Act & Assert
-        Assert.Contains("Create interactive chat completions", command.Description);
-        Assert.Contains("Azure OpenAI chat models", command.Description);
+        Assert.Contains("Create chat completions", command.Description);
+        Assert.Contains("conversational AI models", command.Description);
         Assert.Contains("message-array", command.Description);
     }
 

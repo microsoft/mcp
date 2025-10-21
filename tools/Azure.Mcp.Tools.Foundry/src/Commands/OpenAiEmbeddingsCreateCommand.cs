@@ -20,9 +20,10 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
 
     public override string Description =>
         $"""
-        Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into 
-        high-dimensional vector representations for similarity search and machine learning applications. 
-        Returns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.
+        Create embeddings and convert text into vector representations. Generate vector embeddings for text that can be 
+        used for semantic search, similarity comparisons, clustering, or machine learning. Use this when you need to 
+        create embeddings, generate vectors, or convert text to numerical representations for AI applications. 
+        Requires resource-name, deployment-name, and input-text.
         """;
 
     public override string Title => CommandTitle;
