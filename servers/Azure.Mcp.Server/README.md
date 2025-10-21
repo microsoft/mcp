@@ -92,7 +92,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
 > [!IMPORTANT]  
-> Be sure to be authenticated into Azure the environment where the Azure MCP server will run. See the [Authentication guide](https://github.com/JonathanCrd/mcp/blob/main/docs/Authentication.md) for all the possible methods to authenticate and more information on how to do it.
+> Be sure to be authenticated into Azure the environment where the Azure MCP server will run. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for all the possible methods to authenticate and more information on how to do it.
 
 ## IDE
 
