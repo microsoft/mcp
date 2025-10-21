@@ -287,6 +287,654 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint": {
+      "get": {
+        "summary": "Returns properties of the specified machine learning model's endpoint.",
+        "description": "## Permissions\n\n The caller must have read permission on the MLModel. \n\n## Required Delegated Scopes \n\n MLModel.Read.All or MLModel.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_GetMLModelEndpoint",
+        "produces": [ "application/json" ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MLModelEndpoint"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Could not retrieve endpoint metadata. \n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/GetMLModelEndpoint.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the default version of the specified model.",
+        "description": "## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_UpdateMLModelEndpoint",
+        "consumes": [ "application/json" ],
+        "produces": [ "application/json" ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateMLModelEndpointRequest",
+            "description": "Update MLModel endpoint request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateMLModelEndpointRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoint updated.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MLModelEndpoint"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred. \n\n* Conflict - An operation is already is proress. \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/UpdateMLModelEndpoint.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/deactivateAll": {
+      "post": {
+        "summary": "Deactivates the specified machine learning model and its version's endpoints.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions \n The caller must have write permission on the MLModel. \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_DeactivateAllMLModelEndpointVersions",
+        "produces": [ "application/json" ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted, model activation in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred. \n\n* Conflict - An operation is already is proress. \n\n* BadInput - User Input is invalid.  \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/DeactivateMLModelEndpoint.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions": {
+      "get": {
+        "summary": "Returns a list of all machine learning model endpoint versions.",
+        "description": "This API supports [pagination](/rest/api/fabric/articles/pagination). \n\n## Permissions\n\n The caller must have read permission on the MLModel. \n\n## Required Delegated Scopes \n\n MLModel.Read.All or MLModel.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_ListMLModelEndpointVersions",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [ "application/json" ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MLModelEndpointVersions"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Could not retrieve endpoint metadata. \n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/ListMLModelEndpointVersions.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}": {
+      "get": {
+        "summary": "Returns information about the specified MLModel endpoint version.",
+        "description": "For machine learning model versions where endpoints have never been enabled, or have been disabled after enabling, the status would be 'deactivated'.\n\n## Permissions\n\n The caller must have read permission on the MLModel. \n\n## Required Delegated Scopes \n\n MLModel.Read.All or MLModel.ReadWrite.All or Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_GetMLModelEndpointVersion",
+        "produces": [ "application/json" ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The MLModel version name.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MLModelEndpointVersionInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Could not retrieve endpoint metadata. \n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/GetMLModelEndpointVersion.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Update machine learning model endpoint version configuration.",
+        "description": "## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- Only machine learning model endpoint versions which are enabled can be updated.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_UpdateMLModelEndpointVersion",
+        "consumes": [ "application/json" ],
+        "produces": [ "application/json" ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The MLModel version name.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateMLModelEndpointVersionRequest",
+            "description": "MLModel endpoint configuration update request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateMLModelEndpointVersionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Endpoint version configuration details.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/MLModelEndpointVersionInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred. \n\n* Conflict - An operation is already is proress. \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/UpdateMLModelEndpointVersion.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/activate": {
+      "post": {
+        "summary": "Activates the specified model version endpoint.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_ActivateMLModelEndpointVersion",
+        "consumes": [ "application/json" ],
+        "produces": [ "application/json" ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The MLModel version name.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted, model activation in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "200": {
+            "description": "Machine learning model endpoint activation completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred. \n\n* Conflict -  Model endpoint version is already activating. \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/ActivateMLModelEndpointVersion.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/deactivate": {
+      "post": {
+        "summary": "Deactivates the specified model version version.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_DeactivateMLModelEndpointVersion",
+        "produces": [ "application/json" ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The MLModel version name.",
+            "type": "string",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Machine learning model endpoint deactivation completed successfully."
+          },
+          "202": {
+            "description": "Request accepted, model activation in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred. \n\n* Conflict - Model endpoint version is already deactivating. \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/DeactivateMLModelEndpointVersion.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlModels/{modelId}/endpoint/score": {
+      "post": {
+        "summary": "Scores input data using the default version of the endpoint and returns results.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_ScoreMLModelEndpoint",
+        "consumes": [ "application/json" ],
+        "produces": [ "application/json" ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "scoreDataRequest",
+            "description": "The data to score with the model.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ScoreDataRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ScoreDataResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted, scoring in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred. \n\n* BadInput - User Input is invalid.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Score data using the default model version": {
+            "$ref": "./examples/ScoreMLModelEndpoint.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/mlmodels/{modelId}/endpoint/versions/{name}/score": {
+      "post": {
+        "summary": "Scores input data for the specific version of the endpoint and returns results.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions \n The caller must have write permission on the MLModel.  \n\n## Required Delegated Scopes \n\n MLModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Endpoint"
+        ],
+        "operationId": "Endpoint_ScoreMLModelEndpointVersion",
+        "consumes": [ "application/json" ],
+        "produces": [ "application/json" ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "modelId",
+            "description": "The machine learning model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "name",
+            "description": "The MLModel version name.",
+            "type": "string",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "scoreDataRequest",
+            "description": "The data to score with the model.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ScoreDataRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ScoreDataResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted, scoring in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* NotFound - Version not found. \n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Example": {
+            "$ref": "./examples/ScoreMLModelEndpointVersion.json"
+          }
+        }
+      }
     }
   },
   "responses": {},

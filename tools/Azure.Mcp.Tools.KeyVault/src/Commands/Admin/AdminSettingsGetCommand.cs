@@ -20,7 +20,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,        // Command queries Azure resources (vault settings)
+        OpenWorld = false,       // Command queries Azure resources (vault settings)
         Destructive = false,     // Command only reads settings, no modifications
         Idempotent = true,       // Same call produces same result
         ReadOnly = true,         // Only reads data, no state changes

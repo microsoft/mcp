@@ -65,13 +65,6 @@ Describes the fields used to construct the `dynamic_executor_allocation`.
 | min_executors         | Integer             | true            | The minimum executor number for dynamic allocation. Minimum value is 1. The maximum value must be lower than the `maxExecutors`.  |
 | max_executors         | Integer             | true            | The maximum executor number for dynamic allocation. Minimum value is 1. The maximum value must be lower than the `maxNodeCount` instance pool.  |
 
-## Platform part
-
-The platform part is a file that contains the environment metadata information.
-* [Create Item](https://learn.microsoft.com/rest/api/fabric/core/items/create-item) with definition respects the platform file if provided
-* [Get Item](https://learn.microsoft.com/rest/api/fabric/core/items/get-item) definition always returns the platform file.
-* [Update Item](https://learn.microsoft.com/rest/api/fabric/core/items/update-item) definition accepts the platform file if provided, but only if you set a new URL parameter `updateMetadata=true`.
-
 
 ### Example of spark public libraries `environment.yml` content decoded from Base64
 

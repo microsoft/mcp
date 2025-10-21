@@ -183,7 +183,7 @@ public class ServiceStartCommandTests
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid mode '{invalidMode}'", response.Message);
-        Assert.Contains("Valid modes are: single, namespace, all.", response.Message);
+        Assert.Contains("Valid modes are: single, namespace, all, consolidated.", response.Message);
     }
 
     [Theory]

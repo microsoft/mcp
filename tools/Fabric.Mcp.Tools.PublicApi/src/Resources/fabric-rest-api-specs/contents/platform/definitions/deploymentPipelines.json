@@ -619,9 +619,15 @@
             }
         },
         "DeploymentPipelineRoleAssignment": {
-            "required": ["principal", "role"],
+            "required": ["id", "principal", "role"],
             "description": "A Fabric principal role assignment for a deployment pipeline.",
             "properties": {
+                "id": {
+                    "description": "The deployment pipeline role assignment ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": true
+                },
                 "principal": {
                     "description": "The principal.",
                     "$ref": "../../common/definitions.json#/definitions/Principal",

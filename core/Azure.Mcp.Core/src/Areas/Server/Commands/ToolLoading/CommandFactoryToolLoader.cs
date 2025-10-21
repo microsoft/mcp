@@ -133,7 +133,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (activity != null)
         {
-            activity.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(toolName));
+            activity.SetTag(TagName.ToolName, toolName);
         }
 
         var command = _toolCommands.GetValueOrDefault(toolName);

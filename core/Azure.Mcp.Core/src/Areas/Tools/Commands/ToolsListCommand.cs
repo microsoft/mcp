@@ -68,7 +68,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     {
                         Name = g.Name,
                         Description = g.Description ?? string.Empty,
-                        Command = $"azmcp {g.Name}",
+                        Command = $"{g.Name}",
                         // We deliberately omit populating Subcommands for the lightweight namespace view.
                     })
                     .OrderBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
@@ -87,7 +87,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                                 {
                                     Name = command.Name,
                                     Description = command.Description ?? string.Empty,
-                                    Command = $"azmcp {subgroup.Name} {command.Name}"
+                                    Command = $"{subgroup.Name} {command.Name}"
                                     // Omit Options and Subcommands for surfaced commands as well.
                                 };
                             });

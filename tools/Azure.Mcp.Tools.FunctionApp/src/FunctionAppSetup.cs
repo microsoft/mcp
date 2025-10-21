@@ -13,6 +13,8 @@ public class FunctionAppSetup : IAreaSetup
 {
     public string Name => "functionapp";
 
+    public string Title => "Azure Functions";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IFunctionAppService, FunctionAppService>();
@@ -22,7 +24,7 @@ public class FunctionAppSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.");
+        var functionApp = new CommandGroup(Name, "Function App operations - Commands for managing and accessing Azure Function App resources.", Title);
 
         var getCommand = serviceProvider.GetRequiredService<FunctionAppGetCommand>();
         functionApp.AddCommand(getCommand.Name, getCommand);

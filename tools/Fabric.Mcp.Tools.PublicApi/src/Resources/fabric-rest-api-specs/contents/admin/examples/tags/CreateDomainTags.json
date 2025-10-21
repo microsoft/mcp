@@ -1,0 +1,37 @@
+{
+    "parameters": {
+        "scope": {
+            "type": "Domain",
+            "domainId": "e408a2ca-0e43-49d6-86d3-f2558508d32a"
+        },
+        "createTagsRequest": [
+            { "displayName": "Finance 2024" },
+            { "displayName": "HR 2024" }
+        ]
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "tags": [
+                    {
+                        "id": "e281785b-5608-41ac-a1a1-78b48b95b825",
+                        "displayName": "Finance 2024",
+                        "scope": {
+                            "type": "Domain",
+                            "domainId": "e408a2ca-0e43-49d6-86d3-f2558508d32a"
+                        }
+                    },
+                    {
+                        "id": "24402490-9519-48b9-9d51-b2db4095a56b",
+                        "displayName": "HR 2024",
+                        "scope": {
+                            "type": "Domain",
+                            "domainId": "e408a2ca-0e43-49d6-86d3-f2558508d32a"
+                        }
+                    }
+                ]
+            }
+        }
+    }
+}
+

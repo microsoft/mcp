@@ -6,7 +6,7 @@
     },
     "paths": {},
     "definitions": {
-        "EnvironmentSparkCompute": {
+        "EnvironmentSparkComputePreview": {
             "type": "object",
             "properties": {
                 "instancePool": {
@@ -14,7 +14,7 @@
                     "$ref": "#/definitions/InstancePool"
                 },
                 "driverCores": {
-                    "description": "Spark driver core.",
+                    "description": "Spark driver core. Must be one of the following values: 4, 8, 16, 32, 64.",
                     "format": "int32",
                     "type": "integer"
                 },
@@ -23,7 +23,7 @@
                     "type": "string"
                 },
                 "executorCores": {
-                    "description": "Spark executor core.",
+                    "description": "Spark executor core. Must be one of the following values: 4, 8, 16, 32, 64.",
                     "format": "int32",
                     "type": "integer"
                 },
@@ -37,15 +37,15 @@
                 },
                 "sparkProperties": {
                     "type": "object",
-                    "description": "Spark properties."
+                    "description": "Spark properties. The dictionary-based contract for defining Spark properties will be deprecated on January 31, 2026. Please migrate to using a list of key-value pairs instead."
                 },
                 "runtimeVersion": {
-                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
+                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime).",
                     "type": "string"
                 }
             }
         },
-        "UpdateEnvironmentSparkComputeRequest": {
+        "UpdateEnvironmentSparkComputeRequestPreview": {
             "type": "object",
             "properties": {
                 "instancePool": {
@@ -77,7 +77,51 @@
                 },
                 "sparkProperties": {
                     "type": "object",
-                    "description": "Spark properties."
+                    "description": "Spark properties. The dictionary-based contract for defining Spark properties will be deprecated on January 31, 2026. Please migrate to using a list of key-value pairs instead."
+                },
+                "runtimeVersion": {
+                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime).",
+                    "type": "string"
+                }
+            }
+        },
+        "EnvironmentSparkCompute": {
+            "type": "object",
+            "properties": {
+                "instancePool": {
+                    "description": "Environment pool has to be a valid custom pool. \"Starter Pool\" means use starter pool.",
+                    "$ref": "#/definitions/InstancePool"
+                },
+                "driverCores": {
+                    "description": "Spark driver core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "description": "Spark driver memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "executorCores": {
+                    "description": "Spark executor core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "description": "Spark executor memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "dynamicExecutorAllocation": {
+                    "description": "Dynamic executor allocation.",
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties"
+                },
+                "sparkProperties": {
+                    "type": "array",
+                    "description": "Spark properties.",
+                    "items": {
+                        "$ref": "#/definitions/SparkProperty"
+                    }
                 },
                 "runtimeVersion": {
                     "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
@@ -85,11 +129,97 @@
                 }
             }
         },
+        "UpdateEnvironmentSparkComputeRequest": {
+            "type": "object",
+            "properties": {
+                "instancePool": {
+                    "description": "Environment pool has to be a valid custom pool. The name for a default workspace pool is *Starter Pool*.",
+                    "$ref": "#/definitions/InstancePool",
+                    "type": "object"
+                },
+                "driverCores": {
+                    "description": "Spark driver core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "driverMemory": {
+                    "description": "Spark driver memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "executorCores": {
+                    "description": "Spark executor core. Must be one of the following values: 4, 8, 16, 32, 64.",
+                    "format": "int32",
+                    "type": "integer"
+                },
+                "executorMemory": {
+                    "description": "Spark executor memory.",
+                    "type": "string",
+                    "$ref": "#/definitions/CustomPoolMemory"
+                },
+                "dynamicExecutorAllocation": {
+                    "description": "Dynamic executor allocation.",
+                    "$ref": "#/definitions/DynamicExecutorAllocationProperties"
+                },
+                "sparkProperties": {
+                    "type": "array",
+                    "description": "Spark properties.",
+                    "items": {
+                        "$ref": "#/definitions/SparkProperty"
+                    }
+                },
+                "runtimeVersion": {
+                    "description": "Runtime version, find the supported [fabric runtimes](/fabric/data-engineering/runtime). For example: 1.3",
+                    "type": "string"
+                }
+            }
+        },
+        "CustomPoolMemory": {
+            "type": "string",
+            "description": "Custom pool memory for Spark driver or Spark executor. Additional `CustomPoolMemory` types may be added over time.",
+            "enum": ["28g", "56g", "112g", "224g", "400g"],
+            "x-ms-enum": {
+                "name": "CustomPoolMemory",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "28g",
+                        "description": "28GB memory."
+                    },
+                    {
+                        "value": "56g",
+                        "description": "56G memory."
+                    },
+                    {
+                        "value": "112g",
+                        "description": "112G memory."
+                    },
+                    {
+                        "value": "224g",
+                        "description": "224G memory."
+                    },
+                    {
+                        "value": "400g",
+                        "description": "400G memory."
+                    }
+                ]
+            }
+        },
+        "SparkProperty": {
+            "type": "object",
+            "description": "A Spark property key and its value.",
+            "properties": {
+                "key": {
+                    "description": "The Spark property key.",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The Spark property value.",
+                    "type": "string"
+                }
+            }
+        },
         "InstancePool": {
-            "required": [
-                "name",
-                "type"
-            ],
             "type": "object",
             "description": "An instance of a pool.",
             "properties": {
@@ -141,13 +271,13 @@
                     "type": "boolean"
                 },
                 "minExecutors": {
-                    "description": "The minimum executor number for dynamic allocation and the minimum for this property is 1.",
+                    "description": "The minimum executor number for dynamic allocation and the minimum for this property is 1. The maximum value has to be lower than `maxExecutors`.",
                     "format": "int32",
                     "type": "integer",
                     "minimum": 1
                 },
                 "maxExecutors": {
-                    "description": "The maximum executor number for dynamic allocation and the minimum for this property is 1",
+                    "description": "The maximum executor number for dynamic allocation and the minimum for this property is 1. The maximum value has to be lower than the instance pool `maxNodeCount`.",
                     "format": "int32",
                     "type": "integer",
                     "minimum": 1
@@ -185,7 +315,7 @@
             "properties": {
                 "properties": {
                     "description": "The environment properties.",
-                    "$ref": "#/definitions/EnvironmentPublishInfo"
+                    "$ref": "#/definitions/EnvironmentProperties"
                 }
             }
         },
@@ -208,6 +338,71 @@
                     "type": "string",
                     "format": "uuid",
                     "readOnly": false
+                },
+                "definition": {
+                    "description": "The environment public definition.",
+                    "$ref": "#/definitions/EnvironmentDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateEnvironmentDefinitionRequest": {
+            "description": "Update environment public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/EnvironmentDefinition"
+                }
+            }
+        },
+        "EnvironmentDefinitionResponse": {
+            "description": "Environment public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/EnvironmentDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "EnvironmentDefinition" : {
+            "description": "Environment public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/environment-definition) for more details on how to craft a environment public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the Environment definition.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EnvironmentDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "EnvironmentDefinitionPart": {
+            "description": "Environment definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The environment part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The environment part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
                 }
             }
         },
@@ -226,8 +421,8 @@
                 }
             }
         },
-        "EnvironmentPublishInfo": {
-            "description": "Environment publish information.",
+        "EnvironmentProperties": {
+            "description": "Environment properties.",
             "type": "object",
             "required": ["publishDetails"],
             "properties": {
@@ -283,15 +478,15 @@
                     "type": "string"
                 },
                 "startTime": {
-                    "description": "Start time of publish operation.",
+                    "description": "Start time of publish operation in UTC, using the YYYY-MM-DDTHH:mm:ss.sssssssZ format.",
                     "format": "date-time",
                     "type": "string"
                 },
                 "endTime": {
-                    "description": "End time of publish operation.",
+                    "description": "End time of publish operation in UTC, using the YYYY-MM-DDTHH:mm:ss.sssssssZ format.",
                     "format": "date-time",
                     "type": "string"
-                },
+                }, 
                 "componentPublishInfo": {
                     "description": "Environment component publish information.",
                     "$ref": "#/definitions/ComponentPublishInfo"
@@ -394,7 +589,101 @@
                 }
             }
         },
-        "EnvironmentLibraries": {
+        "LibraryType": {
+            "type": "string",
+            "description": "A library type. Additional types may be added over time.",
+            "enum": ["Custom", "External"],
+            "x-ms-enum": {
+                "name": "LibraryType",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Custom",
+                        "description": "Custom libraries"
+                    },
+                    {
+                        "value": "External",
+                        "description": "External libraries"
+                    }
+                ]
+            }
+        },        
+        "Libraries": {
+            "description": "Environment libraries.",
+            "type": "object",
+            "properties": {
+                "libraries": {
+                    "type": "array",
+                    "description": "All custom and external libraries (.py, .whl, .jar, .tar.gz and external).",
+                    "items": {
+                        "$ref": "#/definitions/Library"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "Library": {
+            "description": "Custom or external library.",
+            "type": "object",
+            "discriminator": "libraryType",
+            "required": ["libraryType", "name"],
+            "properties": {
+                "libraryType": {
+                    "$ref": "#/definitions/LibraryType"
+                },
+                "name": {
+                    "type": "string",
+                    "description": "The name of library."
+                }
+            }
+        },
+        "CustomLibrary": {
+            "type": "object",
+            "description": "Custom library.",
+            "x-ms-discriminator-value": "Custom",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Library"
+                }
+            ]
+        },
+        "ExternalLibrary": {
+            "type": "object",
+            "description": "External library.",
+            "required": ["version"],
+            "x-ms-discriminator-value": "External",
+            "properties": {
+                "version": {
+                    "type": "string",
+                    "description": "The version of external library."
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Library"
+                }
+            ]
+        },
+        "RemoveExternalLibrariesRequest": {
+            "type": "object",
+            "description": "Request to delete an external library.",
+            "required": ["name", "version"],
+            "properties": {
+                "name": {
+                    "type": "string",
+                    "description": "The name of library."
+                },
+                "version": {
+                    "type": "string",
+                    "description": "The version of external library."
+                }
+            }
+        },
+        "LibrariesPreview": {
             "description": "Environment libraries.",
             "type": "object",
             "properties": {
