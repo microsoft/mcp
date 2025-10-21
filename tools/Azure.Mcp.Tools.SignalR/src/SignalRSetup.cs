@@ -13,6 +13,8 @@ public class SignalRSetup : IAreaSetup
 {
     public string Name => "signalr";
 
+    public string Title => "Azure SignalR Service";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ISignalRService, SignalRService>();
@@ -23,7 +25,7 @@ public class SignalRSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         var signalr = new CommandGroup(Name,
-            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.");
+            "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.", Title);
 
         var runtime = new CommandGroup("runtime",
             "Runtime operations - Commands for managing Azure SignalR Service resources.");

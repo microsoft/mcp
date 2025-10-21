@@ -15,7 +15,8 @@
                         "metrics": {
                             "processedBytes": 1247,
                             "processedRows": 6,
-                            "lastSyncDateTime": "2024-10-08T05:07:11.0663362Z"
+                            "lastSyncDateTime": "2024-10-08T05:07:11.0663362Z",
+                            "lastSyncLatencyInSeconds": 15
                         }
                     }
                 ]

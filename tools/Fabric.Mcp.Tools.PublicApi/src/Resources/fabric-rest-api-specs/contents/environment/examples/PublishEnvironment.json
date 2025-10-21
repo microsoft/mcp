@@ -1,7 +1,8 @@
 {
     "parameters": {
         "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
-        "environmentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+        "environmentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "preview": "false"
     },
     "responses": {
         "200": {
@@ -19,6 +20,13 @@
                         }
                     }
                 }
+            }
+        },
+        "202": {
+            "headers": {
+                "Location": "https://api.fabric.microsoft.com/v1/operations/abcdef00-9d7e-469a-abf1-fca847a0ea69",
+                "x-ms-operation-id": "abcdef00-9d7e-469a-abf1-fca847a0ea69",
+                "Retry-After": 120
             }
         }
     }

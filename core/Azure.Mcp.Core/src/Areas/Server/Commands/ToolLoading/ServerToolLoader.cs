@@ -85,14 +85,16 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 InputSchema = ToolSchema,
             };
 
-            if (metadata.ToolMetadata != null)
+            // Set annotations if we have Title or ToolMetadata
+            if (metadata.Title != null || metadata.ToolMetadata != null)
             {
                 tool.Annotations = new ToolAnnotations
                 {
-                    DestructiveHint = metadata.ToolMetadata.Destructive,
-                    IdempotentHint = metadata.ToolMetadata.Idempotent,
-                    OpenWorldHint = metadata.ToolMetadata.OpenWorld,
-                    ReadOnlyHint = metadata.ToolMetadata.ReadOnly,
+                    Title = metadata.Title,
+                    DestructiveHint = metadata.ToolMetadata?.Destructive,
+                    IdempotentHint = metadata.ToolMetadata?.Idempotent,
+                    OpenWorldHint = metadata.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = metadata.ToolMetadata?.ReadOnly,
                 };
             }
 

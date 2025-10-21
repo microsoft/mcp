@@ -1,0 +1,140 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff222",
+    "itemId": "25bac802-080d-4f73-8a42-1b406eb1fceb",
+    "bulkCreateShortcutsRequest": {
+      "createShortcutRequests": [
+        {
+          "path": "Files/blafolder/folder1",
+          "name": "OneLakeShortcut1",
+          "target": {
+            "oneLake": {
+              "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+              "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+              "path": "Tables/myTablesFolder/someTableSubFolder",
+              "connectionId": "4c868756-f7ce-4df1-8198-b1e5225b668f"
+            }
+          },
+          "transform": {
+            "type": "csvToDelta",
+            "properties": {
+              "delimiter": ",",
+              "skipFilesWithErrors": true,
+              "useFirstRowAsHeader": true
+            }
+          }
+        },
+        {
+          "path": "Files/blafolder/folder2",
+          "name": "OneLakeShortcut2",
+          "target": {
+            "oneLake": {
+              "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+              "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+              "path": "Tables/myTablesFolder/someTableSubFolder",
+              "connectionId": "4c868756-f7ce-4df1-8198-b1e5225b668f"
+            }
+          },
+          "transform": {
+            "type": "csvToDelta",
+            "properties": {
+              "delimiter": ",",
+              "skipFilesWithErrors": true,
+              "useFirstRowAsHeader": true
+            }
+          }
+        },
+        {
+          "path": "Files/blafolder/folder3",
+          "name": "OneLakeShortcut3",
+          "target": {
+            "oneLake": {
+              "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+              "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+              "path": "Tables/myTablesFolder/someTableSubFolder"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "responses": {
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/c424214a-4417-4ada-a9d8-9c2eae0ed0c3",
+        "x-ms-operation-id": "c424214a-4417-4ada-a9d8-9c2eae0ed0c3",
+        "Retry-After": 1
+      }
+    },
+    "200": {
+      "value": [
+        {
+          "request": {
+            "path": "Files/blafolder/folder1",
+            "name": "OneLakeShortcut1"
+          },
+          "result": {
+            "path": "Files/blafolder/folder3",
+            "name": "OneLakeShortcut1",
+            "target": {
+              "type": "OneLake",
+              "oneLake": {
+                "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+                "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                "path": "Tables/myTablesFolder/someTableSubFolder",
+                "connectionId": "4c868756-f7ce-4df1-8198-b1e5225b668f"
+              }
+            },
+            "transform": {
+              "type": "csvToDelta",
+              "properties": {
+                "delimiter": ",",
+                "skipFilesWithErrors": true,
+                "useFirstRowAsHeader": true
+              }
+            }
+          },
+          "status": "Succeeded"
+        },
+        {
+          "request": {
+            "path": "Files/blafolder/folder2",
+            "name": "OneLakeShortcut3"
+          },
+          "error": {
+            "errorCode": "ShorcutsOperationNotAllowed",
+            "message": "Shortcut operation set to abort and shortcut with same name already exists."
+          },
+          "transform": {
+            "type": "csvToDelta",
+            "properties": {
+              "delimiter": ",",
+              "skipFilesWithErrors": true,
+              "useFirstRowAsHeader": true
+            }
+          },
+          "status": "Failed"
+        },
+        {
+          "request": {
+            "path": "Files/blafolder/folder3",
+            "name": "OneLakeShortcut3"
+          },
+          "result": {
+            "path": "Files/blafolder/folder3",
+            "name": "OneLakeShortcut3",
+            "target": {
+              "type": "OneLake",
+              "oneLake": {
+                "workspaceId": "acafbeb1-8037-4d0c-896e-a46fb27ff256",
+                "itemId": "56bac802-080d-4f73-8a42-1b406eb1fcac",
+                "path": "Tables/myTablesFolder/someTableSubFolder"
+              }
+            }
+          },
+          "status": "Succeeded"
+        }
+      ]
+    }
+  }
+}
