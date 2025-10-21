@@ -177,7 +177,7 @@ The EntityTypeRelationship file name is the entity type relationship ID.
 
 ## ContextualizationOperations directory: ContextualizationOperation file
 
-The ContextualizationOperation file name is the contextualization operation ID. A ContextualizationOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) artifact.
+The ContextualizationOperation file name is the contextualization operation ID. A ContextualizationOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) artifact.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
@@ -224,7 +224,7 @@ The ContextualizationOperation file name is the contextualization operation ID. 
 
 ## MappingOperations directory: MappingOperation file
 
-The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/en-us/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) artifact.
+The MappingOperation file name is the mapping operation ID. A MappingOperation can be run using a [DigitalTwinBuilderFlow](https://learn.microsoft.com/rest/api/fabric/articles/item-management/definitions/digital-twin-builder-flow-definition) artifact.
 
 | Property | Type | Required | Description |
 |---|---|---|---|
