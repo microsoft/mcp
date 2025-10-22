@@ -105,16 +105,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_appservice_database_add | Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group> under subscription <subscription> in tenant <tenant_id> |
-| azmcp_appservice_database_add | Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group> under subscription <subscription> and tenant <tenant> |
-| azmcp_appservice_database_add | Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> under subscription <subscription> and tenant <tenant> |
-| azmcp_appservice_database_add | Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> under subscription <subscription> and tenant <tenant> |
-| azmcp_appservice_database_add | Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group> under subscription <subscription> and tenant <tenant>|
-| azmcp_appservice_database_add | Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group> under subscription <subscription> and tenant <tenant> |
-| azmcp_appservice_database_add | Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group> under subscription <subscription> and tenant <tenant>   |
-| azmcp_appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> under subscription <subscription> and tenant <tenant> |
-| azmcp_appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> in subscription <subscription> and tenant <tenant_id> under resource group <resource_group_name> |
-| azmcp_appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group_name> under subscription <subscription> in tenant <tenant_id> |
+| azmcp_appservice_database_add | Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group_name> |
+| azmcp_appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group_name> |
 
 ## Azure Application Insights
 
