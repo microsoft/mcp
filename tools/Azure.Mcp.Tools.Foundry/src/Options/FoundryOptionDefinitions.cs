@@ -48,6 +48,7 @@ public static class FoundryOptionDefinitions
     public const string AgentName = "agent-name";
     public const string SystemInstruction = "system-instruction";
     public const string UserMessage = "user-message";
+    public const string ThreadId = "thread-id";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -366,6 +367,14 @@ public static class FoundryOptionDefinitions
         )
     {
         Description = "The user message to add to the thread",
+        Required = true
+    };
+
+    public static readonly Option<string> ThreadIdOption = new(
+        $"--{ThreadId}"
+        )
+    {
+        Description = "The Foundry Agent Thread Id",
         Required = true
     };
 }
