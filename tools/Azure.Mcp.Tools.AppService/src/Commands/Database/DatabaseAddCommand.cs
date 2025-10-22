@@ -21,8 +21,8 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
 
     public override string Description =>
         """
-        Add a database connection to an App Service. This command configures database connection
-        settings for the specified App Service, allowing it to connect to a database server.
+        Add a database connection for an App Service using connection string for an existing database. This command configures database connection
+        settings for the specified App Service, allowing it to connect to a database server. You must specify the App Service name, database name, database type, server, connection string, resource group name, tenant and subscription.
         """;
 
     public override string Title => CommandTitle;
