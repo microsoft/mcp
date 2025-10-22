@@ -14,12 +14,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.UnitTests;
 
-public class ThreadCreateCommandTests
+public class ThreadListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IFoundryService _foundryService;
 
-    public ThreadCreateCommandTests()
+    public ThreadListCommandTests()
     {
         _foundryService = Substitute.For<IFoundryService>();
 
@@ -31,10 +31,9 @@ public class ThreadCreateCommandTests
 
     [Theory]
     [InlineData("", FoundryOptionDefinitions.Endpoint)]
-    [InlineData("--endpoint https://test-endpoint.com", FoundryOptionDefinitions.UserMessage)]
     public async Task ExecuteAsync_Fails_WhenMissingRequiredParameter(string argsString, string missingArgName)
     {
-        var command = new ThreadCreateCommand();
+        var command = new ThreadListCommand();
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
@@ -45,25 +44,26 @@ public class ThreadCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsCreatedThread()
+    public async Task ExecuteAsync_ReturnsListedThreads()
     {
         var endpoint = "https://test-endpoint.com";
-        var userMessage = "usermessage";
 
-        var expectedResult = new ThreadCreateResult()
+        var expectedResult = new ThreadListResult()
         {
-            ThreadId = "threadId",
+            Threads = [new (){
+                ThreadId = "threadId"
+                }
+            ],
         };
 
-        _foundryService.CreateThread(
+        _foundryService.ListThreads(
             Arg.Is(endpoint),
-            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedResult);
 
-        var command = new ThreadCreateCommand();
-        var args = command.GetCommand().Parse(["--endpoint", endpoint, "--user-message", userMessage]);
+        var command = new ThreadListCommand();
+        var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
