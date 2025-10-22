@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using Xunit;
 
-namespace Azure.Mcp.Tests.Client
+namespace Azure.Mcp.Tests.Client.Helpers
 {
     /// <summary>
     /// xUnit fixture that runs once per test class (or collection if used via [CollectionDefinition]).

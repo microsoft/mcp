@@ -32,7 +32,6 @@ namespace Azure.Mcp.Tests.Helpers
             return Enum.TryParse<TestMode>(mode, ignoreCase: true, out var parsed) ? parsed : TestMode.Live;
         }
 
-        public static bool GetEnvironmentDebuggingSetting =>
 
     }
 }

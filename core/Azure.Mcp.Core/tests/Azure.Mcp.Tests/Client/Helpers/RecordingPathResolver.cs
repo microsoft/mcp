@@ -2,9 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Reflection;
-using System.Text;
 
-namespace Azure.Mcp.Tests.Client;
+namespace Azure.Mcp.Tests.Client.Helpers;
 
 /// <summary>
 /// Provides path resolution for session records and related assets.

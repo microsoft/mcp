@@ -13,7 +13,8 @@ This document will eventually contain a guide to enable Record/Playback for an e
 - [x] Abstract location of assets.json
 - [x] Abstract relative path to the recording for a given test.
 - [x] Utilize above steps to properly provide relative recording path to StartPlayback() and StartRecording()
-- [ ] Add delegating handler to our core http client creation pipeline under debug flags
+- [x] Add delegating handler to our core http client creation pipeline under debug flags
+- [ ] 
 - [ ] Test combinations of test parameters to ensure our file uniqueness is g2g
 - [ ] Integrate
 - [ ] Gather feedback

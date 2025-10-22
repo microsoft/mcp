@@ -70,13 +70,20 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
             : ["server", "start", "--mode", "all"];
         var arguments = _customArguments ?? defaultArgs;
 
+        // Capture proxy locally to aid flow analysis
+        var proxy = Proxy ?? throw new InvalidOperationException("Test proxy not initialized.");
+
         StdioClientTransportOptions transportOptions = new()
         {
             Name = "Test Server",
             Command = executablePath,
             Arguments = arguments,
             // Direct stderr to test output helper as required by task
-            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}")
+            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}"),
+            EnvironmentVariables = new Dictionary<string, string?>
+            {
+                { "TEST_PROXY_URL", proxy.BaseUri },
+            }
         };
 
         if (!string.IsNullOrEmpty(Settings.TestPackage))
