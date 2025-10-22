@@ -6,7 +6,6 @@ using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using ModelContextProtocol;
-using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
 
@@ -25,7 +24,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Client_Should_Invoke_Tool_Successfully()
     {
-        var result = await Client.CallToolAsync("azmcp_subscription_list", new Dictionary<string, object?> { },
+        var result = await Client.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
 
         string? content = McpTestUtilities.GetFirstText(result.Content);
@@ -65,7 +64,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Resources_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -73,7 +72,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Resources_Read_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -81,7 +80,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Resources_Templates_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -89,7 +88,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Resources_Subscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -97,7 +96,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -111,7 +110,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Prompts_List_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }
@@ -119,7 +118,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     [Fact]
     public async Task Should_Error_When_Prompts_Get_Not_Supported()
     {
-        var ex = await Assert.ThrowsAsync<McpException>(async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
+        var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
         Assert.Equal(McpErrorCode.MethodNotFound, ex.ErrorCode);
     }

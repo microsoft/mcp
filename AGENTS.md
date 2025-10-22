@@ -243,7 +243,7 @@ dotnet build
 ./eng/scripts/Build-Local.ps1 -BuildNative
 
 # Build with debugging symbols
-./eng/scripts/Build-Local.ps1 -DebugBuild
+./eng/scripts/Build-Local.ps1
 
 # Docker image build
 ./eng/scripts/Build-Docker.ps1 -ServerName "Azure.Mcp.Server"

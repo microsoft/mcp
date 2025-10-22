@@ -3,14 +3,53 @@
         "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
         "createEnvironmentRequest": {
             "displayName": "Environment_1",
-            "description": "An environment description"
+            "description": "An environment description.",
+            "definition": {
+                "parts": [
+                    {
+                        "path": "Libraries/CustomLibraries/samplelibrary.jar",
+                        "payload": "eyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": "Libraries/CustomLibraries/samplepython.py",
+                        "payload": "FyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": "Libraries/CustomLibraries/samplewheel-0.18.0-py2.py3-none-any.whl",
+                        "payload": "LyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": "Libraries/CustomLibraries/sampleR.tar.gz",
+                        "payload": "ZyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": "Libraries/PublicLibraries/environment.yml",
+                        "payload": "IyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": "Setting/Sparkcompute.yml",
+                        "payload": "GyJuYmZvcm1hdCI6N..",
+                        "payloadType": "InlineBase64"
+                    },
+                    {
+                        "path": ".platform",
+                        "payload": "ZG90UGxhdGZvcm1CYXNlNjRTdHJpbmc",
+                        "payloadType": "InlineBase64"
+                    }
+                ]
+            }
         }
     },
     "responses": {
         "201": {
             "body": {
                 "displayName": "Environment_1",
-                "description": "An environment description",
+                "description": "An environment description.",
                 "type": "Environment",
                 "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
                 "id": "5b218778-e7a5-4d73-8187-f10824047715"

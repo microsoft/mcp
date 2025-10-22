@@ -15,7 +15,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
     private const string CommandTitle = "List User Sessions on Session Host";
     private readonly ILogger<SessionHostUserSessionListCommand> _logger = logger;
 
-    public override string Name => "usersession-list";
+    public override string Name => "user-list";
 
     public override string Description =>
         """

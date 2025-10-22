@@ -445,6 +445,65 @@
           }
         }
       }
+    },
+    "/workspaces/{workspaceId}/semanticModels/{semanticModelId}/bindConnection": {
+      "post": {
+        "summary": "Binds a semantic model data source reference to a data connection.",
+        "description": "This API can also be used to unbind data source references. \n\n## Permissions \n\nThe caller must be the owner of the semantic model. \n\n## Limitations \n\nThis API does not support bulk operations. To bind multiple data source references of a semantic model, the user must submit multiple bindConnection requests. \n\n## Required Delegated Scopes \n\nSemanticModel.ReadWrite.All or Item.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_BindSemanticModelConnection",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "semanticModelId",
+            "description": "The semantic model ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "bindSemanticModelConnectionRequest",
+            "description": "Bind semantic model connection request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/BindSemanticModelConnectionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested semantic model was not found. \n\n* InvalidRequest - Invalid bind semantic model connection request.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Bind a semantic model connection example": {
+            "$ref": "./examples/BindSemanticModelConnection.json"
+          },
+          "Unbind a semantic model connection example": {
+            "$ref": "./examples/UnbindSemanticModelConnection.json"
+          }  
+        }
+      }
     }
   },
   "responses": {},

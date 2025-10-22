@@ -1,0 +1,11 @@
+{
+    "parameters": {
+        "workspaceId": "f97451ca-d6a0-482f-a46a-cc4b2c48ba56",
+        "assignWorkspaceToDomainRequest": {
+            "domainId": "9d04ca81-bb30-4009-bd1a-a9213a4c8d75"
+        }
+    },
+    "responses": {
+        "200": {}
+    }
+}

@@ -9,6 +9,7 @@ using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -84,6 +85,19 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 InputSchema = ToolSchema,
             };
 
+            // Set annotations if we have Title or ToolMetadata
+            if (metadata.Title != null || metadata.ToolMetadata != null)
+            {
+                tool.Annotations = new ToolAnnotations
+                {
+                    Title = metadata.Title,
+                    DestructiveHint = metadata.ToolMetadata?.Destructive,
+                    IdempotentHint = metadata.ToolMetadata?.Idempotent,
+                    OpenWorldHint = metadata.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = metadata.ToolMetadata?.ReadOnly,
+                };
+            }
+
             allToolsResponse.Tools.Add(tool);
         }
 
@@ -128,8 +142,6 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         {
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, false);
-
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
@@ -233,6 +245,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
+            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
             if (toolCallResponse.IsError is true)
@@ -308,6 +321,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = await GetChildToolListJsonAsync(request, tool);
 
         var learnResponse = new CallToolResult
@@ -473,15 +487,15 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             Dictionary<string, object?> parameters = [];
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value) ?? [];
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => (object?)prop.Value.Clone()) ?? [];
                 }
             }
             if (commandName != null && commandName != "Unknown")

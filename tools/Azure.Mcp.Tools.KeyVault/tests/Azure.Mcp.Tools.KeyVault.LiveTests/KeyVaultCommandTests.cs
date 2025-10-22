@@ -17,7 +17,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_keys()
     {
         var result = await CallToolAsync(
-            "azmcp_keyvault_key_list",
+            "keyvault_key_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -35,7 +35,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         // Created in keyvault.bicep.
         var knownKeyName = "foo-bar";
         var result = await CallToolAsync(
-            "azmcp_keyvault_key_get",
+            "keyvault_key_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -57,7 +57,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     {
         var keyName = Settings.ResourceBaseName + Random.Shared.NextInt64();
         var result = await CallToolAsync(
-            "azmcp_keyvault_key_create",
+            "keyvault_key_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -79,7 +79,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_secrets()
     {
         var result = await CallToolAsync(
-            "azmcp_keyvault_secret_list",
+            "keyvault_secret_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -97,7 +97,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         // Created in keyvault.bicep.
         var secretName = "foo-bar-secret";
         var result = await CallToolAsync(
-            "azmcp_keyvault_secret_get",
+            "keyvault_secret_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -118,7 +118,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_list_certificates()
     {
         var result = await CallToolAsync(
-            "azmcp_keyvault_certificate_list",
+            "keyvault_certificate_list",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -136,7 +136,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         // Created in keyvault.bicep.
         var certificateName = "foo-bar-certificate";
         var result = await CallToolAsync(
-            "azmcp_keyvault_certificate_get",
+            "keyvault_certificate_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -157,7 +157,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     {
         var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
         var result = await CallToolAsync(
-            "azmcp_keyvault_certificate_create",
+            "keyvault_certificate_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -194,7 +194,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             await File.WriteAllBytesAsync(tempPath, pfxBytes, TestContext.Current.CancellationToken);
             var certificateName = Settings.ResourceBaseName + "import" + Random.Shared.NextInt64();
             var result = await CallToolAsync(
-                "azmcp_keyvault_certificate_import",
+                "keyvault_certificate_import",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -222,7 +222,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     public async Task Should_get_admin_settings_dictionary()
     {
         var result = await CallToolAsync(
-            "azmcp_keyvault_admin_settings_get",
+            "keyvault_admin_settings_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

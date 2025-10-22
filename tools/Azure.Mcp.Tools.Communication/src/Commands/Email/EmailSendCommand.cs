@@ -29,16 +29,13 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
 
     public override string Description =>
         """
-        Send an email message using Azure Communication Services.
-        
-        Sends emails to one or more recipients using your Communication Services resource.
-        Supports HTML content and CC/BCC recipients.
+        Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, custom sender name, CC and BCC recipients, and reply-to addresses.
         """;
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        ReadOnly = false,
+        ReadOnly = true,
         OpenWorld = true,
         Idempotent = false,
         Secret = false,

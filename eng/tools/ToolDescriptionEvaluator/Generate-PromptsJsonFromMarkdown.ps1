@@ -17,11 +17,11 @@ Destination JSON file path. If not provided, the output file will be placed in t
 with the same base file name as the source markdown file (e.g. prompts.md -> prompts.json).
 
 .EXAMPLE
-./Generate-PromptsJson.ps1 -PromptsSource ./prompts.md
+./Generate-PromptsJsonFromMarkdown.ps1 -PromptsSource ./prompts.md
 Generates a prompts.json file based on the specified markdown in the current directory.
 
 .EXAMPLE
-./Generate-PromptsJson.ps1 -PromptsSource ./prompts.md -OutputPath ./eng/tools/ToolDescriptionEvaluator/myprompts.json
+./Generate-PromptsJsonFromMarkdown.ps1 -PromptsSource ./prompts.md -OutputPath ./eng/tools/ToolDescriptionEvaluator/myprompts.json
 Generates a JSON file with the specified name and path. If no filename is provided, the same name as the source markdown
 is used with a .json extension.
 

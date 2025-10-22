@@ -42,7 +42,7 @@
 # ServiceOwners:                       @shenmuxiaosen @avanigupta
 
 # PRLabel: %area-AppLens
-/tools/Azure.Mcp.Tools.AppLens/        @masalaman @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
 
 # ServiceLabel: %area-AppLens
 # ServiceOwners:                       @msalaman
@@ -59,6 +59,11 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-AppService
+/tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AppService
+# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft 
 
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @microsoft/azure-mcp
@@ -71,6 +76,12 @@
 
 # ServiceLabel: %tools-CloudArchitect
 # ServiceOwners:                       @msalaman
+
+# PRLabel: %tools-Communication
+/tools/Azure.Mcp.Tools.Communication/         @KarishmaGhiya @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Communication
+# ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
@@ -136,7 +147,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -234,3 +245,9 @@
 
 # ServiceLabel: %tools-ConfidentialLedger
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
+
+# PRLabel: %tools-ResourceHealth
+/tools/Azure.Mcp.Tools.ResourceHealth/      @pkaza-msft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResourceHealth
+# ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp

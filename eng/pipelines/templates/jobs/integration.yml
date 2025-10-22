@@ -1,6 +1,4 @@
 parameters:
-- name: ServerName
-  type: string
 - name: NugetDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
@@ -39,14 +37,7 @@ jobs:
     displayName: Publish platform-specific Nugets
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/platform/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/platform/*.symbols.nupkg'
-      publishVstsFeed: ${{ parameters.NugetDevFeed }}
-
-  - task: 1ES.PublishNuget@1
-    displayName: Publish wrapper Nuget
-    inputs:
-      packageParentPath: '$(Pipeline.Workspace)'
-      packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/wrapper/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/${{ parameters.ServerName }}/wrapper/*.symbols.nupkg'
+      packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/**/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/**/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
 # - job: PublishDocsToNightly

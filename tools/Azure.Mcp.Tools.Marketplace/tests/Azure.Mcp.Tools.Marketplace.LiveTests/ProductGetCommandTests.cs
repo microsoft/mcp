@@ -34,7 +34,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -54,7 +54,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_language_option()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -75,7 +75,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_market_option()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -96,7 +96,7 @@ public class ProductGetCommandTests : CommandTestsBase
     public async Task Should_get_marketplace_product_with_multiple_options()
     {
         var result = await CallToolAsync(
-            "azmcp_marketplace_product_get",
+            "marketplace_product_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },

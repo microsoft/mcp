@@ -88,7 +88,7 @@
                 "type":{
                     "description": "The type of the principal. Additional principal types may be added over time.",
                     "type": "string",
-                    "enum": ["User", "ServicePrincipal", "Group", "ServicePrincipalProfile"],
+                    "enum": ["User", "ServicePrincipal", "Group", "ServicePrincipalProfile", "EntireTenant"],
                     "x-ms-enum": {
                         "name": "PrincipalType",
                         "modelAsString": true,
@@ -108,6 +108,10 @@
                             {
                                 "value": "ServicePrincipalProfile",
                                 "description": "Principal is a service principal profile."
+                            },
+                            {
+                                "value": "EntireTenant",
+                                "description": "Principal represents all tenant users."
                             }
                         ]
                     },
@@ -188,7 +192,7 @@
       "ItemType": {
         "description": "The type of the item. Additional item types may be added over time.",
         "type": "string",
-        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog" ],
+        "enum": [ "Dashboard", "Report", "SemanticModel", "PaginatedReport", "Datamart", "Lakehouse", "Eventhouse", "Environment", "KQLDatabase", "KQLQueryset", "KQLDashboard", "DataPipeline", "Notebook", "SparkJobDefinition", "MLExperiment", "MLModel", "Warehouse", "Eventstream", "SQLEndpoint", "MirroredWarehouse", "MirroredDatabase", "Reflex", "GraphQLApi", "MountedDataFactory", "SQLDatabase", "CopyJob", "VariableLibrary", "Dataflow", "ApacheAirflowJob", "WarehouseSnapshot", "DigitalTwinBuilder", "DigitalTwinBuilderFlow", "MirroredAzureDatabricksCatalog", "Map", "AnomalyDetector", "UserDataFunction" ],
         "x-ms-enum": {
           "name": "ItemType",
           "modelAsString": true,
@@ -324,6 +328,18 @@
             {
                 "value": "DigitalTwinBuilderFlow",
                 "description": "A Digital Twin Builder Flow."
+            },
+            {
+                "value": "AnomalyDetector",
+                "description": "An Anomaly Detector."
+            },
+            {
+                "value": "Map",
+                "description": "A Map."
+            },
+            {
+                "value": "UserDataFunction",
+                "description": "A User Data Function."
             }
           ]
         },
@@ -644,7 +660,8 @@
             "description": "Represents a tag.",
             "required": [
                 "id",
-                "displayName"
+                "displayName",
+                "scope"
             ],
             "properties": {
                 "id": {
@@ -655,6 +672,10 @@
                 "displayName": {
                     "type": "string",
                     "description": "The name of the tag."
+                },
+                "scope": {
+                    "$ref": "#/definitions/TagScope",
+                    "description": "The scope of the tag."
                 }
             }
         },
@@ -698,7 +719,66 @@
                 }
             }
         },
-
+        "TagScope": {
+            "type": "object",
+            "description": "Represents a tag scope",
+            "discriminator": "type",
+            "required": [
+                "type"
+            ],
+            "properties": {
+                "type":{
+                    "description": "Denotes tag scope. Additional tag scopes may be added over time.",
+                    "type": "string",
+                    "enum": ["Tenant", "Domain"],
+                    "x-ms-enum": {
+                        "name": "TagScopeType",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "Tenant",
+                                "description": "Tag is a tenant level tag."
+                            },
+                            {
+                                "value": "Domain",
+                                "description": "Tag is a domain level tag."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "TenantTagScope": {
+            "type": "object",
+            "description": "Represents tenant tag scope.",
+            "allOf": [
+                {
+                    "$ref": "#/definitions/TagScope"
+                }
+            ],
+            "x-ms-discriminator-value": "Tenant"
+        },
+        "DomainTagScope": {
+            "type": "object",
+            "description": "Represents domain tag scope.",
+            "required": [
+                "domainId"
+            ],
+            "properties": {
+                "domainId": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "Domain object ID"
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "#/definitions/TagScope"
+                }
+            ],
+            "x-ms-discriminator-value": "Domain"
+        },
         "ItemReference": {
             "description": "An item reference object.",
             "type": "object",
@@ -792,8 +872,62 @@
                     }
                 }
             }
+        },
+        "SqlAuditSettings": {
+            "type": "object",
+            "description": "The current state of audit settings for an item.",
+            "required": ["state", "retentionDays", "auditActionsAndGroups"],
+            "properties": {
+                "state": {
+                    "description": "Audit settings state type.",
+                    "$ref": "#/definitions/AuditSettingsState"
+                },
+                "retentionDays": {
+                    "description": "Retention days. 0 indicates indefinite retention period.",
+                    "type": "integer"
+                },
+                "auditActionsAndGroups": {
+                    "description": "Audit actions and groups.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "SqlAuditSettingsUpdate": {
+            "type": "object",
+            "description": "Audit settings update request.",
+            "properties": {
+                "state": {
+                    "description": "Audit settings state type.",
+                    "$ref": "#/definitions/AuditSettingsState"
+                },
+                "retentionDays": {
+                    "description": "Retention days.",
+                    "type": "integer",
+                    "default": 0
+                }
+            }
+        },
+        "AuditSettingsState": {
+            "description": "Audit settings state. Additional AuditSettingsState may be added over time.",
+            "type": "string",
+            "enum": ["Enabled", "Disabled"],
+            "x-ms-enum": {
+                "name": "AuditSettingsState",
+                "modelAsString": true,
+                "values": [
+                    {
+                        "value": "Enabled",
+                        "description": "Enable the SQL audit."
+                    },
+                    {
+                        "value": "Disabled",
+                        "description": "Disable the SQL audit."
+                    }
+                ]
+            }
         }
     }
 }
-
-

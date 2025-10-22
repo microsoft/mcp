@@ -15,6 +15,8 @@ public class EventHubsSetup : IAreaSetup
 {
     public string Name => "eventhubs";
 
+    public string Title => "Azure Event Hubs";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IEventHubsService, EventHubsService>();
@@ -31,7 +33,7 @@ public class EventHubsSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var eventHubs = new CommandGroup(Name, "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes CRUD operations Event Hubs service resources.");
+        var eventHubs = new CommandGroup(Name, "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes CRUD operations Event Hubs service resources.", Title);
 
         var eventHubGroup = new CommandGroup("eventhub", "Event Hub operations");
         eventHubs.AddSubGroup(eventHubGroup);

@@ -46,9 +46,16 @@
     },
     "TableSyncStatuses": {
       "description": "A list of table synchronization statuses.",
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/TableSyncStatus"
+      "required": ["value"],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of table synchronization statuses.",
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/TableSyncStatus"
+          }
+        }
       }
     },
     "TableSyncStatus": {
@@ -116,6 +123,17 @@
             "description": "Indicates that the operation did not run."
           }
         ]
+      }
+    },
+    "ConnectionStringResponse": {
+      "description": "The SQL connection string for the workspace containing this SQL endpoint.",
+      "type": "object",
+      "properties": {
+        "connectionString": {
+          "description": "The SQL connection string for the workspace containing this SQL endpoint.",
+          "type": "string",
+          "readOnly": false
+        }
       }
     }
   }

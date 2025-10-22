@@ -130,10 +130,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
             await InitializeServicesAsync(host.Services);
 
+            await host.StartAsync(CancellationToken.None);
+
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogStartTelemetry(telemetryService, options);
 
-            await host.StartAsync(CancellationToken.None);
             await host.WaitForShutdownAsync(CancellationToken.None);
 
             return context.Response;
@@ -178,12 +179,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
-            mode == ModeTypes.All)
+            mode == ModeTypes.All ||
+            mode == ModeTypes.ConsolidatedProxy)
         {
             return; // Success
         }
 
-        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
     }
 
     /// <summary>
