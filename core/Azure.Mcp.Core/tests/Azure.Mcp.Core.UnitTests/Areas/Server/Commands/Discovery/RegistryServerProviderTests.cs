@@ -132,15 +132,12 @@ public class RegistryServerProviderTests
         };
         var provider = new RegistryServerProvider(testId, serverInfo);
 
-        // Act & Assert - Should not throw, but the subprocess won't actually start correctly in test
-        // Without mocking, we can't easily verify the full client creation
-        // This test is just to verify the code path for stdio client creation
-        var exception = await Record.ExceptionAsync(() => provider.CreateClientAsync(new McpClientOptions()));
+        // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
+        // since configuration is valid but external process fails to start properly
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions()));
 
-        // We expect some kind of exception during the subprocess startup, but not an InvalidOperationException
-        // about missing command or invalid transport
-        Assert.NotNull(exception);
-        Assert.IsNotType<InvalidOperationException>(exception);
+        Assert.Contains($"Failed to create MCP client for registry server '{testId}'", exception.Message);
     }
 
     [Fact]
@@ -161,17 +158,16 @@ public class RegistryServerProviderTests
         };
         var provider = new RegistryServerProvider(testId, serverInfo);
 
-        // Act & Assert - Should not throw, but the subprocess won't actually start correctly in test
-        var exception = await Record.ExceptionAsync(() => provider.CreateClientAsync(new McpClientOptions()));
+        // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
+        // since configuration is valid but external process fails to start properly
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions()));
 
-        // We expect some kind of exception during the subprocess startup, but not an InvalidOperationException
-        // about missing command or invalid transport
-        Assert.NotNull(exception);
-        Assert.IsNotType<InvalidOperationException>(exception);
+        Assert.Contains($"Failed to create MCP client for registry server '{testId}'", exception.Message);
     }
 
     [Fact]
-    public async Task CreateClientAsync_NoUrlOrType_ThrowsInvalidOperationException()
+    public async Task CreateClientAsync_NoUrlOrType_ThrowsArgumentException()
     {
         // Arrange
         string testId = "invalidProvider";
@@ -183,10 +179,10 @@ public class RegistryServerProviderTests
         var provider = new RegistryServerProvider(testId, serverInfo);
 
         // Act & Assert
-        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+        var exception = await Assert.ThrowsAsync<ArgumentException>(
             () => provider.CreateClientAsync(new McpClientOptions()));
 
-        Assert.Contains($"Registry server '{testId}' does not have a valid url or type for transport.",
+        Assert.Contains($"Registry server '{testId}' does not have a valid transport type.",
             exception.Message);
     }
 
@@ -209,6 +205,33 @@ public class RegistryServerProviderTests
 
         Assert.Contains($"Registry server '{testId}' does not have a valid command for stdio transport.",
             exception.Message);
+    }
+
+    [Fact]
+    public async Task CreateClientAsync_WithInstallInstructions_IncludesInstructionsInException()
+    {
+        // Arrange
+        string testId = "toolWithInstructions";
+        string installInstructions = "To install this tool, run: npm install -g my-mcp-tool";
+        var serverInfo = new RegistryServerInfo
+        {
+            Description = "Tool that requires installation",
+            Type = "stdio",
+            Command = "my-mcp-tool", // This will fail since the command doesn't exist
+            Args = ["--serve"],
+            InstallInstructions = installInstructions
+        };
+        var provider = new RegistryServerProvider(testId, serverInfo);
+
+        // Act & Assert - Should throw InvalidOperationException with install instructions
+        var exception = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => provider.CreateClientAsync(new McpClientOptions()));
+
+        // Verify the exception message contains the install instructions
+        Assert.Contains($"Failed to initialize the '{testId}' MCP tool.", exception.Message);
+        Assert.Contains("This tool may require dependencies that are not installed.", exception.Message);
+        Assert.Contains("Installation Instructions:", exception.Message);
+        Assert.Contains(installInstructions, exception.Message);
     }
 }
 

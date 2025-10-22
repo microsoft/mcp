@@ -9,7 +9,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 ### Bugs Fixed
+
 - Increased Kusto HttpClient timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
+- Provide installation instructions when azd or other registry components are missing. [[#926](https://github.com/microsoft/mcp/pull/926)]
 
 ### Other Changes
 

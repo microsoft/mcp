@@ -59,4 +59,10 @@ public sealed class RegistryServerInfo
     /// </summary>
     [JsonPropertyName("env")]
     public Dictionary<string, string>? Env { get; init; }
+
+    /// <summary>
+    /// Gets installation instructions for the server.
+    /// </summary>
+    [JsonPropertyName("installInstructions")]
+    public string? InstallInstructions { get; init; }
 }
