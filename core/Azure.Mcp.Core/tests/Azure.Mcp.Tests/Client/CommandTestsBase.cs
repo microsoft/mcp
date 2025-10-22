@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -46,9 +47,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
 
     public virtual async ValueTask InitializeAsync()
     {
-        _testMode = GetTestMode();
+        _testMode = TestEnvironment.GetEnvironmentTestMode();
 
-        if (_testMode is TestMode.Live)
+        if (_testMode is TestMode.Live || _testMode is TestMode.Record)
         {
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync();
@@ -262,13 +263,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
             Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
         }
         await Task.CompletedTask;
-    }
-
-    private TestMode GetTestMode()
-    {
-        var mode = Environment.GetEnvironmentVariable("AZURE_RECORD_MODE");
-        if (string.IsNullOrWhiteSpace(mode)) return TestMode.Live;
-        return Enum.TryParse<TestMode>(mode, ignoreCase: true, out var parsed) ? parsed : TestMode.Live;
     }
 
     private static string TryGetCurrentTestName()

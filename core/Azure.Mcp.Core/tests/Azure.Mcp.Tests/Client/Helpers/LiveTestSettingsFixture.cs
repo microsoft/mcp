@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tests.Client.Helpers
         {
             var testSettingsFileName = ".testsettings.json";
             var directory = Path.GetDirectoryName(typeof(LiveTestSettingsFixture).Assembly.Location);
+
             while (!string.IsNullOrEmpty(directory))
             {
                 var testSettingsFilePath = Path.Combine(directory, testSettingsFileName);

@@ -1,6 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>false</IsAotCompatible>
+    <!-- Suppress NuGet source mapping and downgrade warnings -->
+    <NoWarn>$(NoWarn);NU1507;NU1605</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Core.csproj" />
@@ -12,7 +14,6 @@
     <PackageReference Include="xunit.v3.assert" />
     <PackageReference Include="xunit.v3.extensibility.core" />
   </ItemGroup>
-
   <ItemGroup>
     <AssemblyAttribute Include="System.Reflection.AssemblyMetadataAttribute">
       <_Parameter1>TestProxyPath</_Parameter1>

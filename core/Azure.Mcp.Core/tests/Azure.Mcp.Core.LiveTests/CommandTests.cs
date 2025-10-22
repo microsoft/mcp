@@ -8,7 +8,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests;
 
-public class CommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class CommandTests(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_groups_by_subscription()
