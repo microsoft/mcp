@@ -1,9 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
@@ -133,11 +131,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        if (learn && string.IsNullOrEmpty(tool))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
         }
-        else if (learn && !string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        else if (learn && !string.IsNullOrEmpty(tool))
         {
             return await ToolLearnModeAsync(request, intent ?? "", tool!, cancellationToken);
         }
@@ -205,7 +203,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        request.Items[TagName.IsServerCommandInvoked] = false;
         var toolsJson = await GetRootToolsJsonAsync();
         var learnResponse = new CallToolResult
         {
@@ -236,7 +234,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        request.Items[TagName.IsServerCommandInvoked] = false;
         var toolsJson = await GetToolListJsonAsync(request, tool);
         if (string.IsNullOrEmpty(toolsJson))
         {
@@ -273,7 +271,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
+        request.Items[TagName.IsServerCommandInvoked] = true;
         McpClient? client;
 
         try

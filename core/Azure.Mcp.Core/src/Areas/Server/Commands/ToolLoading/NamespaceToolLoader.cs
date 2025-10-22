@@ -10,7 +10,6 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
@@ -171,7 +170,7 @@ public sealed class NamespaceToolLoader(
         {
             var activity = Activity.Current;
 
-            if (learn && string.IsNullOrEmpty(command))
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
@@ -269,7 +268,6 @@ public sealed class NamespaceToolLoader(
             };
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -400,6 +398,7 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command);
 
+            request.Items[TagName.IsServerCommandInvoked] = true;
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
@@ -465,36 +464,53 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = GetChildToolListJson(request, namespaceName);
+        request.Items[TagName.IsServerCommandInvoked] = false;
+        var availableTools = GetChildToolList(request, namespaceName);
 
-        var learnResponse = new CallToolResult
+        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            Content =
-            [
+            (string? commandName, IReadOnlyDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
+            if (commandName != null)
+            {
+                var commandTool = availableTools.Where(tool => string.Equals(commandName, tool.Name)).FirstOrDefault();
+                if (commandTool != null)
+                {
+                    return new CallToolResult
+                    {
+                        Content = [
+                            new TextContentBlock {
+                                Text = $"""
+                                Here is the most suitable command and its parameters based on the intent '{intent}'.
+                                If you do not find the command suitable, run again with the "learn=true" to get a list of available commands and their parameters.
+                                Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
+
+                                {JsonSerializer.Serialize(commandTool, ServerJsonContext.Default.Tool)}
+                                """
+                            }
+                        ],
+                        IsError = false
+                    };
+                }
+            }
+        }
+
+        // Wasn't able to infer a specific tool command, either intent was missing, sampling wasn't support, or sampling failed.
+        // Return the list of available tools for the namespace.
+        return new CallToolResult
+        {
+            Content = [
                 new TextContentBlock {
                     Text = $"""
-                        Here are the available command and their parameters for '{namespaceName}' tool.
+                        Here are the available commands and their parameters for '{namespaceName}' tool.
                         If you do not find a suitable command, run again with the "learn=true" to get a list of available commands and their parameters.
                         Next, identify the command you want to execute and run again with the "command" and "parameters" arguments.
 
-                        {toolsJson}
+                        {JsonSerializer.Serialize(availableTools, ServerJsonContext.Default.ListTool)}
                         """
                 }
             ],
             IsError = false
         };
-        var response = learnResponse;
-        if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
-        {
-            var availableTools = GetChildToolList(request, namespaceName);
-            (string? commandName, IReadOnlyDictionary<string, JsonElement> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, namespaceName, availableTools, cancellationToken);
-            if (commandName != null)
-            {
-                response = await InvokeChildToolAsync(request, intent, namespaceName, commandName, parameters, cancellationToken);
-            }
-        }
-        return response;
     }
 
     /// <summary>
@@ -536,12 +552,6 @@ public sealed class NamespaceToolLoader(
         _cachedToolLists[namespaceName] = list;
 
         return list;
-    }
-
-    private string GetChildToolListJson(RequestContext<CallToolRequestParams> request, string namespaceName)
-    {
-        var listTools = GetChildToolList(request, namespaceName);
-        return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
     }
 
     private string GetChildToolJson(RequestContext<CallToolRequestParams> request, string namespaceName, string commandName)

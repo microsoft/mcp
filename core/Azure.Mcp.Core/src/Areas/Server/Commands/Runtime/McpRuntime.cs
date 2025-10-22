@@ -98,6 +98,7 @@ public sealed class McpRuntime : IMcpRuntime
         try
         {
             callTool = await _toolLoader.CallToolHandler(request!, cancellationToken);
+            activity?.SetTag(TagName.IsServerCommandInvoked, request.Items.TryGetValue(TagName.IsServerCommandInvoked, out var isInvoked) && isInvoked is true);
 
             var isSuccessful = !callTool.IsError.HasValue || !callTool.IsError.Value;
             if (isSuccessful)

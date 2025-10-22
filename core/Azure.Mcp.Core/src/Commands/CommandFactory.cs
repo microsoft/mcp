@@ -201,7 +201,7 @@ public class CommandFactory
 
                 if (response.Status == HttpStatusCode.OK && response.Results == null)
                 {
-                    response.Results = ResponseResult.Create(new List<string>(), JsonSourceGenerationContext.Default.ListString);
+                    response.Results = ResponseResult.Create([], JsonSourceGenerationContext.Default.ListString);
                 }
 
                 var isServiceStartCommand = implementation is Areas.Server.Commands.ServiceStartCommand;
