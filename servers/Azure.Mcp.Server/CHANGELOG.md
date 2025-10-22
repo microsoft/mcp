@@ -9,6 +9,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 ### Bugs Fixed
+- Fixed SKU configuration bug in SQL database create and update commands. [[#457](https://github.com/microsoft/mcp/pull/457)]
 - Increased Kusto HttpClient timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
 
 ### Other Changes
