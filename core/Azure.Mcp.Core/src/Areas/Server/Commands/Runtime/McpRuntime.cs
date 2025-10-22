@@ -123,6 +123,19 @@ public sealed class McpRuntime : IMcpRuntime
 
             return callTool;
         }
+        // Catches scenarios where child MCP clients are unable to be created
+        // due to missing dependencies or misconfiguration.
+        catch (InvalidOperationException ex)
+        {
+            return new CallToolResult
+            {
+                Content = [new TextContentBlock
+                {
+                    Text = ex.Message,
+                }],
+                IsError = true,
+            };
+        }
         catch (Exception ex)
         {
             activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")

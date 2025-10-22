@@ -10,7 +10,8 @@
             "command": "azd",
             "args": ["mcp", "start"],
             "title": "Azure Developer CLI",
-            "description": "Azure Developer CLI (azd) includes a suite of tools to help build, modernize, and manage applications on Azure. It simplifies the process of developing cloud applications by providing commands for project initialization, resource provisioning, deployment, and monitoring. Use this tool to streamline your Azure development workflow and manage your cloud resources efficiently."
+            "description": "Azure Developer CLI (azd) includes a suite of tools to help build, modernize, and manage applications on Azure. It simplifies the process of developing cloud applications by providing commands for project initialization, resource provisioning, deployment, and monitoring. Use this tool to streamline your Azure development workflow and manage your cloud resources efficiently.",
+            "installInstructions": "The Azure Developer CLI (azd) is either not installed or requires an update. The minimum required version that works with MCP tools is 1.2.0.\n\nTo install or upgrade, follow the instructions at https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd"
         }
     }
 }
