@@ -73,7 +73,7 @@ internal class Program
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
-        services.AddSingleton<ICacheService, CacheService>();
+        services.AddSingleUserCliCacheService();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
         services.AddSingleton<CommandFactory>();
