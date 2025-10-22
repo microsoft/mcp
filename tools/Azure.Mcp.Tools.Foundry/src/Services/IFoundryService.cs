@@ -174,7 +174,7 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null
     );
 
-    Task<GetThreadMessagesResult> GetMessages(
+    Task<ThreadGetMessagesResult> GetMessages(
         string projectEndpoint,
         string threadId,
         string? tenantId = null,

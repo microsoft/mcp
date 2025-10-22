@@ -6,7 +6,7 @@ using Microsoft.Extensions.AI;
 
 namespace Azure.Mcp.Tools.Foundry.Models;
 
-public class GetThreadMessagesResult
+public class ThreadGetMessagesResult
 {
     [JsonPropertyName("threadId")]
     public string? ThreadId { get; set; }
