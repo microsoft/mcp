@@ -9,7 +9,7 @@ Azure MCP Server authenticates to Microsoft Entra ID via the [Azure Identity lib
 > [!TIP]
 > In VS Code, after installing the Azure MCP Server extension, open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P` on Mac), then run "Azure: Sign In" to authenticate quickly.
 
-Here is an overview of how authentication works:
+The server supports two authentication modes: **broker mode** (which uses your OS's native authentication system like Windows Web Account Manager for enhanced security) and **credential chain mode** (which tries multiple authentication methods in sequence). Here is an overview of how authentication works:
 
 ```mermaid
 flowchart TD
