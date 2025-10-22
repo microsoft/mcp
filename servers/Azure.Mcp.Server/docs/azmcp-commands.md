@@ -432,7 +432,9 @@ azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \
                        --key <key> \
                        --value <value> \
-                       [--label <label>]
+                       [--label <label>] \
+                       [--content-type <content-type>] \
+                       [--tags <tags>]
 ```
 
 ### Azure App Lens Operations
