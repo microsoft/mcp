@@ -66,15 +66,15 @@ public class ServiceBusSetupTests
         // Verify key terms are present in the improved description
         Assert.Contains("messaging infrastructure", serviceBusGroup.Description);
         Assert.Contains("asynchronous communication", serviceBusGroup.Description);
-        Assert.Contains("enterprise application integration", serviceBusGroup.Description);
+        Assert.Contains("enterprise integration", serviceBusGroup.Description);
         Assert.Contains("point-to-point communication", serviceBusGroup.Description);
-        Assert.Contains("publish-subscribe messaging patterns", serviceBusGroup.Description);
+        Assert.Contains("publish-subscribe patterns", serviceBusGroup.Description);
         Assert.Contains("reliable messaging", serviceBusGroup.Description);
         Assert.Contains("dead letter handling", serviceBusGroup.Description);
         Assert.Contains("enterprise integration patterns", serviceBusGroup.Description);
         
         // Verify "do not use" guidance is present
-        Assert.Contains("Do not use this tool for real-time communication", serviceBusGroup.Description);
+        Assert.Contains("Do not use for real-time communication", serviceBusGroup.Description);
         Assert.Contains("direct API calls", serviceBusGroup.Description);
         Assert.Contains("database operations", serviceBusGroup.Description);
         
