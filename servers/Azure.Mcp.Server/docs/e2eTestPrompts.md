@@ -105,15 +105,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
-| azmcp_appservice_database_add | Configure a SQL Server database for app service <app_name> |
-| azmcp_appservice_database_add | Add a MySQL database to app service <app_name> |
-| azmcp_appservice_database_add | Add a PostgreSQL database to app service <app_name> |
-| azmcp_appservice_database_add | Add a CosmosDB database to app service <app_name> |
-| azmcp_appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
-| azmcp_appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
-| azmcp_appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
-| azmcp_appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
+| azmcp_appservice_database_add | Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group> |
+| azmcp_appservice_database_add | Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| azmcp_appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
+| azmcp_appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
 
 ## Azure Application Insights
 
@@ -124,19 +125,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_applicationinsights_recommendation_list | List profiler recommendations for Application Insights in resource group <resource_group_name> |
 | azmcp_applicationinsights_recommendation_list | Show me performance improvement recommendations from Application Insights |
 
-## Azure CLI Generate
+## Azure CLI
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_extension_cli_generate | Get Azure CLI command to create a Storage account with name <storage_account_name> |
-| azmcp_extension_cli_generate | Show me how to use Azure CLI to list all virtual machines in my subscription |
+| azmcp_extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI|
+| azmcp_extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
 | azmcp_extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-
-## Azure CLI Install
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azmcp_extension_cli_install | Get Azure CLI installation instructions |
+| azmcp_extension_cli_install | <uninstall az cli on your machine and run test prompts for azmcp_extension_cli_generate> |
 | azmcp_extension_cli_install | How to install azd |
 | azmcp_extension_cli_install | What is Azure Functions Core tools and how to install it |
 
@@ -283,21 +279,21 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
-| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
-| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
-| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
-| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
+| azmcp_eventhubs_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> |
 | azmcp_eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_update | Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | azmcp_eventhubs_eventhub_update | Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
-| azmcp_eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| azmcp_eventhubs_eventhub_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_delete | Delete my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_get | List all Event Hubs namespaces in my subscription |
+| azmcp_eventhubs_namespace_get | Get the details of my namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Create an new namespace <namespace_name> in my resource group <resource_group_name> |
+| azmcp_eventhubs_namespace_update | Update my namespace <namespace_name> in my resource group <resource_group_name>|
 
 ## Azure Function App
 
@@ -418,13 +414,13 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_managedlustre_filesystem_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
-| azmcp_managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
-| azmcp_managedlustre_filesystem_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
-| azmcp_managedlustre_filesystem_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
-| azmcp_managedlustre_filesystem_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| azmcp_managedlustre_filesystem_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
-| azmcp_managedlustre_filesystem_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_managedlustre_fs_create | Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time> |
+| azmcp_managedlustre_fs_list | List the Azure Managed Lustre filesystems in my subscription <subscription_name> |
+| azmcp_managedlustre_fs_list | List the Azure Managed Lustre filesystems in my resource group <resource_group_name> |
+| azmcp_managedlustre_fs_sku_get | List the Azure Managed Lustre SKUs available in location <location> |
+| azmcp_managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
+| azmcp_managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |
 
 ## Azure Marketplace
 
@@ -446,13 +442,14 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_get_bestpractices_get | Get the latest Azure Functions best practices |
 | azmcp_get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
 | azmcp_get_bestpractices_get | What are azure function best practices? |
+| azmcp_get_bestpractices_get | configure azure mcp in coding agent for my repo |
 
 ## Azure Monitor
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_monitor_activitylog_list | List the activity logs of the last month for <resource_name> |
-| azmcp_monitor_healthmodels_entity_gethealth | Show me the health status of entity <entity_id> using the health model <health_model_name> |
+| azmcp_monitor_healthmodels_entity_get | Show me the health status of entity <entity_id> using the health model <health_model_name> |
 | azmcp_monitor_metrics_definitions | Get metric definitions for <resource_type> <resource_name> from the namespace |
 | azmcp_monitor_metrics_definitions | Show me all available metrics and their definitions for storage account <account_name> |
 | azmcp_monitor_metrics_definitions | What metric definitions are available for the Application Insights resource <resource_name> |
@@ -510,16 +507,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| azmcp_redis_cache_accesspolicy_list | List all access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_accesspolicy_list | Show me the access policies in the Redis Cache <cache_name> |
-| azmcp_redis_cache_list | List all Redis Caches in my subscription |
-| azmcp_redis_cache_list | Show me my Redis Caches |
-| azmcp_redis_cache_list | Show me the Redis Caches in my subscription |
-| azmcp_redis_cluster_database_list | List all databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_database_list | Show me the databases in the Redis Cluster <cluster_name> |
-| azmcp_redis_cluster_list | List all Redis Clusters in my subscription |
-| azmcp_redis_cluster_list | Show me my Redis Clusters |
-| azmcp_redis_cluster_list | Show me the Redis Clusters in my subscription |
+| azmcp_redis_list | List all Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis resources |
+| azmcp_redis_list | Show me the Redis resources in my subscription |
+| azmcp_redis_list | Show me my Redis caches |
+| azmcp_redis_list | Get Redis clusters |
 
 ## Azure Resource Group
 
@@ -539,11 +531,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_resourcehealth_availability-status_list | List availability status for all resources in my subscription |
 | azmcp_resourcehealth_availability-status_list | Show me the health status of all my Azure resources |
 | azmcp_resourcehealth_availability-status_list | What resources in resource group <resource_group_name> have health issues? |
-| azmcp_resourcehealth_service-health-events_list | List all service health events in my subscription |
-| azmcp_resourcehealth_service-health-events_list | Show me Azure service health events for subscription <subscription_id> |
-| azmcp_resourcehealth_service-health-events_list | What service issues have occurred in the last 30 days? |
-| azmcp_resourcehealth_service-health-events_list | List active service health events in my subscription |
-| azmcp_resourcehealth_service-health-events_list | Show me planned maintenance events for my Azure services |
+| azmcp_resourcehealth_health-events_list | List all service health events in my subscription |
+| azmcp_resourcehealth_health-events_list | Show me Azure service health events for subscription <subscription_id> |
+| azmcp_resourcehealth_health-events_list | What service issues have occurred in the last 30 days? |
+| azmcp_resourcehealth_health-events_list | List active service health events in my subscription |
+| azmcp_resourcehealth_health-events_list | Show me planned maintenance events for my Azure services |
 
 ## Azure Service Bus
 
@@ -664,8 +656,8 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_virtualdesktop_hostpool_list | List all host pools in my subscription |
-| azmcp_virtualdesktop_hostpool_sessionhost_list | List all session hosts in host pool <hostpool_name> |
-| azmcp_virtualdesktop_hostpool_sessionhost_usersession-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
+| azmcp_virtualdesktop_hostpool_host_list | List all session hosts in host pool <hostpool_name> |
+| azmcp_virtualdesktop_hostpool_host_user-list | List all user sessions on session host <sessionhost_name> in host pool <hostpool_name> |
 
 ## Azure Workbooks
 
@@ -676,7 +668,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_workbooks_list | List all workbooks in my resource group <resource_group_name> |
 | azmcp_workbooks_list | What workbooks do I have in resource group <resource_group_name>? |
 | azmcp_workbooks_show | Get information about the workbook with resource ID <workbook_resource_id> |
-| azmcp_workbooks_show | Show me the workbook with display name <workbook_display_name> |
+| azmcp_workbooks_show | Show me the workbook with resource ID <workbook_resource_id> |
 | azmcp_workbooks_update | Update the workbook <workbook_resource_id> with a new text step |
 
 ## Bicep
@@ -690,6 +682,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | azmcp_cloudarchitect_design | Please help me design an architecture for a large-scale file upload, storage, and retrieval service |
-| azmcp_cloudarchitect_design | Help me create a cloud service that will serve as ATM for users |
+| azmcp_cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | azmcp_cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | azmcp_cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |

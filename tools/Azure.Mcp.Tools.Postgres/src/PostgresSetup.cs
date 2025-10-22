@@ -15,6 +15,8 @@ public class PostgresSetup : IAreaSetup
 {
     public string Name => "postgres";
 
+    public string Title => "Azure Database for PostgreSQL";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IPostgresService, PostgresService>();
@@ -34,7 +36,7 @@ public class PostgresSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.");
+        var pg = new CommandGroup(Name, "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         var database = new CommandGroup("database", "PostgreSQL database operations");
         pg.AddSubGroup(database);

@@ -35,7 +35,7 @@ If your command is a wrapper/utility (CLI tools, best practices, documentation):
 - ✅ **Focus on** unit tests and mock-based testing
 
 **Examples of each type**:
-- **Azure Service Commands**: ACR Registry List, SQL Database Show, Storage Account List
+- **Azure Service Commands**: ACR Registry List, SQL Database List, Storage Account Get
 - **Non-Azure Commands**: Azure CLI wrapper, Best Practices guidance, Documentation tools
 
 ## Command Architecture
@@ -177,12 +177,12 @@ When creating commands that interact with Azure services, you'll need to:
 
 **Package Management:**
 
-For **Resource Graph queries** (using `BaseAzureResourceService`):
+For **Resource Read Operations**:
 - No additional packages required - `Azure.ResourceManager.ResourceGraph` is already included in the core project
-- Only add toolset-specific packages if you need direct ARM operations beyond Resource Graph queries
-- Example: `<PackageReference Include="Azure.ResourceManager.Sql" />` (only if needed for direct ARM operations)
+- Include toolset-specific packages only for specialized ARM read operations that go beyond standard Resource queries.
+    - Example: `<PackageReference Include="Azure.ResourceManager.Sql" />`
 
-For **Direct ARM operations** (using `BaseAzureService`):
+For **Resource Write Operations**:
 - Add the appropriate Azure Resource Manager package to `Directory.Packages.props`
   - Example: `<PackageVersion Include="Azure.ResourceManager.Sql" Version="1.3.0" />`
 - Add the package reference in `Azure.Mcp.Tools.{Toolset}.csproj`
@@ -193,7 +193,7 @@ For **Direct ARM operations** (using `BaseAzureService`):
 **Service Base Class Selection:**
 Choose the appropriate base class for your service based on the operations needed:
 
-1. **For Azure Resource Graph queries** (recommended for resource management operations):
+1. **For Azure Resource Read Operations** (recommended for resource management operations):
    - Inherit from `BaseAzureResourceService` for services that need to query Azure Resource Graph
    - Automatically provides `ExecuteResourceQueryAsync<T>()` and `ExecuteSingleResourceQueryAsync<T>()` methods
    - Handles subscription resolution, tenant lookup, and Resource Graph query execution
@@ -212,7 +212,8 @@ Choose the appropriate base class for your service based on the operations neede
                resourceGroup,
                subscription,
                retryPolicy,
-               ConvertToMyResourceModel);
+               ConvertToMyResourceModel,
+               cancellationToken: cancellationToken);
        }
 
        public async Task<MyResource?> GetResourceAsync(
@@ -227,7 +228,8 @@ Choose the appropriate base class for your service based on the operations neede
                subscription,
                retryPolicy,
                ConvertToMyResourceModel,
-               additionalFilter: $"name =~ '{resourceName}'");
+               additionalFilter: $"name =~ '{EscapeKqlString(resourceName)}'",
+               cancellationToken: cancellationToken);
        }
 
        private static MyResource ConvertToMyResourceModel(JsonElement item)
@@ -242,7 +244,7 @@ Choose the appropriate base class for your service based on the operations neede
    }
    ```
 
-2. **For direct Azure Resource Manager operations**:
+2. **For Azure Resource Write Operations**:
    - Inherit from `BaseAzureService` for services that use ARM clients directly
    - Use when you need direct ARM resource manipulation (create, update, delete)
    - Example:
@@ -252,20 +254,13 @@ Choose the appropriate base class for your service based on the operations neede
    {
        private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-       public async Task<MyResource> GetResourceAsync(string subscription, ...)
+       public async Task<MyResource> CreateResourceAsync(string subscription, ...)
        {
            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
-           // Use subscriptionResource for direct ARM operations
+           // Use subscriptionResource for Azure Resource write operations
        }
    }
    ```
-
-**BaseAzureResourceService Benefits:**
-- Eliminates duplicate Resource Graph query code across services
-- Provides consistent error handling and validation
-- Handles subscription resolution and tenant lookup automatically
-- Supports additional KQL filter parameters for complex queries
-- Maintains AOT compatibility
 
 **API Pattern Discovery:**
 - Study existing services (e.g., Sql, Postgres, Redis) to understand resource access patterns
@@ -274,7 +269,7 @@ Choose the appropriate base class for your service based on the operations neede
    - ❌ Bad: `.GetSqlServerAsync(serverName, cancellationToken)`
 - Check Azure SDK documentation for correct method signatures and property names
 
-**Common Azure Resource Manager Patterns:**
+**Common Azure Resource Read Operation Patterns:**
 ```csharp
 // Resource Graph pattern (via BaseAzureResourceService)
 var resources = await ExecuteResourceQueryAsync(
@@ -283,21 +278,8 @@ var resources = await ExecuteResourceQueryAsync(
     subscription,
     retryPolicy,
     ConvertToSqlDatabaseModel,
-    "name =~ 'mydb*'");  // Optional KQL filter
-
-// Direct ARM pattern (via BaseAzureService)
-var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-
-var resourceGroupResource = await subscriptionResource
-    .GetResourceGroupAsync(resourceGroup, cancellationToken);
-
-var sqlServerResource = await resourceGroupResource.Value
-    .GetSqlServers()
-    .GetAsync(serverName);
-
-var databaseResource = await sqlServerResource.Value
-    .GetSqlDatabases()
-    .GetAsync(databaseName);
+    additionalFilter: $"name =~ '{EscapeKqlString(databaseName)}'",
+    cancellationToken: cancellationToken);
 ```
 
 **Property Access Issues:**
@@ -645,16 +627,18 @@ The `ToolMetadata` class provides behavioral characteristics that help MCP clien
 - **`true`**: Command may interact with an "open world" of external entities where the domain is unpredictable or dynamic
 - **`false`**: Command's domain of interaction is closed and well-defined
 
+**Important:** Most Azure resource commands use `OpenWorld = false` because they operate within the well-defined domain of Azure Resource Manager APIs, even though the specific resources may vary. Only use `OpenWorld = true` for commands that interact with truly unpredictable external systems.
+
 **Examples:**
-- **Open World (`true`)**: Commands that query Azure resources, list storage accounts, search databases - the set of possible results is unpredictable and changes over time
-- **Closed World (`false`)**: Commands that return schema definitions, best practices guides, static documentation, or predefined samples - the domain is well-defined and predictable
+- **Closed World (`false`)**: Azure resource queries (storage accounts, databases, VMs), schema definitions, best practices guides, static documentation - these all operate within well-defined APIs and return structured data
+- **Open World (`true`)**: Commands that interact with unpredictable external systems or unstructured data sources outside of Azure's control
 
 ```csharp
-// Open world - Azure resource queries
-OpenWorld = true,    // Storage account list, database queries, resource discovery
+// Closed world - Most Azure commands
+OpenWorld = false,   // Storage account get, database queries, resource discovery, Bicep schemas, best practices
 
-// Closed world - Static/predictable content
-OpenWorld = false,   // Bicep schemas, best practices, design patterns, predefined samples
+// Open world - Truly unpredictable domains (rare)
+OpenWorld = true,    // External web scraping, unstructured data sources, unpredictable third-party systems
 ```
 
 #### Destructive Property
@@ -2196,6 +2180,7 @@ Before submitting:
 
 - [ ] **CHANGELOG.md**: Add entry under "Unreleased" section describing the new command(s)
 - [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
+- [ ] **Run metadata update script**: Execute `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI validation)
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section
 - [ ] **eng/vscode/README.md**: Update the VSIX README with new service toolset (if applicable) and add sample prompts to showcase new command capabilities
 - [ ] **servers/Azure.Mcp.Server/docs/e2eTestPrompts.md**: Add test prompts for end-to-end validation of the new command(s)
@@ -2203,6 +2188,7 @@ Before submitting:
 
 **Documentation Standards**:
 - Use consistent command paths in all documentation (e.g., `azmcp sql db show`, not `azmcp sql database show`)
+- **Always run `.\eng\scripts\Update-AzCommandsMetadata.ps1`** after updating azmcp-commands.md to ensure tool metadata is synchronized (CI will fail if this step is skipped)
 - Organize example prompts by service in README.md under service-specific sections (e.g., `### 🗄️ Azure SQL Database`)
 - Place new commands in the appropriate toolset section, or create a new toolset section if needed
 - Provide clear, actionable examples that users can run with placeholder values

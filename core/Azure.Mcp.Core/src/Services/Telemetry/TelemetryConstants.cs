@@ -22,6 +22,15 @@ internal static class TelemetryConstants
         public const string ToolName = "ToolName";
         public const string ToolArea = "ToolArea";
         public const string ServerMode = "ServerMode";
+        public const string IsServerCommandInvoked = "IsServerCommandInvoked";
+        public const string Transport = "Transport";
+        public const string IsReadOnly = "IsReadOnly";
+        public const string Namespace = "Namespace";
+        public const string ToolCount = "ToolCount";
+        public const string InsecureDisableElicitation = "InsecureDisableElicitation";
+        public const string IsDebug = "IsDebug";
+        public const string EnableInsecureTransports = "EnableInsecureTransports";
+        public const string Tool = "Tool";
     }
 
     internal class ActivityName
@@ -29,5 +38,6 @@ internal static class TelemetryConstants
         public const string CommandExecuted = "CommandExecuted";
         public const string ListToolsHandler = "ListToolsHandler";
         public const string ToolExecuted = "ToolExecuted";
+        public const string ServerStarted = "ServerStarted";
     }
 }

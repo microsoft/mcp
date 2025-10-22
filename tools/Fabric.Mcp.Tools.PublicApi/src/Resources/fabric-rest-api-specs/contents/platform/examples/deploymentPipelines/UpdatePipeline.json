@@ -1,0 +1,18 @@
+{
+    "parameters": {
+        "deploymentPipelineId": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+        "updatePipelineRequest": {
+            "displayName": "Updated Deployment Pipeline Name",
+            "description": "Updated deployment pipeline description"
+        }
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "id": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+                "displayName": "Updated Deployment Pipeline Name",
+                "description": "Updated deployment pipeline description"
+            }
+        }
+    }
+}

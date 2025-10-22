@@ -17,7 +17,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -43,15 +43,13 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
 
         var fileInfo = new FileInfo(testAudioFile);
-        Output.WriteLine($"Using test audio file: {testAudioFile}");
-        Output.WriteLine($"Test audio file size: {fileInfo.Length} bytes");
         Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         // Test with the real audio file - expect successful speech recognition
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -65,7 +63,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
 
         var resultText = result.ToString();
-        Output.WriteLine($"Speech recognition result: {resultText}");
 
         // Validate the result structure
         Assert.NotNull(resultText);
@@ -80,7 +77,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         // Assert that we got the exact expected text from the test audio file
         Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
         var fullText = textProperty.GetString() ?? "";
-        Output.WriteLine($"Recognition text: '{fullText}'");
         Assert.Equal(expectedText, fullText);
 
         Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
@@ -95,7 +91,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 ? segmentReasonProperty.GetString()
                 : "Unknown";
 
-            Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
             Assert.Equal("RecognizedSpeech", segmentReason);
         }
     }
@@ -109,7 +104,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -122,7 +117,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Detailed format result: {resultText}");
 
         // Parse the JSON result to verify detailed format structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -140,8 +134,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Assert.True(hasNBest || hasOffset || hasDuration,
                    "Detailed format should include NBest, offset, or duration properties in segments");
-
-        Output.WriteLine("✅ Detailed format recognition completed successfully");
     }
 
     [Theory]
@@ -211,7 +203,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -234,7 +226,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         // Validate full text property
         Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
         var fullText = textProperty.GetString() ?? "";
-        Output.WriteLine($"Recognition text: '{fullText}'");
         Assert.Equal(expectedText, fullText);
 
         Assert.True(resultProperty.TryGetProperty("segments", out var segmentsProperty));
@@ -249,11 +240,8 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 ? segmentReasonProperty.GetString()
                 : "Unknown";
 
-            Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
             Assert.Equal("RecognizedSpeech", segmentReason);
         }
-
-        Output.WriteLine($"✅ Language {language} test completed");
     }
 
     [Theory]
@@ -268,7 +256,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -282,7 +270,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Profanity option '{profanityOption}' result: {resultText}");
 
         // Validate JSON structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -291,10 +278,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Assert.True(resultProperty.TryGetProperty("fullText", out var textProperty));
         var fullText = textProperty.GetString() ?? "";
-        Output.WriteLine($"Recognition text: '{fullText}'");
         Assert.Equal(expectedText, fullText);
-
-        Output.WriteLine($"✅ Profanity filtering '{profanityOption}' test completed");
     }
 
     [Fact]
@@ -306,7 +290,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -320,7 +304,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Phrase hints result: {resultText}");
 
         // Validate JSON structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -330,11 +313,8 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var fullText = resultProperty.TryGetProperty("fullText", out var textProperty)
             ? textProperty.GetString()
             : "";
-        Output.WriteLine($"Recognition text: '{fullText}'");
         var expectedText = "Years later, Douzi and Shitou have become packing opera stars, taking the names Cheng Dieyi and Duan Xiaolou, respectively.";
         Assert.Equal(expectedText, fullText);
-
-        Output.WriteLine("✅ Phrase hints test completed");
     }
 
     [Fact]
@@ -346,7 +326,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var invalidEndpoint = "https://invalid-endpoint.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -359,11 +339,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Invalid endpoint result: {resultText}");
-
         Assert.True(resultText.Contains("Invalid endpoint or connectivity issue.", StringComparison.OrdinalIgnoreCase));
-
-        Output.WriteLine("✅ Invalid endpoint error handling test completed");
     }
 
     [Fact]
@@ -378,7 +354,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
             var result = await CallToolAsync(
-                "azmcp_speech_stt_recognize",
+                "speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -392,7 +368,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.NotNull(result);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
-            Output.WriteLine($"Empty file result: {resultText}");
 
             // Parse to ensure valid JSON structure
             var jsonResult = JsonDocument.Parse(resultText);
@@ -412,11 +387,8 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                     ? segmentReasonProperty.GetString()
                     : "Unknown";
 
-                Output.WriteLine($"Segment {i + 1} reason: {segmentReason}");
                 Assert.Equal("NoMatch", segmentReason);
             }
-
-            Output.WriteLine("✅ Empty file handling test completed");
         }
         finally
         {
@@ -440,7 +412,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
             var result = await CallToolAsync(
-                "azmcp_speech_stt_recognize",
+                "speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -454,7 +426,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.NotNull(result);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
-            Output.WriteLine($"Empty file result: {resultText}");
 
             // Parse to ensure valid JSON structure
             var jsonResult = JsonDocument.Parse(resultText);
@@ -469,8 +440,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.True(resultObject.TryGetProperty("type", out var exceptionTypeProperty));
             var exceptionType = exceptionTypeProperty.GetString() ?? "";
             Assert.True(exceptionType.Contains("InvalidOperationException", StringComparison.OrdinalIgnoreCase));
-
-            Output.WriteLine("✅ Empty file handling test completed");
         }
         finally
         {
@@ -491,7 +460,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -506,14 +475,11 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Retry policy result: {resultText}");
 
         // Should work normally with retry policy
         var jsonResult = JsonDocument.Parse(resultText);
         var resultObject = jsonResult.RootElement;
         Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
-
-        Output.WriteLine("✅ Retry policy test completed");
     }
 
     [Theory]
@@ -528,16 +494,13 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
 
         var fileInfo = new FileInfo(testAudioFile);
-        Output.WriteLine($"Using test audio file: {testAudioFile}");
-        Output.WriteLine($"Test audio file size: {fileInfo.Length} bytes");
-        Output.WriteLine($"Test audio file format: {Path.GetExtension(fileName)}");
         Assert.True(fileInfo.Length > 0, "Test audio file must not be empty");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         // Test with the audio file - expect successful speech recognition
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -551,7 +514,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Empty file result: {resultText}");
 
         // Parse to ensure valid JSON structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -579,7 +541,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -592,7 +554,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Detailed format result for {Path.GetExtension(fileName)}: {resultText}");
 
         // Parse the JSON result to verify detailed format structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -611,8 +572,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         Assert.True(hasNBest || hasOffset || hasDuration,
                    "Detailed format should include NBest, offset, or duration properties in segments");
-
-        Output.WriteLine($"✅ Detailed format recognition completed successfully for {Path.GetExtension(fileName)}");
     }
 
     [Theory(Skip = "Requires GStreamer installed to handle compressed audio formats (e.g., MP3). Skipped if GStreamer is not available.")]
@@ -630,7 +589,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             : new[] { "passport", "verify", "voice" };
 
         var result = await CallToolAsync(
-            "azmcp_speech_stt_recognize",
+            "speech_stt_recognize",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -644,7 +603,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         Assert.NotNull(result);
         var resultText = result.ToString();
         Assert.NotNull(resultText);
-        Output.WriteLine($"Phrase hints result for {Path.GetExtension(fileName)}: {resultText}");
 
         // Validate JSON structure
         var jsonResult = JsonDocument.Parse(resultText);
@@ -658,8 +616,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         // With phrase hints, we should get text containing at least one of the hint words
         var containsHint = phrases.Any(phrase => text?.ToLower().Contains(phrase.ToLower()) == true);
         Assert.True(containsHint, $"Recognition text should contain at least one phrase hint. Text: '{text}', Hints: [{string.Join(", ", phrases)}]");
-
-        Output.WriteLine($"✅ Phrase hints test completed for {Path.GetExtension(fileName)}");
     }
 
     [Theory(Skip = "Requires GStreamer installed to handle compressed audio formats (e.g., MP3). Skipped if GStreamer is not available.")]
@@ -674,7 +630,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         foreach (var profanityOption in new[] { "masked", "removed", "raw" })
         {
             var result = await CallToolAsync(
-                "azmcp_speech_stt_recognize",
+                "speech_stt_recognize",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
@@ -688,15 +644,12 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.NotNull(result);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
-            Output.WriteLine($"Profanity option '{profanityOption}' result for {Path.GetExtension(fileName)}: {resultText}");
 
             // Validate JSON structure
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
             Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
         }
-
-        Output.WriteLine($"✅ Profanity filtering test completed for {Path.GetExtension(fileName)}");
     }
 
     /// <summary>

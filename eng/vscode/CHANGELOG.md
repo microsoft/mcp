@@ -1,5 +1,126 @@
 # Release History
 
+## 0.9.6 (2025-10-21)
+
+### Added
+
+- Added instructions to the best practices tool for the GitHub coding agent on how to configure the Azure MCP Server. [[#888](https://github.com/microsoft/mcp/pull/888)]
+
+### Changed
+
+- Added tool name length validation to ensure all tool names stay within 48 character limit for compatibility with MCP clients. [[#881](https://github.com/microsoft/mcp/pull/881)]
+
+### Fixed
+
+- Fixed an issue where `azmcp_entra_administrator_list` was not listing administrators correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue where `azmcp_sql_server_firewall_rule_list` was not listing firewall rules correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue preventing the `ServerStarted` telemetry event from being published. [[#905](https://github.com/microsoft/mcp/pull/905)]
+- Fixed an issue where MCP tools were missing the 'title' metadata, causing Visual Studio to display raw tool names instead of user-friendly titles. [[#898](https://github.com/microsoft/mcp/pull/898)]
+
+## 0.9.5 (2025-10-20)
+
+### Bugs Fixed
+
+- Update the `server.json` file in the NuGet distribution to match the `2025-09-29` schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
+
+### Other Changes
+
+- Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+
+## 0.9.4 (2025-10-17)
+
+### Features Added
+
+- Added a new server startup "consolidated" mode, which groups Azure MCP tools by tasks and actions tools conduct. This can be enabled by using the `--consolidated` flag. [[#784](https://github.com/microsoft/mcp/pull/784)]
+
+### Breaking Changes
+
+- Removes the `azmcp_` prefix from all commands. [[#868](https://github.com/microsoft/mcp/pull/868)]
+
+## 0.9.3 (2025-10-16)
+
+### Changed
+
+- Updated the description of the following Communications commands to decrease ambiguity and increase selection accuracy by LLMs: [[#804](https://github.com/microsoft/mcp/pull/804)]
+  - `azmcp_communication_email_send`
+  - `azmcp_communication_sms_send`
+- Improved the description of the `--enable-insecure-transports` server startup option. [[#839](https://github.com/microsoft/mcp/pull/839)]
+
+### Fixed
+
+- Fixed a bug where user confirmation (elicitation) stopped working between versions `0.8.5` and `0.9.2`. [[#824](https://github.com/microsoft/mcp/issues/824)]
+- Fixed `IsServerCommandInvoked` always appearing to be true. [[#837](https://github.com/microsoft/mcp/pull/837)]
+- Fixed `ToolName` always showing up as the tool area even if an MCP tool was invoked. [[#837](https://github.com/microsoft/mcp/pull/837)]
+
+## 0.9.2 (2025-10-15)
+
+### Fixed
+
+- Fixed retained-buffer leaks across services (Kusto, EventGrid, AppLens, Speech, Cosmos, Foundry, NetworkResourceProvider) and tool loaders (BaseToolLoader, ServerToolLoader, NamespaceToolLoader, SingleProxyToolLoader) by disposing `JsonDocument`/`HttpResponseMessage` instances and cloning returned `JsonElements`. ([#817](https://github.com/microsoft/mcp/pull/817))
+
+## 0.9.1 (2025-10-14)
+
+### Fixed
+
+- Fixed an issue where `azmcp_sql_db_rename` would not work as expected. [[#615](https://github.com/microsoft/mcp/issues/615)]
+
+### Changed
+
+- MCP server start options are now included in telemetry logs. ([#794](https://github.com/microsoft/mcp/pull/794))
+- Updated the description of the following Workbook commands to decrease ambiguity and increase selection accuracy by LLMs: [[#787](https://github.com/microsoft/mcp/pull/787)]
+  - `azmcp_workbook_show`
+  - `azmcp_workbook_update`
+
+## 0.9.0 (2025-10-13)
+
+### Added
+
+- Added support for sending an email via Azure Communication Services via the command `azmcp_communication_email_send`. [[#690](https://github.com/microsoft/mcp/pull/690)]
+- Added the following Event Hubs commands: [[#750](https://github.com/microsoft/mcp/pull/750)]
+  - `azmcp_eventhubs_consumergroup_update`: Create or update a consumer group for an Event Hub.
+  - `azmcp_eventhubs_consumergroup_get`: Get details of a consumer group for an Event Hub
+  - `azmcp_eventhubs_consumergroup_delete`: Delete a consumer group from an Event Hub
+  - `azmcp_eventhubs_eventhub_update`: Create or update an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_get`: Get details of an Event Hub within a namespace
+  - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace
+  - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace
+  - `azmcp_eventhubs_namespace_delete`: Delete an existing Event Hubs namespace.
+- Added support for listing Azure AI Foundry (Cognitive Services) resources or getting details of a specific one via the command `azmcp_foundry_resource_get`. [[#762](https://github.com/microsoft/mcp/pull/762)]
+- Added support for Azure Monitor Web Tests management operations: [[#529](https://github.com/microsoft/mcp/issues/529)]
+  - `azmcp_monitor_webtests_create`: Create a new web test in Azure Monitor
+  - `azmcp_monitor_webtests_get`: Get details for a specific web test
+  - `azmcp_monitor_webtests_list`: List all web tests in a subscription or optionally, within a resource group
+  - `azmcp_monitor_webtests_update`: Update an existing web test in Azure Monitor
+- Added the following Azure CLI commands:
+  - `azmcp_extension_cli_generate`: Generate Azure CLI commands based on user intent. [[#203](https://github.com/microsoft/mcp/issues/203)]
+  - `azmcp_extension_cli_install`: Get installation instructions for Azure CLI, Azure Developer CLI and Azure Functions Core Tools. [[#74](https://github.com/microsoft/mcp/issues/74)]
+- Added support for Azure AI Search knowledge bases and knowledge sources commands: [[#719](https://github.com/Azure/azure-mcp/pull/719)]
+  - `azmcp_search_knowledge_base_list`: List knowledge bases defined in an Azure AI Search service.
+  - `azmcp_search_knowledge_base_retrieve`: Execute a retrieval operation using a specified knowledge base with optional multi-turn conversation history.
+  - `azmcp_search_knowledge_source_list`: List knowledge sources defined in an Azure AI Search service.
+
+### Changed
+
+- Added more deployment related best practices. [[#698](https://github.com/microsoft/mcp/issues/698)]
+- Added `IsServerCommandInvoked` telemetry field indicating that the MCP tool call resulted in a command invocation. [[#751](https://github.com/microsoft/mcp/pull/751)]
+- Updated the description of the following commands to decrease ambiguity and increase selection accuracy by LLMs:
+  - AKS (Azure Kubernetes Service): [[#771](https://github.com/microsoft/mcp/pull/771)]
+    - `azmcp_aks_cluster_get`
+    - `azmcp_aks_nodepool_get`
+  - Marketplace: [[#761](https://github.com/microsoft/mcp/pull/761)]
+    - `azmcp_marketplace_product_list`
+  - Storage: [[#650](https://github.com/microsoft/mcp/pull/650)]
+    - `azmcp_storage_account_get`
+    - `azmcp_storage_blob_get`
+    - `azmcp_storage_blob_container_create`
+    - `azmcp_storage_blob_container_get`
+- Replaced `azmcp_redis_cache_list` and `azmcp_redis_cluster_list` with a unified `azmcp_redis_list` command that lists all Redis resources in a subscription. [[#756](https://github.com/microsoft/mcp/issues/756)]
+  - Flattened `azmcp_redis_cache_accesspolicy_list` and `azmcp_redis_cluster_database_list` into the aforementioned `azmcp_redis_list` command. [[#757](https://github.com/microsoft/mcp/issues/757)]
+
+### Fixed
+
+- Fix flow of `Activity.Current` in telemetry service by changing `ITelemetryService`'s activity calls to synchronous. [[#558](https://github.com/microsoft/mcp/pull/558)]
+
 ## 0.8.6 (2025-10-09)
 
 ### Added

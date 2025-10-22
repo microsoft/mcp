@@ -1,18 +1,31 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.8.7</Version>
+    <Version>0.9.7</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
+    <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
+    <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+
+    <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>
+
+    <!-- docker settings -->
     <DockerImageName>azure-sdk/azure-mcp</DockerImageName>
-    <PackageId>Azure.Mcp</PackageId>
-    <ToolCommandName>$(CliName)</ToolCommandName>
-    <PackageIcon>azureicon.png</PackageIcon>
+
+    <!-- dnx/nuget settings -->
+    <DnxPackageId>Azure.Mcp</DnxPackageId>
+    <DnxToolCommandName>$(CliName)</DnxToolCommandName>
+    <DnxPackageTags>azure,mcp</DnxPackageTags>
+
+    <!-- vsix settings -->
+    <VsixPackagePrefix>vscode-azure-mcp</VsixPackagePrefix>
+    <VsixDescription>Provides Model Context Protocol (MCP) integration and tooling for Azure in Visual Studio Code.</VsixDescription>
+    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
-  
+
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <AssemblyName>$(CliName)</AssemblyName>
@@ -41,35 +54,20 @@
     <SelfContained>true</SelfContained>
   </PropertyGroup>
 
-  <!-- Properties for the root (RID-less) .NET Tool package -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure.</PackageDescription>
-    <PackageTags>azure;mcp;</PackageTags>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
-  </PropertyGroup>
-  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
-    <None Include="../README.md" Pack="true" PackagePath="./README.md" />
-  </ItemGroup>
-  <!-- Properties for the RID-specific .NET Tool packages -->
-  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
-    <PackageDescription>Azure MCP Server - Model Context Protocol implementation for Azure. Internal
-      implementation package for $(RuntimeIdentifier).</PackageDescription>
-  </PropertyGroup>
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
+
   <ItemGroup>
     <ProjectReference Include="$(RepoRoot)\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
     <ProjectReference Include="$(RepoRoot)\tools\Azure.*\src\*.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="$(RepoRoot)\eng\images\azureicon.png" Pack="true" PackagePath="azureicon.png" />
-  </ItemGroup>
-  
+
   <ItemGroup>
     <None Include="..\docs\azmcp-commands.md" />
     <None Include="..\docs\e2eTestPrompts.md" />

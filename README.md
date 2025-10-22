@@ -23,7 +23,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Azure MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/README.md
 [Azure MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md
 [Azure MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server
-[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-0
+[Azure MCP Releases]: https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-
 [Azure MCP Documentation]: https://learn.microsoft.com/azure/developer/azure-mcp-server/
 [Azure MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md
 [Azure MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/SUPPORT.md
@@ -31,7 +31,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 [Fabric MCP README]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/README.md
 [Fabric MCP CHANGELOG]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/CHANGELOG.md
 [Fabric MCP Source Code]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server
-[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-0
+[Fabric MCP Releases]: https://github.com/microsoft/mcp/releases?q=Fabric.Mcp.Server-
 [Fabric Documentation]: https://learn.microsoft.com/fabric/
 [Fabric MCP Troubleshooting]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/TROUBLESHOOTING.md
 [Fabric MCP Support]: https://github.com/microsoft/mcp/blob/main/servers/Fabric.Mcp.Server/SUPPORT.md
@@ -165,6 +165,13 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
 - **INSTALL**: [![Install Playwright MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect?url=vscode%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D) [![Install Playwright MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://insiders.vscode.dev/redirect?url=vscode-insiders%3Amcp%2Finstall%3F%257B%2522name%2522%253A%2522playwright%2522%252C%2522command%2522%253A%2522npx%2522%252C%2522args%2522%253A%255B%2522%2540playwright%252Fmcp%2540latest%2522%255D%257D) [![Install Playwright MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/vs/mcp-install?%7B%22name%22%3A%22playwright%22%2C%22type%22%3A%22stdio%22%2C%22command%22%3A%22npx%22%2C%22args%22%3A%5B%22%40playwright%2Fmcp%40latest%22%5D%7D)
+
+### 🧩 Wassette
+- **REPOSITORY**: [microsoft/wassette](https://github.com/microsoft/wassette)
+- **DESCRIPTION**: Wassette: A security-oriented runtime that runs WebAssembly Components via MCP.
+- **CATEGORY**: `DEVELOPER TOOLS`
+- **TYPE**: `Local`
+- **INSTALL**: [microsoft/wassette](https://github.com/microsoft/wassette)
 
 
 ## 🏗️ Looking for starter templates that use MCP? 

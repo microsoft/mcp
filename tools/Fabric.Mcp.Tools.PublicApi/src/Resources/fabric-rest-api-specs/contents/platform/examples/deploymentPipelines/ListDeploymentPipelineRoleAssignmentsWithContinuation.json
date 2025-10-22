@@ -7,6 +7,7 @@
             "body" : {
                 "value": [
                     {
+                        "id": "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
                         "principal": {
                             "id":  "6e335e92-a2a2-4b5a-970a-bd6a89fbb765",
                             "type": "User"
@@ -14,6 +15,7 @@
                         "role": "Admin"
                     },
                     {
+                        "id": "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
                         "principal": {
                             "id":  "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
                             "type": "Group"
@@ -21,6 +23,7 @@
                         "role": "Admin"
                     },
                     {
+                        "id": "a35d842b-90d5-59a1-c56a-5f8fcff0bf9d",
                         "principal": {
                             "id":  "a35d842b-90d5-59a1-c56a-5f8fcff0bf9d",
                             "type": "ServicePrincipal"

@@ -25,7 +25,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         // Act
         var result = await CallToolAsync(
-            "azmcp_confidentialledger_entries_append",
+            "confidentialledger_entries_append",
             new()
             {
                 { "ledger", ledgerName },
@@ -66,7 +66,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
 
         // Act
         var result = await CallToolAsync(
-            "azmcp_confidentialledger_entries_append",
+            "confidentialledger_entries_append",
             new()
             {
                 { "ledger", ledgerName },
@@ -100,7 +100,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
             """;
 
         var appendResult = await CallToolAsync(
-            "azmcp_confidentialledger_entries_append",
+            "confidentialledger_entries_append",
             new()
             {
                 { "ledger", ledgerName },
@@ -112,7 +112,7 @@ public class ConfidentialLedgerCommandTests(ITestOutputHelper output) : CommandT
         Assert.False(string.IsNullOrWhiteSpace(transactionId.GetString()));
 
         var getResult = await CallToolAsync(
-            "azmcp_confidentialledger_entries_get",
+            "confidentialledger_entries_get",
             new()
             {
                 { "ledger", ledgerName },

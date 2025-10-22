@@ -124,8 +124,8 @@ public class ListToolsResult
     [JsonPropertyName("results")]
     public List<Tool>? Tools { get; set; }
 
-    [JsonPropertyName("consolidated_azure_tools")]
-    public List<Tool>? ConsolidatedAzureTools { get; set; }
+    [JsonPropertyName("consolidated_tools")]
+    public List<Tool>? ConsolidatedTools { get; set; }
 
     [JsonPropertyName("duration")]
     public int? Duration { get; set; }

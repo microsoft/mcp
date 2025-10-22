@@ -42,7 +42,7 @@
 # ServiceOwners:                       @shenmuxiaosen @avanigupta
 
 # PRLabel: %area-AppLens
-/tools/Azure.Mcp.Tools.AppLens/        @masalaman @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.AppLens/        @msalaman @microsoft/azure-mcp
 
 # ServiceLabel: %area-AppLens
 # ServiceOwners:                       @msalaman
@@ -59,6 +59,11 @@
 # ServiceLabel: %tools-ACR
 # ServiceOwners:                       @jongio
 
+# PRLabel: %tools-AppService
+/tools/Azure.Mcp.Tools.AppService/         @KarishmaGhiya @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AppService
+# ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft 
 
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @microsoft/azure-mcp
@@ -71,6 +76,12 @@
 
 # ServiceLabel: %tools-CloudArchitect
 # ServiceOwners:                       @msalaman
+
+# PRLabel: %tools-Communication
+/tools/Azure.Mcp.Tools.Communication/         @KarishmaGhiya @microsoft/azure-mcp
+
+# ServiceLabel: %tools-Communication
+# ServiceOwners:                       @kirill-linnik @kagbakpem @arazan
 
 # PRLabel: %tools-CosmosDB
 /tools/Azure.Mcp.Tools.Cosmos/         @sajeetharan @xiangyan99 @microsoft/azure-mcp
@@ -136,7 +147,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -173,7 +184,7 @@
 # ServiceOwners:                       @shankarsama @EldertGrootenboer
 
 # PRLabel: %tools-Redis
-/tools/Azure.Mcp.Tools.Redis/          @philon-msft @xiangyan99 @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
 
 # ServiceLabel: %tools-Redis
 # ServiceOwners:                       @philon-msft @carldc
@@ -234,3 +245,16 @@
 
 # ServiceLabel: %tools-ConfidentialLedger
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
+
+# PRLabel: %tools-ResourceHealth
+/tools/Azure.Mcp.Tools.ResourceHealth/      @pkaza-msft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResourceHealth
+# ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
+
+##################
+# Fabric MCP
+##################
+/core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
+/servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
+/tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp

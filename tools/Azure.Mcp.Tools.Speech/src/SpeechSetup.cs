@@ -14,6 +14,8 @@ public class SpeechSetup : IAreaSetup
 {
     public string Name => "speech";
 
+    public string Title => "Azure AI Speech";
+
     public void ConfigureServices(IServiceCollection services)
     {
         // New recognizer-based architecture
@@ -36,7 +38,7 @@ public class SpeechSetup : IAreaSetup
             command, set "command" and wrap its arguments in "parameters". Set "learn=true" to discover available 
             sub-commands for different Azure AI Services Speech operations. Note that this tool requires Azure AI 
             Services Speech endpoints and will only access speech resources accessible to the authenticated user.
-            """);
+            """, Title);
 
         var stt = new CommandGroup(
             name: "stt",

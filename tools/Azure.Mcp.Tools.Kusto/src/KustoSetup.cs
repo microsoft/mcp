@@ -13,6 +13,8 @@ public class KustoSetup : IAreaSetup
 {
     public string Name => "kusto";
 
+    public string Title => "Azure Data Explorer";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IKustoService, KustoService>();
@@ -32,7 +34,7 @@ public class KustoSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Kusto command group
-        var kusto = new CommandGroup(Name, "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. Includes operations for listing clusters and databases, executing KQL queries, retrieving table schemas, and working with Kusto data analytics workloads.");
+        var kusto = new CommandGroup(Name, "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. Includes operations for listing clusters and databases, executing KQL queries, retrieving table schemas, and working with Kusto data analytics workloads.", Title);
 
         // Create Kusto cluster subgroups
         var clusters = new CommandGroup("cluster", "Kusto cluster operations - Commands for listing clusters in your Azure subscription.");
