@@ -251,3 +251,10 @@
 
 # ServiceLabel: %tools-ResourceHealth
 # ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
+
+##################
+# Fabric MCP
+##################
+/core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
+/servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
+/tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
