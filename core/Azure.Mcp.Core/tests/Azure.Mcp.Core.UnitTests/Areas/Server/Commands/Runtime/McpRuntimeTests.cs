@@ -373,7 +373,7 @@ public class McpRuntimeTests
 
         var toolName = "test-tool";
         var request = CreateCallToolRequest(toolName);
-        var expectedException = new InvalidOperationException("Tool loader failed");
+        var expectedException = new Exception("Tool loader failed");
 
         mockToolLoader.CallToolHandler(request, Arg.Any<CancellationToken>())
             .Returns<ValueTask<CallToolResult>>(x => throw expectedException);
@@ -381,7 +381,7 @@ public class McpRuntimeTests
         // Act & Assert
         Assert.NotNull(request.Params);
 
-        var actualException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        var actualException = await Assert.ThrowsAsync<Exception>(() =>
             runtime.CallToolHandler(request, CancellationToken.None).AsTask());
         Assert.Equal(expectedException.Message, actualException.Message);
 
