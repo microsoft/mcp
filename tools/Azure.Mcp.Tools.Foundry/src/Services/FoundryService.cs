@@ -1027,7 +1027,7 @@ public class FoundryService(
         }
     }
 
-    public async Task<List<PersistentAgentThread>> ListThreads(
+    public async Task<ThreadListResult> ListThreads(
         string projectEndpoint,
         string? tenantId,
         RetryPolicyOptions? retryPolicy)
@@ -1040,15 +1040,21 @@ public class FoundryService(
         var agentsClient = projectClient.GetPersistentAgentsClient();
 
         var threadsIterator = agentsClient.Threads.GetThreadsAsync();
-        List<PersistentAgentThread> threads = [];
+        List<ThreadItem> threads = [];
         try
         {
             await foreach (var thread in threadsIterator)
             {
-                threads.Add(thread);
+                threads.Add(new()
+                {
+                    ThreadId = thread.Id
+                });
             }
 
-            return threads;
+            return new ThreadListResult()
+            {
+                Threads = [.. threads]
+            };
         }
         catch (Exception ex)
         {

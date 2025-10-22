@@ -161,7 +161,7 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null
     );
 
-    Task<List<PersistentAgentThread>> ListThreads(
+    Task<ThreadListResult> ListThreads(
         string projectEndpoint,
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null
