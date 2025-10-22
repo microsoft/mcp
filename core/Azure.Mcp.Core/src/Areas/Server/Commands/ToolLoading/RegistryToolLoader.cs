@@ -25,7 +25,7 @@ public sealed class RegistryToolLoader(
     private readonly IOptions<ToolLoaderOptions> _options = options;
     /// <summary>
     /// Key: Tool name
-    /// Value: KVP representing (ServerName, MCP Client).
+    /// Value: Tuple representing (ServerName, MCP Client).
     /// </summary>
     private Dictionary<string, (string, McpClient)> _toolClientMap = new();
     private List<McpClient> _discoveredClients = new();
