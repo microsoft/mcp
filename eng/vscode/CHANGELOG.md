@@ -1,5 +1,19 @@
 # Release History
 
+## 0.9.7 (2025-10-22)
+
+### Changes
+
+- Improved the following tool namespace descriptions for better LLM tool selection, including usage patterns, messaging scenarios, and when not to use their tools:
+  - Service Bus [[#923](https://github.com/microsoft/mcp/pull/923)]
+  - Application Insights [[#928](https://github.com/microsoft/mcp/pull/928)]
+- Updated the description of the `azmcp_appservice_database_add` command to decrease ambiguity and increase selection accuracy by LLMs. [[#912](https://github.com/microsoft/mcp/pull/912)]
+
+### Fixed
+
+- Increased Kusto `HttpClient` timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
+- Provide installation instructions when azd or other registry components are missing. [[#926](https://github.com/microsoft/mcp/pull/926)]
+
 ## 0.9.6 (2025-10-21)
 
 ### Added
