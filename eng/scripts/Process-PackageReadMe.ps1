@@ -208,14 +208,29 @@ function Validate-PackageReadme {
             $level = $matches[1].Length / 4 + 1
             $title = $matches[2]
             $anchorLink = $matches[3]
+            
+            # Check for Unicode emojis in TOC entries that break NuGet packaging
+            if ($title -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+                throw "Unicode emoji detected in table of contents entry: '$title'. Emojis in TOC break NuGet packaging and are not allowed."
+            }
+            if ($anchorLink -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+                throw "Unicode emoji detected in table of contents anchor link: '$anchorLink'. Emojis in TOC break NuGet packaging and are not allowed."
+            }
+            
             $headingValidationList.Add($title, [HeadingInfo]::new($level, $title, $anchorLink))
         }
 
         if ($line -match "^(#+)\s+(.*)$") {
             $level = $matches[1].Length
             $title = $matches[2].Trim()
+            
             $anchorLink = $title.ToLower() -replace '[^a-z0-9 ]', '' -replace ' ', '-'
             if ($headingValidationList.ContainsKey($title)) {
+                # Only check for emojis in headings that are actually in the TOC
+                if ($title -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+                    throw "Unicode emoji detected in heading: '$title'. This heading is in the TOC and emojis in TOC entries break NuGet packaging."
+                }
+                
                 $headingInfo = $headingValidationList[$title]
                 if ($headingInfo.Level -ne $level) {
                     Write-Host "Heading level mismatch for '$title'. TOC level: $($headingInfo.Level), Actual level: $level" -ForegroundColor Red
