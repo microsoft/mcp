@@ -40,7 +40,8 @@ internal sealed class RecordingRedirectHandler : DelegatingHandler
         {
             var upstream = new UriBuilder(message.RequestUri!)
             {
-                Query = string.Empty
+                Query = string.Empty,
+                Path = string.Empty
             };
             message.Headers.Add("x-recording-upstream-base-uri", upstream.Uri.ToString());
         }
