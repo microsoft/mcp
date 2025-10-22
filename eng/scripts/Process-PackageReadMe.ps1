@@ -234,11 +234,6 @@ function Validate-PackageReadme {
             
             $anchorLink = $title.ToLower() -replace '[^a-z0-9 ]', '' -replace ' ', '-'
             if ($headingValidationList.ContainsKey($title)) {
-                # Only check for emojis in headings that are actually in the TOC
-                if ($title -match $emojiPattern) {
-                    throw "Unicode emoji detected in heading: '$title'. This heading is in the TOC and emojis in TOC entries break NuGet packaging."
-                }
-                
                 $headingInfo = $headingValidationList[$title]
                 if ($headingInfo.Level -ne $level) {
                     Write-Host "Heading level mismatch for '$title'. TOC level: $($headingInfo.Level), Actual level: $level" -ForegroundColor Red
@@ -246,6 +241,12 @@ function Validate-PackageReadme {
                 if ($headingInfo.AnchorLink -ne $anchorLink) {
                     Write-Host "Anchor link mismatch for '$title'. TOC anchor: '$($headingInfo.AnchorLink)', Actual anchor: '$anchorLink'" -ForegroundColor Red
                 }
+                
+                # Check for emojis in headings after other validation to provide complete feedback
+                if ($title -match $emojiPattern) {
+                    throw "Unicode emoji detected in heading: '$title'. This heading is in the TOC and emojis in TOC entries break NuGet packaging."
+                }
+                
                 $headingValidationList.Remove($title) | Out-Null
             }
         }
