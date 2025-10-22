@@ -16,7 +16,10 @@ public sealed class KustoClient(
     private readonly string _clusterUri = clusterUri;
     private readonly TokenCredential _tokenCredential = tokenCredential;
     private readonly string _userAgent = userAgent;
-    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(clusterUri));
+    private readonly HttpClient _httpClient = httpClientService.CreateClient(new Uri(clusterUri), client =>
+    {
+        client.Timeout = TimeSpan.FromSeconds(240);
+    });
     private static readonly string s_application = "AzureMCP";
     private static readonly string s_clientRequestIdPrefix = "AzMcp";
     private static readonly string s_default_scope = "https://kusto.kusto.windows.net/.default";
