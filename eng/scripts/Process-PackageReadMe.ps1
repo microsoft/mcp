@@ -197,6 +197,14 @@ function Validate-PackageReadme {
     $allowedTags = @('remove-section:', 'insert-section:')
     $allowedPositions = @('start', 'end', '')
 
+    # Emoji detection pattern covers the following Unicode ranges:
+    # - \uD800-\uDFFF: High and low surrogate pairs (UTF-16 encoding for emojis like 🧮 U+1F9EE)
+    # - \u2600-\u26FF: Miscellaneous Symbols (☀️, ⚡, ✨, etc.)
+    # - \u2700-\u27BF: Dingbats (✂️, ✏️, ✓, etc.)
+    # - \uFE00-\uFE0F: Variation Selectors (modifier characters for emoji presentation)
+    # Note: Most modern emojis (U+1F300-U+1F9FF) use surrogate pairs in PowerShell's UTF-16 encoding
+    $emojiPattern = '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]'
+
     $readMeText = Get-Content $InputReadMePath
     
     # Remove leading comment block if present
@@ -210,10 +218,10 @@ function Validate-PackageReadme {
             $anchorLink = $matches[3]
             
             # Check for Unicode emojis in TOC entries that break NuGet packaging
-            if ($title -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+            if ($title -match $emojiPattern) {
                 throw "Unicode emoji detected in table of contents entry: '$title'. Emojis in TOC break NuGet packaging and are not allowed."
             }
-            if ($anchorLink -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+            if ($anchorLink -match $emojiPattern) {
                 throw "Unicode emoji detected in table of contents anchor link: '$anchorLink'. Emojis in TOC break NuGet packaging and are not allowed."
             }
             
@@ -227,7 +235,7 @@ function Validate-PackageReadme {
             $anchorLink = $title.ToLower() -replace '[^a-z0-9 ]', '' -replace ' ', '-'
             if ($headingValidationList.ContainsKey($title)) {
                 # Only check for emojis in headings that are actually in the TOC
-                if ($title -match '[\uD800-\uDFFF]|[\u2600-\u26FF]|[\u2700-\u27BF]|[\uFE00-\uFE0F]') {
+                if ($title -match $emojiPattern) {
                     throw "Unicode emoji detected in heading: '$title'. This heading is in the TOC and emojis in TOC entries break NuGet packaging."
                 }
                 
