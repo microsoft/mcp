@@ -13,16 +13,10 @@ namespace Azure.Mcp.Tools.Monitor.Services;
 public class MonitorHealthModelService(ITenantService tenantService, IHttpClientService httpClientService)
     : BaseAzureService(tenantService), IMonitorHealthModelService
 {
-    private const int TokenExpirationBuffer = 300;
     private const string ManagementApiBaseUrl = "https://management.azure.com";
-    private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com";
+    private const string HealthModelsDataApiScope = "https://data.healthmodels.azure.com/.default";
     private const string ApiVersion = "2023-10-01-preview";
     private readonly IHttpClientService _httpClientService = httpClientService;
-
-    private string? _cachedDataplaneAccessToken;
-    private string? _cachedControlPlaneAccessToken;
-    private DateTimeOffset _dataplaneTokenExpiryTime;
-    private DateTimeOffset _controlPlaneTokenExpiryTime;
 
     /// <summary>
     /// Retrieves the health information for a specific entity in a health model.
@@ -46,39 +40,40 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
+        CancellationToken cancellationToken = CancellationToken.None;
         ValidateRequiredParameters((nameof(entity), entity), (nameof(healthModelName), healthModelName), (nameof(resourceGroupName), resourceGroupName), (nameof(subscription), subscription));
 
-        string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName);
+        string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName, cancellationToken);
         string entityHealthUrl = $"{dataplaneEndpoint}api/entities/{entity}/history";
 
-        string healthResponseString = await GetDataplaneResponseAsync(entityHealthUrl);
+        string healthResponseString = await GetDataplaneResponseAsync(entityHealthUrl, cancellationToken);
         return JsonNode.Parse(healthResponseString) ?? throw new Exception("Failed to parse health response to JSON.");
     }
 
-    private async Task<string> GetDataplaneResponseAsync(string url)
+    private async Task<string> GetDataplaneResponseAsync(string url, CancellationToken cancellationToken)
     {
-        string dataplaneToken = await GetDataplaneTokenAsync();
+        string dataplaneToken = await GetDataplaneTokenAsync(cancellationToken);
         using var request = new HttpRequestMessage(HttpMethod.Get, url);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", dataplaneToken);
 
-        HttpResponseMessage healthResponse = await _httpClientService.DefaultClient.SendAsync(request);
+        HttpResponseMessage healthResponse = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
         healthResponse.EnsureSuccessStatusCode();
 
-        string healthResponseString = await healthResponse.Content.ReadAsStringAsync();
+        string healthResponseString = await healthResponse.Content.ReadAsStringAsync(cancellationToken);
         return healthResponseString;
     }
 
-    private async Task<string> GetDataplaneEndpointAsync(string subscriptionId, string resourceGroupName, string healthModelName)
+    private async Task<string> GetDataplaneEndpointAsync(string subscriptionId, string resourceGroupName, string healthModelName, CancellationToken cancellationToken)
     {
-        string token = await GetControlPlaneTokenAsync();
+        string token = await GetControlPlaneTokenAsync(cancellationToken);
         string healthModelUrl = $"{ManagementApiBaseUrl}/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.CloudHealth/healthmodels/{healthModelName}?api-version={ApiVersion}";
 
         using var request = new HttpRequestMessage(HttpMethod.Get, healthModelUrl);
         request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token);
 
-        HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(request);
+        HttpResponseMessage response = await _httpClientService.DefaultClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();
-        string responseString = await response.Content.ReadAsStringAsync();
+        string responseString = await response.Content.ReadAsStringAsync(cancellationToken);
 
         string dataplaneEndpoint = GetDataplaneEndpoint(responseString);
         return dataplaneEndpoint;
@@ -104,25 +99,23 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         }
     }
 
-    private async Task<string> GetControlPlaneTokenAsync()
+    private async Task<string> GetControlPlaneTokenAsync(CancellationToken cancellationToken)
     {
-        return await GetCachedTokenAsync(
-            ManagementApiBaseUrl,
-            () => _cachedControlPlaneAccessToken,
-            (token) => _cachedControlPlaneAccessToken = token,
-            () => _controlPlaneTokenExpiryTime,
-            (expiry) => _controlPlaneTokenExpiryTime = expiry,
-            tokenExpirationBufferSeconds: TokenExpirationBuffer);
+        TokenCredential credential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await credential.GetTokenAsync(
+            new TokenRequestContext([$"{ManagementApiBaseUrl}/.default"]),
+            cancellationToken);
+
+        return accessToken.Token;
     }
 
-    private async Task<string> GetDataplaneTokenAsync()
+    private async Task<string> GetDataplaneTokenAsync(CancellationToken cancellationToken)
     {
-        return await GetCachedTokenAsync(
-            HealthModelsDataApiScope,
-            () => _cachedDataplaneAccessToken,
-            (token) => _cachedDataplaneAccessToken = token,
-            () => _dataplaneTokenExpiryTime,
-            (expiry) => _dataplaneTokenExpiryTime = expiry,
-            tokenExpirationBufferSeconds: TokenExpirationBuffer);
+        TokenCredential credential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await credential.GetTokenAsync(
+            new TokenRequestContext([HealthModelsDataApiScope]),
+            cancellationToken);
+
+        return accessToken.Token;
     }
 }
