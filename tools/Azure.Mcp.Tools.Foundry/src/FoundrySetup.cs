@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,6 +32,7 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<AgentsEvaluateCommand>();
 
         services.AddSingleton<ThreadCreateCommand>();
+        services.AddSingleton<ThreadListCommand>();
 
         services.AddSingleton<ResourceGetCommand>();
     }
@@ -93,6 +93,7 @@ public class FoundrySetup : IAreaSetup
         foundry.AddSubGroup(thread);
 
         thread.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
+        thread.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
 
         return foundry;
     }
