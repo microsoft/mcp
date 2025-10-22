@@ -20,9 +20,10 @@ public sealed class OpenAiModelsListCommand : SubscriptionCommand<OpenAiModelsLi
 
     public override string Description =>
         $"""
-        List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about 
-        deployed models including model names, versions, capabilities, and deployment status. 
-        Returns model information as JSON array. Requires resource-name.
+        List all available Azure OpenAI models and deployments in an AI Foundry resource. This tool retrieves information 
+        about Azure OpenAI models deployed in your AI Foundry resource including model names, versions, capabilities, 
+        and deployment status. Use this when you need to see what OpenAI models are available, check model deployments, 
+        or list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.
         """;
 
     public override string Title => CommandTitle;
