@@ -12,6 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Increased Kusto HttpClient timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
 
 ### Other Changes
+- Improved Service Bus tool description with detailed guidance for better LLM tool selection, including usage patterns, messaging scenarios, and when not to use the tool.
 
 ## 0.9.6 (2025-10-21)
 
