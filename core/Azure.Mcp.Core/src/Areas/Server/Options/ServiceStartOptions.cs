@@ -64,4 +64,17 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("insecureDisableElicitation")]
     public bool InsecureDisableElicitation { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the logging level. Valid values: Trace, Debug, Information, Warning, Error, Critical.
+    /// </summary>
+    [JsonPropertyName("logLevel")]
+    public string? LogLevel { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the log file path. When specified, logs will be written to this file in addition to console.
+    /// Supports placeholders: {timestamp}, {pid}.
+    /// </summary>
+    [JsonPropertyName("logFile")]
+    public string? LogFile { get; set; } = null;
 }
