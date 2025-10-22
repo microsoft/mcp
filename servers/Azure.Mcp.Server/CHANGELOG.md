@@ -2,19 +2,37 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.6 (Unreleased)
+## 0.9.7 (Unreleased)
 
 ### Features Added
-
-- Added instructions on configuring Azure MCP for GitHub coding agent. [[#888](https://github.com/microsoft/mcp/pull/888)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
-- Convert ARG usage to .NET SDK method calls of GetEntraAdministratorsAsync and ListFirewallRulesAsync to resolve the related issues ([#779](https://github.com/microsoft/mcp/issues/779) and [#855](https://github.com/microsoft/mcp/issues/855)) in `azmcp_entra_administrator_list` and `azmcp_sql_server_firewall_rule_list` commands. [[#891](https://github.com/microsoft/mcp/pull/891)]
-- Fixed `ServerStarted` telemetry event not being published. [[#905](https://github.com/microsoft/mcp/pull/905)]
 
 ### Other Changes
+
+## 0.9.6 (2025-10-21)
+
+### Features Added
+
+- Added instructions to the best practices tool for the GitHub coding agent on how to configure the Azure MCP Server. [[#888](https://github.com/microsoft/mcp/pull/888)]
+
+### Bugs Fixed
+
+- Fixed an issue where `azmcp_entra_administrator_list` was not listing administrators correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue where `azmcp_sql_server_firewall_rule_list` was not listing firewall rules correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue preventing the `ServerStarted` telemetry event from being published. [[#905](https://github.com/microsoft/mcp/pull/905)]
+- Fixed an issue where MCP tools were missing the 'title' metadata, causing Visual Studio to display raw tool names instead of user-friendly titles. [[#898](https://github.com/microsoft/mcp/pull/898)]
+
+### Other Changes
+
+- Added tool name length validation to ensure all tool names stay within 48 character limit for compatibility with MCP clients. [[#881](https://github.com/microsoft/mcp/pull/881)]
+
+#### Dependency Updates
+
+- Updated the following libraries:
+  - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.2` → `0.4.0-preview.3`. [[#887](https://github.com/Azure/azure-mcp/pull/887)]
 
 ## 0.9.5 (2025-10-20)
 
