@@ -27,7 +27,7 @@ public class ServiceBusSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var serviceBus = new CommandGroup(Name, "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.", Title);
+        var serviceBus = new CommandGroup(Name, "Service Bus operations - Commands for managing Azure Service Bus messaging infrastructure including queues, topics, and subscriptions for reliable asynchronous communication and enterprise integration. Use this tool to manage message queues for point-to-point communication, configure topics and subscriptions for publish-subscribe patterns, monitor message processing, or set up messaging for decoupled architectures. Supports reliable messaging, dead letter handling, and enterprise integration patterns. Do not use for real-time communication, direct API calls, or database operations - Service Bus is for asynchronous messaging between distributed applications. This is a hierarchical MCP command router where sub-commands are routed to servers requiring specific \"parameters\" fields. To invoke: set \"command\" and wrap arguments in \"parameters\". Set \"learn=true\" to discover sub-commands. Requires appropriate Service Bus permissions.", Title);
 
         var queue = new CommandGroup("queue", "Queue operations - Commands for using Azure Service Bus queues.");
         // queue.AddCommand("peek", new QueuePeekCommand());
