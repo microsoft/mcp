@@ -127,6 +127,9 @@ public sealed class McpRuntime : IMcpRuntime
         // due to missing dependencies or misconfiguration.
         catch (InvalidOperationException ex)
         {
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
+                ?.AddTag(TagName.ErrorDetails, ex.Message);
+
             return new CallToolResult
             {
                 Content = [new TextContentBlock
