@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -445,6 +446,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         else
         {
             services.AddSingleIdentityTokenCredentialProvider();
+        }
+
+        // Configure caching strategy based on authentication mode
+        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        {
+            services.AddHttpServiceCacheService();
         }
 
         // Configure non-MCP controllers/endpoints/routes/etc.

@@ -15,12 +15,8 @@ namespace Azure.Mcp.Tools.Marketplace.Services;
 public class MarketplaceService(ITenantService tenantService)
     : BaseAzureService(tenantService), IMarketplaceService
 {
-    private const int TokenExpirationBuffer = 300;
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string ApiVersion = "2023-01-01-preview";
-
-    private string? _cachedAccessToken;
-    private DateTimeOffset _tokenExpiryTime;
 
     /// <summary>
     /// Retrieves a single private product (offer) for a given subscription.
@@ -30,12 +26,12 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="includeStopSoldPlans">Include stop-sold or hidden plans.</param>
     /// <param name="language">Product language (default: en).</param>
     /// <param name="market">Product market (default: US).</param>
-    /// <param name="lookupOfferInTenantLevel">Check against tenant private audience.</param>
+    /// <param name="lookupOfferInTenantLevel">Check against tenantId private audience.</param>
     /// <param name="planId">Filter by plan ID.</param>
     /// <param name="skuId">Filter by SKU ID.</param>
     /// <param name="includeServiceInstructionTemplates">Include service instruction templates.</param>
     /// <param name="pricingAudience">Pricing audience.</param>
-    /// <param name="tenant">Optional. The Azure tenant ID for authentication.</param>
+    /// <param name="tenant">Optional. The Azure tenantId ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A JSON node containing the product information.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
@@ -75,7 +71,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="select">OData select expression. Renamed from 'select' to avoid reserved word.</param>
     /// <param name="nextCursor">Pagination cursor.</param>
     /// <param name="expand">OData expand expression to include related data.</param>
-    /// <param name="tenant">Optional. The Azure tenant ID for authentication.</param>
+    /// <param name="tenant">Optional. The Azure tenantId ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
@@ -207,26 +203,12 @@ public class MarketplaceService(ITenantService tenantService)
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
-    private async Task<string> GetAccessTokenAsync(string? tenant = null)
+    private async Task<AccessToken> GetArmAccessTokenAsync(string? tenantId, CancellationToken cancellationToken)
     {
-        if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedAccessToken;
-        }
-
-        AccessToken accessToken = await GetEntraIdAccessTokenAsync(ManagementApiBaseUrl, tenant);
-        _cachedAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer);
-
-        return _cachedAccessToken;
-    }
-
-    private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource, string? tenant = null)
-    {
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var tokenCredential = await GetCredential(tenant);
+        var tokenRequestContext = new TokenRequestContext([$"{ManagementApiBaseUrl}/.default"]);
+        var tokenCredential = await GetCredential(tenantId, cancellationToken);
         return await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None);
+            .GetTokenAsync(tokenRequestContext, cancellationToken);
     }
 
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
@@ -252,7 +234,7 @@ public class MarketplaceService(ITenantService tenantService)
         // Create pipeline
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        string accessToken = await GetAccessTokenAsync(tenant);
+        string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, CancellationToken.None)).Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         var request = pipeline.CreateRequest();
