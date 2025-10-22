@@ -1,5 +1,7 @@
 {
-    "parameters": {},
+    "parameters": {
+        "preview": "false"
+    },
     "responses": {
         "200": {
             "body": {
@@ -9,48 +11,42 @@
                         "displayName": "Finance",
                         "description": "This domain is used for identifying financial data and reports.",
                         "parentDomainId": null,
-                        "contributorsScope": "AdminsOnly"
+                        "defaultLabelId": "e9d82d27-a651-49e6-a000-068f4c40dd30"
                     },
                     {
                         "id": "b0bca781-003c-4041-b1c4-f94d34ba76d4",
                         "displayName": "Human resources",
-                        "description": null,
-                        "parentDomainId": null,
-                        "contributorsScope": "AllTenant"
+                        "description": "",
+                        "parentDomainId": null
                     },
                     {
                         "id": "6af5a1b6-bc4c-4c0a-b60d-30c68e6e3034",
                         "displayName": "HR Sales",
-                        "description": null,
-                        "parentDomainId": "bc23d4c6-cc92-4eb6-bcb5-0ff98429bbff",
-                        "contributorsScope": "AllTenant"
+                        "description": "",
+                        "parentDomainId": "bc23d4c6-cc92-4eb6-bcb5-0ff98429bbff"
                     },
                     {
                         "id": "6c00e8eb-51d4-46f7-8b90-7e98520ea7a0",
                         "displayName": "Marketing",
-                        "parentDomainId": null,
-                        "contributorsScope": "SpecificUsersAndGroups"
+                        "parentDomainId": null
                     },
                     {
                         "id": "17df435d-9efd-48c1-a937-7d6fd70ab26a",
                         "displayName": "AdminsOnly",
                         "description": "Admins only",
-                        "parentDomainId": "f2f6a374-789e-4d1d-9cc7-6e0b934fc529",
-                        "contributorsScope": "AllTenant"
+                        "parentDomainId": "f2f6a374-789e-4d1d-9cc7-6e0b934fc529"
                     },
                     {
                         "id": "fb765fe3-d404-4f24-9d67-5916449c4c50",
                         "displayName": "Root",
-                        "description": null,
-                        "parentDomainId": null,
-                        "contributorsScope": "AllTenant"
+                        "description": "",
+                        "parentDomainId": null
                     },
                     {
                         "id": "bda31be4-7efe-4272-8b85-e1b2ff0f0592",
                         "displayName": "Legal",
                         "description": "This domain is used for identifying legal data and reports.",
-                        "parentDomainId": null,
-                        "contributorsScope": "AllTenant"
+                        "parentDomainId": null
                     }
                 ]
             }

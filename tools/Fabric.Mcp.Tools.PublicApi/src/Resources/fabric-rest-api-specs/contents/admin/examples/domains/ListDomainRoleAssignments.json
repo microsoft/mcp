@@ -1,0 +1,36 @@
+{
+    "parameters": {
+        "domainId": "00cb3785-58b5-408e-9e5f-7a26d28f0b9b"
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "value": [
+                    {
+                        "role": "Admin",
+                        "principal": {
+                            "displayName": "Eric Solomon",
+                            "id": "81fac5e1-2a81-421b-a168-110b1c72fa11",
+                            "type": "User",
+                            "userDetails": {
+                                "userPrincipalName": "eric@microsoft.com"
+                            }
+                        }
+                    },
+                    {
+                        "role": "Contributor",
+                        "principal": {
+                            "id": "f51b705f-a409-4d40-9197-c5d5f349e2f0",
+                            "displayName": "TestSecurityGroup",
+                            "type": "Group",
+                            "groupDetails": {
+                                "groupType": "SecurityGroup"
+                            }
+                        }
+                    }
+
+                ]
+            }
+        }
+    }
+}

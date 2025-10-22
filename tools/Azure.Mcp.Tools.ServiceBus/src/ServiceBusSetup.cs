@@ -14,6 +14,8 @@ public class ServiceBusSetup : IAreaSetup
 {
     public string Name => "servicebus";
 
+    public string Title => "Azure Service Bus";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IServiceBusService, ServiceBusService>();
@@ -25,7 +27,7 @@ public class ServiceBusSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var serviceBus = new CommandGroup(Name, "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.");
+        var serviceBus = new CommandGroup(Name, "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.", Title);
 
         var queue = new CommandGroup("queue", "Queue operations - Commands for using Azure Service Bus queues.");
         // queue.AddCommand("peek", new QueuePeekCommand());

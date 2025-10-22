@@ -147,7 +147,7 @@
 # ServiceOwners:                       @smritiy @srnagar @jongio @zaaslam
 
 # PRLabel: %tools-ManagedLustre
-/tools/Azure.Mcp.Tools.ManagedLustre/                        @wolfgang-desalvador @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.ManagedLustre/  @wolfgang-desalvador @microsoft/azure-mcp
 # ServiceLabel: %tools-ManagedLustre
 # ServiceOwners:                       @wolfgang-desalvador
 
@@ -245,3 +245,16 @@
 
 # ServiceLabel: %tools-ConfidentialLedger
 # ServiceOwners:                       @taicchoumsft @ivarprudnikov
+
+# PRLabel: %tools-ResourceHealth
+/tools/Azure.Mcp.Tools.ResourceHealth/      @pkaza-msft @microsoft/azure-mcp
+
+# ServiceLabel: %tools-ResourceHealth
+# ServiceOwners:                       @pkaza-msft @microsoft/azure-mcp
+
+##################
+# Fabric MCP
+##################
+/core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
+/servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
+/tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp

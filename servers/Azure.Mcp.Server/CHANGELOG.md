@@ -2,17 +2,49 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.5 (Unreleased)
+## 0.9.7 (Unreleased)
 
 ### Features Added
 
 ### Breaking Changes
 
 ### Bugs Fixed
+- Increased Kusto HttpClient timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
+
+### Other Changes
+
+## 0.9.6 (2025-10-21)
+
+### Features Added
+
+- Added instructions to the best practices tool for the GitHub coding agent on how to configure the Azure MCP Server. [[#888](https://github.com/microsoft/mcp/pull/888)]
+
+### Bugs Fixed
+
+- Fixed an issue where `azmcp_entra_administrator_list` was not listing administrators correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue where `azmcp_sql_server_firewall_rule_list` was not listing firewall rules correctly. [[#891](https://github.com/microsoft/mcp/pull/891)]
+- Fixed an issue preventing the `ServerStarted` telemetry event from being published. [[#905](https://github.com/microsoft/mcp/pull/905)]
+- Fixed an issue where MCP tools were missing the 'title' metadata, causing Visual Studio to display raw tool names instead of user-friendly titles. [[#898](https://github.com/microsoft/mcp/pull/898)]
+
+### Other Changes
+
+- Added tool name length validation to ensure all tool names stay within 48 character limit for compatibility with MCP clients. [[#881](https://github.com/microsoft/mcp/pull/881)]
+
+#### Dependency Updates
+
+- Updated the following libraries:
+  - `ModelContextProtocol.AspNetCore`: `0.4.0-preview.2` → `0.4.0-preview.3`. [[#887](https://github.com/Azure/azure-mcp/pull/887)]
+
+## 0.9.5 (2025-10-20)
+
+### Bugs Fixed
+
+- Update the `server.json` file in the NuGet distribution to match the `2025-09-29` schema version (latest from the MCP Registry). [[#870](https://github.com/microsoft/mcp/pull/870)]
 
 ### Other Changes
 
 - Updated how `IsServerCommandInvoked` telemetry is captured to more correctly report whether learning or tool call was performed. [[#874](https://github.com/microsoft/mcp/pull/874)]
+- Added tool name length validation to ensure all tool names stay within 48 character limit for compatibility with MCP clients. [[#881](https://github.com/microsoft/mcp/pull/881)]
 
 ## 0.9.4 (2025-10-17)
 
