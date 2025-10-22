@@ -22,7 +22,6 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
 
         This function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.
         Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
-        
         Usage:
             Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.
         
