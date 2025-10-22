@@ -2180,6 +2180,7 @@ Before submitting:
 
 - [ ] **CHANGELOG.md**: Add entry under "Unreleased" section describing the new command(s)
 - [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
+- [ ] **Run metadata update script**: Execute `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI validation)
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section
 - [ ] **eng/vscode/README.md**: Update the VSIX README with new service toolset (if applicable) and add sample prompts to showcase new command capabilities
 - [ ] **servers/Azure.Mcp.Server/docs/e2eTestPrompts.md**: Add test prompts for end-to-end validation of the new command(s)
@@ -2187,6 +2188,7 @@ Before submitting:
 
 **Documentation Standards**:
 - Use consistent command paths in all documentation (e.g., `azmcp sql db show`, not `azmcp sql database show`)
+- **Always run `.\eng\scripts\Update-AzCommandsMetadata.ps1`** after updating azmcp-commands.md to ensure tool metadata is synchronized (CI will fail if this step is skipped)
 - Organize example prompts by service in README.md under service-specific sections (e.g., `### 🗄️ Azure SQL Database`)
 - Place new commands in the appropriate toolset section, or create a new toolset section if needed
 - Provide clear, actionable examples that users can run with placeholder values

@@ -13,6 +13,8 @@ public class AppServiceSetup : IAreaSetup
 {
     public string Name => "appservice";
 
+    public string Title => "Azure App Service";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IAppServiceService, AppServiceService>();
@@ -22,7 +24,7 @@ public class AppServiceSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create AppService command group
-        var appService = new CommandGroup("appservice", "App Service operations - Commands for managing Azure App Service resources including web apps, databases, and configurations.");
+        var appService = new CommandGroup("appservice", "App Service operations - Commands for managing Azure App Service resources including web apps, databases, and configurations.", Title);
 
         // Create database subgroup
         var database = new CommandGroup("database", "Operations for configuring database connections for Azure App Service web apps");

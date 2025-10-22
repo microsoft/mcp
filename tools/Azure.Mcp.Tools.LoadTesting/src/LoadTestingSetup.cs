@@ -16,6 +16,8 @@ public class LoadTestingSetup : IAreaSetup
 {
     public string Name => "loadtesting";
 
+    public string Title => "Azure Load Testing";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ILoadTestingService, LoadTestingService>();
@@ -37,7 +39,8 @@ public class LoadTestingSetup : IAreaSetup
         // Create Load Testing command group
         var service = new CommandGroup(
             Name,
-            "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.");
+            "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.",
+            Title);
 
         // Create Load Test subgroups
         var testResource = new CommandGroup(
