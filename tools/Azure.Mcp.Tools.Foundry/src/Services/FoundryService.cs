@@ -1088,7 +1088,7 @@ public class FoundryService(
         }
     }
 
-    public async Task<GetThreadMessagesResult> GetMessages(
+    public async Task<ThreadGetMessagesResult> GetMessages(
         string projectEndpoint,
         string threadId,
         string? tenantId,
@@ -1112,7 +1112,7 @@ public class FoundryService(
                 messages.Add(message);
             }
             List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = ConvertMessages(messages).ToList();
-            return new GetThreadMessagesResult()
+            return new ThreadGetMessagesResult()
             {
                 ThreadId = threadId,
                 Messages = convertedMessages
