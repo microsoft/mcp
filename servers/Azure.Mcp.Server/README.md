@@ -17,7 +17,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 - [Overview](#overview)
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
     - [IDE](#ide)
-        - [VS Code (Recommended)](#vs-code-recommended)
+        - [⭐ VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Manual Setup](#manual-setup)
