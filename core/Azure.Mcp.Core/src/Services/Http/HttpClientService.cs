@@ -53,7 +53,20 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     private HttpClient CreateClientInternal()
     {
         var handler = CreateHttpClientHandler();
-        var client = new HttpClient(handler);
+
+        // If a TEST_PROXY_URL is configured, insert RecordingRedirectHandler as the last delegating handler
+        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+        HttpMessageHandler pipeline = handler;
+        if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
+        {
+            // RecordingRedirectHandler should be the last delegating handler before the transport
+            pipeline = new RecordingRedirectHandler(proxyUri)
+            {
+                InnerHandler = pipeline
+            };
+        }
+
+        var client = new HttpClient(pipeline);
 
         // Apply default configuration
         client.Timeout = _options.DefaultTimeout;
