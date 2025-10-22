@@ -139,7 +139,7 @@ public sealed class RegistryToolLoader(
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
-        Activity.Current?.SetTag(TagName.Tool, kvp.Item1);
+        Activity.Current?.SetTag(TagName.ToolArea, kvp.Item1);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
         return await kvp.Item2.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
