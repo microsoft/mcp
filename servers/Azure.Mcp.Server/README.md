@@ -17,7 +17,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 - [Overview](#overview)
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
     - [IDE](#ide)
-        - [⭐ VS Code (Recommended)](#vs-code-recommended)
+        - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Manual Setup](#manual-setup)
@@ -98,7 +98,7 @@ Install Azure MCP Server using either an IDE extension or package manager. Choos
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
-### ⭐ VS Code (Recommended)
+### VS Code (Recommended)
 Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
 
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
