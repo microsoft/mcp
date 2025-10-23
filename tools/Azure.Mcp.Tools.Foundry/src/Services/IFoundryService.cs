@@ -87,7 +87,9 @@ public interface IFoundryService
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
+    Task<List<PersistentAgent>> ListAgents(
+        string endpoint,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
     Task<AgentsConnectResult> ConnectAgent(
@@ -148,4 +150,36 @@ public interface IFoundryService
         string resourceName,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<AgentsCreateResult> CreateAgent(
+        string projectEndpoint,
+        string modelDeploymentName,
+        string agentName,
+        string systemInstruction,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<List<PersistentAgentThread>> ListThreads(
+        string projectEndpoint,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<PersistentAgentThread> CreateThread(
+        string projectEndpoint,
+        string userMessage,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<GetThreadMessagesResult> GetMessages(
+        string projectEndpoint,
+        string threadId,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    Task<string> GetAgentSdkCodeSample(
+        string prorgammingLanguage
+    );
 }
