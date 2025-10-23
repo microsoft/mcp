@@ -13,5 +13,6 @@ extends:
     ServerName: Azure.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    IncludeDockerRelease : true
+    PackageDocker: true
+    PackageVSIX: true
     IncludeNative: true

@@ -1,0 +1,45 @@
+// A launch configuration that compiles the extension and then opens it inside a new window
+// Use IntelliSense to learn about possible attributes.
+// Hover to view descriptions of existing attributes.
+// For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Run Azure MCP Extension",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}"
+            ],
+            "preLaunchTask": "${defaultBuildTask}",
+            "env": {
+                // Disable telemetry when running the extension under the debugger.
+                // Set this to "verbose" to show telemetry in the console during debugging.
+                "DEBUGTELEMETRY": "true"
+            },
+            "outFiles": [
+                "${workspaceFolder}/dist/**/*.js",
+                "${workspaceFolder}/*.js"
+            ]
+        },
+        {
+            "name": "Debug Unit Tests",
+            "type": "extensionHost",
+            "request": "launch",
+            "args": [
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test/suite/unitTests"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/test/**/*.js"
+            ],
+            "preLaunchTask": "${defaultBuildTask}",
+            "env": {
+                // Disable test timeouts and telemetry when debugging tests.
+                "TEST_TIMEOUT": "0",
+                "DEBUGTELEMETRY": "true"
+            }
+        }
+    ]
+}
