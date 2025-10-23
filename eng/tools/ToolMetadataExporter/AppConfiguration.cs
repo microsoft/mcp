@@ -5,7 +5,7 @@ namespace ToolMetadataExporter;
 
 public class AppConfiguration
 {
-    public string? ClusterName { get; set; }
+    public string? ClusterEndpoint { get; set; }
 
     public string? DatabaseName { get; set; }
 
