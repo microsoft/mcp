@@ -97,15 +97,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         {
             // MCP client throws exceptions for error responses, but we want to handle them gracefully
             writeOutput($"MCP exception: {ex.Message}");
-
-            // For validation errors, we'll return a synthetic error response
-            if (ex.Message.Contains("An error occurred"))
-            {
-                // Return null to indicate error response (no results)
-                writeOutput("synthetic error response: null (error response)");
-                return null;
-            }
-
             throw; // Re-throw if we can't handle it
         }
 
