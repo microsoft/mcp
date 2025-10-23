@@ -15,6 +15,8 @@ public sealed class DatabaseShowCommand(ILogger<DatabaseShowCommand> logger)
 {
     private const string CommandTitle = "Show SQL Database Details";
 
+    public override string Id => "99aad80f-9e24-4999-b2d1-7e42ee1e2f55";
+
     public override string Name => "show";
 
     public override string Description =>

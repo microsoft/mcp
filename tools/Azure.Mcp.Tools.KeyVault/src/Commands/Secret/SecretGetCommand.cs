@@ -16,6 +16,8 @@ public sealed class SecretGetCommand(ILogger<SecretGetCommand> logger) : Subscri
     private const string _commandTitle = "Get Key Vault Secret";
     private readonly ILogger<SecretGetCommand> _logger = logger;
 
+    public override string Id => "933bcb29-87e6-4f78-94ad-8ad0c8c60002";
+
     public override string Name => "get";
 
     public override string Title => _commandTitle;

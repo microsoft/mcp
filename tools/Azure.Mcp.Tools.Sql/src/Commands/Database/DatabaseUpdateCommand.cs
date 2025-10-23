@@ -17,6 +17,8 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 {
     private const string CommandTitle = "Update SQL Database";
 
+    public override string Id => "16f02fbf-6760-440a-bacc-925365b6de49";
+
     public override string Name => "update";
 
     public override string Description =>

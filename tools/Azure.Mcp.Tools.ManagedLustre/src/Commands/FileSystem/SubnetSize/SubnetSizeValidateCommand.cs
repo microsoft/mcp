@@ -17,6 +17,8 @@ public sealed class SubnetSizeValidateCommand(ILogger<SubnetSizeValidateCommand>
 {
     private const string CommandTitle = "Validate AMLFS subnet against SKU and size";
 
+    public override string Id => "b6317bba-e28c-445b-9133-9cfbfe677698";
+
     public override string Name => "validate";
 
     public override string Description =>

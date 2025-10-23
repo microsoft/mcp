@@ -19,6 +19,7 @@ public sealed class EventHubDeleteCommand(ILogger<EventHubDeleteCommand> logger,
     private const string CommandTitle = "Delete Event Hub";
     private readonly IEventHubsService _service = service;
     private readonly ILogger<EventHubDeleteCommand> _logger = logger;
+    public override string Id => "108ffeab-8d37-4c29-98c9-aa99eb8f61c7";
 
     public override string Name => "delete";
 

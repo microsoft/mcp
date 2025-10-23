@@ -16,6 +16,8 @@ public sealed class CertificateImportCommand(ILogger<CertificateImportCommand> l
     private const string CommandTitle = "Import Key Vault Certificate";
     private readonly ILogger<CertificateImportCommand> _logger = logger;
 
+    public override string Id => "4ae12e3e-dee0-4d8d-ad34-ffeaf70c642b";
+
     public override string Name => "import";
 
     public override string Title => CommandTitle;

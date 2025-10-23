@@ -15,6 +15,8 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
     private const string CommandTitle = "Sets the lock state of an App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueLockSetCommand> _logger = logger;
 
+    public override string Id => "b48fd781-d74a-4dfd-a29c-421ded9a6ce9";
+
     public override string Name => "set";
 
     public override string Description =>

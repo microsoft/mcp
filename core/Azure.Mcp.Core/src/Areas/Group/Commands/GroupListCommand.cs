@@ -16,6 +16,8 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
     private const string CommandTitle = "List Resource Groups";
     private readonly ILogger<GroupListCommand> _logger = logger;
 
+    public override string Id => "a0049f31-9a32-4b5e-91ec-e7b074fc7246";
+
     public override string Name => "list";
 
     public override string Description =>

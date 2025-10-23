@@ -12,6 +12,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger) : BaseP
 {
     private const string CommandTitle = "List PostgreSQL Servers";
 
+    public override string Id => "4d9f78e1-38f2-4229-a8c7-b631c192a0ff";
+
     public override string Name => "list";
 
     public override string Description =>
