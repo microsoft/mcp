@@ -520,4 +520,383 @@ public class DatabaseUpdateCommandTests
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Invalid server name", response.Message);
     }
+
+    [Fact]
+    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    {
+        // Arrange
+        var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
+        _sqlService.UpdateDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(authException);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.Forbidden, response.Status);
+        Assert.Contains("Authorization failed", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromBasicToStandard_Succeeds()
+    {
+        // Arrange - Scale up from Basic to Standard (S1)
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("S1", "Standard", 20, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 268435456000,
+            ServiceLevelObjective: "S1",
+            Edition: "Standard",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("S1"),
+            Arg.Is("Standard"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "S1",
+            "--sku-tier", "Standard"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromStandardToBasic_Succeeds()
+    {
+        // Arrange - Scale down from Standard to Basic
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("Basic", "Basic", 5, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 2147483648,
+            ServiceLevelObjective: "Basic",
+            Edition: "Basic",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("Basic"),
+            Arg.Is("Basic"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "Basic",
+            "--sku-tier", "Basic"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromBasicToPremium_Succeeds()
+    {
+        // Arrange - Scale up from Basic to Premium (P1)
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("P1", "Premium", 125, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 536870912000,
+            ServiceLevelObjective: "P1",
+            Edition: "Premium",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("P1"),
+            Arg.Is("Premium"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "P1",
+            "--sku-tier", "Premium"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromStandardToPremium_Succeeds()
+    {
+        // Arrange - Scale up from Standard (S2) to Premium (P2)
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("P2", "Premium", 250, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 536870912000,
+            ServiceLevelObjective: "P2",
+            Edition: "Premium",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Enabled",
+            ZoneRedundant: true
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("P2"),
+            Arg.Is("Premium"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "P2",
+            "--sku-tier", "Premium"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromPremiumToStandard_Succeeds()
+    {
+        // Arrange - Scale down from Premium to Standard (S3)
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("S3", "Standard", 100, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 268435456000,
+            ServiceLevelObjective: "S3",
+            Edition: "Standard",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("S3"),
+            Arg.Is("Standard"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "S3",
+            "--sku-tier", "Standard"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_UpdateFromPremiumToBasic_Succeeds()
+    {
+        // Arrange - Scale down from Premium to Basic
+        var mockDatabase = new SqlDatabase(
+            Name: "testdb",
+            Id: "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Sql/servers/server1/databases/testdb",
+            Type: "Microsoft.Sql/servers/databases",
+            Location: "East US",
+            Sku: new DatabaseSku("Basic", "Basic", 5, null, null),
+            Status: "Online",
+            Collation: "SQL_Latin1_General_CP1_CI_AS",
+            CreationDate: DateTimeOffset.UtcNow,
+            MaxSizeBytes: 2147483648,
+            ServiceLevelObjective: "Basic",
+            Edition: "Basic",
+            ElasticPoolName: null,
+            EarliestRestoreDate: DateTimeOffset.UtcNow,
+            ReadScale: "Disabled",
+            ZoneRedundant: false
+        );
+
+        _sqlService.UpdateDatabaseAsync(
+            Arg.Is("server1"),
+            Arg.Is("testdb"),
+            Arg.Is("rg"),
+            Arg.Is("sub"),
+            Arg.Is("Basic"),
+            Arg.Is("Basic"),
+            Arg.Any<int?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<bool?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(mockDatabase);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", "sub",
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb",
+            "--sku-name", "Basic",
+            "--sku-tier", "Basic"
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.Equal("Success", response.Message);
+    }
 }

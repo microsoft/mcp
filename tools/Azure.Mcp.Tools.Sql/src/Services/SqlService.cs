@@ -145,6 +145,10 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
                     Tier = skuTier,
                     Capacity = skuCapacity
                 };
+
+                _logger.LogInformation(
+                    "SKU Configuration - Name: {SkuName}, Tier: {SkuTier}, Capacity: {SkuCapacity}, Family: {SkuFamily}, Size: {SkuSize}",
+                    databaseData.Sku.Name, databaseData.Sku.Tier, databaseData.Sku.Capacity, databaseData.Sku.Family, databaseData.Sku.Size);
             }
 
             // Configure collation if provided
@@ -255,12 +259,16 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
             if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
             {
+                // When SKU name is being changed, reset tier, capacity, family, and size to avoid conflicts
+                // Only preserve values that are explicitly provided or if SKU name isn't changing
+                bool isSkuNameChanging = !string.IsNullOrEmpty(skuName) && skuName != databaseData.Sku?.Name;
+
                 var sku = new ResourceManager.Sql.Models.SqlSku(skuName ?? databaseData.Sku?.Name ?? "Basic")
                 {
-                    Tier = skuTier ?? databaseData.Sku?.Tier,
-                    Capacity = skuCapacity ?? databaseData.Sku?.Capacity,
-                    Family = databaseData.Sku?.Family,
-                    Size = databaseData.Sku?.Size
+                    Tier = skuTier ?? (isSkuNameChanging ? null : databaseData.Sku?.Tier),
+                    Capacity = skuCapacity ?? (isSkuNameChanging ? null : databaseData.Sku?.Capacity),
+                    Family = isSkuNameChanging ? null : databaseData.Sku?.Family,
+                    Size = isSkuNameChanging ? null : databaseData.Sku?.Size
                 };
 
                 databaseData.Sku = sku;
