@@ -20,6 +20,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Improved Service Bus tool description with detailed guidance for better LLM tool selection, including usage patterns, messaging scenarios, and when not to use the tool.
 - Set telemetry field's for ToolArea and ToolName when "consolidated" mode is used or a server is loaded from registry.json. [[#933](https://github.com/microsoft/mcp/pull/933)]
+- Added instructions on when to not use azd init [[#942](https://github.com/microsoft/mcp/pull/942)]
 
 ## 0.9.6 (2025-10-21)
 
