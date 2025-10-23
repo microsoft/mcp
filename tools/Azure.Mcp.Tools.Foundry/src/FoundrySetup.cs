@@ -32,6 +32,8 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
 
+        services.AddSingleton<ThreadCreateCommand>();
+
         services.AddSingleton<ResourceGetCommand>();
     }
 
@@ -86,6 +88,11 @@ public class FoundrySetup : IAreaSetup
         foundry.AddSubGroup(resources);
 
         resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
+
+        var thread = new CommandGroup("thread", "Founder agent thread operations - Commands for listing and creating threads in AI Foundry.");
+        foundry.AddSubGroup(thread);
+
+        thread.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
 
         return foundry;
     }

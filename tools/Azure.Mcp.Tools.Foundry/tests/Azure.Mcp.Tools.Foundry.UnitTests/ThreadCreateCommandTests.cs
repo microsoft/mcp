@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -14,12 +15,12 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.UnitTests;
 
-public class AgentsCreateCommandTests
+public class ThreadCreateCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IFoundryService _foundryService;
 
-    public AgentsCreateCommandTests()
+    public ThreadCreateCommandTests()
     {
         _foundryService = Substitute.For<IFoundryService>();
 
@@ -31,12 +32,10 @@ public class AgentsCreateCommandTests
 
     [Theory]
     [InlineData("", FoundryOptionDefinitions.Endpoint)]
-    [InlineData("--endpoint https://test-endpoint.com", FoundryOptionDefinitions.ModelDeploymentName)]
-    [InlineData("--endpoint https://test-endpoint.com --model-deployment modeldeployment", FoundryOptionDefinitions.AgentName)]
-    [InlineData("--endpoint https://test-endpoint.com --model-deployment modeldeployment --agent-name agentname", FoundryOptionDefinitions.SystemInstruction)]
+    [InlineData("--endpoint https://test-endpoint.com", FoundryOptionDefinitions.UserMessage)]
     public async Task ExecuteAsync_Fails_WhenMissingRequiredParameter(string argsString, string missingArgName)
     {
-        var command = new AgentsCreateCommand();
+        var command = new ThreadCreateCommand();
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
@@ -47,32 +46,25 @@ public class AgentsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsCreatedAgent()
+    public async Task ExecuteAsync_ReturnsCreatedThread()
     {
         var endpoint = "https://test-endpoint.com";
-        var modelDeploymentName = "model-deployment";
-        var agentName = "agent-name";
-        var systemInstruction = "system-instruction";
+        var userMessage = "usermessage";
 
-        var expectedResult = new AgentsCreateResult()
+        var expectedResult = new ThreadCreateResult()
         {
-            AgentId = "agent-id",
-            AgentName = agentName,
-            ProjectEndpoint = endpoint,
-            ModelDeploymentName = modelDeploymentName
+            ThreadId = "threadId",
         };
 
-        _foundryService.CreateAgent(
+        _foundryService.CreateThread(
             Arg.Is(endpoint),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
             .Returns(expectedResult);
 
-        var command = new AgentsCreateCommand();
-        var args = command.GetCommand().Parse(["--endpoint", endpoint, "--model-deployment", modelDeploymentName, "--agent-name", agentName, "--system-instruction", systemInstruction]);
+        var command = new ThreadCreateCommand();
+        var args = command.GetCommand().Parse(["--endpoint", endpoint, "--user-message", userMessage]);
         var context = new CommandContext(_serviceProvider);
         var response = await command.ExecuteAsync(context, args);
 
