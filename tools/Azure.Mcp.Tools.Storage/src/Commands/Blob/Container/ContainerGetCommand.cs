@@ -19,8 +19,6 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
 
     public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
 
-    public override string Id => "34914873-92b3-4bce-a908-1d6c02c52ccf";
-
     public override string Name => "get";
 
     public override string Description =>
