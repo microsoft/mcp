@@ -1,11 +1,13 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -21,7 +23,7 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    private Dictionary<string, McpClient> _toolClientMap = new();
+    private Dictionary<string, (string ServerName, McpClient Client)> _toolClientMap = new();
     private List<McpClient> _discoveredClients = new();
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
@@ -116,7 +118,7 @@ public sealed class RegistryToolLoader(
             }
         }
 
-        if (!_toolClientMap.TryGetValue(request.Params.Name, out var mcpClient) || mcpClient == null)
+        if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client == null)
         {
             var content = new TextContentBlock
             {
@@ -132,8 +134,11 @@ public sealed class RegistryToolLoader(
             };
         }
 
+        // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
+        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName);
+
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
-        return await mcpClient.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
+        return await kvp.Client.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
     }
 
     /// <summary>
@@ -210,7 +215,7 @@ public sealed class RegistryToolLoader(
 
                 foreach (var tool in filteredTools)
                 {
-                    _toolClientMap[tool.Name] = mcpClient;
+                    _toolClientMap[tool.Name] = (serverMetadata.Name, mcpClient);
                 }
             }
 

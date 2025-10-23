@@ -148,7 +148,7 @@ public sealed class NamespaceToolLoader(
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.AddTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {
