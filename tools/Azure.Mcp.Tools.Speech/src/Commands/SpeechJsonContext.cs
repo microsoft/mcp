@@ -3,6 +3,7 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
+using Azure.Mcp.Tools.Speech.Commands.Tts;
 using Azure.Mcp.Tools.Speech.Models;
 
 [JsonSerializable(typeof(ContinuousRecognitionResult))]
@@ -10,6 +11,8 @@ using Azure.Mcp.Tools.Speech.Models;
 [JsonSerializable(typeof(NBestResult))]
 [JsonSerializable(typeof(SpeechRecognitionResult))]
 [JsonSerializable(typeof(SttRecognizeCommand.SttRecognizeCommandResult))]
+[JsonSerializable(typeof(SynthesisResult))]
+[JsonSerializable(typeof(TtsSynthesizeCommand.TtsSynthesizeCommandResult))]
 [JsonSerializable(typeof(WordResult))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,

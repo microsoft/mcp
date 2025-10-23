@@ -76,6 +76,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azmcp_speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
 | azmcp_speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
 | azmcp_speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+| azmcp_speech_tts_synthesize | Convert text to speech and save to output.wav |
+| azmcp_speech_tts_synthesize | Synthesize speech from "Hello, welcome to Azure" and save to welcome.wav |
+| azmcp_speech_tts_synthesize | Generate speech audio from text "Hello world" using Azure Speech Services |
+| azmcp_speech_tts_synthesize | Convert text to speech with Spanish language and save to spanish-audio.wav |
+| azmcp_speech_tts_synthesize | Synthesize speech with voice en-US-JennyNeural from text "Azure AI Services" |
+| azmcp_speech_tts_synthesize | Create MP3 audio file from text "Welcome to Azure" with high quality format |
+| azmcp_speech_tts_synthesize | Generate speech with custom voice model using endpoint ID <endpoint-id> |
+| azmcp_speech_tts_synthesize | Convert text to OGG/Opus format audio file |
+| azmcp_speech_tts_synthesize | Synthesize long text content to audio file with streaming |
+| azmcp_speech_tts_synthesize | Create audio file from text in French language with appropriate voice |
 
 ## Azure App Configuration
 
