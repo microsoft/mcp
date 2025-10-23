@@ -18,7 +18,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
     private const string CommandTitle = "List Marketplace Products";
     private readonly ILogger<ProductListCommand> _logger = logger;
 
-    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
+    public override string Id => "0485e8f9-61bf-4baf-b914-7fa5530a6f78";
 
     public override string Name => "list";
 
