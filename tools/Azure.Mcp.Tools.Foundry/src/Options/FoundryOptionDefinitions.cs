@@ -49,6 +49,7 @@ public static class FoundryOptionDefinitions
     public const string SystemInstruction = "system-instruction";
     public const string UserMessage = "user-message";
     public const string ThreadId = "thread-id";
+    public const string ProgrammingLanguage = "programming-language";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -375,6 +376,14 @@ public static class FoundryOptionDefinitions
         )
     {
         Description = "The Foundry Agent Thread Id",
+        Required = true
+    };
+
+    public static readonly Option<string> ProgrammingLanguageOption = new(
+        $"--{ProgrammingLanguage}"
+    )
+    {
+        Description = "The programming language of the sdk for interacting with a Foundry Agent",
         Required = true
     };
 }
