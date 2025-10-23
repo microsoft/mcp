@@ -13,82 +13,7 @@ internal class Utility
     {
         try
         {
-            // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
-            var exeDir = AppContext.BaseDirectory;
-            var repoRoot = FindRepoRoot(exeDir);
-            var searchRoots = new List<string>
-            {
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
-                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
-            };
-
-            var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
-            FileInfo? cliArtifact = null;
-
-            foreach (var root in searchRoots.Where(Directory.Exists))
-            {
-                foreach (var name in candidateNames)
-                {
-                    var found = new DirectoryInfo(root)
-                        .EnumerateFiles(name, SearchOption.AllDirectories)
-                        .FirstOrDefault();
-                    if (found != null)
-                    {
-                        cliArtifact = found;
-                        break;
-                    }
-                }
-
-                if (cliArtifact != null)
-                {
-                    break;
-                }
-            }
-
-            if (cliArtifact == null)
-            {
-                if (isCiMode)
-                {
-                    return null; // Graceful fallback in CI
-                }
-
-                throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
-            }
-
-            var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
-            var fileName = isDll ? "dotnet" : cliArtifact.FullName;
-            var arguments = isDll ? $"{cliArtifact.FullName} tools list" : "tools list";
-
-            var process = new Process
-            {
-                StartInfo = new ProcessStartInfo
-                {
-                    FileName = fileName,
-                    Arguments = arguments,
-                    UseShellExecute = false,
-                    RedirectStandardOutput = true,
-                    RedirectStandardError = true,
-                    CreateNoWindow = true
-                }
-            };
-
-            process.Start();
-
-            var output = await process.StandardOutput.ReadToEndAsync();
-            var error = await process.StandardError.ReadToEndAsync();
-
-            await process.WaitForExitAsync();
-
-            if (process.ExitCode != 0)
-            {
-                if (isCiMode)
-                {
-                    return null; // Graceful fallback in CI
-                }
-
-                throw new InvalidOperationException($"Failed to get tools from azmcp: {error}");
-            }
-
+            var output = await ExecuteAzmcpAsync("tools list", isCiMode);
             // Filter out non-JSON lines (like launch settings messages)
             var lines = output.Split('\n');
             var jsonStartIndex = -1;
@@ -139,6 +64,92 @@ internal class Utility
         }
     }
 
+    internal static async Task<string> GetVersionAsync()
+    {
+        return await ExecuteAzmcpAsync("version");
+    }
+
+    internal static async Task<string> ExecuteAzmcpAsync(string arguments, bool isCiMode = false)
+    {
+        // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
+        var exeDir = AppContext.BaseDirectory;
+        var repoRoot = FindRepoRoot(exeDir);
+        var searchRoots = new List<string>
+            {
+                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug"),
+                Path.Combine(repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Release")
+            };
+
+        var candidateNames = new[] { "azmcp.exe", "azmcp", "azmcp.dll" };
+        FileInfo? cliArtifact = null;
+
+        foreach (var root in searchRoots.Where(Directory.Exists))
+        {
+            foreach (var name in candidateNames)
+            {
+                var found = new DirectoryInfo(root)
+                    .EnumerateFiles(name, SearchOption.AllDirectories)
+                    .FirstOrDefault();
+                if (found != null)
+                {
+                    cliArtifact = found;
+                    break;
+                }
+            }
+
+            if (cliArtifact != null)
+            {
+                break;
+            }
+        }
+
+        if (cliArtifact == null)
+        {
+            if (isCiMode)
+            {
+                return string.Empty; // Graceful fallback in CI
+            }
+
+            throw new FileNotFoundException("Could not locate azmcp CLI artifact in Debug/Release outputs under servers.");
+        }
+
+        var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
+        var fileName = isDll ? "dotnet" : cliArtifact.FullName;
+        var argumentsToUse = isDll ? $"{cliArtifact.FullName} " : "tools list";
+
+        var process = new Process
+        {
+            StartInfo = new ProcessStartInfo
+            {
+                FileName = fileName,
+                Arguments = argumentsToUse,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                CreateNoWindow = true
+            }
+        };
+
+        process.Start();
+
+        var output = await process.StandardOutput.ReadToEndAsync();
+        var error = await process.StandardError.ReadToEndAsync();
+
+        await process.WaitForExitAsync();
+
+        if (process.ExitCode != 0)
+        {
+            if (isCiMode)
+            {
+                return string.Empty; // Graceful fallback in CI
+            }
+
+            throw new InvalidOperationException($"Failed to execute operation '{arguments}' from azmcp: {error}");
+        }
+
+        return output;
+    }
+
     private static async Task<ListToolsResult?> LoadToolsFromJsonAsync(string filePath, bool isCiMode = false)
     {
         if (!File.Exists(filePath))
@@ -165,6 +176,7 @@ internal class Utility
 
         return result;
     }
+
 
     private static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
     {
