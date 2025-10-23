@@ -16,6 +16,7 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
 
+    public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
     public override string Name => "get";
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()

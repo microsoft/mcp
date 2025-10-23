@@ -16,6 +16,8 @@ public sealed class WebTestsListCommand(ILogger<WebTestsListCommand> logger) : B
 
     private readonly ILogger<WebTestsListCommand> _logger = logger;
 
+    public override string Id => "3ce06ce4-015f-43c8-a756-a712f9b800c8";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -18,6 +18,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
     private const string CommandTitle = "Append Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryAppendCommand> _logger = logger;
+    public override string Id => "94fec47b-eb44-4d20-862f-24c284328956";
 
     public override string Name => "append";
 

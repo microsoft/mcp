@@ -14,6 +14,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
 {
     private const string _commandTitle = "Test Resource Create";
     private readonly ILogger<TestResourceCreateCommand> _logger = logger;
+    public override string Id => "c39f6e9c-86a7-4cba-b267-0fa71f1ac743";
     public override string Name => "create";
     public override string Description =>
         $"""

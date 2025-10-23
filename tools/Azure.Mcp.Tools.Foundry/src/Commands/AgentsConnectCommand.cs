@@ -12,6 +12,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 {
     private const string CommandTitle = "Connect to AI Agent and Run a Query";
+    public override string Id => "2f0184c9-a19e-41a5-87cc-f96b08fafccb";
 
     public override string Name => "connect";
 

@@ -17,6 +17,8 @@ public sealed class ServerCreateCommand(ILogger<ServerCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Server";
 
+    public override string Id => "43f5f55d-2f21-47ac-b7f3-53f5d51b5218";
+
     public override string Name => "create";
 
     public override string Description =>

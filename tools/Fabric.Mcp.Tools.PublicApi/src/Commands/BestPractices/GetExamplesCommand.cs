@@ -16,6 +16,8 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
 
     private readonly ILogger<GetExamplesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "3efdeea3-ee84-43e7-b7a9-c4accb03795a";
+
     public override string Name => "get";
 
     public override string Description =>

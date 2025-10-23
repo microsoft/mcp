@@ -52,6 +52,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
+    public override string Id => "9953ff62-e3d7-4bdf-9b70-d569e54e3df1";
+
     /// <summary>
     /// Registers command options for the service start command.
     /// </summary>

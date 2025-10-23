@@ -20,6 +20,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
 {
     private const string CommandTitle = "List SQL Servers";
 
+    public override string Id => "72ca757c-b60e-42af-b7dd-396548194b19";
+
     public override string Name => "list";
 
     public override string Description =>

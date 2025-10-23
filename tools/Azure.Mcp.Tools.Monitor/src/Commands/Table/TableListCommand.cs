@@ -13,6 +13,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
     private const string CommandTitle = "List Log Analytics Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
 
+    public override string Id => "2b1ae0be-d6dd-4db9-9c58-fc4fcb3bf8e6";
+
     public override string Name => "list";
 
     public override string Description =>

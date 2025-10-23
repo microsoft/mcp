@@ -20,6 +20,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
     private const string CommandTitle = "Query Azure Monitor Metrics";
     private readonly ILogger<MetricsQueryCommand> _logger = logger;
 
+    public override string Id => "6e86ef31-04e1-4cec-8bda-5292d4bc3ad8";
+
     public override string Name => "query";
 
     public override string Description =>

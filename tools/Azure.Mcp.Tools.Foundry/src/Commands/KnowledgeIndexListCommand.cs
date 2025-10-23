@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -13,6 +12,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexListOptions>
 {
     private const string CommandTitle = "List Knowledge Indexes in Azure AI Foundry";
+
+    public override string Id => "346847c5-61b7-4f14-b484-e28ee3e7c0f0";
 
     public override string Name => "list";
 

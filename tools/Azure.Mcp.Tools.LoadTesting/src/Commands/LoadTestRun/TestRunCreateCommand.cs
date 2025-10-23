@@ -16,6 +16,7 @@ public sealed class TestRunCreateCommand(ILogger<TestRunCreateCommand> logger)
 {
     private const string _commandTitle = "Test Run Create";
     private readonly ILogger<TestRunCreateCommand> _logger = logger;
+    public override string Id => "68e34111-358e-4b56-8747-89e65f16ddc5";
     public override string Name => "create";
     public override string Description =>
         $"""

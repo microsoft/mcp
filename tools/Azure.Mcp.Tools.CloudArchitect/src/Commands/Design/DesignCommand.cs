@@ -21,6 +21,8 @@ public sealed class DesignCommand(ILogger<DesignCommand> logger) : GlobalCommand
 
     private static string GetArchitectureDesignText() => s_designArchitectureText;
 
+    public override string Id => "aa7c2a8b-c664-423b-8fb5-8edfbdadc783";
+
     public override string Name => "design";
 
     public override string Description =>

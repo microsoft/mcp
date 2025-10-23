@@ -15,6 +15,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
     private const string CommandTitle = "List App Configuration Stores";
     private readonly ILogger<AccountListCommand> _logger = logger;
 
+    public override string Id => "e403c988-b57b-4ac1-afb7-25ba3fdd6e6a";
+
     public override string Name => "list";
 
     public override string Description =>

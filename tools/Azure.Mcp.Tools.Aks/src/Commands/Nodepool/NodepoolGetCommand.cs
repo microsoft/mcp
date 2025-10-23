@@ -16,6 +16,8 @@ public sealed class NodepoolGetCommand(ILogger<NodepoolGetCommand> logger) : Bas
     private const string CommandTitle = "Get Azure Kubernetes Service (AKS) Node Pool Details";
     private readonly ILogger<NodepoolGetCommand> _logger = logger;
 
+    public override string Id => "9abb0904-2ffc-4aab-b4ea-fc454b6351b1";
+
     public override string Name => "get";
 
     public override string Description =>

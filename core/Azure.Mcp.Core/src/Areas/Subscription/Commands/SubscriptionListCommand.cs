@@ -15,6 +15,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
     private const string CommandTitle = "List Azure Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
 
+    public override string Id => "72bbe80e-ca42-4a43-8f02-45495bca1179";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -16,6 +16,7 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
 {
     private const string _commandTitle = "Test Run List";
     private readonly ILogger<TestRunListCommand> _logger = logger;
+    public override string Id => "425c843c-a435-4a01-a8ff-5dffab398591";
     public override string Name => "list";
     public override string Description =>
         $"""

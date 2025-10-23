@@ -19,6 +19,8 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
     private const string CommandTitle = "Show Service Details";
     private readonly ILogger<RuntimeGetCommand> _logger = logger;
 
+    public override string Id => "bb9035f6-f642-4ee0-83c8-87d6da8266b1";
+
     public override string Name => "get";
 
     public override string Description =>

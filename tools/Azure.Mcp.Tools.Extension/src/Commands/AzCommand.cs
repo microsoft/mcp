@@ -28,6 +28,7 @@ public sealed class AzCommand(ILogger<AzCommand> logger, int processTimeoutSecon
     {
         _cachedAzPath = null;
     }
+    public override string Id => "6a9ddf1e-7863-40dc-abc5-706772279a80";
 
     public override string Name => "az";
 

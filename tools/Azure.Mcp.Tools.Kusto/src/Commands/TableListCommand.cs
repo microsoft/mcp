@@ -13,6 +13,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
     private const string CommandTitle = "List Kusto Tables";
     private readonly ILogger<TableListCommand> _logger = logger;
 
+    public override string Id => "3cd1e5f1-3353-4029-99f8-1aaa566d05e4";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -17,6 +17,8 @@ public sealed class DatabaseRenameCommand(ILogger<DatabaseRenameCommand> logger)
 {
     private const string CommandTitle = "Rename SQL Database";
 
+    public override string Id => "3bddfa1a-ab9d-44f0-830a-e56a159e5469";
+
     public override string Name => "rename";
 
     public override string Description =>

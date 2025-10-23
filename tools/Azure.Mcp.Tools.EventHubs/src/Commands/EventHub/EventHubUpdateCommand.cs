@@ -19,6 +19,7 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
     private const string CommandTitle = "Create or Update Event Hub";
     private readonly IEventHubsService _service = service;
     private readonly ILogger<EventHubUpdateCommand> _logger = logger;
+    public override string Id => "1df73670-9de5-4d4b-bdd8-9d2d9e16f732";
 
     public override string Name => "update";
 

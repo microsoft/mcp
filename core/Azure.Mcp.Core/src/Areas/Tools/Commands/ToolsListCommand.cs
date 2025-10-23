@@ -13,6 +13,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 {
     private const string CommandTitle = "List Available Tools";
 
+    public override string Id => "63de05a7-047d-4f8a-86ea-cebd64527e2b";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -128,6 +130,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
         return new CommandInfo
         {
+            Id = command.Id,
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
             Command = tokenizedName.Replace(CommandFactory.Separator, ' '),

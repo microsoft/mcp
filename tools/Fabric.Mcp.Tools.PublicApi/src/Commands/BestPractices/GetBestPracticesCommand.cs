@@ -17,6 +17,8 @@ public sealed class GetBestPracticesCommand(ILogger<GetBestPracticesCommand> log
 
     private readonly ILogger<GetBestPracticesCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    public override string Id => "0a73ecc9-d257-4ff3-8e05-fd3158c2cd31";
+
     public override string Name => "get";
 
     public override string Description =>

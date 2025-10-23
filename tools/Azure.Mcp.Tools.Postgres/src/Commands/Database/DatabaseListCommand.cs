@@ -12,6 +12,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 {
     private const string CommandTitle = "List PostgreSQL Databases";
 
+    public override string Id => "cbb8a347-99a2-41d1-a3e1-f4d748c0538b";
+
     public override string Name => "list";
 
     public override string Description => "Lists all databases in the PostgreSQL server.";

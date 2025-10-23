@@ -16,6 +16,8 @@ public sealed class CliInstallCommand(ILogger<CliInstallCommand> logger) : Globa
     private readonly ILogger<CliInstallCommand> _logger = logger;
     private readonly string[] _allowedCliTypeValues = ["az", "azd", "func"];
 
+    public override string Id => "464626d0-b9be-4a3b-9f29-858637ab8c10";
+
     public override string Name => "install";
 
     public override string Description =>

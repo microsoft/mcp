@@ -13,6 +13,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     private const string CommandTitle = "List Kusto Databases";
     private readonly ILogger<DatabaseListCommand> _logger = logger;
 
+    public override string Id => "0bd79f0b-c360-4c96-b3e0-02fce97dcc41";
+
     public override string Name => "list";
 
     public override string Description =>

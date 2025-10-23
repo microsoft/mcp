@@ -14,6 +14,8 @@ public sealed class QueryCommand(ILogger<QueryCommand> logger) : BaseDatabaseCom
     private const string CommandTitle = "Query Kusto Database";
     private readonly ILogger<QueryCommand> _logger = logger;
 
+    public override string Id => "d1e22074-53ce-4eef-8596-0ea134a9e317";
+
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);

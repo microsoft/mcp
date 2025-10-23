@@ -21,6 +21,8 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
         Returns both the agent response and evaluation results
         """;
 
+    public override string Id => "0d8b60ac-4567-4420-bf9f-8d4ed27cc780";
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()

@@ -16,6 +16,7 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
 {
     private const string _commandTitle = "Test Run Update";
     private readonly ILogger<TestRunUpdateCommand> _logger = logger;
+    public override string Id => "0e3c8f2c-57ce-49c0-bff4-27c9573e7049";
     public override string Name => "update";
     public override string Description =>
         $"""

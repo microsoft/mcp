@@ -16,6 +16,8 @@ public sealed class KeyCreateCommand(ILogger<KeyCreateCommand> logger) : Subscri
     private const string CommandTitle = "Create Key Vault Key";
     private readonly ILogger<KeyCreateCommand> _logger = logger;
 
+    public override string Id => "ef27bda9-8a1f-4288-b68b-12308ab8e607";
+
     public override string Name => "create";
 
     public override string Title => CommandTitle;

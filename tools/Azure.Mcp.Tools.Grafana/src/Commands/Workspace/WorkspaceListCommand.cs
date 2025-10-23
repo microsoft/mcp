@@ -18,6 +18,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
     private const string CommandTitle = "List Grafana Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
 
+    public override string Id => "7a47b562-f219-47de-80f6-12e19367b61d";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -18,6 +18,8 @@ public sealed class ProductGetCommand(ILogger<ProductGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Marketplace Product";
     private readonly ILogger<ProductGetCommand> _logger = logger;
 
+    public override string Id => "729a12ee-9c63-4a31-b1b8-4a81ad093564";
+
     public override string Name => "get";
 
     public override string Description =>

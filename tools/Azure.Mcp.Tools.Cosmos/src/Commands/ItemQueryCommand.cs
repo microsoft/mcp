@@ -15,6 +15,7 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
     private const string CommandTitle = "Query Cosmos DB Container";
     private readonly ILogger<ItemQueryCommand> _logger = logger;
     private const string DefaultQuery = "SELECT * FROM c";
+    public override string Id => "5c19a92a-4e0c-44dc-b1e7-5560a0d277b5";
 
     public override string Name => "query";
 

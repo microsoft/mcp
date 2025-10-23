@@ -16,6 +16,8 @@ public sealed class SecretListCommand(ILogger<SecretListCommand> logger) : Subsc
     private const string _commandTitle = "List Key Vault Secrets";
     private readonly ILogger<SecretListCommand> _logger = logger;
 
+    public override string Id => "5ecf1460-a896-4930-964a-570e7b1c33ab";
+
     public override string Name => "list";
 
     public override string Title => _commandTitle;

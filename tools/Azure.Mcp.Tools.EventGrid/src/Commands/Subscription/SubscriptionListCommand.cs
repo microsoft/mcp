@@ -14,6 +14,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
 {
     private const string CommandTitle = "List Event Grid Subscriptions";
     private readonly ILogger<SubscriptionListCommand> _logger = logger;
+    public override string Id => "716a33e5-755c-4168-87ed-8a4651476c6e";
 
     public override string Name => "list";
 

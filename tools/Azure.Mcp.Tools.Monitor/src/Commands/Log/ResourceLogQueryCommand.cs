@@ -14,7 +14,10 @@ public sealed class ResourceLogQueryCommand(ILogger<ResourceLogQueryCommand> log
     private const string CommandTitle = "Query Logs for Azure Resource";
     private readonly ILogger<ResourceLogQueryCommand> _logger = logger;
 
+    public override string Id => "02aaf533-0593-4e1d-bd87-f7c69d34c7ba";
+
     public override string Name => "query";
+
     public override string Description =>
     $"""
     Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). 

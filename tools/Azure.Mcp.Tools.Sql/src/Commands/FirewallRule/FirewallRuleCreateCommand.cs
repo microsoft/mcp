@@ -17,6 +17,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
 {
     private const string CommandTitle = "Create SQL Server Firewall Rule";
 
+    public override string Id => "37c43190-c3f5-4cd2-beda-3ecc2e3ec049";
+
     public override string Name => "create";
 
     public override string Description =>

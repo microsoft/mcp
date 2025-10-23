@@ -17,6 +17,8 @@ public sealed class KnowledgeBaseRetrieveCommand(ILogger<KnowledgeBaseRetrieveCo
     private const string CommandTitle = "Execute retrieval using a knowledge base in Azure AI Search";
     private readonly ILogger<KnowledgeBaseRetrieveCommand> _logger = logger;
 
+    public override string Id => "dcd2952d-02af-4ffc-a7a2-3c6d04251f66";
+
     public override string Name => "retrieve";
 
     public override string Title => CommandTitle;

@@ -19,6 +19,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
     private const string CommandTitle = "Get AI Foundry Resource Details";
     private readonly ILogger<ResourceGetCommand> _logger = logger;
 
+    public override string Id => "422dd6ec-d36e-4ff3-8e0d-b57e892c325e";
+
     public override string Name => "get";
 
     public override string Description =>

@@ -15,6 +15,8 @@ public sealed class ElasticPoolListCommand(ILogger<ElasticPoolListCommand> logge
 {
     private const string CommandTitle = "List SQL Elastic Pools";
 
+    public override string Id => "f980fda7-4bd6-4c24-b139-a091f088584f";
+
     public override string Name => "list";
 
     public override string Description =>

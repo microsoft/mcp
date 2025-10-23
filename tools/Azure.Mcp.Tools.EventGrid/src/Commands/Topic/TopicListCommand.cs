@@ -12,6 +12,7 @@ public sealed class TopicListCommand(ILogger<TopicListCommand> logger) : BaseEve
 {
     private const string CommandTitle = "List Event Grid Topics";
     private readonly ILogger<TopicListCommand> _logger = logger;
+    public override string Id => "42390294-2856-4980-a057-095c91355650";
 
     public override string Name => "list";
 

@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Adds unique identifier to MCP tools. [[#940]](https://github.com/microsoft/mcp/pull/940/)
+
 ### Breaking Changes
 
 ### Bugs Fixed

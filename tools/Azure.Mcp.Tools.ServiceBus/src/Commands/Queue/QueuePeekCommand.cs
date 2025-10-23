@@ -17,6 +17,9 @@ public sealed class QueuePeekCommand(ILogger<QueuePeekCommand> logger) : Subscri
 {
     private const string CommandTitle = "Peek Messages from Service Bus Queue";
     private readonly ILogger<QueuePeekCommand> _logger = logger;
+
+    public override string Id => "90c32c6c-0732-4079-b657-d5129293c67a";
+
     public override string Name => "peek";
 
     public override string Description =>

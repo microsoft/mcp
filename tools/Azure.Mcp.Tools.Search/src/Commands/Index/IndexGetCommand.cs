@@ -18,6 +18,8 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
     private const string CommandTitle = "Get Azure AI Search (formerly known as \"Azure Cognitive Search\") Index Details";
     private readonly ILogger<IndexGetCommand> _logger = logger;
 
+    public override string Id => "471292d0-4f6d-49d8-bf29-cbcb7b27dedb";
+
     public override string Name => "get";
 
     public override string Description =>

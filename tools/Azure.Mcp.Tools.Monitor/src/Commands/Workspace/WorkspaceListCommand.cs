@@ -15,6 +15,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
     private const string CommandTitle = "List Log Analytics Workspaces";
     private readonly ILogger<WorkspaceListCommand> _logger = logger;
 
+    public override string Id => "0c76b74e-14bf-4e0c-ab10-4bbeeb53347b";
+
     public override string Name => "list";
 
     public override string Description =>

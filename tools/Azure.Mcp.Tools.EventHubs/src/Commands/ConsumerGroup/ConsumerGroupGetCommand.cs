@@ -17,6 +17,7 @@ public sealed class ConsumerGroupGetCommand(ILogger<ConsumerGroupGetCommand> log
     private const string CommandTitle = "Get Event Hubs Consumer Groups";
 
     private readonly ILogger<ConsumerGroupGetCommand> _logger = logger;
+    public override string Id => "604fda48-2438-419d-a819-5f9d2f3b21f8";
 
     public override string Name => "get";
 

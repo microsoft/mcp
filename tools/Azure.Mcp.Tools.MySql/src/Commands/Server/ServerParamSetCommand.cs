@@ -14,6 +14,8 @@ public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger)
 {
     private const string CommandTitle = "Set MySQL Server Parameter";
 
+    public override string Id => "8d086e44-8c8a-4649-a282-38f775704595";
+
     public override string Name => "set";
 
     public override string Description => "Sets/updates a single MySQL server configuration setting/parameter.";

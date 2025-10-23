@@ -19,6 +19,8 @@ public sealed class WebTestsCreateCommand(ILogger<WebTestsCreateCommand> logger)
 
     private readonly ILogger<WebTestsCreateCommand> _logger = logger;
 
+    public override string Id => "aa5a22bc-6a04-4bc0-a963-b6e462b5cdc4";
+
     public override string Name => "create";
 
     public override string Description =>

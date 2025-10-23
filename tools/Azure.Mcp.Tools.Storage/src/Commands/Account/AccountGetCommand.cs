@@ -19,6 +19,8 @@ public sealed class AccountGetCommand(ILogger<AccountGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Storage Account Details";
     private readonly ILogger<AccountGetCommand> _logger = logger;
 
+    public override string Id => "eb2363f1-f21f-45fc-ad63-bacfbae8c45c";
+
     public override string Name => "get";
 
     public override string Description =>

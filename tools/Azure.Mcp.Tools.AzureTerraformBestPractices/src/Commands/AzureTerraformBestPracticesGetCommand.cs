@@ -24,6 +24,8 @@ public sealed class AzureTerraformBestPracticesGetCommand(ILogger<AzureTerraform
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
+    public override string Id => "5bd36575-6313-4bf4-aa26-a79fe0fa32a8";
+
     public override string Name => "get";
 
     public override string Description =>

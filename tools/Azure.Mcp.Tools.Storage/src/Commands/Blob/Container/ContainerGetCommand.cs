@@ -17,6 +17,8 @@ public sealed class ContainerGetCommand(ILogger<ContainerGetCommand> logger) : B
     private const string CommandTitle = "Get Storage Container Details";
     private readonly ILogger<ContainerGetCommand> _logger = logger;
 
+    public override string Id => "e96eb850-abb8-431d-bdc6-7ccd0a24838e";
+
     public override string Name => "get";
 
     public override string Description =>

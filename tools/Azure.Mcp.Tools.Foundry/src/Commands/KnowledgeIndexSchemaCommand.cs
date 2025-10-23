@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -13,6 +12,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSchemaOptions>
 {
     private const string CommandTitle = "Get Knowledge Index Schema in Azure AI Foundry";
+
+    public override string Id => "7a7453e2-c021-4554-bf71-f95eb3e8c874";
 
     public override string Name => "schema";
 

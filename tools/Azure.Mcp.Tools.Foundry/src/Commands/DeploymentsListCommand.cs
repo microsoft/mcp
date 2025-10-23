@@ -3,7 +3,6 @@
 
 using Azure.AI.Projects;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
 using Azure.Mcp.Tools.Foundry.Services;
@@ -13,6 +12,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOptions>
 {
     private const string CommandTitle = "List Deployments from Azure AI Services";
+
+    public override string Id => "6739126a-1f3c-468d-af2b-7b0c111c1679";
 
     public override string Name => "list";
 

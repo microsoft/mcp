@@ -14,6 +14,8 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
     private const string CommandTitle = "List hostpools";
     private readonly ILogger<HostpoolListCommand> _logger = logger;
 
+    public override string Id => "bf0ae005-7dfd-4f96-8f45-3d0ba07f81ed";
+
     public override string Name => "list";
 
     public override string Description =>

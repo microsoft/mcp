@@ -17,6 +17,7 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
 {
     private const string CommandTitle = "Get Azure Deployment CICD Pipeline Guidance";
     private readonly ILogger<GuidanceGetCommand> _logger = logger;
+    public override string Id => "8aec84f9-e884-4119-a386-53b7cfbe9e00";
 
     public override string Name => "get";
 

@@ -25,6 +25,8 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
 		returned as a JSON array.
 		""";
 
+    public override string Id => "6f543101-3c70-41bd-a6ed-5cc4af716081";
+
     public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()

@@ -19,6 +19,7 @@ public sealed class GetCommand(ILogger<GetCommand> logger)
 {
     private const string CommandTitle = "Generate Azure Deployment Plan";
     private readonly ILogger<GetCommand> _logger = logger;
+    public override string Id => "92ca95b2-cde6-407c-ac67-9743db40dfc4";
 
     public override string Name => "get";
 

@@ -19,6 +19,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
     private const string CommandTitle = "List Application Insights Recommendations";
     private readonly ILogger<RecommendationListCommand> _logger = logger;
 
+    public override string Id => "8d259f21-43b3-4962-bec8-de616b8b5f0d";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -16,6 +16,8 @@ public sealed class FirewallRuleDeleteCommand(ILogger<FirewallRuleDeleteCommand>
 {
     private const string CommandTitle = "Delete SQL Server Firewall Rule";
 
+    public override string Id => "f13fc5d2-7547-480b-a704-36120e2e9b92";
+
     public override string Name => "delete";
 
     public override string Description =>

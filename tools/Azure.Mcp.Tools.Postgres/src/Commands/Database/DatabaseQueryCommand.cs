@@ -14,6 +14,9 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Database;
 public sealed class DatabaseQueryCommand(ILogger<DatabaseQueryCommand> logger) : BaseDatabaseCommand<DatabaseQueryOptions>(logger)
 {
     private const string CommandTitle = "Query PostgreSQL Database";
+
+    public override string Id => "81a28bca-014c-4738-9e1a-654d77cb2dd8";
+
     public override string Name => "query";
 
     public override string Description => "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.";

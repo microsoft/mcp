@@ -15,6 +15,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger)
 {
     private const string CommandTitle = "List SQL Databases";
 
+    public override string Id => "4c1f18c3-5edf-4b0a-943c-55c8a522019c";
+
     public override string Name => "list";
 
     public override string Description =>

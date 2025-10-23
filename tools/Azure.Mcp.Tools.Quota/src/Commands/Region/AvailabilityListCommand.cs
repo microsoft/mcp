@@ -16,6 +16,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
     private const string CommandTitle = "Get available regions for Azure resource types";
     private readonly ILogger<AvailabilityListCommand> _logger = logger;
 
+    public override string Id => "0b8902f5-3fd4-49d9-b73e-4cea88afdd62";
+
     public override string Name => "list";
 
     public override string Description =>

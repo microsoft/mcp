@@ -19,6 +19,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
     private const string CommandTitle = "Recognize Speech from Audio File";
     private readonly ILogger<SttRecognizeCommand> _logger = logger;
 
+    public override string Id => "c725eb52-ca2c-4fe4-9422-935e7557b701";
+
     public override string Name => "recognize";
 
     public override string Description =>

@@ -18,6 +18,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
     private const string CommandTitle = "Get Kusto Cluster Details";
     private readonly ILogger<ClusterGetCommand> _logger = logger;
 
+    public override string Id => "5fc5a42b-a7f6-4d4a-9517-a8e119752b7a";
+
     public override string Name => "get";
 
     public override string Description =>

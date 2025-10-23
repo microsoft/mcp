@@ -13,6 +13,8 @@ public sealed class TableSchemaCommand(ILogger<TableSchemaCommand> logger) : Bas
     private const string CommandTitle = "Get Kusto Table Schema";
     private readonly ILogger<TableSchemaCommand> _logger = logger;
 
+    public override string Id => "9a972c48-6797-49bb-9784-8063ad1f7e96";
+
     public override string Name => "schema";
 
     public override string Description =>

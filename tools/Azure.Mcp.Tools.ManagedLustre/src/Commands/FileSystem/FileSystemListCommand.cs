@@ -15,6 +15,8 @@ public sealed class FileSystemListCommand(ILogger<FileSystemListCommand> logger)
 {
     private const string CommandTitle = "List Azure Managed Lustre File Systems";
 
+    public override string Id => "723d9b34-9022-486e-83a7-f72d83bdafd2";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -15,6 +15,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
     private const string CommandTitle = "Query Azure AI Search (formerly known as \"Azure Cognitive Search\") Index";
     private readonly ILogger<IndexQueryCommand> _logger = logger;
 
+    public override string Id => "f1938a77-8d6c-49c7-b592-71b4f26508e7";
+
     public override string Name => "query";
 
     public override string Description =>

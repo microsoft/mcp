@@ -19,6 +19,8 @@ public sealed class NamespaceDeleteCommand(ILogger<NamespaceDeleteCommand> logge
 
     private readonly ILogger<NamespaceDeleteCommand> _logger = logger;
 
+    public override string Id => "187ffc25-1e32-4e39-a7d4-94859852ac50";
+
     public override string Name => "delete";
 
     public override string Description =>
