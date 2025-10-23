@@ -49,7 +49,7 @@ public static class FoundryOptionDefinitions
         $"--{Endpoint}"
     )
     {
-        Description = "The endpoint URL for the Azure AI service.",
+        Description = "The endpoint URL for the Azure AI Foundry project/service.",
         Required = true
     };
 

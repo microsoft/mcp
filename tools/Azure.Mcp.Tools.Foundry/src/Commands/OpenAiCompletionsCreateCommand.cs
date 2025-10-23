@@ -20,9 +20,11 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
 
     public override string Description =>
         $"""
-        Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI 
-        completion models and returns generated text with configurable parameters like temperature and max tokens. 
-        Returns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.
+        Create text completions using Azure OpenAI in AI Foundry. Send a prompt or question to Azure OpenAI models 
+        deployed in your AI Foundry resource and receive generated text answers. Use this when you need to create 
+        completions, get AI-generated content, generate answers to questions, or produce text completions from Azure 
+        OpenAI based on any input prompt. Supports customization with temperature and max tokens. 
+        Requires resource-name, deployment-name, and prompt-text.
         """;
 
     public override string Title => CommandTitle;
