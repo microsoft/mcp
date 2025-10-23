@@ -15,6 +15,7 @@ public sealed class RegistryRepositoryListCommand(ILogger<RegistryRepositoryList
 {
     private const string CommandTitle = "List Container Registry Repositories";
     private readonly ILogger<RegistryRepositoryListCommand> _logger = logger;
+    public override string Id => "adc6eb20-ad98-4624-954d-61581f6fbca9";
 
     public override string Name => "list";
 

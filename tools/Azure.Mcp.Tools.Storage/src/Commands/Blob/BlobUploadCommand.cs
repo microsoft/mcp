@@ -15,6 +15,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
     private const string CommandTitle = "Upload Local File to Blob";
     private readonly ILogger<BlobUploadCommand> _logger = logger;
 
+    public override string Id => "aafb82ac-e35a-4800-b362-c642a3ac1e17";
+
     public override string Name => "upload";
 
     public override string Description =>

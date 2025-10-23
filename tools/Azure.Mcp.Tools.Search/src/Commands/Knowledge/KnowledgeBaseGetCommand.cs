@@ -17,6 +17,8 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
     private const string CommandTitle = "Get Azure AI Search Knowledge Base Details";
     private readonly ILogger<KnowledgeBaseGetCommand> _logger = logger;
 
+    public override string Id => "e0e7c288-8d16-4d11-811d-9236dc86d9a8";
+
     public override string Name => "get";
 
     public override string Title => CommandTitle;

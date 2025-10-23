@@ -15,6 +15,8 @@ public sealed class FirewallRuleListCommand(ILogger<FirewallRuleListCommand> log
 {
     private const string CommandTitle = "List SQL Server Firewall Rules";
 
+    public override string Id => "1f55cab9-0bbb-499a-a9ac-1492f11c043a";
+
     public override string Name => "list";
 
     public override string Description =>

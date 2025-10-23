@@ -17,6 +17,8 @@ public sealed class DatabaseCreateCommand(ILogger<DatabaseCreateCommand> logger)
 {
     private const string CommandTitle = "Create SQL Database";
 
+    public override string Id => "a4d9af17-fe8b-4df3-93be-23b69f0b5a0c";
+
     public override string Name => "create";
 
     public override string Description =>

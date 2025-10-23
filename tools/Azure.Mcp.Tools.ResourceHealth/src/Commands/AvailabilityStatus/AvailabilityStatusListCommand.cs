@@ -19,6 +19,8 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
     private const string CommandTitle = "List Resource Availability Statuses";
     private readonly ILogger<AvailabilityStatusListCommand> _logger = logger;
 
+    public override string Id => "80b9d4ac-94af-4010-8a3c-5d633fc6b27d";
+
     public override string Name => "list";
 
     public override string Description =>

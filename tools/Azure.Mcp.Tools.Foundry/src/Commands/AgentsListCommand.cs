@@ -3,7 +3,6 @@
 
 using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
 
@@ -12,6 +11,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 {
     private const string CommandTitle = "List Evaluation Agents";
+
+    public override string Id => "8238b073-a302-49e6-8a27-8aab04c848fe";
 
     public override string Name => "list";
 

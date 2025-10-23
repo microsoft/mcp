@@ -15,6 +15,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Update Workbook";
     private readonly ILogger<UpdateWorkbooksCommand> _logger = logger;
+    public override string Id => "9efdc32c-22bc-4b85-8b5c-2fbefc0e927e";
 
     public override string Name => "update";
 
