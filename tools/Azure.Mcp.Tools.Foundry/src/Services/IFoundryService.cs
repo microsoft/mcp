@@ -6,6 +6,7 @@ using Azure.AI.Projects;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
 
@@ -166,7 +167,7 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null
     );
 
-    Task<PersistentAgentThread> CreateThread(
+    Task<ThreadCreateResult> CreateThread(
         string projectEndpoint,
         string userMessage,
         string? tenantId = null,
