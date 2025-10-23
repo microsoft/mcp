@@ -59,6 +59,5 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentData))]
 [JsonSerializable(typeof(FoundryService.ToolDefinitionAIFunction))]
 [JsonSerializable(typeof(List<FoundryService.ToolDefinitionAIFunction>))]
-[JsonSerializable(typeof(Dictionary<string, object>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;
