@@ -16,7 +16,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     private readonly ILogger<KeyValueSetCommand> _logger = logger;
 
     public override string Id => "a89086eb-acf4-4168-9d32-de5cd7384030";
- 
+
     public override string Name => "set";
 
     public override string Description =>
