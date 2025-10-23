@@ -27,6 +27,7 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<KnowledgeIndexSchemaCommand>();
 
         services.AddSingleton<AgentsListCommand>();
+        services.AddSingleton<AgentsCreateCommand>();
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
@@ -72,10 +73,11 @@ public class FoundrySetup : IAreaSetup
         openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
         openai.AddCommand("models-list", new OpenAiModelsListCommand());
         openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
-        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
+        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, creating, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 
         agents.AddCommand("list", serviceProvider.GetRequiredService<AgentsListCommand>());
+        agents.AddCommand("create", serviceProvider.GetRequiredService<AgentsCreateCommand>());
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());

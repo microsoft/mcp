@@ -786,6 +786,51 @@ public class FoundryService(
         }
     }
 
+    public async Task<AgentsCreateResult> CreateAgent(
+        string projectEndpoint,
+        string modelDeploymentName,
+        string agentName,
+        string systemInstruction,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(modelDeploymentName), modelDeploymentName),
+            (nameof(agentName), agentName),
+            (nameof(systemInstruction), systemInstruction));
+        var credential = await GetCredential(tenantId);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+
+        // Validate if the model deployment exists
+        var deploymentsClient = projectClient.GetDeploymentsClient();
+        try
+        {
+            await deploymentsClient.GetDeploymentAsync(modelDeploymentName);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to create agent. Get model deployment failed with: {ex.Message}", ex);
+        }
+
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+        try
+        {
+            PersistentAgent agent = await agentsClient.Administration.CreateAgentAsync(modelDeploymentName, agentName, null, systemInstruction);
+            return new AgentsCreateResult()
+            {
+                AgentId = agent.Id,
+                AgentName = agent.Name,
+                ProjectEndpoint = projectEndpoint,
+                ModelDeploymentName = modelDeploymentName
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to create agent. Create agent request failed with: {ex.Message}", ex);
+        }
+    }
+
     public async Task<AgentsConnectResult> ConnectAgent(
         string agentId,
         string query,
@@ -803,10 +848,8 @@ public class FoundryService(
             var credential = await GetCredential(tenantId);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
 
-            var thread = await agentsClient.Threads.CreateThreadAsync();
-            var threadId = thread.Value.Id;
-
-            await agentsClient.Messages.CreateMessageAsync(threadId, MessageRole.User, query);
+            var thread = await CreateThreadCore(endpoint, query, credential);
+            var threadId = thread.Id;
 
             var run = await agentsClient.Runs.CreateRunAsync(threadId, agentId);
             var runId = run.Value.Id;
@@ -982,6 +1025,131 @@ public class FoundryService(
         {
             throw new Exception($"Failed to evaluate agent response: {ex.Message}", ex);
         }
+    }
+
+    public async Task<List<PersistentAgentThread>> ListThreads(
+        string projectEndpoint,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint));
+
+        var credential = await GetCredential(tenantId);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        var threadsIterator = agentsClient.Threads.GetThreadsAsync();
+        List<PersistentAgentThread> threads = [];
+        try
+        {
+            await foreach (var thread in threadsIterator)
+            {
+                threads.Add(thread);
+            }
+
+            return threads;
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to list threads. Get threads request failed with: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<PersistentAgentThread> CreateThread(
+        string projectEndpoint,
+        string userMessage,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(userMessage), userMessage));
+
+        var credential = await GetCredential(tenantId);
+
+        try
+        {
+            return await CreateThreadCore(projectEndpoint, userMessage, credential);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unale to create thread. Create thread request failed with: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<GetThreadMessagesResult> GetMessages(
+        string projectEndpoint,
+        string threadId,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy
+    )
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(threadId), threadId));
+
+        var credential = await GetCredential(tenantId);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        try
+        {
+            List<PersistentThreadMessage> messages = [];
+            var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId);
+            await foreach (var message in messagesIterator)
+            {
+                messages.Add(message);
+            }
+            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = ConvertMessages(messages).ToList();
+            return new GetThreadMessagesResult()
+            {
+                ThreadId = threadId,
+                Messages = convertedMessages
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to get messages. Get messages request failed with: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<string> GetAgentSdkCodeSample(string programmingLanguage)
+    {
+        // Todo: implement this method by fetching the real RAG content
+        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
+        if (programmingLanguageLowerCase == "c#")
+        {
+            return await Task.FromResult("todo: c# sdk sample for Foundry Agent");
+        }
+        else if (programmingLanguage == "typescript")
+        {
+            return await Task.FromResult("todo: typescript sdk sample for Foundry Agent");
+        }
+        else if (programmingLanguage == "python")
+        {
+            return await Task.FromResult("todo: python sdk sample for Foundry Agent");
+        }
+        else
+        {
+            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
+        }
+    }
+
+    private async Task<PersistentAgentThread> CreateThreadCore(
+        string projectEndpoint,
+        string userMessage,
+        TokenCredential credential)
+    {
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync([
+            new ThreadMessageOptions(MessageRole.User, userMessage)
+            ]);
+
+        return thread;
+
     }
 
     private List<ToolDefinitionAIFunction> ConvertToolDefinitionsFromString(string? toolDefinitions)

@@ -44,6 +44,9 @@ public static class FoundryOptionDefinitions
     public const string Stop = "stop";
     public const string Stream = "stream";
     public const string Seed = "seed";
+    public const string ModelDeploymentName = "model-deployment";
+    public const string AgentName = "agent-name";
+    public const string SystemInstruction = "system-instruction";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -332,5 +335,28 @@ public static class FoundryOptionDefinitions
     )
     {
         Description = "If specified, the system will make a best effort to sample deterministically."
+    };
+
+    public static readonly Option<string> ModelDeploymentNameOption = new(
+        $"--{ModelDeploymentName}")
+    {
+        Description = "Name of the model deployment",
+        Required = true
+    };
+
+    public static readonly Option<string> AgentNameOption = new(
+        $"--{AgentName}"
+        )
+    {
+        Description = "A human-readable name of the Agent",
+        Required = true
+    };
+
+    public static readonly Option<string> SystemInstructionOption = new(
+        $"--{SystemInstruction}"
+    )
+    {
+        Description = "System instruction for the agent to follow when process messages",
+        Required = true
     };
 }
