@@ -130,6 +130,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
         return new CommandInfo
         {
+            Id = command.Id,
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
             Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
