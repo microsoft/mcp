@@ -101,6 +101,8 @@ Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 ### VS Code (Recommended)
 Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
 
+![Install Azure MCP Server Extension](images/Install%20Azure%20MCP%20Server%20Extension.gif)
+
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
 1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
