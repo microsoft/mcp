@@ -47,6 +47,7 @@ public static class FoundryOptionDefinitions
     public const string ModelDeploymentName = "model-deployment";
     public const string AgentName = "agent-name";
     public const string SystemInstruction = "system-instruction";
+    public const string UserMessage = "user-message";
 
     public static readonly Option<string> EndpointOption = new(
         $"--{Endpoint}"
@@ -357,6 +358,14 @@ public static class FoundryOptionDefinitions
     )
     {
         Description = "System instruction for the agent to follow when process messages",
+        Required = true
+    };
+
+    public static readonly Option<string> UserMessageOption = new(
+        $"--{UserMessage}"
+        )
+    {
+        Description = "The user message to add to the thread",
         Required = true
     };
 }

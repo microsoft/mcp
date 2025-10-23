@@ -17,6 +17,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
 using Microsoft.Extensions.AI;
@@ -1055,7 +1056,7 @@ public class FoundryService(
         }
     }
 
-    public async Task<PersistentAgentThread> CreateThread(
+    public async Task<ThreadCreateResult> CreateThread(
         string projectEndpoint,
         string userMessage,
         string? tenantId,
@@ -1069,7 +1070,11 @@ public class FoundryService(
 
         try
         {
-            return await CreateThreadCore(projectEndpoint, userMessage, credential);
+            var thread = await CreateThreadCore(projectEndpoint, userMessage, credential);
+            return new ThreadCreateResult()
+            {
+                ThreadId = thread.Id
+            };
         }
         catch (Exception ex)
         {
