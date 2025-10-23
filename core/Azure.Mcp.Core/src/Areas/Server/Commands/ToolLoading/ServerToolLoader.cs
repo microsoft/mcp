@@ -245,7 +245,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
-            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
+            request.Items[TagName.IsServerCommandInvoked] = true;
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
             if (toolCallResponse.IsError is true)
@@ -321,7 +321,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        request.Items[TagName.IsServerCommandInvoked] = false;
         var toolsJson = await GetChildToolListJsonAsync(request, tool);
 
         var learnResponse = new CallToolResult
