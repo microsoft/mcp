@@ -13,7 +13,7 @@ public class AppConfiguration
 
     public string? McpToolEventsTableName { get; set; }
 
-    public string? QueriesFolder { get; set; }
+    public string? QueriesFolder { get; set; } = "Resources/queries";
 
     public string? WorkDirectory { get; set; }
 }
