@@ -180,7 +180,7 @@ public interface IFoundryService
         string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<string> GetAgentSdkCodeSample(
+    Task<AgentsGetSdkCodeSampleResult> GetSdkCodeSample(
         string prorgammingLanguage
     );
 }

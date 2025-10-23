@@ -58,6 +58,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(AgentsConnectResult))]
 [JsonSerializable(typeof(AgentsQueryAndEvaluateResult))]
 [JsonSerializable(typeof(AgentsEvaluateResult))]
+[JsonSerializable(typeof(AgentsGetSdkCodeSampleResult))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentData))]
 [JsonSerializable(typeof(FoundryService.ToolDefinitionAIFunction))]
 [JsonSerializable(typeof(List<FoundryService.ToolDefinitionAIFunction>))]

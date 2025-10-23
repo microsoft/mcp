@@ -1529,6 +1529,40 @@ public class FoundryService(
         }
     }
 
+    public async Task<AgentsGetSdkCodeSampleResult> GetSdkCodeSample(
+        string programmingLanguage
+    )
+    {
+        // Todo: finalize the resource urls
+        string? resourceUrl;
+        if (programmingLanguage == "python")
+        {
+            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/python/agent-sdk-sample.md";
+        }
+        else if (programmingLanguage == "c#")
+        {
+            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/c%23/agent-sdk-sample.md";
+        }
+        else if (programmingLanguage == "typescript")
+        {
+            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/typescript/agent-sdk-sample.md";
+        }
+        else
+        {
+            throw new ArgumentException($"Unsupported sdk programming language {programmingLanguage}");
+        }
+
+        var response = await _httpClientService.DefaultClient.GetAsync(resourceUrl);
+        response.EnsureSuccessStatusCode();
+
+        var codeSampleText = await response.Content.ReadAsStringAsync();
+
+        return new AgentsGetSdkCodeSampleResult()
+        {
+            CodeSampleText = codeSampleText
+        };
+    }
+
     private async Task<AiResourceInformation> BuildResourceInformation(
         CognitiveServicesAccountResource account,
         string subscriptionName)
