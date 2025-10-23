@@ -6,11 +6,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
+- Fixed SKU configuration bug in SQL database create and update commands. [[#925](https://github.com/microsoft/mcp/pull/925)]
+
 ### Other Changes
+
+- Set telemetry field's for `ToolArea` and `ToolName` when "consolidated" mode is used or a server is loaded from `registry.json`. [[#933](https://github.com/microsoft/mcp/pull/933)]
 
 ## 0.9.7 (2025-10-22)
 

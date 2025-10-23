@@ -18,6 +18,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
     private const string CommandTitle = "Get Storage Blob Details";
     private readonly ILogger<BlobGetCommand> _logger = logger;
 
+    public override string Id => "d6bdc190-e68f-49af-82e7-9cf6ec9b8183";
+
     public override string Name => "get";
 
     public override string Description =>

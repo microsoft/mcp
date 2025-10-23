@@ -13,6 +13,9 @@ namespace Azure.Mcp.Tools.Postgres.Commands.Server;
 public sealed class ServerParamSetCommand(ILogger<ServerParamSetCommand> logger) : BaseServerCommand<ServerParamSetOptions>(logger)
 {
     private const string CommandTitle = "Set PostgreSQL Server Parameter";
+
+    public override string Id => "2134621b-518f-48ac-a66a-82c40fcb58bb";
+
     public override string Name => "set";
 
     public override string Description =>

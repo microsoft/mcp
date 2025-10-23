@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -14,6 +13,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
 {
     private const string CommandTitle = "List Models from Model Catalog";
+
+    public override string Id => "cd46271e-f665-480d-ac48-abd949beec45";
 
     public override string Name => "list";
 

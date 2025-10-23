@@ -18,6 +18,9 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
 {
     private const string CommandTitle = "Get Service Bus Topic Subscription Details";
     private readonly ILogger<SubscriptionDetailsCommand> _logger = logger;
+
+    public override string Id => "578edf30-01f3-45da-b451-3932dcce7cc5";
+
     public override string Name => "details";
 
     public override string Description =>

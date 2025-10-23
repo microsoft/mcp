@@ -13,6 +13,8 @@ public sealed class WorkspaceLogQueryCommand(ILogger<WorkspaceLogQueryCommand> l
     private const string CommandTitle = "Query Log Analytics Workspace";
     private readonly ILogger<WorkspaceLogQueryCommand> _logger = logger;
 
+    public override string Id => "3f513aea-b6fc-4ad0-8f7d-9fbaa1056ac6";
+
     public override string Name => "query";
 
     public override string Description =>

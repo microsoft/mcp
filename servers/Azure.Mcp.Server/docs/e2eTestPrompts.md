@@ -6,26 +6,26 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| foundry_agents_connect | Query an agent in my AI foundry project |
+| foundry_agents_connect | Query an agent in my Azure AI foundry resource |
 | foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_list | List all agents in my AI Foundry project |
-| foundry_agents_list | Show me the available agents in my AI Foundry project |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
+| foundry_agents_list | List all agents in my Azure AI Foundry resource |
+| foundry_agents_list | Show me the available agents in my Azure AI Foundry resource |
+| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Azure AI Foundry resource for task_adherence |
 | foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
-| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
+| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Azure AI Foundry resource |
 | foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
 | foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
 | foundry_models_deployments_list | List all AI Foundry model deployments |
 | foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | foundry_models_list | List all AI Foundry models |
 | foundry_models_list | Show me the available AI Foundry models |
-| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
-| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
-| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
-| foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
-| foundry_openai_models-list | List all available OpenAI models in my Azure resource |
-| foundry_openai_models-list | Show me the OpenAI model deployments |
+| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Azure AI Foundry resource |
+| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Azure AI Foundry resource |
+| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Azure AI Foundry resource |
+| foundry_openai_embeddings-create | Create vector embeddings for my text using my Azure AI Foundry resource |
+| foundry_openai_models-list | List all available OpenAI models in my Azure AI Foundry resource |
+| foundry_openai_models-list | Show me the OpenAI model deployments in my Azure AI Foundry resource |
 | foundry_resource_get | List all AI Foundry resources in my subscription |
 | foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
 | foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |

@@ -19,6 +19,8 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
 
     private new readonly ILogger<FileSystemUpdateCommand> _logger = logger;
 
+    public override string Id => "db1bdf99-ac8a-4920-ab2e-15048623b2dc";
+
     public override string Name => "update";
 
     public override string Description =>
