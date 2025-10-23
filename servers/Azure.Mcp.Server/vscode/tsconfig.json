@@ -1,0 +1,26 @@
+{
+    "compilerOptions": {
+        "module": "commonjs",
+        "target": "es2020",
+        "outDir": "out",
+        "lib": [
+            "es2020"
+        ],
+        "sourceMap": true,
+        "rootDir": "src",
+        "strict": true,   /* enable all strict type-checking options */
+        "alwaysStrict": true,
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitThis": true,
+        "noUnusedLocals": false, // ESLint takes care of this for us
+        "noUnusedParameters": false, // ESLint takes care of this for us
+        "noImplicitAny": true,
+        "noImplicitReturns": true,
+        "strictNullChecks": true,
+        "skipLibCheck": true // Ignore typing issues in libraries
+    },
+    "exclude": [
+        "node_modules",
+        ".vscode-test"
+    ]
+}

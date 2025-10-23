@@ -13,5 +13,6 @@ extends:
     ServerName: Fabric.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    IncludeDockerRelease : false
+    PackageDocker: false
+    PackageVSIX: false
     IncludeNative: false
