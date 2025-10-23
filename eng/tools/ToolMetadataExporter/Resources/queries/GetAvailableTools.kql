@@ -1,0 +1,4 @@
+McpToolEvents
+    | summarize arg_max(EventTime, *) by ToolId
+    | where EventType != 'Deleted'
+    | project EventTime, ToolId, ToolName, ToolArea, ServerVersion, EventType, ReplacedByToolName, ReplacedByToolArea
