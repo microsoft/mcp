@@ -23,11 +23,7 @@ public sealed class RegistryToolLoader(
 {
     private readonly IMcpDiscoveryStrategy _serverDiscoveryStrategy = discoveryStrategy;
     private readonly IOptions<ToolLoaderOptions> _options = options;
-    /// <summary>
-    /// Key: Tool name
-    /// Value: Tuple representing (ServerName, MCP Client).
-    /// </summary>
-    private Dictionary<string, (string, McpClient)> _toolClientMap = new();
+    private Dictionary<string, (string ServerName, McpClient Client)> _toolClientMap = new();
     private List<McpClient> _discoveredClients = new();
     private readonly SemaphoreSlim _initializationSemaphore = new(1, 1);
     private bool _isInitialized = false;
@@ -122,7 +118,7 @@ public sealed class RegistryToolLoader(
             }
         }
 
-        if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp == default || kvp.Item2 == null)
+        if (!_toolClientMap.TryGetValue(request.Params.Name, out var kvp) || kvp.Client == null)
         {
             var content = new TextContentBlock
             {
@@ -139,10 +135,10 @@ public sealed class RegistryToolLoader(
         }
 
         // For MCP servers loaded from registry.json, the ToolArea is also its "server name".
-        Activity.Current?.SetTag(TagName.ToolArea, kvp.Item1);
+        Activity.Current?.SetTag(TagName.ToolArea, kvp.ServerName);
 
         var parameters = TransformArgumentsToDictionary(request.Params.Arguments);
-        return await kvp.Item2.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
+        return await kvp.Client.CallToolAsync(request.Params.Name, parameters, cancellationToken: cancellationToken);
     }
 
     /// <summary>

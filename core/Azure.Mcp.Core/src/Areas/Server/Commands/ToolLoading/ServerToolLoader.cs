@@ -253,7 +253,8 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
-            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)?.SetTag(TagName.ToolName, command);
+            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
+                .SetTag(TagName.ToolName, command);
 
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
