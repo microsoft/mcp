@@ -109,7 +109,6 @@ extends:
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
-            ServerName: ${{ parameters.ServerName }}
             ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:

@@ -1,6 +1,4 @@
 parameters:
-  - name: ServerName
-    type: string
   - name: ServerMatrix
     type: string
 
@@ -148,4 +146,3 @@ jobs:
         - PackNuget
         - BuildDockerImages
       TestTimeoutInMinutes: 10
-      ServerName: ${{ parameters.ServerName }}

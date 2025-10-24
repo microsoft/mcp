@@ -5,9 +5,6 @@
 param(
     [string] $BuildInfoPath,
     [string] $ArtifactsDirectory,
-    [string] $ServerName,
-    [string] $RepositoryName,
-    [string] $BuildId,
     [string] $TargetOs,
     [string] $TargetArch,
     [switch] $CI
@@ -169,9 +166,7 @@ function Test-NpmPackages {
 
 function Test-DockerImages {
     param (
-        [hashtable] $Server,
-        [string] $RepositoryName,
-        [string] $BuildId
+        [hashtable] $Server
     )
 
     $artifactsPath = "$ArtifactsDirectory/docker_output"
@@ -242,16 +237,13 @@ function Test-DockerImages {
 }
 
 $servers = $buildInfo.servers
-if ($ServerName) {
-    $servers = $servers | Where-Object { $_.name -eq $ServerName }
-}
 
 foreach($server in $servers) {
     Write-Host "Validating packages for server $($server.name) version $($server.version) for OS $TargetOs and Arch $TargetArch"
 
     $nugetValid = Test-NugetPackages -Server $server
     $npmValid = Test-NpmPackages -Server $server
-    $dockerValid = Test-DockerImages -Server $server -RepositoryName $RepositoryName -BuildId $BuildId
+    $dockerValid = Test-DockerImages -Server $server
 
     if (!$nugetValid -or !$npmValid -or !$dockerValid) {
         $exitCode = 1

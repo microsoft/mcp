@@ -9,8 +9,6 @@ parameters:
   type: object
 - name: TestTimeoutInMinutes
   type: number
-- name: ServerName
-  type: string
 
 jobs:
 - job: Verify_Packages_${{ parameters.OSName }}
@@ -53,9 +51,6 @@ jobs:
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsDirectory $(Pipeline.Workspace)
-        -ServerName ${{ parameters.ServerName }}
-        -BuildId '$(Build.BuildId)'
-        -RepositoryName '$(Build.Repository.Name)'
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
         -WorkingDirectory $(Agent.TempDirectory)

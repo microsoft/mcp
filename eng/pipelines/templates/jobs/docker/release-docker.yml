@@ -5,19 +5,13 @@ parameters:
   type: string
 - name: ServerName
   type: string
-- name: ServerVersion
-  type: string
-- name: CliName
-  type: string
-- name: DockerImageName
-  type: string
 - name: DependsOn
   type: object
 
 jobs:
 - deployment: PublishACR
   displayName: "Publish Docker Images to ACR"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'), or(eq('${{ parameters.ServerName }}',''), eq(variables['ServerName'], '${{ parameters.ServerName }}')))
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true')))
   dependsOn: ${{ parameters.DependsOn }}
   timeoutInMinutes: 120
   templateContext:
@@ -27,6 +21,9 @@ jobs:
     - input: pipelineArtifact
       artifactName: docker_output
       targetPath: $(Pipeline.Workspace)/docker_output
+    - input: pipelineArtifact
+      artifactName: build_info
+      targetPath: $(Pipeline.Workspace)/build_info
   environment: package-publish
   pool:
     name: azsdk-pool
@@ -45,12 +42,32 @@ jobs:
             inlineScript: |
               az acr login --name ${{ parameters.ContainerRegistry }}
 
+        - pwsh: |
+            $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
+            $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
+
+            $serverName = '${{ parameters.ServerName }}'
+            $server = $buildInfo.servers | Where-Object { $_.name -eq $serverName } | Select-Object -First 1
+            if (-not $server) {
+              Write-Error "Server '$serverName' not found in build info."
+              exit 1
+            }
+
+            $version = $server.version
+            $cliName = $server.cliName
+            $dockerImageName = $server.dockerImageName
+
+            Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+            Write-Host "##vso[task.setvariable variable=CliName;isOutput=true]$cliName"
+            Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
+          name: SetReleaseVariables
+
         - script: |
             set -euo pipefail
             
             # Load image from tar
             echo "Loading image tar for ${{ parameters.ServerName }}"
-            LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/${{ parameters.CliName }}-image.tar | grep -oP 'Loaded image: \K.*')
+            LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/$(SetReleaseVariables.CliName)-image.tar | grep -oP 'Loaded image: \K.*')
             echo "Loaded image: $LOADED_IMAGE"
 
             # Verify the loaded image exists
@@ -60,8 +77,8 @@ jobs:
             }
 
             # Prepare tags
-            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/${{ parameters.DockerImageName }}"
-            VERSIONED_TAG="$BASE_REPO:${{ parameters.ServerVersion }}"
+            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName)"
+            VERSIONED_TAG="$BASE_REPO:$(SetReleaseVariables.DockerImageVersion)"
             LATEST_TAG="$BASE_REPO:latest"
             
             echo "Tagging $LOADED_IMAGE as:"

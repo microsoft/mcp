@@ -38,16 +38,9 @@ jobs:
 
       $version = $server.version
       $tag = $server.releaseTag
-      $cliName = $server.cliName
-      $dockerImageName = $server.dockerImageName
 
       gh release create $tag --title "$serverName $version"
       gh release upload $tag $(Pipeline.Workspace)/binaries_signed_zipped/*.zip
-
-      Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
-      Write-Host "##vso[task.setvariable variable=CliName;isOutput=true]$cliName"
-      Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
-    name: SetReleaseVariables
     displayName: Create GitHub Release and upload artifacts
     env:
       GH_TOKEN: $(azuresdk-github-pat)
@@ -74,9 +67,6 @@ jobs:
       ContainerRegistry: 'azuresdkimages'
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
-      ServerVersion: $[ dependencies.TagRepository.outputs['SetReleaseVariables.DockerImageVersion'] ]
-      CliName: $[ dependencies.TagRepository.outputs['SetReleaseVariables.CliName'] ]
-      DockerImageName: $[ dependencies.TagRepository.outputs['SetReleaseVariables.DockerImageName'] ]
       DependsOn: TagRepository
 
 - job: UpdatePackageVersion
