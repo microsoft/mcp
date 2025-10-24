@@ -23,6 +23,26 @@ jobs:
     displayName: Download docker staging
     artifact: docker_staging
 
+  - script: |
+      echo "Listing docker_staging contents for debugging:"
+      ls -la "$(Pipeline.Workspace)/docker_staging/"
+      echo ""
+      echo "Listing $(ArtifactPath) contents:"
+      ls -la "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/"
+      echo ""
+      echo "Listing linux-x64 contents:"
+      ls -la "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/$(Platform)"
+      echo ""
+      echo "Listing dist contents:"
+      ls -la "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/$(Platform)/dist"
+      echo ""
+      echo "Listing variables:"
+      echo "ArtifactPath: $(ArtifactPath)"
+      echo "Platform: $(Platform)"
+      echo "CliName: $(CliName)"
+      echo "ExecutableName: $(ExecutableName)"
+    displayName: Debug - List staged files
+
   - task: 1ES.BuildContainerImage@1
     displayName: "Building Docker image for $(CliName) as $(DockerLocalTag)"
     inputs:
