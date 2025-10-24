@@ -26,7 +26,7 @@ jobs:
   - task: 1ES.BuildContainerImage@1
     displayName: "Building Docker image for $(CliName) as $(DockerLocalTag)"
     inputs:
-      path: "$(Pipeline.Workspace)/docker_staging"
+      path: "$(Pipeline.Workspace)/docker_staging/$(ArtifactPath)/$(Platform)"
       image: "$(DockerLocalTag)"
       buildArguments: |
         --build-arg PUBLISH_DIR="$(ArtifactPath)/linux-x64/dist"

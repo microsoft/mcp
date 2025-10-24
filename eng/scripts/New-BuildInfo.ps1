@@ -414,6 +414,7 @@ function Get-ServerMatrix {
             ServerName = $server.name
             CliName = $server.cliName
             ArtifactPath = $server.artifactPath
+            Platform = $platformName
             Version = $server.version
             ImageName = $imageName
             ExecutableName = $server.cliName + $executableExtension
