@@ -305,9 +305,13 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
 
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
-            .SetTag(TagName.ToolArea, tool)
-            .SetTag(TagName.ToolName, command);
+        var activity = Activity.Current;
+        if (activity != null)
+        {
+            activity.SetTag(TagName.IsServerCommandInvoked, true)
+                    .SetTag(TagName.ToolArea, tool)
+                    .SetTag(TagName.ToolName, command);
+        }
 
         try
         {
