@@ -57,7 +57,23 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         }
         else
         {
-            Settings = new LiveTestSettings();
+            // Playback mode: use sanitized placeholder values and disable any interactive auth.
+            Settings = new LiveTestSettings
+            {
+                // Subscription / Tenant placeholders used by playback matching & sanitizers.
+                SubscriptionId = "00000000-0000-0000-0000-000000000000",
+                TenantId = "00000000-0000-0000-0000-000000000000",
+                // ResourceBaseName used for vault name input to tools (maps to sanitized recording host).
+                ResourceBaseName = "Sanitized",
+                SubscriptionName = "Sanitized",
+                TenantName = "Sanitized"
+            };
+
+            // Signal playback mode to child process & any credential logic.
+            Environment.SetEnvironmentVariable("AZURE_MCP_PLAYBACK_MODE", "true");
+            Environment.SetEnvironmentVariable("AZURE_TENANT_ID", Settings.TenantId);
+            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId);
+            // TODO: Consider setting AZURE_TOKEN_CREDENTIALS=playback if additional branching is introduced.
         }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
@@ -83,6 +99,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
             EnvironmentVariables = new Dictionary<string, string?>
             {
                 { "TEST_PROXY_URL", proxy.BaseUri },
+                // Propagate playback signaling & sanitized identifiers to server process.
+                { "AZURE_MCP_PLAYBACK_MODE", _testMode is TestMode.Playback ? "true" : null },
+                { "AZURE_TENANT_ID", Settings.TenantId },
+                { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
             }
         };
 
@@ -228,9 +248,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         var assetsPath = _pathResolver.GetAssetsJson(GetType());
 
         var recordOptions = new Dictionary<string, string>
-            {
-                { "x-recording-file", pathToRecording },
-            };
+        {
+            { "x-recording-file", pathToRecording },
+        };
 
         if (!string.IsNullOrWhiteSpace(assetsPath))
         {
@@ -285,7 +305,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
     private string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null); // TODO: supply variant suffix if needed
+        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
         var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;
