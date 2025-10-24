@@ -16,6 +16,8 @@ public sealed class CertificateCreateCommand(ILogger<CertificateCreateCommand> l
     private const string CommandTitle = "Create Key Vault Certificate";
     private readonly ILogger<CertificateCreateCommand> _logger = logger;
 
+    public override string Id => "a11e024a-62e6-4237-8d7d-4b9b8439f50e";
+
     public override string Name => "create";
 
     public override string Title => CommandTitle;

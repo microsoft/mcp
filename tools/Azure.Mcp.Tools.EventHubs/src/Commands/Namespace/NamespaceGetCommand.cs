@@ -19,6 +19,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
 
     private readonly ILogger<NamespaceGetCommand> _logger = logger;
 
+    public override string Id => "71ec6c5b-b6e4-4c64-b31b-2d61dfad3b5c";
+
     public override string Name => "get";
 
     public override string Description =>

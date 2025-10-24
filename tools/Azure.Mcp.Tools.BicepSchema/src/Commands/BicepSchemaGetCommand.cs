@@ -15,6 +15,9 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
         private const string CommandTitle = "Get Bicep Schema for a resource";
 
         private readonly ILogger<BicepSchemaGetCommand> _logger = logger;
+
+        public override string Id => "553c003a-7cdf-4382-b833-94fe8bbb7386";
+
         public override string Name => "get";
 
         public override string Description =>

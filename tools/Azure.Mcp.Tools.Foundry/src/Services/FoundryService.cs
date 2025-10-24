@@ -872,7 +872,7 @@ public class FoundryService(
                 QueryText = query,
                 Response = convertedResponse,
                 Query = convertedRequestMessages,
-                ToolDefinitions = JsonSerializer.Serialize(toolDefinitions, (JsonTypeInfo<List<ToolDefinitionAIFunction>>)AIJsonUtilities.DefaultOptions.GetTypeInfo(typeof(List<ToolDefinitionAIFunction>))),
+                ToolDefinitions = JsonSerializer.Serialize(toolDefinitions, FoundryJsonContext.Default.ListToolDefinitionAIFunction),
                 Citations = citations
             };
         }

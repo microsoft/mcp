@@ -17,6 +17,8 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
     private const string CommandTitle = "Check Azure resources usage and quota in a region";
     private readonly ILogger<CheckCommand> _logger = logger;
 
+    public override string Id => "81f64603-5a56-4f74-90f8-395da69a99d3";
+
     public override string Name => "check";
 
     public override string Description =>

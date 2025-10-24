@@ -10,7 +10,6 @@ $ErrorActionPreference = "Stop"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
-$sourcePath = "$RepoRoot/eng/vscode"
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
@@ -19,7 +18,7 @@ if (!$ArtifactsPath) {
 }
 
 if (!$OutputPath) {
-    $OutputPath = "$RepoRoot/.work/vsix"
+    $OutputPath = "$RepoRoot/.work/packages_vsix"
 }
 
 if (!$BuildInfoPath) {
@@ -48,27 +47,31 @@ if(Test-Path $OutputPath) {
 }
 
 $tempPath = "$RepoRoot/.work/temp"
-Remove-Item -Path $tempPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
 
-Write-Host "Copying vsix source files to $tempPath"
-Copy-Item -Path $sourcePath -Destination $tempPath -Recurse -Force -ProgressAction SilentlyContinue
+foreach ($server in $buildInfo.servers) {
+    $vsixDirectory = "$RepoRoot/servers/$($server.name)/vscode"
 
-$originalLocation = Get-Location
-Set-Location $tempPath
-try {
-    Write-Host "Installing npm packages"
-    Invoke-LoggedCommand 'npm ci --omit=optional'
+    if(!(Test-Path $vsixDirectory)) {
+        LogWarning "VSIX directory $vsixDirectory does not exist."
+        continue
+    }
 
-    foreach ($server in $buildInfo.servers) {
-        $packagePrefix = $server.vsixPackagePrefix
+    Write-Host "Packing VSIX for server $($server.name)"
+
+    Write-Host "Creating clean temporary working directory $tempPath"
+    Remove-Item -Path $tempPath -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    New-Item -ItemType Directory -Force -Path $tempPath | Out-Null
+
+    $originalLocation = Get-Location
+    Set-Location $tempPath
+    try {
+        Write-Host "Copying VSIX base files from $vsixDirectory to $tempPath"
+        Copy-Item -Path "$vsixDirectory/*" -Destination $tempPath -Recurse -Force -ProgressAction SilentlyContinue
+
+        Write-Host "Installing npm packages"
+        Invoke-LoggedCommand 'npm ci --omit=optional'
+
         $version = $server.version
-
-        & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
-            -Command "extract" `
-            -InputReadMePath "$RepoRoot/$($server.readmePath)" `
-            -PackageType "vsix" `
-            -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' } `
-            -OutputDirectory $tempPath
 
         # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
         if($env:SETDEVVERSION -eq "true") {
@@ -89,10 +92,37 @@ try {
         }
 
         Write-Host "Copying server icon from $($server.packageIcon) to $tempPath/resources/package-icon.png"
+        New-Item -Path "$tempPath/resources" -ItemType Directory -Force | Out-Null
         Copy-Item -Path "$RepoRoot/$($server.packageIcon)" -Destination "$tempPath/resources/package-icon.png" -Force
+
+        & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
+            -Command "extract" `
+            -InputReadMePath "$RepoRoot/$($server.readmePath)" `
+            -PackageType "vsix" `
+            -InsertPayload @{ ToolTitle = 'Extension for Visual Studio Code' } `
+            -OutputDirectory $tempPath
+
+        Write-Host "Copying NOTICE.txt and LICENSE to $tempPath"
+        Copy-Item -Path "$RepoRoot/LICENSE" -Destination $tempPath -Force
+        Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPath -Force
 
         # Skip native platforms for now
         $filteredPlatforms = $server.platforms | Where-Object { -not $_.native }
+
+        ## Update the version number
+        $vsixPackageJsonPath = "./package.json"
+        if (Test-Path $vsixPackageJsonPath) {
+            $packageJson = Get-Content $vsixPackageJsonPath -Raw | ConvertFrom-Json
+            $packageJson.version = $version
+            $packageJson | ConvertTo-Json -Depth 100 | Set-Content $vsixPackageJsonPath -NoNewline
+
+            $packagePrefix = $packageJson.name -replace '-server$', ''
+            Write-Host "Updated VSIX version in $vsixPackageJsonPath to $version" -ForegroundColor Yellow
+        } else {
+            LogError "VSIX package.json not found at $vsixPackageJsonPath"
+            $exitCode = 1
+            continue
+        }
 
         foreach ($platform in $filteredPlatforms) {
             $platformDirectory = "$ArtifactsPath/$($platform.artifactPath)"
@@ -145,23 +175,6 @@ Processing VSIX packaging: $vsixBaseName
 
             New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
-            ## Update the version number
-            $vsixPackageJsonPath = "./package.json"
-            if (Test-Path $vsixPackageJsonPath) {
-                $packageJson = Get-Content $vsixPackageJsonPath -Raw | ConvertFrom-Json
-                $packageJson.version = $version
-                $packageJson.name = "$packagePrefix-server"
-                $packageJson.displayName = $server.assemblyTitle
-                $packageJson.description = $server.vsixDescription ? $server.vsixDescription : $packageJson.description
-                $packageJson.publisher = $server.vsixPublisher
-                $packageJson | ConvertTo-Json -Depth 100 | Set-Content $vsixPackageJsonPath -NoNewline
-                Write-Host "Updated VSIX version in $vsixPackageJsonPath to $version" -ForegroundColor Yellow
-            } else {
-                LogError "VSIX package.json not found at $vsixPackageJsonPath"
-                $exitCode = 1
-                continue
-            }
-
             $preRelease = $setDevVersion -or $version -match '-'
 
             ## Run package command
@@ -177,9 +190,9 @@ Processing VSIX packaging: $vsixBaseName
             Copy-Item -Path $manifestPath -Destination $signaturePath -Force
         }
     }
-}
-finally {
-    Set-Location $originalLocation
+    finally {
+        Set-Location $originalLocation
+    }
 }
 
 exit $exitCode

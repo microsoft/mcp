@@ -16,6 +16,7 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
     private const string _commandTitle = "Test Get";
     private readonly ILogger<TestGetCommand> _logger = logger;
 
+    public override string Id => "be7c3864-0713-42f8-8eb7-b7ca28a951fb";
     public override string Name => "get";
     public override string Description =>
         $"""

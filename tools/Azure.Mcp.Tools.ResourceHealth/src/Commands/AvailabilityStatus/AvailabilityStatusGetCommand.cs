@@ -18,6 +18,8 @@ public sealed class AvailabilityStatusGetCommand(ILogger<AvailabilityStatusGetCo
     private const string CommandTitle = "Get Resource Availability Status";
     private readonly ILogger<AvailabilityStatusGetCommand> _logger = logger;
 
+    public override string Id => "3b388cc7-4b16-4919-9e90-f592247d9891";
+
     public override string Name => "get";
 
     public override string Description =>

@@ -91,17 +91,19 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 <!-- remove-section: start nuget;npm remove_ide_sub_section -->
 Install Azure MCP Server using either an IDE extension or package manager. Choose one method below.
 
+> [!IMPORTANT]  
+> Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
+
 ## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
 ### VS Code (Recommended)
+Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
 
-1. Install either the stable or Insiders release of VS Code:
-   * [💫 Stable release](https://code.visualstudio.com/download)
-   * [🔮 Insiders release](https://code.visualstudio.com/insiders)
-1. Install the [GitHub Copilot](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot) and [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extensions
-1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension
+1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
+1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
+1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
 
 ### Visual Studio 2022
 

@@ -14,6 +14,7 @@ public sealed class DeleteWorkbooksCommand(ILogger<DeleteWorkbooksCommand> logge
 {
     private const string CommandTitle = "Delete Workbook";
     private readonly ILogger<DeleteWorkbooksCommand> _logger = logger;
+    public override string Id => "17bb94ef-9df1-45d2-a1a0-ed57656ca067";
 
     public override string Name => "delete";
 

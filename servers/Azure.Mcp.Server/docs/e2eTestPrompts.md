@@ -6,26 +6,26 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| foundry_agents_connect | Query an agent in my AI foundry project |
+| foundry_agents_connect | Query an agent in my Azure AI foundry resource |
 | foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_list | List all agents in my AI Foundry project |
-| foundry_agents_list | Show me the available agents in my AI Foundry project |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my AI Foundry project for task_adherence |
+| foundry_agents_list | List all agents in my Azure AI Foundry resource |
+| foundry_agents_list | Show me the available agents in my Azure AI Foundry resource |
+| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Azure AI Foundry resource for task_adherence |
 | foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
-| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my AI Foundry project |
+| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Azure AI Foundry resource |
 | foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
 | foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
 | foundry_models_deployments_list | List all AI Foundry model deployments |
 | foundry_models_deployments_list | Show me all AI Foundry model deployments |
 | foundry_models_list | List all AI Foundry models |
 | foundry_models_list | Show me the available AI Foundry models |
-| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" |
-| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?"|
-| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" |
-| foundry_openai_embeddings-create | Create vector embeddings for my text using Azure OpenAI |
-| foundry_openai_models-list | List all available OpenAI models in my Azure resource |
-| foundry_openai_models-list | Show me the OpenAI model deployments |
+| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Azure AI Foundry resource |
+| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Azure AI Foundry resource |
+| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Azure AI Foundry resource |
+| foundry_openai_embeddings-create | Create vector embeddings for my text using my Azure AI Foundry resource |
+| foundry_openai_models-list | List all available OpenAI models in my Azure AI Foundry resource |
+| foundry_openai_models-list | Show me the OpenAI model deployments in my Azure AI Foundry resource |
 | foundry_resource_get | List all AI Foundry resources in my subscription |
 | foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
 | foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
@@ -105,15 +105,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| appservice_database_add | Add a database connection to my app service <app_name> in resource group <resource_group> |
-| appservice_database_add | Configure a SQL Server database for app service <app_name> |
-| appservice_database_add | Add a MySQL database to app service <app_name> |
-| appservice_database_add | Add a PostgreSQL database to app service <app_name> |
-| appservice_database_add | Add a CosmosDB database to app service <app_name> |
-| appservice_database_add | Add database <database_name> on server <database_server> to app service <app_name> |
-| appservice_database_add | Set connection string for database <database_name> in app service <app_name> |
-| appservice_database_add | Configure tenant <tenant> for database <database_name> in app service <app_name> |
-| appservice_database_add | Add database <database_name> with retry policy to app service <app_name> |
+| appservice_database_add | Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group> |
+| appservice_database_add | Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group> |
+| appservice_database_add | Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| appservice_database_add | Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group> |
+| appservice_database_add | Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group> |
+| appservice_database_add | Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group> |
+| appservice_database_add | Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| appservice_database_add | Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group> |
+| appservice_database_add | Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group> |
+| appservice_database_add | Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group> |
 
 ## Azure Application Insights
 
@@ -128,7 +129,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI|
+| extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
 | extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
 | extension_cli_install | <uninstall az cli on your machine and run test prompts for extension_cli_generate> |
@@ -278,11 +279,11 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| eventhubs_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| eventhubs_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
-| eventhubs_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| eventhubs_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
-| eventhubs_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| eventhubs_eventhub_consumergroup_delete | Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| eventhubs_eventhub_consumergroup_get | List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name> |
+| eventhubs_eventhub_consumergroup_get | Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| eventhubs_eventhub_consumergroup_update | Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
+| eventhubs_eventhub_consumergroup_update | Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name> |
 | eventhubs_eventhub_delete | Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
 | eventhubs_eventhub_get | List all Event Hubs in my namespace <namespace_name> |
 | eventhubs_eventhub_get | Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name> |
@@ -437,7 +438,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | get_bestpractices_get | Get the latest Azure deployment best practices |
 | get_bestpractices_get | Get the latest Azure best practices |
 | get_bestpractices_get | Get the latest Azure Functions code generation best practices |
-| get_bestpractices_get | Get the latest Azure Functions deployment best practices|
+| get_bestpractices_get | Get the latest Azure Functions deployment best practices |
 | get_bestpractices_get | Get the latest Azure Functions best practices |
 | get_bestpractices_get | Get the latest Azure Static Web Apps best practices |
 | get_bestpractices_get | What are azure function best practices? |

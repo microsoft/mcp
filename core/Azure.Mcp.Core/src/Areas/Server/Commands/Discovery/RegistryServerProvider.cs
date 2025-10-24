@@ -37,20 +37,47 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
     /// <returns>A configured MCP client ready for use.</returns>
-    /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid transport mechanism.</exception>
+    /// <exception cref="ArgumentException">Thrown when the server configuration doesn't specify a valid transport type (missing URL or stdio configuration).</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the server configuration is valid but client creation fails (e.g., missing command for stdio transport, dependency issues, or external process failures).</exception>
     public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions)
     {
+        Func<McpClientOptions, Task<McpClient>>? clientFactory = null;
+
+        // Determine which factory function to use based on configuration
         if (!string.IsNullOrWhiteSpace(_serverInfo.Url))
         {
-            return await CreateHttpClientAsync(clientOptions);
+            clientFactory = CreateHttpClientAsync;
         }
         else if (!string.IsNullOrWhiteSpace(_serverInfo.Type) && _serverInfo.Type.Equals("stdio", StringComparison.OrdinalIgnoreCase))
         {
-            return await CreateStdioClientAsync(clientOptions);
+            clientFactory = CreateStdioClientAsync;
         }
-        else
+
+        if (clientFactory == null)
         {
-            throw new InvalidOperationException($"Registry server '{_id}' does not have a valid url or type for transport.");
+            throw new ArgumentException($"Registry server '{_id}' does not have a valid transport type. Either 'url' for HTTP transport or 'type=stdio' with 'command' must be specified.");
+        }
+
+        try
+        {
+            return await clientFactory(clientOptions);
+        }
+        catch (Exception ex)
+        {
+            if (!string.IsNullOrWhiteSpace(_serverInfo.InstallInstructions))
+            {
+                var errorWithInstructions = $"""
+                    Failed to initialize the '{_id}' MCP tool.
+                    This tool may require dependencies that are not installed.
+
+                    Installation Instructions:
+                    {_serverInfo.InstallInstructions}
+                    """;
+
+                throw new InvalidOperationException(errorWithInstructions.Trim(), ex);
+            }
+
+            throw new InvalidOperationException($"Failed to create MCP client for registry server '{_id}': {ex.Message}", ex);
         }
     }
 
