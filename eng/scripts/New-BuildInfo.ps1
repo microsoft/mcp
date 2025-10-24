@@ -335,9 +335,6 @@ function Get-ServerDetails {
             dnxDescription = $props.DnxDescription
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            vsixPackagePrefix = $props.VsixPackagePrefix
-            vsixDescription = $props.VsixDescription
-            vsixPublisher = $props.VsixPublisher
             platforms = $platforms
         }
     }

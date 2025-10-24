@@ -15,6 +15,8 @@ public sealed class ServerShowCommand(ILogger<ServerShowCommand> logger)
 {
     private const string CommandTitle = "Show SQL Server";
 
+    public override string Id => "70c56d40-4611-4e22-b3f7-19e22b707f6b";
+
     public override string Name => "show";
 
     public override string Description =>

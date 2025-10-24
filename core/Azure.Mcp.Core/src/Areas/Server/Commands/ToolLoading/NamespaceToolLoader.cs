@@ -120,6 +120,10 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                Annotations = new ToolAnnotations()
+                {
+                    Title = group.Title ?? namespaceName,
+                },
             };
 
             allToolsResponse.Tools.Add(tool);
@@ -144,7 +148,7 @@ public sealed class NamespaceToolLoader(
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.AddTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {

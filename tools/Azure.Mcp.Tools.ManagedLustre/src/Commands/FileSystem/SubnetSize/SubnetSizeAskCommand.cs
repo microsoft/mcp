@@ -15,6 +15,8 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
 {
     private const string CommandTitle = "Calculate AMLFS Subnet Size required number of IP Addresses";
 
+    public override string Id => "3d3f6f27-218b-4915-9c1e-243dd53b16da";
+
     public override string Name => "ask";
 
     public override string Description =>

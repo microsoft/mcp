@@ -148,7 +148,7 @@
     },
     {
       "name": "get_azure_resource_and_app_health_status",
-      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, and manage web tests for application monitoring.",
+      "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, manage web tests for application monitoring, and get health status of entities in Azure Monitor health models.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -164,7 +164,7 @@
         "datadog_monitoredresources_list",
         "monitor_workspace_list",
         "monitor_activitylog_list",
-        "monitor_healthmodels_entity_gethealth",
+        "monitor_healthmodels_entity_get",
         "monitor_metrics_definitions",
         "monitor_metrics_query",
         "monitor_resource_log_query",
@@ -175,7 +175,7 @@
         "monitor_workspace_log_query",
         "resourcehealth_availability-status_get",
         "resourcehealth_availability-status_list",
-        "resourcehealth_service-health-events_list"
+        "resourcehealth_health-events_list"
       ]
     },
     {
@@ -664,7 +664,7 @@
     },
     {
       "name": "get_azure_storage_details",
-      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, blob data, and Azure Managed Lustre filesystem information including available SKUs, subnet size validation, and subnet size requirements.",
+      "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -674,13 +674,13 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "managedlustre_filesystem_list",
-        "managedlustre_filesystem_sku_get",
+        "managedlustre_fs_list",
+        "managedlustre_fs_sku_get",
         "storage_account_get",
         "storage_blob_container_get",
         "storage_blob_get",
-        "managedlustre_filesystem_subnetsize_ask",
-        "managedlustre_filesystem_subnetsize_validate"
+        "managedlustre_fs_subnetsize_ask",
+        "managedlustre_fs_subnetsize_validate"
       ]
     },
     {
@@ -697,7 +697,7 @@
       "mappedToolList": [
         "storage_account_create",
         "storage_blob_container_create",
-        "managedlustre_filesystem_create"
+        "managedlustre_fs_create"
       ]
     },
     {
@@ -712,7 +712,7 @@
         "localRequired": false
       },
       "mappedToolList": [
-        "managedlustre_filesystem_update"
+        "managedlustre_fs_update"
       ]
     },
     {
@@ -922,7 +922,7 @@
     },
     {
       "name": "get_azure_virtual_desktop_details",
-      "description": "Get details about Azure Virtual Desktop resources including host pools, session hosts, and user sessions.",
+      "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
       "toolMetadata": {
         "destructive": false,
         "idempotent": true,
@@ -933,8 +933,8 @@
       },
       "mappedToolList": [
         "virtualdesktop_hostpool_list",
-        "virtualdesktop_hostpool_sessionhost_list",
-        "virtualdesktop_hostpool_sessionhost_usersession-list"
+        "virtualdesktop_hostpool_host_list",
+        "virtualdesktop_hostpool_host_user-list"
       ]
     },
     {

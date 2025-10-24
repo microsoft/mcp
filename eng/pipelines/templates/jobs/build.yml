@@ -76,7 +76,7 @@ jobs:
 
   - task: Powershell@2
     displayName: "Run tests"
-    condition: and(succeeded(), eq(variables['RunTests'], 'true'))
+    condition: and(succeeded(), eq(variables['RunUnitTests'], 'true'))
     timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     inputs:
       pwsh: true
@@ -88,7 +88,7 @@ jobs:
 
   - task: PublishTestResults@2
     displayName: "Publish Results"
-    condition: and(succeededOrFailed(), eq(variables['RunTests'], 'true'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
       testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
@@ -97,7 +97,7 @@ jobs:
 
   - task: PublishCodeCoverageResults@2
     displayName: "Publish Code Coverage Reports"
-    condition: and(succeededOrFailed(), eq(variables['RunTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
     inputs:
       summaryFileLocation: $(CoverageFile)
 
@@ -105,22 +105,3 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
       ArtifactName: binaries_$(System.JobName)
-
-  # --- VS Code Extension Component Detection ---
-  - task: NodeTool@0
-    displayName: "Use Node.js 20.x"
-    inputs:
-      versionSpec: 20.x
-
-  - bash: |
-      npm install -g npm vsce
-      npm ci --no-optional
-    displayName: "Install npm dependencies and vsce"
-    workingDirectory: eng/vscode
-
-  - pwsh: ./ci-build.ps1
-    workingDirectory: eng/vscode
-    displayName: "Build VS Code Extension"
-
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: "Component Governance Detection"

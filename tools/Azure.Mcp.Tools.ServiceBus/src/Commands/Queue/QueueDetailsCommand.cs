@@ -18,6 +18,9 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
 {
     private const string CommandTitle = "Get Service Bus Queue Details";
     private readonly ILogger<QueueDetailsCommand> _logger = logger;
+
+    public override string Id => "a02c58ce-e89f-4303-ac4a-c9dfb118e761";
+
     public override string Name => "details";
 
     public override string Description =>

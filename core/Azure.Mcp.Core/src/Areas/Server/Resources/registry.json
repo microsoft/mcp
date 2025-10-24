@@ -2,13 +2,16 @@
     "servers": {
         "documentation": {
             "url": "https://learn.microsoft.com/api/mcp",
+            "title": "Microsoft Documentation Search",
             "description": "Search official Microsoft/Azure documentation to find the most relevant and trustworthy content for a user's query. This tool returns up to 10 high-quality content chunks (each max 500 tokens), extracted from Microsoft Learn and other official sources. Each result includes the article title, URL, and a self-contained content excerpt optimized for fast retrieval and reasoning. Always use this tool to quickly ground your answers in accurate, first-party Microsoft/Azure knowledge."
         },
         "azd": {
             "type": "stdio",
             "command": "azd",
             "args": ["mcp", "start"],
-            "description": "Azure Developer CLI (azd) includes a suite of tools to help build, modernize, and manage applications on Azure. It simplifies the process of developing cloud applications by providing commands for project initialization, resource provisioning, deployment, and monitoring. Use this tool to streamline your Azure development workflow and manage your cloud resources efficiently."
+            "title": "Azure Developer CLI",
+            "description": "Azure Developer CLI (azd) includes a suite of tools to help build, modernize, and manage applications on Azure. It simplifies the process of developing cloud applications by providing commands for project initialization, resource provisioning, deployment, and monitoring. Use this tool to streamline your Azure development workflow and manage your cloud resources efficiently.",
+            "installInstructions": "The Azure Developer CLI (azd) is either not installed or requires an update. The minimum required version that works with MCP tools is 1.20.0.\n\nTo install or upgrade, follow the instructions at https://aka.ms/azd/install\n\nAfter installation you may need to restart the Azure MCP server and your IDE."
         }
     }
 }

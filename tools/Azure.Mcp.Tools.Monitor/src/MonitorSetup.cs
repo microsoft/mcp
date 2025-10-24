@@ -20,6 +20,7 @@ public class MonitorSetup : IAreaSetup
 {
     public string Name => "monitor";
 
+    public string Title => "Azure Monitor";
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddHttpClient<IMonitorService, MonitorService>();
@@ -54,7 +55,7 @@ public class MonitorSetup : IAreaSetup
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
         // Create Monitor command group
-        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.");
+        var monitor = new CommandGroup(Name, "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.", Title);
 
         // Create Monitor subgroups
         var workspaces = new CommandGroup("workspace", "Log Analytics workspace operations - Commands for managing Log Analytics workspaces.");

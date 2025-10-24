@@ -339,7 +339,7 @@ azmcp search knowledge base get --service <service>
                                 [--knowledge-base <knowledge-base>]
 
 # Run retrieval against an AI Search knowledge base
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ✅ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp search knowledge base retrieve --service <service> \
                                      --knowledge-base <knowledge-base> \
                                      [--query <query>] \
@@ -352,7 +352,7 @@ azmcp search knowledge source get --service <service>
 
 # List AI Search accounts in a subscription
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp search list --subscription <subscription>
+azmcp search service list --subscription <subscription>
 ```
 
 ### Azure AI Services Speech Operations
@@ -432,7 +432,9 @@ azmcp appconfig kv set --subscription <subscription> \
                        --account <account> \
                        --key <key> \
                        --value <value> \
-                       [--label <label>]
+                       [--label <label>] \
+                       [--content-type <content-type>] \
+                       [--tags <tags>]
 ```
 
 ### Azure App Lens Operations
@@ -460,6 +462,8 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
+```
+
 ### Azure App Service Operations
 
 ```bash
@@ -546,7 +550,7 @@ azmcp extension cli generate --cli-type <cli-type>
 
 ```bash
 # Get installation instructions for Azure CLI, Azure Developer CLI or Azure Functions Core Tools CLI
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp extension cli install --cli-type <cli-type>
 ```
 
@@ -556,7 +560,7 @@ azmcp extension cli install --cli-type <cli-type>
 
 ```bash
 # Send email using Azure Communication Services
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint <endpoint> \
                                --from <sender-email> \
                                --to <recipient-email> \
@@ -570,7 +574,7 @@ azmcp communication email send --endpoint <endpoint> \
 
 # Examples:
 # Send plain text email
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --to "recipient@example.com" \
@@ -578,7 +582,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --message "Hello from Azure Communication Services!"
 
 # Send HTML-formatted email with CC and sender name
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "sender@verified-domain.com" \
                                --sender-name "Support Team" \
@@ -589,7 +593,7 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
                                --is-html
 
 # Send to multiple recipients with BCC and reply-to
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp communication email send --endpoint "https://mycomms.communication.azure.com" \
                                --from "notifications@verified-domain.com" \
                                --to "recipient1@example.com,recipient2@example.com" \
@@ -615,8 +619,8 @@ azmcp communication email send --endpoint "https://mycomms.communication.azure.c
 
 ```bash
 # SMS message using Azure Communication Services
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string <connection-string> \
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint <endpoint> \
                              --from <sender-phone-number> \
                              --to <recipient-phone-number> \
                              --message <message-text> \
@@ -625,15 +629,15 @@ azmcp communication sms send --connection-string <connection-string> \
 
 # Examples:
 # Send SMS to single recipient
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..." \
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com" \
                              --from "+1234567890" \
                              --to "+1234567891" \
                              --message "Hello from Azure Communication Services!"
 
 # Send SMS to multiple recipients with delivery reporting
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp communication sms send --connection-string "endpoint=https://mycomms.communication.azure.com/;accesskey=..."
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp communication sms send --endpoint "https://mycomms.communication.azure.com"
                              --from "+1234567890" \
                              --to "+1234567891,+1234567892" \
                              --message "Broadcast message" \
@@ -642,7 +646,7 @@ azmcp communication sms send --connection-string "endpoint=https://mycomms.commu
 ```
 
 **Options:**
--   `--connection-string`: Azure Communication Services connection string (required)
+-   `--endpoint`: Azure Communication Services endpoint URL (required)
 -   `--from`: SMS-enabled phone number in E.164 format (required)
 -   `--to`: Recipient phone number(s) in E.164 format, comma-separated for multiple recipients (required)
 -   `--message`: SMS message content (required)
@@ -988,28 +992,28 @@ azmcp eventgrid events publish --subscription <subscription> \
 ```bash
 # Delete a Consumer Group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup delete --subscription <subscription> \
-                                     --resource-group <resource-group> \
-                                     --namespace <namespace> \
-                                     --eventhub <eventhub-name> \
-                                     --consumer-group <consumer-group-name>
+azmcp eventhubs eventhub consumergroup delete --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --namespace <namespace> \
+                                              --eventhub <eventhub-name> \
+                                              --consumer-group <consumer-group-name>
 
 # Get Consumer Groups (list all in event hub or get specific consumer group)
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup get --subscription <subscription> \
-                                  --resource-group <resource-group> \
-                                  --namespace <namespace> \
-                                  --eventhub <eventhub-name> \
-                                  [--consumer-group <consumer-group-name>]
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp eventhubs eventhub consumergroup get --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --namespace <namespace> \
+                                           --eventhub <eventhub-name> \
+                                           [--consumer-group <consumer-group-name>]
 
 # Create or update a Consumer Group
 # ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp eventhubs consumergroup update --subscription <subscription> \
-                                     --resource-group <resource-group> \
-                                     --namespace <namespace> \
-                                     --eventhub <eventhub-name> \
-                                     --consumer-group <consumer-group-name> \
-                                     [--user-metadata <user-metadata>]
+azmcp eventhubs eventhub consumergroup update --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --namespace <namespace> \
+                                              --eventhub <eventhub-name> \
+                                              --consumer-group <consumer-group-name> \
+                                              [--user-metadata <user-metadata>]
 ```
 
 ```bash
@@ -1021,14 +1025,14 @@ azmcp eventhubs eventhub delete --subscription <subscription> \
                                 --eventhub <eventhub-name>
 
 # Get Event Hubs (list all in namespace or get specific event hub)
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs eventhub get --subscription <subscription> \
                              --resource-group <resource-group> \
                              --namespace <namespace> \
                              [--eventhub <eventhub-name>]
 
 # Create or update an Event Hub
-# ✅ Destructive | ✅ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp eventhubs eventhub update --subscription <subscription> \
                                 --resource-group <resource-group> \
                                 --namespace <namespace> \
@@ -1083,7 +1087,7 @@ azmcp functionapp get --subscription <subscription> \
 
 ```bash
 # Gets Key Vault Managed HSM account settings
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp keyvault admin settings get --subscription <subscription> \
                                   --vault <vault-name>
 ```
@@ -1302,7 +1306,8 @@ azmcp marketplace product get --subscription <subscription> \
 
 ```bash
 # Get best practices for secure, production-grade Azure usage
-azmcp bestpractices get --resource <resource> --action <action>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp get bestpractices get --resource <resource> --action <action>
 
 # Resource options:
 #   general        - General Azure best practices
@@ -1332,7 +1337,7 @@ azmcp tools list --namespaces
 
 ```bash
 # List the activity logs of an Azure Resource
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp monitor activitylog list --subscription <subscription> \
                                --resource-group <resource-group> \
                                --resource-type <resource-type> \
@@ -1520,7 +1525,7 @@ azmcp managedlustre fs list --subscription <subscription> \
                                          --resource-group <resource-group> 
 
 # Create an Azure Managed Lustre filesystem
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs create --subscription <subscription> \
                                            --sku <sku> \
                                            --size <filesystem-size-in-tib> \
@@ -1815,7 +1820,7 @@ azmcp sql server delete --subscription <subscription> \
                         --server <server-name>
 
 # List SQL servers in a resource group
-# ❌ Destructive | ✅ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp sql server list --subscription <subscription> \
                       --resource-group <resource-group>
 

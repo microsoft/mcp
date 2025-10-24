@@ -13,6 +13,8 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
 {
     private const string CommandTitle = "Evaluate Agent";
 
+    public override string Id => "a614ec89-1fce-474f-9cb2-87537b287cbf";
+
     public override string Name => "evaluate";
 
     public override string Description =>
