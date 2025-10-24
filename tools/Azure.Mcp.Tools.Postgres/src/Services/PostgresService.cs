@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
+using Pgvector.Npgsql;
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
@@ -51,7 +52,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken};Ssl Mode=Prefer";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
@@ -69,7 +70,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken};Ssl Mode=Prefer";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         await using var command = new NpgsqlCommand(query, resource.Connection);
@@ -97,7 +98,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken};Ssl Mode=Prefer";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
@@ -115,7 +116,7 @@ public class PostgresService : BaseAzureService, IPostgresService
     {
         var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken};Ssl Mode=Prefer";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table}';";
@@ -219,9 +220,9 @@ public class PostgresService : BaseAzureService, IPostgresService
 
         public static async Task<PostgresResource> CreateAsync(string connectionString)
         {
-            var dataSource = new NpgsqlSlimDataSourceBuilder(connectionString)
-                .EnableTransportSecurity()
-                .Build();
+            var builder = new NpgsqlDataSourceBuilder(connectionString);
+            builder.UseVector();
+            var dataSource = builder.Build();
             var connection = await dataSource.OpenConnectionAsync();
             return new PostgresResource(dataSource, connection);
         }

@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.Core" />
     <PackageReference Include="Azure.ResourceManager" />
@@ -17,6 +16,7 @@
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="Npgsql" />
+    <PackageReference Include="Pgvector" />
     <PackageReference Include="System.CommandLine" />
   </ItemGroup>
 </Project>
