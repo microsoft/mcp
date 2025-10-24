@@ -190,7 +190,7 @@ function Get-PathsToTest {
             'tools/Azure.Mcp.Tools.Storage',
             'tools/Azure.Mcp.Tools.Monitoring',
             'core/Microsoft.Mcp.Core',
-            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core'server canary list
+            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
         ) #>
     }
 
