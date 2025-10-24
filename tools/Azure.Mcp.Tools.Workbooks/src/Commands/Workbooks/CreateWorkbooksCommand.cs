@@ -17,6 +17,7 @@ public sealed class CreateWorkbooksCommand(ILogger<CreateWorkbooksCommand> logge
 {
     private const string CommandTitle = "Create Workbook";
     private readonly ILogger<CreateWorkbooksCommand> _logger = logger;
+    public override string Id => "a49c650d-8568-4b63-8bad-35eb6d9ab0a7";
 
     public override string Name => "create";
 

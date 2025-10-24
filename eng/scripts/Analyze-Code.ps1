@@ -42,6 +42,29 @@ try {
         Write-Host "✅ Tool description evaluation did not detect any issues."
     }
 
+    # Run tool name length validation
+    $toolNameResult = & "$PSScriptRoot/Test-ToolNameLength.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Tool name length validation failed"
+        Write-Host "Maximum Length Allowed: $($toolNameResult.MaxAllowed). $($toolNameResult.ViolationCount) tool(s) exceeding this limit. Review the above output for details."
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Tool name length validation passed."
+        Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit."
+    }
+
+    # Run tool id validation
+    $toolIdResult = & "$PSScriptRoot/Test-ToolId.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Tool id validation failed"
+        Write-Host "$($toolIdResult.ViolationCount) duplicated tool id(s) found. Review the above output for details."
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Tool id validation passed."
+    }
+
     if($hasErrors) {
         exit 1
     }

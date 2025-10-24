@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -132,8 +133,6 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, !learn);
-
         if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
@@ -163,6 +162,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         };
     }
 
+    /// <summary>
+    /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
+    /// </summary>
+    /// <returns>A JSON serialized string with each area's name and a description of operations available in
+    /// that namespace.</returns>
     private async Task<string> GetRootToolsJsonAsync()
     {
         if (_cachedRootToolsJson != null)
@@ -188,6 +192,12 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         return toolsJson;
     }
 
+    /// <summary>
+    /// Gets the set of <see cref="Core.Commands.IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// </summary>
+    /// <param name="request">Calling request</param>
+    /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
+    /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool)
     {
         if (_cachedToolListsJson.TryGetValue(tool, out var cachedJson))
@@ -206,6 +216,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = await GetRootToolsJsonAsync();
         var learnResponse = new CallToolResult
         {
@@ -236,6 +247,10 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
+        var activity = Activity.Current?
+            .SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolArea, tool);
+
         var toolsJson = await GetToolListJsonAsync(request, tool);
         if (string.IsNullOrEmpty(toolsJson))
         {
@@ -288,6 +303,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         {
             _logger.LogError(ex, "Exception thrown while getting provider client for tool: {Tool}", tool);
             return await RootLearnModeAsync(request, intent, cancellationToken);
+        }
+
+        var activity = Activity.Current;
+        if (activity != null)
+        {
+            activity.SetTag(TagName.IsServerCommandInvoked, true)
+                    .SetTag(TagName.ToolArea, tool)
+                    .SetTag(TagName.ToolName, command);
         }
 
         try

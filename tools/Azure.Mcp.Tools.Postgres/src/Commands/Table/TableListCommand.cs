@@ -13,6 +13,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
 {
     private const string CommandTitle = "List PostgreSQL Tables";
 
+    public override string Id => "625af363-9894-4b24-a6d9-62032e62a940";
     public override string Name => "list";
     public override string Description => "Lists all tables in the PostgreSQL database.";
     public override string Title => CommandTitle;

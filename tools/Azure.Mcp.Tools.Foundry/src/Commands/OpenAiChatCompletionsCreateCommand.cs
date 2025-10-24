@@ -17,13 +17,17 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
 {
     private const string CommandTitle = "Create OpenAI Chat Completions";
 
+    public override string Id => "aa674825-1463-464d-9b2c-f8315f778d0d";
+
     public override string Name => "chat-completions-create";
 
     public override string Description =>
         $"""
-        Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational 
-        inputs with message history and system instructions to generate contextual responses. Returns chat 
-        response as JSON. Requires resource-name, deployment-name, and message-array.
+        Create chat completions using Azure OpenAI in AI Foundry. Send messages to Azure OpenAI chat models deployed 
+        in your AI Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations 
+        with message history, system instructions, and response customization. Use this when you need to create chat 
+        completions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI. 
+        Requires resource-name, deployment-name, and message-array.
         """;
 
     public override string Title => CommandTitle;

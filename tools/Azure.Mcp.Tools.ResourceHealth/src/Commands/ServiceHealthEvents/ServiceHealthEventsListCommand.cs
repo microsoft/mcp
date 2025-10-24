@@ -18,6 +18,8 @@ public sealed class ServiceHealthEventsListCommand(ILogger<ServiceHealthEventsLi
     private const string CommandTitle = "List Service Health Events";
     private readonly ILogger<ServiceHealthEventsListCommand> _logger = logger;
 
+    public override string Id => "c3211c73-af20-4d8d-bed2-4f181e0e4c92";
+
     public override string Name => "list";
 
     public override string Description =>

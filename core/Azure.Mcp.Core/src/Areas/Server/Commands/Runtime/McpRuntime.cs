@@ -77,10 +77,6 @@ public sealed class McpRuntime : IMcpRuntime
 
         activity?.AddTag(TagName.ToolName, request.Params.Name);
 
-        // Assume that this is a BaseCommand<T>.  If not, the tag will be updated in 
-        // the children ToolLoaders.
-        activity?.AddTag(TagName.IsServerCommandInvoked, true);
-
         var symbol = OptionDefinitions.Common.Subscription;
 
         var subscriptionArgument = request.Params?.Arguments?
@@ -126,6 +122,22 @@ public sealed class McpRuntime : IMcpRuntime
             }
 
             return callTool;
+        }
+        // Catches scenarios where child MCP clients are unable to be created
+        // due to missing dependencies or misconfiguration.
+        catch (InvalidOperationException ex)
+        {
+            activity?.SetStatus(ActivityStatusCode.Error, "Exception occurred calling tool handler")
+                ?.AddTag(TagName.ErrorDetails, ex.Message);
+
+            return new CallToolResult
+            {
+                Content = [new TextContentBlock
+                {
+                    Text = ex.Message,
+                }],
+                IsError = true,
+            };
         }
         catch (Exception ex)
         {

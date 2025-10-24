@@ -1,6 +1,10 @@
 parameters:
-  - name: ServerMatrix
-    type: string
+- name: ServerMatrix
+  type: string
+- name: PackageDocker
+  type: boolean
+- name: PackageVSIX
+  type: boolean
 
 jobs:
 - job: Sign
@@ -30,24 +34,8 @@ jobs:
     parameters:
       SigningKeyCode: 'CP-230012' # MS Cert
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/windows-*/**/azmcp.dll
-        **/windows-*/**/azmcp.exe
-        **/windows-*/**/mcptmp.dll
-        **/windows-*/**/mcptmp.exe
-        **/windows-*/**/*.Mcp.*.dll
-
-  - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
-    parameters:
-      SigningKeyCode: 'CP-231522' # MS 3rd Party Cert
-      BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/windows-*/**/ModelContextProtocol*.dll
-        **/windows-*/**/Newtonsoft.Json.dll
-        **/windows-*/**/Npgsql.dll
-        **/windows-*/**/OpenAI.dll
-        **/windows-*/**/OpenTelemetry*.dll
-        **/windows-*/**/YamlDotNet.dll
+      # The CliName variable is produced in Compress-ForSigning.ps1 based on build_info.json cliName properties.
+      BinaryPattern: '**/windows-*/$(CliName).exe'
 
   - template: pipelines/steps/azd-cli-mac-signing.yml@azure-sdk-build-tools
     parameters:
@@ -126,14 +114,16 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
-  parameters:
-    DependsOn: Sign
+- ${{ if parameters.PackageVSIX }}:
+  - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+    parameters:
+      DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
-  parameters:
-    DependsOn: Sign
-    ServerMatrix: ${{ parameters.ServerMatrix }}
+- ${{ if parameters.PackageDocker }}:
+  - template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
+    parameters:
+      DependsOn: Sign
+      ServerMatrix: ${{ parameters.ServerMatrix }}
 
 - ${{ each os in split('linux|windows|macOS', '|') }}:
   - template: /eng/pipelines/templates/jobs/verify-packages.yml

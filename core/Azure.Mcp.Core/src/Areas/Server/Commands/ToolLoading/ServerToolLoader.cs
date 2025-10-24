@@ -3,12 +3,12 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 
@@ -84,6 +84,19 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
                 InputSchema = ToolSchema,
             };
 
+            // Set annotations if we have Title or ToolMetadata
+            if (metadata.Title != null || metadata.ToolMetadata != null)
+            {
+                tool.Annotations = new ToolAnnotations
+                {
+                    Title = metadata.Title,
+                    DestructiveHint = metadata.ToolMetadata?.Destructive,
+                    IdempotentHint = metadata.ToolMetadata?.Idempotent,
+                    OpenWorldHint = metadata.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = metadata.ToolMetadata?.ReadOnly,
+                };
+            }
+
             allToolsResponse.Tools.Add(tool);
         }
 
@@ -124,16 +137,23 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             learn = true;
         }
 
+        // The ToolArea for the Servers loaded is the name of the server.
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
+
         try
         {
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TelemetryConstants.TagName.IsServerCommandInvoked, false);
-
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // The "command" JSON property is what concrete BaseCommand is trying to be invoked.
+                // It is possible that the LLM provides a value for "command" that does not exist in
+                // CommandFactory. This incorrect value will be replaced if we are able to find
+                // a matching tool via sampling.
+                Activity.Current?.SetTag(TagName.ToolName, command);
+
                 var toolParams = GetParametersDictionary(request);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -233,6 +253,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
+            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
+                .SetTag(TagName.ToolName, command);
+
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
             if (toolCallResponse.IsError is true)
@@ -308,6 +331,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = await GetChildToolListJsonAsync(request, tool);
 
         var learnResponse = new CallToolResult

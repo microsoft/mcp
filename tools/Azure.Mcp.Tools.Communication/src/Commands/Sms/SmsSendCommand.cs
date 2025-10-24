@@ -20,6 +20,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
 {
     private const string CommandTitle = "Send SMS Message";
     private readonly ILogger<SmsSendCommand> _logger = logger;
+    public override string Id => "a0dc94f3-25ac-4971-a552-0d90fd57e902";
 
     public override string Name => "send";
 
@@ -36,7 +37,7 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
         Destructive = false,
         ReadOnly = true,
         OpenWorld = true,
-        Idempotent = true,
+        Idempotent = false,
         Secret = false,
         LocalRequired = false
     };

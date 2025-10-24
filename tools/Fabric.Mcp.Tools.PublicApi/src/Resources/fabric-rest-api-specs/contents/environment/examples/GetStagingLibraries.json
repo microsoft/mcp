@@ -1,26 +1,42 @@
 {
     "parameters": {
         "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
-        "environmentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87"
+        "environmentId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "preview": "false"
     },
     "responses": {
         "200": {
             "body": {
-                "customLibraries": {
-                    "wheelFiles": [
-                        "samplewheel-0.18.0-py2.py3-none-any.whl"
-                    ],
-                    "pyFiles": [
-                        "samplepython.py"
-                    ],
-                    "jarFiles": [
-                        "samplejar.jar"
-                    ],
-                    "rTarFiles": [
-                        "sampleR.tar.gz"
-                    ]
-                },
-                "environmentYml": "dependencies:\r\n- pip:\r\n  - matplotlib==3.4.3"
+                "libraries": [
+                    {
+                        "name": "samplewheel-0.18.0-py2.py3-none-any.whl",
+                        "libraryType": "Custom"
+                    },
+                    {
+                        "name": "samplepython.py",
+                        "libraryType": "Custom"
+                    },
+                    {
+                        "name": "samplejar.jar",
+                        "libraryType": "Custom"
+                    },
+                    {
+                        "name": "sampleR.tar.gz",
+                        "libraryType": "Custom"
+                    },
+                    {
+                        "name": "fuzzywuzzy",
+                        "libraryType": "External",
+                        "version": "0.0.1"
+                    },
+                    {
+                        "name": "matplotlib",
+                        "libraryType": "External",
+                        "version": "0.0.1"
+                    }
+                ],
+                "continuationToken": "null",
+                "continuationUri": "null"
             }
         }
     }

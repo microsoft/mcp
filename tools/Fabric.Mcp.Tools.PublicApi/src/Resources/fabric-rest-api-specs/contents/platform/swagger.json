@@ -49,7 +49,7 @@
             }
           },
           "default": {
-            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* InsufficientPermissionsToDomain - User permission to the domain is not sufficient to perform the operation\n\n* UnknownError - An error occurred.",
             "schema": {
               "$ref": "../common/definitions.json#/definitions/ErrorResponse"
             }
@@ -88,6 +88,13 @@
             "description": "A token for retrieving the next page of results.",
             "type": "string",
             "required": false
+          },
+          {
+            "in": "query",
+            "name": "preferWorkspaceSpecificEndpoints",
+            "description": "A setting that controls whether to include the workspace-specific API endpoint per workspace. True - Include the workspace-specific API endpoint, False - Do not include the workspace-specific API endpoint.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -113,6 +120,9 @@
           },
           "List workspaces with continuation example": {
             "$ref": "./examples/platform/ListWorkspacesWithContinuation.json"
+          },
+          "List workspaces with preferWorkspaceSpecificEndpoints example": {
+            "$ref": "./examples/platform/ListWorkspacesWithPreferWorkspaceSpecificEndpoints.json"
           }
         }
       }
@@ -136,6 +146,13 @@
             "type": "string",
             "format": "uuid",
             "required": true
+          },
+          {
+            "in": "query",
+            "name": "preferWorkspaceSpecificEndpoints",
+            "description": "A setting that controls whether to include workspace-specific or general public endpoints for API and OneLake access. True - Include workspace-specific endpoints for API and OneLake access, False - Include general public endpoints for OneLake access.",
+            "type": "boolean",
+            "required": false
           }
         ],
         "responses": {
@@ -155,6 +172,9 @@
         "x-ms-examples": {
           "Get a workspace example": {
             "$ref": "./examples/platform/GetWorkspace.json"
+          },
+          "Get a workspace with preferWorkspaceSpecificEndpoints example": {
+            "$ref": "./examples/platform/GetWorkspaceWithPreferWorkspaceSpecificEndpoints.json"
           }
         }
       },
@@ -251,7 +271,7 @@
     "/workspaces/{workspaceId}/roleAssignments": {
       "post": {
         "summary": "Adds a workspace role assignment.",
-        "description": "To get the principal user object ID required for request body, see [Find the user object ID](/partner-center/find-ids-and-domain-names#find-the-user-object-id).\n\n## Permissions\n\n- The caller must have *member* or higher workspace role. \n- Members can add members or others with lower permissions. For more information see: [workspace roles](/power-bi/collaborate-share/service-roles-new-workspaces#workspace-roles).\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "To get the principal user object ID required for request body, see [Find the user object ID](/partner-center/find-ids-and-domain-names#find-the-user-object-id).\n\n## Permissions\n\n- The caller must have *member* or higher workspace role. \n- Members can add members or others with lower permissions. For more information see: [workspace roles](/power-bi/collaborate-share/service-roles-new-workspaces#workspace-roles).\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations\n\n- Each workspace is limited to a maximum of 1,000 users or groups in workspace roles (Admin, Member, Contributor, Viewer). The number of users within a group is not limited. The limitation also covers external guests.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Workspaces"
         ],
@@ -1676,6 +1696,96 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/assignToDomain": {
+      "post": {
+        "summary": "Assigns the specified workspace to the specified domain.",
+        "description": "## Permissions\n\n- The caller must have contributor permissions or be a domain Admin. \n- The caller must have workspace admin role.\n\n## Required Scope\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_AssignToDomain",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "assignWorkspaceToDomainRequest",
+            "description": "Assign to domain parameters",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/AssignWorkspaceToDomainRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* WorkspaceNotFound - The provided workspace was not found\n\n* InsufficientPermissionsToDomain - Caller doesn't have enough permissions to the domain to perform the operation\n\n* InsufficientWorkspaceRole - Caller doesn't have enough permissions to the workspace to perform the operation\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Assign a workspace to a domain example": {
+            "$ref": "./examples/platform/AssignWorkspaceToDomain.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/unassignFromDomain": {
+      "post": {
+        "summary": "Unassigns the specified workspace from domain.",
+        "description": "## Permissions\n\n The caller must have workspace admin role. \n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_UnassignFromDomain",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* WorkspaceNotFound - The provided workspace was not found\n\n* InsufficientWorkspaceRole - Caller doesn't have enough permissions to the workspace to perform the operation\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Unassign a workspace from a domain example": {
+            "$ref": "./examples/platform/UnassignWorkspaceFromDomain.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/git/connection": {
       "get": {
         "summary": "Returns git connection details for the specified workspace.",
@@ -1724,7 +1834,7 @@
     "/workspaces/{workspaceId}/git/connect": {
       "post": {
         "summary": "Connect a specific workspace to a git repository and branch.",
-        "description": "This operation does not sync between the workspace and the connected branch. To complete the sync, use the [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) operation and follow with either the [Commit To Git](/rest/api/fabric/core/git/commit-to-git) or the [Update From Git](/rest/api/fabric/core/git/update-from-git) operation.\n\nTo get started with GitHub, see: [Get started with Git integration](/fabric/cicd/git-integration/git-get-started?tabs=github).\n\nTo get the connection ID, see [Automate Git integration](/fabric/cicd/git-integration/git-automation#get-or-create-git-provider-credentials-connection).\n\n## Permissions\n\nThe caller must have an *admin* role for the workspace.\n\nFor configured connection Git credentials, the caller must have permission for the connection.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Not supported when the Git provider is AzureDevOps and credentials are Automatic |\n\n## Interface",
+        "description": "This operation does not sync between the workspace and the connected branch. To complete the sync, use the [Initialize Connection](/rest/api/fabric/core/git/initialize-connection) operation and follow with either the [Commit To Git](/rest/api/fabric/core/git/commit-to-git) or the [Update From Git](/rest/api/fabric/core/git/update-from-git) operation.\n\nTo get started with GitHub, see: [Get started with Git integration](/fabric/cicd/git-integration/git-get-started?tabs=github).\n\nTo get the connection ID, see [Automate Git integration](/fabric/cicd/git-integration/git-automation#get-or-create-git-provider-credentials-connection).\n\n## Permissions\n\nThe caller must have an *admin* role for the workspace.\n\nFor configured connection Git credentials, the caller must have permission for the connection.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations \n When using Automatic credentials source, this API is blocked for GitHub provider and for Service Principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Supported only when myGitCredentials.source is ConfiguredConnection |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -1823,7 +1933,7 @@
     "/workspaces/{workspaceId}/git/initializeConnection": {
       "post": {
         "summary": "Initialize a connection for a workspace that's connected to Git.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nThis API should be called after a successful call to the [Connect](/rest/api/fabric/core/git/connect) API. To complete a full sync of the workspace, use the [Required Action](initialize-connection#requiredaction) operation to call the relevant sync operation, either [Commit To Git](/rest/api/fabric/core/git/commit-to-git) or [Update From Git](/rest/api/fabric/core/git/update-from-git).\n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\nThis API should be called after a successful call to the [Connect](/rest/api/fabric/core/git/connect) API. To complete a full sync of the workspace, use the [Required Action](initialize-connection#requiredaction) operation to call the relevant sync operation, either [Commit To Git](/rest/api/fabric/core/git/commit-to-git) or [Update From Git](/rest/api/fabric/core/git/update-from-git).\n\n## Permissions\n\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -1965,7 +2075,7 @@
     "/workspaces/{workspaceId}/git/status": {
       "get": {
         "summary": "Returns the `Git status` of items in the workspace, that can be committed to Git.",
-        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe status indicates changes to items since the last workspace and remote branch sync. If the remote and workspace items were both modified, the API flags a conflict.\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All or Workspace.GitCommit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) |\n\n## Interface",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nThe status indicates changes to items since the last workspace and remote branch sync. If the remote and workspace items were both modified, the API flags a conflict.\n\nTo use this API, the caller's Git credentials must be configured using [Update My Git Credentials](/rest/api/fabric/core/git/update-my-git-credentials) API. You can use the [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to check the Git credentials configuration.\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.GitUpdate.All or Workspace.GitCommit.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -2151,7 +2261,7 @@
       },
       "patch": {
         "summary": "Updates the user's Git credentials configuration details.",
-        "description": "Each user in the workspace has their own configured Git credentials. You can use [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to get the Git credentials configuration.\n\nTo get the connection ID, see [Automate Git integration](/fabric/cicd/git-integration/git-automation#get-or-create-git-provider-credentials-connection).\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\nFor configured connection Git credentials, the caller must have permission for the connection.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Not supported when the Git provider is AzureDevOps and credentials are Automatic |\n\n## Interface",
+        "description": "Each user in the workspace has their own configured Git credentials. You can use [Get My Git Credentials](/rest/api/fabric/core/git/get-my-git-credentials) API to get the Git credentials configuration.\n\nTo get the connection ID, see [Automate Git integration](/fabric/cicd/git-integration/git-automation#get-or-create-git-provider-credentials-connection).\n\n## Permissions\n\nThe caller must have a *contributor* or higher workspace role.\n\nFor configured connection Git credentials, the caller must have permission for the connection.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations \n When using Automatic credentials source, this API is blocked for GitHub provider and for Service Principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Supported only when source is ConfiguredConnection or None |\n\n## Interface",
         "tags": [
           "Git"
         ],
@@ -2360,6 +2470,122 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/items/{itemId}/shortcuts/bulkCreate": {
+      "post": {
+        "summary": "Creates bulk shortcuts.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n## Required Delegated Scopes\n\nOneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeShortcuts"
+        ],
+        "operationId": "OneLakeShortcuts_CreatesShortcutsInBulk",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+            {
+                "in": "path",
+                "name": "workspaceId",
+                "description": "The ID of the workspace.",
+                "type": "string",
+                "format": "uuid",
+                "required": true
+            },
+            {
+                "in": "path",
+                "name": "itemId",
+                "description": "The ID of the data item.",
+                "type": "string",
+                "format": "uuid",
+                "required": true
+            },
+            {
+                "in": "query",
+                "name": "shortcutConflictPolicy",
+                "description": "When provided, it defines the action to take when a shortcut with the same name and path already exists. The default action is 'Abort'. Additional ShortcutConflictPolicy types may be added over time.",
+                "type": "string",
+                "enum": [
+                    "Abort",
+                    "GenerateUniqueName",
+                    "CreateOrOverwrite",
+                    "OverwriteOnly"
+                ],
+                "x-ms-enum": {
+                    "name": "ShortcutConflictPolicy",
+                    "modelAsString": true,
+                    "values": [
+                        {
+                            "value": "Abort",
+                            "description": "When a shortcut with the same name and path already exists the shortcut creation will be cancelled."
+                        },
+                        {
+                            "value": "GenerateUniqueName",
+                            "description": "When a shortcut with the same name and path already exists the shortcut creation will continue with a new unique shortcut name."
+                        },
+                        {
+                            "value": "CreateOrOverwrite",
+                            "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut. Create shortcut if it does not exist."
+                        },
+                        {
+                            "value": "OverwriteOnly",
+                            "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut."
+                        }
+                    ]
+                },
+                "required": false
+            },
+            {
+                "in": "body",
+                "name": "bulkCreateShortcutsRequest",
+                "description": "A shortcut bulk create request includes an array of shortcut objects, each representing a reference pointing to internal or external storage locations within OneLake.",
+                "schema": {
+                    "$ref": "./definitions/platform.json#/definitions/BulkCreateShortcutsRequest"
+                },
+                "required": true
+            }
+        ],
+        "responses": {
+          "202": {
+            "description": "Request accepted. Shortcut creation is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "Retry-After": {
+                "description": "The number of seconds to wait before retrying the request.",
+                "type": "integer"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              }
+            }
+          },
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkCreateShortcutResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - Server cannot find the requested item.\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create bulk shortcut example": {
+            "$ref": "./examples/platform/CreateBulkShortcutOneLakeTargetCsvToDeltaTransform.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/items/{itemId}/shortcuts": {
       "get": {
         "summary": "Returns a list of shortcuts for the item, including all the subfolders exhaustively.",
@@ -2426,6 +2652,9 @@
           },
           "List shortcuts with continuation example": {
             "$ref": "./examples/platform/ListShortcutsWithContinuation.json"
+          },
+          "List shortcuts with shortcut transforms example": {
+            "$ref": "./examples/platform/ListShortcutsWithShortcutTransforms.json"
           }
         }
       },
@@ -2636,6 +2865,9 @@
           },
           "Get shortcut AzureBlobStorage target example": {
             "$ref": "./examples/platform/GetShortcutAzureBlobStorageTarget.json"
+          },
+          "Get shortcut transform with One Lake target example": {
+            "$ref": "./examples/platform/GetShortcutTransformOneLakeTarget.json"
           }
         }
       },
@@ -2699,52 +2931,141 @@
         }
       }
     },
-    "/tags":{
-        "get": {
-            "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of all the tenant's tags.",
-            "description": "## Required Delegated Scopes\n\nTag.Read.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-            "tags": [
-                "Tags"
-            ],
-            "operationId": "Tags_ListTags",
-            "x-ms-pageable": {
-              "nextLinkName": "continuationUri"
-            },
-            "produces": [
-                "application/json"
-            ],
-            "parameters": [
-              {
-                "in": "query",
-                "name": "continuationToken",
-                "description": "A token for retrieving the next page of results.",
-                "type": "string",
-                "required": false
-              }
-            ],
-            "responses": {
-                "200": {
-                    "description": "The request was successful.",
-                    "schema": {
-                        "$ref": "../common/definitions.json#/definitions/Tags"
-                    }
-                },
-                "default": {
-                    "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                    "schema": {
-                        "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                    }
-                }
-            },
-            "x-ms-examples": {
-                "List of all tenant's tags example": {
-                    "$ref": "./examples/tags/ListTags.json"
-                },
-                "List of all tenant's tags with continuation example": {
-                    "$ref": "./examples/tags/ListTagsWithContinuation.json"
-                }
+    "/tags": {
+      "get": {
+        "summary": "Returns a list of all the tenant's tags.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\nTag.Read.All\n\n## Limitations\n\nMaximum 25 requests per one minute per principal. \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Tags"
+        ],
+        "operationId": "Tags_ListTags",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request was successful.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/Tags"
             }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List of all tenant's tags example": {
+            "$ref": "./examples/tags/ListTags.json"
+          },
+          "List of all tenant's tags with continuation example": {
+            "$ref": "./examples/tags/ListTagsWithContinuation.json"
+          }
         }
+      }
+    },
+    "/domains":{
+      "get": {
+        "summary": "Returns a list of all the tenant's domains.",
+        "description": "## Required Delegated Scopes\n\nDomain.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Domains"
+        ],
+        "operationId": "Domains_ListDomains",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request was successful.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/Domains"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List of all tenant's domains example": {
+            "$ref": "./examples/domains/ListDomains.json"
+          },
+          "List of all tenant's domains with continuation example": {
+            "$ref": "./examples/domains/ListDomainsWithContinuation.json"
+          }
+        }
+      }
+    },
+    "/domains/{domainId}":{
+      "get": {
+        "summary": "Returns specified domain information.",
+        "description": "## Required Delegated Scopes\n\nDomain.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Domains"
+        ],
+        "operationId": "Domains_GetDomain",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "domainId",
+            "description": "The domain ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The request was successful.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/Domain"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* DomainNotFound - The provided domain was not found\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get domain example": {
+            "$ref": "./examples/domains/GetDomain.json"
+          }
+        }
+      }
     },
     "/workspaces/{workspaceId}/onelake/resetShortcutCache": {
       "post": {
@@ -2804,6 +3125,131 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/onelake/settings": {
+      "get": {
+        "summary": "Get workspace OneLake settings.",
+        "description": "## Permissions\n\nThe caller must have an *admin* workspace role.\n\n ## Required Delegated Scopes\n\n OneLake.Read.All or OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeSettings"
+        ],
+        "operationId": "OneLakeSettings_GetSettings",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": false,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref":  "./definitions/platform.json#/definitions/GetOneLakeSettingsResponse"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred. \n\n* WorkspaceNotFound - Workspace not found. \n\n * UserNotAuthorizedSourceWorkspace - User is not authorized for the workspace.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get OneLake Setting for workspace with diagnostic setting example": {
+            "$ref": "./examples/platform/GetOneLakeDiagnosticSettingWithDiagnosticSetting.json"
+          },
+          "Get OneLake Setting for workspace without diagnostic setting example": {
+            "$ref": "./examples/platform/GetOneLakeDiagnosticSettingWithoutDiagnosticSetting.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/onelake/settings/modifyDiagnostics": {
+      "post": {
+        "summary": "Enables or disables workspace OneLake diagnostic settings.",
+        "description": "This API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation). \n\n ## Permissions\n\n* The caller must have an *admin* workspace role on the source workspace. \n\n * The caller must have *contributor* or above workspace role on the destination workspace. \n\n ## Required Delegated Scopes\n\nOneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "OneLakeSettings"
+        ],
+        "operationId": "OneLakeSettings_ModifyDiagnostics",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "modifyOneLakeDiagnosticSettingRequest",
+            "description": "The OneLake diagnostic setting object.",
+            "required": false,
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/ModifyOneLakeDiagnosticSettingRequest"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Modify diagnostic settings is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status. Can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID. Can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred. \n\n* WorkspaceNotFound - Source Workspace not found. \n\n * UserNotAuthorizedSourceWorkspace - User is not authorized for the source workspace.\n\n * UserNotAuthorizedDestinationItem - User is not authorized for the destination workspace.\n\n * DestinationWorkspaceNotFound - Destination Workspace not found.\n\n * DestinationItemNotFound -Destination item not found.\n\n * WorkspaceNotInSameCapacity - Source and destination workspace not in same capacity.\n\n * SettingsNotAllowedOnWorkspace - Diagnostic setting not allowed on workspace.\n\n * RequiredDestination - Destination is required when enabling diagnostics for first time.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create OneLake Diagnostic Setting for Workspace example": {
+            "$ref": "./examples/platform/ModifyOneLakeDiagnosticSettingCreate.json"
+          },
+          "Disable OneLake Diagnostic Setting for Workspace example": {
+            "$ref": "./examples/platform/ModifyOneLakeDiagnosticSettingDisable.json"
+          },
+          "Replace OneLake Diagnostic Setting Destination for Workspace example": {
+            "$ref": "./examples/platform/ModifyOneLakeDiagnosticSettingReplace.json"
+          },
+          "Remove OneLake Diagnostic Setting Destination for Workspace example": {
+            "$ref": "./examples/platform/ModifyOneLakeDiagnosticSettingRemove.json"
+          }
+        }
+      }
+    },
     "/deploymentPipelines": {
       "get": {
         "summary": "Returns a list of deployment pipelines the user can access.",
@@ -2851,42 +3297,48 @@
         }
       },
       "post": {
-          "summary": "Creates a new deployment pipeline.",
-          "description": "\n## Permissions\n\n Service Principals must have permission granted by Fabric administrator. For more information see: [Service principals can create workspaces, connections, and deployment pipelines](/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines). \n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_CreateDeploymentPipeline",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "createDeploymentPipelineRequest",
-                  "in": "body",
-                  "description": "The create pipeline request.",
-                  "required": true,
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/CreateDeploymentPipelineRequest"
-                  }
-              }
-          ],
-          "responses": {
-              "201": {
-                  "description": "Successfuly created.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
-          },
-          "x-ms-examples": {
-              "Create a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/CreateDeploymentPipeline.json"
-              }
+        "summary": "Creates a new deployment pipeline.",
+        "description": "\n## Permissions\n\n Service Principals must have permission granted by Fabric administrator. For more information see: [Service principals can create workspaces, connections, and deployment pipelines](/fabric/admin/service-admin-portal-developer#service-principals-can-create-workspaces-connections-and-deployment-pipelines). \n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_CreateDeploymentPipeline",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "createDeploymentPipelineRequest",
+            "in": "body",
+            "description": "The create pipeline request.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/CreateDeploymentPipelineRequest"
+            }
           }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfuly created.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/CreateDeploymentPipeline.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}": {
@@ -2932,331 +3384,366 @@
         }
       },
       "patch": {
-          "summary": "Updates the properties of the specified deployment pipeline.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_UpdateDeploymentPipeline",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "name": "updatePipelineRequest",
-                  "in": "body",
-                  "description": "The update pipeline request.",
-                  "required": true,
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/UpdateDeploymentPipelineRequest"
-                  }
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Updates the properties of the specified deployment pipeline.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_UpdateDeploymentPipeline",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Update a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/UpdateDeploymentPipeline.json"
-              }
+          {
+            "name": "updatePipelineRequest",
+            "in": "body",
+            "description": "The update pipeline request.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/UpdateDeploymentPipelineRequest"
+            }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineExtendedInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/UpdateDeploymentPipeline.json"
+          }
+        }
       },
       "delete": {
-          "summary": "Deletes the specified deployment pipeline.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\nThis operation will fail if there's an active deployment operation.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_DeleteDeploymentPipeline",
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully."
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
-          },
-          "x-ms-examples": {
-              "Delete a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipeline.json"
-              }
+        "summary": "Deletes the specified deployment pipeline.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\nThis operation will fail if there's an active deployment operation.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_DeleteDeploymentPipeline",
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipeline.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/roleAssignments": {
       "get": {
-          "tags": ["DeploymentPipelines"],
-          "summary": "Returns a list of deployment pipeline role assignments.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "operationId": "DeploymentPipelines_ListDeploymentPipelineRoleAssignments",
-          "x-ms-pageable": {
-            "nextLinkName": "continuationUri"
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "summary": "Returns a list of deployment pipeline role assignments.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "DeploymentPipelines_ListDeploymentPipelineRoleAssignments",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "required": true,
+            "description": "The deployment pipeline ID.",
+            "type": "string",
+            "format": "uuid"
           },
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "required": true,
-                  "description": "The deployment pipeline ID.",
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                "in": "query",
-                "name": "continuationToken",
-                "description": "A token for retrieving the next page of results.",
-                "type": "string",
-                "required": false
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineRoleAssignments"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
-          },
-          "x-ms-examples": {
-              "List role assignments of a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineRoleAssignments.json"
-              },
-              "List role assignments of a deployment pipeline with continuation example": {
-                "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineRoleAssignmentsWithContinuation.json"
-              }
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineRoleAssignments"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List role assignments of a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineRoleAssignments.json"
+          },
+          "List role assignments of a deployment pipeline with continuation example": {
+            "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineRoleAssignmentsWithContinuation.json"
+          }
+        }
       },
       "post": {
-          "tags": ["DeploymentPipelines"],
-          "summary": "Adds a deployment pipeline role assignment.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "operationId": "DeploymentPipelines_AddDeploymentPipelineRoleAssignment",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "required": true,
-                  "description": "The deployment pipeline ID.",
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "in": "body",
-                  "name": "deploymentPipelineRoleAssignmentRequest",
-                  "description": "Add deployment pipeline role assignment request payload.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/AddDeploymentPipelineRoleAssignmentRequest"
-                  },
-                  "required": true
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully."
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "summary": "Adds a deployment pipeline role assignment.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "operationId": "DeploymentPipelines_AddDeploymentPipelineRoleAssignment",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "required": true,
+            "description": "The deployment pipeline ID.",
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Add a user role assignment to a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineUserRoleAssignment.json"
-              },
-              "Add a group role assignment to a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineGroupRoleAssignment.json"
-              },
-              "Add a service principal role assignment to a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineServicePrincipalRoleAssignment.json"
-              }
+          {
+            "in": "body",
+            "name": "deploymentPipelineRoleAssignmentRequest",
+            "description": "Add deployment pipeline role assignment request payload.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/AddDeploymentPipelineRoleAssignmentRequest"
+            },
+            "required": true
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineRoleAssignment"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Add a user role assignment to a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineUserRoleAssignment.json"
+          },
+          "Add a group role assignment to a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineGroupRoleAssignment.json"
+          },
+          "Add a service principal role assignment to a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/AddDeploymentPipelineServicePrincipalRoleAssignment.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/roleAssignments/{principalId}": {
       "delete": {
-          "summary": "Deletes the specified deployment pipeline role assignment for the specified principal.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_DeleteDeploymentPipelineRoleAssignment",
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "required": true,
-                  "description": "The deployment pipeline ID.",
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "in": "path",
-                  "name": "principalId",
-                  "description": "The principal ID.",
-                  "type": "string",
-                  "format": "uuid",
-                  "required": true
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully."
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Deletes the specified deployment pipeline role assignment.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_DeleteDeploymentPipelineRoleAssignment",
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "required": true,
+            "description": "The deployment pipeline ID.",
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Remove group role assignment from a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipelineUserGroupRoleAssignment.json"
-              },
-              "Remove service principal role assignment from a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipelineUserPrincipalRoleAssignment.json"
-              }
+          {
+            "in": "path",
+            "name": "principalId",
+            "description": "The principal ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Remove group role assignment from a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipelineUserGroupRoleAssignment.json"
+          },
+          "Remove service principal role assignment from a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/DeleteDeploymentPipelineUserPrincipalRoleAssignment.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/operations": {
       "get": {
-          "summary": "Returns a list of the up-to-20 most recent deploy operations performed on the specified deployment pipeline.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_ListDeploymentPipelineOperations",
-          "x-ms-pageable": {
-            "nextLinkName": "continuationUri"
+        "summary": "Returns a list of the up-to-20 most recent deploy operations performed on the specified deployment pipeline.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_ListDeploymentPipelineOperations",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                "in": "query",
-                "name": "continuationToken",
-                "description": "A token for retrieving the next page of results.",
-                "type": "string",
-                "required": false
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperations"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
-          },
-          "x-ms-examples": {
-              "List deployment pipeline operations example": {
-                  "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineOperations.json"
-              },
-              "List deployment pipeline operations with continuation example": {
-                "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineOperationsWithContinuation.json"
-              }
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperations"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List deployment pipeline operations example": {
+            "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineOperations.json"
+          },
+          "List deployment pipeline operations with continuation example": {
+            "$ref": "./examples/deploymentPipelines/ListDeploymentPipelineOperationsWithContinuation.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/operations/{operationId}": {
       "get": {
-          "summary": "Returns the details of the specified deploy operation performed on the specified deployment pipeline, including the deployment execution plan.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_GetDeploymentPipelineOperation",
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "name": "operationId",
-                  "in": "path",
-                  "description": "The operation ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperationExtendedInfo"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Returns the details of the specified deploy operation performed on the specified deployment pipeline, including the deployment execution plan.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.Read.All or Pipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_GetDeploymentPipelineOperation",
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Get a deployment pipeline operation example": {
-                  "$ref": "./examples/deploymentPipelines/GetDeploymentPipelineOperation.json"
-              }
+          {
+            "name": "operationId",
+            "in": "path",
+            "description": "The operation ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineOperationExtendedInfo"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a deployment pipeline operation example": {
+            "$ref": "./examples/deploymentPipelines/GetDeploymentPipelineOperation.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/stages": {
@@ -3366,58 +3853,64 @@
         }
       },
       "patch": {
-          "summary": "Updates the properties of the specified deployment pipeline stage.",
-          "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_UpdateDeploymentPipelineStage",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                "name": "stageId",
-                "in": "path",
-                "description": "The deployment pipeline stage ID.",
-                "required": true,
-                "type": "string",
-                "format": "uuid"
-              },
-              {
-                  "name": "updatePipelineStageRequest",
-                  "in": "body",
-                  "description": "The update pipeline stage request.",
-                  "required": true,
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStageRequest"
-                  }
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully.",
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStage"
-                  }
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Updates the properties of the specified deployment pipeline stage.",
+        "description": "## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_UpdateDeploymentPipelineStage",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Update a deployment pipeline stage example": {
-                  "$ref": "./examples/deploymentPipelines/UpdateDeploymentPipelineStage.json"
-              }
+          {
+            "name": "stageId",
+            "in": "path",
+            "description": "The deployment pipeline stage ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "updatePipelineStageRequest",
+            "in": "body",
+            "description": "The update pipeline stage request.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStageRequest"
+            }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineStage"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a deployment pipeline stage example": {
+            "$ref": "./examples/deploymentPipelines/UpdateDeploymentPipelineStage.json"
+          }
+        }
       }
     },
     "/deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/items": {
@@ -3567,105 +4060,115 @@
     },
     "/deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/assignWorkspace": {
       "post": {
-          "summary": "Assigns the specified workspace to the specified deployment pipeline stage.",
-          "description": "This operation will fail if there's an active deployment operation.\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All and Workspace.ReadWrite.All\n\n## Limitations\n\n - The specified deployment pipeline stage must not be assigned to any other workspace.\n  - Only workspace admins can assign it to a deployment pipeline stage.\n - The specified workspace isn't assigned to any other deployment pipeline stage.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_AssignWorkspaceToStage",
-          "consumes": ["application/json"],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "name": "stageId",
-                  "in": "path",
-                  "description": "The deployment pipeline stage ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "name": "deploymentPipelineAssignWorkspaceRequest",
-                  "in": "body",
-                  "description": "The assign workspace request.",
-                  "required": true,
-                  "schema": {
-                      "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineAssignWorkspaceRequest"
-                  }
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully."
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Assigns the specified workspace to the specified deployment pipeline stage.",
+        "description": "This operation will fail if there's an active deployment operation.\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\nThe caller must have an *admin* workspace role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All and Workspace.ReadWrite.All\n\n## Limitations\n\n - The specified deployment pipeline stage must not be assigned to any other workspace.\n  - Only workspace admins can assign it to a deployment pipeline stage.\n - The specified workspace isn't assigned to any other deployment pipeline stage.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_AssignWorkspaceToStage",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Assign a workspace to a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/AssignWorkspaceToStage.json"
-              }
+          {
+            "name": "stageId",
+            "in": "path",
+            "description": "The deployment pipeline stage ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
+          },
+          {
+            "name": "deploymentPipelineAssignWorkspaceRequest",
+            "in": "body",
+            "description": "The assign workspace request.",
+            "required": true,
+            "schema": {
+              "$ref": "./definitions/deploymentPipelines.json#/definitions/DeploymentPipelineAssignWorkspaceRequest"
+            }
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Assign a workspace to a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/AssignWorkspaceToStage.json"
+          }
+        }
       }
-  },
-  "/deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace": {
+    },
+    "/deploymentPipelines/{deploymentPipelineId}/stages/{stageId}/unassignWorkspace": {
       "post": {
-          "summary": "Unassigns the workspace from the specified stage in the specified deployment pipeline.",
-          "description": "This operation will fail if there's an active deployment operation.\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
-          "tags": ["DeploymentPipelines"],
-          "operationId": "DeploymentPipelines_UnassignWorkspaceFromStage",
-          "consumes": [],
-          "produces": ["application/json"],
-          "parameters": [
-              {
-                  "name": "deploymentPipelineId",
-                  "in": "path",
-                  "description": "The deployment pipeline ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              },
-              {
-                  "name": "stageId",
-                  "in": "path",
-                  "description": "The deployment pipeline stage ID.",
-                  "required": true,
-                  "type": "string",
-                  "format": "uuid"
-              }
-          ],
-          "responses": {
-              "200": {
-                  "description": "Request completed successfully."
-              },
-              "default":{
-                  "description": "Common error codes:\n\n* UnknownError - An error occurred",
-                  "schema": {
-                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
-                  }
-              }
+        "summary": "Unassigns the workspace from the specified stage in the specified deployment pipeline.",
+        "description": "This operation will fail if there's an active deployment operation.\n\n## Permissions\n\nThe caller must have an *admin* deployment pipelines role.\n\n## Required Delegated Scopes\n\nPipeline.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "DeploymentPipelines"
+        ],
+        "operationId": "DeploymentPipelines_UnassignWorkspaceFromStage",
+        "consumes": [],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "name": "deploymentPipelineId",
+            "in": "path",
+            "description": "The deployment pipeline ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           },
-          "x-ms-examples": {
-              "Unassign a workspace from a deployment pipeline example": {
-                  "$ref": "./examples/deploymentPipelines/UnassignWorkspaceFromStage.json"
-              }
+          {
+            "name": "stageId",
+            "in": "path",
+            "description": "The deployment pipeline stage ID.",
+            "required": true,
+            "type": "string",
+            "format": "uuid"
           }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Unassign a workspace from a deployment pipeline example": {
+            "$ref": "./examples/deploymentPipelines/UnassignWorkspaceFromStage.json"
+          }
+        }
       }
     },
     "/workspaces/{workspaceId}/items/{itemId}/dataAccessRoles": {
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of OneLake roles.",
-        "description": "## Required Delegated Scopes\n\n OneLake.Read.All or OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns a list of OneLake roles.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\n OneLake.Read.All or OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "OneLakeDataAccessSecurity"
         ],
@@ -3726,12 +4229,15 @@
           },
           "List data access roles single page example": {
             "$ref": "./examples/platform/ListDataAccessRolesSinglePageExample.json"
+          },
+          "List data access roles with constraints example": {
+            "$ref": "./examples/platform/ListDefaultDataAccessRolesWithConstraints.json"
           }
         }
       },
       "put": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreates or updates data access roles in OneLake.",
-        "description": "## Required Delegated Scopes\n\n OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Creates or updates data access roles in OneLake.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Required Delegated Scopes\n\n OneLake.ReadWrite.All \n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "OneLakeDataAccessSecurity"
         ],
@@ -3812,6 +4318,9 @@
           },
           "Create or update data access roles with tables path example": {
             "$ref": "./examples/platform/CreateOrUpdateDataAccessRolesWithTablesPathExample.json"
+          },
+          "Create or update data access roles with constraints example": {
+            "$ref": "./examples/platform/CreateOrUpdateDataAccessRolesWithConstraints.json"
           }
         }
       }
@@ -4405,8 +4914,8 @@
     },
     "/workspaces/{workspaceId}/items/{itemId}/applyTags": {
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nApply tags on an item.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Apply tags on an item.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -4461,8 +4970,8 @@
     },
     "/workspaces/{workspaceId}/items/{itemId}/unapplyTags": {
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nUnapply tags from an item.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Unapply tags from an item.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace. \n\n## Required Delegated Scopes\n\n ItemMetadata.ReadWrite.All or these scope types: \n- Generic scope: Item.ReadWrite.All \n- Specific scope: *itemType*.ReadWrite.All (for example: Notebook.ReadWrite.All) \n\n For more information about scopes, see [Scopes article](/rest/api/fabric/articles/scopes).\n\n## Limitations\n\nMaximum 25 requests per hour per principal.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Tags"
         ],
@@ -4517,8 +5026,8 @@
     },
     "/workspaces/{workspaceId}/folders": {
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of folders from the specified workspace.",
-        "description": "\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns a list of folders from the specified workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4591,8 +5100,8 @@
         }
       },
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreates a folder in the specified workspace.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Creates a folder in the specified workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4648,8 +5157,8 @@
     },
     "/workspaces/{workspaceId}/folders/{folderId}": {
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns the properties of the specified folder.",
-        "description": "## Permissions\n\n The caller must have *viewer* or higher role on the workspace. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns the properties of the specified folder.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher role on the workspace. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4696,8 +5205,8 @@
         }
       },
       "patch": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nUpdates the properties of the specified folder.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Updates the properties of the specified folder.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4756,8 +5265,8 @@
         }
       },
       "delete": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nDeletes the specified folder.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations \n- This API is supported only for the empty folder. Deleting a folder with any items or nested folders inside is not allowed, and returns a FolderNotEmpty error response.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Deletes the specified folder.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher workspace role.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations \n- This API is supported only for the empty folder. Deleting a folder with any items or nested folders inside is not allowed, and returns a FolderNotEmpty error response.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4803,8 +5312,8 @@
     },
     "/workspaces/{workspaceId}/folders/{folderId}/move": {
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nMoves the specified folder within the same workspace.",
-        "description": "## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Moves the specified folder within the same workspace.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Folders"
         ],
@@ -4866,9 +5375,131 @@
         }
       }
     },
+    "/workspaces/{workspaceId}/items/bulkMove": {
+      "post": {
+        "summary": "Move multiple items to a folder. Children items are moved with their parent items. You can't move children items without their parent items.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Limitations\n\n A single request can't contain more than 50 items.\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_BulkMoveItems",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "bulkMoveItemsRequest",
+            "description": "Bulk move items request payload.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkMoveItemsRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully and all the items are moved.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/MovedItems"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* FolderNotFound - Could not find the requested folder.\n\n* CannotMoveChildOnly - Child item can't be moved without its parent item.\n\n If request failed, no items are moved.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Bulk move items into folder example": {
+            "$ref": "./examples/platform/BulkMoveItemsIntoFolder.json"
+          },
+          "Bulk move items with the workspace as the destination example": {
+            "$ref": "./examples/platform/BulkMoveItemsWithWorkspaceAsDestination.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/items/{itemId}/move": {
+      "post": {
+        "summary": "Move the specified item to a folder within the same workspace. Child items are moved with their parent item. You can't move a child item without its parent item.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *contributor* or higher role on the workspace.\n\n## Required Delegated Scopes\n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_MoveItem",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "moveItemRequest",
+            "description": "Move item request payload.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/MoveItemRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/MovedItems"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.\n\n* FolderNotFound - Could not find the requested folder.\n\n* CannotMoveChildOnly - Child item can't be moved without its parent item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Move an item into folder example": {
+            "$ref": "./examples/platform/MoveItemIntoFolder.json"
+          },
+          "Move an item with the workspace as the destination example": {
+            "$ref": "./examples/platform/MoveItemWithWorkspaceAsDestination.json"
+          }
+        }
+      }
+    },
     "/workspaces/{workspaceId}/managedPrivateEndpoints": {
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nReturns a list of managed private endpoints associated with the specified workspace.",
+        "summary": "Returns a list of managed private endpoints associated with the specified workspace.",
         "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
@@ -4921,7 +5552,7 @@
         }
       },
       "post": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nCreates a managed private endpoint in the specified workspace.",
+        "summary": "Creates a managed private endpoint in the specified workspace.",
         "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All.\n\n## Limitations \n- To create managed private endpoint the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
@@ -4975,13 +5606,16 @@
         "x-ms-examples": {
           "Create a managed private endpoint example": {
             "$ref": "./examples/managedPrivateEndpoint/CreateManagedPrivateEndpoint.json"
+          },
+          "Create a managed private endpont with FQDNs example": {
+            "$ref": "./examples/managedPrivateEndpoint/CreateManagedPrivateEndpointWithFQDNs.json"
           }
         }
       }
     },
     "/workspaces/{workspaceId}/managedPrivateEndpoints/{managedPrivateEndpointId}": {
       "delete": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nDeletes the specified managed private endpoint.",
+        "summary": "Deletes the specified managed private endpoint.",
         "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
@@ -5026,7 +5660,7 @@
         }
       },
       "get": {
-        "summary": "> [!NOTE]\n> This API is in preview.\n\nGets the specified managed private endpoint.",
+        "summary": "Gets the specified managed private endpoint.",
         "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
@@ -6279,6 +6913,171 @@
         "x-ms-examples": {
           "Delete connection role assignment example": {
             "$ref": "./examples/connections/DeleteConnectionRoleAssignment.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/networking/communicationPolicy": {
+      "get": {
+        "summary": "Returns networking communication policy for the specified workspace. This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_GetNetworkCommunicationPolicy",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceNetworkingCommunicationPolicy"
+            },
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get workspace networking communication policy example": {
+            "$ref": "./examples/platform/GetWorkspaceNetworkingCommunicationPolicy.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Sets networking communication policy for the specified workspace. This API uses the PUT method and will overwrite all settings. Remaining policy will be set to default value if only partial policy is provided in the request body. Always run Get Network Communication Policy first and provide full policy in the request body. This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_SetNetworkCommunicationPolicy",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "SetWorkspaceNetworkingCommunicationPolicy",
+            "description": "Set workspace networking communication policy request payload.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceNetworkingCommunicationPolicy"
+            },
+            "required": true
+          },
+          {
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Set workspace networking communication policy example": {
+            "$ref": "./examples/platform/SetWorkspaceNetworkingCommunicationPolicy.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/managedPrivateEndpoints/{managedPrivateEndpointId}/targetFQDNs": {
+      "get": {
+        "summary": "Returns a list of fully qualified domain names (FQDNs) associated with the specified managed private endpoint.",
+        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "ManagedPrivateEndpoints"
+        ],
+        "operationId": "ManagedPrivateEndpoints_ListFQDNs",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "managedPrivateEndpointId",
+            "description": "The managed private endpoint ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/managedPrivateEndpoint.json#/definitions/ManagedPrivateEndpointTargetFQDNs"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List managed private endpoints in workspace example": {
+            "$ref": "./examples/managedPrivateEndpoint/ListFQDNsInManagedPrivateEndpoint.json"
           }
         }
       }

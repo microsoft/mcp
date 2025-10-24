@@ -174,9 +174,34 @@ See the complete list of [Available Azure MCP Servers](https://github.com/micros
 
 You can start the server with multiple services by specifying after the `--namespace` flag, such as `--namespace storage --namespace keyvault`.
 
-**Option 3: Use Dynamic Tool Selection**
+**Option 3: Use Consolidated Mode (Recommended)**
 
-Azure MCP's dynamic proxy mode exposes one tool that routes to all Azure services:
+Azure MCP's consolidated mode groups related operations into curated tools, providing an optimal balance:
+
+*Example Configuration:*
+```json
+{
+  "servers": {
+    "Azure MCP": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@azure/mcp@latest", "server", "start", "--mode", "consolidated"]
+    }
+  }
+}
+```
+
+*Result: consolidated tools covering all Azure services*
+
+**Benefits:**
+- Better for AI agents: Groups related operations meaningfully
+- Optimized tool count: Well under VS Code's 128-tool limit
+- Task-oriented: Named after user intents (e.g., `get_azure_databases_details`)
+- Full functionality: All individual commands accessible through consolidated tools
+
+**Option 4: Use Dynamic Tool Selection**
+
+Azure MCP's single tool proxy mode exposes one tool that routes to all Azure services:
 
 *Example Configuration:*
 ```json
@@ -203,10 +228,12 @@ Azure MCP's dynamic proxy mode exposes one tool that routes to all Azure service
 
 The Azure MCP Server can run in multiple modes. Review your MCP configuration to ensure it matches your expectations:
 
-- `azmcp server start` - Launches an MCP server with all tools enabled
+- `azmcp server start` - Launches an MCP server with namespace proxy mode (default - one tool per Azure service namespace)
+- `azmcp server start --mode consolidated` - Launches an MCP server with consolidated tools (curated tools grouping related operations, optimized for AI agents)
+- `azmcp server start --mode all` - Launches an MCP server with all ~800+ individual tools exposed separately
 - `azmcp server start --namespace <service-name>` - Launches an MCP server with tools for the specified service (e.g., `storage`, `keyvault`)
 - `azmcp server start --mode single` - Launches an MCP server with a single `azure` tool that performs internal dynamic proxy and tool selection
-- `azmcp server start --mode namespace` - Launches an MCP server with a tool registered for each Azure service/namespace.
+- `azmcp server start --mode namespace` - Explicitly use namespace proxy mode (same as default)
 
 ### VS Code Permission Dialog for Language Model Calls
 
@@ -265,7 +292,7 @@ When elicitation isn't supported, you may experience:
 - Missing interactive prompts when tools request additional information
 - Error messages indicating elicitation is unsupported by the client
 
-![Elicitation error message](elicitation_not_supported.png)
+![Elicitation error message](images/elicitation_not_supported.png)
 
 #### Solution
 Update VS Code to version 1.102 or newer:

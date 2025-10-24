@@ -1,0 +1,14 @@
+{
+  "parameters": {
+    "workspaceId": "a97f3e88-9f0a-4183-b1d9-31e6eb00e778",
+    "itemId": "70bcc992-a346-4f21-afe5-8b9ed1596a2b",
+    "setAuditActionsAndGroupsRequest": [
+      "SUCCESSFUL_DATABASE_AUTHENTICATION_GROUP",
+      "FAILED_DATABASE_AUTHENTICATION_GROUP",
+      "BATCH_COMPLETED_GROUP"
+    ]
+  },
+  "responses": {
+    "200": {}
+  }
+}

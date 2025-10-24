@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Models;
@@ -14,6 +13,8 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
 {
     private const string CommandTitle = "List Knowledge Indexes in Azure AI Foundry";
 
+    public override string Id => "346847c5-61b7-4f14-b484-e28ee3e7c0f0";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -21,10 +22,10 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
         Retrieves a list of knowledge indexes from Azure AI Foundry.
 
         This function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.
-
+        Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
         Usage:
             Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.
-
+        
         Notes:
             - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.
             - These indexes can be used with AI agents for knowledge retrieval and RAG applications.

@@ -14,6 +14,8 @@ public sealed class DatabaseDeleteCommand(ILogger<DatabaseDeleteCommand> logger)
 {
     private const string CommandTitle = "Delete SQL Database";
 
+    public override string Id => "c4ef0375-0df9-445c-b8ae-2542e9612425";
+
     public override string Name => "delete";
 
     public override string Description =>

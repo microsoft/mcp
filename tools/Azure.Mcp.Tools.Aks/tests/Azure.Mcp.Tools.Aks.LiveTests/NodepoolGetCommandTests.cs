@@ -16,7 +16,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     {
         // Get a real cluster to target
         var listResult = await CallToolAsync(
-            "azmcp_aks_cluster_get",
+            "aks_cluster_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId }
@@ -31,7 +31,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Find a node pool to query
         var nodepoolList = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -47,7 +47,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Get details for that node pool
         var nodepoolGet = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -127,7 +127,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     public async Task Should_handle_nonexistent_nodepool_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -149,7 +149,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     {
         // Missing cluster
         var r1 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -160,7 +160,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Missing resource-group
         var r2 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
@@ -171,7 +171,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
 
         // Missing subscription
         var r3 = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "resource-group", "rg" },
@@ -185,7 +185,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     public async Task Should_handle_invalid_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", "invalid-subscription" },
@@ -205,7 +205,7 @@ public sealed class NodepoolGetCommandTests(ITestOutputHelper output)
     public async Task Should_handle_empty_subscription_gracefully()
     {
         var result = await CallToolAsync(
-            "azmcp_aks_nodepool_get",
+            "aks_nodepool_get",
             new()
             {
                 { "subscription", "" },

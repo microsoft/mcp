@@ -17,6 +17,8 @@ public sealed class RoleAssignmentListCommand(ILogger<RoleAssignmentListCommand>
     private const string _commandTitle = "List Role Assignments";
     private readonly ILogger<RoleAssignmentListCommand> _logger = logger;
 
+    public override string Id => "1dfbef45-4014-4575-a9ba-2242bc792e54";
+
     public override string Name => "list";
 
     public override string Description =>

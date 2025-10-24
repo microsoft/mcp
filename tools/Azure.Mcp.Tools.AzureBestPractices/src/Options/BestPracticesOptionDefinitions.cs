@@ -12,7 +12,7 @@ public static class BestPracticesOptionDefinitions
         $"--{ResourceName}"
     )
     {
-        Description = "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
+        Description = "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps), 'coding-agent' (Coding Agent).",
         Required = true
     };
 
@@ -20,7 +20,7 @@ public static class BestPracticesOptionDefinitions
         $"--{ActionName}"
     )
     {
-        Description = "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
+        Description = "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' and 'coding-agent' resources only supports 'all'.",
         Required = true
     };
 }

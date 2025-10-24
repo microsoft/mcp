@@ -16,6 +16,8 @@ public sealed class KeyListCommand(ILogger<KeyListCommand> logger) : Subscriptio
     private const string CommandTitle = "List Key Vault Keys";
     private readonly ILogger<KeyListCommand> _logger = logger;
 
+    public override string Id => "efa3d435-44af-47c1-a2ce-76ac56d575e5";
+
     public override string Name => "list";
 
     public override string Title => CommandTitle;

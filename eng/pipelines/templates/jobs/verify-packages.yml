@@ -54,4 +54,4 @@ jobs:
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
         -WorkingDirectory $(Agent.TempDirectory)
-    condition: and(succeeded(), eq(variables['RunTests'], 'true')) # skipping on arm64 machines until #753 is fixed
+    condition: and(succeeded(), eq(variables['RunUnitTests'], 'true')) # skipping on arm64 machines until #753 is fixed

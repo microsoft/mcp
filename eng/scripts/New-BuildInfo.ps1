@@ -3,10 +3,7 @@
 
 [CmdletBinding()]
 param(
-    [parameter(Mandatory)]
-    [ValidateSet('none', 'internal', 'public')]
     [string] $PublishTarget,
-    [parameter(Mandatory)]
     [int] $BuildId,
     [string] $OutputPath,
     [string] $ServerName,
@@ -36,6 +33,20 @@ $nativePlatforms = @(
 #     $nativePlatforms = @('linux-x64-native')
 # }
 
+if ($BuildId -eq 0) {
+    if ($isPipelineRun) {
+        LogError 'A non-zero BuildId is required when running in a pipeline.'
+        $exitCode = 1
+    } else {
+        $BuildId = 99999
+    }
+}
+
+if ($isPipelineRun -and !$PublishTarget) {
+    LogError 'PublishTarget parameter is required when running in a pipeline.'
+    $exitCode = 1
+}
+
 if(!$OutputPath) {
     $OutputPath = "$RepoRoot/.work/build_info.json"
 }
@@ -64,9 +75,7 @@ function CheckVariable($name) {
             $script:exitCode = 1
             return ""
         } else {
-            $substitute = "Missing-$name"
-            LogWarning "Environment variable $name is not set. Using substitute value '$substitute'." -ForegroundColor Yellow
-            return $substitute
+            return "Missing-$name"
         }
     }
     return $value
@@ -220,7 +229,6 @@ function Get-TestMatrix {
             pathToTest = $path.Path
         }
 
-
         if ($TestType -eq 'Live') {
             if (!$path.HasLiveTests -or !$path.HasTestResources) {
                 continue
@@ -327,9 +335,6 @@ function Get-ServerDetails {
             dnxDescription = $props.DnxDescription
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
-            vsixPackagePrefix = $props.VsixPackagePrefix
-            vsixDescription = $props.VsixDescription
-            vsixPublisher = $props.VsixPublisher
             platforms = $platforms
         }
     }

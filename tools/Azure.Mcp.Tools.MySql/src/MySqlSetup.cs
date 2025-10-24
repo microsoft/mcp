@@ -16,6 +16,8 @@ public class MySqlSetup : IAreaSetup
 {
     public string Name => "mysql";
 
+    public string Title => "Azure Database for MySQL";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IMySqlService, MySqlService>();
@@ -36,7 +38,7 @@ public class MySqlSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.");
+        var mysql = new CommandGroup(Name, "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.", Title);
 
         var database = new CommandGroup("database", "MySQL database operations");
         mysql.AddSubGroup(database);

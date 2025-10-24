@@ -12,7 +12,10 @@ parameters:
 - name: IncludeNative
   type: boolean
   default: false
-- name: IncludeDockerRelease
+- name: PackageDocker
+  type: boolean
+  default: false
+- name: PackageVSIX
   type: boolean
   default: false
 - name: IsTestPipeline
@@ -110,6 +113,8 @@ extends:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
             ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
+            PackageDocker: ${{ parameters.PackageDocker }}
+            PackageVSIX: ${{ parameters.PackageVSIX }}
 
       - ${{ if eq(parameters.PublishTarget, 'public') }}:
         - stage: Release
@@ -128,7 +133,8 @@ extends:
             parameters:
               ServerName: ${{ parameters.ServerName }}
               IncludeNative: false
-              IncludeDockerRelease: ${{ parameters.IncludeDockerRelease }}
+              PackageDocker: ${{ parameters.PackageDocker }}
+              PackageVSIX: ${{ parameters.PackageVSIX }}
               IsTestPipeline: ${{ parameters.IsTestPipeline }}
 
       - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
