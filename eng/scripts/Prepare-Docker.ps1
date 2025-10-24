@@ -6,8 +6,6 @@ param(
     [string] $ArtifactsPath,
     [string] $BuildInfoPath,
     [string] $OutputPath,
-    [string] $RepositoryName,
-    [string] $BuildId,
     [switch] $CI
 )
 
