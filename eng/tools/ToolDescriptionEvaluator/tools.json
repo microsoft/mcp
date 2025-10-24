@@ -5,7 +5,7 @@
     {
       "name": "list",
       "description": "List Azure Container Registries in a subscription. Optionally filter by resource group. Each registry result\r\nincludes: name, location, loginServer, skuName, skuTier. If no registries are found the tool returns null results\r\n(consistent with other list commands).",
-      "command": "azmcp acr registry list",
+      "command": "acr registry list",
       "option": [
         {
           "name": "--tenant",
@@ -66,7 +66,7 @@
     {
       "name": "list",
       "description": "List repositories in Azure Container Registries. By default, lists repositories for all registries in the subscription.\r\nYou can narrow the scope using --resource-group and/or --registry to list repositories for a specific registry only.",
-      "command": "azmcp acr registry repository list",
+      "command": "acr registry repository list",
       "option": [
         {
           "name": "--tenant",
@@ -132,8 +132,8 @@
     },
     {
       "name": "get",
-      "description": "List/retrieves/gets one or more Azure Kubernetes Service (AKS) clusters and metadata in a subscription. Not for kubectl, workload inspection, or app deployment-use Kubernetes tools for in-cluster work. Requires `--subscription`; add `--cluster` with `--resource-group` to target a single cluster. Returns an array of cluster's metadata.",
-      "command": "azmcp aks cluster get",
+      "description": "List/enumerate all AKS (Azure Kubernetes Service) clusters in a subscription. Get/retrieve/show the details of a specific cluster if a name is provided.",
+      "command": "aks cluster get",
       "option": [
         {
           "name": "--tenant",
@@ -199,8 +199,8 @@
     },
     {
       "name": "get",
-      "description": "List Azure Kubernetes Service (AKS) node pools for a cluster. Requires `--subscription`, `--resource-group`, and `--cluster`; add `--nodepool` to fetch one pool. Returns `NodePool[]` metadata (SKU, node count, OS, mode, autoscale, provisioning state). Not for scaling, draining, or kubectl tasks-use Kubernetes tools for cluster operations.",
-      "command": "azmcp aks nodepool get",
+      "description": "List/enumerate all AKS (Azure Kubernetes Service) node pools in a cluster. Get/retrieve/show the details of a specific node pool if a name is provided.",
+      "command": "aks nodepool get",
       "option": [
         {
           "name": "--tenant",
@@ -273,7 +273,7 @@
     {
       "name": "list",
       "description": "List all App Configuration stores in a subscription. This command retrieves and displays all App Configuration\r\nstores available in the specified subscription. Results include store names returned as a JSON array.",
-      "command": "azmcp appconfig account list",
+      "command": "appconfig account list",
       "option": [
         {
           "name": "--tenant",
@@ -328,7 +328,7 @@
     {
       "name": "delete",
       "description": "Delete a key-value pair from an App Configuration store. This command removes the specified key-value pair from the store.\r\nIf a label is specified, only the labeled version is deleted. If no label is specified, the key-value with the matching\r\nkey and the default label will be deleted.",
-      "command": "azmcp appconfig kv delete",
+      "command": "appconfig kv delete",
       "option": [
         {
           "name": "--tenant",
@@ -407,7 +407,7 @@
     {
       "name": "get",
       "description": "Gets key-values in an App Configuration store. This command can either retrieve a specific key-value by its key\r\nand optional label, or list key-values if no key is provided. Listing key-values can optionally be filtered by a\r\nkey filter and label filter. Each key-value includes its key, value, label, content type, ETag, last modified time,\r\nand lock status.",
-      "command": "azmcp appconfig kv get",
+      "command": "appconfig kv get",
       "option": [
         {
           "name": "--tenant",
@@ -492,7 +492,7 @@
     {
       "name": "set",
       "description": "Sets the lock state of a key-value in an App Configuration store. This command can lock and unlock key-values.\r\nLocking sets a key-value to read-only mode, preventing any modifications to its value. Unlocking removes the\r\nread-only mode from a key-value setting, allowing modifications to its value. You must specify an account name\r\nand key. Optionally, you can specify a label to lock or unlock a specific labeled version of the key-value.\r\nDefault is unlocking the key-value.",
-      "command": "azmcp appconfig kv lock set",
+      "command": "appconfig kv lock set",
       "option": [
         {
           "name": "--tenant",
@@ -577,7 +577,7 @@
     {
       "name": "set",
       "description": "Set a key-value setting in an App Configuration store. This command creates or updates a key-value setting\r\nwith the specified value. You must specify an account name, key, and value. Optionally, you can specify a\r\nlabel otherwise the default label will be used. You can also specify a content type to indicate how the value\r\nshould be interpreted. You can add tags in the format 'key=value' to associate metadata with the setting.",
-      "command": "azmcp appconfig kv set",
+      "command": "appconfig kv set",
       "option": [
         {
           "name": "--tenant",
@@ -668,7 +668,7 @@
     {
       "name": "diagnose",
       "description": "Get diagnostic help from App Lens for Azure application and service issues to identify what's wrong with a service. Ask questions about performance, slowness, failures, errors, application state, availability to receive expert analysis and solutions which can help when performing diagnostics and to address issues about performance and failures. Returns insights, recommended solutions, and analysis. Always use this tool before manually checking metrics or logs when users report performance or functionality issues. Use Azure CLI to find the subscription, resourceGroup, and resourceType if not provided. If given a resourceId, parse it to extract subscription, resourceGroup, and resourceType (format: /subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resource}). This tool can be used to ask questions about application state, diagnose performance problems, and address service failures.",
-      "command": "azmcp applens resource diagnose",
+      "command": "applens resource diagnose",
       "option": [
         {
           "name": "--tenant",
@@ -747,7 +747,7 @@
     {
       "name": "list",
       "description": "List Application Insights Code Optimization Recommendations in a subscription. Optionally filter by resource group when --resource-group is provided.\r\nReturns the code optimization recommendations based on the profiler data.",
-      "command": "azmcp applicationinsights recommendation list",
+      "command": "applicationinsights recommendation list",
       "option": [
         {
           "name": "--tenant",
@@ -808,7 +808,7 @@
     {
       "name": "add",
       "description": "Add a database connection to an App Service. This command configures database connection\r\nsettings for the specified App Service, allowing it to connect to a database server.",
-      "command": "azmcp appservice database add",
+      "command": "appservice database add",
       "option": [
         {
           "name": "--tenant",
@@ -899,13 +899,13 @@
     {
       "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
-      "command": "azmcp azureterraformbestpractices get",
+      "command": "azureterraformbestpractices get",
       "option": []
     },
     {
       "name": "get",
       "description": " Provides the Bicep schema definition of any Azure resource type (latest service version). Use this to get the schema needed to write Bicep IaC (infrasturcture as code) for Azure resources such as AI models, storage accounts, databases, virtual machines, app services, key vaults, and more. Do not use this tool for resource deployment, deployment guidelines, or getting best practices.",
-      "command": "azmcp bicepschema get",
+      "command": "bicepschema get",
       "option": [
         {
           "name": "--tenant",
@@ -960,7 +960,7 @@
     {
       "name": "design",
       "description": "Recommends architecture design for cloud services/apps/solutions, such as: file storage, banking, video streaming, e-commerce, SaaS, and more. Use as follows: 1. Ask about user role, business goals, etc (1-2 questions at a time). 2. Track confidence returned by service and update requirements (explicit/implicit/assumed). 3. Repeat steps 1 and 2 as needed until confidence >= 0.7 4. Present architecture with table format, visual organization, ASCII diagrams. 4. Follow Azure Well-Architected Framework principles. 5. Cover all tiers: infrastructure, platform, application, data, security, operations. 6. Provide actionable advice and high-level overview. Note: State tracks components, requirements by category, and confidence factors. Be conservative with suggestions.",
-      "command": "azmcp cloudarchitect design",
+      "command": "cloudarchitect design",
       "option": [
         {
           "name": "--tenant",
@@ -1050,8 +1050,117 @@
     },
     {
       "name": "send",
-      "description": "Sends SMS messages to one or more recipients using Azure Communication Services.\r\nReturns message IDs and delivery status for each sent message.",
-      "command": "azmcp communication sms send",
+      "description": "Send emails to one or multiple recipients to the given email-address. The emails can be plain text or HTML formatted. You can include a subject, custom sender name, CC and BCC recipients, and reply-to addresses.",
+      "command": "communication email send",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Communication Services URI endpoint (e.g., https://myservice.communication.azure.com). Required for credential authentication.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--from",
+          "description": "The email address to send from (must be from a verified domain)",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sender-name",
+          "description": "The display name of the sender",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--to",
+          "description": "The recipient email address(es) to send the email to.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--cc",
+          "description": "CC recipient email addresses",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--bcc",
+          "description": "BCC recipient email addresses",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subject",
+          "description": "The email subject",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--message",
+          "description": "The email message content to send to the recipient(s).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--is-html",
+          "description": "Flag indicating whether the message content is HTML",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--reply-to",
+          "description": "Reply-to email addresses",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "send",
+      "description": "Sends SMS messages to one or more recipients to the given phone-number. You can enable delivery reports and receipt tracking, broadcast SMS, and tag messages for easier tracking.\r\nReturns message IDs and delivery status for each sent message.",
+      "command": "communication sms send",
       "option": [
         {
           "name": "--tenant",
@@ -1136,7 +1245,7 @@
     {
       "name": "append",
       "description": "Appends a tamper-proof entry to a Confidential Ledger instance and returns the transaction identifier.",
-      "command": "azmcp confidentialledger entries append",
+      "command": "confidentialledger entries append",
       "option": [
         {
           "name": "--tenant",
@@ -1203,7 +1312,7 @@
     {
       "name": "get",
       "description": "Retrieves the Confidential Ledger entry and its recorded contents for the specified transaction ID, optionally scoped to a collection.",
-      "command": "azmcp confidentialledger entries get",
+      "command": "confidentialledger entries get",
       "option": [
         {
           "name": "--tenant",
@@ -1270,7 +1379,7 @@
     {
       "name": "list",
       "description": "List all Cosmos DB accounts in a subscription. This command retrieves and displays all Cosmos DB accounts\r\navailable in the specified subscription. Results include account names and are returned as a JSON array.",
-      "command": "azmcp cosmos account list",
+      "command": "cosmos account list",
       "option": [
         {
           "name": "--tenant",
@@ -1325,7 +1434,7 @@
     {
       "name": "query",
       "description": "List items from a Cosmos DB container by specifying the account name, database name, and container name, optionally providing a custom SQL query to filter results.",
-      "command": "azmcp cosmos database container item query",
+      "command": "cosmos database container item query",
       "option": [
         {
           "name": "--tenant",
@@ -1404,7 +1513,7 @@
     {
       "name": "list",
       "description": "List all containers in a Cosmos DB database. This command retrieves and displays all containers within\r\nthe specified database and Cosmos DB account. Results include container names and are returned as a\r\nJSON array. You must specify both an account name and a database name.",
-      "command": "azmcp cosmos database container list",
+      "command": "cosmos database container list",
       "option": [
         {
           "name": "--tenant",
@@ -1471,7 +1580,7 @@
     {
       "name": "list",
       "description": "List all databases in a Cosmos DB account. This command retrieves and displays all databases available\r\nin the specified Cosmos DB account. Results include database names and are returned as a JSON array.",
-      "command": "azmcp cosmos database list",
+      "command": "cosmos database list",
       "option": [
         {
           "name": "--tenant",
@@ -1532,7 +1641,7 @@
     {
       "name": "list",
       "description": "List monitored resources in Datadog for a datadog resource taken as input from the user.\r\nThis command retrieves all monitored azure resources available.\r\nRequires `datadog-resource`, `resource-group` and `subscription`.\r\nResult is a list of monitored resources as a JSON array.",
-      "command": "azmcp datadog monitoredresources list",
+      "command": "datadog monitoredresources list",
       "option": [
         {
           "name": "--tenant",
@@ -1599,7 +1708,7 @@
     {
       "name": "get",
       "description": "Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.",
-      "command": "azmcp deploy app logs get",
+      "command": "deploy app logs get",
       "option": [
         {
           "name": "--tenant",
@@ -1672,7 +1781,7 @@
     {
       "name": "generate",
       "description": "Generates an azure service architecture diagram for the application based on the provided app topology.Call this tool when the user need recommend or design the azure architecture of their application.Do not call this tool when the user need detailed design of the azure architecture, such as the network topology, security design, etc.Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services, also find the environment variables that used to create the connection strings.If it's a .NET Aspire application, check aspireManifest.json file if there is. Try your best to fulfill the input schema with your analyze result.",
-      "command": "azmcp deploy architecture diagram generate",
+      "command": "deploy architecture diagram generate",
       "option": [
         {
           "name": "--raw-mcp-tool-input",
@@ -1685,7 +1794,7 @@
     {
       "name": "get",
       "description": "This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with the azd tool and adhere to best practices.",
-      "command": "azmcp deploy iac rules get",
+      "command": "deploy iac rules get",
       "option": [
         {
           "name": "--deployment-tool",
@@ -1710,7 +1819,7 @@
     {
       "name": "get",
       "description": "Guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure. Use this tool BEFORE generating/creating a Github actions workflow file for DEPLOYMENT on Azure. Infrastructure files should be ready and the application should be ready to be containerized.",
-      "command": "azmcp deploy pipeline guidance get",
+      "command": "deploy pipeline guidance get",
       "option": [
         {
           "name": "--tenant",
@@ -1789,7 +1898,7 @@
     {
       "name": "get",
       "description": "Generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services.",
-      "command": "azmcp deploy plan get",
+      "command": "deploy plan get",
       "option": [
         {
           "name": "--workspace-folder",
@@ -1826,7 +1935,7 @@
     {
       "name": "publish",
       "description": "Publish custom events to Event Grid topics for event-driven architectures. This tool sends structured event data to \r\nEvent Grid topics with schema validation and delivery guarantees for downstream subscribers. Returns publish operation \r\nstatus. Requires topic, data, and optional schema.",
-      "command": "azmcp eventgrid events publish",
+      "command": "eventgrid events publish",
       "option": [
         {
           "name": "--tenant",
@@ -1905,7 +2014,7 @@
     {
       "name": "list",
       "description": "Show all available Event Grid subscriptions with optional topic filtering. This tool displays active event subscriptions including webhook endpoints, event filters, and delivery retry policies. Use this when you need to show, list, or get Event Grid subscriptions for topics. Requires either topic name OR subscription. If only topic is provided, searches all accessible subscriptions for a topic with that name. Resource group and location filters can be applied, but only when used with a subscription or topic.",
-      "command": "azmcp eventgrid subscription list",
+      "command": "eventgrid subscription list",
       "option": [
         {
           "name": "--tenant",
@@ -1978,7 +2087,7 @@
     {
       "name": "list",
       "description": "List or show all Event Grid topics in a subscription, optionally filtered by resource group, returning endpoints, access keys, provisioning state, and subscription details for event publishing and management. A subscription or topic name is required.",
-      "command": "azmcp eventgrid topic list",
+      "command": "eventgrid topic list",
       "option": [
         {
           "name": "--tenant",
@@ -2037,9 +2146,556 @@
       ]
     },
     {
+      "name": "delete",
+      "description": "Delete a Consumer Group. This tool will delete a pre-existing Consumer Group from the specified \r\nEvent Hub. This tool will remove existing configurations, and is considered to be destructive.\r\n\r\nThe tool requires specifying the resource group, Namespace name, Event Hub name, and Consumer\r\nGroup name to identify the Consumer Group to delete.",
+      "command": "eventhubs eventhub consumergroup delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "get",
-      "description": "Get Event Hubs namespaces from Azure. This command supports three modes of operation:\r\n1. List all Event Hubs namespaces in a subscription (when no --resource-group is provided)\r\n2. List all Event Hubs namespaces in a specific resource group (when only --resource-group is provided)\r\n3. Get a single namespace by name (using --namespace with --resource-group)\r\n\r\nWhen retrieving a single namespace, detailed information including SKU, settings, and metadata \r\nis returned. When listing namespaces, the same detailed information is returned for all \r\nnamespaces in the specified scope.\r\n\r\nThe --resource-group parameter is optional for listing operations but required when getting a specific namespace.",
-      "command": "azmcp eventhubs namespace get",
+      "description": "Get consumer groups from Azure Event Hub. This command can either:\r\n\r\n1) List all consumer groups in an Event Hub\r\n2) Get a single consumer group by name\r\n\r\nThe EventHub, Namespace, and ResourceGroup parameters are required (for both get and list)\r\nThe Consumer Group parameter is only required for getting a specific consumer-group\r\nWhen retrieving a single consumer group and when listing all available consumer groups, return all available metadata on the consumer group.",
+      "command": "eventhubs eventhub consumergroup get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Create or Update a Consumer Group. This tool will either create a Consumer Group resource \r\nor update a pre-existing Consumer Group resource within the specified Event Hub, depending \r\non whether or not the specified Consumer Group already exists. This tool may modify existing \r\nconfigurations, and is considered to be destructive. \r\n\r\nThe tool requires specifying the resource group, namespace name, event hub name, and consumer \r\ngroup name. Optionally, you can provide user metadata for the consumer group.",
+      "command": "eventhubs eventhub consumergroup update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--consumer-group",
+          "description": "The name of the consumer group within the Event Hub.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user-metadata",
+          "description": "User metadata for the consumer group.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Delete an Event Hub from an Azure Event Hubs namespace. This operation permanently removes\r\nthe specified Event Hub and all its data. This is a destructive operation.\r\n\r\nThe operation is idempotent - if the Event Hub doesn't exist, the command reports success\r\nwith Deleted = false. If the Event Hub is successfully deleted, Deleted = true is returned.\r\nWarning: This operation cannot be undone. All messages and consumer groups in the Event Hub\r\nwill be permanently deleted.",
+      "command": "eventhubs eventhub delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Get Event Hubs from Azure namespace. This command can either:\r\n1. List all Event Hubs in a namespace\r\n2. Get a single Event Hub by name\r\n\r\nWhen retrieving a single Event Hub or listing multiple Event Hubs, detailed information including\r\npartition count, settings, and metadata is returned for all Event Hubs.",
+      "command": "eventhubs eventhub get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Create or update an Event Hub within an Azure Event Hubs namespace. This command can either:\r\n1. Create a new Event Hub if it doesn't exist\r\n2. Update an existing Event Hub's configuration\r\n\r\nYou can configure:\r\n- Partition count (number of partitions for parallel processing)\r\n- Message retention time (how long messages are retained in hours)\r\n\r\nNote: Some properties like partition count cannot be changed after creation.\r\nThis is a potentially long-running operation that waits for completion.",
+      "command": "eventhubs eventhub update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--eventhub",
+          "description": "The name of the Event Hub within the namespace.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--partition-count",
+          "description": "The number of partitions for the event hub. Must be between 1 and 32 (or higher based on namespace tier).",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--message-retention-in-hours",
+          "description": "The message retention time in hours. Minimum is 1 hour, maximum depends on the namespace tier.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--status",
+          "description": "The status of the event hub (Active, Disabled, etc.). Note: Status may be read-only in some operations.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "delete",
+      "description": "Delete Event Hubs namespace. This tool will delete a pre-existing Namespace from the \r\nspecified resource group. This tool will remove existing configurations, and is \r\nconsidered to be destructive.\r\n\r\nWARNING: This operation is irreversible. All Event Hubs, Consumer Groups, and\r\nconfigurations within the namespace will be permanently deleted.\r\n\r\nThe namespace must exist in the specified resource group. If the namespace is not found,\r\nan error will be returned.",
+      "command": "eventhubs namespace delete",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Get Event Hubs namespaces from Azure. This command supports three modes of operation:\r\n1. List all Event Hubs namespaces in a subscription \r\n2. List all Event Hubs namespaces in a specific resource group \r\n3. Get a single namespace by name \r\n\r\nWhen retrieving a single namespace, detailed information including SKU, settings, and metadata \r\nis returned. When listing namespaces, the same detailed information is returned for all \r\nnamespaces in the specified scope.\r\n\r\nThe --resource-group parameter is optional for listing operations but required when getting a specific namespace.",
+      "command": "eventhubs namespace get",
       "option": [
         {
           "name": "--tenant",
@@ -2104,9 +2760,130 @@
       ]
     },
     {
+      "name": "update",
+      "description": "Create or Update a Namespace. This tool will either create a Namespace resource or \r\nupdate a pre-existing Namespace resource within the specified resource group, depending on \r\nwhether or not the specified Namespace already exists. This tool may modify existing \r\nconfigurations, and is considered to be destructive. This is a potentially long-running operation.\r\n\r\nWhen updating an existing namespace, you only need to provide the properties you want to change.\r\nUnspecified properties will retain their existing values. At least one update property must be provided.\r\n\r\nCommon update scenarios:\r\n- Scale up/down by changing SKU tier or capacity\r\n- Enable/disable auto-inflate and set maximum throughput units\r\n- Enable/disable Kafka support\r\n- Modify tags for resource management\r\n- Enable/disable zone redundancy (Premium SKU only)",
+      "command": "eventhubs namespace update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--namespace",
+          "description": "The name of the Event Hubs namespace to retrieve. Must be used with --resource-group option.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "The Azure region where the namespace is located (e.g., 'eastus', 'westus2').",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-name",
+          "description": "The SKU name for the namespace. Valid values: 'Basic', 'Standard', 'Premium'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-tier",
+          "description": "The SKU tier for the namespace. Valid values: 'Basic', 'Standard', 'Premium'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--sku-capacity",
+          "description": "The SKU capacity (throughput units) for the namespace. Valid range depends on the SKU.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--is-auto-inflate-enabled",
+          "description": "Enable or disable auto-inflate for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--maximum-throughput-units",
+          "description": "The maximum throughput units when auto-inflate is enabled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--kafka-enabled",
+          "description": "Enable or disable Kafka for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--zone-redundant",
+          "description": "Enable or disable zone redundancy for the namespace.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--tags",
+          "description": "Tags for the namespace in JSON format (e.g., '{\"key1\":\"value1\",\"key2\":\"value2\"}').",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "azqr",
       "description": "Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.\r\nThis tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.\r\nRequires a subscription id and optionally a resource group name. Returns the generated report file's path.\r\nNote that Azure Quick Review CLI (azqr) is different from Azure CLI (az).",
-      "command": "azmcp extension azqr",
+      "command": "extension azqr",
       "option": [
         {
           "name": "--tenant",
@@ -2165,9 +2942,125 @@
       ]
     },
     {
+      "name": "generate",
+      "description": "This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.",
+      "command": "extension cli generate",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--intent",
+          "description": "The user intent of the task to be solved by using the CLI tool. This user intent will be used to generate the appropriate CLI command to accomplish the desirable goal.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--cli-type",
+          "description": "The type of CLI tool to use. Supported values are 'az' for Azure CLI.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "install",
+      "description": "This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.",
+      "command": "extension cli install",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--cli-type",
+          "description": "The type of CLI tool to use. Supported values are 'az' for Azure CLI, 'azd' for Azure Developer CLI, and 'func' for Azure Functions Core Tools CLI.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "connect",
       "description": "Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows - instead, use agents_query-and-evaluate or agents_evaluate.",
-      "command": "azmcp foundry agents connect",
+      "command": "foundry agents connect",
       "option": [
         {
           "name": "--tenant",
@@ -2234,7 +3127,7 @@
     {
       "name": "evaluate",
       "description": "Run agent evaluation on agent data. Requires JSON strings for query, response, and tool definitions.",
-      "command": "azmcp foundry agents evaluate",
+      "command": "foundry agents evaluate",
       "option": [
         {
           "name": "--tenant",
@@ -2319,7 +3212,7 @@
     {
       "name": "list",
       "description": "List all Azure AI Agents available in the configured project.",
-      "command": "azmcp foundry agents list",
+      "command": "foundry agents list",
       "option": [
         {
           "name": "--tenant",
@@ -2374,7 +3267,7 @@
     {
       "name": "query-and-evaluate",
       "description": "Query an agent and evaluate its response in a single operation.\r\nReturns both the agent response and evaluation results",
-      "command": "azmcp foundry agents query-and-evaluate",
+      "command": "foundry agents query-and-evaluate",
       "option": [
         {
           "name": "--tenant",
@@ -2459,7 +3352,7 @@
     {
       "name": "list",
       "description": "Retrieves a list of knowledge indexes from Azure AI Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\n\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
-      "command": "azmcp foundry knowledge index list",
+      "command": "foundry knowledge index list",
       "option": [
         {
           "name": "--tenant",
@@ -2514,7 +3407,7 @@
     {
       "name": "schema",
       "description": "Retrieves the detailed schema configuration of a specific knowledge index from Azure AI Foundry.\r\n\r\nThis function provides comprehensive information about the structure and configuration of a knowledge index, including field definitions, data types, searchable attributes, and other schema properties. The schema information is essential for understanding how the index is structured and how data is indexed and searchable.\r\n\r\nUsage:\r\n    Use this function when you need to examine the detailed configuration of a specific knowledge index. This is helpful for troubleshooting search issues, understanding index capabilities, planning data mapping, or when integrating with the index programmatically.\r\n\r\nNotes:\r\n    - Returns the index schema.",
-      "command": "azmcp foundry knowledge index schema",
+      "command": "foundry knowledge index schema",
       "option": [
         {
           "name": "--tenant",
@@ -2575,7 +3468,7 @@
     {
       "name": "deploy",
       "description": "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.",
-      "command": "azmcp foundry models deploy",
+      "command": "foundry models deploy",
       "option": [
         {
           "name": "--tenant",
@@ -2696,7 +3589,7 @@
     {
       "name": "list",
       "description": "Lists Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint and shows currently provisioned model deployments. Use to audit what is deployed before invoking or creating new deployments. Do not use this tool to discover undeployed catalog/base models - instead, use models_list tool.",
-      "command": "azmcp foundry models deployments list",
+      "command": "foundry models deployments list",
       "option": [
         {
           "name": "--tenant",
@@ -2751,7 +3644,7 @@
     {
       "name": "list",
       "description": "Retrieves a list of supported models from the Azure AI Foundry catalog.\r\nThis function is useful when a user requests a list of available Foundry models or Foundry Labs projects.\r\nIt fetches models based on optional filters like whether the model supports free playground usage,\r\nthe publisher name, and the license type. The function will return the list of models with useful fields.\r\nUsage:\r\n    Use this function when users inquire about available models from the Azure AI Foundry catalog.\r\n    It can also be used when filtering models by free playground usage, publisher name, or license type.\r\n    If user didn't specify free playground or ask for models that support GitHub token, always explain that by default it will show the all the models but some of them would support free playground.\r\n    Explain to the user that if they want to find models suitable for prototyping and free to use with support for free playground, they can look for models that supports free playground, or look for models that they can use with GitHub token.",
-      "command": "azmcp foundry models list",
+      "command": "foundry models list",
       "option": [
         {
           "name": "--tenant",
@@ -2824,7 +3717,7 @@
     {
       "name": "chat-completions-create",
       "description": "Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational \r\ninputs with message history and system instructions to generate contextual responses. Returns chat \r\nresponse as JSON. Requires resource-name, deployment-name, and message-array.",
-      "command": "azmcp foundry openai chat-completions-create",
+      "command": "foundry openai chat-completions-create",
       "option": [
         {
           "name": "--tenant",
@@ -2957,7 +3850,7 @@
     {
       "name": "create-completion",
       "description": "Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI \r\ncompletion models and returns generated text with configurable parameters like temperature and max tokens. \r\nReturns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.",
-      "command": "azmcp foundry openai create-completion",
+      "command": "foundry openai create-completion",
       "option": [
         {
           "name": "--tenant",
@@ -3048,7 +3941,7 @@
     {
       "name": "embeddings-create",
       "description": "Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into \r\nhigh-dimensional vector representations for similarity search and machine learning applications. \r\nReturns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.",
-      "command": "azmcp foundry openai embeddings-create",
+      "command": "foundry openai embeddings-create",
       "option": [
         {
           "name": "--tenant",
@@ -3145,7 +4038,7 @@
     {
       "name": "models-list",
       "description": "List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about \r\ndeployed models including model names, versions, capabilities, and deployment status. \r\nReturns model information as JSON array. Requires resource-name.",
-      "command": "azmcp foundry openai models-list",
+      "command": "foundry openai models-list",
       "option": [
         {
           "name": "--tenant",
@@ -3211,8 +4104,75 @@
     },
     {
       "name": "get",
+      "description": "Gets detailed information about Azure AI Foundry (Cognitive Services) resources, including endpoint URL, \r\nlocation, SKU, and all deployed models with their configuration. If a specific resource name is provided, \r\nreturns details for that resource only. If no resource name is provided, lists all AI Foundry resources \r\nin the subscription or resource group. Use this tool when users need endpoint information, want to discover \r\navailable AI resources, or need to see all models deployed on AI resources.",
+      "command": "foundry resource get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-name",
+          "description": "The name of the Azure OpenAI resource.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "get",
       "description": "Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group\r\nis specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,\r\nlocation, status, and app service plan name.",
-      "command": "azmcp functionapp get",
+      "command": "functionapp get",
       "option": [
         {
           "name": "--tenant",
@@ -3279,7 +4239,7 @@
     {
       "name": "get",
       "description": "This tool returns a list of best practices for code generation, operations and deployment\r\n        when working with Azure services. It should be called for any code generation, deployment or\r\n        operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container\r\n        Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory,\r\n        Azure App Services, or any other Azure technology or programming language. Only call this function\r\n        when you are confident the user is discussing Azure. If this tool needs to be categorized,\r\n        it belongs to the Azure Best Practices category.",
-      "command": "azmcp get bestpractices get",
+      "command": "get bestpractices get",
       "option": [
         {
           "name": "--resource",
@@ -3298,7 +4258,7 @@
     {
       "name": "list",
       "description": "List all Grafana workspace resources in a specified subscription. Returns an array of Grafana workspace details.\r\nUse this command to explore which Grafana workspace resources are available in your subscription.",
-      "command": "azmcp grafana list",
+      "command": "grafana list",
       "option": [
         {
           "name": "--tenant",
@@ -3353,7 +4313,7 @@
     {
       "name": "list",
       "description": "List all resource groups in a subscription. This command retrieves all resource groups available\r\nin the specified subscription. Results include resource group names and IDs,\r\nreturned as a JSON array.",
-      "command": "azmcp group list",
+      "command": "group list",
       "option": [
         {
           "name": "--tenant",
@@ -3408,7 +4368,7 @@
     {
       "name": "get",
       "description": "Retrieves all Key Vault Managed HSM account settings for a given vault. This includes settings such as purge protection and soft-delete retention days. This tool ONLY applies to Managed HSM vaults.",
-      "command": "azmcp keyvault admin settings get",
+      "command": "keyvault admin settings get",
       "option": [
         {
           "name": "--tenant",
@@ -3469,7 +4429,7 @@
     {
       "name": "create",
       "description": "Create/issue/generate a new certificate in an Azure Key Vault using the default certificate policy. Required: --vault, --certificate, --subscription. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuerName. Creates a new certificate version if it already exists.",
-      "command": "azmcp keyvault certificate create",
+      "command": "keyvault certificate create",
       "option": [
         {
           "name": "--tenant",
@@ -3536,7 +4496,7 @@
     {
       "name": "get",
       "description": "Get/retrieve/show details for a single certificate in a Key Vault (latest version). Not for listing multiple certificates or importing existing ones. Required: --vault <vault>, --certificate <certificate> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, secretId, cer, thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer.",
-      "command": "azmcp keyvault certificate get",
+      "command": "keyvault certificate get",
       "option": [
         {
           "name": "--tenant",
@@ -3603,7 +4563,7 @@
     {
       "name": "import",
       "description": "Imports/uploads an existing certificate (PFX or PEM with private key) into an Azure Key Vault without generating a new certificate or key material. This command accepts either a file path to a PFX/PEM file, a base64 encoded PFX, or raw PEM text starting with -----BEGIN. If the certificate is a password-protected PFX, a password must be provided. Required: --vault <vault>, --certificate <certificate>, --certificate-data <certificate-data>, --subscription <subscription>. Optional: --password <password-for-PFX>, --tenant <tenant>. Returns: name, id, keyId, secretId, cer (base64), thumbprint, enabled, notBefore, expiresOn, createdOn, updatedOn, subject, issuer. Creates a new certificate version if it already exists.",
-      "command": "azmcp keyvault certificate import",
+      "command": "keyvault certificate import",
       "option": [
         {
           "name": "--tenant",
@@ -3682,7 +4642,7 @@
     {
       "name": "list",
       "description": "List/enumerate all certificates in an Azure Key Vault. Not for fetching a single certificate.",
-      "command": "azmcp keyvault certificate list",
+      "command": "keyvault certificate list",
       "option": [
         {
           "name": "--tenant",
@@ -3743,7 +4703,7 @@
     {
       "name": "create",
       "description": "Create a new key in an Azure Key Vault. This command creates a key with the specified name and type in the given vault. Supports types: RSA, RSA-HSM, EC, EC-HSM, oct, oct-HSM. Required: --vault <vault>, --key <key> --key-type <key-type> --subscription <subscription>. Optional: --tenant <tenant>. Returns: Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn. Creates a new key version if it already exists.",
-      "command": "azmcp keyvault key create",
+      "command": "keyvault key create",
       "option": [
         {
           "name": "--tenant",
@@ -3816,7 +4776,7 @@
     {
       "name": "get",
       "description": "Get/retrieve/show details for a single key in a Key Vault (latest version). Not for listing multiple keys. Required: --vault <vault>, --key <key> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, id, keyId, keyType, enabled, notBefore, expiresOn, createdOn, updatedOn.",
-      "command": "azmcp keyvault key get",
+      "command": "keyvault key get",
       "option": [
         {
           "name": "--tenant",
@@ -3883,7 +4843,7 @@
     {
       "name": "list",
       "description": "List/enumerate all keys in an Azure Key Vault. Not for fetching a single key.",
-      "command": "azmcp keyvault key list",
+      "command": "keyvault key list",
       "option": [
         {
           "name": "--tenant",
@@ -3950,7 +4910,7 @@
     {
       "name": "create",
       "description": "Create/set a secret in an Azure Key Vault with the specified name and value. Required: --vault <vault>, --secret <secret>, --subscription <subscription>. Optional: --tenant <tenant>. Creates a new secret version if it already exists.",
-      "command": "azmcp keyvault secret create",
+      "command": "keyvault secret create",
       "option": [
         {
           "name": "--tenant",
@@ -4023,7 +4983,7 @@
     {
       "name": "get",
       "description": "Get/retrieve/show details for a single secret in an Azure Key Vault (latest version). Not for listing multiple secrets. Required: --vault <vault>, --secret <secret> --subscription <subscription>. Optional: --tenant <tenant>. Returns: name, value, id, contentType, enabled, notBefore, expiresOn, createdOn, updatedOn, tags.",
-      "command": "azmcp keyvault secret get",
+      "command": "keyvault secret get",
       "option": [
         {
           "name": "--tenant",
@@ -4090,7 +5050,7 @@
     {
       "name": "list",
       "description": "List/enumerate all secrets in a Key Vault. Not for fetching a single secret.",
-      "command": "azmcp keyvault secret list",
+      "command": "keyvault secret list",
       "option": [
         {
           "name": "--tenant",
@@ -4151,7 +5111,7 @@
     {
       "name": "get",
       "description": "Get/retrieve/show details for a specific Azure Data Explorer/Kusto/KQL cluster in a subscription. Not for listing multiple clusters. Required: --cluster and --subscription.",
-      "command": "azmcp kusto cluster get",
+      "command": "kusto cluster get",
       "option": [
         {
           "name": "--tenant",
@@ -4212,7 +5172,7 @@
     {
       "name": "list",
       "description": "List/enumerate all Azure Data Explorer/Kusto/KQL clusters in a subscription.",
-      "command": "azmcp kusto cluster list",
+      "command": "kusto cluster list",
       "option": [
         {
           "name": "--tenant",
@@ -4267,7 +5227,7 @@
     {
       "name": "list",
       "description": "List/enumerate all databases in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri ( or --cluster and --subscription).",
-      "command": "azmcp kusto database list",
+      "command": "kusto database list",
       "option": [
         {
           "name": "--tenant",
@@ -4334,7 +5294,7 @@
     {
       "name": "query",
       "description": "Executes a query against an Azure Data Explorer/Kusto/KQL cluster to search for specific terms, retrieve records, or perform management operations. Required: --cluster-uri (or --cluster and --subscription), --database, and --query.",
-      "command": "azmcp kusto query",
+      "command": "kusto query",
       "option": [
         {
           "name": "--tenant",
@@ -4413,7 +5373,7 @@
     {
       "name": "sample",
       "description": "Return a sample of rows from a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
-      "command": "azmcp kusto sample",
+      "command": "kusto sample",
       "option": [
         {
           "name": "--tenant",
@@ -4498,7 +5458,7 @@
     {
       "name": "list",
       "description": "List/enumerate all tables in a specific Azure Data Explorer/Kusto/KQL database. Required: --cluster-uri (or --cluster and --subscription), --database.",
-      "command": "azmcp kusto table list",
+      "command": "kusto table list",
       "option": [
         {
           "name": "--tenant",
@@ -4571,7 +5531,7 @@
     {
       "name": "schema",
       "description": "Get/retrieve/show the schema of a specific table in an Azure Data Explorer/Kusto/KQL cluster. Required: --cluster-uri (or --cluster and --subscription), --database, and --table.",
-      "command": "azmcp kusto table schema",
+      "command": "kusto table schema",
       "option": [
         {
           "name": "--tenant",
@@ -4650,7 +5610,7 @@
     {
       "name": "create",
       "description": "Creates a new load test plan or configuration for performance testing scenarios. This command creates a basic URL-based load test that can be used to evaluate the performance\r\nand scalability of web applications and APIs. The test configuration defines target endpoint, load parameters, and test duration. Once we create a test plan, we can use that to trigger test runs to test the endpoints set using the 'azmcp loadtesting testrun create' command.\r\nThis is NOT going to trigger or create any test runs and only will setup your test plan. Also, this is NOT going to create any test resource in azure. \r\nIt will only create a test in an already existing load test resource.",
-      "command": "azmcp loadtesting test create",
+      "command": "loadtesting test create",
       "option": [
         {
           "name": "--tenant",
@@ -4759,7 +5719,7 @@
     {
       "name": "get",
       "description": "Get the configuration and setup details for a load test by its test ID in a Load Testing resource.\r\nReturns only the test definition, including duration, ramp-up, virtual users, and endpoint. Does not return any test run results or execution data. Also does NOT return and resource details. Only the test configuration is fetched.",
-      "command": "azmcp loadtesting test get",
+      "command": "loadtesting test get",
       "option": [
         {
           "name": "--tenant",
@@ -4832,7 +5792,7 @@
     {
       "name": "create",
       "description": "Returns the created Load Testing resource. This creates the resource in Azure only. It does not create any test plan or test run. \r\nOnce the resource is setup, you can go and configure test plans in the resource and then trigger test runs for your test plans.",
-      "command": "azmcp loadtesting testresource create",
+      "command": "loadtesting testresource create",
       "option": [
         {
           "name": "--tenant",
@@ -4899,7 +5859,7 @@
     {
       "name": "list",
       "description": "Lists all Azure Load Testing resources available in the selected subscription and resource group.\r\nReturns metadata for each resource, including name, location, and status. Use this to discover, manage, or audit load testing resources in your environment. Does not return test plans or test runs.",
-      "command": "azmcp loadtesting testresource list",
+      "command": "loadtesting testresource list",
       "option": [
         {
           "name": "--tenant",
@@ -4966,7 +5926,7 @@
     {
       "name": "create",
       "description": "Creates a test run for a specified test in the selected load testing resource. This command triggers a new test run and does not modify the test plan or create a new test or resource. Use this to execute performance or functional tests based on an existing test configuration.",
-      "command": "azmcp loadtesting testrun create",
+      "command": "loadtesting testrun create",
       "option": [
         {
           "name": "--tenant",
@@ -5063,7 +6023,7 @@
     {
       "name": "get",
       "description": "Get details for a specific test run by testrun ID.\r\nUse this to retrieve a single run's execution details (not a list). Returns status, start/end times, progress, aggregated metrics, and available artifacts (logs/traces). \r\nDoes NOT return the test plan/configuration or the test resource. Only the test run details. Also it is used to get details of SINGLE testrun based on its id. For a list of runs use testrun list command instead.",
-      "command": "azmcp loadtesting testrun get",
+      "command": "loadtesting testrun get",
       "option": [
         {
           "name": "--tenant",
@@ -5136,7 +6096,7 @@
     {
       "name": "list",
       "description": "Retrieves a comprehensive list of all test run executions for a specific load test. We get the test ID from the user and all the associated test runs are fetched. It is a one to many relationship.\r\nEach test run only stores data corresponding to that particular run associated for that test. This does NOT return the test configuration or plan. For that use the test command. This is only for testruns.",
-      "command": "azmcp loadtesting testrun list",
+      "command": "loadtesting testrun list",
       "option": [
         {
           "name": "--tenant",
@@ -5209,7 +6169,7 @@
     {
       "name": "update",
       "description": "Updates the metadata and display properties of a completed or in-progress load test run execution.\r\nThis command allows you to modify descriptive information for better organization, documentation, and identification of test runs without affecting the actual test execution or results. \r\nThis will only update a test run for the selected test in the load test resource. It does not help in changing the test plan configuration. \r\nThis will NOT create a test and also NOT update a test resource. Only for the specified test, it will update a test run.",
-      "command": "azmcp loadtesting testrun update",
+      "command": "loadtesting testrun update",
       "option": [
         {
           "name": "--tenant",
@@ -5300,7 +6260,7 @@
     {
       "name": "create",
       "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
-      "command": "azmcp managedlustre filesystem create",
+      "command": "managedlustre filesystem create",
       "option": [
         {
           "name": "--tenant",
@@ -5382,7 +6342,7 @@
         },
         {
           "name": "--subnet-id",
-          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
           "type": "string",
           "required": true
         },
@@ -5406,13 +6366,13 @@
         },
         {
           "name": "--hsm-container",
-          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
+          "description": "Full blob container resource ID for HSM integration. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account.Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}.\nExample: --hsm-container /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-container\n",
           "type": "string",
           "required": null
         },
         {
           "name": "--hsm-log-container",
-          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/0000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
+          "description": "Full blob container resource ID for HSM logging. HPC Cache Resource Provider must have before deployment Storage Blob Data Contributor and Storage Account Contributor roles on parent Storage Account. Same format as --hsm-container.\nExample: --hsm-log-container /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/stacc/blobServices/default/containers/hsm-logs\n",
           "type": "string",
           "required": null
         },
@@ -5454,19 +6414,19 @@
         },
         {
           "name": "--key-url",
-          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/0000\n",
+          "description": "Full Key Vault key URL. Format: https://{vaultName}.vault.azure.net/keys/{keyName}/{keyVersion}.\nExample: --key-url https://kv-amlfs-001.vault.azure.net/keys/key-amlfs-001/a1b2c3d4e5f6g7h8i9j0k1l2m3n4o5p\n",
           "type": "string",
           "required": null
         },
         {
           "name": "--source-vault",
-          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/0000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
+          "description": "Full Key Vault resource ID. Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}.\nExample: --source-vault /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv-amlfs-001\n",
           "type": "string",
           "required": null
         },
         {
           "name": "--user-assigned-identity-id",
-          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/0000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
+          "description": "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\nFormat: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\nExample: --user-assigned-identity-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n",
           "type": "string",
           "required": null
         }
@@ -5475,7 +6435,7 @@
     {
       "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
-      "command": "azmcp managedlustre filesystem list",
+      "command": "managedlustre filesystem list",
       "option": [
         {
           "name": "--tenant",
@@ -5536,7 +6496,7 @@
     {
       "name": "get",
       "description": "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
-      "command": "azmcp managedlustre filesystem sku get",
+      "command": "managedlustre filesystem sku get",
       "option": [
         {
           "name": "--tenant",
@@ -5597,7 +6557,7 @@
     {
       "name": "ask",
       "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
-      "command": "azmcp managedlustre filesystem subnetsize ask",
+      "command": "managedlustre filesystem subnetsize ask",
       "option": [
         {
           "name": "--tenant",
@@ -5664,7 +6624,7 @@
     {
       "name": "validate",
       "description": "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
-      "command": "azmcp managedlustre filesystem subnetsize validate",
+      "command": "managedlustre filesystem subnetsize validate",
       "option": [
         {
           "name": "--tenant",
@@ -5728,7 +6688,7 @@
         },
         {
           "name": "--subnet-id",
-          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/0000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
+          "description": "Full subnet resource ID. Required format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnet}/subnets/{subnet}.\nExample: --subnet-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/my-rg/providers/Microsoft.Network/virtualNetworks/vnet-001/subnets/subnet-001",
           "type": "string",
           "required": true
         },
@@ -5743,7 +6703,7 @@
     {
       "name": "update",
       "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
-      "command": "azmcp managedlustre filesystem update",
+      "command": "managedlustre filesystem update",
       "option": [
         {
           "name": "--tenant",
@@ -5846,7 +6806,7 @@
     {
       "name": "get",
       "description": "Retrieves detailed information about a specific Azure Marketplace product (offer) for a given subscription,\r\n including available plans, pricing, and product metadata.",
-      "command": "azmcp marketplace product get",
+      "command": "marketplace product get",
       "option": [
         {
           "name": "--tenant",
@@ -5954,8 +6914,8 @@
     },
     {
       "name": "list",
-      "description": "Retrieves products (offers) that a subscription has access to in the Azure Marketplace.\r\nReturns a list of marketplace products including display names, publishers, pricing information, and metadata.\r\n\r\nRequired options:\r\n- subscription: Azure subscription ID or name\r\n\r\nAdditional options:\r\n- search: Search for products using a short general term (up to 25 characters)\r\n- language: Specify the language for returned information (default: en)\r\n\r\nAdvanced query options (OData):\r\n- filter: Filter results using OData syntax (e.g., \"displayName eq 'Azure'\")\r\n- orderby: Sort results by a single field using OData syntax (e.g., \"displayName asc\")\r\n- select: Select specific fields using OData syntax (e.g., \"displayName,publisherDisplayName\")\r\n- expand: Include related data in the response using OData syntax (e.g., \"plans\" to include plan details)\r\n\r\nPagination:\r\n- next-cursor: Token used for pagination to request the next batch of products in a multi-part response",
-      "command": "azmcp marketplace product list",
+      "description": "Retrieves and lists all marketplace products (offers) available to a subscription in the Azure Marketplace. Use this tool to search, select, browse, or filter marketplace offers by product name, publisher, pricing, or metadata. Returns information for each product, including display name, publisher details, category, pricing data, and available plans.",
+      "command": "marketplace product list",
       "option": [
         {
           "name": "--tenant",
@@ -6052,7 +7012,7 @@
     {
       "name": "list",
       "description": "Always use this tool if user is asking for activity logs for a resource.\r\nLists activity logs for the specified Azure resource over the given prior number of hours.\r\nThis command retrieves activity logs to help understand resource deployment history, modification activities, and access patterns.\r\nReturns activity log events with details including timestamp, operation name, status, and caller information. should be called to help retrieve information about why a resource failed to deploy or may not be working.",
-      "command": "azmcp monitor activitylog list",
+      "command": "monitor activitylog list",
       "option": [
         {
           "name": "--tenant",
@@ -6143,7 +7103,7 @@
     {
       "name": "gethealth",
       "description": "Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.\r\nFor basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  \r\nFor querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  \r\nFor querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. \r\nRequired arguments:\r\n    - --entity: The entity to get health for\r\n    - --health-model: The health model name",
-      "command": "azmcp monitor healthmodels entity gethealth",
+      "command": "monitor healthmodels entity gethealth",
       "option": [
         {
           "name": "--tenant",
@@ -6216,7 +7176,7 @@
     {
       "name": "definitions",
       "description": "    List available metric definitions for an Azure resource. Returns metadata about the metrics available for the resource.",
-      "command": "azmcp monitor metrics definitions",
+      "command": "monitor metrics definitions",
       "option": [
         {
           "name": "--tenant",
@@ -6307,7 +7267,7 @@
     {
       "name": "query",
       "description": "Query Azure Monitor metrics for a resource. Returns time series data for the specified metrics.",
-      "command": "azmcp monitor metrics query",
+      "command": "monitor metrics query",
       "option": [
         {
           "name": "--tenant",
@@ -6428,7 +7388,7 @@
     {
       "name": "query",
       "description": "Query diagnostic and activity logs for a SPECIFIC Azure resource in a Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user mentions a specific resource name or Resource ID in their request (e.g., \"show logs for resource 'app-monitor'\"). \r\nThis tool filters logs to only show data from the specified resource.\r\n\r\nWhen to use: User asks for logs from a specific resource by name or ID.\r\nWhen NOT to use: User asks for general workspace-wide logs without mentioning a specific resource.\r\n\r\nRequired arguments: resource ID or resource name, table name, KQL query\r\nOptional: hours, limit",
-      "command": "azmcp monitor resource log query",
+      "command": "monitor resource log query",
       "option": [
         {
           "name": "--tenant",
@@ -6513,7 +7473,7 @@
     {
       "name": "list",
       "description": "List all tables in a Log Analytics workspace. Requires workspace.\r\nReturns table names and schemas that can be used for constructing KQL queries.",
-      "command": "azmcp monitor table list",
+      "command": "monitor table list",
       "option": [
         {
           "name": "--tenant",
@@ -6586,7 +7546,7 @@
     {
       "name": "list",
       "description": "List available table types in a Log Analytics workspace. Returns table type names.",
-      "command": "azmcp monitor table type list",
+      "command": "monitor table type list",
       "option": [
         {
           "name": "--tenant",
@@ -6651,9 +7611,499 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Creates a new standard web test in Azure Monitor. Ping/Multstep web tests are deprecated and are not supported.\r\nReturns the created web test details.",
+      "command": "monitor webtests create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--webtest-resource",
+          "description": "The name of the Web Test resource to operate on.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--appinsights-component",
+          "description": "The resource id of the Application Insights component to associate with the web test.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--location",
+          "description": "The location where the web test resource is created. This should be the same as the AppInsights component location.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--webtest-locations",
+          "description": "List of locations to run the test from (comma-separated values). Location refers to the geo-location population tag specific to Availability Tests.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--request-url",
+          "description": "The absolute URL to test",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--webtest",
+          "description": "The name of the test in web test resource",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--description",
+          "description": "The description of the web test",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--enabled",
+          "description": "Whether the web test is enabled",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--expected-status-code",
+          "description": "Expected HTTP status code",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--follow-redirects",
+          "description": "Whether to follow redirects",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--frequency",
+          "description": "Test frequency in seconds. Supported values 300, 600, 900 seconds.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--headers",
+          "description": "HTTP headers to include in the request. Comma-separated KEY=VALUE",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--http-verb",
+          "description": "HTTP method (get, post, etc.)",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ignore-status-code",
+          "description": "Whether to ignore the status code validation",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--parse-requests",
+          "description": "Whether to parse dependent requests",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--request-body",
+          "description": "The body of the request",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-enabled",
+          "description": "Whether retries are enabled",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ssl-check",
+          "description": "Whether to check SSL certificates",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ssl-lifetime-check",
+          "description": "Number of days to check SSL certificate lifetime",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--timeout",
+          "description": "Request timeout in seconds (max 2 minutes). Supported values: 30, 60, 90, 120 seconds",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Gets details for a specific web test in the provided resource group based on webtest resource name.\r\nReturns detailed information about a single web test.",
+      "command": "monitor webtests get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--webtest-resource",
+          "description": "The name of the Web Test resource to operate on.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "Lists all web tests in a specified subscription and optionally, a resource group.\r\nReturns a list of web tests.",
+      "command": "monitor webtests list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "update",
+      "description": "Updates an existing standard web test in Azure Monitor. Ping/Multstep web tests are deprecated and are not supported.\r\nReturns the updated web test details.",
+      "command": "monitor webtests update",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--webtest-resource",
+          "description": "The name of the Web Test resource to operate on.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--appinsights-component",
+          "description": "The resource id of the Application Insights component to associate with the web test.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--location",
+          "description": "The location where the web test resource is created. This should be the same as the AppInsights component location.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--webtest-locations",
+          "description": "List of locations to run the test from (comma-separated values). Location refers to the geo-location population tag specific to Availability Tests.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--request-url",
+          "description": "The absolute URL to test",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--webtest",
+          "description": "The name of the test in web test resource",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--description",
+          "description": "The description of the web test",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--enabled",
+          "description": "Whether the web test is enabled",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--expected-status-code",
+          "description": "Expected HTTP status code",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--follow-redirects",
+          "description": "Whether to follow redirects",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--frequency",
+          "description": "Test frequency in seconds. Supported values 300, 600, 900 seconds.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--headers",
+          "description": "HTTP headers to include in the request. Comma-separated KEY=VALUE",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--http-verb",
+          "description": "HTTP method (get, post, etc.)",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ignore-status-code",
+          "description": "Whether to ignore the status code validation",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--parse-requests",
+          "description": "Whether to parse dependent requests",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--request-body",
+          "description": "The body of the request",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-enabled",
+          "description": "Whether retries are enabled",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ssl-check",
+          "description": "Whether to check SSL certificates",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--ssl-lifetime-check",
+          "description": "Number of days to check SSL certificate lifetime",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--timeout",
+          "description": "Request timeout in seconds (max 2 minutes). Supported values: 30, 60, 90, 120 seconds",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "List Log Analytics workspaces in a subscription. This command retrieves all Log Analytics workspaces\r\navailable in the specified Azure subscription, displaying their names, IDs, and other key properties.\r\nUse this command to identify workspaces before querying their logs or tables.",
-      "command": "azmcp monitor workspace list",
+      "command": "monitor workspace list",
       "option": [
         {
           "name": "--tenant",
@@ -6708,7 +8158,7 @@
     {
       "name": "query",
       "description": "Query logs across an ENTIRE Log Analytics workspace using Kusto Query Language (KQL). \r\nUse this tool when the user wants to query all resources in a workspace or doesn't specify a particular resource name/ID (e.g., \"show all errors in workspace\", \"query workspace logs\", \"what happened in my workspace\").\r\nThis tool queries across all resources and tables in the workspace.\r\n\r\nWhen to use: User asks for workspace-wide logs, all resources, or doesn't mention a specific resource.\r\nWhen NOT to use: User mentions a specific resource name or Resource ID - use resource log query instead.\r\n\r\nRequires workspace and resource group.\r\nOptional: hours and limit.\r\nquery accepts KQL syntax.",
-      "command": "azmcp monitor workspace log query",
+      "command": "monitor workspace log query",
       "option": [
         {
           "name": "--tenant",
@@ -6799,7 +8249,7 @@
     {
       "name": "list",
       "description": "Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.",
-      "command": "azmcp mysql database list",
+      "command": "mysql database list",
       "option": [
         {
           "name": "--tenant",
@@ -6872,7 +8322,7 @@
     {
       "name": "query",
       "description": "Executes a safe, read-only SQL SELECT query against a database on Azure Database for MySQL Flexible Server. Use this tool to explore or retrieve table data without modifying it. Rejects non-SELECT statements (INSERT/UPDATE/DELETE/REPLACE/MERGE/TRUNCATE/ALTER/CREATE/DROP), multi-statements, comments hiding writes, transaction control (BEGIN/COMMIT/ROLLBACK), INTO OUTFILE, and other destructive keywords. Only a single SELECT is executed to ensure data integrity. Best practices: List needed columns (avoid SELECT *), add WHERE filters, use LIMIT/OFFSET for paging, ORDER BY for deterministic results, and avoid unnecessary sensitive data. Example: SELECT id, name, status FROM customers WHERE status = 'Active' ORDER BY name LIMIT 50;",
-      "command": "azmcp mysql database query",
+      "command": "mysql database query",
       "option": [
         {
           "name": "--tenant",
@@ -6957,7 +8407,7 @@
     {
       "name": "get",
       "description": "Retrieves comprehensive configuration details for the specified Azure Database for MySQL Flexible Server instance. This command provides insights into server settings, performance parameters, security configurations, and operational characteristics essential for database administration and optimization. Returns configuration data in JSON format including ServerName, Location, Version, SKU, StorageSizeGB, BackupRetentionDays, and GeoRedundantBackup properties.",
-      "command": "azmcp mysql server config get",
+      "command": "mysql server config get",
       "option": [
         {
           "name": "--tenant",
@@ -7030,7 +8480,7 @@
     {
       "name": "list",
       "description": "Discovers and lists all Azure Database for MySQL Flexible Server instances within the specified resource group. This command provides an inventory of available MySQL server resources, including their names and current status, enabling efficient server management and resource planning.",
-      "command": "azmcp mysql server list",
+      "command": "mysql server list",
       "option": [
         {
           "name": "--tenant",
@@ -7097,7 +8547,7 @@
     {
       "name": "get",
       "description": "Retrieves the current value of a single server configuration parameter on an Azure Database for MySQL Flexible Server. Use to inspect a setting (e.g. max_connections, wait_timeout, slow_query_log) before changing it.",
-      "command": "azmcp mysql server param get",
+      "command": "mysql server param get",
       "option": [
         {
           "name": "--tenant",
@@ -7176,7 +8626,7 @@
     {
       "name": "set",
       "description": "Sets/updates a single MySQL server configuration setting/parameter.",
-      "command": "azmcp mysql server param set",
+      "command": "mysql server param set",
       "option": [
         {
           "name": "--tenant",
@@ -7261,7 +8711,7 @@
     {
       "name": "list",
       "description": "Enumerates all tables within a specified database on an Azure Database for MySQL Flexible Server instance. This command provides a complete inventory of table objects, facilitating database exploration, schema analysis, and data architecture understanding for development tasks.",
-      "command": "azmcp mysql table list",
+      "command": "mysql table list",
       "option": [
         {
           "name": "--tenant",
@@ -7340,7 +8790,7 @@
     {
       "name": "get",
       "description": "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.",
-      "command": "azmcp mysql table schema get",
+      "command": "mysql table schema get",
       "option": [
         {
           "name": "--tenant",
@@ -7425,7 +8875,7 @@
     {
       "name": "list",
       "description": "Lists all databases in the PostgreSQL server.",
-      "command": "azmcp postgres database list",
+      "command": "postgres database list",
       "option": [
         {
           "name": "--tenant",
@@ -7498,7 +8948,7 @@
     {
       "name": "query",
       "description": "Executes a SQL query on an Azure Database for PostgreSQL server to search for specific terms, retrieve records, or perform SELECT operations.",
-      "command": "azmcp postgres database query",
+      "command": "postgres database query",
       "option": [
         {
           "name": "--tenant",
@@ -7583,7 +9033,7 @@
     {
       "name": "get",
       "description": "Retrieve the configuration of a PostgreSQL server.",
-      "command": "azmcp postgres server config get",
+      "command": "postgres server config get",
       "option": [
         {
           "name": "--tenant",
@@ -7656,7 +9106,7 @@
     {
       "name": "list",
       "description": "Lists all PostgreSQL servers in the specified subscription.",
-      "command": "azmcp postgres server list",
+      "command": "postgres server list",
       "option": [
         {
           "name": "--tenant",
@@ -7723,7 +9173,7 @@
     {
       "name": "get",
       "description": "Retrieves a specific parameter of a PostgreSQL server.",
-      "command": "azmcp postgres server param get",
+      "command": "postgres server param get",
       "option": [
         {
           "name": "--tenant",
@@ -7802,7 +9252,7 @@
     {
       "name": "set",
       "description": "Configures PostgreSQL server settings including replication, connection limits, and other parameters.",
-      "command": "azmcp postgres server param set",
+      "command": "postgres server param set",
       "option": [
         {
           "name": "--tenant",
@@ -7887,7 +9337,7 @@
     {
       "name": "list",
       "description": "Lists all tables in the PostgreSQL database.",
-      "command": "azmcp postgres table list",
+      "command": "postgres table list",
       "option": [
         {
           "name": "--tenant",
@@ -7966,7 +9416,7 @@
     {
       "name": "get",
       "description": "Retrieves the schema of a specified table in a PostgreSQL database.",
-      "command": "azmcp postgres table schema get",
+      "command": "postgres table schema get",
       "option": [
         {
           "name": "--tenant",
@@ -8051,7 +9501,7 @@
     {
       "name": "list",
       "description": "Given a list of Azure resource types, this tool will return a list of regions where the resource types are available. Always get the user's subscription ID before calling this tool.",
-      "command": "azmcp quota region availability list",
+      "command": "quota region availability list",
       "option": [
         {
           "name": "--tenant",
@@ -8130,7 +9580,7 @@
     {
       "name": "check",
       "description": "This tool will check the usage and quota information for Azure resources in a region.",
-      "command": "azmcp quota usage check",
+      "command": "quota usage check",
       "option": [
         {
           "name": "--tenant",
@@ -8196,197 +9646,8 @@
     },
     {
       "name": "list",
-      "description": "List the Access Policies and Assignments for the specified Redis cache. Returns an array of Redis Access Policy Assignment details.\r\nUse this command to explore which Access Policies have been assigned to which identities for your Redis cache.",
-      "command": "azmcp redis cache accesspolicy list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--cache",
-          "description": "The name of the Redis cache (e.g., my-redis-cache).",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List/show all Redis Caches in a subscription. Returns Redis Cache details including Azure Cache for Redis resources (Basic, Standard, and Premium tier caches). Use this command to explore and view which Redis Cache resources are available in your subscription.",
-      "command": "azmcp redis cache list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List the databases in the specified Redis Cluster resource. Returns an array of Redis database details.\r\nUse this command to explore which databases are available in your Redis Cluster.",
-      "command": "azmcp redis cluster database list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--cluster",
-          "description": "The name of the Redis cluster (e.g., my-redis-cluster).",
-          "type": "string",
-          "required": true
-        }
-      ]
-    },
-    {
-      "name": "list",
-      "description": "List/show all Redis Clusters in a subscription. Returns Redis Cluster details including Azure Managed Redis clusters and Azure Redis Enterprise clusters. Use this command to explore and view which Redis Cluster resources are available in your subscription.",
-      "command": "azmcp redis cluster list",
+      "description": "List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.",
+      "command": "redis list",
       "option": [
         {
           "name": "--tenant",
@@ -8441,7 +9702,7 @@
     {
       "name": "get",
       "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.\r\nIf health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.",
-      "command": "azmcp resourcehealth availability-status get",
+      "command": "resourcehealth availability-status get",
       "option": [
         {
           "name": "--tenant",
@@ -8502,7 +9763,7 @@
     {
       "name": "list",
       "description": "List availability statuses for all resources in a subscription or resource group.\r\nProvides health status information for multiple Azure resources at once, including availability state,\r\nsummaries, and timestamps. This is useful for getting an overview of resource health across your infrastructure.\r\nResults can be filtered by resource group to narrow the scope.",
-      "command": "azmcp resourcehealth availability-status list",
+      "command": "resourcehealth availability-status list",
       "option": [
         {
           "name": "--tenant",
@@ -8563,7 +9824,7 @@
     {
       "name": "list",
       "description": "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
-      "command": "azmcp resourcehealth service-health-events list",
+      "command": "resourcehealth service-health-events list",
       "option": [
         {
           "name": "--tenant",
@@ -8654,7 +9915,7 @@
     {
       "name": "list",
       "description": "List role assignments. This command retrieves and displays all Azure RBAC role assignments\r\nin the specified scope. Results include role definition IDs and principal IDs, returned as a JSON array.",
-      "command": "azmcp role assignment list",
+      "command": "role assignment list",
       "option": [
         {
           "name": "--tenant",
@@ -8715,7 +9976,7 @@
     {
       "name": "get",
       "description": "Gets the details of Azure AI Search indexes, including fields, description, and more. If a specific index name\r\nis not provided, the command will return details for all indexes within the specified service.",
-      "command": "azmcp search index get",
+      "command": "search index get",
       "option": [
         {
           "name": "--tenant",
@@ -8776,7 +10037,7 @@
     {
       "name": "query",
       "description": "Queries an Azure AI Search index, returning the results of the query.",
-      "command": "azmcp search index query",
+      "command": "search index query",
       "option": [
         {
           "name": "--tenant",
@@ -8841,9 +10102,204 @@
       ]
     },
     {
+      "name": "get",
+      "description": "Gets the details of Azure AI Search knowledge bases. Knowledge bases encapsulate retrieval and reasoning\r\ncapabilities over one or more knowledge sources or indexes. If a specific knowledge base name is not provided,\r\nthe command will return details for all knowledge bases within the specified service.\r\n\r\nRequired arguments:\r\n- service",
+      "command": "search knowledge base get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--service",
+          "description": "The name of the Azure AI Search service (e.g., my-search-service).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--knowledge-base",
+          "description": "The name of the knowledge base within the Azure AI Search service.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "retrieve",
+      "description": "Execute a retrieval operation using a specific Azure AI Search knowledge base, effectively searching and querying the underlying\r\ndata sources as needed to find relevant information. Provide either a --query for single-turn retrieval or one or more\r\nconversational --messages in role:content form (e.g. user:What policies apply?). Specifying both --query and --messages is not\r\nallowed.\r\n\r\nRequired arguments:\r\n- service\r\n- knowledge-base",
+      "command": "search knowledge base retrieve",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--service",
+          "description": "The name of the Azure AI Search service (e.g., my-search-service).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--knowledge-base",
+          "description": "The name of the knowledge base within the Azure AI Search service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--query",
+          "description": "Natural language query for retrieval when a conversational message history isn't provided.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--messages",
+          "description": "Conversation history messages passed to the knowledge base. Able to specify multiple --messages entries. Each entry formatted as role:content, where role is `user` or `assistant` (e.g., user:How many docs?).",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "get",
+      "description": "Gets the details of Azure AI Search knowledge sources. A knowledge source may point directly at an\r\nexisting Azure AI Search index, or may represent external data (e.g. a blob storage container) that has been\r\nindexed in Azure AI Search internally. These knowledge sources are used by knowledge bases during retrieval.\r\nIf a specific knowledge source name is not provided, the command will return details for all knowledge sources\r\nwithin the specified service.\r\n\r\nRequired arguments:\r\n- service",
+      "command": "search knowledge source get",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--service",
+          "description": "The name of the Azure AI Search service (e.g., my-search-service).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--knowledge-source",
+          "description": "The name of the knowledge source within the Azure AI Search service.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "Lists all Azure AI Search services in a subscription.",
-      "command": "azmcp search service list",
+      "command": "search service list",
       "option": [
         {
           "name": "--tenant",
@@ -8898,7 +10354,7 @@
     {
       "name": "details",
       "description": "Get details about a Service Bus queue. Returns queue properties and runtime information. Properties returned include\r\nlock duration, max message size, queue size, creation date, status, current message counts, etc.\r\n\r\nRequired arguments:\r\n- namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)\r\n- queue: Queue name to get details and runtime information for.",
-      "command": "azmcp servicebus queue details",
+      "command": "servicebus queue details",
       "option": [
         {
           "name": "--tenant",
@@ -8965,7 +10421,7 @@
     {
       "name": "details",
       "description": "Retrieves details about a Service Bus topic. Returns runtime information and topic properties including number of subscriptions, max message size, max topic size, number of scheduled messages, etc.\r\nRequired arguments are namespace: The fully qualified Service Bus namespace host name (usually in the form <namespace>.servicebus.windows.net) and topic: Topic name to get information about.\r\nDo not use this to get details on Service Bus subscription- instead use servicebus_topic_subscription_details.",
-      "command": "azmcp servicebus topic details",
+      "command": "servicebus topic details",
       "option": [
         {
           "name": "--tenant",
@@ -9032,7 +10488,7 @@
     {
       "name": "details",
       "description": "Get details about a Service Bus subscription. Returns subscription runtime properties including message counts, delivery settings, and other metadata.\r\n\r\nRequired arguments:\r\n- namespace: The fully qualified Service Bus namespace host name. (This is usually in the form <namespace>.servicebus.windows.net)\r\n- topic: Topic name containing the subscription\r\n- subscription-name: Name of the subscription to get details for",
-      "command": "azmcp servicebus topic subscription details",
+      "command": "servicebus topic subscription details",
       "option": [
         {
           "name": "--tenant",
@@ -9105,7 +10561,7 @@
     {
       "name": "get",
       "description": "Gets or lists details of an Azure SignalR Runtimes. If a specific SignalR name is used, the details of that\r\nSignalR runtime will be retrieved. Otherwise, all SignalR Runtimes in the specified subscription or resource\r\ngroup will be retrieved. Returns runtime information including identity, network ACLs, upstream templates.",
-      "command": "azmcp signalr runtime get",
+      "command": "signalr runtime get",
       "option": [
         {
           "name": "--tenant",
@@ -9172,7 +10628,7 @@
     {
       "name": "recognize",
       "description": "Recognize speech from an audio file using Azure AI Services Speech. This command takes an audio file and converts it to text using advanced speech recognition capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/) and a path to the audio file.\r\nSupported audio formats include WAV, MP3, OPUS/OGG, FLAC, ALAW, MULAW, MP4, M4A, and AAC. Compressed formats require GStreamer to be installed on the system.\r\nOptional parameters include language specification, phrase hints for better accuracy, output format (simple or detailed), and profanity filtering.",
-      "command": "azmcp speech stt recognize",
+      "command": "speech stt recognize",
       "option": [
         {
           "name": "--tenant",
@@ -9263,7 +10719,7 @@
     {
       "name": "create",
       "description": "Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable\r\nperformance tiers, size limits, and other settings. Equivalent to 'az sql db create'.\r\nReturns the newly created database information including configuration details.",
-      "command": "azmcp sql db create",
+      "command": "sql db create",
       "option": [
         {
           "name": "--tenant",
@@ -9384,7 +10840,7 @@
     {
       "name": "delete",
       "description": "Deletes a database from an Azure SQL Server.This idempotent operation removes the specified database from the server, returning Deleted = false if the database doesn't exist or Deleted = true if successfully removed.",
-      "command": "azmcp sql db delete",
+      "command": "sql db delete",
       "option": [
         {
           "name": "--tenant",
@@ -9457,7 +10913,7 @@
     {
       "name": "list",
       "description": "Lists all databases in an Azure SQL Server with their configuration, status, SKU, and performance details.\r\nUse when you need to: view database inventory, check database status across a server, compare database configurations,\r\nor find databases for management operations.\r\nRequires: subscription ID, resource group name, server name.\r\nReturns: JSON array of databases with complete configuration details including SKU, status, and size information.\r\nEquivalent to 'az sql db list'.",
-      "command": "azmcp sql db list",
+      "command": "sql db list",
       "option": [
         {
           "name": "--tenant",
@@ -9524,7 +10980,7 @@
     {
       "name": "rename",
       "description": "Rename an existing Azure SQL Database to a new name within the same SQL server. This command moves the\r\ndatabase resource to a new identifier while preserving configuration and data. Equivalent to\r\n'az sql db rename'. Returns the updated database information using the new name.",
-      "command": "azmcp sql db rename",
+      "command": "sql db rename",
       "option": [
         {
           "name": "--tenant",
@@ -9603,7 +11059,7 @@
     {
       "name": "show",
       "description": "Get the details of an Azure SQL Database. This command retrieves detailed information about a specific database\r\nincluding its configuration, status, performance tier, and other properties. Equivalent to 'az sql db show'.\r\nReturns detailed database information including SKU, status, collation, and size information.\r\n  Required options:\r\n- subscription: Azure subscription ID\r\n- resource-group: Resource group name containing the SQL server\r\n- server: Azure SQL Server name\r\n- database: Database name to retrieve details for",
-      "command": "azmcp sql db show",
+      "command": "sql db show",
       "option": [
         {
           "name": "--tenant",
@@ -9676,7 +11132,7 @@
     {
       "name": "update",
       "description": "Scale and configure Azure SQL Database performance settings.\r\nUpdate an existing database's SKU, compute tier, storage capacity,\r\nor redundancy options to meet changing performance requirements.\r\nReturns the updated database configuration including applied scaling changes.",
-      "command": "azmcp sql db update",
+      "command": "sql db update",
       "option": [
         {
           "name": "--tenant",
@@ -9797,7 +11253,7 @@
     {
       "name": "list",
       "description": "Lists all SQL elastic pools in an Azure SQL Server with their SKU, capacity, state, and database limits.\r\nUse when you need to: view elastic pool inventory, check pool utilization, compare pool configurations,\r\nor find available pools for database placement.\r\nRequires: subscription ID, resource group name, server name.\r\nReturns: JSON array of elastic pools with complete configuration details.\r\nEquivalent to 'az sql elastic-pool list'.",
-      "command": "azmcp sql elastic-pool list",
+      "command": "sql elastic-pool list",
       "option": [
         {
           "name": "--tenant",
@@ -9864,7 +11320,7 @@
     {
       "name": "create",
       "description": "Creates a new Azure SQL server in the specified resource group and location.\r\nThe server will be created with the specified administrator credentials and\r\noptional configuration settings. Returns the created server with its properties\r\nincluding the fully qualified domain name.",
-      "command": "azmcp sql server create",
+      "command": "sql server create",
       "option": [
         {
           "name": "--tenant",
@@ -9961,7 +11417,7 @@
     {
       "name": "delete",
       "description": "Remove the specified SQL server from your Azure subscription, including all associated databases.\r\nThis operation permanently deletes all server data and cannot be reversed.\r\nUse --force to bypass confirmation.",
-      "command": "azmcp sql server delete",
+      "command": "sql server delete",
       "option": [
         {
           "name": "--tenant",
@@ -10034,7 +11490,7 @@
     {
       "name": "list",
       "description": "Gets a list of Microsoft Entra ID administrators for a SQL server. This command retrieves all\r\nEntra ID administrators configured for the specified SQL server, including their display names, object IDs,\r\nand tenant information. Returns an array of Entra ID administrator objects with their properties.",
-      "command": "azmcp sql server entra-admin list",
+      "command": "sql server entra-admin list",
       "option": [
         {
           "name": "--tenant",
@@ -10101,7 +11557,7 @@
     {
       "name": "create",
       "description": "Creates a firewall rule for a SQL server. Firewall rules control which IP addresses\r\nare allowed to connect to the SQL server. You can specify either a single IP address\r\n(by setting start and end IP to the same value) or a range of IP addresses. Returns\r\nthe created firewall rule with its properties.",
-      "command": "azmcp sql server firewall-rule create",
+      "command": "sql server firewall-rule create",
       "option": [
         {
           "name": "--tenant",
@@ -10186,7 +11642,7 @@
     {
       "name": "delete",
       "description": "Deletes a firewall rule from a SQL server. This operation removes the specified\r\nfirewall rule, potentially restricting access for the IP addresses that were\r\npreviously allowed by this rule. The operation is idempotent - if the rule\r\ndoesn't exist, no error is returned.",
-      "command": "azmcp sql server firewall-rule delete",
+      "command": "sql server firewall-rule delete",
       "option": [
         {
           "name": "--tenant",
@@ -10259,7 +11715,7 @@
     {
       "name": "list",
       "description": "Gets a list of firewall rules for a SQL server. This command retrieves all\r\nfirewall rules configured for the specified SQL server, including their IP address ranges\r\nand rule names. Returns an array of firewall rule objects with their properties.",
-      "command": "azmcp sql server firewall-rule list",
+      "command": "sql server firewall-rule list",
       "option": [
         {
           "name": "--tenant",
@@ -10326,7 +11782,7 @@
     {
       "name": "list",
       "description": "Lists Azure SQL servers within a resource group including fully qualified domain name, state,\r\nadministrator login, and network access settings. Use this command to discover SQL servers,\r\naudit configurations, or verify deployment targets. Equivalent to 'az sql server list'.\r\nRequired parameters: subscription ID and resource group name.\r\nReturns: JSON array of SQL server objects with metadata, network configuration, and tags.",
-      "command": "azmcp sql server list",
+      "command": "sql server list",
       "option": [
         {
           "name": "--subscription",
@@ -10345,7 +11801,7 @@
     {
       "name": "show",
       "description": "Retrieves detailed information about an Azure SQL server including its configuration,\r\nstatus, and properties such as the fully qualified domain name, version,\r\nadministrator login, and network access settings.",
-      "command": "azmcp sql server show",
+      "command": "sql server show",
       "option": [
         {
           "name": "--tenant",
@@ -10412,7 +11868,7 @@
     {
       "name": "create",
       "description": "Creates an Azure Storage account in the specified resource group and location and returns the created storage account\r\ninformation including name, location, SKU, access settings, and configuration details.",
-      "command": "azmcp storage account create",
+      "command": "storage account create",
       "option": [
         {
           "name": "--tenant",
@@ -10502,8 +11958,8 @@
     },
     {
       "name": "get",
-      "description": "Gets detailed information about Azure Storage accounts, including account name, location, SKU, access settings,\r\nand configuration details. If a specific account name is not provided, the command will return details for all\r\naccounts in a subscription.",
-      "command": "azmcp storage account get",
+      "description": "Retrieves detailed information about Azure Storage accounts, including account name, location, SKU, kind, hierarchical namespace status, HTTPS-only settings, and blob public access configuration. If a specific account name is not provided, the command will return details for all accounts in a subscription.",
+      "command": "storage account get",
       "option": [
         {
           "name": "--tenant",
@@ -10563,8 +12019,8 @@
     },
     {
       "name": "create",
-      "description": "Creates an Azure Storage container, returning the last modified time, the ETag of the created container, and more.",
-      "command": "azmcp storage blob container create",
+      "description": "Create/provision a new Azure Storage blob container in a storage account. Required: --account <account>, --container <container>, --subscription <subscription>. Optional: --public-access-level, --tenant <tenant>. Returns: container name, lastModified, eTag, leaseStatus, publicAccessLevel, hasImmutabilityPolicy, hasLegalHold. Creates a logical container for organizing blobs within a storage account.",
+      "command": "storage blob container create",
       "option": [
         {
           "name": "--tenant",
@@ -10630,8 +12086,8 @@
     },
     {
       "name": "get",
-      "description": "Gets the details of Azure Storage containers, including metadata, lease status, access level, and more. If a specific\r\ncontainer name is not provided, the command will return details for all containers within the specified account.",
-      "command": "azmcp storage blob container get",
+      "description": "Show/list containers in a storage account. Use this tool to list all blob containers in the storage account or show details for a specific Storage container. Displays container properties including access policies, lease status, and metadata. If no container specified, shows all containers in the storage account. Required: account <account>, subscription <subscription>. Optional: container <container>, tenant <tenant>. Returns: container name, lastModified, leaseStatus, publicAccessLevel, metadata, and container properties. Do not use this tool to list blobs in a container.",
+      "command": "storage blob container get",
       "option": [
         {
           "name": "--tenant",
@@ -10697,8 +12153,8 @@
     },
     {
       "name": "get",
-      "description": "Gets the details of Azure Storage blobs, including metadata properties, approximate size, last modification time, and more.\r\nIf a specific blob name is not provided, the command will return details for all blobs within the specified container.",
-      "command": "azmcp storage blob get",
+      "description": "List/get/show blobs in a blob container in Storage account. Use this tool to list the blobs in a container or get details for a specific blob. Shows blob properties including metadata, size, last modification time, and content properties. If no blob specified, lists all blobs present in the container. Required: account, container <container>, subscription <subscription>. Optional: blob <blob>, tenant <tenant>. Returns: blob name, size, lastModified, contentType, contentMD5, metadata, and blob properties. Do not use this tool to list containers in the storage account.",
+      "command": "storage blob get",
       "option": [
         {
           "name": "--tenant",
@@ -10771,7 +12227,7 @@
     {
       "name": "upload",
       "description": "Uploads a local file to an Azure Storage blob, only if the blob does not exist, returning the last modified time,\r\nETag, and content hash of the uploaded blob.",
-      "command": "azmcp storage blob upload",
+      "command": "storage blob upload",
       "option": [
         {
           "name": "--tenant",
@@ -10850,7 +12306,7 @@
     {
       "name": "list",
       "description": "List all or current subscriptions for an account in Azure; returns subscriptionId, displayName, state, tenantId, and isDefault. Use for scope selection in governance, policy, access, cost management, or deployment.",
-      "command": "azmcp subscription list",
+      "command": "subscription list",
       "option": [
         {
           "name": "--tenant",
@@ -10899,7 +12355,7 @@
     {
       "name": "list",
       "description": "List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available\r\nin the specified Option`1: --subscription. If a resource group is specified, only hostpools in that resource group are returned.\r\nResults include hostpool names and are returned as a JSON array.",
-      "command": "azmcp virtualdesktop hostpool list",
+      "command": "virtualdesktop hostpool list",
       "option": [
         {
           "name": "--tenant",
@@ -10960,7 +12416,7 @@
     {
       "name": "list",
       "description": "List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available\r\nin the specified Option`1: --subscription and hostpool. Results include SessionHost details and are\r\nreturned as a JSON array.",
-      "command": "azmcp virtualdesktop hostpool sessionhost list",
+      "command": "virtualdesktop hostpool sessionhost list",
       "option": [
         {
           "name": "--tenant",
@@ -11033,7 +12489,7 @@
     {
       "name": "usersession-list",
       "description": "List all user sessions on a specific session host in a host pool. This command retrieves all Azure Virtual Desktop\r\nuser session objects available on the specified session host. Results include user session details such as\r\nuser principal name, session state, application type, and creation time.",
-      "command": "azmcp virtualdesktop hostpool sessionhost usersession-list",
+      "command": "virtualdesktop hostpool sessionhost usersession-list",
       "option": [
         {
           "name": "--tenant",
@@ -11112,7 +12568,7 @@
     {
       "name": "create",
       "description": "Create a new workbook in the specified resource group and subscription.\r\nYou can set the display name and serialized data JSON content for the workbook.\r\nReturns the created workbook information upon successful completion.",
-      "command": "azmcp workbooks create",
+      "command": "workbooks create",
       "option": [
         {
           "name": "--tenant",
@@ -11191,7 +12647,7 @@
     {
       "name": "delete",
       "description": "Delete a workbook by its Azure resource ID.\r\nThis command soft deletes the workbook: it will be retained for 90 days.\r\nIf needed, you can restore it from the Recycle Bin through the Azure Portal.\r\n\r\nTo learn more, visit: https://learn.microsoft.com/azure/azure-monitor/visualize/workbooks-manage",
-      "command": "azmcp workbooks delete",
+      "command": "workbooks delete",
       "option": [
         {
           "name": "--tenant",
@@ -11246,7 +12702,7 @@
     {
       "name": "list",
       "description": "List all workbooks in a specific resource group. This command retrieves all workbooks available\r\nin the specified resource group within the given subscription. Resource group is required.\r\nOptionally filter by kind (shared/user), category (workbook/sentinel/etc), or source resource ID.",
-      "command": "azmcp workbooks list",
+      "command": "workbooks list",
       "option": [
         {
           "name": "--tenant",
@@ -11324,8 +12780,8 @@
     },
     {
       "name": "show",
-      "description": "Gets information about a specific workbook by its Azure resource ID.\r\nReturns workbook details including JSON serialized content, display name, description, category,\r\nlocation, kind, tags, version, modification time, and other metadata.",
-      "command": "azmcp workbooks show",
+      "description": "Gets information about a specific Azure Workbook using its resource ID. Returns workbook details including serialized JSON content, display name, description, category, location, kind, tags, version, modification time, and other metadata.\r\nRequires the Azure resource ID of the workbook to retrieve.",
+      "command": "workbooks show",
       "option": [
         {
           "name": "--tenant",
@@ -11379,8 +12835,8 @@
     },
     {
       "name": "update",
-      "description": "Updates properties of a workbook, including its display name and serialized content.\r\nAt least one property must be provided for the update operation.\r\nReturns the updated workbook object upon successful completion.",
-      "command": "azmcp workbooks update",
+      "description": "Updates properties of an existing Azure Workbook by adding new steps, modifying content, or changing the display name. Returns the updated workbook details.  Requires the workbook resource ID and either new serialized content or a new display name.",
+      "command": "workbooks update",
       "option": [
         {
           "name": "--tenant",
@@ -11445,6 +12901,6 @@
       ]
     }
   ],
-  "consolidated_azure_tools": null,
-  "duration": 47
+  "consolidated_tools": null,
+  "duration": 67
 }
