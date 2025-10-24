@@ -9,7 +9,7 @@ RUN if [ -z "$PUBLISH_DIR" ]; then \
     echo "ERROR: PUBLISH_DIR build argument is required" && exit 1; \
     fi
 
-# Add executable name for publish directory
+# Add build argument for executable name
 ARG EXECUTABLE_NAME
 
 # Error out if EXECUTABLE_NAME is not set
