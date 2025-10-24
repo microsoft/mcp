@@ -162,6 +162,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         };
     }
 
+    /// <summary>
+    /// Gets all of the <see cref="IAreaSetup"/>'s available in the server.
+    /// </summary>
+    /// <returns>A JSON serialized string with each area's name and a description of operations available in
+    /// that namespace.</returns>
     private async Task<string> GetRootToolsJsonAsync()
     {
         if (_cachedRootToolsJson != null)
@@ -187,6 +192,12 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         return toolsJson;
     }
 
+    /// <summary>
+    /// Gets the set of <see cref="Core.Commands.IBaseCommand"/> within an <see cref="IAreaSetup">.
+    /// </summary>
+    /// <param name="request">Calling request</param>
+    /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
+    /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
     private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool)
     {
         if (_cachedToolListsJson.TryGetValue(tool, out var cachedJson))
@@ -236,7 +247,10 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> ToolLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
+        var activity = Activity.Current?
+            .SetTag(TagName.IsServerCommandInvoked, false)
+            .SetTag(TagName.ToolArea, tool);
+
         var toolsJson = await GetToolListJsonAsync(request, tool);
         if (string.IsNullOrEmpty(toolsJson))
         {
@@ -273,7 +287,6 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
 
     private async Task<CallToolResult> CommandModeAsync(RequestContext<CallToolRequestParams> request, string intent, string tool, string command, Dictionary<string, object?> parameters, CancellationToken cancellationToken)
     {
-        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         McpClient? client;
 
         try
@@ -291,6 +304,10 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             _logger.LogError(ex, "Exception thrown while getting provider client for tool: {Tool}", tool);
             return await RootLearnModeAsync(request, intent, cancellationToken);
         }
+
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
+            .SetTag(TagName.ToolArea, tool)
+            .SetTag(TagName.ToolName, command);
 
         try
         {
