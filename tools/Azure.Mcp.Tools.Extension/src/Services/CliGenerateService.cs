@@ -9,16 +9,17 @@ using Azure.Mcp.Tools.Extension.Models;
 
 namespace Azure.Mcp.Tools.Extension.Services;
 
-internal class CliGenerateService(IHttpClientService httpClientService) : ICliGenerateService
+internal class CliGenerateService(IHttpClientService httpClientService, IAzureTokenCredentialProvider tokenCredentialProvider) : ICliGenerateService
 {
     private readonly IHttpClientService _httpClientService = httpClientService;
+    private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
     public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent)
     {
         // AzCli copilot 1P app scope
         const string apiScope = "a5ede409-60d3-4a6c-93e6-eb2e7271e8e3/.default";
 
-        var credential = new CustomChainedCredential();
+        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, CancellationToken.None);
         var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);
 
         // AzCli copilot API endpoint

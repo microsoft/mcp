@@ -5,7 +5,6 @@ using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
 using Microsoft.Extensions.Logging;
@@ -17,12 +16,9 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
 
-    private CustomChainedCredential? _credential;
-    private string? _lastTenantId;
     private ArmClient? _armClient;
     private string? _lastArmClientTenantId;
     private RetryPolicyOptions? _lastRetryPolicy;
-    private readonly ITenantService? _tenantService = tenantService;
     private readonly ILoggerFactory? _loggerFactory = loggerFactory;
 
     protected ILoggerFactory LoggerFactory => _loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
@@ -39,6 +35,15 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     }
 
     protected string UserAgent { get; } = DefaultUserAgent;
+
+    /// <summary>
+    /// Gets or sets the tenant service for resolving tenant IDs and obtaining credentials.
+    /// </summary>
+    /// <remarks>
+    /// Do not set this. The setter is just for <see cref="Tenant.TenantService"/> to
+    /// overcome a circular dependency on itself.
+    /// </remarks>
+    protected ITenantService? TenantService { get; init; } = tenantService;
 
     /// <summary>
     /// Escapes a string value for safe use in KQL queries to prevent injection attacks.
@@ -59,27 +64,25 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
 
     protected async Task<string?> ResolveTenantIdAsync(string? tenant)
     {
-        if (tenant == null || _tenantService == null)
+        if (tenant == null || TenantService == null)
             return tenant;
-        return await _tenantService.GetTenantId(tenant);
+        return await TenantService.GetTenantId(tenant);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant = null)
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken = default)
     {
-        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
+        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
+        return await GetCredential(null, cancellationToken);
+    }
 
-        // Return cached credential if it exists and tenant ID hasn't changed
-        if (_credential != null && _lastTenantId == tenantId)
-        {
-            return _credential;
-        }
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken = default)
+    {
+        // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
 
         try
         {
-            ILogger<CustomChainedCredential>? logger = _loggerFactory?.CreateLogger<CustomChainedCredential>();
-            _credential = new CustomChainedCredential(tenantId, logger);
-            _lastTenantId = tenantId;
-            return _credential;
+            return await TenantService!.GetTokenCredentialAsync(tenantId, cancellationToken);
         }
         catch (Exception ex)
         {
