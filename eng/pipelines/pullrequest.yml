@@ -4,6 +4,7 @@ pr:
       - main
       - feature/*
       - hotfix/*
+      - release/*
 
 trigger: none
 
