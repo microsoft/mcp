@@ -26,6 +26,11 @@ namespace Azure.Mcp.Tests.Client.Helpers
                     Settings = JsonSerializer.Deserialize<LiveTestSettings>(content)
                         ?? throw new Exception("Unable to deserialize live test settings");
 
+                    foreach (var (key, value) in Settings.EnvironmentVariables)
+                    {
+                        Environment.SetEnvironmentVariable(key, value);
+                    }
+
                     Settings.SettingsDirectory = directory;
                     await SetPrincipalSettingsAsync();
 
