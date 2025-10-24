@@ -59,6 +59,7 @@ internal class Program
     {
         return [
             // Register core areas
+            new Azure.Mcp.Core.Areas.Tools.ToolsSetup()
             // Register template areas
         ];
     }
