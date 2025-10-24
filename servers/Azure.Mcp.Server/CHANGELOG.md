@@ -2,17 +2,26 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.8 (Unreleased)
+## 0.9.9 (Unreleased)
 
 ### Features Added
-
-- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
+### Other Changes
+
+## 0.9.8 (2025-10-23)
+
+### Features Added
+
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+
+### Bugs Fixed
+
 - Fixed SKU configuration bug in SQL database create and update commands. [[#925](https://github.com/microsoft/mcp/pull/925)]
+- Fixed a serialization issue with Foundry tools. [[#904](https://github.com/microsoft/mcp/pull/904)]
 
 ### Other Changes
 

@@ -1,5 +1,20 @@
 # Release History
 
+## 0.9.8 (2025-10-23)
+
+### Added
+
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+
+### Changed
+
+- Set telemetry field's for `ToolArea` and `ToolName` when "consolidated" mode is used or a server is loaded from `registry.json`. [[#933](https://github.com/microsoft/mcp/pull/933)]
+
+### Fixed
+
+- Fixed SKU configuration bug in SQL database create and update commands. [[#925](https://github.com/microsoft/mcp/pull/925)]
+- Fixed a serialization issue with Foundry tools. [[#904](https://github.com/microsoft/mcp/pull/904)]
+
 ## 0.9.7 (2025-10-22)
 
 ### Changes
