@@ -5,14 +5,13 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Options.Agents;
 using Azure.Mcp.Tools.Foundry.Services;
-using static Azure.Mcp.Tools.Foundry.Commands.AgentsConnectCommand;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions>
 {
     private const string CommandTitle = "Get Sdk code samples to interact with a Foundry Agent";
-
+    public override string Id => "38cc4070-6704-49be-af1b-be55aec8d6d6";
     public override string Name => "get-sdk-sample";
 
     public override string Description =>

@@ -1,7 +1,6 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -13,6 +12,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
 {
     private const string CommandTitle = "Create an AI Foundry Agent";
+    public override string Id => "6de93935-7df0-4161-8618-8daf624dbb23";
     public override string Name => "create";
 
 
