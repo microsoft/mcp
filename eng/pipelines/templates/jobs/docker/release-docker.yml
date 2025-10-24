@@ -15,65 +15,75 @@ parameters:
   type: object
 
 jobs:
-- job: PublishACR
+- deployment: PublishACR
   displayName: "Publish Docker Images to ACR"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'), or(eq('${{ parameters.ServerName }}',''), eq(variables['ServerName'], '${{ parameters.ServerName }}')))
   dependsOn: ${{ parameters.DependsOn }}
   timeoutInMinutes: 120
+  templateContext:
+    type: releaseJob
+    isProduction: true
+    inputs:
+    - input: pipelineArtifact
+      artifactName: docker_output
+      targetPath: $(Pipeline.Workspace)/docker_output
   environment: package-publish
   pool:
     name: azsdk-pool
     image: ubuntu-24.04
     os: linux
-  steps:
-  - task: AzureCLI@2
-    displayName: Login to ${{ parameters.ContainerRegistry }}
-    inputs:
-      azureSubscription: "Azure SDK Engineering System"
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        az acr login --name ${{ parameters.ContainerRegistry }}
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureCLI@2
+          displayName: Login to ${{ parameters.ContainerRegistry }}
+          inputs:
+            azureSubscription: "Azure SDK Engineering System"
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              az acr login --name ${{ parameters.ContainerRegistry }}
 
-  - script: |
-      set -euo pipefail
-      
-      # Load image from tar
-      echo "Loading image tar for ${{ parameters.ServerName }}"
-      LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/${{ parameters.CliName }}-image.tar | grep -oP 'Loaded image: \K.*')
-      echo "Loaded image: $LOADED_IMAGE"
+        - script: |
+            set -euo pipefail
+            
+            # Load image from tar
+            echo "Loading image tar for ${{ parameters.ServerName }}"
+            LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/${{ parameters.CliName }}-image.tar | grep -oP 'Loaded image: \K.*')
+            echo "Loaded image: $LOADED_IMAGE"
 
-      # Verify the loaded image exists
-      docker image inspect "$LOADED_IMAGE" >/dev/null 2>&1 || { 
-        echo "ERROR: Loaded image $LOADED_IMAGE not found after load"; 
-        exit 1; 
-      }
+            # Verify the loaded image exists
+            docker image inspect "$LOADED_IMAGE" >/dev/null 2>&1 || { 
+              echo "ERROR: Loaded image $LOADED_IMAGE not found after load"; 
+              exit 1; 
+            }
 
-      # Prepare tags
-      BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/${{ parameters.DockerImageName }}"
-      VERSIONED_TAG="$BASE_REPO:${{ parameters.ServerVersion }}"
-      LATEST_TAG="$BASE_REPO:latest"
-      
-      echo "Tagging $LOADED_IMAGE as:"
-      echo "  Versioned tag: $VERSIONED_TAG"
-      echo "  Latest tag:    $LATEST_TAG"
-      
-      # Tag the images
-      docker tag "$LOADED_IMAGE" "$VERSIONED_TAG"
-      docker tag "$LOADED_IMAGE" "$LATEST_TAG"
-      
-      # Verify tags exist before pushing
-      docker image inspect "$VERSIONED_TAG" >/dev/null 2>&1 || { 
-        echo "ERROR: Versioned tag $VERSIONED_TAG not found after tagging"; 
-        exit 1; 
-      }
-      docker image inspect "$LATEST_TAG" >/dev/null 2>&1 || { 
-        echo "ERROR: Latest tag $LATEST_TAG not found after tagging"; 
-        exit 1; 
-      }
-      
-      # Push both tags
-      echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
-      echo "Pushing latest tag...";   docker push "$LATEST_TAG"
-      echo "Publish complete for ${{ parameters.ServerName }}"
-    displayName: Load, tag, and push image
+            # Prepare tags
+            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/${{ parameters.DockerImageName }}"
+            VERSIONED_TAG="$BASE_REPO:${{ parameters.ServerVersion }}"
+            LATEST_TAG="$BASE_REPO:latest"
+            
+            echo "Tagging $LOADED_IMAGE as:"
+            echo "  Versioned tag: $VERSIONED_TAG"
+            echo "  Latest tag:    $LATEST_TAG"
+            
+            # Tag the images
+            docker tag "$LOADED_IMAGE" "$VERSIONED_TAG"
+            docker tag "$LOADED_IMAGE" "$LATEST_TAG"
+            
+            # Verify tags exist before pushing
+            docker image inspect "$VERSIONED_TAG" >/dev/null 2>&1 || { 
+              echo "ERROR: Versioned tag $VERSIONED_TAG not found after tagging"; 
+              exit 1; 
+            }
+            docker image inspect "$LATEST_TAG" >/dev/null 2>&1 || { 
+              echo "ERROR: Latest tag $LATEST_TAG not found after tagging"; 
+              exit 1; 
+            }
+            
+            # Push both tags
+            echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
+            echo "Pushing latest tag...";   docker push "$LATEST_TAG"
+            echo "Publish complete for ${{ parameters.ServerName }}"
+          displayName: Load, tag, and push image
