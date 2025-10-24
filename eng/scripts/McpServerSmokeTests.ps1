@@ -203,20 +203,27 @@ function Test-DockerImages {
     }
     Write-Host "Image loaded: $loadOutput"
 
-    $dockerLocalTag = "$RepositoryName/$($Server.cliName):$BuildId"
+    # Extract the loaded image tag from the docker load output
+    $loadedImage = $loadOutput | Select-String -Pattern 'Loaded image: (.+)' | ForEach-Object { $_.Matches.Groups[1].Value }
+    if (-not $loadedImage) {
+        LogError "Could not parse loaded image name from docker load output"
+        Write-Host "Load output was: $loadOutput"
+        return $false
+    }
+    Write-Host "Loaded image tag: $loadedImage"
     
     # Verify the image exists after loading
-    $imageExists = docker image inspect $dockerLocalTag 2>&1
+    $imageExists = docker image inspect $loadedImage 2>&1
     if ($LASTEXITCODE -ne 0) {
-        LogError "Docker image $dockerLocalTag not found after loading"
+        LogError "Docker image $loadedImage not found after loading"
         Write-Host $imageExists
         return $false
     }
-    Write-Host "Verified image exists: $dockerLocalTag"
+    Write-Host "Verified image exists: $loadedImage"
 
     # Run the smoke test command
-    Write-Host "Running smoke test: docker run --rm --entrypoint ./$($Server.cliName) $dockerLocalTag tools list"
-    $output = docker run --rm --entrypoint ./$($Server.cliName) $dockerLocalTag tools list 2>&1
+    Write-Host "Running smoke test: docker run --rm --entrypoint ./server-binary $loadedImage tools list"
+    $output = docker run --rm --entrypoint ./server-binary $loadedImage tools list 2>&1
     
     if ($LASTEXITCODE -eq 0) {
         Write-Host "Server tools list command completed successfully for $($Server.name)"
@@ -228,8 +235,8 @@ function Test-DockerImages {
     }
 
     # Cleanup: Remove the loaded image to save space
-    Write-Host "Cleaning up Docker image $dockerLocalTag"
-    docker rmi $dockerLocalTag 2>&1 | Out-Null
+    Write-Host "Cleaning up Docker image $loadedImage"
+    docker rmi $loadedImage 2>&1 | Out-Null
 
     return $true
 }

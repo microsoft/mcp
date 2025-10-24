@@ -1,8 +1,8 @@
 parameters:
 - name: DependsOn
   type: object
-- name: ServerBuildMatrix
-  type: object
+- name: ServerMatrix
+  type: string
 
 jobs:
 - job: StageDocker
@@ -45,4 +45,4 @@ jobs:
 - template: /eng/pipelines/templates/jobs/docker/build-docker.yml
   parameters:
     DependsOn: StageDocker
-    ServerBuildMatrix: ${{ parameters.ServerBuildMatrix }}
+    ServerMatrix: ${{ parameters.ServerMatrix }}

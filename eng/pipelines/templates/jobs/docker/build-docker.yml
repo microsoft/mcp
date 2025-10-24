@@ -1,16 +1,16 @@
 parameters:
 - name: DependsOn
   type: object
-- name: ServerBuildMatrix
-  type: object
+- name: ServerMatrix
+  type: string
 
 jobs:
 - job: BuildDockerImages
   displayName: "Build Docker Images"
   dependsOn: ${{ parameters.DependsOn }}
-  condition: and(succeeded(), ne(${{ parameters.ServerBuildMatrix }}, '{}'))
+  condition: and(succeeded(), ne(${{ parameters.ServerMatrix }}, '{}'))
   strategy:
-    matrix: $[ ${{ parameters.ServerBuildMatrix }}]
+    matrix: $[ ${{ parameters.ServerMatrix }}]
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
@@ -24,29 +24,32 @@ jobs:
     artifact: docker_staging
 
   - task: 1ES.BuildContainerImage@1
-    displayName: "Building Docker image for $(CliName)"
+    displayName: "Building Docker image for $(CliName) as $(DockerLocalTag)"
     inputs:
       path: "$(Pipeline.Workspace)/docker_staging"
-      image: "$(DockerLocalTag-$(CliName))"
+      image: "$(DockerLocalTag)"
       buildArguments: |
         --build-arg PUBLISH_DIR="$(ArtifactPath)/linux-x64/dist"
-        --build-arg EXECUTABLE_NAME="$(DockerExecutableName-$(CliName))"
+        --build-arg EXECUTABLE_NAME="$(ExecutableName)"
       enableNetwork: true
       useBuildKit: true
 
   - script: |
       set -euo pipefail
-      echo "Capturing image digest for $(DockerLocalTag-$(CliName))"
-      digest="$(docker inspect --format='{{index .Id}}' "$(DockerLocalTag-$(CliName))")"
+
+      # Load image from tar
+      echo "Capturing image digest for $(DockerLocalTag)"
+      digest="$(docker inspect --format='{{index .Id}}' "$(DockerLocalTag)")"
       if [ -z "$digest" ]; then
-        echo "ERROR: Could not resolve image ID for $(DockerLocalTag-$(CliName))" >&2
+        echo "ERROR: Could not resolve image ID for $(DockerLocalTag)" >&2
         docker images | head
         exit 1
       fi
       echo "Image digest: $digest"
-      echo "##vso[task.setvariable variable=DockerImageDigest-$(CliName);isOutput=true]$digest"
+
+      # Save image as .tar
       echo "Saving image"
-      docker save "$(DockerLocalTag-$(CliName))" -o "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
+      docker save "$(DockerLocalTag)" -o "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
       ls -lh "$(Build.ArtifactStagingDirectory)/$(CliName)-image.tar"
     displayName: Capture image digest and save as .tar
 

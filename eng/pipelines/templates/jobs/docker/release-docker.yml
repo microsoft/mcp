@@ -5,10 +5,13 @@ parameters:
   type: string
 - name: ServerName
   type: string
-  default: ''
+- name: ServerVersion
+  type: string
+- name: CliName
+  type: string
+- name: DockerImageName
+  type: string
 - name: DependsOn
-  type: object
-- name: ServerBuildMatrix  # Object (map) of server entries matching build-docker matrix
   type: object
 
 jobs:
@@ -22,8 +25,6 @@ jobs:
     name: azsdk-pool
     image: ubuntu-24.04
     os: linux
-  strategy:
-    matrix: $[ ${{ parameters.ServerBuildMatrix }}]
   steps:
   - task: AzureCLI@2
     displayName: Login to ${{ parameters.ContainerRegistry }}
@@ -33,27 +34,46 @@ jobs:
       scriptLocation: inlineScript
       inlineScript: |
         az acr login --name ${{ parameters.ContainerRegistry }}
+
   - script: |
       set -euo pipefail
-      echo "Loading image tar for $(CliName)"
-      docker load -i $(Pipeline.Workspace)/docker_output/$(CliName)-image.tar
-      docker image inspect "$(DockerLocalTag-$(CliName))" >/dev/null 2>&1 || { echo "Local tag $(DockerLocalTag-$(CliName)) not found after load"; exit 1; }
-    displayName: Load image
-  - script: |
-      set -euo pipefail
-      if [ -z "$(DockerImageVersion-$(CliName))" ] || [ -z "$(DockerImageName-$(CliName))" ]; then
-        echo "ERROR: Required tag components missing (version='$(DockerImageVersion-$(CliName))', name='$(DockerImageName-$(CliName))')" >&2
-        exit 1
-      fi
-      BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(DockerImageName-$(CliName))"
-      VERSIONED_TAG="$BASE_REPO:$(DockerImageVersion-$(CliName))"
+      
+      # Load image from tar
+      echo "Loading image tar for ${{ parameters.ServerName }}"
+      LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/${{ parameters.CliName }}-image.tar | grep -oP 'Loaded image: \K.*')
+      echo "Loaded image: $LOADED_IMAGE"
+
+      # Verify the loaded image exists
+      docker image inspect "$LOADED_IMAGE" >/dev/null 2>&1 || { 
+        echo "ERROR: Loaded image $LOADED_IMAGE not found after load"; 
+        exit 1; 
+      }
+
+      # Prepare tags
+      BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/${{ parameters.DockerImageName }}"
+      VERSIONED_TAG="$BASE_REPO:${{ parameters.ServerVersion }}"
       LATEST_TAG="$BASE_REPO:latest"
-      echo "Tagging $(DockerLocalTag-$(CliName)) as:"
+      
+      echo "Tagging $LOADED_IMAGE as:"
       echo "  Versioned tag: $VERSIONED_TAG"
       echo "  Latest tag:    $LATEST_TAG"
-      docker tag "$(DockerLocalTag-$(CliName))" "$VERSIONED_TAG"
-      docker tag "$(DockerLocalTag-$(CliName))" "$LATEST_TAG"
+      
+      # Tag the images
+      docker tag "$LOADED_IMAGE" "$VERSIONED_TAG"
+      docker tag "$LOADED_IMAGE" "$LATEST_TAG"
+      
+      # Verify tags exist before pushing
+      docker image inspect "$VERSIONED_TAG" >/dev/null 2>&1 || { 
+        echo "ERROR: Versioned tag $VERSIONED_TAG not found after tagging"; 
+        exit 1; 
+      }
+      docker image inspect "$LATEST_TAG" >/dev/null 2>&1 || { 
+        echo "ERROR: Latest tag $LATEST_TAG not found after tagging"; 
+        exit 1; 
+      }
+      
+      # Push both tags
       echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
       echo "Pushing latest tag...";   docker push "$LATEST_TAG"
       echo "Publish complete for ${{ parameters.ServerName }}"
-    displayName: Tag and push image
+    displayName: Load, tag, and push image

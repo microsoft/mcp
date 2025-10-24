@@ -396,12 +396,41 @@ function Get-BuildMatrices {
     return $matrices
 }
 
+function Get-ServerMatrix {
+    param($servers)
+
+    Write-Host "Forming server matrix"
+
+    $serverMatrix = [ordered]@{}
+    $platformName = "linux-x64"
+    
+    foreach ($server in $servers) {
+        $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
+        $executableExtension = $platform.extension
+        $imageName = $server.dockerImageName
+        if (-not $platform.extension) { $executableExtension = '' }
+        if (-not $server.dockerImageName) { $imageName = "microsoft/" + $server.cliName + "-mcp" }
+        $serverMatrix[$server.name] = [ordered]@{
+            ServerName = $server.name
+            CliName = $server.cliName
+            ArtifactPath = $server.artifactPath
+            Version = $server.version
+            ImageName = $imageName
+            ExecutableName = $server.cliName + $executableExtension
+            DockerLocalTag = $imageName + ":" + $BuildId
+        }
+    }
+
+    return $serverMatrix
+}
+
 Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $matrices = Get-BuildMatrices $serverDetails
     $pathsToTest = @(Get-PathsToTest)
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
+    $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
 
     # spellchecker: ignore SOURCEVERSION
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
@@ -430,20 +459,6 @@ try {
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
-
-        $serverMatrix = [ordered]@{}
-        foreach ($server in $serverDetails) {
-            $serverMatrix[$server.name] = [ordered]@{
-                ServerName = $server.name
-                CliName = $server.cliName
-                ArtifactPath = $server.artifactPath
-                Version = $server.version
-                ImageName = $server.dockerImageName
-            }
-        }
-
-        $serverMatrixJson = $serverMatrix | ConvertTo-Json -Compress
-        Write-Host "##vso[task.setvariable variable=ServerBuildMatrix;isOutput=true]$serverMatrixJson"
     }
 }
 finally {

@@ -31,9 +31,9 @@ RUN ls -la
 RUN if [ ! -f $EXECUTABLE_NAME ]; then \
     echo "ERROR: $EXECUTABLE_NAME executable does not exist" && exit 1; \
     fi
-
+    
 # Copy the server binary to a known location and make it executable
-COPY {$EXECUTABLE_NAME} server-binary
+COPY ${PUBLISH_DIR}/${EXECUTABLE_NAME} server-binary
 RUN chmod +x server-binary && test -x server-binary
 
 ENTRYPOINT ["./server-binary", "server", "start"]
