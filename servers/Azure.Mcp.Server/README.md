@@ -569,7 +569,7 @@ This MCP server may interact with clients and services outside Microsoft complia
 
 ## Third Party Components
 
-This MCP server may use or depend on third party components.  You are responsible for reviewing and complying with the licenses and security posture of any third-party components.
+This MCP server may use or depend on third party components. You are responsible for reviewing and complying with the licenses and security posture of any third-party components.
 
 ## Export Control
 
