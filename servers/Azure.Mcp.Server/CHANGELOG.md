@@ -2,21 +2,33 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.8 (Unreleased)
+## 0.9.9 (Unreleased)
 
 ### Features Added
-
-- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
+### Other Changes
+
+- Set telemetry fields for `ToolArea` and `ToolName` when "single" mode is used. [[#952](https://github.com/microsoft/mcp/pull/952)]
+
+## 0.9.8 (2025-10-23)
+
+### Features Added
+
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+
+### Bugs Fixed
+
 - Fixed SKU configuration bug in SQL database create and update commands. [[#925](https://github.com/microsoft/mcp/pull/925)]
+- Fixed a serialization issue with Foundry tools. [[#904](https://github.com/microsoft/mcp/pull/904)]
 
 ### Other Changes
 
-- Set telemetry field's for `ToolArea` and `ToolName` when "consolidated" mode is used or a server is loaded from `registry.json`. [[#933](https://github.com/microsoft/mcp/pull/933)]
+- Set telemetry fields for `ToolArea` and `ToolName` when "consolidated" mode is used or a server is loaded from `registry.json`. [[#933](https://github.com/microsoft/mcp/pull/933)]
+- Added instructions on when to not use azd init [[#942](https://github.com/microsoft/mcp/pull/942)]
 
 ## 0.9.7 (2025-10-22)
 

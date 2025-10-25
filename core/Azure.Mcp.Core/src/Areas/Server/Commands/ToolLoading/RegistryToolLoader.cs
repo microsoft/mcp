@@ -122,7 +122,7 @@ public sealed class RegistryToolLoader(
         {
             var content = new TextContentBlock
             {
-                Text = $"The tool {request.Params.Name} was not found",
+                Text = $"The tool {request.Params.Name} was not found in the tool registry.",
             };
 
             _logger.LogWarning(content.Text);
