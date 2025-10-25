@@ -456,7 +456,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         // Configure caching strategy based on authentication mode
-        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthenticationTypes.UseOnBehalfOf)
+        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
             services.AddHttpServiceCacheService();
         }
