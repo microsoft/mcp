@@ -30,6 +30,7 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
+        services.AddSingleton<AgentsGetSdkSampleCommand>();
 
         services.AddSingleton<ThreadCreateCommand>();
         services.AddSingleton<ThreadListCommand>();
@@ -83,6 +84,7 @@ public class FoundrySetup : IAreaSetup
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());
+        agents.AddCommand("get-sdk-sample", serviceProvider.GetRequiredService<AgentsGetSdkSampleCommand>());
 
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Azure AI Foundry resources.");
         foundry.AddSubGroup(resources);
