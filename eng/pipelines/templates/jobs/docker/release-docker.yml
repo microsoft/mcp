@@ -11,7 +11,7 @@ parameters:
 jobs:
 - deployment: PublishACR
   displayName: "Publish Docker Images to ACR"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true')))
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   dependsOn: ${{ parameters.DependsOn }}
   timeoutInMinutes: 120
   templateContext:
