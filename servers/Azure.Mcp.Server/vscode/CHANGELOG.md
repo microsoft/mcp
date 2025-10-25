@@ -1,5 +1,12 @@
 # Release History
 
+## 0.9.9 (2025-10-24)
+
+### Other Changes
+
+- Set telemetry fields for `ToolArea` and `ToolName` when "single" mode is used. [[#952](https://github.com/microsoft/mcp/pull/952)]
+- Added instructions on when to not use azd init [[#942](https://github.com/microsoft/mcp/pull/942)]
+
 ## 0.9.8 (2025-10-23)
 
 ### Added
