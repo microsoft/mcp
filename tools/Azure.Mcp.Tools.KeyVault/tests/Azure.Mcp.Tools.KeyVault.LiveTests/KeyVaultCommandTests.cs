@@ -12,7 +12,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output, fixture)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     [Fact]
     public async Task Should_list_keys()

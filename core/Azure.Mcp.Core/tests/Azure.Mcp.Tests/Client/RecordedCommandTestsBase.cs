@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IAsyncLifetime, IDisposable
+public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
@@ -27,45 +27,18 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     // TODO: do I need to worry about service version? Adding a versionQualifier here just in case. Feedback on PR will clean it out possibly.
     protected virtual string? VersionQualifier => null;
 
-    public async ValueTask InitializeAsync()
+    public override async ValueTask InitializeAsync()
     {
-        TestingMode = TestEnvironment.GetEnvironmentTestMode();
-
-        await base.InitializeAsync();
+        await base.InitializeAsyncInternal(Proxy);
 
         await StartRecordOrPlayback();
     }
 
-    // subclasses should override this method to dispose resources
-    // overrides should still call base.Dispose(disposing)
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing)
-        {
-            // No unmanaged resources to release, but if we had, we'd release them here.
-            // _disposableResource?.Dispose();
-            // _disposableResource = null;
-
-            // Handle things normally disposed in DisposeAsyncCore
-            if (Client is IDisposable disposable)
-            {
-                disposable.Dispose();
-            }
-        }
-
-        // Failure output may contain request and response details that should be output for failed tests.
-        if (TestContext.Current?.TestState?.Result == TestResult.Failed && FailureOutput.Length > 0)
-        {
-            Output.WriteLine(FailureOutput.ToString());
-        }
-    }
-
-    // subclasses should override this method to dispose async resources
-    // overrides should still call base.DisposeAsyncCore()
-    protected override async ValueTask DisposeAsyncCore()
+    public new async ValueTask DisposeAsync()
     {
         await StopRecordOrPlayback();
-        await Client.DisposeAsync().ConfigureAwait(false);
+
+        await base.DisposeAsync();
     }
 
     private async Task StartRecordOrPlayback()

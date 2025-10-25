@@ -35,7 +35,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         CustomArguments = arguments;
     }
 
-    public virtual async ValueTask InitializeAsync(TestProxy? Proxy = null)
+    public virtual async ValueTask InitializeAsync()
+    {
+        await InitializeAsyncInternal(null);
+    }
+
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxy? Proxy = null)
     {
         TestingMode = TestEnvironment.GetEnvironmentTestMode();
 
