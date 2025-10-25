@@ -13,28 +13,18 @@ using Xunit;
 
 namespace Azure.Mcp.Tests.Client;
 
-public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : IAsyncLifetime, IDisposable, IClassFixture<TestProxyFixture>
+public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetime, IDisposable
 {
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
-    protected LiveTestSettings Settings { get; private set; } = default!;
+    public LiveTestSettings Settings { get; set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
-    protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
-    private string[]? _customArguments;
-    private TestMode _testMode = TestMode.Live;
+    public string[]? CustomArguments;
+    public TestMode TestingMode = TestMode.Live;
 
-    // Recording path support (lightweight) ----------------------------------
-    private static readonly RecordingPathResolver _pathResolver = new();
-
-    // TODO: grab asyncncess of the test. Given that it is good practice to separate sync and async tests, this may
-    // not be necessary?
-    protected virtual bool IsAsync => false;
-
-    // TODO: do I need to worry about service version? Adding a versionQualifier here just in case. Feedback on PR will clean it out possibly.
-    protected virtual string? VersionQualifier => null;
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -42,14 +32,14 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
     /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
     public void SetArguments(params string[] arguments)
     {
-        _customArguments = arguments;
+        CustomArguments = arguments;
     }
 
-    public virtual async ValueTask InitializeAsync()
+    public virtual async ValueTask InitializeAsync(TestProxy? Proxy = null)
     {
-        _testMode = TestEnvironment.GetEnvironmentTestMode();
+        TestingMode = TestEnvironment.GetEnvironmentTestMode();
 
-        if (_testMode is TestMode.Live || _testMode is TestMode.Record)
+        if (TestingMode is TestMode.Live || TestingMode is TestMode.Record)
         {
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync();
@@ -84,10 +74,23 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         string[] defaultArgs = enableDebug
             ? ["server", "start", "--mode", "all", "--debug"]
             : ["server", "start", "--mode", "all"];
-        var arguments = _customArguments ?? defaultArgs;
+        var arguments = CustomArguments ?? defaultArgs;
 
-        // Capture proxy locally to aid flow analysis
-        var proxy = Proxy ?? throw new InvalidOperationException("Test proxy not initialized.");
+        var dictionaryEvents = new Dictionary<string, string?> {
+            // Propagate playback signaling & sanitized identifiers to server process.
+            { "AZURE_MCP_PLAYBACK_MODE", TestingMode is TestMode.Playback ? "true" : null },
+            { "AZURE_TENANT_ID", Settings.TenantId },
+            { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
+        };
+
+        if (Proxy != null)
+        {
+            // Capture proxy locally to aid flow analysis
+            var proxy = Proxy;
+
+            dictionaryEvents.Add("TEST_PROXY_URL", proxy.BaseUri);
+        }
+        
 
         StdioClientTransportOptions transportOptions = new()
         {
@@ -96,14 +99,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
             Arguments = arguments,
             // Direct stderr to test output helper as required by task
             StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}"),
-            EnvironmentVariables = new Dictionary<string, string?>
-            {
-                { "TEST_PROXY_URL", proxy.BaseUri },
-                // Propagate playback signaling & sanitized identifiers to server process.
-                { "AZURE_MCP_PLAYBACK_MODE", _testMode is TestMode.Playback ? "true" : null },
-                { "AZURE_TENANT_ID", Settings.TenantId },
-                { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
-            }
+            EnvironmentVariables = dictionaryEvents
         };
 
         if (!string.IsNullOrEmpty(Settings.TestPackage))
@@ -117,8 +113,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
         Client = await McpClient.CreateAsync(clientTransport);
 
         Output.WriteLine("MCP client initialized successfully");
-
-        await StartRecordOrPlayback();
     }
 
     protected Task<JsonElement?> CallToolAsync(string command, Dictionary<string, object?> parameters)
@@ -232,82 +226,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output, TestProxyFixtur
     // overrides should still call base.DisposeAsyncCore()
     protected virtual async ValueTask DisposeAsyncCore()
     {
-        await StopRecordOrPlayback();
         await Client.DisposeAsync().ConfigureAwait(false);
     }
 
-    private async Task StartRecordOrPlayback()
-    {
-        if (Proxy is null)
-        {
-            throw new InvalidOperationException("Test proxy is not initialized.");
-        }
-
-        var testName = TryGetCurrentTestName();
-        var pathToRecording = GetSessionFilePath(testName);
-        var assetsPath = _pathResolver.GetAssetsJson(GetType());
-
-        var recordOptions = new Dictionary<string, string>
-        {
-            { "x-recording-file", pathToRecording },
-        };
-
-        if (!string.IsNullOrWhiteSpace(assetsPath))
-        {
-            recordOptions["x-recording-assets-file"] = assetsPath;
-        }
-        // todo: replace after regenerating using Azure.Core instead of System.ClientModel
-        var bodyContent = BinaryContentHelper.FromObject(recordOptions);
-
-        if (_testMode is TestMode.Playback)
-        {
-            Output.WriteLine($"[Playback] Session file: {pathToRecording}");
-            await Proxy.Client.StartPlaybackAsync(bodyContent).ConfigureAwait(false);
-        }
-        else if (_testMode is TestMode.Record)
-        {
-            Output.WriteLine($"[Record] Session file: {pathToRecording}");
-            Proxy.Client.StartRecord(bodyContent);
-        }
-
-        await Task.CompletedTask;
-    }
-
-    private async Task StopRecordOrPlayback()
-    {
-        if (Proxy is null)
-        {
-            throw new InvalidOperationException("Test proxy is not initialized.");
-        }
-
-        if (_testMode is TestMode.Playback)
-        {
-            await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
-        }
-        else if (_testMode is TestMode.Record)
-        {
-            // TODO: feed variables / metadata to proxy stop.
-            Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
-        }
-        await Task.CompletedTask;
-    }
-
-    private static string TryGetCurrentTestName()
-    {
-        var name = TestContext.Current?.Test?.TestCase.TestCaseDisplayName;
-        if (string.IsNullOrWhiteSpace(name))
-        {
-            throw new InvalidOperationException("Test name is not available. Recording requires a valid test name.");
-        }
-        return name;
-    }
-
-    private string GetSessionFilePath(string displayName)
-    {
-        var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
-        var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
-        var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
-        return fullPath;
-    }
 }
