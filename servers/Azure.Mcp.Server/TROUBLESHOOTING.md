@@ -881,10 +881,25 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 
 ### Development in VS Code
 
+#### Running Azure MCP Server Locally for Development
+
+When developing or debugging the Azure MCP Server locally, you can use `dotnet run` which automatically uses the configuration in `Properties/launchSettings.json`:
+
+```bash
+dotnet run --project servers/Azure.Mcp.Server/src/
+```
+
+The `launchSettings.json` file automatically configures:
+- **Command line arguments:** `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+- **Environment variables** for Azure AD authentication and ASP.NET Core settings
+- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
+
+This is the recommended approach for local development as it sets up the server in HTTP mode with all necessary authentication and configuration automatically.
+
 #### Bring your own language model key
 
 [Bring your own language model key](https://code.visualstudio.com/docs/copilot/language-models#_bring-your-own-language-model-key)
-An existing API key from a language model provider can be used to access that provider’s models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
+An existing API key from a language model provider can be used to access that provider's models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
 
 
 ### Locating MCP Server Binaries in VS Code
