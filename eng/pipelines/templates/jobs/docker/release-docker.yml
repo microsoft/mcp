@@ -43,6 +43,7 @@ jobs:
               az acr login --name ${{ parameters.ContainerRegistry }}
 
         - pwsh: |
+            Write-Host "Setting release variables from build info for Docker release for ${{ parameters.ServerName }}..."
             $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
             $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 
