@@ -10,5 +10,5 @@ public interface IAzureMcpDatastore
 {
     Task<IList<AzureMcpTool>> GetAvailableToolsAsync(CancellationToken cancellationToken = default);
 
-    Task AddToolEventsAsync(IList<McpToolEvent> toolEvents, CancellationToken cancellationToken = default);
+    Task AddToolEventsAsync(List<McpToolEvent> toolEvents, CancellationToken cancellationToken = default);
 }
