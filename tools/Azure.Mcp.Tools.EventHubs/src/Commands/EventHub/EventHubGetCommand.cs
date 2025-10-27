@@ -21,6 +21,8 @@ public sealed class EventHubGetCommand(ILogger<EventHubGetCommand> logger, IEven
     private readonly IEventHubsService _service = service;
     private readonly ILogger<EventHubGetCommand> _logger = logger;
 
+    public override string Id => "ab774777-76ac-4e24-ba19-da67254441a9";
+
     public override string Name => "get";
 
     public override string Description =>

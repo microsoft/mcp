@@ -13,6 +13,12 @@ namespace Azure.Mcp.Core.Commands;
 public interface IBaseCommand
 {
     /// <summary>
+    /// A unique identifier for the command. Identifier must be a constant value representing a GUID.
+    /// See <see cref="Guid.NewGuid()"/> to generate a random GUID.
+    /// </summary>
+    string Id { get; }
+
+    /// <summary>
     /// Gets the name of the command
     /// </summary>
     string Name { get; }

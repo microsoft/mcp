@@ -13,6 +13,8 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
     private const string CommandTitle = "Delete App Configuration Key-Value Setting";
     private readonly ILogger<KeyValueDeleteCommand> _logger = logger;
 
+    public override string Id => "f885a499-82ec-4897-a788-fb6b4615ab06";
+
     public override string Name => "delete";
 
     public override string Description =>

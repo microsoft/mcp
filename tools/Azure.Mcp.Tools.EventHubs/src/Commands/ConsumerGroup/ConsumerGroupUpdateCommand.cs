@@ -17,6 +17,7 @@ public sealed class ConsumerGroupUpdateCommand(ILogger<ConsumerGroupUpdateComman
     private const string CommandTitle = "Create or Update Event Hubs Consumer Group";
 
     private readonly ILogger<ConsumerGroupUpdateCommand> _logger = logger;
+    public override string Id => "859871ba-b8dc-439c-a607-11b0d89f5112";
 
     public override string Name => "update";
 

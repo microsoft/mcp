@@ -15,6 +15,8 @@ public sealed class EntraAdminListCommand(ILogger<EntraAdminListCommand> logger)
 {
     private const string CommandTitle = "List SQL Server Entra ID Administrators";
 
+    public override string Id => "240aac03-0eb0-4cd3-91f8-475577289186";
+
     public override string Name => "list";
 
     public override string Description =>

@@ -19,6 +19,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
 
     private readonly ILogger<NamespaceUpdateCommand> _logger = logger;
 
+    public override string Id => "225eb25d-52c5-4c3a-9eb4-066cf2b9da84";
+
     public override string Name => "update";
 
     public override string Description =>

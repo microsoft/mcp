@@ -16,6 +16,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
 {
     private const string CommandTitle = "Get details of a specific web test";
 
+    public override string Id => "c9897ba5-445c-43dc-9902-e8454dbdc243";
+
     public override string Name => "get";
 
     public override string Description =>
