@@ -19,7 +19,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     // Workspace Operations
     public async Task<IEnumerable<Workspace>> ListWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces";
         if (!string.IsNullOrEmpty(continuationToken))
         {
             url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
@@ -110,7 +110,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<Workspace> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
     }
@@ -124,7 +124,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         if (!string.IsNullOrEmpty(rootFolderId)) queryParams.Add($"rootFolderId={Uri.EscapeDataString(rootFolderId)}");
         if (!string.IsNullOrEmpty(continuationToken)) queryParams.Add($"continuationToken={Uri.EscapeDataString(continuationToken)}");
 
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
         if (queryParams.Any()) url += "?" + string.Join("&", queryParams);
 
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
@@ -134,22 +134,34 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<OneLakeItem> GetItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
     }
 
     public async Task<OneLakeItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateItemRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
+        
+        try
+        {
+            return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
+        }
+        catch (JsonException)
+        {
+            // Reset stream position to read the content for debugging
+            response.Position = 0;
+            var responseContent = await new StreamReader(response).ReadToEndAsync();
+            Console.WriteLine($"Response content: {responseContent}");
+            throw;
+        }
     }
 
     public async Task<OneLakeItem> UpdateItemAsync(string workspaceId, string itemId, UpdateItemRequest request, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.UpdateItemRequest);
         var response = await SendFabricApiRequestAsync(new HttpMethod("PATCH"), url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
@@ -157,14 +169,14 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task DeleteItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
         await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
     // Lakehouse Operations
     public async Task<IEnumerable<Lakehouse>> ListLakehousesAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/lakehouses";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/lakehouses";
         if (!string.IsNullOrEmpty(continuationToken))
         {
             url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
@@ -177,7 +189,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<Lakehouse> GetLakehouseAsync(string workspaceId, string lakehouseId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/lakehouses/{lakehouseId}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/lakehouses/{lakehouseId}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync<Lakehouse>(response, OneLakeJsonContext.Default.Lakehouse, cancellationToken) ?? new Lakehouse();
     }
@@ -185,7 +197,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     // OneLake Shortcuts Operations  
     public async Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var result = await JsonSerializer.DeserializeAsync<ShortcutsResponse>(response, OneLakeJsonContext.Default.ShortcutsResponse, cancellationToken);
         return result?.Value ?? [];
@@ -193,14 +205,14 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<OneLakeShortcut> GetShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
     }
 
     public async Task<OneLakeShortcut> CreateShortcutAsync(string workspaceId, string itemId, string path, CreateShortcutRequest request, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts?path={Uri.EscapeDataString(path)}";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateShortcutRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
         return await JsonSerializer.DeserializeAsync<OneLakeShortcut>(response, OneLakeJsonContext.Default.OneLakeShortcut, cancellationToken) ?? new OneLakeShortcut();
@@ -208,7 +220,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task DeleteShortcutAsync(string workspaceId, string itemId, string path, string shortcutName, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.FabricApiBaseUrl}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}/shortcuts/{Uri.EscapeDataString(shortcutName)}?path={Uri.EscapeDataString(path)}";
         await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
@@ -541,7 +553,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     // Private helper methods
     private async Task<Stream> SendFabricApiRequestAsync(HttpMethod method, string url, string? jsonContent = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
-        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.FabricScopes[0] });
+        var tokenContext = new TokenRequestContext(new[] { OneLakeEndpoints.GetFabricScope() });
         var token = await _credential.GetTokenAsync(tokenContext, cancellationToken);
         
         using var request = new HttpRequestMessage(method, url);

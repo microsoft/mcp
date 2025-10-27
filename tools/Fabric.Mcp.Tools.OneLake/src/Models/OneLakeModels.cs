@@ -302,6 +302,12 @@ public static class OneLakeEndpoints
     public const string FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1";
     public const string StorageScope = "https://storage.azure.com/.default";
     
+    // Environment-aware Fabric API base URL
+    public static string GetFabricApiBaseUrl() => GetEndpoints(CurrentEnvironment).FabricApiBaseUrl;
+    
+    // Environment-aware Fabric authentication scope
+    public static string GetFabricScope() => GetEndpoints(CurrentEnvironment).FabricScope;
+    
     public static readonly string[] FabricScopes =
     [
         "https://api.fabric.microsoft.com/.default"
@@ -314,25 +320,33 @@ public static class OneLakeEndpoints
         {
             OneLakeDataPlaneBaseUrl = "https://api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com"
+            OneLakeDataPlaneBlobBaseUrl = "https://onelake.blob.fabric.microsoft.com",
+            FabricApiBaseUrl = "https://api.fabric.microsoft.com/v1",
+            FabricScope = "https://api.fabric.microsoft.com/.default"
         },
         ["DAILY"] = new OneLakeEnvironmentEndpoints
         {
             OneLakeDataPlaneBaseUrl = "https://daily-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://daily-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://daily-onelake.blob.fabric.microsoft.com"
+            OneLakeDataPlaneBlobBaseUrl = "https://daily-onelake.blob.fabric.microsoft.com",
+            FabricApiBaseUrl = "https://dailyapi.fabric.microsoft.com/v1",
+            FabricScope = "https://api.fabric.microsoft.com/.default"
         },
         ["DXT"] = new OneLakeEnvironmentEndpoints
         {
             OneLakeDataPlaneBaseUrl = "https://dxt-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://dxt-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://dxt-onelake.blob.fabric.microsoft.com"
+            OneLakeDataPlaneBlobBaseUrl = "https://dxt-onelake.blob.fabric.microsoft.com",
+            FabricApiBaseUrl = "https://dxt-api.fabric.microsoft.com/v1",
+            FabricScope = "https://api.fabric.microsoft.com/.default"
         },
         ["MSIT"] = new OneLakeEnvironmentEndpoints
         {
             OneLakeDataPlaneBaseUrl = "https://msit-api.onelake.fabric.microsoft.com",
             OneLakeDataPlaneDfsBaseUrl = "https://msit-onelake.dfs.fabric.microsoft.com",
-            OneLakeDataPlaneBlobBaseUrl = "https://msit-onelake.blob.fabric.microsoft.com"
+            OneLakeDataPlaneBlobBaseUrl = "https://msit-onelake.blob.fabric.microsoft.com",
+            FabricApiBaseUrl = "https://msit-api.fabric.microsoft.com/v1",
+            FabricScope = "https://api.fabric.microsoft.com/.default"
         }
     };
 
@@ -368,4 +382,6 @@ public class OneLakeEnvironmentEndpoints
     public string OneLakeDataPlaneBaseUrl { get; set; } = string.Empty;
     public string OneLakeDataPlaneDfsBaseUrl { get; set; } = string.Empty;
     public string OneLakeDataPlaneBlobBaseUrl { get; set; } = string.Empty;
+    public string FabricApiBaseUrl { get; set; } = string.Empty;
+    public string FabricScope { get; set; } = string.Empty;
 }

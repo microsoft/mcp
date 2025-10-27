@@ -176,4 +176,12 @@ public static class FabricOptionDefinitions
         Description = "Token for retrieving the next page of results.",
         Required = false
     };
+
+    // Endpoint options
+    public const string EndpointTypeName = "endpoint-type";
+    public static readonly Option<string> EndpointType = new($"--{EndpointTypeName}")
+    {
+        Description = "The endpoint type to use for listing items (fabric-api, blob, auto). Default is 'auto' which uses blob endpoint when appropriate.",
+        Required = false
+    };
 }

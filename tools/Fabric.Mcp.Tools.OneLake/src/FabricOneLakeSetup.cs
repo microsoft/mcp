@@ -22,13 +22,11 @@ public class FabricOneLakeSetup : IAreaSetup
         services.AddHttpClient<OneLakeService>();
 
         // Register workspace commands
-        services.AddSingleton<WorkspaceListCommand>();
         services.AddSingleton<OneLakeWorkspaceListCommand>();
-        services.AddSingleton<WorkspaceGetCommand>();
         
         // Register item commands
-        services.AddSingleton<ItemListCommand>();
         services.AddSingleton<OneLakeItemListCommand>();
+        services.AddSingleton<ItemCreateCommand>();
         
         // Register file commands
         services.AddSingleton<FileReadCommand>();
@@ -50,21 +48,15 @@ public class FabricOneLakeSetup : IAreaSetup
             """);
 
         // Register workspace commands
-        var workspaceListCommand = serviceProvider.GetRequiredService<WorkspaceListCommand>();
-        fabricOneLake.AddCommand(workspaceListCommand.Name, workspaceListCommand);
-        
         var oneLakeWorkspaceListCommand = serviceProvider.GetRequiredService<OneLakeWorkspaceListCommand>();
         fabricOneLake.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
         
-        var workspaceGetCommand = serviceProvider.GetRequiredService<WorkspaceGetCommand>();
-        fabricOneLake.AddCommand(workspaceGetCommand.Name, workspaceGetCommand);
-        
         // Register item commands
-        var itemListCommand = serviceProvider.GetRequiredService<ItemListCommand>();
-        fabricOneLake.AddCommand(itemListCommand.Name, itemListCommand);
-        
         var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
         fabricOneLake.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
+        
+        var itemCreateCommand = serviceProvider.GetRequiredService<ItemCreateCommand>();
+        fabricOneLake.AddCommand(itemCreateCommand.Name, itemCreateCommand);
         
         // Register file commands
         var fileReadCommand = serviceProvider.GetRequiredService<FileReadCommand>();
