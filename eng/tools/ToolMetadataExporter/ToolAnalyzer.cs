@@ -9,6 +9,8 @@ namespace ToolMetadataExporter;
 
 public class ToolAnalyzer
 {
+    private const string Separator = "_";
+
     private readonly AzmcpProgram _azmcpExe;
     private readonly IAzureMcpDatastore _azureMcpDatastore;
     private readonly ILogger<ToolAnalyzer> _logger;
@@ -68,7 +70,7 @@ public class ToolAnalyzer
             var toolArea = GetToolArea(tool);
             if (string.IsNullOrEmpty(toolArea))
             {
-                throw new InvalidOperationException($"Tool without a tool area. Name: {tool.Name}. Id: {tool.Id}");
+                throw new InvalidOperationException($"Tool without a tool area. Name: {tool.Name}. Command: {tool.Command} Id: {tool.Id}");
             }
 
             var changeEvent = new McpToolEvent
@@ -78,10 +80,12 @@ public class ToolAnalyzer
                 ServerVersion = serverVersion,
             };
 
+            var commandWithSeparator = tool.Command?.Replace(" ", Separator);
+
             var hasChange = false;
             if (existingTools.Remove(tool.Id, out var knownValue))
             {
-                if (!string.Equals(tool.Name, knownValue.ToolName, StringComparison.OrdinalIgnoreCase)
+                if (!string.Equals(commandWithSeparator, knownValue.ToolName, StringComparison.OrdinalIgnoreCase)
                     || !string.Equals(toolArea, knownValue.ToolArea, StringComparison.OrdinalIgnoreCase))
                 {
                     hasChange = true;
@@ -89,7 +93,7 @@ public class ToolAnalyzer
                     changeEvent.EventType = McpToolEventType.Updated;
                     changeEvent.ToolName = knownValue.ToolName;
                     changeEvent.ToolArea = knownValue.ToolArea;
-                    changeEvent.ReplacedByToolName = tool.Name;
+                    changeEvent.ReplacedByToolName = commandWithSeparator;
                     changeEvent.ReplacedByToolArea = toolArea;
                 }
             }
@@ -97,7 +101,7 @@ public class ToolAnalyzer
             {
                 hasChange = true;
                 changeEvent.EventType = McpToolEventType.Created;
-                changeEvent.ToolName = tool.Name;
+                changeEvent.ToolName = commandWithSeparator;
                 changeEvent.ToolArea = toolArea;
             }
 
