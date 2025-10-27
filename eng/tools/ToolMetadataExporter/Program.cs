@@ -31,7 +31,14 @@ public class Program
 
         await host.StartAsync();
 
-        await analyzer.RunAsync(DateTimeOffset.UtcNow, isDryRun: true);
+        var isDryRunValue = builder.Configuration["IsDryRun"];
+        var isDryRun = false;
+        if (bool.TryParse(isDryRunValue, out var parsed))
+        {
+            isDryRun = parsed;
+        }
+
+        await analyzer.RunAsync(DateTimeOffset.UtcNow, isDryRun);
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -70,19 +77,21 @@ public class Program
         services.AddSingleton<ICslQueryProvider>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
-            //var credential = sp.GetRequiredService<TokenCredential>();
+
             var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.QueryEndpoint)
+                .WithAadUserPromptAuthentication()
                 .WithAadAzCliAuthentication(interactive: true);
 
             return KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
         });
         services.AddSingleton<IKustoIngestClient>(sp => {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
-            //var credential = sp.GetRequiredService<TokenCredential>();
-            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.IngestionEndpoint)
-            .WithAadAzCliAuthentication(interactive: true);
 
-            return KustoIngestFactory.CreateQueuedIngestClient(connectionStringBuilder);
+            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.IngestionEndpoint)
+                .WithAadUserPromptAuthentication()
+                .WithAadAzCliAuthentication(interactive: true);
+
+            return KustoIngestFactory.CreateDirectIngestClient(connectionStringBuilder);
         });
     }
 }
