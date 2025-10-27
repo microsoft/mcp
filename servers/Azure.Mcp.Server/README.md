@@ -33,7 +33,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Documentation](#documentation)
     - [Feedback and Support](#feedback-and-support)
     - [Security](#security)
+    - [Permissions and Risk](#permissions-and-risk)
     - [Data Collection](#data-collection)
+    - [Compliance Responsibility](#compliance-responsibility)
+    - [Third Party Components](#third-party-components)
+    - [Export Control](#export-control)
+    - [No Warranty / Limitation of Liability](#no-warranty--limitation-of-liability)
     - [Contributing](#contributing)
     - [Code of Conduct](#code-of-conduct)
 
