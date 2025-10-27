@@ -124,7 +124,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
                         var unmatchedToolsList = string.Join(", ", unmatchedToolsInList);
                         var errorMessage = $"Consolidated tool '{consolidatedTool.Name}' has {unmatchedToolsInList.Count} tools in MappedToolList that didn't find a match in filteredCommands: {unmatchedToolsList}";
                         _logger.LogError(errorMessage);
-                        // throw new InvalidOperationException(errorMessage);
+                        throw new InvalidOperationException(errorMessage);
                     }
                 }
             }

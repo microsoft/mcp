@@ -17,12 +17,15 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
 
+    public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
+
     public override string Name => "add";
 
     public override string Description =>
         """
-        Add a database connection to an App Service. This command configures database connection
-        settings for the specified App Service, allowing it to connect to a database server.
+        Add a database connection for an App Service using connection string for an existing database. This command configures database connection
+        settings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,
+        database type, database server name, connection string, resource group name and subscription.
         """;
 
     public override string Title => CommandTitle;

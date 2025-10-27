@@ -230,7 +230,7 @@ public sealed class CommandFactoryToolLoader(
         if (commandContext.Activity != null)
         {
             var serviceArea = _commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.AddTag(TagName.ToolArea, serviceArea);
+            commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
         }
 
         try

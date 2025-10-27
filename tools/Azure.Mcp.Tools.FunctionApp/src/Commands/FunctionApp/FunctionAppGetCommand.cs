@@ -19,6 +19,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
     private const string CommandTitle = "Get Azure Function App Details";
     private readonly ILogger<FunctionAppGetCommand> _logger = logger;
 
+    public override string Id => "5249839c-a3c6-4f9e-b62b-afde801d95a6";
+
     public override string Name => "get";
 
     public override string Description =>

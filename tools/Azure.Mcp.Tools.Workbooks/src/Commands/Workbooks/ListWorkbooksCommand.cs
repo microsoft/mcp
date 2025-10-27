@@ -17,6 +17,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
 {
     private const string CommandTitle = "List Workbooks";
     private readonly ILogger<ListWorkbooksCommand> _logger = logger;
+    public override string Id => "c4c90435-fbc0-4598-ba82-3b9213d58b26";
 
     public override string Name => "list";
 

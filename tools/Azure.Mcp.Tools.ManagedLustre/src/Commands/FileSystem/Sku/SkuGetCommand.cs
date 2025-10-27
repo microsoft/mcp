@@ -17,6 +17,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
 {
     private const string CommandTitle = "Get AMLFS SKU information";
 
+    public override string Id => "43f679ba-1b6e-4851-9315-f8ad16b789e5";
     public override string Name => "get";
 
     public override string Description =>

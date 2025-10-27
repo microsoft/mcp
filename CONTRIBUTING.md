@@ -136,6 +136,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 5. **Update documentation**:
    - Add the new command to [/servers/Azure.Mcp.Server/docs/azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+   - Run `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI)
    - Add test prompts for the new command in [/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md)
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
@@ -681,6 +682,14 @@ To run live tests for a PR, inspect the PR code for any suspicious changes, then
 If you would like to see the product of a PR as a package on the dev feed, after thoroughly inspecting the change, create a branch in the main repo and manually trigger an [azure - mcp](https://dev.azure.com/azure-sdk/internal/_build?definitionId=7571) pipeline run against that branch. This will queue a manually triggered run which will build, run unit tests, deploy test resources, run live tests, sign and publish the packages to the dev feed.
 
 Instructions for consuming the package from the dev feed can be found in the "Extensions" tab of the pipeline run page.
+
+**CI Validation Checks**:
+
+All PRs automatically run the following validation checks:
+- **Code formatting** - Ensures code follows project formatting standards
+- **Spelling check** - Validates spelling across the codebase
+- **AOT compatibility** - Checks ahead-of-time compilation compatibility
+- **Tool metadata verification** - Ensures `azmcp-commands.md` is up-to-date with tool metadata (run `.\eng\scripts\Update-AzCommandsMetadata.ps1` if this fails)
 
 ## Support and Community
 

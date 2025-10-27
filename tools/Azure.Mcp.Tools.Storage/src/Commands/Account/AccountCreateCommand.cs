@@ -20,6 +20,8 @@ public sealed class AccountCreateCommand(ILogger<AccountCreateCommand> logger) :
     private const string CommandTitle = "Create Storage Account";
     private readonly ILogger<AccountCreateCommand> _logger = logger;
 
+    public override string Id => "a2cf843a-57f2-45ea-8078-59b0be0805e6";
+
     public override string Name => "create";
 
     public override string Description =>

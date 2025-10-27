@@ -17,6 +17,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
     private const string _commandTitle = "List Monitored Resources in a Datadog Monitor";
     private readonly ILogger<MonitoredResourcesListCommand> _logger = logger;
 
+    public override string Id => "bbd026b6-df96-4c52-8b72-13734984a600";
+
     public override string Name => "list";
 
     public override string Description =>

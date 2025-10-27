@@ -15,6 +15,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 {
     private const string CommandTitle = "Get AZD deployed App Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
+    public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
 
     public override string Name => "get";
     public override string Title => CommandTitle;

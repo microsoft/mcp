@@ -18,6 +18,8 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
 
     private readonly ILogger<WebTestsUpdateCommand> _logger = logger;
 
+    public override string Id => "5d7d322b-0e38-412c-982f-17d84554844b";
+
     public override string Name => "update";
 
     public override string Description =>

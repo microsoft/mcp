@@ -147,9 +147,10 @@ $removedCount = 0
 while ($i -lt $docLines.Count) {
     $line = $docLines[$i]
     
-    # Check if this is an old metadata line (without # prefix) and skip it
-    if ($line -match '^(✅|❌)\s+(Destructive|Idempotent|Openworld|Readonly|Secret|Localrequired)') {
-        Write-Verbose "Removing old metadata line: $line"
+    # Check if this is a metadata line (with or without # prefix) and remove it
+    # We'll regenerate all metadata lines to ensure they're correct
+    if ($line -match '^#?\s*(✅|❌)\s+(Destructive|Idempotent|Openworld|OpenWorld|Readonly|ReadOnly|Secret|Localrequired|LocalRequired)') {
+        Write-Verbose "Removing existing metadata line: $line"
         $removedCount++
         $i++
         continue
@@ -165,8 +166,10 @@ while ($i -lt $docLines.Count) {
         $matchedMetadata = $null
         
         foreach ($cmd in $commandMetadata.Keys) {
+            # Prepend "azmcp " to the command from metadata to match the format in the file
+            $fullCommand = "azmcp $cmd"
             # Check if the line starts with this command
-            if ($commandLine -match "^$([regex]::Escape($cmd))(\s|\\|$)") {
+            if ($commandLine -match "^$([regex]::Escape($fullCommand))(\s|\\|$)") {
                 $matchedCommand = $cmd
                 $matchedMetadata = $commandMetadata[$cmd]
                 break
@@ -174,27 +177,14 @@ while ($i -lt $docLines.Count) {
         }
         
         if ($matchedMetadata) {
-            # Check if the previous line already has metadata (to avoid duplicates)
-            $hasPreviousMetadata = $false
+            # Generate metadata string
+            $metadataString = Get-ToolMetadataString $matchedMetadata
             
-            if ($updatedLines.Count -gt 0) {
-                $prevLine = $updatedLines[$updatedLines.Count - 1]
-                # Check for metadata line with # prefix and PascalCase
-                if ($prevLine -match '^#\s+(✅|❌)\s+(Destructive|Idempotent|OpenWorld|ReadOnly|Secret|LocalRequired)') {
-                    $hasPreviousMetadata = $true
-                }
-            }
-            
-            if (-not $hasPreviousMetadata) {
-                # Generate metadata string
-                $metadataString = Get-ToolMetadataString $matchedMetadata
-                
-                if ($metadataString) {
-                    # Add metadata line above the command
-                    $updatedLines += $metadataString
-                    $updatedCount++
-                    Write-Verbose "Added metadata for: $matchedCommand"
-                }
+            if ($metadataString) {
+                # Add metadata line above the command
+                $updatedLines += $metadataString
+                $updatedCount++
+                Write-Verbose "Added metadata for: $matchedCommand"
             }
         }
     }

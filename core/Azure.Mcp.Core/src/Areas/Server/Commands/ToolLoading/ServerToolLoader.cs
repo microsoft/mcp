@@ -3,7 +3,6 @@
 
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol;
@@ -138,6 +137,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             learn = true;
         }
 
+        // The ToolArea for the Servers loaded is the name of the server.
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
+
         try
         {
             if (learn && string.IsNullOrEmpty(command))
@@ -146,6 +148,12 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // The "command" JSON property is what concrete BaseCommand is trying to be invoked.
+                // It is possible that the LLM provides a value for "command" that does not exist in
+                // CommandFactory. This incorrect value will be replaced if we are able to find
+                // a matching tool via sampling.
+                Activity.Current?.SetTag(TagName.ToolName, command);
+
                 var toolParams = GetParametersDictionary(request);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -245,7 +253,9 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
             }
 
             // At this point we should always have a valid command (child tool) call to invoke.
-            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
+            Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true)
+                .SetTag(TagName.ToolName, command);
+
             await NotifyProgressAsync(request, $"Calling {tool} {command}...", cancellationToken);
             var toolCallResponse = await client.CallToolAsync(command, parameters, cancellationToken: cancellationToken);
             if (toolCallResponse.IsError is true)
