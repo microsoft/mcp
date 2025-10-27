@@ -40,7 +40,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         await InitializeAsyncInternal(null);
     }
 
-    protected virtual async ValueTask InitializeAsyncInternal(TestProxy? Proxy = null)
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
         TestingMode = TestEnvironment.GetEnvironmentTestMode();
 
@@ -88,14 +88,10 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         };
 
-        if (Proxy != null)
+        if (proxy != null && proxy.Proxy != null)
         {
-            // Capture proxy locally to aid flow analysis
-            var proxy = Proxy;
-
-            dictionaryEvents.Add("TEST_PROXY_URL", proxy.BaseUri);
+            dictionaryEvents.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
         }
-        
 
         StdioClientTransportOptions transportOptions = new()
         {
@@ -115,8 +111,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
+        Output.WriteLine("Attemptig to start MCP Client");
         Client = await McpClient.CreateAsync(clientTransport);
-
         Output.WriteLine("MCP client initialized successfully");
     }
 
@@ -196,7 +192,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         GC.SuppressFinalize(this);
     }
 
-    public async ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         Dispose(disposing: false);

@@ -29,15 +29,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     public override async ValueTask InitializeAsync()
     {
-        await base.InitializeAsyncInternal(Proxy);
+        await InitializeAsyncInternal(fixture);
 
         await StartRecordOrPlayback();
     }
 
-    public new async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await StopRecordOrPlayback();
-
         await base.DisposeAsync();
     }
 
