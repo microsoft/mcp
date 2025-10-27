@@ -9,45 +9,6 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-
-# Function to get the latest VSIX version from VS Code Marketplace
-function Get-LatestMarketplaceVersion {
-    param(
-        [string]$PublisherId,
-        [string]$ExtensionId
-    )
-    
-    try {
-        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery"
-        $body = @{
-            filters = @(
-                @{
-                    criteria = @(
-                        @{ filterType = 7; value = "$PublisherId.$ExtensionId" }
-                    )
-                }
-            )
-            flags = 914
-        } | ConvertTo-Json -Depth 10
-        
-        $response = Invoke-RestMethod -Uri $marketplaceUrl -Method Post -Body $body -ContentType "application/json" -ErrorAction SilentlyContinue
-        
-        if ($response.results -and $response.results[0].extensions) {
-            $extension = $response.results[0].extensions[0]
-            if ($extension.versions -and $extension.versions.Count -gt 0) {
-                # Get all versions and find the highest X.0.Y version for the given major version
-                $allVersions = $extension.versions | ForEach-Object { $_.version }
-                return $allVersions
-            }
-        }
-    }
-    catch {
-        Write-Verbose "Could not fetch marketplace versions: $_"
-    }
-    
-    return $null
-}
-
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
@@ -110,6 +71,7 @@ foreach ($server in $buildInfo.servers) {
         Invoke-LoggedCommand 'npm ci --omit=optional'
 
         $version = $server.version
+        $setDevVersion = $env:SETDEVVERSION -eq "true"
         
         # Check if this is X.0.0 series (beta or GA) before any version transformations
         $semverOriginal = [AzureEngSemanticVersion]::new($version)
@@ -117,7 +79,7 @@ foreach ($server in $buildInfo.servers) {
         $isGA = $semverOriginal.Minor -eq 0 -and $semverOriginal.Patch -eq 0 -and !$semverOriginal.IsPrerelease
 
         # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
-        if($env:SETDEVVERSION -eq "true") {
+        if($setDevVersion) {
             <#
                 VS Code Marketplace doesn't support pre-release versions. Also, the major.minor.patch portion of the
                 version number is stored in the repo, making the pre-release suffix the only dynamic portion of the
@@ -150,19 +112,18 @@ foreach ($server in $buildInfo.servers) {
             #>
             if ($isBetaSeries) {
                 # Map X.0.0-beta.Y -> VSIX X.0.Y (with pre-release flag)
-                $originalVersion = $version
+                $serverVersion = $version
                 $semver = [AzureEngSemanticVersion]::new($version)
                 $semver.Patch = $semver.PrereleaseNumber
                 $semver.PrereleaseLabel = ''
                 $version = $semver.ToString()
-                Write-Host "Beta version mapping: $originalVersion -> VSIX $version (pre-release)" -ForegroundColor Cyan
+                Write-Host "Beta version: $serverVersion -> VSIX $version (prerelease)" -ForegroundColor Cyan
             }
             elseif ($isGA) {
                 # X.0.0 GA release - read VSIX version from package.json and validate
-                $originalVersion = $version
-                
-                # Read package.json to get the VSIX GA version
+                $serverVersion = $version
                 $packageJsonPath = "./package.json"
+                
                 if (!(Test-Path $packageJsonPath)) {
                     Write-Host "ERROR: package.json not found at $packageJsonPath" -ForegroundColor Red
                     $script:exitCode = 1
@@ -172,35 +133,37 @@ foreach ($server in $buildInfo.servers) {
                 $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
                 $vsixVersion = $packageJson.version
                 
-                # Validate that package.json version is a valid GA version (not alpha/beta/prerelease)
+                # Validate version does not contain prerelease labels
                 if ($vsixVersion -match '-') {
-                    Write-Host "ERROR: package.json version ($vsixVersion) contains prerelease label. For GA releases, version must not contain '-alpha', '-beta', or other prerelease labels." -ForegroundColor Red
-                    Write-Host "Please update package.json version to a GA version (e.g., $($semverOriginal.Major).0.6)" -ForegroundColor Yellow
+                    Write-Host "ERROR: package.json version '$vsixVersion' contains prerelease label" -ForegroundColor Red
+                    Write-Host "For GA releases, version must not contain '-alpha', '-beta', or other prerelease labels" -ForegroundColor Red
+                    Write-Host "Expected format: $($semverOriginal.Major).0.X (e.g., $($semverOriginal.Major).0.6)" -ForegroundColor Yellow
                     $script:exitCode = 1
                     continue
                 }
                 
-                # Parse and validate the VSIX version format
+                # Validate semantic version format
                 if ($vsixVersion -notmatch '^(\d+)\.(\d+)\.(\d+)$') {
-                    Write-Host "ERROR: package.json version ($vsixVersion) is not in valid semantic version format (X.Y.Z)" -ForegroundColor Red
+                    Write-Host "ERROR: package.json version '$vsixVersion' is not valid semantic version (X.Y.Z)" -ForegroundColor Red
                     $script:exitCode = 1
                     continue
                 }
                 
+                # Verify major.minor matches server version pattern
                 $vsixMajor = [int]$Matches[1]
                 $vsixMinor = [int]$Matches[2]
                 
-                # Verify the major and minor versions match Azure.Mcp.Server version
                 if ($vsixMajor -ne $semverOriginal.Major -or $vsixMinor -ne 0) {
-                    Write-Host "ERROR: package.json version ($vsixVersion) major.minor does not match Azure.Mcp.Server version pattern $($semverOriginal.Major).0.X" -ForegroundColor Red
-                    Write-Host "For $originalVersion GA release, VSIX version should be $($semverOriginal.Major).0.X" -ForegroundColor Yellow
+                    Write-Host "ERROR: package.json version '$vsixVersion' does not match expected pattern" -ForegroundColor Red
+                    Write-Host "Server version: $serverVersion requires VSIX pattern: $($semverOriginal.Major).0.X" -ForegroundColor Red
+                    Write-Host "Update package.json to: $($semverOriginal.Major).0.X (e.g., $($semverOriginal.Major).0.6)" -ForegroundColor Yellow
                     $script:exitCode = 1
                     continue
                 }
                 
-                # Use the version from package.json
+                # Use validated version from package.json
                 $version = $vsixVersion
-                Write-Host "GA version mapping: $originalVersion -> VSIX $version (from package.json)" -ForegroundColor Green
+                Write-Host "GA version: $serverVersion -> VSIX $version" -ForegroundColor Green
             }
             # All other versions (X.Y.Z where Y!=0 or Z!=0) pass through unchanged
         }
