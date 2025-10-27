@@ -53,4 +53,3 @@ jobs:
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
-        -WorkingDirectory $(Agent.TempDirectory)
