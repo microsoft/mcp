@@ -91,7 +91,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         return results;
     }
 
-    public async Task AddToolEventsAsync(IList<McpToolEvent> toolEvents, CancellationToken cancellationToken = default)
+    public async Task AddToolEventsAsync(List<McpToolEvent> toolEvents, CancellationToken cancellationToken = default)
     {
         cancellationToken.ThrowIfCancellationRequested();
 
@@ -104,7 +104,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
 
         var ingestionProperties = new KustoIngestionProperties(_databaseName, _tableName)
         {
-            Format = DataSourceFormat.json,
+            Format = DataSourceFormat.singlejson,
             IngestionMapping = new IngestionMapping()
             {
                 IngestionMappingKind = IngestionMappingKind.Json,
@@ -112,7 +112,24 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
             }
         };
 
-        await _ingestClient.IngestFromStreamAsync(stream, ingestionProperties);
+        var result = await _ingestClient.IngestFromStreamAsync(stream, ingestionProperties);
+
+        if (result != null)
+        {
+            _logger.LogInformation("Ingestion results.");
+            foreach(var item in result.GetIngestionStatusCollection())
+            {
+                _logger.LogInformation("- {IngestionSourceId}\t{Table}\t{Status}\t{Details}",
+                    item.IngestionSourceId,
+                    item.Table,
+                    item.Status,
+                    item.Details);
+            }
+        }
+        else
+        {
+            _logger.LogWarning("Ingestion client did not produce any results.");
+        }
     }
 
     internal async IAsyncEnumerable<McpToolEvent> GetLatestToolEventsAsync(string kqlFilePath,
