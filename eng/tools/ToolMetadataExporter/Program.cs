@@ -29,8 +29,9 @@ public class Program
 
         var analyzer = host.Services.GetRequiredService<ToolAnalyzer>();
 
+        await host.StartAsync();
+
         await analyzer.RunAsync(DateTimeOffset.UtcNow, isDryRun: true);
-        await host.RunAsync();
     }
 
     private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
