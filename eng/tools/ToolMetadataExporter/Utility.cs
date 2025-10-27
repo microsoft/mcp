@@ -14,21 +14,9 @@ internal class Utility
         try
         {
             var output = await ExecuteAzmcpAsync("tools list", isCiMode);
-            // Filter out non-JSON lines (like launch settings messages)
-            var lines = output.Split('\n');
-            var jsonStartIndex = -1;
+            var jsonOutput = GetJsonFromOutput(output);
 
-            for (int i = 0; i < lines.Length; i++)
-            {
-                if (lines[i].Trim().StartsWith("{"))
-                {
-                    jsonStartIndex = i;
-
-                    break;
-                }
-            }
-
-            if (jsonStartIndex == -1)
+            if (jsonOutput == null)
             {
                 if (isCiMode)
                 {
@@ -37,8 +25,6 @@ internal class Utility
 
                 throw new InvalidOperationException("No JSON output found from azmcp command.");
             }
-
-            var jsonOutput = string.Join('\n', lines.Skip(jsonStartIndex));
 
             // Parse the JSON output
             var result = JsonSerializer.Deserialize(jsonOutput, SourceGenerationContext.Default.ListToolsResult);
@@ -66,10 +52,11 @@ internal class Utility
 
     internal static async Task<string> GetVersionAsync()
     {
-        return await ExecuteAzmcpAsync("version");
+        var output = await ExecuteAzmcpAsync("--version", checkErrorCode: false);
+        return output.Trim();
     }
 
-    internal static async Task<string> ExecuteAzmcpAsync(string arguments, bool isCiMode = false)
+    internal static async Task<string> ExecuteAzmcpAsync(string arguments, bool isCiMode = false, bool checkErrorCode = true)
     {
         // Locate azmcp artifact across common build outputs (servers/core, Debug/Release)
         var exeDir = AppContext.BaseDirectory;
@@ -115,7 +102,7 @@ internal class Utility
 
         var isDll = string.Equals(cliArtifact.Extension, ".dll", StringComparison.OrdinalIgnoreCase);
         var fileName = isDll ? "dotnet" : cliArtifact.FullName;
-        var argumentsToUse = isDll ? $"{cliArtifact.FullName} " : "tools list";
+        var argumentsToUse = isDll ? $"{cliArtifact.FullName} " : arguments;
 
         var process = new Process
         {
@@ -137,7 +124,7 @@ internal class Utility
 
         await process.WaitForExitAsync();
 
-        if (process.ExitCode != 0)
+        if (checkErrorCode && process.ExitCode != 0)
         {
             if (isCiMode)
             {
@@ -177,6 +164,34 @@ internal class Utility
         return result;
     }
 
+    private static string? GetJsonFromOutput(string? output)
+    {
+        if (output == null)
+        {
+            return null;
+        }
+
+        // Filter out non-JSON lines (like launch settings messages)
+        var lines = output.Split('\n');
+        var jsonStartIndex = -1;
+
+        for (int i = 0; i < lines.Length; i++)
+        {
+            if (lines[i].Trim().StartsWith("{"))
+            {
+                jsonStartIndex = i;
+
+                break;
+            }
+        }
+
+        if (jsonStartIndex == -1)
+        {
+            return null;
+        }
+
+        return string.Join('\n', lines.Skip(jsonStartIndex));
+    }
 
     private static async Task SaveToolsToJsonAsync(ListToolsResult toolsResult, string filePath)
     {
