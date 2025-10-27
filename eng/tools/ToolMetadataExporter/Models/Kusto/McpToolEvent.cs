@@ -44,13 +44,14 @@ public class McpToolEvent
     public static ColumnMapping[] GetColumnMappings()
     {
         return [
-            new ColumnMapping { ColumnName = EventTypeColumn, ColumnType = "datetime" },
+            new ColumnMapping { ColumnName = EventTimeColumn, ColumnType = "datetime" },
+            new ColumnMapping { ColumnName = EventTypeColumn, ColumnType = "string"},
+            new ColumnMapping { ColumnName = ReplacedByToolAreaColumn, ColumnType = "string"},
+            new ColumnMapping { ColumnName = ReplacedByToolNameColumn, ColumnType = "string"},
             new ColumnMapping { ColumnName = ServerVersionColumn, ColumnType = "string" },
+            new ColumnMapping { ColumnName = ToolAreaColumn , ColumnType = "string" },
             new ColumnMapping { ColumnName = ToolIdColumn, ColumnType = "string"},
             new ColumnMapping { ColumnName = ToolNameColumn, ColumnType = "string" },
-            new ColumnMapping { ColumnName = ToolAreaColumn , ColumnType = "string" },
-            new ColumnMapping { ColumnName = ReplacedByToolNameColumn, ColumnType = "string"},
-            new ColumnMapping { ColumnName = ReplacedByToolAreaColumn, ColumnType = "string"},
         ];
     }
 }
