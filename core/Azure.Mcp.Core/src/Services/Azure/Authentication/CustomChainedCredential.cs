@@ -11,8 +11,7 @@ using Microsoft.Extensions.Logging;
 namespace Azure.Mcp.Core.Services.Azure.Authentication;
 
 /// <summary>
-/// A custom token credential that chains multiple Azure credentials with a broker-enabled instance of
-/// InteractiveBrowserCredential to provide a seamless authentication experience.
+/// A custom token credential that chains multiple Azure credentials with optional browser-enabled authentication.
 /// </summary>
 /// <remarks>
 /// The credential chain behavior can be controlled via the AZURE_TOKEN_CREDENTIALS environment variable:
@@ -26,7 +25,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
 /// Visual Studio Code credential is automatically prioritized first in the chain.
 /// 
-/// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
+/// Interactive Browser Authentication is automatically disabled in headless environments (no DISPLAY/Wayland, CI/CD, containers, Windows services).
 /// </remarks>
 public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
 {
@@ -54,6 +53,71 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     private static bool ShouldUseOnlyBrokerCredential()
     {
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
+    }
+
+    private static bool IsHeadlessEnvironment()
+    {
+        bool nonInteractive = !Environment.UserInteractive;
+
+        // ---------- OS-scoped heuristics ----------
+        bool noDisplay = false;
+        bool inDocker = false, inK8s = false, cgroupContainer = false;
+
+        if (OperatingSystem.IsLinux())
+        {
+            string? display = Environment.GetEnvironmentVariable("DISPLAY");
+            string? wayland = Environment.GetEnvironmentVariable("WAYLAND_DISPLAY");
+            string? xdg = Environment.GetEnvironmentVariable("XDG_SESSION_TYPE");
+            noDisplay = string.IsNullOrEmpty(display) &&
+                        string.IsNullOrEmpty(wayland) &&
+                        string.IsNullOrEmpty(xdg);
+
+            try { inDocker = File.Exists("/.dockerenv"); } catch { /* ignore */ }
+            try { inK8s = File.Exists("/var/run/secrets/kubernetes.io/serviceaccount/token"); } catch { /* ignore */ }
+            try {
+                cgroupContainer =
+                    FileContainsAny("/proc/1/cgroup", "docker", "kubepods", "containerd") ||
+                    FileContainsAny("/proc/self/mountinfo", "containers");
+            } catch { /* ignore */ }
+        }
+        // Note: On macOS, skip DISPLAY/Wayland checks. On Windows, skip /proc and container-file checks.
+
+        // ---------- CI/CD ----------
+        bool inCI =
+            IsEnvTrue("CI") ||
+            IsEnvTrue("GITHUB_ACTIONS") ||
+            IsEnvTrue("GITLAB_CI") ||
+            IsEnvTrue("AZP_CI") ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TEAMCITY_VERSION")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("BUILD_NUMBER")) ||
+            !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("TF_BUILD"));
+
+        // ---------- Windows service hint ----------
+        bool winServiceLike = OperatingSystem.IsWindows() &&
+            string.Equals(Environment.GetEnvironmentVariable("SESSIONNAME"), "Services", StringComparison.OrdinalIgnoreCase);
+
+        return nonInteractive || noDisplay || inCI || inDocker || inK8s || cgroupContainer || winServiceLike;
+    }
+
+    // helpers
+    private static bool IsEnvTrue(string key)
+    {
+        var v = Environment.GetEnvironmentVariable(key);
+        return v != null && (v.Equals("1", StringComparison.OrdinalIgnoreCase)
+            || v.Equals("true", StringComparison.OrdinalIgnoreCase)
+            || v.Equals("yes", StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool FileContainsAny(string path, params string[] needles)
+    {
+        try
+        {
+            var txt = File.ReadAllText(path);
+            foreach (var n in needles)
+                if (txt.IndexOf(n, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+        }
+        catch { /* ignore */ }
+        return false;
     }
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
@@ -92,7 +156,16 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        // Only add interactive browser credential if not in headless environment
+        if (!IsHeadlessEnvironment())
+        {
+            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        }
+        else
+        {
+            logger?.LogWarning("Headless environment detected. Interactive browser authentication is disabled. ");
+        }
+
         return new ChainedTokenCredential([.. creds]);
     }
 
