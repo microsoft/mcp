@@ -29,7 +29,7 @@ public class ToolAnalyzer
 
     public async Task RunAsync(DateTimeOffset analysisTime, bool isDryRun, CancellationToken cancellationToken = default)
     {
-        _logger.LogInformation("Starting analysis.");
+        _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", isDryRun);
 
         var serverVersion = await _azmcpExe.GetVersionAsync();
         var currentTools = await _azmcpExe.LoadToolsDynamicallyAsync();
@@ -67,7 +67,7 @@ public class ToolAnalyzer
                 throw new InvalidOperationException($"Tool without an id. Name: {tool.Name}. Command: {tool.Command}");
             }
 
-            var toolArea = GetToolArea(tool);
+            var toolArea = GetToolArea(tool)?.ToLowerInvariant();
             if (string.IsNullOrEmpty(toolArea))
             {
                 throw new InvalidOperationException($"Tool without a tool area. Name: {tool.Name}. Command: {tool.Command} Id: {tool.Id}");
@@ -80,7 +80,7 @@ public class ToolAnalyzer
                 ServerVersion = serverVersion,
             };
 
-            var commandWithSeparator = tool.Command?.Replace(" ", Separator);
+            var commandWithSeparator = tool.Command?.Replace(" ", Separator).ToLowerInvariant();
 
             var hasChange = false;
             if (existingTools.Remove(tool.Id, out var knownValue))
@@ -137,8 +137,7 @@ public class ToolAnalyzer
 
         var outputFile = Path.Combine(_workingDirectory, "tool_changes.json");
 
-        _logger.LogInformation("Tool updates. Writing output to : {FileName}", outputFile);
-
+        _logger.LogInformation("Tool updates. Writing output to: {FileName}", outputFile);
 
         var writerOptions = new JsonWriterOptions
         {
@@ -152,7 +151,7 @@ public class ToolAnalyzer
 
             try
             {
-                await File.WriteAllBytesAsync(outputFile, ms.ToArray());
+                await File.WriteAllBytesAsync(outputFile, ms.ToArray(), cancellationToken);
             }
             catch (Exception ex)
             {
@@ -172,5 +171,4 @@ public class ToolAnalyzer
         var split = tool.Command?.Split(" ", 2);
         return split == null ? null : split[0];
     }
-
 }
