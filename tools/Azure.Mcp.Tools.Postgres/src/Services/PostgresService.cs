@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -48,11 +50,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string? password, string server)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken};Ssl Mode=Prefer";
+        var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse};Ssl Mode=Prefer";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
@@ -87,6 +89,18 @@ public class PostgresService : BaseAzureService, IPostgresService
             var row = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
+                if (reader.GetColumnSchema()[i].DataTypeName == "public.vector")
+                {
+                    throw new CommandValidationException($"E_QUERY_UNSUPPORTED_COMPLEX_TYPES. The PostgreSQL query failed because it returned one or more columns with non-standard data types unsupported by the MCP agent (extension or user-defined)." +
+                        $"Action required:" +
+                        $"1. Obtain the exact schema for all the tables involved in the query." +
+                        $"2. Identify which columns have non-standard data types." +
+                        $"3. Modify the query to convert them to a supported type (e.g. using CAST or converting to text, integer, or the appropriate standard type)." +
+                        $"4. Re-execute the modified query." +
+                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest);
+                    //throw new CommandValidationException($"There are columns like '{reader.GetColumnSchema()[i].ColumnName}' which have complex types such as '{reader.GetColumnSchema()[i].DataTypeName}' that are not supported by the MCP agent. Only out-of-the-box standard column types are supported (such as text, integer, etc.), please get the table schema and rewrite your query casting complex types like 'public.vector' to their corresponding out-of-the-box types and retry.", HttpStatusCode.BadRequest);
+                    //throw new CommandValidationException($"The column {reader.GetColumnSchema()[i].ColumnName} could not be returned since Vector type columns are not supported. Please cast it to text in the select query. For example: SELECT {reader.GetColumnSchema()[i].ColumnName}::text as {reader.GetColumnSchema()[i].ColumnName} ... and try again.", HttpStatusCode.BadRequest);
+                }
                 row.Add(reader[i]?.ToString() ?? "NULL");
             }
             rows.Add(string.Join(", ", row));
@@ -221,7 +235,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         public static async Task<PostgresResource> CreateAsync(string connectionString)
         {
             var builder = new NpgsqlDataSourceBuilder(connectionString);
-            builder.UseVector();
+            //builder.UseVector();
             var dataSource = builder.Build();
             var connection = await dataSource.OpenConnectionAsync();
             return new PostgresResource(dataSource, connection);

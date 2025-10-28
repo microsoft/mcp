@@ -11,6 +11,9 @@ public class BasePostgresOptions : SubscriptionOptions
     [JsonPropertyName(PostgresOptionDefinitions.UserName)]
     public string? User { get; set; }
 
+    [JsonPropertyName(PostgresOptionDefinitions.Password)]
+    public string? Password { get; set; }
+
     [JsonPropertyName(PostgresOptionDefinitions.ServerName)]
     public string? Server { get; set; }
 

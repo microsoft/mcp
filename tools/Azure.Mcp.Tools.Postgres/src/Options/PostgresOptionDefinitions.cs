@@ -6,6 +6,7 @@ namespace Azure.Mcp.Tools.Postgres.Options;
 public static class PostgresOptionDefinitions
 {
     public const string UserName = "user";
+    public const string Password = "password";
     public const string ServerName = "server";
     public const string DatabaseName = "database";
     public const string TableName = "table";
@@ -19,6 +20,14 @@ public static class PostgresOptionDefinitions
     {
         Description = "The user name to access PostgreSQL server.",
         Required = true
+    };
+
+    public static readonly Option<string> Pass = new(
+    $"--{Password}"
+)
+    {
+        Description = "The user password to access PostgreSQL server, only if PostgreSQL authentication is used.",
+        Required = false
     };
 
     public static readonly Option<string> Server = new(
