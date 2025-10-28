@@ -69,7 +69,7 @@ public sealed class TableTypeListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), CancellationToken.None);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -110,7 +110,7 @@ public sealed class TableTypeListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -155,7 +155,7 @@ public sealed class TableTypeListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -186,7 +186,7 @@ public sealed class TableTypeListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -218,7 +218,7 @@ public sealed class TableTypeListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

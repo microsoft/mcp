@@ -577,7 +577,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -617,7 +617,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Non-Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = false }); // Not secret
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -659,7 +659,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection
@@ -704,7 +704,7 @@ public class CommandFactoryToolLoaderTests
         fakeCommand.GetCommand().Returns(fakeSystemCommand);
         fakeCommand.Title.Returns("Fake Secret Get");
         fakeCommand.Metadata.Returns(new ToolMetadata { Secret = true });
-        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>())
+        fakeCommand.ExecuteAsync(Arg.Any<CommandContext>(), Arg.Any<ParseResult>(), Arg.Any<CancellationToken>())
                    .Returns(new CommandResponse { Status = HttpStatusCode.OK, Message = "Secret test response" });
 
         // Add our fake command to the internal command map using reflection

@@ -61,7 +61,7 @@ public class AvailabilityStatusListCommandTests
         var command = new AvailabilityStatusListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -99,7 +99,7 @@ public class AvailabilityStatusListCommandTests
         var command = new AvailabilityStatusListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -128,7 +128,7 @@ public class AvailabilityStatusListCommandTests
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -150,7 +150,7 @@ public class AvailabilityStatusListCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

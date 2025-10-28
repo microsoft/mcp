@@ -89,7 +89,7 @@ public class DatabaseRenameCommandTests
             "--new-database-name", "newdb"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -155,7 +155,7 @@ public class DatabaseRenameCommandTests
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         if (shouldSucceed)
@@ -196,7 +196,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -227,7 +227,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -259,7 +259,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -289,7 +289,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -341,7 +341,7 @@ public class DatabaseRenameCommandTests
             ]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, args);
+            var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
             // Assert
             Assert.NotNull(response);

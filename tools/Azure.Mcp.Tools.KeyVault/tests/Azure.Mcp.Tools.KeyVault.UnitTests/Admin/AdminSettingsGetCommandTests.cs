@@ -61,7 +61,7 @@ public class AdminSettingsGetCommandTests
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -89,7 +89,7 @@ public class AdminSettingsGetCommandTests
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
@@ -129,7 +129,7 @@ public class AdminSettingsGetCommandTests
             }
 
             var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
             Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
             if (!shouldSucceed)

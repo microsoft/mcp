@@ -72,7 +72,7 @@ public class DatabaseListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         if (shouldSucceed)
@@ -101,7 +101,7 @@ public class DatabaseListCommandTests
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -129,7 +129,7 @@ public class DatabaseListCommandTests
             .Returns(expectedDatabases);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

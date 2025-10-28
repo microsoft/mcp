@@ -65,7 +65,7 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         await _keyVaultService.Received(1).ImportCertificate(
@@ -112,7 +112,7 @@ public class CertificateImportCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         if (shouldPassValidation)
@@ -153,7 +153,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
@@ -183,7 +183,7 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert - ensure the PEM (with header) was passed through untouched
         await _keyVaultService.Received(1).ImportCertificate(
@@ -220,7 +220,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         await _keyVaultService.Received(1).ImportCertificate(
             _knownVault,
@@ -257,7 +257,7 @@ public class CertificateImportCommandTests
                 "--subscription", _knownSubscription
             ]);
             // Act
-            var response = await _command.ExecuteAsync(_context, args);
+            var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
             // Assert - ensure the raw path was passed through
             await _keyVaultService.Received(1).ImportCertificate(
                 _knownVault,
@@ -302,7 +302,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(errorMessage, response.Message);
@@ -333,7 +333,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);

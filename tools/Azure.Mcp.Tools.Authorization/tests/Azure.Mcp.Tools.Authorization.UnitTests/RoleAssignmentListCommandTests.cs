@@ -81,7 +81,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -111,7 +111,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -143,7 +143,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);

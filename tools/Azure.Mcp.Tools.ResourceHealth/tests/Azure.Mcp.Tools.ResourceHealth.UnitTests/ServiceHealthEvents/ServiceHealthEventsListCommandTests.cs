@@ -77,7 +77,7 @@ public class ServiceHealthEventsListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
 
         // Assert
         if (shouldSucceed)
@@ -117,7 +117,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -145,7 +145,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(["--subscription", "nonexistent-sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -162,7 +162,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
 
         // Assert - Should have proper structure even if empty results
         Assert.NotNull(response);

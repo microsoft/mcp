@@ -79,7 +79,7 @@ public class ProductGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -94,7 +94,7 @@ public class ProductGetCommandTests
         var args = _commandDefinition.Parse(["--product-id", "test-product"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -128,7 +128,7 @@ public class ProductGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);

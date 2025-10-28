@@ -158,7 +158,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -178,7 +178,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -199,7 +199,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert - Should not fail validation, though may fail later due to server startup
         if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
@@ -350,7 +350,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -463,7 +463,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown for valid transport
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -487,7 +487,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown when transport is omitted
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {

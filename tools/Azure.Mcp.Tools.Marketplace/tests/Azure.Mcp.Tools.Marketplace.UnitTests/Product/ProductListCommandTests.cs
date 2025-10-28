@@ -81,7 +81,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -125,7 +125,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -140,7 +140,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--search", "test"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -170,7 +170,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -201,7 +201,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -247,7 +247,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -297,7 +297,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -347,7 +347,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);
@@ -395,7 +395,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);

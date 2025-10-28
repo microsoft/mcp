@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -72,7 +72,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -100,7 +100,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal([200], [(int)response.Status]);
@@ -123,7 +123,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

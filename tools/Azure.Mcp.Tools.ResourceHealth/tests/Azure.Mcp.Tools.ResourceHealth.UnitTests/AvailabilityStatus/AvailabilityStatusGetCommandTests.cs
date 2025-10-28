@@ -52,7 +52,7 @@ public class AvailabilityStatusGetCommandTests
         var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -83,7 +83,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -112,7 +112,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

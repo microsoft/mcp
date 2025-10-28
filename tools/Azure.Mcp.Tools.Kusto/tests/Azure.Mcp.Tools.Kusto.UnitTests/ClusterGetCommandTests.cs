@@ -62,7 +62,7 @@ public sealed class ClusterGetCommandTests
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -86,7 +86,7 @@ public sealed class ClusterGetCommandTests
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
@@ -104,7 +104,7 @@ public sealed class ClusterGetCommandTests
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

@@ -61,7 +61,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -97,7 +97,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -133,7 +133,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
@@ -147,7 +147,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

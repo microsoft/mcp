@@ -67,7 +67,7 @@ public sealed class ProductListCommand(ILogger<ProductListCommand> logger) : Sub
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         var options = BindOptions(parseResult);
 

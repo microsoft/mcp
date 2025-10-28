@@ -47,7 +47,7 @@ public interface IBaseCommand
     /// <summary>
     /// Executes the command
     /// </summary>
-    Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult);
+    Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken);
 
     ValidationResult Validate(CommandResult commandResult, CommandResponse? commandResponse = null);
 }

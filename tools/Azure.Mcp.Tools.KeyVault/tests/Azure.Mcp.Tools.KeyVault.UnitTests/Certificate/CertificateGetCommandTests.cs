@@ -65,7 +65,7 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert - Verify the service was called with correct parameters
         await _keyVaultService.Received(1).GetCertificate(
@@ -90,7 +90,7 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -119,7 +119,7 @@ public class CertificateGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
 
         // Assert
         Assert.NotNull(response);

@@ -164,6 +164,9 @@ dotnet_style_require_accessibility_modifiers = for_non_interface_members:suggest
 # Analyzers
 dotnet_code_quality.ca1802.api_surface = private, internal
 
+# CA2016: Forward the CancellationToken parameter to methods that take one
+dotnet_diagnostic.CA2016.severity = error
+
 # Xml project files
 [*.{csproj,vcxproj,vcxproj.filters,proj,nativeproj,locproj}]
 indent_size = 2
