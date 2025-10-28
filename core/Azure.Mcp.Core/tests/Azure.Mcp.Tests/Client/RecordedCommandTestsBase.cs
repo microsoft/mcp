@@ -29,15 +29,32 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     public override async ValueTask InitializeAsync()
     {
-        await InitializeAsyncInternal(fixture);
+        await base.InitializeAsyncInternal(fixture);
 
         await StartRecordOrPlayback();
     }
 
-    public override async ValueTask DisposeAsync()
+    public new async ValueTask DisposeAsync()
     {
         await StopRecordOrPlayback();
         await base.DisposeAsync();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        base.Dispose(disposing);
+
+        // On test failure, append proxy stderr for diagnostics.
+        if (TestContext.Current?.TestState?.Result == TestResult.Failed && Proxy is not null)
+        {
+            var stderr = Proxy.SnapshotStdErr();
+            if (!string.IsNullOrWhiteSpace(stderr))
+            {
+                Output.WriteLine("=== Test Proxy stderr (captured) ===");
+                Output.WriteLine(stderr);
+                Output.WriteLine("=== End Test Proxy stderr ===");
+            }
+        }
     }
 
     private async Task StartRecordOrPlayback()
@@ -60,7 +77,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         {
             recordOptions["x-recording-assets-file"] = assetsPath;
         }
-        // todo: replace after regenerating using Azure.Core instead of System.ClientModel
         var bodyContent = BinaryContentHelper.FromObject(recordOptions);
 
         if (TestingMode is TestMode.Playback)
@@ -90,7 +106,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
         else if (TestingMode is TestMode.Record)
         {
-            // TODO: feed variables / metadata to proxy stop.
             Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
         }
         await Task.CompletedTask;
