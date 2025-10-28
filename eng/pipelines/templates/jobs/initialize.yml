@@ -22,7 +22,13 @@ jobs:
       pwsh: true
       targetType: 'inline'
       script: |
-        Write-Host "Setting pipeline variables for PR build"
+        $changedFilesScriptPath = "$(Build.SourcesDirectory)/eng/common/scripts/get-changedfiles.ps1"
+        $changedFiles = & $changedFilesScriptPath -DiffFilterType ''
+
+        if ($changedFiles) {
+          Write-Host "Changed files in this PR : ($($changedFiles.Count)):"
+          $changedFiles | ForEach-Object { Write-Host "  $_" }
+        }
         
         # Set pipeline variables that can be used in subsequent stages
         Write-Host "##vso[task.setvariable variable=SkipBuildJob;isOutput=true]true"
