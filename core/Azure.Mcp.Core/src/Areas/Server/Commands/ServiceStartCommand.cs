@@ -393,10 +393,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing and incoming (if needed) authentication and authorization.
         if (serverOptions.RunAsRemoteHttpService)
         {
+#if !BUILD_TRIMMED
             // Configure incoming authentication and authorization.
             MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder = services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(builder.Configuration);
+#endif
 
             // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
             services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
@@ -441,7 +443,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             // Configure outgoing authentication strategy
             if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
             {
+#if !BUILD_TRIMMED
                 services.AddHttpOnBehalfOfTokenCredentialProvider(authBuilder);
+#endif
             }
             else
             {
