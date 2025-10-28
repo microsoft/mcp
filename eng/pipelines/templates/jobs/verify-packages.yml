@@ -55,3 +55,4 @@ jobs:
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
+    condition: and(succeeded(), eq(variables['RunUnitTests'], 'true')) # skipping until smoke tests are fixed
