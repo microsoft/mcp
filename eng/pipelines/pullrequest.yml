@@ -5,6 +5,7 @@ pr:
       - feature/*
       - hotfix/*
       - release/*
+      - SkipJobsBasedOnFilesChanged
 
 trigger: none
 
