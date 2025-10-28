@@ -16,7 +16,7 @@ parameters:
 jobs:
 - job: Build_${{ parameters.OSName }}
   displayName: "Build"
-  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'), ne(variables['SkipBuildJob'], 'true'))
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]

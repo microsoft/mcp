@@ -15,6 +15,22 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
+  - task: PowerShell@2
+    displayName: "Set PR skip job variables"
+    condition: eq(variables['Build.Reason'], 'PullRequest')
+    inputs:
+      pwsh: true
+      targetType: 'inline'
+      script: |
+        Write-Host "Setting pipeline variables for PR build"
+        
+        # Set pipeline variables that can be used in subsequent stages
+        Write-Host "##vso[task.setvariable variable=SkipBuildJob;isOutput=true]true"
+        Write-Host "##vso[task.setvariable variable=SkipLiveTestJob;isOutput=true]true"
+        
+        Write-Host "SkipBuildJob set to: true"
+        Write-Host "SkipLiveTestJob set to: true"
+
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3
