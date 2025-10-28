@@ -4,6 +4,7 @@
 using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using Azure.Mcp.Tests.Generated;
@@ -30,20 +31,30 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     public TestProxyClient Client { get; private set; } = default!;
     public TestProxyAdminClient AdminClient { get; private set; } = default!;
 
-    private static string? _cachedProxyDir;
+    private static string? _cachedRootDir;
+    private static string? _cachedExecutable;
+    private static string? _cachedVersion;
 
     private static async Task<string> GetClient()
     {
+        if (_cachedExecutable != null) {
+            return _cachedExecutable;
+        }
+
         var proxyDir = GetProxyDirectory();
-        var version = "1.0.0-dev.20251022.1";
-        var (assetName, isArchive) = GetAssetNameForPlatform();
-        var targetDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy", version);
+        var version = GetTargetVersion();
 
-        Directory.CreateDirectory(targetDir);
+        // if we have a version.txt within the directory, 
+        if (CheckProxyVersion(proxyDir, version))
+        {
+            _cachedExecutable = FindExecutableInDirectory(proxyDir);
+            return _cachedExecutable;
+        }
 
+        // we need to download
+        var assetName = GetAssetNameForPlatform();
         var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
-        var downloadPath = Path.Combine(targetDir, assetName);
-
+        var downloadPath = Path.Combine(proxyDir, assetName);
         if (!File.Exists(downloadPath))
         {
             using var client = new HttpClient();
@@ -51,38 +62,47 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             await File.WriteAllBytesAsync(downloadPath, bytes);
         }
 
-        if (isArchive)
+        // if we've gotten to here then we need to decompress
+        if (assetName.EndsWith(".tar.gz"))
         {
-            var extractDir = Path.Combine(targetDir, "extracted");
-            if (!Directory.Exists(extractDir))
-            {
-                if (assetName.EndsWith(".tar.gz"))
-                {
-                    TarFile.ExtractToDirectory(downloadPath, extractDir, true);
-                }
-                else
-                {
-                    ZipFile.ExtractToDirectory(downloadPath, extractDir);
-                }
-            }
-            return FindExecutableInDirectory(extractDir);
+            TarFile.ExtractToDirectory(downloadPath, proxyDir, true);
+        }
+        else
+        {
+            ZipFile.ExtractToDirectory(downloadPath, proxyDir);
         }
 
-        return downloadPath;
+        _cachedExecutable = FindExecutableInDirectory(proxyDir);
+
+        return _cachedExecutable;
     }
 
-    private static (string assetName, bool isArchive) GetAssetNameForPlatform()
+    private static bool CheckProxyVersion(string proxyDirectory, string version)
+    {
+        var versionFilePath = Path.Combine(proxyDirectory, "version.txt");
+        if (File.Exists(versionFilePath))
+        {
+            var existingVersion = File.ReadAllText(versionFilePath).Trim();
+            if (existingVersion == version)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static string GetAssetNameForPlatform()
     {
         var arch = RuntimeInformation.ProcessArchitecture;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
-            return (arch == Architecture.Arm64 ? "test-proxy-standalone-win-arm64.zip" : "test-proxy-standalone-win-x64.zip", true);
+            return (arch == Architecture.Arm64 ? "test-proxy-standalone-win-arm64.zip" : "test-proxy-standalone-win-x64.zip");
         }
         if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
         {
-            return (arch == Architecture.Arm64 ? "test-proxy-standalone-osx-arm64.zip" : "test-proxy-standalone-osx-x64.zip", true);
+            return (arch == Architecture.Arm64 ? "test-proxy-standalone-osx-arm64.zip" : "test-proxy-standalone-osx-x64.zip");
         }
-        return (arch == Architecture.Arm64 ? "test-proxy-standalone-linux-arm64.tar.gz" : "test-proxy-standalone-linux-x64.tar.gz", true);
+        return (arch == Architecture.Arm64 ? "test-proxy-standalone-linux-arm64.tar.gz" : "test-proxy-standalone-linux-x64.tar.gz");
     }
 
     private static string FindExecutableInDirectory(string dir)
@@ -113,23 +133,48 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private static string GetProxyDirectory()
+    private static string GetRootDirectory()
     {
-        if (_cachedProxyDir != null) return _cachedProxyDir;
-
-        var current = Directory.GetCurrentDirectory();
+        if (_cachedRootDir != null)
+            return _cachedRootDir;
+        var current = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
         while (current != null)
         {
             var gitPath = Path.Combine(current, ".git");
             if (File.Exists(gitPath) || Directory.Exists(gitPath))
             {
-                _cachedProxyDir = Path.Combine(current, ".proxy");
-                Directory.CreateDirectory(_cachedProxyDir);
-                return _cachedProxyDir;
+                return current;
             }
             current = Directory.GetParent(current)?.FullName;
         }
         throw new InvalidOperationException("Could not find repository root (.git)");
+    }
+
+    private static string GetTargetVersion()
+    {
+        if (_cachedVersion != null)
+        {
+            return _cachedVersion;
+        }
+
+        var versionFile = Path.Combine(GetRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
+        if (!File.Exists(versionFile))
+        {
+            throw new FileNotFoundException($"Test proxy version file not found: {versionFile}");
+        }
+        _cachedVersion = File.ReadAllText(versionFile).Trim();
+        return _cachedVersion;
+    }
+
+    private static string GetProxyDirectory()
+    {
+        var root = GetRootDirectory();
+        var proxyDirectory = Path.Combine(root, ".proxy");
+        if (!Directory.Exists(proxyDirectory))
+        {
+            Directory.CreateDirectory(proxyDirectory);
+        }
+        return proxyDirectory;
     }
 
     private static string? GetExecutableFromAssetsDirectory()
@@ -152,14 +197,14 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return null;
     }
 
-    public void Start(string repositoryRoot)
+    public async Task Start(string repositoryRoot)
     {
         if (_process != null)
         {
             return;
         }
 
-        var proxyExe = GetExecutableFromAssetsDirectory() ?? GetClient().GetAwaiter().GetResult();
+        var proxyExe = GetExecutableFromAssetsDirectory() ?? await GetClient();
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {

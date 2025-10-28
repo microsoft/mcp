@@ -9,7 +9,7 @@ namespace Azure.Mcp.Tests.Client.Helpers
     /// </summary>
     public sealed class TestProxyFixture : IAsyncLifetime
     {
-        private string DetermineRepositoryRoot()
+        public static string DetermineRepositoryRoot()
         {
             var path = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Environment.CurrentDirectory;
             while (!string.IsNullOrEmpty(path))
@@ -31,12 +31,11 @@ namespace Azure.Mcp.Tests.Client.Helpers
         /// </summary>
         public TestProxy? Proxy { get; private set; }
 
-        public ValueTask InitializeAsync()
+        public async ValueTask InitializeAsync()
         {
             var root = DetermineRepositoryRoot();
             Proxy = new TestProxy();
-            Proxy.Start(root);
-            return ValueTask.CompletedTask;
+            await Proxy.Start(root);
         }
 
         public ValueTask DisposeAsync()
