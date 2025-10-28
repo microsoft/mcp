@@ -144,19 +144,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
         var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.CreateItemRequest);
         var response = await SendFabricApiRequestAsync(HttpMethod.Post, url, jsonContent, null, cancellationToken);
-        
-        try
-        {
-            return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
-        }
-        catch (JsonException)
-        {
-            // Reset stream position to read the content for debugging
-            response.Position = 0;
-            var responseContent = await new StreamReader(response).ReadToEndAsync();
-            Console.WriteLine($"Response content: {responseContent}");
-            throw;
-        }
+        return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
     }
 
     public async Task<OneLakeItem> UpdateItemAsync(string workspaceId, string itemId, UpdateItemRequest request, CancellationToken cancellationToken = default)
@@ -262,7 +250,12 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}?delimiter=/&restype=container&comp=list";
+        // First, get the workspace name from the workspace ID using Fabric API
+        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
+        var workspaceName = workspace.DisplayName ?? workspaceId;
+
+        // Use workspace name in OneLake Data Plane API to get items with proper names
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceName}?delimiter=/&restype=container&comp=list";
         if (!string.IsNullOrEmpty(continuationToken))
         {
             url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
@@ -325,6 +318,46 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             throw new InvalidOperationException($"Failed to parse OneLake items list response: {ex.Message}", ex);
         }
+    }
+
+    public async Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
+    {
+        // First, get the workspace name from the workspace ID using Fabric API
+        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
+        var workspaceName = workspace.DisplayName ?? workspaceId;
+
+        // Use workspace name in OneLake Data Plane API to get items with proper names
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceName}?delimiter=/&restype=container&comp=list";
+        if (!string.IsNullOrEmpty(continuationToken))
+        {
+            url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+        }
+
+        var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        
+        // Return raw XML response
+        using var reader = new StreamReader(response);
+        return await reader.ReadToEndAsync(cancellationToken);
+    }
+
+    public async Task<string> ListOneLakeItemsDfsJsonAsync(string workspaceId, bool recursive = true, string? continuationToken = null, CancellationToken cancellationToken = default)
+    {
+        // First, get the workspace name from the workspace ID using Fabric API
+        var workspace = await GetWorkspaceAsync(workspaceId, cancellationToken);
+        var workspaceName = workspace.DisplayName ?? workspaceId;
+
+        // Use workspace name in OneLake DFS API to get items
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceName}?resource=filesystem&recursive={recursive.ToString().ToLower()}";
+        if (!string.IsNullOrEmpty(continuationToken))
+        {
+            url += $"&continuationToken={Uri.EscapeDataString(continuationToken)}";
+        }
+
+        var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        
+        // Return raw JSON response (DFS API returns JSON, not XML)
+        using var reader = new StreamReader(response);
+        return await reader.ReadToEndAsync(cancellationToken);
     }
 
     private static List<OneLakeItem> ParseBlobPrefixElements(IEnumerable<XElement> blobPrefixes, string workspaceId)
@@ -516,12 +549,15 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
 
     public async Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
+        // Use DFS endpoint for file operations (similar to directory creation)
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
         
-        // Create or overwrite file
-        using var createRequest = new HttpRequestMessage(HttpMethod.Put, url);
+        // Create or overwrite file using DFS API
+        using var createRequest = new HttpRequestMessage(HttpMethod.Put, url + "?resource=file");
         createRequest.Headers.Add("x-ms-resource", "file");
-        if (overwrite)
+        createRequest.Content = new ByteArrayContent(Array.Empty<byte>());
+        createRequest.Content.Headers.ContentLength = 0;
+        if (!overwrite)
         {
             createRequest.Headers.Add("If-None-Match", "*");
         }
@@ -548,6 +584,18 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     {
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{filePath.TrimStart('/')}";
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
+    }
+
+    public async Task CreateDirectoryAsync(string workspaceId, string itemId, string directoryPath, CancellationToken cancellationToken = default)
+    {
+        // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created
+        // However, we can create an empty directory using a PUT request with the appropriate headers
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/Files/{directoryPath.TrimStart('/')}?resource=directory";
+        
+        using var request = new HttpRequestMessage(HttpMethod.Put, url);
+        request.Headers.Add("x-ms-resource", "directory");
+        
+        await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
     }
 
     // Private helper methods
@@ -603,6 +651,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token.Token);
         request.Headers.Add("x-ms-version", "2023-11-03");
+        request.Headers.Add("x-ms-date", DateTime.UtcNow.ToString("R"));
         
         var response = await _httpClient.SendAsync(request, cancellationToken);
         response.EnsureSuccessStatusCode();

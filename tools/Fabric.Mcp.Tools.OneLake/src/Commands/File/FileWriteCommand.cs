@@ -49,18 +49,20 @@ public sealed class FileWriteCommand(
     protected override FileWriteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceIdName) ?? string.Empty;
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemIdName) ?? string.Empty;
-        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePathName) ?? string.Empty;
-        options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContentName);
-        options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePathName);
-        options.Overwrite = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.OverwriteName);
+        
+        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
+        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name) ?? string.Empty;
+        options.FilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.FilePath.Name) ?? string.Empty;
+        options.Content = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Content.Name);
+        options.LocalFilePath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.LocalFilePath.Name);
+        options.Overwrite = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Overwrite.Name);
         return options;
     }
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         var options = BindOptions(parseResult);
+        
         try
         {
             Stream contentStream;

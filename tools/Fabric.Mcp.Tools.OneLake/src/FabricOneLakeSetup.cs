@@ -26,11 +26,13 @@ public class FabricOneLakeSetup : IAreaSetup
         
         // Register item commands
         services.AddSingleton<OneLakeItemListCommand>();
+        services.AddSingleton<OneLakeItemListDfsCommand>();
         services.AddSingleton<ItemCreateCommand>();
         
         // Register file commands
         services.AddSingleton<FileReadCommand>();
         services.AddSingleton<FileWriteCommand>();
+        services.AddSingleton<DirectoryCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -55,6 +57,9 @@ public class FabricOneLakeSetup : IAreaSetup
         var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
         fabricOneLake.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
         
+        var oneLakeItemListDfsCommand = serviceProvider.GetRequiredService<OneLakeItemListDfsCommand>();
+        fabricOneLake.AddCommand(oneLakeItemListDfsCommand.Name, oneLakeItemListDfsCommand);
+        
         var itemCreateCommand = serviceProvider.GetRequiredService<ItemCreateCommand>();
         fabricOneLake.AddCommand(itemCreateCommand.Name, itemCreateCommand);
         
@@ -64,6 +69,9 @@ public class FabricOneLakeSetup : IAreaSetup
         
         var fileWriteCommand = serviceProvider.GetRequiredService<FileWriteCommand>();
         fabricOneLake.AddCommand(fileWriteCommand.Name, fileWriteCommand);
+
+        var directoryCreateCommand = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
+        fabricOneLake.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);
 
         return fabricOneLake;
     }
