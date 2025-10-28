@@ -21,64 +21,7 @@ jobs:
     condition: eq(variables['Build.Reason'], 'PullRequest')
     inputs:
       pwsh: true
-      targetType: 'inline'
-      script: |
-        # Set of files that don't require build or test when changed
-        $skipFiles = @(
-          'CHANGELOG.md',
-          'README.md',
-          'SUPPORT.md',
-          'TROUBLESHOOTING.md',
-          'CONTRIBUTING.md',
-          'CODE_OF_CONDUCT.md',
-          'SECURITY.md',
-          'NOTICE.txt',
-          'LICENSE'
-        )
-
-        # Set of directories that don't require build or test when changed
-        $skipDirectories = @(
-          '.github/',
-          'eng/common/'
-        )
-
-        $skipBuildAndTest = $true
-
-        $changedFilesScriptPath = "$(Build.SourcesDirectory)/eng/common/scripts/get-changedfiles.ps1"
-        $changedFiles = & $changedFilesScriptPath -DiffFilterType ''
-
-        if ($changedFiles) {
-          $changedFiles | ForEach-Object {
-            Write-Host "Checking file: $_"
-            $fileName = [System.IO.Path]::GetFileName($_)
-            $isSkipFile = $skipFiles -contains $fileName
-
-            $normalizedFile = $_ -replace '\\', '/'
-            $isInSkipDirectory = $false
-            foreach ($dir in $skipDirectories) {
-              if ($normalizedFile.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
-                $isInSkipDirectory = $true
-                break
-              }
-            }
-
-            Write-Host "  -> File: $fileName, IsSkipFile: $isSkipFile, IsInSkipDir: $isInSkipDirectory"
-            if (-not $isSkipFile -and -not $isInSkipDirectory) {
-              $skipBuildAndTest = $false
-              Write-Host "  -> This file $_ requires build and test!"
-              return
-            }
-          }
-        }
-        
-        if ($skipBuildAndTest) {
-          Write-Host "##vso[task.setvariable variable=SkipBuildJob;isOutput=true]true"
-          Write-Host "##vso[task.setvariable variable=SkipLiveTestJob;isOutput=true]true"
-          Write-Host "SkipBuildJob set to: true"
-          Write-Host "SkipLiveTestJob set to: true"
-        } else {
-          Write-Host "This PR contains files that require build and/or test."
-        }
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Set-SkipJobVariables.ps1
         
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
