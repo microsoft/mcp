@@ -1,4 +1,5 @@
 .assets/
+.proxy/
 .dist/
 .work/
 tests/test-cmds.txt
