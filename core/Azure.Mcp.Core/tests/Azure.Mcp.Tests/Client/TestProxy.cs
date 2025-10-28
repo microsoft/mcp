@@ -19,7 +19,7 @@ namespace Azure.Mcp.Tests.Client;
 public sealed class TestProxy(bool debug = false) : IDisposable
 {
     private readonly bool _debug = debug;
-    public readonly StringBuilder stderr = new();
+    public StringBuilder stderr = new();
     public readonly StringBuilder stdout = new();
     private Process? _process;
     private CancellationTokenSource? _cts;
@@ -50,7 +50,6 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         ProcessStartInfo psi;
         if (isDll)
         {
-            // Run through dotnet host
             var host = GetDotNetHost();
             psi = new ProcessStartInfo(host, $"\"{ExecutablePath}\" {args}");
         }
@@ -64,7 +63,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
 
         _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
-        _cts = new CancellationTokenSource(); //todo: put this in as filler, I feel like I should be pulling a cancellation token from somewhere else
+        _cts = new CancellationTokenSource();
         _ = Task.Run(() => PumpAsync(_process.StandardError, stderr, _cts.Token));
         _ = Task.Run(() => PumpAsync(_process.StandardOutput, stdout, _cts.Token));
 
@@ -180,28 +179,38 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         throw new InvalidOperationException("Unable to locate dotnet host.");
     }
 
+    /// <summary>
+    /// Snapshots the current stderr output from the testproxy. This is a destructive read; the internal buffer is cleared after the call.
+    ///
+    /// This means that if multiple tests fail in sequence, each test will only see the stderr output generated since the last call to SnapshotStdErr(), which means
+    /// we won't be seeing errors from previous test failures. This is intentional to ensure that each test only gets the relevant stderr output.
+    /// </summary>
+    /// <returns></returns>
     public string? SnapshotStdErr()
     {
         lock (stderr)
         {
-            return stderr.Length == 0 ? null : stderr.ToString();
+            var toOutput = stderr.Length == 0 ? null : stderr.ToString();
+
+            stderr = new();
+
+            return toOutput;
         }
     }
 
     public void Dispose()
     {
-        if (_disposed) return;
+        if (_disposed)
+            return;
         _disposed = true;
-        try
+
+        _cts?.Cancel();
+        _cts?.Dispose();
+
+        if (_process != null && !_process.HasExited)
         {
-            _cts?.Cancel();
-            if (_process != null && !_process.HasExited)
-            {
-                try { _process.Kill(entireProcessTree: true); } catch { }
-            }
-            _process?.Dispose();
-            _cts?.Dispose();
+            _process.Kill();
         }
-        catch { }
+        _process?.Dispose();
     }
 }
