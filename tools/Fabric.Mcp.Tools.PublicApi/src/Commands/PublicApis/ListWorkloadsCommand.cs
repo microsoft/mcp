@@ -37,7 +37,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

@@ -43,7 +43,7 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
 
     private readonly ILogger<EntityGetHealthCommand> _logger = logger;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {

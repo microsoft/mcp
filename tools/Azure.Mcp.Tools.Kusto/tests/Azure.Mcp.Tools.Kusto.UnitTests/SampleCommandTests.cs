@@ -48,14 +48,14 @@ public sealed class SampleCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1 | sample 10",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "table1 | sample 10",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         var command = new SampleCommand(_logger);
@@ -64,7 +64,7 @@ public sealed class SampleCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -89,14 +89,14 @@ public sealed class SampleCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1 | sample 10",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "table1 | sample 10",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         var command = new SampleCommand(_logger);
@@ -104,7 +104,7 @@ public sealed class SampleCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -140,7 +140,7 @@ public sealed class SampleCommandTests
     //     var args = command.GetCommand().Parse(cliArgs);
     //     var context = new CommandContext(_serviceProvider);
 
-    //     var response = await command.ExecuteAsync(context, args);
+    //     var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
     //     Assert.NotNull(response);
     //     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     //     Assert.Equal(expectedError, response.Message);
@@ -154,7 +154,7 @@ public sealed class SampleCommandTests
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

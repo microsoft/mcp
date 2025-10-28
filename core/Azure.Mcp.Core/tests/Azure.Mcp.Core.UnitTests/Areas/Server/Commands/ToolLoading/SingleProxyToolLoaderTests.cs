@@ -80,7 +80,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateListToolsRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -107,7 +107,7 @@ public class SingleProxyToolLoaderTests
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -131,7 +131,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("azure", arguments);
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -161,7 +161,7 @@ public class SingleProxyToolLoaderTests
         // Act & Assert
         // The current implementation throws KeyNotFoundException for unknown tools
         await Assert.ThrowsAsync<KeyNotFoundException>(async () =>
-            await toolLoader.CallToolHandler(request, CancellationToken.None));
+            await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -177,7 +177,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("azure", arguments);
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -205,7 +205,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("azure", arguments);
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -230,7 +230,7 @@ public class SingleProxyToolLoaderTests
         };
 
         // Act
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -254,8 +254,8 @@ public class SingleProxyToolLoaderTests
         var request = CreateCallToolRequest("azure", arguments);
 
         // Act - Call twice to test caching
-        var result1 = await toolLoader.CallToolHandler(request, CancellationToken.None);
-        var result2 = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result1 = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Both calls should succeed and return consistent results
         Assert.NotNull(result1);
