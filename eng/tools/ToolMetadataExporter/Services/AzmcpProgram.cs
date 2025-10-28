@@ -17,7 +17,7 @@ public class AzmcpProgram
         return Utility.LoadToolsDynamicallyAsync(_toolDirectory, false);
     }
 
-    public Task<string> GetVersionAsync()
+    public virtual Task<string> GetVersionAsync()
     {
         return Utility.GetVersionAsync();
     }
