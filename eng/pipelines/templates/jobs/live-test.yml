@@ -11,7 +11,7 @@ jobs:
   displayName: "Live tests -"
   timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
   # The variable reference in the matrix parameter will resolve to a json map. If there are no live test legs, it will be an empty map.
-  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'), ne(variables['SkipLiveTestJob'], 'true'))
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'), ne(stageDependencies.Initialize.Initialize.outputs['SetPRSkipJobVariables.SkipLiveTestJob'], 'true'))
   strategy:
     maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
