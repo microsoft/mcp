@@ -66,7 +66,8 @@ public class Program
 
     private static void ConfigureAzureServices(IServiceCollection services)
     {
-        services.AddScoped<TokenCredential>(sp => {
+        services.AddScoped<TokenCredential>(sp =>
+        {
             var credential = new ChainedTokenCredential(
                 new ManagedIdentityCredential(),
                 new DefaultAzureCredential()
@@ -84,7 +85,8 @@ public class Program
 
             return KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
         });
-        services.AddSingleton<IKustoIngestClient>(sp => {
+        services.AddSingleton<IKustoIngestClient>(sp =>
+        {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
 
             var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.IngestionEndpoint)
