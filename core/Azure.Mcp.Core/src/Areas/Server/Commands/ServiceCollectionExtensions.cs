@@ -170,7 +170,21 @@ public static class AzureMcpServiceCollectionExtensions
         }
         else if (serviceStartOptions.Mode == ModeTypes.ConsolidatedProxy)
         {
-            services.AddSingleton<IToolLoader, ServerToolLoader>();
+            services.AddSingleton<IToolLoader>(sp =>
+            {
+                var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
+                var consolidatedStrategy = sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>();
+                
+                // Create a new CommandFactory with consolidated command groups
+                var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
+                
+                return new NamespaceToolLoader(
+                    consolidatedCommandFactory,
+                    sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
+                    sp,
+                    loggerFactory.CreateLogger<NamespaceToolLoader>()
+                );
+            });
         }
         else if (serviceStartOptions.Mode == ModeTypes.All)
         {

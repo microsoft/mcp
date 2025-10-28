@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -16,9 +17,10 @@ public class ConsolidatedToolDiscoveryStrategyTests
         string? entryPoint = null)
     {
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
+        var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
         var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, startOptions, logger);
+        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, logger);
         if (entryPoint != null)
         {
             strategy.EntryPoint = entryPoint;

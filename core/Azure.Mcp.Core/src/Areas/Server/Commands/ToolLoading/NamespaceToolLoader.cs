@@ -123,6 +123,10 @@ public sealed class NamespaceToolLoader(
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
+                    DestructiveHint = group.ToolMetadata?.Destructive,
+                    IdempotentHint = group.ToolMetadata?.Idempotent,
+                    OpenWorldHint = group.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = group.ToolMetadata?.ReadOnly,
                 },
             };
 
