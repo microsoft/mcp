@@ -22,7 +22,6 @@ public abstract class BasePostgresCommand<
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(PostgresOptionDefinitions.User);
-        command.Options.Add(PostgresOptionDefinitions.Pass.AsOptional());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
@@ -30,7 +29,6 @@ public abstract class BasePostgresCommand<
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.User = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.User.Name);
-        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Pass.Name);
         return options;
     }
 }
