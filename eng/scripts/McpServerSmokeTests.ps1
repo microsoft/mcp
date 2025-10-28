@@ -129,8 +129,8 @@ function Test-NpmPackages {
         }
     }
 
-    $mainPackage = Get-ChildItem -Path $artifactsPath -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
-    $platformPackage = Get-ChildItem -Path $artifactsPath -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
+    $mainPackage = Get-ChildItem -Path "$artifactsPath/wrapper" -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
+    $platformPackage = Get-ChildItem -Path "$artifactsPath/platform" -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
 
     $originalLocation = Get-Location
     Set-Location $tempDirectory
