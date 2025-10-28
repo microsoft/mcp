@@ -98,18 +98,4 @@
     <PackageVersion Include="coverlet.collector" Version="6.0.2" />
     <!-- Pin to 6.0.2 until https://github.com/coverlet-coverage/coverlet/issues/1737 is resolved -->
   </ItemGroup>
-
-  <PropertyGroup>
-    <TestProxyVersion>1.0.0-dev.20251022.1</TestProxyVersion>
-  </PropertyGroup>
-
-  <!-- Add custom package source for restore -->
-  <ItemGroup>
-    <PackageDownload Include="Azure.Sdk.Tools.TestProxy" Version="[$(TestProxyVersion)]">
-      <PrivateAssets>all</PrivateAssets>
-    </PackageDownload>
-    <PackageSource Include="https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-net/nuget/v3/index.json">
-      <Name>azure-sdk-tools</Name>
-    </PackageSource>
-  </ItemGroup>
 </Project>

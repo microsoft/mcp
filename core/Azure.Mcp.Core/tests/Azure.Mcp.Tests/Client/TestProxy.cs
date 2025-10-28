@@ -146,7 +146,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             var gitPath = Path.Combine(current, ".git");
             if (File.Exists(gitPath) || Directory.Exists(gitPath))
             {
-                return current;
+                _cachedRootDir = current;
+                return _cachedRootDir;
             }
             current = Directory.GetParent(current)?.FullName;
         }
