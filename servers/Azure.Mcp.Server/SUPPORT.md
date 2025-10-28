@@ -28,3 +28,5 @@ Support for Azure MCP is limited to the resources listed above.
 ## Troubleshoot the Azure MCP
 
 If you encounter an unexpected issue while working with the Azure MCP, check out our [Troubleshooting](https://aka.ms/azmcp/troubleshooting) guide.
+
+Minor chage for testing

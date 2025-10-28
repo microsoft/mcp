@@ -15,6 +15,8 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 
+Minor chage for testing
+
 <!-- remove-section: end remove_install_links -->
 
 ## Table of Contents

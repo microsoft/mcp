@@ -1,6 +1,7 @@
 # CHANGELOG 📝
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
+Minor change for testing
 
 ## 0.9.9 (Unreleased)
 

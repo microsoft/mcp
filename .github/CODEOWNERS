@@ -257,4 +257,4 @@
 ##################
 /core/Microsoft.Fabric.Mcp.Core/      @microsoft/fabric-mcp
 /servers/Fabric.Mcp.Server/           @microsoft/fabric-mcp
-/tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mcp
+/tools/Fabric.Mcp.Tools.PublicApi/    @microsoft/fabric-mc
