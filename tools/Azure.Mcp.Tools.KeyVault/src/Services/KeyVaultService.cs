@@ -25,8 +25,8 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-    var credential = await GetCredential(tenantId);
-    var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var credential = await GetCredential(tenantId);
+        var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
         try
@@ -53,8 +53,8 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
 
-    var credential = await GetCredential(tenantId);
-    var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var credential = await GetCredential(tenantId);
+        var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
         {
@@ -77,8 +77,8 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
 
         var type = new KeyType(keyType);
-    var credential = await GetCredential(tenantId);
-    var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var credential = await GetCredential(tenantId);
+        var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
         {

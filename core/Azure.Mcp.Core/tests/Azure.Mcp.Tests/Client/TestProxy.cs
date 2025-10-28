@@ -37,7 +37,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
 
     private static async Task<string> GetClient()
     {
-        if (_cachedExecutable != null) {
+        if (_cachedExecutable != null)
+        {
             return _cachedExecutable;
         }
 
@@ -186,7 +187,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         var proxyDir = GetProxyDirectory();
         var toolDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy");
 
-        if (!Directory.Exists(toolDir)) return null;
+        if (!Directory.Exists(toolDir))
+            return null;
 
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "test-proxy.exe" : "test-proxy";
         foreach (var file in Directory.EnumerateFiles(toolDir, exeName, SearchOption.AllDirectories))
@@ -254,7 +256,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             while (!ct.IsCancellationRequested && !reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync().ConfigureAwait(false);
-                if (line == null) break;
+                if (line == null)
+                    break;
                 lock (sink)
                 {
                     sink.AppendLine(line);
@@ -281,7 +284,8 @@ public sealed class TestProxy(bool debug = false) : IDisposable
                     return p;
                 }
             }
-            if (_process?.HasExited == true) break;
+            if (_process?.HasExited == true)
+                break;
             Thread.Sleep(50);
         }
         return null;
@@ -291,8 +295,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     {
         port = 0;
         const string prefix = "Now listening on: http://127.0.0.1:";
-        if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return false;
-        var remainder = line[prefix.Length..].TrimEnd('/','\r');
+        if (!line.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
+            return false;
+        var remainder = line[prefix.Length..].TrimEnd('/', '\r');
         return int.TryParse(remainder, out port);
     }
 

@@ -45,7 +45,8 @@ internal sealed class RecordingPathResolver
     /// </summary>
     public static string Sanitize(string name)
     {
-        if (string.IsNullOrWhiteSpace(name)) return "(unknown)";
+        if (string.IsNullOrWhiteSpace(name))
+            return "(unknown)";
         Span<char> buffer = stackalloc char[name.Length];
         int i = 0;
         foreach (var c in name)
