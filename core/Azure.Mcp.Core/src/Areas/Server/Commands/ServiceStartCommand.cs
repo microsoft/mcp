@@ -18,6 +18,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -393,11 +394,39 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure outgoing and incoming (if needed) authentication and authorization.
         if (serverOptions.RunAsRemoteHttpService)
         {
-#if !BUILD_TRIMMED
             // Configure incoming authentication and authorization.
+#if !BUILD_TRIMMED
             MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder = services
                 .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
                 .AddMicrosoftIdentityWebApi(builder.Configuration);
+#else
+            var azureAd = builder.Configuration.GetSection("AzureAd");
+            var tenantId = azureAd["TenantId"]!;
+            var clientId = azureAd["ClientId"]!;
+
+            services
+                .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+                .AddJwtBearer(options =>
+                {
+                    options.Authority = $"https://login.microsoftonline.com/{tenantId}/v2.0";
+
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidIssuer = $"https://login.microsoftonline.com/{tenantId}/v2.0",
+
+                        ValidateAudience = true,
+                        ValidAudiences = new[] { clientId, $"api://{clientId}" },
+
+                        ValidateLifetime = true,
+                        ValidateIssuerSigningKey = true,
+                        ClockSkew = TimeSpan.FromMinutes(2),
+                        RoleClaimType = "roles",
+                    };
+
+                    options.MapInboundClaims = false;
+                    options.RefreshOnIssuerKeyNotFound = true;
+                });
 #endif
 
             // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
