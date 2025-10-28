@@ -9,7 +9,7 @@ namespace ToolMetadataExporter.Models;
 [JsonSerializable(typeof(McpToolEvent))]
 [JsonSerializable(typeof(McpToolEventType))]
 [JsonSerializable(typeof(List<McpToolEvent>))]
-[JsonSourceGenerationOptions(Converters = [ typeof(JsonStringEnumConverter<McpToolEventType> )])]
+[JsonSourceGenerationOptions(Converters = [typeof(JsonStringEnumConverter<McpToolEventType>)])]
 public partial class ModelsSerializationContext : JsonSerializerContext
 {
 }
