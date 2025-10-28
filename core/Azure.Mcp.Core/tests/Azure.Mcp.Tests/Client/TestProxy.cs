@@ -44,7 +44,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         var proxyDir = GetProxyDirectory();
         var version = GetTargetVersion();
 
-        // if we have a version.txt within the directory, 
+        // if we have a version.txt within the directory,
         if (CheckProxyVersion(proxyDir, version))
         {
             _cachedExecutable = FindExecutableInDirectory(proxyDir);
@@ -60,6 +60,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             using var client = new HttpClient();
             var bytes = await client.GetByteArrayAsync(url);
             await File.WriteAllBytesAsync(downloadPath, bytes);
+            // record the downloaded version right here so we don't need to parse anything other than what
+            // is in this folder later
+            await File.WriteAllBytesAsync(Path.Combine(proxyDir, "version.txt"), Encoding.UTF8.GetBytes(version));
         }
 
         // if we've gotten to here then we need to decompress
