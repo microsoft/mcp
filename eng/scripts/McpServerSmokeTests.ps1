@@ -73,7 +73,7 @@ function Test-NugetPackages {
     Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     New-Item -ItemType Directory -Path $tempDirectory | Out-Null
 
-    $artifactsPath = "$ArtifactsDirectory/packages_dnx/$($Server.artifactPath)"
+    $artifactsPath = "$ArtifactsDirectory/packages_nuget_signed/$($Server.artifactPath)"
     if( -not (Test-Path $artifactsPath) ) {
         $message = "Artifacts path $artifactsPath does not exist."
         if ($ignoreMissingArtifacts) {
