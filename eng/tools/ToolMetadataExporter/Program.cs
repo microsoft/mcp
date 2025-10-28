@@ -21,6 +21,7 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = Host.CreateApplicationBuilder(args);
+
         ConfigureServices(builder.Services, builder.Configuration);
         ConfigureAzureServices(builder.Services);
 
@@ -68,16 +69,17 @@ public class Program
         services.AddSingleton<ICslQueryProvider>(sp =>
         {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
-            var credential = sp.GetRequiredService<TokenCredential>();
-            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.ClusterEndpoint)
-                .WithAadAzureTokenCredentialsAuthentication(credential);
+            //var credential = sp.GetRequiredService<TokenCredential>();
+            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.QueryEndpoint)
+                .WithAadAzCliAuthentication(interactive: true);
 
             return KustoClientFactory.CreateCslQueryProvider(connectionStringBuilder);
         });
         services.AddSingleton<IKustoIngestClient>(sp => {
             var config = sp.GetRequiredService<IOptions<AppConfiguration>>();
-            var credential = sp.GetRequiredService<TokenCredential>();
-            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.ClusterEndpoint);
+            //var credential = sp.GetRequiredService<TokenCredential>();
+            var connectionStringBuilder = new KustoConnectionStringBuilder(config.Value.IngestionEndpoint)
+            .WithAadAzCliAuthentication(interactive: true);
 
             return KustoIngestFactory.CreateQueuedIngestClient(connectionStringBuilder);
         });
