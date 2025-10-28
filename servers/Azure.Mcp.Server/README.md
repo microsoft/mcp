@@ -15,7 +15,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 
 ## Table of Contents
 - [Overview](#overview)
-- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installatiion_sub_sections -->
+- [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
         - [Visual Studio 2022](#visual-studio-2022)
@@ -24,7 +24,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end remove_installatiion_sub_sections -->
+        - [Docker](#docker)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -33,7 +33,12 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Documentation](#documentation)
     - [Feedback and Support](#feedback-and-support)
     - [Security](#security)
+    - [Permissions and Risk](#permissions-and-risk)
     - [Data Collection](#data-collection)
+    - [Compliance Responsibility](#compliance-responsibility)
+    - [Third Party Components](#third-party-components)
+    - [Export Control](#export-control)
+    - [No Warranty / Limitation of Liability](#no-warranty--limitation-of-liability)
     - [Contributing](#contributing)
     - [Code of Conduct](#code-of-conduct)
 
@@ -100,6 +105,8 @@ Start using Azure MCP with your favorite IDE.  We recommend VS Code:
 
 ### VS Code (Recommended)
 Compatible with both the [Stable](https://code.visualstudio.com/download) and [Insiders](https://code.visualstudio.com/insiders) builds of VS Code.
+
+![Install Azure MCP Server Extension](images/install-azure-mcp-server-extension.gif)
 
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
@@ -542,6 +549,12 @@ Your credentials are always handled securely through the official [Azure Identit
 
 MCP as a phenomenon is very novel and cutting-edge. As with all new technology standards, consider doing a security review to ensure any systems that integrate with MCP servers follow all regulations and standards your system is expected to adhere to. This includes not only the Azure MCP Server, but any MCP client/agent that you choose to implement down to the model provider.
 
+You should follow Microsoft security guidance for MCP servers, including enabling Entra ID authentication, secure token management, and network isolation. Refer to [Microsoft Security Documentation](https://learn.microsoft.com/azure/api-management/secure-mcp-servers) for details.
+
+## Permissions and Risk
+
+MCP clients can invoke operations based on the user’s Azure RBAC permissions. Autonomous or misconfigured clients may perform destructive actions. You should review and apply least-privilege RBAC roles and implement safeguards before deployment. Certain safeguards, such as flags to prevent destructive operations, are not standardized in the MCP specification and may not be supported by all clients.
+
 ## Data Collection
 
 <!-- remove-section: start vsix remove_data_collection_section_content -->
@@ -556,6 +569,22 @@ Telemetry collection is on by default.
 
 To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
 <!-- remove-section: end remove_telemetry_config_section -->
+
+## Compliance Responsibility
+
+This MCP server may interact with clients and services outside Microsoft compliance boundaries. You are responsible for ensuring that any integration complies with applicable organizational, regulatory, and contractual requirements.
+
+## Third Party Components
+
+This MCP server may use or depend on third party components. You are responsible for reviewing and complying with the licenses and security posture of any third-party components.
+
+## Export Control
+
+Use of this software must comply with all applicable export laws and regulations, including U.S. Export Administration Regulations and local jurisdiction requirements.
+
+## No Warranty / Limitation of Liability
+
+This software is provided “as is” without warranties or conditions of any kind, either express or implied. Microsoft shall not be liable for any damages arising from use, misuse, or misconfiguration of this software.
 
 ## Contributing
 
