@@ -544,7 +544,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Workbooks.U
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{294AC723-70DA-F50A-2C7A-AC6C0AEA0A62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Tools.PublicApi.UnitTests", "tools\Fabric.Mcp.Tools.PublicApi\tests\Fabric.Mcp.Tools.PublicApi.UnitTests.csproj", "{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Tools.PublicApi.UnitTests", "tools\Fabric.Mcp.Tools.PublicApi\tests\Fabric.Mcp.Tools.PublicApi.UnitTests\Fabric.Mcp.Tools.PublicApi.UnitTests.csproj", "{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Postgres.LiveTests", "tools\Azure.Mcp.Tools.Postgres\tests\Azure.Mcp.Tools.Postgres.LiveTests\Azure.Mcp.Tools.Postgres.LiveTests.csproj", "{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE}"
 EndProject
