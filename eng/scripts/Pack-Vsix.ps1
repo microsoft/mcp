@@ -72,11 +72,18 @@ foreach ($server in $buildInfo.servers) {
 
         $version = $server.version
         $setDevVersion = $env:SETDEVVERSION -eq "true"
+
+        Write-Host "Dev Version Status: $setDevVersion"
+        Write-Host "Original Server Version: $version"
         
         # Check if this is X.0.0 series (beta or GA) before any version transformations
         $semverOriginal = [AzureEngSemanticVersion]::new($version)
         $isBetaSeries = $semverOriginal.Minor -eq 0 -and $semverOriginal.Patch -eq 0 -and $semverOriginal.PrereleaseLabel -eq 'beta'
         $isGA = $semverOriginal.Minor -eq 0 -and $semverOriginal.Patch -eq 0 -and !$semverOriginal.IsPrerelease
+
+
+        Write-Host "Beta Series Status: $isBetaSeries"
+        Write-Host "GA Status: $isGA"
 
         # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
         if($setDevVersion) {
