@@ -205,9 +205,52 @@ Build the project at the root directory of this repository:
 dotnet build
 ```
 
+#### Run the Azure MCP server in HTTP mode
+
+**Option 1: Using dotnet run (uses launchSettings.json)**
+
+```bash
+dotnet run --project servers/Azure.Mcp.Server/src/
+```
+
+> **Note:** Running `dotnet run` automatically uses the configuration in `servers/Azure.Mcp.Server/src/Properties/launchSettings.json`, which contains the necessary command line arguments and environment variables to run the server in HTTP mode at `http://localhost:1031` for easier debugging and testing.
+
+**Option 2: Using the built executable directly**
+
+Build the project first, then run the executable with the necessary environment variables:
+
+```bash
+# Set environment variables (PowerShell)
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:1031"
+$env:AzureAd__TenantId = "<your-tenant-id>"
+$env:AzureAd__ClientId = "<your-client-id>"
+$env:AzureAd__Instance = "https://login.microsoftonline.com/"
+
+# Run the executable
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+```bash
+# Set environment variables (Bash)
+export ASPNETCORE_ENVIRONMENT="Development"
+export ASPNETCORE_URLS="http://localhost:1031"
+export AzureAd__TenantId="<your-tenant-id>"
+export AzureAd__ClientId="<your-client-id>"
+export AzureAd__Instance="https://login.microsoftonline.com/"
+
+# Run the executable
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+> **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
+
+
 #### Configure mcp.json
 
-Update your mcp.json to point to the locally built azmcp executable:
+Update your mcp.json to point to the locally built azmcp executable.
+
+**Stdio Mode:**
 
 ```json
 {
@@ -221,9 +264,23 @@ Update your mcp.json to point to the locally built azmcp executable:
 }
 ```
 
+**HTTP Mode:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "http://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
+
 > [!NOTE]
-> Replace `<absolute-path-to>` with the full path to your built executable.
+> For stdio mode, replace `<absolute-path-to>` with the full path to your built executable.
 > On **Windows**, use `azmcp.exe`. On **macOS/Linux**, use `azmcp`.
+> For HTTP mode, ensure the server is running on the specified port before connecting (port 1031 is the default port configured in launchSettings.json).
 
 #### Server Modes
 
