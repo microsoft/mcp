@@ -117,7 +117,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
         if (result != null)
         {
             _logger.LogInformation("Ingestion results.");
-            foreach(var item in result.GetIngestionStatusCollection())
+            foreach (var item in result.GetIngestionStatusCollection())
             {
                 _logger.LogInformation("- {IngestionSourceId}\t{Table}\t{Status}\t{Details}",
                     item.IngestionSourceId,
