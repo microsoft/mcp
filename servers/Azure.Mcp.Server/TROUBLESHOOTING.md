@@ -915,7 +915,7 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
    }
    ```
 
-3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID.
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
 
 > [!NOTE]
 > For internal contributors, refer to **Running the Azure MCP server** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use the team's tenant and credentials.
