@@ -42,13 +42,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
     protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
     {
-        TestingMode = TestEnvironment.GetEnvironmentTestMode();
-
         if (TestingMode is TestMode.Live || TestingMode is TestMode.Record)
         {
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync();
             Settings = settingsFixture.Settings;
+            TestingMode = Settings.TestMode;
         }
         else
         {
@@ -61,8 +60,11 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
                 // ResourceBaseName used for vault name input to tools (maps to sanitized recording host).
                 ResourceBaseName = "Sanitized",
                 SubscriptionName = "Sanitized",
-                TenantName = "Sanitized"
+                TenantName = "Sanitized",
+                TestMode = TestMode.Playback
             };
+
+            TestingMode = Settings.TestMode;
         }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
