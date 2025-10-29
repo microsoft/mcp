@@ -28,6 +28,9 @@ jobs:
       - input: pipelineArtifact
         artifactName: packages_vsix_signed
         targetPath: $(Pipeline.Workspace)/drop
+      - input: pipelineArtifact
+        artifactName: build_info
+        targetPath: $(Pipeline.Workspace)/build_info
     environment: package-publish
     pool:
       name: azsdk-pool
@@ -37,10 +40,6 @@ jobs:
       runOnce:
         deploy:
           steps:
-          - download: current
-            artifact: build_info
-            displayName: Download build_info artifact
-          
           - pwsh: |
               $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
               $buildInfo = Get-Content $buildInfoPath -Raw | ConvertFrom-Json
