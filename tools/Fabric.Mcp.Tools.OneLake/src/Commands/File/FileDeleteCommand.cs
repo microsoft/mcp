@@ -14,24 +14,24 @@ using System.CommandLine.Parsing;
 
 namespace Fabric.Mcp.Tools.OneLake.Commands.File;
 
-public sealed class FileReadCommand(
-    ILogger<FileReadCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<FileReadOptions>()
+public sealed class FileDeleteCommand(
+    ILogger<FileDeleteCommand> logger,
+    IOneLakeService oneLakeService) : GlobalCommand<FileDeleteOptions>()
 {
-    private readonly ILogger<FileReadCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<FileDeleteCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "file-read";
-    public override string Title => "Read OneLake File";
-    public override string Description => "Read the contents of a file from OneLake storage.";
+    public override string Name => "file-delete";
+    public override string Title => "Delete OneLake File";
+    public override string Description => "Delete a file from OneLake storage.";
 
     public override ToolMetadata Metadata => new()
     {
-        Destructive = false,
+        Destructive = true,
         Idempotent = true,
         LocalRequired = false,
         OpenWorld = false,
-        ReadOnly = true,
+        ReadOnly = false,
         Secret = false
     };
 
@@ -43,7 +43,7 @@ public sealed class FileReadCommand(
         command.Options.Add(FabricOptionDefinitions.FilePath);
     }
 
-    protected override FileReadOptions BindOptions(ParseResult parseResult)
+    protected override FileDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
@@ -57,21 +57,18 @@ public sealed class FileReadCommand(
         var options = BindOptions(parseResult);
         try
         {
-            using var stream = await _oneLakeService.ReadFileAsync(
+            await _oneLakeService.DeleteFileAsync(
                 options.WorkspaceId,
                 options.ItemId,
                 options.FilePath,
                 CancellationToken.None);
 
-            using var reader = new StreamReader(stream);
-            var content = await reader.ReadToEndAsync(CancellationToken.None);
-
-            var result = new FileReadCommandResult(options.FilePath, content);
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileReadCommandResult);
+            var result = new FileDeleteCommandResult(options.FilePath, "File deleted successfully");
+            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.FileDeleteCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error reading file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
+            _logger.LogError(ex, "Error deleting file {FilePath} from workspace {WorkspaceId}, item {ItemId}. Options: {@Options}", 
                 options.FilePath, options.WorkspaceId, options.ItemId, options);
             HandleException(context, ex);
         }
@@ -79,12 +76,12 @@ public sealed class FileReadCommand(
         return context.Response;
     }
 
-    public sealed record FileReadCommandResult(
+    public sealed record FileDeleteCommandResult(
         string FilePath,
-        string Content);
+        string Message);
 }
 
-public sealed class FileReadOptions : GlobalOptions
+public sealed class FileDeleteOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
     public string ItemId { get; set; } = string.Empty;

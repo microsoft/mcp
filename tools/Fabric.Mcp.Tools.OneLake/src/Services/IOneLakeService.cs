@@ -43,4 +43,5 @@ public interface IOneLakeService
     Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
     Task CreateDirectoryAsync(string workspaceId, string itemId, string directoryPath, CancellationToken cancellationToken = default);
     Task DeleteFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
+    Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default);
 }

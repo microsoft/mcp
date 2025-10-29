@@ -586,6 +586,23 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         await SendDataPlaneRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
     }
 
+    public async Task DeleteDirectoryAsync(string workspaceId, string itemId, string directoryPath, bool recursive = false, CancellationToken cancellationToken = default)
+    {
+        // Use blob endpoint for directory deletion, similar to file deletion
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files/{directoryPath.TrimStart('/')}";
+        
+        if (recursive)
+        {
+            url += "?recursive=true";
+        }
+        
+        using var request = new HttpRequestMessage(HttpMethod.Delete, url);
+        // Add the required header to indicate we're deleting a directory
+        request.Headers.Add("x-ms-delete-type", "directory");
+        
+        await SendDataPlaneRequestAsync(request, cancellationToken: cancellationToken);
+    }
+
     public async Task CreateDirectoryAsync(string workspaceId, string itemId, string directoryPath, CancellationToken cancellationToken = default)
     {
         // In OneLake/Azure Data Lake Storage, directories are created implicitly when files are created

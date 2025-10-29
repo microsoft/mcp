@@ -32,7 +32,9 @@ public class FabricOneLakeSetup : IAreaSetup
         // Register file commands
         services.AddSingleton<FileReadCommand>();
         services.AddSingleton<FileWriteCommand>();
+        services.AddSingleton<FileDeleteCommand>();
         services.AddSingleton<DirectoryCreateCommand>();
+        services.AddSingleton<DirectoryDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -70,8 +72,14 @@ public class FabricOneLakeSetup : IAreaSetup
         var fileWriteCommand = serviceProvider.GetRequiredService<FileWriteCommand>();
         fabricOneLake.AddCommand(fileWriteCommand.Name, fileWriteCommand);
 
+        var fileDeleteCommand = serviceProvider.GetRequiredService<FileDeleteCommand>();
+        fabricOneLake.AddCommand(fileDeleteCommand.Name, fileDeleteCommand);
+
         var directoryCreateCommand = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
         fabricOneLake.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);
+
+        var directoryDeleteCommand = serviceProvider.GetRequiredService<DirectoryDeleteCommand>();
+        fabricOneLake.AddCommand(directoryDeleteCommand.Name, directoryDeleteCommand);
 
         return fabricOneLake;
     }
