@@ -62,14 +62,14 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
-        #if DEBUG
+#if DEBUG
         // Short-circuit for playback to avoid any real auth & interactive prompts.
         if (IsPlaybackMode())
         {
             logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
             return new PlaybackTokenCredential();
         }
-        #endif
+#endif
 
         string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
         AuthenticationRecord? authRecord = null;
