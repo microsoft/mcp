@@ -33,7 +33,12 @@ if ($changedFiles) {
     $fileName = [System.IO.Path]::GetFileName($_)
     $isSkipFile = $skipFiles -contains $fileName
 
+    Write-Host "  -> File: $_"
+
     $normalizedFile = $_ -replace '\\', '/'
+
+    Write-Host "  -> Normalized File: $normalizedFile"
+
     $relativeFile = $normalizedFile -replace [regex]::Escape($RepoRoot), ''
     $relativeFile = $relativeFile.TrimStart('/')
     $isInSkipDirectory = $false
