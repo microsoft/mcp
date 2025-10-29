@@ -68,7 +68,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             Environment.SetEnvironmentVariable("AZURE_MCP_PLAYBACK_MODE", "true");
             Environment.SetEnvironmentVariable("AZURE_TENANT_ID", Settings.TenantId);
             Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId);
-            // TODO: Consider setting AZURE_TOKEN_CREDENTIALS=playback if additional branching is introduced.
         }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
@@ -111,7 +110,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        Output.WriteLine("Attemptig to start MCP Client");
+        Output.WriteLine("Attempting to start MCP Client");
         Client = await McpClient.CreateAsync(clientTransport);
         Output.WriteLine("MCP client initialized successfully");
     }

@@ -17,24 +17,21 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
-    // Recording path support (lightweight) ----------------------------------
+    // used to resolve a recording "path" given an invoking test
     private static readonly RecordingPathResolver _pathResolver = new();
 
-    // TODO: grab asyncncess of the test. Given that it is good practice to separate sync and async tests, this may
-    // not be necessary?
     protected virtual bool IsAsync => false;
 
-    // TODO: do I need to worry about service version? Adding a versionQualifier here just in case. Feedback on PR will clean it out possibly.
+    // todo: use this when we have versioned tests to run this against.
     protected virtual string? VersionQualifier => null;
 
     public override async ValueTask InitializeAsync()
     {
         await base.InitializeAsyncInternal(fixture);
-
         await StartRecordOrPlayback();
     }
 
-    public new async ValueTask DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await StopRecordOrPlayback();
         await base.DisposeAsync();
@@ -82,12 +79,42 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         if (TestingMode is TestMode.Playback)
         {
             Output.WriteLine($"[Playback] Session file: {pathToRecording}");
-            await Proxy.Client.StartPlaybackAsync(bodyContent).ConfigureAwait(false);
+            try
+            {
+                await Proxy.Client.StartPlaybackAsync(bodyContent).ConfigureAwait(false);
+            }
+            catch (Exception e)
+            {
+                if (Proxy is not null)
+                {
+                    Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start playback.{e.ToString()}");
+                }
+                else
+                {
+                    Output.WriteLine($"Proxy is null while attempting to snapshot stderr. Facing exception during start playback.{e.ToString()}");
+                }
+                throw;
+            }
         }
         else if (TestingMode is TestMode.Record)
         {
             Output.WriteLine($"[Record] Session file: {pathToRecording}");
-            Proxy.Client.StartRecord(bodyContent);
+            try
+            {
+                Proxy.Client.StartRecord(bodyContent);
+            }
+            catch (Exception e)
+            {
+                if (Proxy is not null)
+                {
+                    Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start record.{e.ToString()}");
+                }
+                else
+                {
+                    Output.WriteLine($"Proxy is null while attempting to snapshot stderr. Facing exception during start recording.{e.ToString()}");
+                }
+                throw;
+            }
         }
 
         await Task.CompletedTask;

@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Formats.Tar;
 using System.IO.Compression;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 using Azure.Mcp.Tests.Generated;
@@ -35,25 +36,23 @@ public sealed class TestProxy(bool debug = false) : IDisposable
     private static string? _cachedExecutable;
     private static string? _cachedVersion;
 
-    private static async Task<string> GetClient()
+    private async Task<string> _getClient()
     {
         if (_cachedExecutable != null)
         {
             return _cachedExecutable;
         }
 
-        var proxyDir = GetProxyDirectory();
-        var version = GetTargetVersion();
+        var proxyDir = _getProxyDirectory();
+        var version = _getTargetVersion();
 
-        // if we have a version.txt within the directory,
-        if (CheckProxyVersion(proxyDir, version))
+        if (_checkProxyVersion(proxyDir, version))
         {
-            _cachedExecutable = FindExecutableInDirectory(proxyDir);
+            _cachedExecutable = _findExecutableInDirectory(proxyDir);
             return _cachedExecutable;
         }
 
-        // we need to download
-        var assetName = GetAssetNameForPlatform();
+        var assetName = _getAssetNameForPlatform();
         var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
         var downloadPath = Path.Combine(proxyDir, assetName);
         if (!File.Exists(downloadPath))
@@ -76,12 +75,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             ZipFile.ExtractToDirectory(downloadPath, proxyDir);
         }
 
-        _cachedExecutable = FindExecutableInDirectory(proxyDir);
+        _cachedExecutable = _findExecutableInDirectory(proxyDir);
 
         return _cachedExecutable;
     }
 
-    private static bool CheckProxyVersion(string proxyDirectory, string version)
+    private bool _checkProxyVersion(string proxyDirectory, string version)
     {
         var versionFilePath = Path.Combine(proxyDirectory, "version.txt");
         if (File.Exists(versionFilePath))
@@ -95,7 +94,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return false;
     }
 
-    private static string GetAssetNameForPlatform()
+    private string _getAssetNameForPlatform()
     {
         var arch = RuntimeInformation.ProcessArchitecture;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -109,21 +108,21 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return (arch == Architecture.Arm64 ? "test-proxy-standalone-linux-arm64.tar.gz" : "test-proxy-standalone-linux-x64.tar.gz");
     }
 
-    private static string FindExecutableInDirectory(string dir)
+    private string _findExecutableInDirectory(string dir)
     {
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Azure.Sdk.Tools.TestProxy.exe" : "Azure.Sdk.Tools.TestProxy";
         foreach (var file in Directory.EnumerateFiles(dir, exeName, SearchOption.AllDirectories))
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                EnsureExecutable(file);
+                _ensureExecutable(file);
             }
             return file;
         }
         throw new FileNotFoundException($"Could not find {exeName} in {dir}");
     }
 
-    private static void EnsureExecutable(string path)
+    private void _ensureExecutable(string path)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -137,10 +136,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private static string GetRootDirectory()
+    private string _getRootDirectory()
     {
         if (_cachedRootDir != null)
+        {
             return _cachedRootDir;
+        }
         var current = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? Directory.GetCurrentDirectory();
         while (current != null)
         {
@@ -152,17 +153,18 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             }
             current = Directory.GetParent(current)?.FullName;
         }
+
         throw new InvalidOperationException("Could not find repository root (.git)");
     }
 
-    private static string GetTargetVersion()
+    private string _getTargetVersion()
     {
         if (_cachedVersion != null)
         {
             return _cachedVersion;
         }
 
-        var versionFile = Path.Combine(GetRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
+        var versionFile = Path.Combine(_getRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
         if (!File.Exists(versionFile))
         {
             throw new FileNotFoundException($"Test proxy version file not found: {versionFile}");
@@ -171,9 +173,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedVersion;
     }
 
-    private static string GetProxyDirectory()
+    private string _getProxyDirectory()
     {
-        var root = GetRootDirectory();
+        var root = _getRootDirectory();
         var proxyDirectory = Path.Combine(root, ".proxy");
         if (!Directory.Exists(proxyDirectory))
         {
@@ -182,9 +184,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return proxyDirectory;
     }
 
-    private static string? GetExecutableFromAssetsDirectory()
+    private string? _getExecutableFromAssetsDirectory()
     {
-        var proxyDir = GetProxyDirectory();
+        var proxyDir = _getProxyDirectory();
         var toolDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy");
 
         if (!Directory.Exists(toolDir))
@@ -195,7 +197,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                EnsureExecutable(file);
+                _ensureExecutable(file);
             }
             return file;
         }
@@ -210,7 +212,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return;
         }
 
-        var proxyExe = GetExecutableFromAssetsDirectory() ?? await GetClient();
+        var proxyExe = _getExecutableFromAssetsDirectory() ?? await _getClient();
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
@@ -226,10 +228,15 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         psi.UseShellExecute = false;
         psi.EnvironmentVariables["ASPNETCORE_URLS"] = "http://127.0.0.1:0"; // Let proxy choose free port
 
-        _process = Process.Start(psi) ?? throw new InvalidOperationException("Failed to start test proxy process.");
+        _process = Process.Start(psi);
+
+        if (_process == null)
+        {
+            throw new InvalidOperationException("Failed to start test proxy process.");
+        }
         _cts = new CancellationTokenSource();
-        _ = Task.Run(() => PumpAsync(_process.StandardError, stderr, _cts.Token));
-        _ = Task.Run(() => PumpAsync(_process.StandardOutput, stdout, _cts.Token));
+        _ = Task.Run(() => _pumpAsync(_process.StandardError, stderr, _cts.Token));
+        _ = Task.Run(() => _pumpAsync(_process.StandardOutput, stdout, _cts.Token));
 
         if (!string.IsNullOrWhiteSpace(Environment.GetEnvironmentVariable("PROXY_MANUAL_START")))
         {
@@ -237,7 +244,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
         else
         {
-            _httpPort = WaitForHttpPort(TimeSpan.FromSeconds(15));
+            _httpPort = _waitForHttpPort(TimeSpan.FromSeconds(15));
         }
 
         if (_httpPort is null)
@@ -249,7 +256,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         AdminClient = Client.GetTestProxyAdminClient();
     }
 
-    private static async Task PumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
+    private static async Task _pumpAsync(StreamReader reader, StringBuilder sink, CancellationToken ct)
     {
         try
         {
@@ -267,7 +274,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         catch { /* swallow */ }
     }
 
-    private int? WaitForHttpPort(TimeSpan timeout)
+    private int? _waitForHttpPort(TimeSpan timeout)
     {
         var start = DateTime.UtcNow;
         while ((DateTime.UtcNow - start) < timeout)
@@ -279,7 +286,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             }
             foreach (var line in text.Split('\n'))
             {
-                if (TryParsePort(line.Trim(), out var p))
+                if (_tryParsePort(line.Trim(), out var p))
                 {
                     return p;
                 }
@@ -291,7 +298,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return null;
     }
 
-    private static bool TryParsePort(string line, out int port)
+    private static bool _tryParsePort(string line, out int port)
     {
         port = 0;
         const string prefix = "Now listening on: http://127.0.0.1:";

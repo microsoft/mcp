@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Azure.Mcp.Tests.Helpers;
 using Xunit;
 
 namespace Azure.Mcp.Tests.Client.Helpers
@@ -33,6 +34,12 @@ namespace Azure.Mcp.Tests.Client.Helpers
 
         public async ValueTask InitializeAsync()
         {
+            if (TestEnvironment.GetEnvironmentTestMode() is not (TestMode.Record or TestMode.Playback))
+            {
+                // No proxy needed in live mode.
+                return;
+            }
+
             var root = DetermineRepositoryRoot();
             Proxy = new TestProxy();
             await Proxy.Start(root);

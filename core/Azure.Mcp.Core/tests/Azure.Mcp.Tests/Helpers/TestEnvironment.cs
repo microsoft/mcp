@@ -25,7 +25,6 @@ namespace Azure.Mcp.Tests.Helpers
         public static TestMode GetEnvironmentTestMode()
         {
             // todo: figure out a better way than restarting vs with setting environment variable. maybe we can pull it out of the testsettings file?
-
             var mode = Environment.GetEnvironmentVariable("AZURE_RECORD_MODE");
             if (string.IsNullOrWhiteSpace(mode))
             {
