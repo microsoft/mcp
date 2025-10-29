@@ -883,14 +883,43 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 
 #### Running Azure MCP Server Locally for Development
 
-> [!NOTE]
-> **Microsoft Employees Only:** This section is intended for Microsoft employees with access to the TME tenant.Any outside contributors or Microsoft employees without access to TME will need to modify their copy of `launchSettings.json`.
-
 When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
 
 **Option 1: HTTP Mode (Remote)**
 
-Use `dotnet run` which automatically uses the configuration in `Properties/launchSettings.json`:
+**Prerequisites: Create launchSettings.json**
+
+Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
+
+1. Create the directory (if it doesn't exist):
+   ```bash
+   mkdir -p servers/Azure.Mcp.Server/src/Properties
+   ```
+
+2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
+   ```json
+   {
+     "profiles": {
+       "debug-remotemcp": {
+         "commandName": "Project",
+         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "environmentVariables": {
+           "ASPNETCORE_ENVIRONMENT": "Development",
+           "ASPNETCORE_URLS": "http://localhost:<port>",
+           "AzureAd__TenantId": "<your-tenant-id>",
+           "AzureAd__ClientId": "<your-client-id>",
+           "AzureAd__Instance": "<endpoint>"
+         }
+       }
+     }
+   }
+   ```
+
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID.
+
+> [!NOTE]
+> For internal contributors, refer to **Running the Azure MCP server** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use the team's tenant and credentials.
+
 
 ```bash
 dotnet build

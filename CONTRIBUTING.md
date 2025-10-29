@@ -207,16 +207,45 @@ dotnet build
 
 #### Run the Azure MCP server in HTTP mode
 
-> [!NOTE]
-> **Microsoft Employees Only:** This section is intended for Microsoft employees with access to the TME tenant. Any outside contributors or Microsoft employees without access to TME will need to modify their copy of `launchSettings.json`.
-
 **Option 1: Using dotnet run (uses launchSettings.json)**
+
+**Prerequisites: Create launchSettings.json**
+
+Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
+
+1. Create the directory (if it doesn't exist):
+   ```bash
+   mkdir -p servers/Azure.Mcp.Server/src/Properties
+   ```
+
+2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
+   ```json
+   {
+     "profiles": {
+       "debug-remotemcp": {
+         "commandName": "Project",
+         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "environmentVariables": {
+           "ASPNETCORE_ENVIRONMENT": "Development",
+           "ASPNETCORE_URLS": "http://localhost:<port>",
+           "AzureAd__TenantId": "<your-tenant-id>",
+           "AzureAd__ClientId": "<your-client-id>",
+           "AzureAd__Instance": "<endpoint>"
+         }
+       }
+     }
+   }
+   ```
+
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID.
+
+> [!NOTE]
+> For internal contributors, refer to **Running the Azure MCP server** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use the team's tenant and credentials.
+
 
 ```bash
 dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
 ```
-
-> **Note:** Running `dotnet run` with the `debug-remotemcp` launch profile automatically uses the configuration in `servers/Azure.Mcp.Server/src/Properties/launchSettings.json`, which runs the command `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity` with the necessary environment variables to run the server in HTTP mode at `http://localhost:1031` for easier debugging and testing.
 
 **Option 2: Using the built executable directly**
 
@@ -225,10 +254,10 @@ Build the project first, then run the executable with the necessary environment 
 ```powershell
 # Set environment variables (PowerShell)
 $env:ASPNETCORE_ENVIRONMENT = "Development"
-$env:ASPNETCORE_URLS = "http://localhost:1031"
+$env:ASPNETCORE_URLS = "http://localhost:<port>"
 $env:AzureAd__TenantId = "<your-tenant-id>"
 $env:AzureAd__ClientId = "<your-client-id>"
-$env:AzureAd__Instance = "https://login.microsoftonline.com/"
+$env:AzureAd__Instance = "<endpoint>"
 
 # Run the executable
 ./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
@@ -237,10 +266,10 @@ $env:AzureAd__Instance = "https://login.microsoftonline.com/"
 ```bash
 # Set environment variables (Bash)
 export ASPNETCORE_ENVIRONMENT="Development"
-export ASPNETCORE_URLS="http://localhost:1031"
+export ASPNETCORE_URLS="http://localhost:<port>"
 export AzureAd__TenantId="<your-tenant-id>"
 export AzureAd__ClientId="<your-client-id>"
-export AzureAd__Instance="https://login.microsoftonline.com/"
+export AzureAd__Instance="<endpoint>"
 
 # Run the executable
 ./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
