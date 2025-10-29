@@ -331,58 +331,62 @@ function Get-ServerDetails {
             $version.PrereleaseNumber = $BuildId
         }
 
-        # Calculate VSIX version based on server version
-        $vsixVersion = $null
-        $vsixIsPrerelease = $false
-        
-        # Check if this is X.0.0-beta.Y series
-        $isBetaSeries = $version.Minor -eq 0 -and $version.Patch -eq 0 -and $version.PrereleaseLabel -eq 'beta'
-        
-        if ($isBetaSeries) {
-            # Map X.0.0-beta.Y -> VSIX X.0.Y (prerelease)
-            $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
-            $vsixIsPrerelease = $true
-        }
-        else {
-            # For all non-beta versions, calculate next patch version from marketplace
-            $vscodePath = "$RepoRoot/servers/$serverName/vscode"
-            $packageJsonPath = "$vscodePath/package.json"
+        if ($PublishTarget -eq 'public') {
+
+            # Calculate VSIX version based on server version
+            $vsixVersion = $null
+            $vsixIsPrerelease = $false
             
-            if (Test-Path $packageJsonPath) {
-                $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
-                $publisherId = $packageJson.publisher
-                $extensionName = $packageJson.name
+            # Check if this is X.0.0-beta.Y series
+            $isBetaSeries = $version.Minor -eq 0 -and $version.Patch -eq 0 -and $version.PrereleaseLabel -eq 'beta'
+            
+            
+            if ($isBetaSeries) {
+                # Map X.0.0-beta.Y -> VSIX X.0.Y (prerelease)
+                $vsixVersion = "$($version.Major).$($version.Minor).$($version.PrereleaseNumber)"
+                $vsixIsPrerelease = $true
+            }
+            else {
+                # For all non-beta versions, calculate next patch version from marketplace
+                $vscodePath = "$RepoRoot/servers/$serverName/vscode"
+                $packageJsonPath = "$vscodePath/package.json"
                 
-                if ($publisherId -and $extensionName) {
-                    Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
+                if (Test-Path $packageJsonPath) {
+                    $packageJson = Get-Content $packageJsonPath -Raw | ConvertFrom-Json
+                    $publisherId = $packageJson.publisher
+                    $extensionName = $packageJson.name
                     
-                    $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
-                    
-                    if ($marketplaceInfo) {
-                        # Use next patch version from marketplace
-                        $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
-                        $vsixIsPrerelease = $false
-                        Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
+                    if ($publisherId -and $extensionName) {
+                        Write-Host "Fetching latest marketplace version for $publisherId.$extensionName with major version $($version.Major)..." -ForegroundColor Cyan
+                        
+                        $marketplaceInfo = Get-LatestMarketplaceVersion -PublisherId $publisherId -ExtensionId $extensionName -MajorVersion $version.Major
+                        
+                        if ($marketplaceInfo) {
+                            # Use next patch version from marketplace
+                            $vsixVersion = "$($version.Major).0.$($marketplaceInfo.NextPatch)"
+                            $vsixIsPrerelease = $false
+                            Write-Host "Marketplace latest: $($marketplaceInfo.LatestVersion) -> Next VSIX version: $vsixVersion" -ForegroundColor Green
+                        }
+                        else {
+                            # No matching versions found - this is an illegal state for non-beta releases
+                            LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
+                            LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
+                            LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
+                            $script:exitCode = 1
+                            continue
+                        }
                     }
                     else {
-                        # No matching versions found - this is an illegal state for non-beta releases
-                        LogError "Cannot determine VSIX version for $serverName $($version.ToString()). No marketplace versions found for $($version.Major).0.X series."
-                        LogError "For non-beta releases, the VSIX version must be calculated from existing marketplace versions."
-                        LogError "If this is the first release for major version $($version.Major), use a beta version (e.g., $($version.Major).0.0-beta.1) instead."
+                        LogError "Publisher or extension name not found in $packageJsonPath for $serverName"
                         $script:exitCode = 1
                         continue
                     }
                 }
                 else {
-                    LogError "Publisher or extension name not found in $packageJsonPath for $serverName"
+                    LogError "package.json not found at $packageJsonPath for $serverName"
                     $script:exitCode = 1
                     continue
                 }
-            }
-            else {
-                LogError "package.json not found at $packageJsonPath for $serverName"
-                $script:exitCode = 1
-                continue
             }
         }
 
