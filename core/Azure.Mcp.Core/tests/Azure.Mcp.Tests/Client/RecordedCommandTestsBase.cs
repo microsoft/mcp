@@ -34,7 +34,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await base.LoadSettingsAsync();
 
         // we will use the same proxy instance throughout the test class instances, so we only need to start it if not already started.
-        if (TestingMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
+        if (TestMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
         {
             await fixture.StartProxyAsync();
         }
@@ -71,7 +71,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task StartRecordOrPlayback()
     {
-        if (TestingMode is TestMode.Live)
+        if (TestMode is TestMode.Live)
         {
             return;
         }
@@ -96,7 +96,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
         var bodyContent = BinaryContentHelper.FromObject(recordOptions);
 
-        if (TestingMode is TestMode.Playback)
+        if (TestMode is TestMode.Playback)
         {
             Output.WriteLine($"[Playback] Session file: {pathToRecording}");
             try
@@ -116,7 +116,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 throw;
             }
         }
-        else if (TestingMode is TestMode.Record)
+        else if (TestMode is TestMode.Record)
         {
             Output.WriteLine($"[Record] Session file: {pathToRecording}");
             try
@@ -142,7 +142,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task StopRecordOrPlayback()
     {
-        if (TestingMode is TestMode.Live)
+        if (TestMode is TestMode.Live)
         {
             return;
         }
@@ -152,11 +152,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             throw new InvalidOperationException("Test proxy is not initialized.");
         }
 
-        if (TestingMode is TestMode.Playback)
+        if (TestMode is TestMode.Playback)
         {
             await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
         }
-        else if (TestingMode is TestMode.Record)
+        else if (TestMode is TestMode.Record)
         {
             Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
         }

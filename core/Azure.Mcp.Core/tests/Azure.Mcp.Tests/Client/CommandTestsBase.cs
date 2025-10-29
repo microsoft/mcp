@@ -23,7 +23,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected ITestOutputHelper Output { get; } = output;
 
     public string[]? CustomArguments;
-    public TestMode TestingMode = TestMode.Live;
+    public TestMode TestMode = TestMode.Live;
 
 
     /// <summary>
@@ -48,7 +48,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync();
             Settings = settingsFixture.Settings;
-            TestingMode = Settings.TestMode;
+            TestMode = Settings.TestMode;
         }
         catch (FileNotFoundException)
         {
@@ -62,7 +62,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
                 TenantName = "Sanitized",
                 TestMode = TestMode.Playback
             };
-            TestingMode = TestMode.Playback;
+            TestMode = TestMode.Playback;
         }
     }
 
@@ -82,7 +82,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         var dictionaryEvents = new Dictionary<string, string?> {
             // Propagate playback signaling & sanitized identifiers to server process.
-            { "AZURE_TOKEN_CREDENTIALS", TestingMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
+            { "AZURE_TOKEN_CREDENTIALS", TestMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
             { "AZURE_TENANT_ID", Settings.TenantId },
             { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         };
