@@ -300,9 +300,10 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
-        var options = new KeyClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        var transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
+        var options = new KeyClientOptions { Transport = transport }
+            .AddDefaultPolicies()
+            .ConfigureRetryPolicy(retry);
         return new KeyClient(BuildVaultUri(vaultName), credential, options);
     }
 
