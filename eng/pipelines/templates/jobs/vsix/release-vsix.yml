@@ -68,10 +68,12 @@ jobs:
                 
                 if ("$(prereleaseArg)" -ne "") {
                     $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`" --pre-release"
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s" --pre-release
+                    Write-Host "[DRY RUN] Would execute: $publishCmd"
+                    # DISABLED FOR DRY RUN
+                    # vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s" --pre-release
                 } else {
                     $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`""
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"
+                    Write-Host "[DRY RUN] Would execute: $publishCmd"
+                    # DISABLED FOR DRY RUN
+                    # vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"
                 }

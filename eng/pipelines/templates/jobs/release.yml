@@ -13,7 +13,8 @@ parameters:
 jobs:
 - job: TagRepository
   displayName: "Create release tag"
-  condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
+  condition: false # DISABLED FOR DRY RUN
+  # condition: and(succeeded(), ne(variables['Skip.TagRepository'], 'true'))
   steps:
   - checkout: self
 
@@ -47,16 +48,18 @@ jobs:
     env:
       GH_TOKEN: $(azuresdk-github-pat)
 
-- template: /eng/pipelines/templates/jobs/npm/release-npm.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    IncludeNative: ${{ parameters.IncludeNative }}
-    DependsOn: TagRepository
+# DISABLED FOR DRY RUN
+# - template: /eng/pipelines/templates/jobs/npm/release-npm.yml
+#   parameters:
+#     ServerName: ${{ parameters.ServerName }}
+#     IncludeNative: ${{ parameters.IncludeNative }}
+#     DependsOn: TagRepository
 
-- template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    DependsOn: TagRepository
+# DISABLED FOR DRY RUN
+# - template: /eng/pipelines/templates/jobs/nuget/release-nuget.yml
+#   parameters:
+#     ServerName: ${{ parameters.ServerName }}
+#     DependsOn: TagRepository
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
@@ -64,34 +67,37 @@ jobs:
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
 
-- ${{ if parameters.PackageDocker }}:
-  - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
-    parameters:
-      ContainerRegistry: 'azuresdkimages'
-      DeploymentEnvironment: 'public'
-      ServerName: ${{ parameters.ServerName }}
-      DependsOn: TagRepository
+# DISABLED FOR DRY RUN
+# - ${{ if parameters.PackageDocker }}:
+#   - template: /eng/pipelines/templates/jobs/docker/release-docker.yml
+#     parameters:
+#       ContainerRegistry: 'azuresdkimages'
+#       DeploymentEnvironment: 'public'
+#       ServerName: ${{ parameters.ServerName }}
+#       DependsOn: TagRepository
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
-  condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
+  condition: false # DISABLED FOR DRY RUN
+  # condition: and(succeeded(), ne(variables['Skip.UpdatePackageVersion'], 'true'))
   dependsOn: TagRepository
   steps:
   - checkout: self
 
-  # Apply the version increment to each library, which updates the Cargo.toml and changelog files.
-  - task: PowerShell@2
-    displayName: Increment version
-    inputs:
-      targetType: filePath
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
-      arguments: >
-        -ServerName '${{ parameters.ServerName }}'
+  # DISABLED FOR DRY RUN
+  # # Apply the version increment to each library, which updates the Cargo.toml and changelog files.
+  # - task: PowerShell@2
+  #   displayName: Increment version
+  #   inputs:
+  #     targetType: filePath
+  #     filePath: $(Build.SourcesDirectory)/eng/scripts/Update-Version.ps1
+  #     arguments: >
+  #       -ServerName '${{ parameters.ServerName }}'
 
-  - template: /eng/common/pipelines/templates/steps/create-pull-request.yml
-    parameters:
-      PRBranchName: increment-package-version-$(Build.BuildId)
-      CommitMsg: "Increment package version after release"
-      PRTitle: "Increment version after release"
-      RepoOwner: microsoft
-      CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline }}
+  # - template: /eng/common/pipelines/templates/steps/create-pull-request.yml
+  #   parameters:
+  #     PRBranchName: increment-package-version-$(Build.BuildId)
+  #     CommitMsg: "Increment package version after release"
+  #     PRTitle: "Increment version after release"
+  #     RepoOwner: microsoft
+  #     CloseAfterOpenForTesting: ${{ parameters.IsTestPipeline }}
