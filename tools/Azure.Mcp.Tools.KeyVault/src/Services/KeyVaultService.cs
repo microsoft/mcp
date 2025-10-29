@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Security.KeyVault.Administration;
@@ -12,10 +13,10 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService, Azure.Mcp.Core.Services.Http.IHttpClientService httpClientService) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(ISubscriptionService subscriptionService, ITenantService tenantService, IHttpClientService httpClientService) : BaseAzureService(tenantService), IKeyVaultService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly Azure.Mcp.Core.Services.Http.IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
+    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -295,8 +296,7 @@ public sealed class KeyVaultService(ISubscriptionService subscriptionService, IT
 
     private static Uri BuildVaultUri(string vaultName) => new($"https://{vaultName}.vault.azure.net");
 
-    // --- Client creation helpers using IHttpClientService so the RecordingRedirectHandler (if enabled)
-    //     will be applied to outgoing requests.
+    // Create clients with injected HttpClient, this will enable record/playback during testing.
     private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
     {
         var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
