@@ -2,25 +2,103 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 0.9.7 (Unreleased)
+## 2.0.0-beta.1 (Unreleased)
 
 ### Features Added
-
-- Adds unique identifier to MCP tools. [[#940]](https://github.com/microsoft/mcp/pull/940/)
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
+### Other Changes
+
+## 1.0.0 (2025-10-27)
+
+**🎉 First Stable Release**
+
+We're excited to announce the first stable release of the Azure MCP Server! This milestone represents months of development, extensive testing, and valuable feedback from our community. The Azure MCP Server provides seamless integration between AI agents and 40+ Azure services through the Model Context Protocol (MCP) specification.
+
+### What's Included in 1.0.0
+
+The Azure MCP Server now offers:
+
+- **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
+- **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
+- **Flexible Server Modes**: 
+  - Namespace mode (default): Organizes tools by service for easy discovery
+  - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
+  - Single mode: All tools behind one unified "azure" tool
+  - All mode: Exposes every tool individually for maximum control
+- **Advanced Authentication**: Supports multiple Azure authentication methods with credential chaining
+- **Production Ready**: Includes comprehensive error handling, retry policies, telemetry, and extensive test coverage
+- **Developer Friendly**: Native AOT compilation support, read-only mode for safe exploration, and detailed documentation
+
+### Key Features
+
+- **170+ Azure Commands** across Storage, Databases, AI Services, Monitoring, and more
+- **Enterprise Support**: Proxy configuration, managed identity authentication, and secure credential handling
+- **Performance Optimizations**: Selective caching for expensive operations and efficient HTTP client management
+
+### Getting Started
+
+Install the Azure MCP Server from your preferred platform:
+
+- **VS Code**: Install the [Azure MCP Server extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server)
+- **Visual Studio 2022**: Install [GitHub Copilot for Azure](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)
+- **IntelliJ IDEA**: Install [Azure Toolkit for IntelliJ](https://plugins.jetbrains.com/plugin/8053-azure-toolkit-for-intellij)
+- **NuGet**: `dotnet tool install -g Azure.Mcp --version 1.0.0`
+- **npm**: `npx @azure/mcp@1.0.0`
+- **Docker**: `docker pull mcr.microsoft.com/azure-mcp:1.0.0`
+
+### Documentation
+
+- [Complete Command Reference](https://github.com/microsoft/mcp/blob/release/azure/1.x/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
+- [Authentication Guide](https://github.com/microsoft/mcp/blob/release/azure/1.x/docs/Authentication.md)
+- [Troubleshooting](https://github.com/microsoft/mcp/blob/release/azure/1.x/servers/Azure.Mcp.Server/TROUBLESHOOTING.md)
+- [Contributing Guidelines](https://github.com/microsoft/mcp/blob/release/azure/1.x/CONTRIBUTING.md)
+
+### Thank You
+
+This release wouldn't have been possible without the contributions from our community, extensive testing from early adopters, and collaboration with the MCP ecosystem. Thank you for your feedback, bug reports, and feature requests that helped shape this stable release.
+
+For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10-24) through [0.0.10](#0010-2025-04-17) below.
+
+## 0.9.9 (2025-10-24)
+
+### Other Changes
+
+- Set telemetry fields for `ToolArea` and `ToolName` when "single" mode is used. [[#952](https://github.com/microsoft/mcp/pull/952)]
+- Added instructions on when to not use azd init [[#942](https://github.com/microsoft/mcp/pull/942)]
+
+## 0.9.8 (2025-10-23)
+
+### Features Added
+
+- Adds unique identifier to MCP tools. [[#940](https://github.com/microsoft/mcp/pull/940/)]
+
+### Bugs Fixed
+
 - Fixed SKU configuration bug in SQL database create and update commands. [[#925](https://github.com/microsoft/mcp/pull/925)]
-- Increased Kusto HttpClient timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
+- Fixed a serialization issue with Foundry tools. [[#904](https://github.com/microsoft/mcp/pull/904)]
+
+### Other Changes
+
+- Set telemetry fields for `ToolArea` and `ToolName` when "consolidated" mode is used or a server is loaded from `registry.json`. [[#933](https://github.com/microsoft/mcp/pull/933)]
+
+## 0.9.7 (2025-10-22)
+
+### Bugs Fixed
+
+- Increased Kusto `HttpClient` timeout from 100 seconds to 240 seconds to support long-running queries. [[#907](https://github.com/microsoft/mcp/pull/907)]
 - Provide installation instructions when azd or other registry components are missing. [[#926](https://github.com/microsoft/mcp/pull/926)]
 - Update the `server.json` in the NuGet distribution to match the 2025-10-17 server.json schema version (latest from the MCP Registry).
 
 ### Other Changes
 
-- Improved Service Bus tool description with detailed guidance for better LLM tool selection, including usage patterns, messaging scenarios, and when not to use the tool.
-- Set telemetry field's for ToolArea and ToolName when "consolidated" mode is used or a server is loaded from registry.json. [[#933](https://github.com/microsoft/mcp/pull/933)]
+- Improved the following tool namespace descriptions for better LLM tool selection, including usage patterns, messaging scenarios, and when not to use their tools:
+  - Service Bus [[#923](https://github.com/microsoft/mcp/pull/923)]
+  - Application Insights [[#928](https://github.com/microsoft/mcp/pull/928)]
+- Updated the description of the `azmcp_appservice_database_add` command to decrease ambiguity and increase selection accuracy by LLMs. [[#912](https://github.com/microsoft/mcp/pull/912)]
 
 ## 0.9.6 (2025-10-21)
 
