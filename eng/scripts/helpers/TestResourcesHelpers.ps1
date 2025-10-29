@@ -51,6 +51,11 @@ function New-TestSettings {
         SubscriptionName = $subscriptionName
         ResourceGroupName = $ResourceGroupName
         ResourceBaseName = $BaseName
+        EnvironmentVariables = [ordered]@{
+            # Live test resources are deployed using Azure PowerShell, so we know it's already in the correct tenant
+            # Force CustomChainedCredential to use AzurePowerShellCredential to avoid cross-tenant auth issues
+            "AZURE_TOKEN_CREDENTIALS" = "AzurePowerShellCredential"
+        }
     }
 
     # Add DeploymentOutputs if provided

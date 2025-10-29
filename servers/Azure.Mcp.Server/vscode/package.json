@@ -1,0 +1,200 @@
+{
+    "name": "vscode-azure-mcp-server",
+    "displayName": "Azure MCP Server",
+    "description": "Provides Model Context Protocol (MCP) integration and tooling for Azure in Visual Studio Code.",
+    "version": "0.0.0",
+    "license": "MIT",
+    "icon": "resources/package-icon.png",
+    "preview": false,
+    "publisher": "ms-azuretools",
+    "aiKey": "0c6ae279ed8443289764825290e4f9e2-1a736e7c-1324-4338-be46-fc2a58ae4d14-7255",
+    "engines": {
+        "vscode": "^1.101.0"
+    },
+    "categories": [
+        "AI",
+        "Azure",
+        "Chat",
+        "Extension Packs"
+    ],
+    "keywords": [
+        "azure",
+        "agent",
+        "chat",
+        "copilot",
+        "language-model-tools",
+        "mcp",
+        "model context protocol",
+        "ai"
+    ],
+    "bugs": {
+        "url": "https://github.com/microsoft/mcp/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/mcp"
+    },
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "main.js",
+    "contributes": {
+        "mcpServerDefinitionProviders": [
+            {
+                "id": "azureMcpProvider",
+                "label": "Azure MCP Server Provider"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Azure MCP",
+            "properties": {
+                "azureMcp.enabledServices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "acr",
+                            "aks",
+                            "appconfig",
+                            "azuremanagedlustre",
+                            "azureterraformbestpractices",
+                            "bestpractices",
+                            "bicepschema",
+                            "cloudarchitect",
+                            "cosmos",
+                            "datadog",
+                            "deploy",
+                            "documentation",
+                            "eventgrid",
+                            "extension",
+                            "functionapp",
+                            "foundry",
+                            "grafana",
+                            "group",
+                            "keyvault",
+                            "kusto",
+                            "loadtesting",
+                            "marketplace",
+                            "monitor",
+                            "mysql",
+                            "postgres",
+                            "quota",
+                            "redis",
+                            "resourcehealth",
+                            "role",
+                            "search",
+                            "servicebus",
+                            "sql",
+                            "storage",
+                            "subscription",
+                            "virtualdesktop",
+                            "workbooks"
+                        ],
+                        "markdownEnumDescriptions": [
+                            "Azure Container Registry (ACR) — Container registry management.",
+                            "Azure Kubernetes Service (AKS) — Container orchestration.",
+                            "Azure App Configuration — Configuration management.",
+                            "Azure Managed Lustre — Commands for listing and inspecting Azure Managed Lustre filesystems.",
+                            "Azure Terraform Best Practices — Infrastructure as code guidance.",
+                            "Azure Best Practices — Secure, production-grade guidance.",
+                            "Bicep — Azure resource templates (schema operations).",
+                            "Cloud Architecture — Commands for generating Azure architecture diagrams and design guidance.",
+                            "Cosmos DB operations — Commands for managing and querying Azure Cosmos DB resources.",
+                            "Datadog — Manage and query Datadog resources.",
+                            "Deploy — Commands for deploying applications to Azure, including subcommands for planning and architecture.",
+                            "Official Microsoft/Azure documentation — Find relevant, trustworthy answers.",
+                            "Event Grid — Commands for managing and accessing Event Grid topics, domains, and subscriptions.",
+                            "Azure CLI (az), Azure Developer CLI (azd), Azure Quick Review CLI (azqr)  — Execute CLI commands in context.",
+                            "Function App — Commands for managing and accessing Azure Function Apps.",
+                            "Azure Foundry — AI model management and deployment.",
+                            "Azure Managed Grafana — Monitoring dashboards.",
+                            "Azure Resource Groups — Resource organization.",
+                            "Azure Key Vault — Secrets, keys, and certificates.",
+                            "Azure Data Explorer (Kusto) — Analytics queries and KQL.",
+                            "Azure Load Testing — Performance testing.",
+                            "Azure Marketplace — Product discovery.",
+                            "Azure Monitor — Logging, metrics, and health monitoring.",
+                            "MySQL — Commands for managing Azure Database for MySQL Flexible Server resources.",
+                            "Azure Database for PostgreSQL — PostgreSQL database management.",
+                            "Quota — Commands for getting available regions and checking Azure resource usage quotas.",
+                            "Azure Redis Cache — In-memory data store.",
+                            "Resource Health — Commands for monitoring and diagnosing Azure resource health status.",
+                            "Azure RBAC — Access control management.",
+                            "Azure AI Search — Search engine/vector database operations.",
+                            "Service Bus operations — Manage queues, topics, and subscriptions.",
+                            "Azure SQL operations — Manage databases, elastic pools, and servers.",
+                            "Storage operations — Manage blobs, tables, files, and data lake storage.",
+                            "Azure subscription operations — List and manage subscriptions.",
+                            "Azure Virtual Desktop — Virtual desktop infrastructure.",
+                            "Azure Workbooks — Custom visualizations."
+                        ]
+                    },
+                    "uniqueItems": true,
+                    "markdownDescription": "Service namespaces to enable. Leave empty to enable all. Choose from the list to avoid typing errors. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+
+                },
+                "azureMcp.serverMode": {
+                    "type": "string",
+                    "enum": ["single", "namespace", "all"],
+                    "default": "namespace",
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Azure service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+
+                },
+                "azureMcp.readOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Start the Azure MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Azure MCP → Start/Restart)."
+                }
+            }
+        }
+    },
+    "extensionPack": [
+        "ms-azuretools.vscode-azure-github-copilot"
+    ],
+    "scripts": {
+        "vscode:prepublish": "npm run build",
+        "compile": "tsc -p ./",
+        "build": "webpack --mode production --devtool hidden-source-map",
+        "watch": "webpack --mode development --watch",
+        "dev-build": "webpack --mode development",
+        "lint": "eslint src --ext ts",
+        "test": "npm run compile && node ./out/test/runAllTests.js",
+        "unit-test": "npm run compile && node ./out/test/runUnitTests.js"
+    },
+    "devDependencies": {
+        "@azure/core-auth": "^1.4",
+        "@types/chai": "~4",
+        "@types/glob": "~7",
+        "@types/mocha": "~10",
+        "@types/node": "~16",
+        "@types/semver": "~7",
+        "@types/sinon": "^17.0.4",
+        "@types/vscode": "^1.101.0",
+        "@typescript-eslint/eslint-plugin": "~6",
+        "@typescript-eslint/parser": "~6",
+        "@vscode/test-electron": "~2",
+        "@vscode/vsce": "~3",
+        "chai": "~4",
+        "eslint": "~8",
+        "glob": "~8",
+        "mocha": "~10",
+        "node-loader": "~2",
+        "sinon": "^21.0.0",
+        "terser-webpack-plugin": "^5.3.14",
+        "ts-loader": "~9",
+        "typescript": "~5.1",
+        "webpack": "^5.99.9",
+        "webpack-bundle-analyzer": "^4.10.2",
+        "webpack-cli": "^6.0.1"
+    },
+    "dependencies": {
+        "@microsoft/vscode-azext-utils": "~2",
+        "@microsoft/vscode-azureresources-api": "~2",
+        "dayjs": "~1",
+        "dotenv": "~16",
+        "rxjs": "~7",
+        "semver": "~7",
+        "yaml": "~2"
+    }
+}

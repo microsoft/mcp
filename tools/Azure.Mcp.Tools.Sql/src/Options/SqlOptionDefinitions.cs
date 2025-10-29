@@ -170,7 +170,7 @@ public static class SqlOptionDefinitions
         Required = false
     };
 
-    public static readonly Option<bool> ZoneRedundantOption = new(
+    public static readonly Option<bool?> ZoneRedundantOption = new(
         $"--{ZoneRedundant}"
     )
     {

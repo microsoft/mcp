@@ -12,6 +12,7 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
 {
     private const string CommandTitle = "List Cosmos DB Containers";
     private readonly ILogger<ContainerListCommand> _logger = logger;
+    public override string Id => "0b0a2374-40c3-4ccb-89f5-37c33dc85735";
 
     public override string Name => "list";
 

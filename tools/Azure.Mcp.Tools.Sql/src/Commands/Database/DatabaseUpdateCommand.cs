@@ -17,6 +17,8 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
 {
     private const string CommandTitle = "Update SQL Database";
 
+    public override string Id => "16f02fbf-6760-440a-bacc-925365b6de49";
+
     public override string Name => "update";
 
     public override string Description =>
@@ -55,14 +57,14 @@ public sealed class DatabaseUpdateCommand(ILogger<DatabaseUpdateCommand> logger)
     protected override DatabaseUpdateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuName);
-        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTier);
-        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacity);
-        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.Collation);
-        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytes);
-        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolName);
-        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundant);
-        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScale);
+        options.SkuName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuNameOption.Name);
+        options.SkuTier = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.SkuTierOption.Name);
+        options.SkuCapacity = parseResult.GetValueOrDefault<int?>(SqlOptionDefinitions.SkuCapacityOption.Name);
+        options.Collation = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.CollationOption.Name);
+        options.MaxSizeBytes = parseResult.GetValueOrDefault<long?>(SqlOptionDefinitions.MaxSizeBytesOption.Name);
+        options.ElasticPoolName = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ElasticPoolNameOption.Name);
+        options.ZoneRedundant = parseResult.GetValueOrDefault<bool?>(SqlOptionDefinitions.ZoneRedundantOption.Name);
+        options.ReadScale = parseResult.GetValueOrDefault<string>(SqlOptionDefinitions.ReadScaleOption.Name);
         return options;
     }
 

@@ -14,6 +14,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
     private const string CommandTitle = "Create Storage Blob Container";
     private readonly ILogger<ContainerCreateCommand> _logger = logger;
 
+    public override string Id => "f5088334-e630-4df0-a5be-ac87787acad0";
+
     public override string Name => "create";
 
     public override string Description =>

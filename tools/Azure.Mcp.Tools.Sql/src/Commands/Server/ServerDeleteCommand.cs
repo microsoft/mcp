@@ -16,6 +16,8 @@ public sealed class ServerDeleteCommand(ILogger<ServerDeleteCommand> logger)
 {
     private const string CommandTitle = "Delete SQL Server";
 
+    public override string Id => "381bd0ef-5bb4-45ed-ae51-d129dcc044b2";
+
     public override string Name => "delete";
 
     public override string Description =>

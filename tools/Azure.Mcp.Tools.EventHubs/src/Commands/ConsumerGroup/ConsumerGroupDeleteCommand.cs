@@ -17,6 +17,7 @@ public sealed class ConsumerGroupDeleteCommand(ILogger<ConsumerGroupDeleteComman
     private const string CommandTitle = "Delete Event Hubs Consumer Group";
 
     private readonly ILogger<ConsumerGroupDeleteCommand> _logger = logger;
+    public override string Id => "08980fd4-c7c2-41cd-a3c2-eda5303bd458";
 
     public override string Name => "delete";
 

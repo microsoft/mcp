@@ -16,6 +16,8 @@ public sealed class CertificateGetCommand(ILogger<CertificateGetCommand> logger)
     private const string CommandTitle = "Get Key Vault Certificate";
     private readonly ILogger<CertificateGetCommand> _logger = logger;
 
+    public override string Id => "0e898126-0c5e-44b8-9eef-51ddeed6327f";
+
     public override string Name => "get";
 
     public override string Title => CommandTitle;

@@ -54,6 +54,17 @@ try {
         Write-Host "All tools are within the $($toolNameResult.MaxAllowed) character limit."
     }
 
+    # Run tool id validation
+    $toolIdResult = & "$PSScriptRoot/Test-ToolId.ps1"
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "❌ Tool id validation failed"
+        Write-Host "$($toolIdResult.ViolationCount) duplicated tool id(s) found. Review the above output for details."
+        $hasErrors = $true
+    } else {
+        Write-Host "✅ Tool id validation passed."
+    }
+
     if($hasErrors) {
         exit 1
     }

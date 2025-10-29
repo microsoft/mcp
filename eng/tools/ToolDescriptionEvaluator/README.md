@@ -38,25 +38,51 @@ Runs comprehensive analysis on all tools and prompts:
 dotnet run
 ```
 
-### 2. Validation Mode
+### 2. Single Tool Test Mode
 
-Tests a specific tool description against one or more prompts:
+Tests a specific tool description against one or more prompts. This mode is useful for testing new tool descriptions before adding them to the system.
+
+**Note:** In this mode, the following arguments are ignored: `--area`, `--server`, `--server-exe`, `--prompts-file`
 
 ```bash
-# Single prompt validation
-dotnet run -- --validate \
+# Single prompt
+dotnet run -- --test-single-tool \
   --tool-description "Lists all storage accounts in a subscription" \
   --prompt "show me my storage accounts"
 
-# Multiple prompt validation
-dotnet run -- --validate \
+# Multiple prompts
+dotnet run -- --test-single-tool \
   --tool-description "Lists storage accounts" \
   --prompt "show me storage accounts" \
   --prompt "list my storage accounts" \
   --prompt "what storage accounts do I have"
 ```
 
-### 3. Tool Prefix Filtering Mode
+### 3. Server Selection Mode
+
+Test tools from different MCP servers:
+
+```bash
+# Test Azure MCP Server tools (default)
+dotnet run -- --server "Azure"
+
+# Test Fabric MCP Server tools
+dotnet run -- --server "Fabric"
+
+# Use a specific server executable path (overrides --server)
+dotnet run -- --server-exe "./path/to/azmcp.exe"
+dotnet run -- --server-exe "./path/to/fabmcp.dll"
+
+# Combine with area filtering
+dotnet run -- --server "Fabric" --area "workspace"
+```
+
+**When to use `--server` vs `--server-exe`:**
+- Use `--server "Azure"` or `--server "Fabric"` when testing the standard Azure or Fabric MCP servers from the repository
+- Use `--server-exe` when you need to test a specific build output or custom server executable path
+- If both are provided, `--server-exe` takes precedence
+
+### 4. Tool Prefix Filtering Mode
 
 Filter prompts by tool name prefix to test specific Azure service tools. Service names are automatically prefixed with `azmcp_`:
 
@@ -76,7 +102,7 @@ dotnet run -- --area "sql,cosmos,storage"     # Filters SQL, Cosmos, and Storage
 dotnet run -- --area "azmcp_keyvault"
 ```
 
-### 4. Custom Files Mode
+### 5. Custom Files Mode
 
 Use custom tools or prompts files:
 
@@ -93,16 +119,34 @@ dotnet run -- --tools-file my-tools.json --prompts-file my-prompts.json --area "
 
 ## Input Data Sources
 
-The tool can load data from multiple sources:
+The tool can load data from multiple sources and supports both Azure and Fabric MCP servers:
+
+### Server Selection
+
+- **Azure MCP Server** (default): Tests tools from the Azure MCP Server (`azmcp`)
+- **Fabric MCP Server**: Tests tools from the Fabric MCP Server (`fabmcp`)
+- **Custom executable**: Use a specific server executable path with `--server-exe`
+
+The tool automatically locates the appropriate server executable in Debug or Release build outputs. If you need to test a specific build or custom server, use the `--server-exe` option.
 
 ### Tool Definitions
 
-- **Dynamic loading** (default): Queries Azure MCP Server directly for current tool definitions
+- **Dynamic loading** (default): Queries the MCP Server directly for current tool definitions
 - **Static JSON file**: Uses `tools.json` or custom file specified with `--tools-file`
+
+When using dynamic loading:
+- The tool automatically searches for the server executable in standard build output locations
+- For Azure: looks for `azmcp.exe`, `azmcp`, or `azmcp.dll`
+- For Fabric: looks for `fabmcp.exe`, `fabmcp`, or `fabmcp.dll`
+- Searches both Debug and Release build directories
+- Runs `tools list` command to get current tool definitions
+- Saves results to `tools.json` for future use
 
 ### Test Prompts
 
-- **Markdown format** (default): Uses `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+- **Markdown format** (default): Uses `servers/{ServerName}.Mcp.Server/docs/e2eTestPrompts.md`
+  - For Azure: `servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
+  - For Fabric: `servers/Fabric.Mcp.Server/docs/e2eTestPrompts.md`
 - **JSON format**: Uses `prompts.json` or custom file specified with `--prompts-file`
 - **Custom files**: Supports both `.md` and `.json` formats
 
@@ -216,6 +260,12 @@ dotnet run -- --area "functionapp"                # Filter to Function App tools
 dotnet run -- --area "keyvault,storage"           # Filter to multiple areas (comma-separated)
 dotnet run -- --area "sql,cosmos,functionapp"     # Filter to SQL, Cosmos, and Function App tools
 
+# Server selection
+dotnet run -- --server "Azure"                    # Test Azure MCP Server tools (default)
+dotnet run -- --server "Fabric"                   # Test Fabric MCP Server tools
+dotnet run -- --server-exe "./azmcp.exe"          # Use specific server executable path
+dotnet run -- --server-exe "./fabmcp.dll"         # Use specific server DLL path
+
 # File options
 dotnet run -- --tools-file my-tools.json          # Use custom tools file
 dotnet run -- --prompts-file my-prompts.md        # Use custom prompts file
@@ -231,7 +281,7 @@ dotnet run -- --top 10                           # Show top 10 results per test
 dotnet run -- --ci                               # Run in CI mode (graceful failures)
 
 # Combined options
-dotnet run -- --area "keyvault" --text-results --top 3
+dotnet run -- --area "keyvault" --text-results --top 3 --server "Azure"
 ```
 
 ### Analysis Metrics

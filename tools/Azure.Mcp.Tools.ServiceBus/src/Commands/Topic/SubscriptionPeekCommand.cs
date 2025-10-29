@@ -17,6 +17,9 @@ public sealed class SubscriptionPeekCommand(ILogger<SubscriptionPeekCommand> log
 {
     private const string CommandTitle = "Peek Messages from Service Bus Topic Subscription";
     private readonly ILogger<SubscriptionPeekCommand> _logger = logger;
+
+    public override string Id => "61d32f07-fad6-4e43-9f1e-f0937ce773b3";
+
     public override string Name => "peek";
 
     public override string Description =>

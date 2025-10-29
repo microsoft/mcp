@@ -17,6 +17,8 @@ public sealed class DatabaseAddCommand(ILogger<DatabaseAddCommand> logger) : Bas
     private const string CommandTitle = "Add Database to App Service";
     private readonly ILogger<DatabaseAddCommand> _logger = logger;
 
+    public override string Id => "14be1264-82c8-4a4c-8271-7cfe1fbebbc8";
+
     public override string Name => "add";
 
     public override string Description =>
