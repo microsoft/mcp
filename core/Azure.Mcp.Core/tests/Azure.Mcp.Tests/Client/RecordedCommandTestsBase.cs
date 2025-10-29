@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
@@ -15,6 +16,8 @@ namespace Azure.Mcp.Tests.Client;
 
 public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
 {
+    public SanitizerList sanitizers => new();
+
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
     // used to resolve a recording "path" given an invoking test
@@ -56,6 +59,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task StartRecordOrPlayback()
     {
+        if (TestingMode is TestMode.Live)
+        {
+            return;
+        }
+
         if (Proxy is null)
         {
             throw new InvalidOperationException("Test proxy is not initialized.");
@@ -122,6 +130,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task StopRecordOrPlayback()
     {
+        if (TestingMode is TestMode.Live)
+        {
+            return;
+        }
+
         if (Proxy is null)
         {
             throw new InvalidOperationException("Test proxy is not initialized.");
