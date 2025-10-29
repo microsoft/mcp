@@ -24,7 +24,13 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 {
                     var content = await File.ReadAllTextAsync(testSettingsFilePath);
 
-                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content)
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                    };
+
+                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content, options)
                         ?? throw new Exception("Unable to deserialize live test settings");
 
                     foreach (var (key, value) in Settings.EnvironmentVariables)

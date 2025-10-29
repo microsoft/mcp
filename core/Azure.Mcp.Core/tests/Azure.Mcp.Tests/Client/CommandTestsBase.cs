@@ -80,7 +80,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             : ["server", "start", "--mode", "all"];
         var arguments = CustomArguments ?? defaultArgs;
 
-        var dictionaryEvents = new Dictionary<string, string?> {
+        var envVarDictionary = new Dictionary<string, string?> {
             // Propagate playback signaling & sanitized identifiers to server process.
             { "AZURE_TOKEN_CREDENTIALS", TestMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
             { "AZURE_TENANT_ID", Settings.TenantId },
@@ -89,7 +89,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         if (proxy != null && proxy.Proxy != null)
         {
-            dictionaryEvents.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
+            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
         }
 
         StdioClientTransportOptions transportOptions = new()
@@ -99,7 +99,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             Arguments = arguments,
             // Direct stderr to test output helper as required by task
             StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}"),
-            EnvironmentVariables = dictionaryEvents
+            EnvironmentVariables = envVarDictionary
         };
 
         if (!string.IsNullOrEmpty(Settings.TestPackage))

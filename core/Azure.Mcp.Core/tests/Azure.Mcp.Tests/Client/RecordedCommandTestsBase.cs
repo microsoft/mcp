@@ -37,6 +37,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         if (TestMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
         {
             await fixture.StartProxyAsync();
+            Proxy = fixture.Proxy;
         }
 
         // start MCP client with proxy URL available
