@@ -54,6 +54,7 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     {
         var handler = CreateHttpClientHandler();
 
+#if DEBUG
         // If a TEST_PROXY_URL is configured, insert RecordingRedirectHandler as the last delegating handler
         var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
         Console.WriteLine("Using test proxy URL: " + testProxyUrl);
@@ -67,8 +68,11 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
                 InnerHandler = pipeline
             };
         }
-
         var client = new HttpClient(pipeline);
+#endif
+#if !DEBUG
+        var client = new HttpClient(handler);
+#endif
 
         // Apply default configuration
         client.Timeout = _options.DefaultTimeout;
