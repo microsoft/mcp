@@ -178,12 +178,25 @@ public static class AzureMcpServiceCollectionExtensions
                 // Create a new CommandFactory with consolidated command groups
                 var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
                 
-                return new NamespaceToolLoader(
-                    consolidatedCommandFactory,
-                    sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
-                    sp,
-                    loggerFactory.CreateLogger<NamespaceToolLoader>()
-                );
+                var toolLoaders = new List<IToolLoader>
+                {
+                    // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.
+                    new ServerToolLoader(
+                        sp.GetRequiredService<RegistryDiscoveryStrategy>(),
+                        sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
+                        loggerFactory.CreateLogger<ServerToolLoader>()
+                    ),
+                    // NamespaceToolLoader enables direct in-process execution for consolidated tools
+                    new NamespaceToolLoader(
+                        consolidatedCommandFactory,
+                        sp.GetRequiredService<IOptions<ServiceStartOptions>>(),
+                        sp,
+                        loggerFactory.CreateLogger<NamespaceToolLoader>(),
+                        false
+                    ),
+                };
+
+                return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
         else if (serviceStartOptions.Mode == ModeTypes.All)
