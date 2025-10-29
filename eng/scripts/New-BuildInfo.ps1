@@ -331,12 +331,19 @@ function Get-ServerDetails {
             $version.PrereleaseNumber = $BuildId
         }
 
-        if ($PublishTarget -eq 'public') {
+        # Calculate VSIX version based on server version
+        $vsixVersion = $null
+        $vsixIsPrerelease = $false
 
-            # Calculate VSIX version based on server version
-            $vsixVersion = $null
+        # If SETDEVVERSION is true, use BuildId as patch number (dev builds)
+        if ($env:SETDEVVERSION -eq "true") {
+            # VS Code Marketplace doesn't support pre-release versions with semantic versioning suffixes
+            # For dev builds, we strip the prerelease label and use BuildId as patch number
+            $vsixVersion = "$($version.Major).$($version.Minor).$BuildId"
             $vsixIsPrerelease = $false
-            
+            Write-Host "SETDEVVERSION is true, using BuildId as patch number for VSIX: $($version.ToString()) -> $vsixVersion" -ForegroundColor Yellow
+        }
+        elseif ($PublishTarget -eq 'public') {
             # Check if this is X.0.0-beta.Y series
             $isBetaSeries = $version.Minor -eq 0 -and $version.Patch -eq 0 -and $version.PrereleaseLabel -eq 'beta'
             
@@ -387,6 +394,12 @@ function Get-ServerDetails {
                     continue
                 }
             }
+        }
+        else {
+            # For non-public builds without SETDEVVERSION, use a placeholder version
+            $vsixVersion = "$($version.Major).0.999"
+            $vsixIsPrerelease = $false
+            Write-Host "Non-public target without SETDEVVERSION: Using placeholder VSIX version $vsixVersion" -ForegroundColor Yellow
         }
 
         $platforms = @()
