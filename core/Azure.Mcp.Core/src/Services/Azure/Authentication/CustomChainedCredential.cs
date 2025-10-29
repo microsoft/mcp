@@ -56,8 +56,8 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
 #if DEBUG
-    private const string PlaybackModeEnvVarName = "AZURE_MCP_PLAYBACK_MODE";
-    private static bool IsPlaybackMode() => string.Equals(Environment.GetEnvironmentVariable(PlaybackModeEnvVarName), "true", StringComparison.OrdinalIgnoreCase);
+    private const string PlaybackModeEnvVarName = "AZURE_TOKEN_CREDENTIALS";
+    private static bool IsPlaybackMode() => string.Equals(Environment.GetEnvironmentVariable(PlaybackModeEnvVarName), "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
 #endif
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)

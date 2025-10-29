@@ -4,8 +4,7 @@ using System.Text.Json;
 namespace Azure.Mcp.Tests.Client.Helpers;
 
 /// <summary>
-/// This entire class is a placeholder. Azure.Mcp.Core takes a dependency on Azure.Core, so what I should do is generate the test-proxy client
-/// taking an Azure.Core dependency to generate, versus System.ClientModel (which is what it is rn)
+/// Generate BinaryContent from objects or JSON strings.
 /// </summary>
 internal static class BinaryContentHelper
 {

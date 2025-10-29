@@ -63,11 +63,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
                 SubscriptionName = "Sanitized",
                 TenantName = "Sanitized"
             };
-
-            // Signal playback mode to child process & any credential logic.
-            Environment.SetEnvironmentVariable("AZURE_MCP_PLAYBACK_MODE", "true");
-            Environment.SetEnvironmentVariable("AZURE_TENANT_ID", Settings.TenantId);
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId);
         }
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
@@ -82,7 +77,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         var dictionaryEvents = new Dictionary<string, string?> {
             // Propagate playback signaling & sanitized identifiers to server process.
-            { "AZURE_MCP_PLAYBACK_MODE", TestingMode is TestMode.Playback ? "true" : null },
+            { "AZURE_TOKEN_CREDENTIALS", TestingMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
             { "AZURE_TENANT_ID", Settings.TenantId },
             { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         };

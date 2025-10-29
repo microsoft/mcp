@@ -69,8 +69,7 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
             };
         }
         var client = new HttpClient(pipeline);
-#endif
-#if !DEBUG
+#else
         var client = new HttpClient(handler);
 #endif
 
