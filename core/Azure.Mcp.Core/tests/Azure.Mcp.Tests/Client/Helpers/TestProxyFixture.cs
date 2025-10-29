@@ -27,19 +27,17 @@ namespace Azure.Mcp.Tests.Client.Helpers
         }
 
         /// <summary>
-        /// Optional shared proxy instance (not started automatically here to keep side-effects minimal). Tests should set their local copy of Proxy to
-        /// This fixture.Proxy in their constructor if they want recorded or playback tests.
+        /// Proxy instance created lazily. RecordedCommandTestsBase will start it after determining TestMode from LiveTestSettings.
         /// </summary>
         public TestProxy? Proxy { get; private set; }
 
-        public async ValueTask InitializeAsync()
+        public ValueTask InitializeAsync()
         {
-            if (TestEnvironment.GetEnvironmentTestMode() is not (TestMode.Record or TestMode.Playback))
-            {
-                // No proxy needed in live mode.
-                return;
-            }
+            return ValueTask.CompletedTask;
+        }
 
+        public async Task StartProxyAsync()
+        {
             var root = DetermineRepositoryRoot();
             Proxy = new TestProxy();
             await Proxy.Start(root);

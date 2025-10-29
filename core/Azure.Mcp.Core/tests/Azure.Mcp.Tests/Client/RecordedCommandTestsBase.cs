@@ -30,7 +30,19 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     public override async ValueTask InitializeAsync()
     {
+        // load settings first to determine test mode
+        await base.LoadSettingsAsync();
+
+        // we will use the same proxy instance throughout the test class instances, so we only need to start it if not already started.
+        if (TestingMode is TestMode.Record or TestMode.Playback && fixture.Proxy == null)
+        {
+            await fixture.StartProxyAsync();
+        }
+
+        // start MCP client with proxy URL available
         await base.InitializeAsyncInternal(fixture);
+
+        // start recording/playback session
         await StartRecordOrPlayback();
     }
 

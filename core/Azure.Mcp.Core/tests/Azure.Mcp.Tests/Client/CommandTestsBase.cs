@@ -40,32 +40,35 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         await InitializeAsyncInternal(null);
     }
 
-    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    protected virtual async ValueTask LoadSettingsAsync()
     {
-        if (TestingMode is TestMode.Live || TestingMode is TestMode.Record)
+        try
         {
+            // Try to load LiveTestSettings from .testsettings.json (authoritative source)
             var settingsFixture = new LiveTestSettingsFixture();
             await settingsFixture.InitializeAsync();
             Settings = settingsFixture.Settings;
             TestingMode = Settings.TestMode;
         }
-        else
+        catch (FileNotFoundException)
         {
-            // Playback mode: use sanitized placeholder values and disable any interactive auth.
+            // No .testsettings.json found - assume playback mode with sanitized values
             Settings = new LiveTestSettings
             {
-                // Subscription / Tenant placeholders used by playback matching & sanitizers.
                 SubscriptionId = "00000000-0000-0000-0000-000000000000",
                 TenantId = "00000000-0000-0000-0000-000000000000",
-                // ResourceBaseName used for vault name input to tools (maps to sanitized recording host).
                 ResourceBaseName = "Sanitized",
                 SubscriptionName = "Sanitized",
                 TenantName = "Sanitized",
                 TestMode = TestMode.Playback
             };
-
-            TestingMode = Settings.TestMode;
+            TestingMode = TestMode.Playback;
         }
+    }
+
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    {
+        await LoadSettingsAsync();
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
