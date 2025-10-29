@@ -207,19 +207,22 @@ dotnet build
 
 #### Run the Azure MCP server in HTTP mode
 
+> [!NOTE]
+> **Microsoft Employees Only:** This section is intended for Microsoft employees with access to the TME tenant. Any outside contributors or Microsoft employees without access to TME will need to modify their copy of `launchSettings.json`.
+
 **Option 1: Using dotnet run (uses launchSettings.json)**
 
 ```bash
-dotnet run --project servers/Azure.Mcp.Server/src/
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
 ```
 
-> **Note:** Running `dotnet run` automatically uses the configuration in `servers/Azure.Mcp.Server/src/Properties/launchSettings.json`, which contains the necessary command line arguments and environment variables to run the server in HTTP mode at `http://localhost:1031` for easier debugging and testing.
+> **Note:** Running `dotnet run` with the `debug-remotemcp` launch profile automatically uses the configuration in `servers/Azure.Mcp.Server/src/Properties/launchSettings.json`, which runs the command `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity` with the necessary environment variables to run the server in HTTP mode at `http://localhost:1031` for easier debugging and testing.
 
 **Option 2: Using the built executable directly**
 
 Build the project first, then run the executable with the necessary environment variables:
 
-```bash
+```powershell
 # Set environment variables (PowerShell)
 $env:ASPNETCORE_ENVIRONMENT = "Development"
 $env:ASPNETCORE_URLS = "http://localhost:1031"

@@ -802,7 +802,7 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ### Streamable HTTP Transport
 
-The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
+See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
 
 ## Logging and Diagnostics
 
@@ -883,18 +883,63 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 
 #### Running Azure MCP Server Locally for Development
 
-When developing or debugging the Azure MCP Server locally, you can use `dotnet run` which automatically uses the configuration in `Properties/launchSettings.json`:
+> [!NOTE]
+> **Microsoft Employees Only:** This section is intended for Microsoft employees with access to the TME tenant.Any outside contributors or Microsoft employees without access to TME will need to modify their copy of `launchSettings.json`.
+
+When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
+
+**Option 1: HTTP Mode (Remote)**
+
+Use `dotnet run` which automatically uses the configuration in `Properties/launchSettings.json`:
 
 ```bash
-dotnet run --project servers/Azure.Mcp.Server/src/
+dotnet build
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
 ```
 
-The `launchSettings.json` file automatically configures:
+This starts the MCP server in **remote HTTP mode** with the following configuration:
 - **Command line arguments:** `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
-- **Environment variables** for Azure AD authentication and ASP.NET Core settings
+- **Environment variables** for Entra ID authentication and ASP.NET Core settings
 - **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
 
-This is the recommended approach for local development as it sets up the server in HTTP mode with all necessary authentication and configuration automatically.
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "http://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
+
+**Option 2: Stdio Mode (Local)**
+
+If you need to test the server in stdio mode (standard input/output), first build the project and then run the executable directly:
+
+```bash
+dotnet build
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
+```
+
+This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start"]
+    }
+  }
+}
+```
 
 #### Bring your own language model key
 
