@@ -174,10 +174,10 @@ public static class AzureMcpServiceCollectionExtensions
             {
                 var loggerFactory = sp.GetRequiredService<ILoggerFactory>();
                 var consolidatedStrategy = sp.GetRequiredService<ConsolidatedToolDiscoveryStrategy>();
-                
+
                 // Create a new CommandFactory with consolidated command groups
                 var consolidatedCommandFactory = consolidatedStrategy.CreateConsolidatedCommandFactory();
-                
+
                 var toolLoaders = new List<IToolLoader>
                 {
                     // ServerToolLoader with RegistryDiscoveryStrategy creates proxy tools for external MCP servers.

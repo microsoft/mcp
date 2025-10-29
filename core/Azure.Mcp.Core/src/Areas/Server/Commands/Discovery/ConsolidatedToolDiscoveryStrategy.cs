@@ -50,7 +50,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
 
         // Load consolidated tool definitions from JSON file
         var consolidatedTools = LoadConsolidatedToolDefinitions();
-        
+
         // Filter commands based on options
         var allCommands = _commandFactory.AllCommands;
         var filteredCommands = FilterCommands(allCommands);
@@ -58,9 +58,9 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
         // Create individual area setups for each consolidated tool
         // This way, each consolidated tool becomes a top-level namespace
         var consolidatedAreas = new List<IAreaSetup>();
-        
+
         var unmatchedCommands = new HashSet<string>(filteredCommands.Keys, StringComparer.OrdinalIgnoreCase);
-        
+
         foreach (var consolidatedTool in consolidatedTools)
         {
             var matchingCommands = filteredCommands
@@ -124,7 +124,7 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
                 consolidatedTool,
                 matchingCommands
             );
-            
+
             consolidatedAreas.Add(area);
         }
 
@@ -144,18 +144,18 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             _logger.LogWarning("Found {Count} unmatched commands: {Commands}", unmatchedCommands.Count, unmatchedList);
         }
 #endif
-        
+
         // Create a new CommandFactory with all consolidated areas
         var telemetryService = _serviceProvider.GetRequiredService<ITelemetryService>();
         var factoryLogger = _serviceProvider.GetRequiredService<ILogger<CommandFactory>>();
-        
+
         _consolidatedCommandFactory = new CommandFactory(
             _serviceProvider,
             consolidatedAreas,
             telemetryService,
             factoryLogger
         );
-        
+
         return _consolidatedCommandFactory;
     }
 
