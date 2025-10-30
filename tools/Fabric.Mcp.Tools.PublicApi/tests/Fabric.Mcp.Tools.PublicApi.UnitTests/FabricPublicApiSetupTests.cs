@@ -38,11 +38,12 @@ public class FabricPublicApiSetupTests
         var loggerFactory = LoggerFactory.Create(builder => builder.AddConsole());
         var setup = new FabricPublicApiSetup();
         var rootGroup = new CommandGroup("root", "Root command group");
-        var services = Substitute.For<IServiceProvider>();
+        var services = new ServiceCollection();
+        setup.ConfigureServices(services);
+        var serviceProvider = services.BuildServiceProvider();
 
         // Act
-
-        var commands = setup.RegisterCommands(services);
+        var commands = setup.RegisterCommands(serviceProvider);
         rootGroup.AddSubGroup(commands);
 
         // Assert
