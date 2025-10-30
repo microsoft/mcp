@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <NoWarn>$(NoWarn);IDE0005;CA1303;CA1305;CA1848;CA1869;CA2007;CA5394;IDE0055;IDE0058;IDE0290;SA1000;SA1101;SA1118;SA1200;SA1201;SA1309;SA1402;SA1503;SA1600;SA1601;SA1602;SA1633</NoWarn>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+  </ItemGroup>
+
+</Project>
