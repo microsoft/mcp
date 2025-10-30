@@ -21,7 +21,7 @@ public class SpeechService(ITenantService tenantService, ILogger<SpeechService> 
     /// </summary>
     /// <param name="endpoint">Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/)</param>
     /// <param name="filePath">Path to the audio file to process</param>
-    /// <param name="language">Speech recognition language (default: en-US)</param>
+    /// <param name="language">Optional Speech recognition language (default: en-US)</param>
     /// <param name="phrases">Optional phrases to improve recognition accuracy (ignored for Fast Transcription)</param>
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>

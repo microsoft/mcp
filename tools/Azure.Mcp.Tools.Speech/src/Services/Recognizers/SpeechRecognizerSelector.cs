@@ -20,6 +20,12 @@ public static class SpeechRecognizerSelector
     /// <exception cref="NotSupportedException">Thrown when the language is not supported by any recognizer</exception>
     public static RecognizerType GetSpeechRecognizer(string filePath, string? language, string[]? phrases, string? format)
     {
+        // If language not provided, use Fast Transcription Multi-lingual model
+        if (string.IsNullOrWhiteSpace(language))
+        {
+            return RecognizerType.Fast;
+        }
+
         // if format is specified, we must use Realtime as Fast Transcription does not support format options
         if (!string.IsNullOrEmpty(format))
         {
@@ -34,12 +40,6 @@ public static class SpeechRecognizerSelector
             {
                 return RecognizerType.Realtime; // File too large for Fast Transcription, use Realtime
             }
-        }
-
-        // If language not provided, use Fast Transcription Multi-lingual model
-        if (string.IsNullOrWhiteSpace(language))
-        {
-            return RecognizerType.Fast;
         }
 
         // Map language to supported locale

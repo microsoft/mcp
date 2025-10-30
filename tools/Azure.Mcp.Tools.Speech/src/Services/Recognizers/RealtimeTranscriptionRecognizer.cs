@@ -55,174 +55,234 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             throw new FileNotFoundException($"Audio file not found: {filePath}");
         }
 
-        try
+        // Apply retry policy configuration
+        var maxRetries = retryPolicy?.MaxRetries ?? 3;
+        var delaySeconds = retryPolicy?.DelaySeconds ?? 1.0;
+        var maxDelaySeconds = retryPolicy?.MaxDelaySeconds ?? 30.0;
+        var isExponentialBackoff = retryPolicy?.Mode == RetryMode.Exponential;
+
+        Exception? lastException = null;
+
+        for (int attempt = 0; attempt <= maxRetries; attempt++)
         {
-            // Get Azure AD credential and token
-            var credential = await GetCredential();
-
-            // Get access token for Cognitive Services with proper scope
-            var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-            var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-
-            // Configure Speech SDK with endpoint
-            var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
-
-            // Set the authorization token
-            config.AuthorizationToken = accessToken.Token;
-
-            // Set language (default to en-US)
-            config.SpeechRecognitionLanguage = language ?? "en-US";
-
-            // set output format (default to simple)
-            if (format?.ToLowerInvariant() == "detailed")
+            try
             {
-                config.OutputFormat = OutputFormat.Detailed;
-            }
-            else
-            {
-                config.OutputFormat = OutputFormat.Simple;
-            }
+                // Get Azure AD credential and token
+                var credential = await GetCredential();
 
-            // Configure profanity filtering
-            if (!string.IsNullOrEmpty(profanity))
-            {
-                config.SetProfanity(GetProfanityOption(profanity));
-            }
+                // Get access token for Cognitive Services with proper scope
+                var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
+                var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
 
-            // Create audio configuration from file
-            using var audioConfig = CreateAudioConfigFromFile(filePath);
-            using var recognizer = new SpeechRecognizer(config, audioConfig);
+                // Configure Speech SDK with endpoint
+                var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
 
-            // Add phrase hints if provided
-            if (phrases?.Length > 0)
-            {
-                var phraseList = PhraseListGrammar.FromRecognizer(recognizer);
-                foreach (var phrase in phrases)
+                // Set the authorization token
+                config.AuthorizationToken = accessToken.Token;
+
+                // Set language (default to en-US)
+                config.SpeechRecognitionLanguage = language ?? "en-US";
+
+                // set output format (default to simple)
+                if (format?.ToLowerInvariant() == "detailed")
                 {
-                    phraseList.AddPhrase(phrase);
+                    config.OutputFormat = OutputFormat.Detailed;
                 }
-            }
-
-            var taskCompletionSource = new TaskCompletionSource<bool>();
-            var recognizedText = new System.Text.StringBuilder();
-            var recognizedSegments = new List<RealtimeRecognitionResult>();
-            CancellationDetails? cancellationDetails = null;
-
-            // Subscribe to recognition events
-            recognizer.SessionStarted += (s, e) =>
-            {
-                _logger.LogInformation("Continuous recognition session started: {SessionId}", e.SessionId);
-            };
-
-            recognizer.Recognizing += (s, e) =>
-            {
-                _logger.LogDebug("Recognizing intermediate result: Text={Text}", e.Result.Text);
-            };
-
-            recognizer.Recognized += (s, e) =>
-            {
-                if (e.Result.Reason == ResultReason.RecognizedSpeech)
+                else
                 {
-                    _logger.LogInformation("Recognized segment: Text={Text}", e.Result.Text);
-                    recognizedText.Append(e.Result.Text).Append(" ");
-
-                    // Create a segment for this recognition result
-                    var segment = ConvertToSpeechRecognitionResult(e.Result, format);
-                    recognizedSegments.Add(segment);
-                }
-                else if (e.Result.Reason == ResultReason.NoMatch)
-                {
-                    _logger.LogWarning("NoMatch: Speech could not be recognized in this segment.");
-                }
-            };
-
-            recognizer.Canceled += (s, e) =>
-            {
-                _logger.LogInformation("Continuous recognition canceled: Reason={Reason}", e.Reason);
-
-                if (e.Reason == CancellationReason.Error)
-                {
-                    _logger.LogError("Continuous recognition error: ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
-                        e.ErrorCode, e.ErrorDetails);
-
-                    cancellationDetails = CancellationDetails.FromResult(e.Result);
+                    config.OutputFormat = OutputFormat.Simple;
                 }
 
-                taskCompletionSource.TrySetResult(false);
-            };
-
-            recognizer.SessionStopped += (s, e) =>
-            {
-                _logger.LogInformation("Continuous recognition session stopped.");
-                taskCompletionSource.TrySetResult(true);
-            };
-
-            // Start continuous recognition
-            await recognizer.StartContinuousRecognitionAsync();
-
-            // Wait for session to complete
-            var success = await taskCompletionSource.Task;
-
-            // Stop recognition
-            await recognizer.StopContinuousRecognitionAsync();
-
-            // Check if recognition was canceled due to invalid endpoint or other errors
-            if (!success && cancellationDetails != null)
-            {
-                _logger.LogWarning("Recognition failed: {Reason}, {ErrorCode}, {ErrorDetails}",
-                    cancellationDetails.Reason, cancellationDetails.ErrorCode, cancellationDetails.ErrorDetails);
-                // Common error codes for invalid endpoints:
-                // ConnectionFailure: Network connectivity issues or invalid endpoint
-                // AuthenticationFailure: Invalid credentials or endpoint authentication issues
-                // Forbidden: Endpoint exists but access is denied
-                if (IsInvalidEndpointError(cancellationDetails))
+                // Configure profanity filtering
+                if (!string.IsNullOrEmpty(profanity))
                 {
-                    var errorMessage = $"Invalid endpoint or connectivity issue. Reason: {cancellationDetails.Reason}, ErrorCode: {cancellationDetails.ErrorCode}, Details: {cancellationDetails.ErrorDetails}";
-                    throw new InvalidOperationException(errorMessage);
+                    config.SetProfanity(GetProfanityOption(profanity));
+                }
+
+                // Create audio configuration from file
+                using var audioConfig = CreateAudioConfigFromFile(filePath);
+                using var recognizer = new SpeechRecognizer(config, audioConfig);
+
+                // Add phrase hints if provided
+                if (phrases?.Length > 0)
+                {
+                    var phraseList = PhraseListGrammar.FromRecognizer(recognizer);
+                    foreach (var phrase in phrases)
+                    {
+                        phraseList.AddPhrase(phrase);
+                    }
+                }
+
+                var taskCompletionSource = new TaskCompletionSource<bool>();
+                var recognizedText = new System.Text.StringBuilder();
+                var recognizedSegments = new List<RealtimeRecognitionResult>();
+                CancellationDetails? cancellationDetails = null;
+
+                // Subscribe to recognition events
+                recognizer.SessionStarted += (s, e) =>
+                {
+                    _logger.LogInformation("Continuous recognition session started: {SessionId}", e.SessionId);
+                };
+
+                recognizer.Recognizing += (s, e) =>
+                {
+                    _logger.LogDebug("Recognizing intermediate result: Text={Text}", e.Result.Text);
+                };
+
+                recognizer.Recognized += (s, e) =>
+                {
+                    if (e.Result.Reason == ResultReason.RecognizedSpeech)
+                    {
+                        _logger.LogInformation("Recognized segment: Text={Text}", e.Result.Text);
+                        recognizedText.Append(e.Result.Text).Append(" ");
+
+                        // Create a segment for this recognition result
+                        var segment = ConvertToSpeechRecognitionResult(e.Result, format);
+                        recognizedSegments.Add(segment);
+                    }
+                    else if (e.Result.Reason == ResultReason.NoMatch)
+                    {
+                        _logger.LogWarning("NoMatch: Speech could not be recognized in this segment.");
+                    }
+                };
+
+                recognizer.Canceled += (s, e) =>
+                {
+                    _logger.LogInformation("Continuous recognition canceled: Reason={Reason}", e.Reason);
+
+                    if (e.Reason == CancellationReason.Error)
+                    {
+                        _logger.LogError("Continuous recognition error: ErrorCode={ErrorCode}, ErrorDetails={ErrorDetails}",
+                            e.ErrorCode, e.ErrorDetails);
+
+                        cancellationDetails = CancellationDetails.FromResult(e.Result);
+                    }
+
+                    taskCompletionSource.TrySetResult(false);
+                };
+
+                recognizer.SessionStopped += (s, e) =>
+                {
+                    _logger.LogInformation("Continuous recognition session stopped.");
+                    taskCompletionSource.TrySetResult(true);
+                };
+
+                // Start continuous recognition
+                await recognizer.StartContinuousRecognitionAsync();
+
+                // Wait for session to complete
+                var success = await taskCompletionSource.Task;
+
+                // Stop recognition
+                await recognizer.StopContinuousRecognitionAsync();
+
+                // Check if recognition was canceled due to invalid endpoint or other errors
+                if (!success && cancellationDetails != null)
+                {
+                    _logger.LogWarning("Recognition failed: {Reason}, {ErrorCode}, {ErrorDetails}",
+                        cancellationDetails.Reason, cancellationDetails.ErrorCode, cancellationDetails.ErrorDetails);
+                    // Common error codes for invalid endpoints:
+                    // ConnectionFailure: Network connectivity issues or invalid endpoint
+                    // AuthenticationFailure: Invalid credentials or endpoint authentication issues
+                    // Forbidden: Endpoint exists but access is denied
+                    if (IsInvalidEndpointError(cancellationDetails))
+                    {
+                        var errorMessage = $"Invalid endpoint or connectivity issue. Reason: {cancellationDetails.Reason}, ErrorCode: {cancellationDetails.ErrorCode}, Details: {cancellationDetails.ErrorDetails}";
+                        throw new InvalidOperationException(errorMessage);
+                    }
+                }
+
+                // Handle case where no segments were recognized
+                if (success && recognizedSegments.Count == 0)
+                {
+                    _logger.LogWarning("Recognition success, but no speech segments were recognized. Creating NoMatch result.");
+                    var noMatchSegment = CreateNoMatchResult();
+                    recognizedSegments.Add(noMatchSegment);
+                }
+
+                // Return the continuous recognition result
+                return new RealtimeRecognitionContinuousResult
+                {
+                    FullText = recognizedText.ToString().Trim(),
+                    Segments = recognizedSegments
+                };
+            }
+            catch (ApplicationException ex) when (ex.Message.Contains("SPXERR_UNEXPECTED_EOF", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogError(ex, "The audio file appears to be empty or corrupted.");
+                throw new InvalidOperationException("The audio file appears to be empty or corrupted. Please provide a valid audio file.", ex);
+            }
+            catch (Exception ex) when (IsGStreamerMissingError(ex))
+            {
+                throw new InvalidOperationException($"Cannot process compressed audio file '{filePath}' because GStreamer is not properly installed or configured.\n\n" +
+                    "To use compressed audio formats (MP3, OGG, FLAC, etc.), you must install GStreamer:\n\n" +
+                    "Windows:\n" +
+                    "1. Download and install GStreamer from: https://gstreamer.freedesktop.org/download/\n" +
+                    "2. Install both the runtime and development packages\n" +
+                    "3. Add GStreamer\\bin to your system PATH environment variable\n" +
+                    "4. Restart your application\n\n" +
+                    "Linux (Ubuntu/Debian):\n" +
+                    "sudo apt-get install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly\n\n" +
+                    "macOS:\n" +
+                    "brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly\n\n" +
+                    "For more information, see: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-use-codec-compressed-audio-input-streams?pivots=programming-language-csharp#gstreamer-configuration\n\n" +
+                    "Alternatively, convert your audio file to WAV format, which doesn't require GStreamer.", ex);
+            }
+            catch (Exception ex) when (IsRetryableException(ex) && attempt < maxRetries)
+            {
+                lastException = ex;
+                _logger.LogWarning(ex, "Retryable error occurred during speech recognition attempt {Attempt}/{MaxAttempts}: {ErrorMessage}",
+                    attempt + 1, maxRetries + 1, ex.Message);
+
+                // Calculate delay for next attempt
+                if (attempt < maxRetries)
+                {
+                    var delay = isExponentialBackoff
+                        ? Math.Min(delaySeconds * Math.Pow(2, attempt), maxDelaySeconds)
+                        : delaySeconds;
+
+                    _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
+                    await Task.Delay(TimeSpan.FromSeconds(delay));
                 }
             }
-
-            // Handle case where no segments were recognized
-            if (success && recognizedSegments.Count == 0)
+            catch (Exception ex)
             {
-                _logger.LogWarning("Recognition success, but no speech segments were recognized. Creating NoMatch result.");
-                var noMatchSegment = CreateNoMatchResult();
-                recognizedSegments.Add(noMatchSegment);
+                _logger.LogError(ex, "Non-retryable error during speech recognition from file.");
+                throw;
             }
-
-            // Return the continuous recognition result
-            return new RealtimeRecognitionContinuousResult
-            {
-                FullText = recognizedText.ToString().Trim(),
-                Segments = recognizedSegments
-            };
         }
-        catch (ApplicationException ex) when (ex.Message.Contains("SPXERR_UNEXPECTED_EOF", StringComparison.OrdinalIgnoreCase))
+
+        // If we've exhausted all retries, throw the last exception
+        _logger.LogError(lastException, "Speech recognition failed after {MaxRetries} retry attempts", maxRetries);
+        throw lastException ?? new InvalidOperationException("Speech recognition failed after maximum retry attempts");
+    }
+
+    /// <summary>
+    /// Determines if an exception is retryable for Speech SDK operations.
+    /// </summary>
+    /// <param name="ex">The exception to check</param>
+    /// <returns>True if the exception indicates a retryable condition, false otherwise</returns>
+    private static bool IsRetryableException(Exception ex)
+    {
+        return ex switch
         {
-            _logger.LogError(ex, "The audio file appears to be empty or corrupted.");
-            throw new InvalidOperationException("The audio file appears to be empty or corrupted. Please provide a valid audio file.", ex);
-        }
-        catch (Exception ex) when (IsGStreamerMissingError(ex))
-        {
-            throw new InvalidOperationException($"Cannot process compressed audio file '{filePath}' because GStreamer is not properly installed or configured.\n\n" +
-                "To use compressed audio formats (MP3, OGG, FLAC, etc.), you must install GStreamer:\n\n" +
-                "Windows:\n" +
-                "1. Download and install GStreamer from: https://gstreamer.freedesktop.org/download/\n" +
-                "2. Install both the runtime and development packages\n" +
-                "3. Add GStreamer\\bin to your system PATH environment variable\n" +
-                "4. Restart your application\n\n" +
-                "Linux (Ubuntu/Debian):\n" +
-                "sudo apt-get install gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly\n\n" +
-                "macOS:\n" +
-                "brew install gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad gst-plugins-ugly\n\n" +
-                "For more information, see: https://learn.microsoft.com/en-us/azure/ai-services/speech-service/how-to-use-codec-compressed-audio-input-streams?pivots=programming-language-csharp#gstreamer-configuration\n\n" +
-                "Alternatively, convert your audio file to WAV format, which doesn't require GStreamer.", ex);
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error during speech recognition from file.");
-            throw;
-        }
+            // Network-related exceptions
+            HttpRequestException => true,
+            TaskCanceledException => true,
+            System.Net.Sockets.SocketException => true,
+
+            // Speech SDK specific retryable exceptions
+            ApplicationException appEx when appEx.Message.Contains("SPXERR_TIMEOUT", StringComparison.OrdinalIgnoreCase) => true,
+            ApplicationException appEx when appEx.Message.Contains("SPXERR_NETWORK", StringComparison.OrdinalIgnoreCase) => true,
+            ApplicationException appEx when appEx.Message.Contains("SPXERR_CONNECTION_FAILURE", StringComparison.OrdinalIgnoreCase) => true,
+
+            // Other transient errors
+            InvalidOperationException ioEx when ioEx.Message.Contains("timeout", StringComparison.OrdinalIgnoreCase) => true,
+            InvalidOperationException ioEx when ioEx.Message.Contains("network", StringComparison.OrdinalIgnoreCase) => true,
+            InvalidOperationException ioEx when ioEx.Message.Contains("connection", StringComparison.OrdinalIgnoreCase) => true,
+
+            _ => false
+        };
     }
 
     /// <summary>

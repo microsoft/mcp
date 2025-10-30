@@ -23,10 +23,10 @@ public record FastTranscriptionRequest
     public string? ProfanityFilterMode { get; set; }
 
     /// <summary>
-    /// The list of phrases to improve recognition accuracy.
+    /// The list of phrases to improve recognition accuracy separated by semicolon.
     /// </summary>
     [JsonPropertyName("phraseList")]
-    public List<string> PhrasesList { get; set; } = new();
+    public string? PhraseList { get; set; }
 
     /// <summary>
     /// The channels to transcribe (0-based indices).

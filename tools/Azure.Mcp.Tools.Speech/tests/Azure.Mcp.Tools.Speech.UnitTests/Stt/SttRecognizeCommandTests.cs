@@ -104,6 +104,35 @@ public class SttRecognizeCommandTests
         }
     }
 
+    [Theory]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav", RecognizerType.Fast)]
+    public async Task ExecuteAsync_DifferentInput_ShouldUseDifferentRecognizer(string args, RecognizerType expectedRecognizer)
+    {
+        // Arrange
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var response = await _command.ExecuteAsync(_context, parseResult);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var result = JsonSerializer.Deserialize(
+            JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+        Assert.NotNull(result);
+        if (expectedRecognizer == RecognizerType.Fast)
+        {
+            Assert.NotNull(result.Result.FastTranscriptionResult);
+        }
+        else
+        {
+            Assert.NotNull(result.Result.RealtimeContinuousResult);
+            Assert.Equal("Hello world", result.Result.RealtimeContinuousResult.FullText);
+        }
+        Assert.Equal("Hello world", result.Result.Text);
+
+    }
+
+
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ShouldSucceed()
     {
