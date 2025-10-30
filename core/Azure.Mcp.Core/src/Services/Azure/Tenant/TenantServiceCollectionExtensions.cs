@@ -48,7 +48,7 @@ public static class TenantServiceCollectionExtensions
         // container to be populated with the correct authentication strategy, such as OBO for
         // running as a remote HTTP MCP service.
         services.AddSingleIdentityTokenCredentialProvider();
-        
+
         services.TryAddSingleton<ITenantService, TenantService>();
         return services;
     }

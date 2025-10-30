@@ -20,7 +20,7 @@ public class BaseAzureServiceTests
 
     public BaseAzureServiceTests()
     {
-        _azureService = new TestAzureService();
+        _azureService = new TestAzureService(_tenantService);
         _tenantService.GetTenantId(TenantName).Returns(TenantId);
     }
 
