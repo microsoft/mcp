@@ -43,16 +43,16 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return _cachedExecutable;
         }
 
-        var proxyDir = _getProxyDirectory();
-        var version = _getTargetVersion();
+        var proxyDir = GetProxyDirectory();
+        var version = GetTargetVersion();
 
-        if (_checkProxyVersion(proxyDir, version))
+        if (CheckProxyVersion(proxyDir, version))
         {
-            _cachedExecutable = _findExecutableInDirectory(proxyDir);
+            _cachedExecutable = FindExecutableInDirectory(proxyDir);
             return _cachedExecutable;
         }
 
-        var assetName = _getAssetNameForPlatform();
+        var assetName = GetAssetNameForPlatform();
         var url = $"https://github.com/Azure/azure-sdk-tools/releases/download/Azure.Sdk.Tools.TestProxy_{version}/{assetName}";
         var downloadPath = Path.Combine(proxyDir, assetName);
         if (!File.Exists(downloadPath))
@@ -75,12 +75,12 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             ZipFile.ExtractToDirectory(downloadPath, proxyDir);
         }
 
-        _cachedExecutable = _findExecutableInDirectory(proxyDir);
+        _cachedExecutable = FindExecutableInDirectory(proxyDir);
 
         return _cachedExecutable;
     }
 
-    private bool _checkProxyVersion(string proxyDirectory, string version)
+    private bool CheckProxyVersion(string proxyDirectory, string version)
     {
         var versionFilePath = Path.Combine(proxyDirectory, "version.txt");
         if (File.Exists(versionFilePath))
@@ -94,7 +94,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return false;
     }
 
-    private string _getAssetNameForPlatform()
+    private string GetAssetNameForPlatform()
     {
         var arch = RuntimeInformation.ProcessArchitecture;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -108,21 +108,21 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return (arch == Architecture.Arm64 ? "test-proxy-standalone-linux-arm64.tar.gz" : "test-proxy-standalone-linux-x64.tar.gz");
     }
 
-    private string _findExecutableInDirectory(string dir)
+    private string FindExecutableInDirectory(string dir)
     {
         var exeName = RuntimeInformation.IsOSPlatform(OSPlatform.Windows) ? "Azure.Sdk.Tools.TestProxy.exe" : "Azure.Sdk.Tools.TestProxy";
         foreach (var file in Directory.EnumerateFiles(dir, exeName, SearchOption.AllDirectories))
         {
             if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                _ensureExecutable(file);
+                EnsureExecutable(file);
             }
             return file;
         }
         throw new FileNotFoundException($"Could not find {exeName} in {dir}");
     }
 
-    private void _ensureExecutable(string path)
+    private void EnsureExecutable(string path)
     {
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
         {
@@ -136,7 +136,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         }
     }
 
-    private string _getRootDirectory()
+    private string GetRootDirectory()
     {
         if (_cachedRootDir != null)
         {
@@ -157,14 +157,14 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         throw new InvalidOperationException("Could not find repository root (.git)");
     }
 
-    private string _getTargetVersion()
+    private string GetTargetVersion()
     {
         if (_cachedVersion != null)
         {
             return _cachedVersion;
         }
 
-        var versionFile = Path.Combine(_getRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
+        var versionFile = Path.Combine(GetRootDirectory(), "eng", "common", "testproxy", "target_version.txt");
         if (!File.Exists(versionFile))
         {
             throw new FileNotFoundException($"Test proxy version file not found: {versionFile}");
@@ -173,9 +173,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return _cachedVersion;
     }
 
-    private string _getProxyDirectory()
+    private string GetProxyDirectory()
     {
-        var root = _getRootDirectory();
+        var root = GetRootDirectory();
         var proxyDirectory = Path.Combine(root, ".proxy");
         if (!Directory.Exists(proxyDirectory))
         {
@@ -184,9 +184,9 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         return proxyDirectory;
     }
 
-    private string? _getExecutableFromAssetsDirectory()
+    private string? GetExecutableFromAssetsDirectory()
     {
-        var proxyDir = _getProxyDirectory();
+        var proxyDir = GetProxyDirectory();
         var toolDir = Path.Combine(proxyDir, "Azure.Sdk.Tools.TestProxy");
 
         if (!Directory.Exists(toolDir))
@@ -197,7 +197,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         {
             if (!RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                _ensureExecutable(file);
+                EnsureExecutable(file);
             }
             return file;
         }
@@ -212,7 +212,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             return;
         }
 
-        var proxyExe = _getExecutableFromAssetsDirectory() ?? await _getClient();
+        var proxyExe = GetExecutableFromAssetsDirectory() ?? await _getClient();
 
         if (string.IsNullOrWhiteSpace(proxyExe) || !File.Exists(proxyExe))
         {
