@@ -36,7 +36,7 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsTables_WhenTablesExist()
     {
         var expectedTables = new List<string> { "table1", "table2" };
-        _postgresService.ListTablesAsync("sub123", "rg1", "user1", "server1", "db123").Returns(expectedTables);
+        _postgresService.ListTablesAsync("sub123", "rg1", "user1", null, "server1", "db123").Returns(expectedTables);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123"]);
@@ -57,7 +57,7 @@ public class TableListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyList_WhenNoTablesExist()
     {
-        _postgresService.ListTablesAsync("sub123", "rg1", "user1", "server1", "db123").Returns([]);
+        _postgresService.ListTablesAsync("sub123", "rg1", "user1", null, "server1", "db123").Returns([]);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123"]);

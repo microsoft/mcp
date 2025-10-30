@@ -41,7 +41,7 @@ public class DatabaseQueryCommandTests
     {
         var expectedResults = new List<string> { "result1", "result2" };
 
-        _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db123", "SELECT * FROM test;")
+        _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", null, "server1", "db123", "SELECT * FROM test;")
             .Returns(expectedResults);
 
         var command = new DatabaseQueryCommand(_logger);
@@ -62,7 +62,7 @@ public class DatabaseQueryCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails()
     {
-        _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db123", "SELECT * FROM test;")
+        _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", null, "server1", "db123", "SELECT * FROM test;")
             .Returns([]);
 
         var command = new DatabaseQueryCommand(_logger);
@@ -133,7 +133,7 @@ public class DatabaseQueryCommandTests
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
         // Service should never be called for invalid queries.
-        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
 
     [Fact]
@@ -155,6 +155,6 @@ public class DatabaseQueryCommandTests
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
+        await _postgresService.DidNotReceive().ExecuteQueryAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>());
     }
 }

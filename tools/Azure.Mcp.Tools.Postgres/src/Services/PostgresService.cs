@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
+
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
@@ -47,11 +50,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string? password, string server)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
@@ -65,11 +68,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query)
+    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database, string query)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         await using var command = new NpgsqlCommand(query, resource.Connection);
@@ -93,11 +96,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database)
+    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
@@ -111,11 +114,11 @@ public class PostgresService : BaseAzureService, IPostgresService
         return tables;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table)
+    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database, string table)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table}';";
