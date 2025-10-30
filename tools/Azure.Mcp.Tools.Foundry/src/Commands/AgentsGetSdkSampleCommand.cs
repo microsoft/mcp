@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions>
 {
-    private const string CommandTitle = "Get Sdk code samples to interact with a Foundry Agent";
+    private const string CommandTitle = "Get code samples to interact with a Foundry Agent using AI Foundry SDK and programming language of your choice";
     public override string Id => "38cc4070-6704-49be-af1b-be55aec8d6d6";
     public override string Name => "get-sdk-sample";
 
