@@ -44,7 +44,7 @@ public class AgentsGetSdkCodeSampleCommandTests
 
     [Theory]
     [InlineData("python")]
-    [InlineData("c#")]
+    [InlineData("csharp")]
     [InlineData("typescript")]
 
     public async Task ExecuteAsync_ReturnsSdkCodeSample(string programmingLanguage)

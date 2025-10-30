@@ -383,7 +383,7 @@ public static class FoundryOptionDefinitions
         $"--{ProgrammingLanguage}"
     )
     {
-        Description = "The programming language of the sdk for interacting with a Foundry Agent",
+        Description = "The programming language of the sdk for interacting with a Foundry Agent. Supported values are csharp, python and typescript.",
         Required = true
     };
 }

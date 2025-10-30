@@ -238,7 +238,7 @@ azmcp foundry agents list --endpoint <endpoint>
 
 # Get SDK samples for interacting with an AI Foundry agent
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents get-sdk-sample --programming-language <python|typescript|c#>
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
 
 # Create an AI Foundry agent thread
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired

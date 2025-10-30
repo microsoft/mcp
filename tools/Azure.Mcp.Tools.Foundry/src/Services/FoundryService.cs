@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.ClientModel;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
@@ -9,6 +10,7 @@ using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -1125,28 +1127,6 @@ public class FoundryService(
         }
     }
 
-    public async Task<string> GetAgentSdkCodeSample(string programmingLanguage)
-    {
-        // Todo: implement this method by fetching the real RAG content
-        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
-        if (programmingLanguageLowerCase == "c#")
-        {
-            return await Task.FromResult("todo: c# sdk sample for Foundry Agent");
-        }
-        else if (programmingLanguageLowerCase == "typescript")
-        {
-            return await Task.FromResult("todo: typescript sdk sample for Foundry Agent");
-        }
-        else if (programmingLanguageLowerCase == "python")
-        {
-            return await Task.FromResult("todo: python sdk sample for Foundry Agent");
-        }
-        else
-        {
-            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
-        }
-    }
-
     private async Task<PersistentAgentThread> CreateThreadCore(
         string projectEndpoint,
         string userMessage,
@@ -1529,33 +1509,33 @@ public class FoundryService(
         }
     }
 
-    public async Task<AgentsGetSdkCodeSampleResult> GetSdkCodeSample(
+    public AgentsGetSdkCodeSampleResult GetSdkCodeSample(
         string programmingLanguage
     )
     {
-        // Todo: finalize the resource urls
-        string? resourceUrl;
-        if (programmingLanguage == "python")
+        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
+        string resourceFileName;
+        if (programmingLanguageLowerCase == "csharp")
         {
-            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/python/agent-sdk-sample.md";
+            resourceFileName = "csharp.md";
         }
-        else if (programmingLanguage == "c#")
+        else if (programmingLanguageLowerCase == "typescript")
         {
-            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/c%23/agent-sdk-sample.md";
+            resourceFileName = "typescript.md";
         }
-        else if (programmingLanguage == "typescript")
+        else if (programmingLanguageLowerCase == "python")
         {
-            resourceUrl = "https://raw.githubusercontent.com/microsoft/GitHub-Copilot-for-Azure/refs/heads/dev/chuye/foundry-agent-sdk-sample/docs/foundry-agent-sdk-sample/typescript/agent-sdk-sample.md";
+            resourceFileName = "python.md";
         }
         else
         {
-            throw new ArgumentException($"Unsupported sdk programming language {programmingLanguage}");
+            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
         }
 
-        var response = await _httpClientService.DefaultClient.GetAsync(resourceUrl);
-        response.EnsureSuccessStatusCode();
+        Assembly assembly = typeof(FoundryService).Assembly;
 
-        var codeSampleText = await response.Content.ReadAsStringAsync();
+        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
+        string codeSampleText = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
 
         return new AgentsGetSdkCodeSampleResult()
         {

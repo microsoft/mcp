@@ -44,11 +44,11 @@ public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
-            return context.Response;
+            return Task.FromResult(context.Response);
         }
 
         var options = BindOptions(parseResult);
@@ -58,8 +58,11 @@ public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions
             var programmingLanguageLowercase = options.ProgrammingLanguage!.ToLowerInvariant();
 
             var service = context.GetService<IFoundryService>();
-            var result = await service.GetSdkCodeSample(
+            var result = service.GetSdkCodeSample(
                 programmingLanguageLowercase);
+
+            // If we can get a code sample, the programming language must be within one of our expected values so it's safe to log it.
+            context.Activity?.AddTag("programmingLanguage", programmingLanguageLowercase);
 
             context.Response.Results = ResponseResult.Create(
                 result,
@@ -70,6 +73,6 @@ public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions
             HandleException(context, ex);
         }
 
-        return context.Response;
+        return Task.FromResult(context.Response);
     }
 }
