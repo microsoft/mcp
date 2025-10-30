@@ -44,6 +44,8 @@ public sealed class AppTraceListCommand(ILogger<AppTraceListCommand> logger) : S
 
     public override ToolMetadata Metadata => new() { Destructive = false, Idempotent = true, LocalRequired = false, OpenWorld = false, Secret = false, ReadOnly = true };
 
+    public override string Id => "2bc7216a-9ceb-4dce-b587-aa8be9c807cc";
+
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
