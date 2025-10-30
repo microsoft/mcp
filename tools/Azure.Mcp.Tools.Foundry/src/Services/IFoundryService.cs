@@ -181,6 +181,6 @@ public interface IFoundryService
         RetryPolicyOptions? retryPolicy = null);
 
     Task<AgentsGetSdkCodeSampleResult> GetSdkCodeSample(
-        string prorgammingLanguage
+        string programmingLanguage
     );
 }

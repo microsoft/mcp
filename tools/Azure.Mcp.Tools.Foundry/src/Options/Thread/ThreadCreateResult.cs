@@ -8,8 +8,8 @@ namespace Azure.Mcp.Tools.Foundry.Options.Thread;
 public class ThreadCreateResult
 {
     [JsonPropertyName("threadId")]
-    public string? ThreadId;
+    public string? ThreadId { get; set; }
 
     [JsonPropertyName("projectEndpoint")]
-    public string? ProjectEndpoint;
+    public string? ProjectEndpoint { get; set; }
 }

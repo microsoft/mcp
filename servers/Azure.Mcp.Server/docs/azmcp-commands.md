@@ -249,7 +249,8 @@ azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
 azmcp foundry threads list --endpoint <endpoint>
 
 # Get messages of an AI Foundry agent thread
-azmcp foundry threads get-messages --<endpoint> --thread-id <thread-id>
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
 
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired

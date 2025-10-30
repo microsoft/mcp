@@ -16,7 +16,7 @@ public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions
 
     public override string Description =>
         """
-        Get Sdk code samples to interact with a Foundry Agent using the programming language of choice.
+        Get code samples to interact with a Foundry Agent using AI Foundry SDK and programming language of your choice.
         """;
 
     public override ToolMetadata Metadata => new()

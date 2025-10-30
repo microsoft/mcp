@@ -14,5 +14,5 @@ public class ThreadListResult
 public class ThreadItem
 {
     [JsonPropertyName("threadId")]
-    public string? ThreadId;
+    public string? ThreadId { get; set; }
 }

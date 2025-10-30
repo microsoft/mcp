@@ -349,7 +349,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * List knowledge indexes
 * Get knowledge index schema configuration
 * Create AI Foundry agents
-* List AI Fondry agents
+* List AI Foundry agents
 * Connect and query AI Foundry agents
 * Evaluate AI Foundry agents
 * Get SDK samples for interacting with AI Foundry agent
