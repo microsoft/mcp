@@ -28,21 +28,28 @@ public sealed class NamespaceToolLoader(
     CommandFactory commandFactory,
     IOptions<ServiceStartOptions> options,
     IServiceProvider serviceProvider,
-    ILogger<NamespaceToolLoader> logger) : BaseToolLoader(logger)
+    ILogger<NamespaceToolLoader> logger,
+    bool applyFilter = true) : BaseToolLoader(logger)
 {
     private readonly CommandFactory _commandFactory = commandFactory ?? throw new ArgumentNullException(nameof(commandFactory));
     private readonly IOptions<ServiceStartOptions> _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+    private readonly bool _applyFilter = applyFilter;
 
-    private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new Lazy<IReadOnlyList<string>>(() =>
+    private readonly Lazy<IReadOnlyList<string>> _availableNamespaces = new(() =>
     {
-        return commandFactory.RootGroup.SubGroup
-            .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-            .Where(group => options.Value.Namespace == null ||
-                           options.Value.Namespace.Length == 0 ||
-                           options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
-            .Select(group => group.Name)
-            .ToList();
+        IEnumerable<CommandGroup> allSubGroups = commandFactory.RootGroup.SubGroup;
+
+        if (applyFilter)
+        {
+            allSubGroups = allSubGroups
+                .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))
+                .Where(group => options.Value.Namespace == null ||
+                               options.Value.Namespace.Length == 0 ||
+                               options.Value.Namespace.Contains(group.Name, StringComparer.OrdinalIgnoreCase));
+        }
+
+        return allSubGroups.Select(group => group.Name).ToList();
     });
 
     private readonly Dictionary<string, List<Tool>> _cachedToolLists = new(StringComparer.OrdinalIgnoreCase);
@@ -123,6 +130,10 @@ public sealed class NamespaceToolLoader(
                 Annotations = new ToolAnnotations()
                 {
                     Title = group.Title ?? namespaceName,
+                    DestructiveHint = group.ToolMetadata?.Destructive,
+                    IdempotentHint = group.ToolMetadata?.Idempotent,
+                    OpenWorldHint = group.ToolMetadata?.OpenWorld,
+                    ReadOnlyHint = group.ToolMetadata?.ReadOnly,
                 },
             };
 
