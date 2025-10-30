@@ -91,11 +91,11 @@ public class FoundrySetup : IAreaSetup
 
         resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
 
-        var thread = new CommandGroup("thread", "Founder agent thread operations - Commands for listing and creating threads in AI Foundry.");
-        foundry.AddSubGroup(thread);
+        var threads = new CommandGroup("threads", "Founder agent threads operations - Commands for listing, creating threads and getting messages in a thread in AI Foundry.");
+        foundry.AddSubGroup(threads);
 
-        thread.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
-        thread.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
+        threads.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
+        threads.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
 
         return foundry;
     }

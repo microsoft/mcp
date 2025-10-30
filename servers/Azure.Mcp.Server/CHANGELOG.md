@@ -6,7 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_thread_create`, `foundry_thread_list`, `foundry_thread_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
+- Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_threads_create`, `foundry_threads_list`, `foundry_threads_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
 
 ### Breaking Changes
 

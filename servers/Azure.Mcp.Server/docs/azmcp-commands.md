@@ -242,14 +242,14 @@ azmcp foundry agents get-sdk-sample --programming-language <python|typescript|c#
 
 # Create an AI Foundry agent thread
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry thread create --endpoint <endpoint> --user-message <user-message>
+azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
 
 # List AI Foundry agent threads in a Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry thread list --endpoint <endpoint>
+azmcp foundry threads list --endpoint <endpoint>
 
 # Get messages of an AI Foundry agent thread
-azmcp foundry thread get-messages --<endpoint> --thread-id <thread-id>
+azmcp foundry threads get-messages --<endpoint> --thread-id <thread-id>
 
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
