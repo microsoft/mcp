@@ -83,6 +83,9 @@ public class ToolAnnotations
 // Tool definition for azmcp tools list response
 public class Tool
 {
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
+
     [JsonPropertyName("name")]
     public required string Name { get; set; }
 
