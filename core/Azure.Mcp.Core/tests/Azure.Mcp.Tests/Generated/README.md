@@ -1,6 +1,6 @@
 ﻿# Regenerating this code
 
-- Add this file to the repo under `eng/common`
+- Add this file to the repo under `eng/`
   ```json
   {
     "main": "dist/src/index.js",
