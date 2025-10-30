@@ -9,7 +9,6 @@ $ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-
 $ignoreMissingArtifacts = $env:TF_BUILD -ne 'true'
 $exitCode = 0
 
@@ -71,25 +70,12 @@ foreach ($server in $buildInfo.servers) {
         Write-Host "Installing npm packages"
         Invoke-LoggedCommand 'npm ci --omit=optional'
 
-        $version = $server.version
-
-        # If not SetDevVersion, don't strip pre-release labels leaving the packages unpublishable
-        if($env:SETDEVVERSION -eq "true") {
-            <#
-                VS Code Marketplace doesn't support pre-release versions. Also, the major.minor.patch portion of the
-                version number is stored in the repo, making the pre-release suffix the only dynamic portion of the
-                version.
-
-                In build runs with "SetDevVersion" set to true, we are intentionally publishing dynamically
-                numbered packages to the marketplace. In this case, we use the CI build id as the patch number
-                (e.g. 1.2.3 -> 1.2.56789)
-            #>
-            $semver = [AzureEngSemanticVersion]::new($version)
-            $semver.PrereleaseLabel = ''
-            $semver.Patch = $buildInfo.buildId
-            $version = $semver.ToString()
-            Write-Host "SetDevVersion is true, using Build.BuildId as patch number: $($server.version) -> $version" -ForegroundColor Yellow
-        }
+        $version = $server.vsixVersion
+        $isPrerelease = $server.vsixIsPrerelease
+        
+        Write-Host "Server Version: $($server.version)"
+        Write-Host "VSIX Version: $version"
+        Write-Host "Is Prerelease: $isPrerelease"
 
         Write-Host "Copying server icon from $($server.packageIcon) to $tempPath/resources/package-icon.png"
         New-Item -Path "$tempPath/resources" -ItemType Directory -Force | Out-Null
@@ -175,7 +161,10 @@ Processing VSIX packaging: $vsixBaseName
 
             New-Item -ItemType Directory -Force -Path $outputDirectory | Out-Null
 
-            $preRelease = $setDevVersion -or $version -match '-'
+            # Use pre-release status from build_info.json
+            # For X.0.0-beta.Y series: $isPrerelease will be $true
+            # For X.0.0 GA releases: $isPrerelease will be $false
+            $preRelease = $isPrerelease
 
             ## Run package command
             Write-Host "Packaging $vsixBaseName"
