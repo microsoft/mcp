@@ -626,7 +626,7 @@
       "toolMetadata": {
         "destructive": false,
         "idempotent": false,
-        "openWorld": true,
+        "openWorld": false,
         "readOnly": false,
         "secret": false,
         "localRequired": false
