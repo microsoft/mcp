@@ -162,10 +162,10 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
         // For tokenized names (using underscore), include "azmcp_" prefix
         // For command strings (using space), don't include "azmcp " prefix
-        var namespacePrefixes = separator == '_' 
+        var namespacePrefixes = separator == '_'
             ? namespaces.Select(ns => $"{ns}{separator}").ToList()
             : namespaces.Select(ns => $"{ns}{separator}").ToList();
-            
+
         return names.Where(name =>
             namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
     }
@@ -183,7 +183,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
         var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');
         // Strip the "azmcp " prefix from the command
-        var commandWithoutPrefix = fullCommand.StartsWith("azmcp ", StringComparison.OrdinalIgnoreCase) 
+        var commandWithoutPrefix = fullCommand.StartsWith("azmcp ", StringComparison.OrdinalIgnoreCase)
             ? fullCommand.Substring(6) // Remove "azmcp "
             : fullCommand;
 
