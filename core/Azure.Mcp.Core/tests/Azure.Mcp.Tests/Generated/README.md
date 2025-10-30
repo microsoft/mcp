@@ -1,6 +1,6 @@
 ﻿# Regenerating this code
 
-- Add this file to the repo under `eng/`
+- Add this file to the repo under `eng/emitter-package.json`
   ```json
   {
     "main": "dist/src/index.js",
