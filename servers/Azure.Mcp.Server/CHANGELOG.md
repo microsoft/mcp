@@ -8,7 +8,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Enhanced `azmcp tools list` command with new filtering and output options:
   - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
-  - Added `--name` option to return only tool names without descriptions or metadata
+  - Added `--name-only` option to return only tool names without descriptions or metadata
   - Renamed `--namespaces` to `--namespace-mode` for better clarity when listing top-level service namespaces
 
 ### Breaking Changes

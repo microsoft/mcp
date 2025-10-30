@@ -475,13 +475,13 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
-    /// Verifies that the --name option returns only tool names without descriptions.
+    /// Verifies that the --name-only option returns only tool names without descriptions.
     /// </summary>
     [Fact]
     public async Task ExecuteAsync_WithNameOption_ReturnsOnlyToolNames()
     {
         // Arrange
-        var args = _commandDefinition.Parse(new[] { "--name" });
+        var args = _commandDefinition.Parse(new[] { "--name-only" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -508,16 +508,15 @@ public class ToolsListCommandTests
         Assert.Equal(1, propertyCount);
 
         // Explicitly verify that description and command fields are not present
-        Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name option");
-        Assert.False(jsonElement.TryGetProperty("command", out _), "Response should not contain 'command' property when using --name option");
-        Assert.False(jsonElement.TryGetProperty("options", out _), "Response should not contain 'options' property when using --name option");
-        Assert.False(jsonElement.TryGetProperty("metadata", out _), "Response should not contain 'metadata' property when using --name option");
+        Assert.False(jsonElement.TryGetProperty("description", out _), "Response should not contain 'description' property when using --name-only option");
+        Assert.False(jsonElement.TryGetProperty("command", out _), "Response should not contain 'command' property when using --name-only option");
+        Assert.False(jsonElement.TryGetProperty("options", out _), "Response should not contain 'options' property when using --name-only option");
+        Assert.False(jsonElement.TryGetProperty("metadata", out _), "Response should not contain 'metadata' property when using --name-only option");
 
         // Verify that all names are properly formatted tokenized names
         foreach (var name in result.Names)
         {
             Assert.False(string.IsNullOrWhiteSpace(name), "Tool name should not be empty");
-            Assert.StartsWith("azmcp_", name);
             Assert.DoesNotContain(" ", name);
         }
 
@@ -551,11 +550,11 @@ public class ToolsListCommandTests
         // All commands should be from the storage namespace
         foreach (var command in result)
         {
-            Assert.StartsWith("azmcp storage", command.Command);
+            Assert.StartsWith("storage", command.Command);
         }
 
         // Should contain some well-known storage commands
-        Assert.Contains(result, cmd => cmd.Command == "azmcp storage account get");
+        Assert.Contains(result, cmd => cmd.Command == "storage account get");
     }
 
     /// <summary>
@@ -582,25 +581,25 @@ public class ToolsListCommandTests
         // All commands should be from either storage or keyvault namespaces
         foreach (var command in result)
         {
-            var isStorageCommand = command.Command.StartsWith("azmcp storage");
-            var isKeyvaultCommand = command.Command.StartsWith("azmcp keyvault");
+            var isStorageCommand = command.Command.StartsWith("storage");
+            var isKeyvaultCommand = command.Command.StartsWith("keyvault");
             Assert.True(isStorageCommand || isKeyvaultCommand,
                 $"Command '{command.Command}' should be from storage or keyvault namespace");
         }
 
         // Should contain commands from both namespaces
-        Assert.Contains(result, cmd => cmd.Command.StartsWith("azmcp storage"));
-        Assert.Contains(result, cmd => cmd.Command.StartsWith("azmcp keyvault"));
+        Assert.Contains(result, cmd => cmd.Command.StartsWith("storage"));
+        Assert.Contains(result, cmd => cmd.Command.StartsWith("keyvault"));
     }
 
     /// <summary>
-    /// Verifies that --name and --namespace options work together correctly.
+    /// Verifies that --name-only and --namespace options work together correctly.
     /// </summary>
     [Fact]
     public async Task ExecuteAsync_WithNameAndNamespaceOptions_FiltersAndReturnsNamesOnly()
     {
         // Arrange
-        var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage" });
+        var args = _commandDefinition.Parse(new[] { "--name-only", "--namespace", "storage" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -629,7 +628,7 @@ public class ToolsListCommandTests
         // All names should be from the storage namespace
         foreach (var name in result.Names)
         {
-            Assert.StartsWith("azmcp_storage_", name);
+            Assert.StartsWith("storage_", name);
         }
 
         // Should contain some well-known storage commands
@@ -637,13 +636,13 @@ public class ToolsListCommandTests
     }
 
     /// <summary>
-    /// Verifies that --name with multiple --namespace options works correctly.
+    /// Verifies that --name-only with multiple --namespace options works correctly.
     /// </summary>
     [Fact]
     public async Task ExecuteAsync_WithNameAndMultipleNamespaceOptions_FiltersAndReturnsNamesOnly()
     {
         // Arrange
-        var args = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
+        var args = _commandDefinition.Parse(new[] { "--name-only", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
@@ -672,15 +671,15 @@ public class ToolsListCommandTests
         // All names should be from either storage or keyvault namespaces
         foreach (var name in result.Names)
         {
-            var isStorageName = name.StartsWith("azmcp_storage_");
-            var isKeyvaultName = name.StartsWith("azmcp_keyvault_");
+            var isStorageName = name.StartsWith("storage_");
+            var isKeyvaultName = name.StartsWith("keyvault_");
             Assert.True(isStorageName || isKeyvaultName,
                 $"Tool name '{name}' should be from storage or keyvault namespace");
         }
 
         // Should contain names from both namespaces
-        Assert.Contains(result.Names, name => name.StartsWith("azmcp_storage_"));
-        Assert.Contains(result.Names, name => name.StartsWith("azmcp_keyvault_"));
+        Assert.Contains(result.Names, name => name.StartsWith("storage_"));
+        Assert.Contains(result.Names, name => name.StartsWith("keyvault_"));
     }
 
     /// <summary>
@@ -690,7 +689,7 @@ public class ToolsListCommandTests
     public void BindOptions_WithNewOptions_BindsCorrectly()
     {
         // Arrange
-        var parseResult = _commandDefinition.Parse(new[] { "--name", "--namespace", "storage", "--namespace", "keyvault" });
+        var parseResult = _commandDefinition.Parse(new[] { "--name-only", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Use reflection to call the protected BindOptions method
         var bindOptionsMethod = typeof(ToolsListCommand).GetMethod("BindOptions",
@@ -716,17 +715,17 @@ public class ToolsListCommandTests
     public void CanParseNewOptions()
     {
         // Arrange & Act
-        var parseResult1 = _commandDefinition.Parse(["--name"]);
+        var parseResult1 = _commandDefinition.Parse(["--name-only"]);
         var parseResult2 = _commandDefinition.Parse(["--namespace", "storage"]);
-        var parseResult3 = _commandDefinition.Parse(["--name", "--namespace", "storage", "--namespace", "keyvault"]);
+        var parseResult3 = _commandDefinition.Parse(["--name-only", "--namespace", "storage", "--namespace", "keyvault"]);
 
         // Assert
-        Assert.False(parseResult1.Errors.Any(), $"Parse errors for --name: {string.Join(", ", parseResult1.Errors)}");
+        Assert.False(parseResult1.Errors.Any(), $"Parse errors for --name-only: {string.Join(", ", parseResult1.Errors)}");
         Assert.False(parseResult2.Errors.Any(), $"Parse errors for --namespace: {string.Join(", ", parseResult2.Errors)}");
         Assert.False(parseResult3.Errors.Any(), $"Parse errors for combined options: {string.Join(", ", parseResult3.Errors)}");
 
         // Verify values
-        Assert.True(parseResult1.GetValueOrDefault<bool>(ToolsListOptionDefinitions.Name.Name));
+        Assert.True(parseResult1.GetValueOrDefault<bool>(ToolsListOptionDefinitions.NameOnly.Name));
 
         var namespaces2 = parseResult2.GetValueOrDefault<string[]>(ToolsListOptionDefinitions.Namespace.Name);
         Assert.NotNull(namespaces2);
