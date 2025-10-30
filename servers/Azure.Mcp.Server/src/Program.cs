@@ -128,13 +128,16 @@ internal class Program
         services.ConfigureOpenTelemetry();
 
         services.AddMemoryCache();
-        services.AddSingleton<ICacheService, CacheService>();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
         services.AddSingleton<IDateTimeProvider, DateTimeProvider>();
-        services.AddAzureTenantService();
         services.AddSingleton<IResourceGroupService, ResourceGroupService>();
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
+
+        // !!! WARNING !!!
+        // The DI container being set up in this method 
+        services.AddAzureTenantService();
+        services.AddSingleUserCliCacheService();
 
         foreach (var area in Areas)
         {

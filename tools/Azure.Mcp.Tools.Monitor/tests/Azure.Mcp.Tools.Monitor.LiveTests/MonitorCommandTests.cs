@@ -39,7 +39,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     private static IMonitorService GetMonitorService()
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new CacheService(memoryCache);
+        var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
         var tenantService = new TenantService(tokenProvider, cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);

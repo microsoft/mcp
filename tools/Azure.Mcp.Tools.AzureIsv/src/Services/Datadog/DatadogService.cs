@@ -19,7 +19,7 @@ public partial class DatadogService : BaseAzureService, IDatadogService
         try
         {
             var tenantId = await ResolveTenantIdAsync(null);
-            var armClient = await CreateArmClientAsync(tenant: tenantId, retryPolicy: null);
+            var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null);
 
             var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 
