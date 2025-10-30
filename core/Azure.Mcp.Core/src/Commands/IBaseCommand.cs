@@ -3,6 +3,7 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -43,6 +44,12 @@ public interface IBaseCommand
     /// Gets the command definition
     /// </summary>
     Command GetCommand();
+
+    internal Task<CommandResponse> InternalExecuteAsync(CommandContext context, ParseResult parseResult)
+    {
+        context.Activity?.SetTag(TagName.ToolId, Id);
+        return ExecuteAsync(context, parseResult);
+    }
 
     /// <summary>
     /// Executes the command
