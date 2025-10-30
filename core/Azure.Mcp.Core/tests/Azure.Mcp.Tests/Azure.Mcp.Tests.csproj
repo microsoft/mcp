@@ -1,8 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>false</IsAotCompatible>
-    <!-- Suppress NuGet source mapping and downgrade warnings -->
-    <NoWarn>$(NoWarn);NU1507;NU1605</NoWarn>
   </PropertyGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Core.csproj" />
