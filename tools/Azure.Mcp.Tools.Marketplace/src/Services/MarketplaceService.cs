@@ -6,21 +6,23 @@ using Azure.Core;
 using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Marketplace.Commands;
 using Azure.Mcp.Tools.Marketplace.Models;
 
 namespace Azure.Mcp.Tools.Marketplace.Services;
 
-public class MarketplaceService(ITenantService tenantService)
-    : BaseAzureService(tenantService), IMarketplaceService
+public class MarketplaceService(ITokenCredentialProvider tokenCredentialProvider, ITenantService tenantService, ICacheService cacheService)
+    : BaseAzureService(tokenCredentialProvider, tenantService), IMarketplaceService
 {
-    private const int TokenExpirationBuffer = 300;
+    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
+
     private const string ManagementApiBaseUrl = "https://management.azure.com";
     private const string ApiVersion = "2023-01-01-preview";
 
-    private string? _cachedAccessToken;
-    private DateTimeOffset _tokenExpiryTime;
+    private const string CacheGroup = "marketplace";
 
     /// <summary>
     /// Retrieves a single private product (offer) for a given subscription.
@@ -207,18 +209,13 @@ public class MarketplaceService(ITenantService tenantService)
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
 
-    private async Task<string> GetAccessTokenAsync(string? tenant = null)
+    private async Task<string> GetEntraIdAccessTokenAsync(string? tenant = null)
     {
-        if (_cachedAccessToken != null && DateTimeOffset.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedAccessToken;
-        }
-
-        AccessToken accessToken = await GetEntraIdAccessTokenAsync(ManagementApiBaseUrl, tenant);
-        _cachedAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.AddSeconds(-TokenExpirationBuffer);
-
-        return _cachedAccessToken;
+        return await GetEntraIdAccessTokenAsync(
+            _cacheService,
+            CacheGroup,
+            "https://management.azure.com/.default",
+            tenant);
     }
 
     private async Task<AccessToken> GetEntraIdAccessTokenAsync(string resource, string? tenant = null)
@@ -252,7 +249,7 @@ public class MarketplaceService(ITenantService tenantService)
         // Create pipeline
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        string accessToken = await GetAccessTokenAsync(tenant);
+        string accessToken = await GetEntraIdAccessTokenAsync(tenant);
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         var request = pipeline.CreateRequest();
