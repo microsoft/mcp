@@ -33,14 +33,10 @@ if ($changedFiles) {
     $fileName = [System.IO.Path]::GetFileName($_)
     $isSkipFile = $skipFiles -contains $fileName
 
-    Write-Host "  -> File: $_"
-
-    $normalizedFile = $_ -replace '\\', '/'
-
-    Write-Host "  -> Normalized File: $normalizedFile"
-
-    $relativeFile = $normalizedFile -replace [regex]::Escape($RepoRoot), ''
+    $relativeFile = $_ -replace [regex]::Escape($RepoRoot), ''
     $relativeFile = $relativeFile.TrimStart('/')
+
+    Write-Host "  -> Relative file path: $relativeFile"
     $isInSkipDirectory = $false
     foreach ($dir in $skipDirectories) {
         if ($relativeFile.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
