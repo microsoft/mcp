@@ -76,15 +76,18 @@ function Get-LatestMarketplaceVersion {
     )
     
     try {
-        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery"
+        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1"
         $body = @{
             filters = @(
                 @{
                     criteria = @(
+                        # filterType 7 = ExtensionName: Filter by the unique identifier (publisher.extensionName)
                         @{ filterType = 7; value = "$PublisherId.$ExtensionId" }
                     )
                 }
             )
+            # flags 914 = IncludeVersions | IncludeFiles | IncludeAssetUri | IncludeStatistics
+            # This requests version information needed to determine the latest published version
             flags = 914
         } | ConvertTo-Json -Depth 10
 
