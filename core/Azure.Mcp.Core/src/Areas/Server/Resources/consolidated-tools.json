@@ -585,7 +585,7 @@
                 "foundry_agents_list",
                 "foundry_resource_get",
                 "foundry_threads_list",
-                "foundry_threads_get_messages"
+                "foundry_threads_get-messages"
             ]
         },
         {
@@ -623,7 +623,7 @@
     {
       "name": "create_azure_ai_foundry_agent_resources",
       "description": "Create Azure AI Foundry agent or thread.",
-        "toolMetadata": {
+      "toolMetadata": {
         "destructive": false,
         "idempotent": false,
         "openWorld": true,

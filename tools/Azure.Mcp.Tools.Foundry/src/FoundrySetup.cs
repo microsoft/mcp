@@ -34,6 +34,7 @@ public class FoundrySetup : IAreaSetup
 
         services.AddSingleton<ThreadCreateCommand>();
         services.AddSingleton<ThreadListCommand>();
+        services.AddSingleton<ThreadGetMessagesCommand>();
 
         services.AddSingleton<ResourceGetCommand>();
     }
@@ -96,6 +97,7 @@ public class FoundrySetup : IAreaSetup
 
         threads.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
         threads.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
+        threads.AddCommand("get-messages", serviceProvider.GetRequiredService<ThreadGetMessagesCommand>());
 
         return foundry;
     }
