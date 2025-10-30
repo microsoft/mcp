@@ -121,8 +121,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
         await using var resource = await PostgresResource.CreateAsync(connectionString);
-        var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table}';";
+        var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
         await using var command = new NpgsqlCommand(query, resource.Connection);
+        command.Parameters.AddWithValue("tableName", table);
         await using var reader = await command.ExecuteReaderAsync();
         var schema = new List<string>();
         while (await reader.ReadAsync())
