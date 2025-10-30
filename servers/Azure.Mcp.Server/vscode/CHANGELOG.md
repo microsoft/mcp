@@ -1,5 +1,9 @@
 # Release History
 
+## 2.0.1 (2025-10-29) (pre-release)
+
+- Initial beta release to validate updated release infrastructure and versioning strategy. No functional changes from 1.x series.
+
 ## 1.0.0 (2025-10-27)
 
 **🎉 First Stable Release**

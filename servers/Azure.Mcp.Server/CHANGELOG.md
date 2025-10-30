@@ -2,7 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.1 (Unreleased)
+## 2.0.0-beta.2 (Unreleased)
 
 ### Features Added
 
@@ -11,6 +11,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 ### Other Changes
+
+## 2.0.0-beta.1 (2025-10-29)
+
+- Initial beta release to validate updated release infrastructure and versioning strategy. No functional changes from 1.x series.
 
 ## 1.0.0 (2025-10-27)
 
