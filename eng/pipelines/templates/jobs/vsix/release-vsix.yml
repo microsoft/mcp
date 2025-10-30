@@ -66,12 +66,13 @@ jobs:
                 
                 npm install -g @vscode/vsce
                 
+                # DISABLED FOR DUMMY RUN - Publishing commands commented out
                 if ("$(prereleaseArg)" -ne "") {
                     $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`" --pre-release"
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s" --pre-release
+                    Write-Host "[DRY RUN] Would execute: $publishCmd"
+                    # vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s" --pre-release
                 } else {
                     $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`""
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"
+                    Write-Host "[DRY RUN] Would execute: $publishCmd"
+                    # vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"
                 }
