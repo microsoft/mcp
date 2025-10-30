@@ -1,0 +1,19 @@
+{
+  "parameters": {
+    "workspaceId": "cf5fef71-f7f3-43f3-ae7f-3c427922bef1",
+    "modelId": "7e92a6fc-3ef5-40bf-96df-ddae3fcde313",
+    "name": "1"
+  },
+  "responses": {
+    "202": {
+      "headers": {
+        "Location": "https://api.fabric.microsoft.com/v1/operations/0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "x-ms-operation-id": "0acd697c-1550-43cd-b998-91bfbfbd47c6",
+        "Retry-After": 30
+      }
+    },
+    "200": {
+      "description": "Provisioning completed successfully."
+    }
+  }
+}

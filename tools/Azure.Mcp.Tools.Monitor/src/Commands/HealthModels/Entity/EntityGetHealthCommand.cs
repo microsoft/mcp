@@ -12,8 +12,12 @@ namespace Azure.Mcp.Tools.Monitor.Commands.HealthModels.Entity;
 public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logger) : BaseMonitorHealthModelsCommand<BaseMonitorHealthModelsOptions>
 {
     private const string CommandTitle = "Get the health of an entity in a health model";
-    private const string CommandName = "gethealth";
+    private const string CommandName = "get";
+
+    public override string Id => "80b23546-a6ac-4f0c-ad70-f51d6dff5543";
+
     public override string Name => CommandName;
+
     public override string Description =>
     $"""
     Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.

@@ -13,6 +13,7 @@ extends:
     ServerName: Template.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    IncludeDockerRelease : false
+    PackageDocker: false
+    PackageVSIX: false
     IncludeNative: true
     IsTestPipeline: true

@@ -9,7 +9,8 @@
                         "name": "test report",
                         "type": "Workspace",
                         "state": "Active",
-                        "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84"
+                        "capacityId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e84",
+                        "domainId": "039bd896-b39c-4540-93e3-e9926de135f9"
                     }
                 ],
                 "continuationUri": "https://api.fabric.microsoft.com/v1/admin/workspaces?continuationToken='LDEsMTAwMDAwLDA%3D'",

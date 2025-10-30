@@ -199,6 +199,130 @@
           "readOnly": false
         }
       }
+    },
+    "RestorePoint": {
+      "type": "object",
+      "description": "The properties of a restore point.",
+      "required": [ "id", "displayName", "description", "creationMode", "creationDetails" ],
+      "properties": {
+        "id": {
+          "description": "The restore point ID.",
+          "type": "string",
+          "readOnly": true
+        },
+        "displayName": {
+          "description": "The restore point name.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The restore point description.",
+          "type": "string",
+          "readOnly": false
+        },
+        "creationMode": {
+          "description": "The creation mode of the restore point. Additional creation mode types may be added over time.",
+          "type": "string",
+          "readOnly": true,
+          "enum": [ "UserDefined", "SystemCreated" ],
+          "x-ms-enum": {
+            "name": "CreationModeType",
+            "modelAsString": true,
+            "values": [
+              {
+                "value": "UserDefined",
+                "description": "User defined restore point."
+              },
+              {
+                "value": "SystemCreated",
+                "description": "System created restore point."
+              }
+            ]
+          }
+        },
+        "creationDetails": {
+          "description": "The creation metadata of the restore point.",
+          "$ref": "#/definitions/RestorePointEventDetails"
+        }
+      }
+    },
+    "RestorePointEventDetails": {
+      "type": "object",
+      "description": "The restore point event details.",
+      "required": [ "eventDateTime" ],
+      "properties": {
+        "eventDateTime": {
+            "description": "The time of the restore point event in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+            "type": "string",
+            "format": "date-time",
+            "readOnly": true
+        },
+        "eventInitiator": {
+          "description": "The principal that initiated the restore point event.",
+          "$ref": "../common/definitions.json#/definitions/Principal"
+        }
+      }
+    },
+    "RestorePoints": {
+      "description": "A list of restore points.",
+      "required": [ "value" ],
+      "type": "object",
+      "properties": {
+        "value": {
+          "description": "A list of restore points.",
+          "type": "array",
+          "readOnly": true,
+          "items": {
+            "$ref": "#/definitions/RestorePoint"
+          }
+        }
+      },
+      "allOf": [
+        {
+          "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+        }
+      ]
+    },
+    "CreateRestorePointRequest": {
+      "description": "Create restore point request payload.",
+      "properties": {
+        "displayName": {
+          "description": "The restore point name. Maximum length is 128 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The restore point description. Maximum length is 512 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "UpdateRestorePointRequest": {
+      "description": "Update restore point request payload.",
+      "properties": {
+        "displayName": {
+          "description": "The restore point name. Maximum length is 128 characters.",
+          "type": "string",
+          "readOnly": false
+        },
+        "description": {
+          "description": "The restore point description. Maximum length is 512 characters.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
+    },
+    "ConnectionStringResponse": {
+      "description": "The SQL connection string for the workspace containing this warehouse.",
+      "type": "object",
+      "properties": {
+        "connectionString": {
+          "description": "The SQL connection string for the workspace containing this warehouse.",
+          "type": "string",
+          "readOnly": false
+        }
+      }
     }
   }
 }

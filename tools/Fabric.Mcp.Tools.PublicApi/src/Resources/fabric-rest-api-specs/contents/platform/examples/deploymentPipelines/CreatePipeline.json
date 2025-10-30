@@ -1,0 +1,17 @@
+{
+    "parameters": {
+        "createDeploymentPipelineRequest": {
+            "displayName": "My Deployment Pipeline Name",
+            "description": "My deployment pipeline description"
+        }
+    },
+    "responses": {
+        "201": {
+            "body": {
+                "id": "a5ded933-57b7-41f4-b072-ed4c1f9d5824",
+                "displayName": "My Deployment Pipeline Name",
+                "description": "My deployment pipeline description"
+            }
+        }
+    }
+}

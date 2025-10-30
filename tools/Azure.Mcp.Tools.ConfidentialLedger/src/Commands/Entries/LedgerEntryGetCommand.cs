@@ -16,6 +16,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
     private const string CommandTitle = "Retrieve Confidential Ledger Entry";
     private readonly IConfidentialLedgerService _service = service;
     private readonly ILogger<LedgerEntryGetCommand> _logger = logger;
+    public override string Id => "f1281e49-6392-455d-8caf-eb58428e8f5e";
 
     public override string Name => "get";
 

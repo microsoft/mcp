@@ -13,6 +13,8 @@ public class RedisSetup : IAreaSetup
 {
     public string Name => "redis";
 
+    public string Title => "Azure Redis";
+
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<IRedisService, RedisService>();
@@ -22,7 +24,7 @@ public class RedisSetup : IAreaSetup
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var redis = new CommandGroup(Name, "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services.");
+        var redis = new CommandGroup(Name, "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services.", Title);
 
         var redisResourceList = serviceProvider.GetRequiredService<ResourceListCommand>();
         redis.AddCommand(redisResourceList.Name, redisResourceList);

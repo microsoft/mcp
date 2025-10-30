@@ -3,53 +3,108 @@
 
 [CmdletBinding()]
 param(
-    [string] $ServerName,
+    [string] $BuildInfoPath,
     [string] $ArtifactsDirectory,
+    [string] $ServerName,
     [string] $TargetOs,
     [string] $TargetArch,
-    [string] $WorkingDirectory
+    [switch] $CI
 )
 
+$ErrorActionPreference = "Stop"
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
-$projectPropertiesScript = "$RepoRoot/eng/scripts/Get-ProjectProperties.ps1"
 
-function Validate-Nuget-Packages {
-    param (
-        [string] $ServerName,
-        [string] $ArtifactsPath
-    )
+$exitCode = 0
+$isPipelineRun = $CI -or $env:TF_BUILD -eq "true"
+$ignoreMissingArtifacts = -not $isPipelineRun
 
-    $hasFailures = $false
-    $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
-    $serverProjectProperties = & "$projectPropertiesScript" -ProjectName "$ServerName.csproj"
-    foreach ($wrapperDir in $wrapperDirs) {
-        $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
-        Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
-        if (Test-Path $platformDir) {
-            Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
-            Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
-            Write-Host "Validating NuGet package for server $ServerName"
+$tempDirectory = "$RepoRoot/.work/temp"
 
-            $output = dnx $serverProjectProperties.PackageId -y --source $platformDir --prerelease -- azmcp tools list
-            if ($LASTEXITCODE -eq 0) {
-                Write-Host "Server tools list command completed successfully for server $($wrapperDir.Parent.Name)."
-            } else {
-                Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                Write-Host $output
-                $hasFailures = $true
-            }
-        }
-    }
-    return $hasFailures
+if (!$BuildInfoPath) {
+    $BuildInfoPath = "$RepoRoot/.work/build_info.json"
 }
 
-function Validate-Npm-Packages {
+if (!$ArtifactsDirectory) {
+    $ArtifactsDirectory = "$RepoRoot/.work"
+}
+
+if (!$TargetOs) {
+    $osPlatform = [System.Runtime.InteropServices.RuntimeInformation]::OSDescription
+    $TargetOs = switch -Regex ($osPlatform) {
+        "Windows" { "windows" }
+        "Linux"   { "linux" }
+        "Darwin"  { "macOs" }
+        default { LogError "Unknown OS Platform: $osPlatform"; $exitCode = 1}
+    }
+}
+
+if (!$TargetArch) {
+    $archPlatform = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
+    $TargetArch = switch ($archPlatform) {
+        "X64" { "x64" }
+        "Arm64" { "arm64" }
+        default { LogError "Unknown Architecture Platform: $archPlatform"; $exitCode = 1}
+    }
+}
+
+if (!(Test-Path $BuildInfoPath)) {
+    LogError "Build info file $BuildInfoPath does not exist. Run eng/scripts/New-BuildInfo.ps1 to create it."
+    $exitCode = 1
+}
+
+if (!(Test-Path $ArtifactsDirectory)) {
+    LogError "Artifacts directory $ArtifactsDirectory does not exist."
+    $exitCode = 1
+}
+
+if ($exitCode -ne 0) {
+    Write-Host "Exiting with code $exitCode"
+    exit $exitCode
+}
+
+$buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+
+function Test-NugetPackages {
     param (
-        [string] $ArtifactsPath,
-        [string] $TargetOs,
-        [string] $TargetArch,
-        [string] $WorkingDirectory
+        [hashtable] $Server
+    )
+
+    Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDirectory | Out-Null
+
+    $artifactsPath = "$ArtifactsDirectory/packages_nuget_signed/$($Server.artifactPath)"
+    if( -not (Test-Path $artifactsPath) ) {
+        $message = "Artifacts path $artifactsPath does not exist."
+        if ($ignoreMissingArtifacts) {
+            LogWarning $message
+            return $true
+        } else {
+            LogError $message
+            return $false
+        }
+    }
+
+    Copy-Item -Path (Join-Path $artifactsPath '*') -Destination $tempDirectory -Recurse -Force
+
+    Write-Host "Copied from $artifactsPath to $tempDirectory"
+    Write-Host "Validating NuGet package for server $($Server.name)"
+
+    $output = dnx $server.dnxPackageId -y --source $tempDirectory --prerelease -- $server.dnxToolCommandName tools list
+    if ($LASTEXITCODE -eq 0) {
+        Write-Host "Server tools list command completed successfully for server $($Server.name)."
+    } else {
+        Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+        Write-Host $output
+        return $false
+    }
+
+    return $true
+}
+
+function Test-NpmPackages {
+    param (
+        [hashtable] $Server
     )
 
     switch ($TargetOs) {
@@ -59,50 +114,71 @@ function Validate-Npm-Packages {
         default { throw "Unknown TargetOs: $TargetOs" }
     }
 
-    Push-Location $WorkingDirectory
-    $hasFailures = $false
+    Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
+    New-Item -ItemType Directory -Path $tempDirectory | Out-Null
+
+    $artifactsPath = "$ArtifactsDirectory/packages_npm/$($Server.artifactPath)"
+    if( -not (Test-Path $artifactsPath) ) {
+        $message = "Artifacts path $artifactsPath does not exist."
+        if ($ignoreMissingArtifacts) {
+            LogWarning $message
+            return $true
+        } else {
+            LogError $message
+            return $false
+        }
+    }
+
+    $mainPackage = Get-ChildItem -Path "$artifactsPath/wrapper" -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
+    $platformPackage = Get-ChildItem -Path "$artifactsPath/platform" -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
+
+    $originalLocation = Get-Location
+    Set-Location $tempDirectory
     try {
-        $wrapperDirs = Get-ChildItem -Path $ArtifactsPath -Directory -Recurse | Where-Object { $_.Name -eq "wrapper" }
-        foreach ($wrapperDir in $wrapperDirs) {
-            $platformDir = Join-Path $wrapperDir.Parent.FullName "platform"
-            Write-Host "Verifying package: $($wrapperDir.Parent.Name)"
-            if (Test-Path $platformDir) {
-                Copy-Item -Path (Join-Path $wrapperDir.FullName '*') -Destination $platformDir -Recurse -Force
-                Write-Host "Copied from $($wrapperDir.FullName) to $platformDir"
+        Write-Host "Installing Platform Package: $($platformPackage.FullName)"
+        npm install $platformPackage.FullName | Out-Null
 
-                $mainPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp-*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
-                $platformPackage = Get-ChildItem -Path $platformDir -Filter "azure-mcp*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install platform package $($platformPackage.FullName) with exit code $LASTEXITCODE"
+            return $false
+        }
 
-                if ($mainPackage -and $platformPackage -and (Test-Path $mainPackage.FullName) -and (Test-Path $platformPackage.FullName)) {
-                    Write-Host "Installing Platform Package: $($platformPackage.FullName)"
-                    npm install $platformPackage.FullName | Out-Null
-                    
-                    Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
-                    npm install $mainPackage.FullName | Out-Null
+        Write-Host "Installing Wrapper Package: $($mainPackage.FullName)"
+        npm install $mainPackage.FullName | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            Write-Host "Failed to install platform package $($platformPackage.FullName) with exit code $LASTEXITCODE"
+            return $false
+        }
 
-                    $output = npx azmcp tools list
-                    if ($LASTEXITCODE -eq 0) {
-                        Write-Host "Server tools list command completed successfully for $($wrapperDir.Parent.Name)"
-                    } else {
-                        Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
-                        Write-Host $output
-                        $hasFailures = $true
-                    }
-                }
-                else {
-                    Write-Host "Either main package or platform package is missing. Skipping tools list command."
-                }
-            }
+        $output = npx --no $server.cliName tools list
+        if ($LASTEXITCODE -eq 0) {
+            Write-Host "Server tools list command completed successfully for $($server.name)"
+        } else {
+            Write-Host "Server tools list command failed with exit code $LASTEXITCODE"
+            Write-Host $output
+            return $false
         }
     } finally {
-        Pop-Location
+        Set-Location $originalLocation
     }
-    return $hasFailures
+
+    return $true
 }
 
-$nugetHasFailures = Validate-Nuget-Packages -ServerName $ServerName -ArtifactsPath "$ArtifactsDirectory/packages_nuget_signed"
-$npmHasFailures = Validate-Npm-Packages -ArtifactsPath "$ArtifactsDirectory/packages_npm" -TargetOs $TargetOs -TargetArch $TargetArch -WorkingDirectory $WorkingDirectory
-
-if ($nugetHasFailures -or $npmHasFailures) {
-    exit 1
+$servers = $buildInfo.servers
+if ($ServerName) {
+    $servers = $servers | Where-Object { $_.name -eq $ServerName }
 }
+
+foreach($server in $servers) {
+    Write-Host "Validating packages for server $($server.name) version $($server.version) for OS $TargetOs and Arch $TargetArch"
+
+    $nugetValid = Test-NugetPackages -Server $server
+    $npmValid = Test-NpmPackages -Server $server
+
+    if (!$nugetValid -or !$npmValid) {
+        $exitCode = 1
+    }
+}
+
+exit $exitCode

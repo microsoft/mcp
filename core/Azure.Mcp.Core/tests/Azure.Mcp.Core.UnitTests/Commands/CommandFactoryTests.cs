@@ -155,45 +155,13 @@ public class CommandFactoryTests
         var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
         var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
 
-        // All commands in command factory are prefixed with the root command group, "azmcp".
-        var commandNameToTry = "azmcp" + CommandFactory.Separator + commandName;
-
         // Act
-        var actual = factory.GetServiceArea(commandNameToTry);
-
         // Try in the case that the root prefix is not used.  This is in the case that the tool
         // is created using the IAreaSetup name as root.
         var actual2 = factory.GetServiceArea(commandName);
 
         // Assert
-        Assert.Equal(expected, actual);
         Assert.Equal(expected, actual2);
-    }
-
-    [Fact]
-    public void GetCommandName_WithOutRootGroup()
-    {
-        // Arrange
-        var commandName = "kusto_cluster_list";
-        var area1 = CreateIAreaSetup("name1");
-        var area2 = CreateIAreaSetup("name2");
-        var area3 = CreateIAreaSetup("name3");
-
-        var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
-
-        // All commands in command factory are prefixed with the root command group.
-        var commandNameToTry = CommandFactory.RootCommandGroupName + CommandFactory.Separator + commandName;
-
-        // Act
-        var actual = factory.RemoveRootGroupFromCommandName(commandNameToTry);
-
-        // Try in the case that the root prefix is not used.
-        var actual2 = factory.RemoveRootGroupFromCommandName(commandName);
-
-        // Assert
-        Assert.Equal(commandName, actual);
-        Assert.Equal(commandName, actual2);
     }
 
     [Fact]
@@ -225,7 +193,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, prefix);
+        var commandDictionary = CommandFactory.CreateCommandDictionaryInner(commandGroup, prefix);
 
         // Assert
         Assert.NotNull(commandDictionary);
@@ -247,7 +215,7 @@ public class CommandFactoryTests
         var commandGroup = CreateCommandGroup();
 
         // Act
-        var commandDictionary = CommandFactory.CreateCommandDictionary(commandGroup, string.Empty);
+        var commandDictionary = CommandFactory.CreateCommandDictionaryInner(commandGroup, string.Empty);
 
         // Assert
         Assert.NotNull(commandDictionary);

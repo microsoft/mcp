@@ -32,15 +32,31 @@ if ($ProjectName) {
     }
 }
 
-$project = [xml](Get-Content $projectFiles[0])
-$propertyGroups = $project.Project.PropertyGroup
-$properties = [ordered]@{}
+$propertyList = @(
+    'Version',
+    'CliName',
+    'AssemblyTitle',
+    'Description',
+    'ReadmeUrl',
+    'ReadmePath',
+    'PackageIcon',
 
-foreach($propertyGroup in $propertyGroups) {
-    $nodes = $propertyGroup.ChildNodes
-    foreach($node in $nodes) {
-        $properties[$node.Name] = $node.InnerText
-    }
-}
+    'NpmPackageName',
+    'NpmDescription',
+    'NpmPackageKeywords',
 
-[pscustomobject]$properties
+    'DockerImageName',
+    'DockerDescription',
+
+    'DnxPackageId',
+    'DnxPackageTags',
+    'DnxDescription',
+    'DnxToolCommandName',
+
+    'IsAotCompatible'
+)
+
+$projectFile = $projectFiles | Select-Object -First 1
+$output = dotnet build $projectFile -getProperty:($propertyList -join ',') | ConvertFrom-Json
+
+return $output.Properties

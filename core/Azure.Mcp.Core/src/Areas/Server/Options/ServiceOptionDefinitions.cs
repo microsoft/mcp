@@ -46,7 +46,7 @@ public static class ServiceOptionDefinitions
         $"--{ToolName}"
     )
     {
-        Description = "Expose only specific tools by name (e.g., 'azmcp_acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"azmcp_acr_registry_list\" --tool \"azmcp_group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
+        Description = "Expose only specific tools by name (e.g., 'acr_registry_list'). Repeat this option to include multiple tools, e.g., --tool \"acr_registry_list\" --tool \"group_list\". It automatically switches to \"all\" mode when \"--tool\" is used. It can't be used together with \"--namespace\".",
         Required = false,
         Arity = ArgumentArity.OneOrMore,
         AllowMultipleArgumentsPerToken = true,
@@ -72,7 +72,7 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Hidden = true,
-        Description = "Enable insecure transport",
+        Description = "Enables insecure, unauthenticated transport over streamable HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
         DefaultValueFactory = _ => false
     };
 

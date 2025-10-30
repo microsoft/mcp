@@ -13,6 +13,8 @@ public sealed class TableTypeListCommand(ILogger<TableTypeListCommand> logger) :
     private const string CommandTitle = "List Log Analytics Table Types";
     private readonly ILogger<TableTypeListCommand> _logger = logger;
 
+    public override string Id => "17928c13-3907-428c-8232-74f7aec1d76d";
+
     public override string Name => "list";
 
     public override string Description =>

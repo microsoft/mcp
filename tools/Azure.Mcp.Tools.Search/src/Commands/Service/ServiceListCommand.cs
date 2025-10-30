@@ -15,6 +15,8 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
     private const string CommandTitle = "List Azure AI Search (formerly known as \"Azure Cognitive Search\") Services";
     private readonly ILogger<ServiceListCommand> _logger = logger;
 
+    public override string Id => "b0684f8c-20de-4bc0-bbc3-982575c8441f";
+
     public override string Name => "list";
 
     public override string Description =>

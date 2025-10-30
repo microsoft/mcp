@@ -9,6 +9,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Models.Elicitation;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -119,6 +120,10 @@ public sealed class NamespaceToolLoader(
                     Set "learn=true" to discover available sub commands.
                     """,
                 InputSchema = ToolSchema,
+                Annotations = new ToolAnnotations()
+                {
+                    Title = group.Title ?? namespaceName,
+                },
             };
 
             allToolsResponse.Tools.Add(tool);
@@ -143,7 +148,7 @@ public sealed class NamespaceToolLoader(
         bool learn = false;
 
         // In namespace mode, the name of the tool is also its IAreaSetup name.
-        Activity.Current?.AddTag(TagName.ToolArea, tool);
+        Activity.Current?.SetTag(TagName.ToolArea, tool);
 
         if (args != null)
         {
@@ -168,14 +173,42 @@ public sealed class NamespaceToolLoader(
 
         try
         {
+            var activity = Activity.Current;
+
             if (learn && string.IsNullOrEmpty(command))
             {
-                Activity.Current?.AddTag(TagName.IsServerCommandInvoked, false);
-
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
             else if (!string.IsNullOrEmpty(tool) && !string.IsNullOrEmpty(command))
             {
+                // We no longer spawn new processes to handle child tool invocations.
+                // So, we have to update ToolName to represent the namespace's child tool name
+                // rather than what is exposed to the user. The following inputs would
+                // be routed here.  In both examples, the end-user's MCP client sees that we expose
+                // a tool called "storage" and would invoke our "storage" tool.
+                //
+                // A) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": [ "--name", "foo", "--subscription-id", "bar" ]
+                //    }
+                //
+                // This is the case where the LLM knows what tool should be executed, so it passes
+                // in all the parameters required to execute the underlying Storage tool.
+                //
+                // B) {
+                //       "intent": "List storage blobs.",
+                //       "command": "blob_list",
+                //       "parameters": []
+                //       "learn": true
+                //    }
+                //
+                // This command attempts to learn what the command "blob_list" entails by
+                // invoking it with no parameters and "learn" == "true".  The command will
+                // generally fail, providing the LLM with extra information it needs to pass
+                // in for the command to succeed the next time.
+                activity?.SetTag(TagName.ToolName, command);
+
                 var toolParams = GetParametersFromArgs(args);
                 return await InvokeChildToolAsync(request, intent ?? "", tool, command, toolParams, cancellationToken);
             }
@@ -240,6 +273,7 @@ public sealed class NamespaceToolLoader(
             };
         }
 
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, true);
         IReadOnlyDictionary<string, IBaseCommand> namespaceCommands;
         try
         {
@@ -288,7 +322,69 @@ public sealed class NamespaceToolLoader(
                 return await InvokeToolLearn(request, intent, namespaceName, cancellationToken);
             }
 
-            var commandContext = new CommandContext(_serviceProvider, Activity.Current);
+            // Check if this tool requires elicitation for sensitive data
+            var metadata = cmd.Metadata;
+            if (metadata.Secret)
+            {
+                // Check if elicitation is disabled by insecure option
+                if (_options.Value.InsecureDisableElicitation)
+                {
+                    _logger.LogWarning("Tool '{Namespace} {Command}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", namespaceName, command);
+                }
+                else
+                {
+                    // If client doesn't support elicitation, treat as rejected and don't execute
+                    if (!request.Server.SupportsElicitation())
+                    {
+                        _logger.LogWarning("Tool '{Namespace} {Command}' handles sensitive data but client does not support elicitation. Operation rejected.", namespaceName, command);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                            IsError = true
+                        };
+                    }
+
+                    try
+                    {
+                        _logger.LogInformation("Tool '{Namespace} {Command}' handles sensitive data. Requesting user confirmation via elicitation.", namespaceName, command);
+
+                        // Create the elicitation request using our custom model
+                        var elicitationRequest = new ElicitationRequestParams
+                        {
+                            Message = $"⚠️ SECURITY WARNING: The tool '{namespaceName} {command}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                            RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                        };
+
+                        // Use our extension method to handle the elicitation
+                        var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+                        if (elicitationResponse.Action != ElicitationAction.Accept)
+                        {
+                            _logger.LogInformation("User {Action} the elicitation for tool '{Namespace} {Command}'. Operation not executed.",
+                                elicitationResponse.Action.ToString().ToLower(), namespaceName, command);
+                            return new CallToolResult
+                            {
+                                Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                                IsError = true
+                            };
+                        }
+
+                        _logger.LogInformation("User accepted elicitation for tool '{Namespace} {Command}'. Proceeding with execution.", namespaceName, command);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during elicitation for tool '{Namespace} {Command}': {Error}", namespaceName, command, ex.Message);
+                        return new CallToolResult
+                        {
+                            Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{namespaceName} {command}': {ex.Message}. Operation not executed for security." }],
+                            IsError = true
+                        };
+                    }
+                }
+            }
+
+            var currentActivity = Activity.Current;
+            var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
             ParseResult commandOptions;
@@ -302,6 +398,11 @@ public sealed class NamespaceToolLoader(
             }
 
             _logger.LogTrace("Executing namespace command '{Namespace} {Command}'", namespaceName, command);
+
+            // It is possible that the command provided by the LLM is not one that exists, such as "blob-list".
+            // The logic above performs sampling to try and get a correct command name.  "blob_get" in
+            // this case, which will be executed.
+            currentActivity?.SetTag(TagName.ToolName, command);
 
             var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
@@ -368,6 +469,7 @@ public sealed class NamespaceToolLoader(
 
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string namespaceName, CancellationToken cancellationToken)
     {
+        Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
         var toolsJson = GetChildToolListJson(request, namespaceName);
 
         var learnResponse = new CallToolResult
@@ -612,15 +714,15 @@ public sealed class NamespaceToolLoader(
 
             if (!string.IsNullOrEmpty(toolCallJson))
             {
-                var doc = JsonDocument.Parse(toolCallJson);
-                var root = doc.RootElement;
+                using var jsonDoc = JsonDocument.Parse(toolCallJson);
+                var root = jsonDoc.RootElement;
                 if (root.TryGetProperty("tool", out var toolProp) && toolProp.ValueKind == JsonValueKind.String)
                 {
                     commandName = toolProp.GetString();
                 }
                 if (root.TryGetProperty("parameters", out var parametersElem) && parametersElem.ValueKind == JsonValueKind.Object)
                 {
-                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value) ?? new Dictionary<string, JsonElement>();
+                    parameters = parametersElem.EnumerateObject().ToDictionary(prop => prop.Name, prop => prop.Value.Clone()) ?? new Dictionary<string, JsonElement>();
                 }
             }
 

@@ -1,0 +1,28 @@
+{
+  "parameters": {
+    "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+    "warehouseId": "5b218778-e7a5-4d73-8187-f10824047715",
+    "restorePointId": "1726617378000"
+  },
+  "responses": {
+    "200": {
+      "body": {
+        "id": "1726617378000",
+        "displayName": "Restore point 1",
+        "description": "Restore point 1 description.",
+        "creationMode": "UserDefined",
+        "creationDetails": {
+          "eventDateTime": "2024-10-18T22:17:09Z",
+          "eventInitiator": {
+            "id": "f3052d1c-61a9-46fb-8df9-0d78916ae041",
+            "displayName": "Jacob Hancock",
+            "type": "User",
+            "userDetails": {
+                "userPrincipalName": "jacob@contoso.com"
+            }
+          }
+        }
+      }
+    }
+  }
+}

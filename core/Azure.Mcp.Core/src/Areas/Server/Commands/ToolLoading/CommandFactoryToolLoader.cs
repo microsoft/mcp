@@ -133,7 +133,7 @@ public sealed class CommandFactoryToolLoader(
 
         if (activity != null)
         {
-            activity.SetTag(TagName.ToolName, _commandFactory.RemoveRootGroupFromCommandName(toolName));
+            activity.SetTag(TagName.ToolName, toolName);
         }
 
         var command = _toolCommands.GetValueOrDefault(toolName);
@@ -230,7 +230,7 @@ public sealed class CommandFactoryToolLoader(
         if (commandContext.Activity != null)
         {
             var serviceArea = _commandFactory.GetServiceArea(toolName);
-            commandContext.Activity.AddTag(TagName.ToolArea, serviceArea);
+            commandContext.Activity.SetTag(TagName.ToolArea, serviceArea);
         }
 
         try

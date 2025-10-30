@@ -3,7 +3,6 @@
 
 using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Options;
 using Azure.Mcp.Tools.Foundry.Services;
 
@@ -13,11 +12,14 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 {
     private const string CommandTitle = "List Evaluation Agents";
 
+    public override string Id => "8238b073-a302-49e6-8a27-8aab04c848fe";
+
     public override string Name => "list";
 
     public override string Description =>
         """
-        List all Azure AI Agents available in the configured project.
+        List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, 
+        evaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
         """;
 
     public override string Title => CommandTitle;

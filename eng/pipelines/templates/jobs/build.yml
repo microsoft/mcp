@@ -1,26 +1,24 @@
 parameters:
 # required matrix parameters
-- name: UsePlatformContainer
-  type: boolean
-- name: OSName
-  type: string
-- name: Matrix
-  type: object
-- name: DependsOn
-  type: string
-- name: CloudConfig
-  type: object
 - name: TestTimeoutInMinutes
   type: number
 - name: ServerName
   type: string
+- name: PublishTarget
+  type: string
+- name: OSName
+  type: string
+- name: Matrix
+  type: string
+- name: MaxParallel
+  type: number
 
 jobs:
 - job: Build_${{ parameters.OSName }}
   displayName: "Build"
-  dependsOn:
-  - ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(${{ parameters.Matrix }}, '{}'))
   strategy:
+    maxParallel: ${{ parameters.MaxParallel }}
     matrix: $[ ${{ parameters.Matrix }} ]
   pool:
     name: $(Pool)
@@ -39,6 +37,10 @@ jobs:
             enabled: true
 
   steps:
+  - download: current
+    artifact: build_info
+    displayName: 'Download build info artifact'
+
   - checkout: self
 
   - task: UseDotNet@2
@@ -55,24 +57,26 @@ jobs:
       version: 9.0.x
 
   - task: Powershell@2
-    displayName: "(Trimmed) Build module"
+    displayName: "Build code"
     condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'))
     inputs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -VersionSuffix '$(VersionSuffix)'
         -OperatingSystem '${{ parameters.OSName }}'
         -Architecture '$(Architecture)'
+        -Native:$$(Native)
+        -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
         -Trimmed
         -SingleFile
 
   - task: Powershell@2
     displayName: "Run tests"
-    condition: and(succeeded(), eq(variables['RunTests'], 'true'))
+    condition: and(succeeded(), eq(variables['RunUnitTests'], 'true'))
     timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     inputs:
       pwsh: true
@@ -84,7 +88,7 @@ jobs:
 
   - task: PublishTestResults@2
     displayName: "Publish Results"
-    condition: and(succeededOrFailed(), eq(variables['RunTests'], 'true'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
       testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
@@ -93,46 +97,11 @@ jobs:
 
   - task: PublishCodeCoverageResults@2
     displayName: "Publish Code Coverage Reports"
-    condition: and(succeededOrFailed(), eq(variables['RunTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
+    condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'), eq('${{ parameters.OSName }}', 'linux'))
     inputs:
       summaryFileLocation: $(CoverageFile)
-
-  - task: Powershell@2
-    displayName: "(Native AOT) Build module"
-    condition: and(succeeded(), ne(variables['NoPackagesChanged'],'true'), eq('${{ parameters.OSName }}', 'linux'), eq(variables['Architecture'], 'x64'))
-    inputs:
-      pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/Build-Code.ps1
-      arguments: >
-        -ServerName '${{ parameters.ServerName }}'
-        -OutputPath '$(Build.ArtifactStagingDirectory)'
-        -VersionSuffix '$(VersionSuffix)'
-        -OperatingSystem '${{ parameters.OSName }}'
-        -Architecture '$(Architecture)'
-        -CleanBuild
-        -BuildNative
-
-  # --- VS Code Extension Packaging Steps ---
-  - task: NodeTool@0
-    displayName: "Use Node.js 20.x"
-    inputs:
-      versionSpec: 20.x
-
-  - bash: |
-      npm install -g npm vsce
-      npm ci --no-optional
-    displayName: "Install npm dependencies and vsce"
-    workingDirectory: eng/vscode
-
-  - pwsh: ./ci-build.ps1
-    workingDirectory: eng/vscode
-    displayName: "Build VS Code Extension"
-
-  - task: ComponentGovernanceComponentDetection@0
-    displayName: "Component Governance Detection"
 
   - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)
-      ArtifactName: build_$(System.JobName)
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+      ArtifactName: binaries_$(System.JobName)

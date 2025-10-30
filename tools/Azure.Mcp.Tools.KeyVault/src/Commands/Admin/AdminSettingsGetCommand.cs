@@ -16,11 +16,12 @@ public sealed class AdminSettingsGetCommand(ILogger<AdminSettingsGetCommand> log
     private const string CommandTitle = "Get Key Vault Managed HSM Account Settings";
     private readonly ILogger<AdminSettingsGetCommand> _logger = logger;
 
+    public override string Id => "2e89755e-8c64-4c08-ae10-8fd47aead570";
     public override string Name => "get";
     public override string Title => CommandTitle;
     public override ToolMetadata Metadata => new()
     {
-        OpenWorld = true,        // Command queries Azure resources (vault settings)
+        OpenWorld = false,       // Command queries Azure resources (vault settings)
         Destructive = false,     // Command only reads settings, no modifications
         Idempotent = true,       // Same call produces same result
         ReadOnly = true,         // Only reads data, no state changes

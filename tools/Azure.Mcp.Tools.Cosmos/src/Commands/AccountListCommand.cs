@@ -13,6 +13,7 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
 {
     private const string CommandTitle = "List Cosmos DB Accounts";
     private readonly ILogger<AccountListCommand> _logger = logger;
+    public override string Id => "9b69bac8-d465-410e-8b79-fabc38f0426b";
 
     public override string Name => "list";
 

@@ -16,6 +16,8 @@ public sealed class CliGenerateCommand(ILogger<CliGenerateCommand> logger) : Glo
     private readonly ILogger<CliGenerateCommand> _logger = logger;
     private readonly string[] _allowedCliTypeValues = ["az"];
 
+    public override string Id => "3de4ef37-90bf-41f1-8385-5e870c3ae911";
+
     public override string Name => "generate";
 
     public override string Description =>

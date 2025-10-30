@@ -17,6 +17,8 @@ public sealed class KeyValueGetCommand(ILogger<KeyValueGetCommand> logger) : Bas
     private const string CommandTitle = "Gets App Configuration Key-Value Settings";
     private readonly ILogger<KeyValueGetCommand> _logger = logger;
 
+    public override string Id => "abc28800-ae4a-4369-9ec0-2653a578e82a";
+
     public override string Name => "get";
 
     public override string Description =>

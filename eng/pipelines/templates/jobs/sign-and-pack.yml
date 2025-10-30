@@ -1,13 +1,14 @@
 parameters:
 - name: ServerName
   type: string
-- name: TimeoutInMinutes
-  type: number
-  default: 120
+- name: PackageDocker
+  type: boolean
+- name: PackageVSIX
+  type: boolean
 
 jobs:
 - job: Sign
-  timeoutInMinutes: ${{ parameters.TimeoutInMinutes }}
+  timeoutInMinutes: 120
   pool: # Binary signing of mac bits needs to happen on mac see https://github.com/Azure/azure-mcp/blob/4ff032fafc77bc618738879b7028665c0de2e632/eng/scripts/Compress-ForSigning.ps1#L40
     name: $(MACPOOL)
     vmImage: $(MACVMIMAGE)
@@ -24,32 +25,17 @@ jobs:
       pwsh: true
       filePath: $(Build.SourcesDirectory)/eng/scripts/Compress-ForSigning.ps1
       arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsPath '$(Pipeline.Workspace)'
-        -ArtifactPrefix 'build_'
+        -ArtifactPrefix 'binaries_'
         -OutputPath '$(Build.ArtifactStagingDirectory)/signed'
 
   - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
     parameters:
       SigningKeyCode: 'CP-230012' # MS Cert
       BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/win-*/**/azmcp.dll
-        **/win-*/**/azmcp.exe
-        **/win-*/**/mcptmp.dll
-        **/win-*/**/mcptmp.exe
-        **/win-*/**/*.Mcp.*.dll
-
-  - template: pipelines/steps/binary-signing.yml@azure-sdk-build-tools
-    parameters:
-      SigningKeyCode: 'CP-231522' # MS 3rd Party Cert
-      BinaryPath: $(Build.ArtifactStagingDirectory)/signed
-      BinaryPattern: |
-        **/win-*/**/ModelContextProtocol*.dll
-        **/win-*/**/Newtonsoft.Json.dll
-        **/win-*/**/Npgsql.dll
-        **/win-*/**/OpenAI.dll
-        **/win-*/**/OpenTelemetry*.dll
-        **/win-*/**/YamlDotNet.dll
+      # The CliName variable is produced in Compress-ForSigning.ps1 based on build_info.json cliName properties.
+      BinaryPattern: '**/windows-*/$(CliName).exe'
 
   - template: pipelines/steps/azd-cli-mac-signing.yml@azure-sdk-build-tools
     parameters:
@@ -68,7 +54,21 @@ jobs:
     parameters:
       ArtifactPath: $(Build.ArtifactStagingDirectory)/signed
       ArtifactName: binaries_signed
-      SbomEnabled: ${{ ne(variables['Build.Reason'], 'PullRequest') }}
+
+  - task: Powershell@2
+    displayName: "Pack binaries into zip files"
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Pack-Zip.ps1
+      arguments: >
+        -ArtifactsPath '$(Build.ArtifactStagingDirectory)/signed'
+        -OutputPath '$(Build.ArtifactStagingDirectory)/zipped'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+
+  - template: /eng/common/pipelines/templates/steps/publish-1es-artifact.yml
+    parameters:
+      ArtifactPath: $(Build.ArtifactStagingDirectory)/zipped
+      ArtifactName: binaries_signed_zipped
 
 - job: Verify_Signing
   displayName: "Verify Signing"
@@ -90,7 +90,7 @@ jobs:
   - pwsh: |
       Write-Host "Verifying binary signing for win-x64 and win-arm64 binaries..."
       $allSigned = $true
-      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/binaries_signed/**/win-*' -Recurse -Include @("*.dll", "*.exe")
+      $signedBinaries = Get-ChildItem -Path '$(Pipeline.Workspace)/binaries_signed/**/windows-*' -Recurse -Include @("*.dll", "*.exe")
       foreach ($binary in $signedBinaries) {
           if ((Get-AuthenticodeSignature -FilePath $binary.FullName).Status -ne 'Valid') {
               Write-Host "Binary $($binary.FullName) is NOT signed correctly."
@@ -114,7 +114,24 @@ jobs:
   parameters:
     DependsOn: Sign
 
-- template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
-  parameters:
-    DependsOn: Sign
-    ServerName: ${{ parameters.ServerName }}
+- ${{ if parameters.PackageVSIX }}:
+  - template: /eng/pipelines/templates/jobs/vsix/pack-and-sign-vsix.yml
+    parameters:
+      DependsOn: Sign
+
+- ${{ if parameters.PackageDocker }}:
+  - template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
+    parameters:
+      DependsOn: Sign
+
+- ${{ each os in split('linux|windows|macOS', '|') }}:
+  - template: /eng/pipelines/templates/jobs/verify-packages.yml
+    parameters:
+      OSName: ${{ os }}
+      Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}SmokeTestMatrix']
+      MaxParallel: 4
+      DependsOn:
+        - PackNpm
+        - PackNuget
+      TestTimeoutInMinutes: 10
+      ServerName: ${{ parameters.ServerName }}

@@ -13,6 +13,8 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
     private const string CommandTitle = "List Container Registries";
     private readonly ILogger<RegistryListCommand> _logger = logger;
 
+    public override string Id => "796f8778-2fa7-4343-87ad-06bdcf6b296c";
+
     public override string Name => "list";
 
     public override string Description =>

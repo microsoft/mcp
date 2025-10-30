@@ -30,7 +30,7 @@ public class CommunicationCommandTests : CommandTestsBase
         Assert.SkipWhen(string.IsNullOrEmpty(fromPhone), "From phone number not configured for live testing");
         Assert.SkipWhen(string.IsNullOrEmpty(toPhone), "To phone number not configured for live testing");
         var result = await CallToolAsync(
-            "azmcp_communication_sms_send",
+            "communication_sms_send",
             new()
             {
                 { "endpoint", endpoint },
@@ -78,7 +78,7 @@ public class CommunicationCommandTests : CommandTestsBase
     public async Task Should_Return400_WithInvalidInput(string args)
     {
         var result = await CallToolAsync(
-            "azmcp_communication_sms_send",
+            "communication_sms_send",
             new()
             {
                 { "args", args }

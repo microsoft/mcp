@@ -6,6 +6,7 @@ using System.Net;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Logging;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
+using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands;
 
@@ -49,6 +51,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
+
+    public override string Id => "9953ff62-e3d7-4bdf-9b70-d569e54e3df1";
 
     /// <summary>
     /// Registers command options for the service start command.
@@ -127,7 +131,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             using var host = CreateHost(options);
 
             await InitializeServicesAsync(host.Services);
+
             await host.StartAsync(CancellationToken.None);
+
+            var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
+            LogStartTelemetry(telemetryService, options);
+
             await host.WaitForShutdownAsync(CancellationToken.None);
 
             return context.Response;
@@ -136,6 +145,30 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         {
             HandleException(context, ex);
             return context.Response;
+        }
+    }
+
+    internal static void LogStartTelemetry(ITelemetryService telemetryService, ServiceStartOptions options)
+    {
+        using var activity = telemetryService.StartActivity(ActivityName.ServerStarted);
+
+        if (activity != null)
+        {
+            activity.SetTag(TagName.Transport, options.Transport);
+            activity.SetTag(TagName.ServerMode, options.Mode);
+            activity.SetTag(TagName.IsReadOnly, options.ReadOnly);
+            activity.SetTag(TagName.InsecureDisableElicitation, options.InsecureDisableElicitation);
+            activity.SetTag(TagName.EnableInsecureTransports, options.EnableInsecureTransports);
+            activity.SetTag(TagName.IsDebug, options.Debug);
+
+            if (options.Namespace != null && options.Namespace.Length > 0)
+            {
+                activity.SetTag(TagName.Namespace, string.Join(",", options.Namespace));
+            }
+            if (options.Tool != null && options.Tool.Length > 0)
+            {
+                activity.SetTag(TagName.Tool, string.Join(",", options.Tool));
+            }
         }
     }
 
@@ -148,12 +181,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (mode == ModeTypes.SingleToolProxy ||
             mode == ModeTypes.NamespaceProxy ||
-            mode == ModeTypes.All)
+            mode == ModeTypes.All ||
+            mode == ModeTypes.ConsolidatedProxy)
         {
             return; // Success
         }
 
-        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}.");
+        commandResult.AddError($"Invalid mode '{mode}'. Valid modes are: {ModeTypes.SingleToolProxy}, {ModeTypes.NamespaceProxy}, {ModeTypes.All}, {ModeTypes.ConsolidatedProxy}.");
     }
 
     /// <summary>

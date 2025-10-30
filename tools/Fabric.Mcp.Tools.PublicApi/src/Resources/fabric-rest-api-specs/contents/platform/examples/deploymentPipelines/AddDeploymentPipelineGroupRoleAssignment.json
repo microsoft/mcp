@@ -10,6 +10,15 @@
         }
     },
     "responses": {
-        "200": {}
+        "200": {
+            "body": {
+                "id": "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
+                "principal": {
+                    "id": "154aef10-47b8-48c4-ab97-f0bf9d5f8fcf",
+                    "type": "Group"
+                }, 
+                "role": "Admin"
+            }
+        }
     }
 }

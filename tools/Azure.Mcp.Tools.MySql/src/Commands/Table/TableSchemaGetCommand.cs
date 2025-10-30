@@ -15,6 +15,8 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 {
     private const string CommandTitle = "Get MySQL Table Schema";
 
+    public override string Id => "1c8d2584-fa52-4641-85f9-fb67a8f5c7c9";
+
     public override string Name => "get";
 
     public override string Description => "Retrieves detailed schema information for a specific table within an Azure Database for MySQL Flexible Server database. This command provides comprehensive metadata including column definitions, data types, constraints, indexes, and relationships, essential for understanding table structure and supporting application development.";

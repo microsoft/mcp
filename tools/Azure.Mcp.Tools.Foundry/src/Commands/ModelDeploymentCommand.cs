@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Commands.Subscription;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
@@ -15,6 +14,8 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeploymentOptions>
 {
     private const string CommandTitle = "Deploy Model to Azure AI Services";
+
+    public override string Id => "67ef0a4a-3d5b-4d9e-8f07-f2fdc0f60fba";
 
     public override string Name => "deploy";
 

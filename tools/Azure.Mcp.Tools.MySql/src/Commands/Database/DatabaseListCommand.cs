@@ -13,6 +13,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
 {
     private const string CommandTitle = "List MySQL Databases";
 
+    public override string Id => "5941c89c-1406-4657-8828-eec3531e64ec";
+
     public override string Name => "list";
 
     public override string Description => "Retrieves a comprehensive list of all databases available on the specified Azure Database for MySQL Flexible Server instance. This command provides visibility into the database structure and helps identify available databases for connection and querying operations.";

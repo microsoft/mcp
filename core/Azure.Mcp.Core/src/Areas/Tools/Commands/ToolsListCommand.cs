@@ -17,6 +17,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 {
     private const string CommandTitle = "List Available Tools";
 
+    public override string Id => "63de05a7-047d-4f8a-86ea-cebd64527e2b";
+
     public override string Name => "list";
 
     public override string Description =>
@@ -97,7 +99,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     {
                         Name = g.Name,
                         Description = g.Description ?? string.Empty,
-                        Command = $"azmcp {g.Name}",
+                        Command = $"{g.Name}",
                         // We deliberately omit populating Subcommands for the lightweight namespace view.
                     })
                     .OrderBy(ci => ci.Name, StringComparer.OrdinalIgnoreCase)
@@ -116,7 +118,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                                 {
                                     Name = command.Name,
                                     Description = command.Description ?? string.Empty,
-                                    Command = $"azmcp {subgroup.Name} {command.Name}"
+                                    Command = $"{subgroup.Name} {command.Name}"
                                     // Omit Options and Subcommands for surfaced commands as well.
                                 };
                             });
@@ -176,6 +178,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
         return new CommandInfo
         {
+            Id = command.Id,
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
             Command = tokenizedName.Replace(CommandFactory.Separator, ' '),
