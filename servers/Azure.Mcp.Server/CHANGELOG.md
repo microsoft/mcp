@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+
 ### Other Changes
 
 ## 2.0.0-beta.1 (2025-10-29)
