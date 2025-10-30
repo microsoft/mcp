@@ -76,7 +76,7 @@ function Get-LatestMarketplaceVersion {
     )
     
     try {
-        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery"
+        $marketplaceUrl = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery?api-version=7.1-preview.1"
         $body = @{
             filters = @(
                 @{
