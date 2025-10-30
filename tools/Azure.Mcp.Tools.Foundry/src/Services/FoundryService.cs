@@ -1084,7 +1084,7 @@ public class FoundryService(
         }
         catch (Exception ex)
         {
-            throw new Exception($"Unale to create thread. Create thread request failed with: {ex.Message}", ex);
+            throw new Exception($"Unable to create thread. Create thread request failed with: {ex.Message}", ex);
         }
     }
 
@@ -1132,11 +1132,11 @@ public class FoundryService(
         {
             return await Task.FromResult("todo: c# sdk sample for Foundry Agent");
         }
-        else if (programmingLanguage == "typescript")
+        else if (programmingLanguageLowerCase == "typescript")
         {
             return await Task.FromResult("todo: typescript sdk sample for Foundry Agent");
         }
-        else if (programmingLanguage == "python")
+        else if (programmingLanguageLowerCase == "python")
         {
             return await Task.FromResult("todo: python sdk sample for Foundry Agent");
         }
