@@ -383,7 +383,7 @@ public sealed class NamespaceToolLoader(
             }
 
             var currentActivity = Activity.Current;
-            currentActivity?.SetTag(TagName.ToolId, command.Id);
+            currentActivity?.SetTag(TagName.ToolId, cmd.Id);
             var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
