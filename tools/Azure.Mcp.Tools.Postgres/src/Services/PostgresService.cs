@@ -219,7 +219,13 @@ public class PostgresService : BaseAzureService, IPostgresService
 
         public static async Task<PostgresResource> CreateAsync(string connectionString)
         {
-            var dataSource = new NpgsqlSlimDataSourceBuilder(connectionString)
+            // Configure SSL settings for secure connection
+            var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                SslMode = SslMode.VerifyFull // See: https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls
+            };
+
+            var dataSource = new NpgsqlSlimDataSourceBuilder(connectionBuilder.ConnectionString)
                 .EnableTransportSecurity()
                 .Build();
             var connection = await dataSource.OpenConnectionAsync();
