@@ -911,7 +911,7 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
            "ASPNETCORE_URLS": "http://localhost:<port>",
            "AzureAd__TenantId": "<your-tenant-id>",
            "AzureAd__ClientId": "<your-client-id>",
-           "AzureAd__Instance": "<endpoint>"
+           "AzureAd__Instance": "https://login.microsoftonline.com/"
          }
        }
      }
