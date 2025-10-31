@@ -43,7 +43,7 @@ with project_client:
 
 ## Create an Agent
 
-Before creating an Agent, you need a model deployment. Ask the user for the model deployment details. If they aren't sure, show them this [documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/create-model-deployments?pivots=ai-foundry-portal).
+Before creating an Agent, you need a model deployment. Ask the user for the model deployment details. If they aren't sure, show them this [documentation](https://learn.microsoft.com/azure/ai-foundry/foundry-models/how-to/create-model-deployments?pivots=ai-foundry-portal).
 
 Once you have a model deployment, use the following code to create an Agent
 
@@ -61,7 +61,7 @@ Once an Agent is created, you can reuse it by getting it from the id. The Agent 
 agent = agents_client.get_agent("user_provided_agent_id")
 ```
 
-Agents can be created with tools. To learn more about what tools it supports, refer to [agent creation with tools](https://learn.microsoft.com/en-us/python/api/overview/azure/ai-agents-readme?view=azure-python-preview&preserve-view=true#examples).
+Agents can be created with tools. To learn more about what tools it supports, refer to [agent creation with tools](https://learn.microsoft.com/python/api/overview/azure/ai-agents-readme?view=azure-python-preview&preserve-view=true#examples).
 
 ## Run an Agent
 

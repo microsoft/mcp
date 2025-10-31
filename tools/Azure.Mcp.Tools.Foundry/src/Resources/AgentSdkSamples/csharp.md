@@ -28,7 +28,7 @@ PersistentAgentsClient client = new(projectEndpoint, new DefaultAzureCredential(
 
 ## Create an Agent
 
-Before creating an Agent, you need a model deployment. Ask the user for the model deployment details. If they aren't sure, show them this [documentation](https://learn.microsoft.com/en-us/azure/ai-foundry/foundry-models/how-to/create-model-deployments?pivots=ai-foundry-portal).
+Before creating an Agent, you need a model deployment. Ask the user for the model deployment details. If they aren't sure, show them this [documentation](https://learn.microsoft.com/azure/ai-foundry/foundry-models/how-to/create-model-deployments?pivots=ai-foundry-portal).
 
 Once you have a model deployment, use the following code to create an Agent
 
