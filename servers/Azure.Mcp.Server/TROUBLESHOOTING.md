@@ -889,6 +889,9 @@ When developing or debugging the Azure MCP Server locally, you have two options 
 
 **Prerequisites: Create launchSettings.json**
 
+> [!NOTE]
+> Internal contributors may skip this step as the `launchSettings.json` file is already provided in the repository.
+
 Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
 
 1. Create the directory (if it doesn't exist):
@@ -916,10 +919,6 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
    ```
 
 3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
-
-> [!NOTE]
-> For internal contributors, refer to **Running the Azure MCP server** section of [this document](https://eng.ms/docs/products/azure-developer-experience/mcp/mcp-getting-started) to use the team's tenant and credentials.
-
 
 ```bash
 dotnet build
