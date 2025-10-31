@@ -3,7 +3,6 @@
 
 using System.CommandLine.Parsing;
 using System.Diagnostics.CodeAnalysis;
-using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
 
