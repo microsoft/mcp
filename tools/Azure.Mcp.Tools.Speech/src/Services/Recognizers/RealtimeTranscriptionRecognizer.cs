@@ -84,14 +84,9 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                 config.SpeechRecognitionLanguage = language ?? "en-US";
 
                 // set output format (default to simple)
-                if (format?.ToLowerInvariant() == "detailed")
-                {
-                    config.OutputFormat = OutputFormat.Detailed;
-                }
-                else
-                {
-                    config.OutputFormat = OutputFormat.Simple;
-                }
+                config.OutputFormat = (format?.ToLowerInvariant() == "detailed")
+                    ? OutputFormat.Detailed
+                    : OutputFormat.Simple;
 
                 // Configure profanity filtering
                 if (!string.IsNullOrEmpty(profanity))
@@ -444,29 +439,22 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
     private static RealtimeRecognitionResult ConvertToSpeechRecognitionResult(SdkSpeechRecognitionResult speechResult, string? format)
     {
-        // detailed format
-        if (format?.ToLowerInvariant() == "detailed")
-        {
-            return new RealtimeRecognitionDetailedResult
+        return (format?.ToLowerInvariant() == "detailed")
+            ? new RealtimeRecognitionDetailedResult
             {
                 Text = speechResult.Text,
                 Reason = speechResult.Reason.ToString(),
                 Offset = (ulong)speechResult.OffsetInTicks,
                 Duration = (ulong)speechResult.Duration.Ticks,
                 NBest = ExtractNBestResults(speechResult)
-            };
-        }
-        // simple format
-        else
-        {
-            return new RealtimeRecognitionResult
+            }
+            : new RealtimeRecognitionResult
             {
                 Text = speechResult.Text,
                 Reason = speechResult.Reason.ToString(),
                 Offset = (ulong)speechResult.OffsetInTicks,
                 Duration = (ulong)speechResult.Duration.Ticks
             };
-        }
     }
 
     /// <summary>
@@ -501,7 +489,8 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                             List<RealtimeRecognitionWordResult>? words = null;
                             if (item.TryGetProperty("Words", out var wordsArray))
                             {
-                                words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult{
+                                words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult
+                                {
                                     Word = wordItem.TryGetProperty("Word", out var wordProp) ? wordProp.GetString() : "",
                                     Offset = wordItem.TryGetProperty("Offset", out var offsetProp) ? (ulong)offsetProp.GetInt64() : null,
                                     Duration = wordItem.TryGetProperty("Duration", out var durationProp) ? (ulong)durationProp.GetInt64() : null
