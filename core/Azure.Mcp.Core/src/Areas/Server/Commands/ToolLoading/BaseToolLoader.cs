@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Models.Elicitation;
 using Microsoft.Extensions.Logging;
+using ModelContextProtocol;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -149,5 +151,82 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
         };
 
         return clientOptions;
+    }
+
+    /// <summary>
+    /// Handles elicitation for commands that access sensitive data.
+    /// If elicitation is disabled or not supported, returns appropriate error result.
+    /// </summary>
+    /// <param name="request">The request context containing the MCP server.</param>
+    /// <param name="toolName">The name of the tool being invoked.</param>
+    /// <param name="insecureDisableElicitation">Whether elicitation has been disabled via insecure option.</param>
+    /// <param name="logger">Logger instance for recording elicitation events.</param>
+    /// <param name="cancellationToken">Cancellation token for the operation.</param>
+    /// <returns>
+    /// Null if elicitation was accepted or bypassed (operation should proceed).
+    /// A CallToolResult with IsError=true if elicitation was rejected or failed (operation should not proceed).
+    /// </returns>
+    protected static async Task<CallToolResult?> HandleSecretElicitationAsync(
+        RequestContext<CallToolRequestParams> request,
+        string toolName,
+        bool insecureDisableElicitation,
+        ILogger logger,
+        CancellationToken cancellationToken)
+    {
+        // Check if elicitation is disabled by insecure option
+        if (insecureDisableElicitation)
+        {
+            logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", toolName);
+            return null;
+        }
+
+        // If client doesn't support elicitation, treat as rejected and don't execute
+        if (!request.Server.SupportsElicitation())
+        {
+            logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
+            return new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
+                IsError = true
+            };
+        }
+
+        try
+        {
+            logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
+
+            // Create the elicitation request using our custom model
+            var elicitationRequest = new ElicitationRequestParams
+            {
+                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
+                RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+            };
+
+            // Use our extension method to handle the elicitation
+            var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
+
+            if (elicitationResponse.Action != ElicitationAction.Accept)
+            {
+                logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
+                    elicitationResponse.Action.ToString().ToLower(), toolName);
+                return new CallToolResult
+                {
+                    Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
+                    IsError = true
+                };
+            }
+
+            logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
+            return null;
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
+            return new CallToolResult
+            {
+                Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
+                IsError = true
+            };
+        }
     }
 }

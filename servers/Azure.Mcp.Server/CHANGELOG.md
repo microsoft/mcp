@@ -15,6 +15,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+
+
 ## 2.0.0-beta.1 (2025-10-29)
 
 - Initial beta release to validate updated release infrastructure and versioning strategy. No functional changes from 1.x series.
