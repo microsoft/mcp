@@ -485,44 +485,39 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
             if (!string.IsNullOrEmpty(jsonProperty))
             {
-                var jsonResult = JsonDocument.Parse(jsonProperty);
-
-                if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
+                using (var jsonResult = JsonDocument.Parse(jsonProperty))
                 {
-                    foreach (var item in nbestArray.EnumerateArray())
+                    if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
                     {
-                        var confidence = item.TryGetProperty("Confidence", out var confidenceProp) ? confidenceProp.GetDouble() : 0.0;
-                        var lexical = item.TryGetProperty("Lexical", out var lexicalProp) ? lexicalProp.GetString() : "";
-                        var itn = item.TryGetProperty("ITN", out var itnProp) ? itnProp.GetString() : "";
-                        var maskedITN = item.TryGetProperty("MaskedITN", out var maskedITNProp) ? maskedITNProp.GetString() : "";
-                        var display = item.TryGetProperty("Display", out var displayProp) ? displayProp.GetString() : "";
-
-                        // Extract words if available
-                        List<RealtimeRecognitionWordResult>? words = null;
-                        if (item.TryGetProperty("Words", out var wordsArray))
+                        foreach (var item in nbestArray.EnumerateArray())
                         {
-                            words = new List<RealtimeRecognitionWordResult>();
-                            foreach (var wordItem in wordsArray.EnumerateArray())
+                            var confidence = item.TryGetProperty("Confidence", out var confidenceProp) ? confidenceProp.GetDouble() : 0.0;
+                            var lexical = item.TryGetProperty("Lexical", out var lexicalProp) ? lexicalProp.GetString() : "";
+                            var itn = item.TryGetProperty("ITN", out var itnProp) ? itnProp.GetString() : "";
+                            var maskedITN = item.TryGetProperty("MaskedITN", out var maskedITNProp) ? maskedITNProp.GetString() : "";
+                            var display = item.TryGetProperty("Display", out var displayProp) ? displayProp.GetString() : "";
+
+                            // Extract words if available
+                            List<RealtimeRecognitionWordResult>? words = null;
+                            if (item.TryGetProperty("Words", out var wordsArray))
                             {
-                                var word = new RealtimeRecognitionWordResult
-                                {
+                                words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult{
                                     Word = wordItem.TryGetProperty("Word", out var wordProp) ? wordProp.GetString() : "",
                                     Offset = wordItem.TryGetProperty("Offset", out var offsetProp) ? (ulong)offsetProp.GetInt64() : null,
                                     Duration = wordItem.TryGetProperty("Duration", out var durationProp) ? (ulong)durationProp.GetInt64() : null
-                                };
-                                words.Add(word);
+                                }).ToList();
                             }
-                        }
 
-                        nbestResults.Add(new RealtimeRecognitionNBestResult
-                        {
-                            Confidence = confidence,
-                            Lexical = lexical,
-                            ITN = itn,
-                            MaskedITN = maskedITN,
-                            Display = display,
-                            Words = words
-                        });
+                            nbestResults.Add(new RealtimeRecognitionNBestResult
+                            {
+                                Confidence = confidence,
+                                Lexical = lexical,
+                                ITN = itn,
+                                MaskedITN = maskedITN,
+                                Display = display,
+                                Words = words
+                            });
+                        }
                     }
                 }
             }

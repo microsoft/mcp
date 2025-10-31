@@ -46,7 +46,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithFastSupportedLanguage_ShouldRecognizeSpeechWithFastTranscription(string? language, string fileName, string expectedText)
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
 
         Assert.True(File.Exists(testAudioFile),
             $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
@@ -71,7 +71,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
@@ -88,7 +88,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithFastUnsupportedLanguage_ShouldFallBackToRealtimeTranscription(string language, string fileName, string expectedText)
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
 
         Assert.True(File.Exists(testAudioFile),
             $"Test audio file not found at: {testAudioFile}. Please ensure {fileName} exists in TestResources folder.");
@@ -113,7 +113,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -134,7 +134,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithFormat_ShouldRecognizeSpeechWithRealtimeTranscription(string format)
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -156,7 +156,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -194,7 +194,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     [InlineData("raw", "simple", "You don't deserve it, you bastard. Fuck you.")]
     public async Task SpeechToText_WithDifferentProfanityOptions_ShouldApplyCorrectly(string profanityOption, string format, string expectedText)
     {
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "en-US-with-profanity.wav");
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-with-profanity.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -214,7 +214,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -233,7 +233,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithPhrases_ShouldIncreaseRecognitionAccuracy()
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "en-US-phraselist.wav");
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "en-US-phraselist.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -255,7 +255,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
@@ -269,7 +269,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithInvalidEndpoint_ShouldHandleGracefully()
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var invalidEndpoint = "https://invalid-endpoint.cognitiveservices.azure.com/";
@@ -287,8 +287,8 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         // Assert
         Assert.NotNull(result);
+        Output.WriteLine("Recognition Result: " + result);
         var resultText = result.ToString();
-        Output.WriteLine("Recognition Result: " + resultText);
         Assert.NotNull(resultText);
         Assert.Contains("Invalid endpoint or connectivity issue.", resultText, StringComparison.OrdinalIgnoreCase);
     }
@@ -297,7 +297,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithEmptyAudioFileAndFastTranscription_ShouldHandleGracefully()
     {
         // Create a valid empty WAV file
-        var emptyWavFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
+        var emptyWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         CreateWavFile(emptyWavFile);
 
         try
@@ -318,7 +318,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-            Output.WriteLine("Recognition Result: " + result?.ToString());
+            Output.WriteLine("Recognition Result: " + result);
 
             // STRICT REQUIREMENT: Speech recognition must return a result
             Assert.NotNull(resultObj);
@@ -341,7 +341,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithEmptyAudioFileAndRealtimeTranscription_ShouldHandleGracefully()
     {
         // Create a valid empty WAV file
-        var emptyWavFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
+        var emptyWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         CreateWavFile(emptyWavFile);
 
         try
@@ -363,7 +363,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-            Output.WriteLine("Recognition Result: " + result?.ToString());
+            Output.WriteLine("Recognition Result: " + result);
 
             Assert.NotNull(resultObj);
             Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -391,7 +391,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_WithBrokenFile_ShouldHandleGracefully()
     {
         // Arrange
-        var brokenWavFile = Path.Combine(Path.GetTempPath(), Guid.NewGuid() + ".wav");
+        var brokenWavFile = Path.Join(Path.GetTempPath(), $"{Guid.NewGuid()}.wav");
         File.WriteAllText(brokenWavFile, "123"); // Broken audio content
 
         try
@@ -413,7 +413,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             Assert.NotNull(result);
             var resultText = result.ToString();
             Assert.NotNull(resultText);
-            Output.WriteLine("Recognition Result: " + result?.ToString());
+            Output.WriteLine("Recognition Result: " + resultText);
 
             // Parse to ensure valid JSON structure
             var jsonResult = JsonDocument.Parse(resultText);
@@ -443,7 +443,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     public async Task SpeechToText_ShouldHandleRetryPolicyCorrectly()
     {
         // Arrange
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", "test-audio.wav");
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", "test-audio.wav");
         Assert.True(File.Exists(testAudioFile), $"Test audio file not found at: {testAudioFile}");
 
         var aiServicesEndpoint = $"https://{Settings.ResourceBaseName}.cognitiveservices.azure.com/";
@@ -466,7 +466,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result?.ToString());
+        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
@@ -481,7 +481,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
     {
         // This test validates speech recognition with different audio file formats
         var fileName = "whatstheweatherlike.mp3";
-        var testAudioFile = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", "..", "TestResources", fileName);
+        var testAudioFile = Path.Join(AppContext.BaseDirectory, "TestResources", fileName);
 
         // STRICT REQUIREMENT: The test audio file MUST exist in TestResources
         Assert.True(File.Exists(testAudioFile),
