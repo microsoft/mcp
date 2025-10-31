@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
-using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Options.Database;
 using Azure.Mcp.Tools.Postgres.Services;
@@ -36,13 +35,15 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(PostgresOptionDefinitions.Pass.AsOptional());
+        command.Options.Add(PostgresOptionDefinitions.AuthType);
+        command.Options.Add(PostgresOptionDefinitions.Password);
     }
 
     protected override DatabaseListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Pass.Name);
+        options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
+        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
         return options;
     }
 
@@ -58,7 +59,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         try
         {
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> databases = await pgService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Password, options.Server!);
+            List<string> databases = await pgService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.AuthType!, options.User!, options.Password, options.Server!);
             context.Response.Results = ResponseResult.Create(new(databases ?? []), PostgresJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)

@@ -6,7 +6,10 @@ using Azure.Core;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Tools.Postgres.Options;
+using Azure.Mcp.Tools.Postgres.Validation;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 
@@ -50,9 +53,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string? password, string server)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server)
     {
-        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
 
@@ -68,9 +71,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database, string query)
+    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database, string query)
     {
-        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
@@ -96,9 +99,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database)
+    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database)
     {
-        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
@@ -114,9 +117,9 @@ public class PostgresService : BaseAzureService, IPostgresService
         return tables;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string? password, string server, string database, string table)
+    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database, string table)
     {
-        string? passwordToUse = user.Contains("@") ? await GetEntraIdAccessTokenAsync() : password;
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
@@ -214,6 +217,31 @@ public class PostgresService : BaseAzureService, IPostgresService
         {
             throw new Exception($"Failed to update parameter '{param}' to value '{value}'.");
         }
+    }
+
+    private async Task<string> GetPassword(string authType, string? password)
+    {
+        if (!string.IsNullOrEmpty(password))
+        {
+            // If password is provided, use that one.
+            return password;
+        }
+
+        if (string.IsNullOrEmpty(authType) || AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await GetEntraIdAccessTokenAsync();
+        }
+
+        if (AuthTypes.PostgreSQL.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.", HttpStatusCode.BadRequest);
+            }
+            return password;
+        }
+
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'", HttpStatusCode.BadRequest);
     }
 
     private sealed class PostgresResource : IAsyncDisposable

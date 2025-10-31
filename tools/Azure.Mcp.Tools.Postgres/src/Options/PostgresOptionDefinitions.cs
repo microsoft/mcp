@@ -5,14 +5,25 @@ namespace Azure.Mcp.Tools.Postgres.Options;
 
 public static class PostgresOptionDefinitions
 {
+    public const string AuthTypeText = "auth-type";
     public const string UserName = "user";
-    public const string Password = "password";
+    public const string PasswordText = "password";
     public const string ServerName = "server";
     public const string DatabaseName = "database";
     public const string TableName = "table";
     public const string QueryText = "query";
     public const string ParamName = "param";
     public const string ValueName = "value";
+
+    public static readonly Option<string> AuthType = new(
+    $"--{AuthTypeText}"
+)
+    {
+        Description = $"The authentication type to access PostgreSQL server. " +
+            $"Supported values are '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'",
+        Arity = ArgumentArity.ExactlyOne,
+        Required = true,
+    };
 
     public static readonly Option<string> User = new(
         $"--{UserName}"
@@ -22,11 +33,12 @@ public static class PostgresOptionDefinitions
         Required = true
     };
 
-    public static readonly Option<string> Pass = new(
-    $"--{Password}"
+    public static readonly Option<string> Password = new(
+    $"--{PasswordText}"
 )
     {
         Description = "The user password to access PostgreSQL server, only if PostgreSQL authentication is used.",
+        Arity = ArgumentArity.ZeroOrOne,
         Required = false
     };
 
