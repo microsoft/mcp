@@ -74,7 +74,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     public virtual void RegisterVariable(string name, string value)
     {
-        if (TestMode == TestMode.Live || TestMode == TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             // no-op in live/playback modes, as during playback the variables will be populated from the recording file automatically.
             return;
