@@ -9,80 +9,99 @@ parameters:
   type: object
 
 jobs:
-- job: PublishACR
-  displayName: "Publish to ACR"
+- deployment: PublishACR
+  displayName: "Publish Docker Images to ACR"
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   dependsOn: ${{ parameters.DependsOn }}
-
+  timeoutInMinutes: 120
   templateContext:
+    type: releaseJob
+    isProduction: true
     inputs:
+    - input: pipelineArtifact
+      artifactName: docker_output
+      targetPath: $(Pipeline.Workspace)/docker_output
     - input: pipelineArtifact
       artifactName: build_info
       targetPath: $(Pipeline.Workspace)/build_info
-    - input: pipelineArtifact
-      artifactName: docker_staged
-      targetPath: $(Pipeline.Workspace)/docker_staged
-
-    outputs:
-    - output: containerImage
-      image: image:tag
-      remoteImage:
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:$(DockerImageVersion)
-      - ${{ format('{0}.azurecr.io', parameters.ContainerRegistry) }}/${{ format('{0}/{1}', parameters.DeploymentEnvironment, '$(DockerImageName)')}}:latest
-
-  timeoutInMinutes: 120
+  environment: package-publish
   pool:
     name: azsdk-pool
     image: ubuntu-24.04
     os: linux
+  strategy:
+    runOnce:
+      deploy:
+        steps:
+        - task: AzureCLI@2
+          displayName: Login to ${{ parameters.ContainerRegistry }}
+          inputs:
+            azureSubscription: "Azure SDK Engineering System"
+            scriptType: pscore
+            scriptLocation: inlineScript
+            inlineScript: |
+              az acr login --name ${{ parameters.ContainerRegistry }}
 
-  steps:
-  - task: Powershell@2
-    displayName: 'Set Docker Variables'
-    name: SetVariables
-    inputs:
-      targetType: 'inline'
-      script: |
-        $buildInfo = Get-Content -Raw -Path "$(Pipeline.Workspace)/build_info/build_info.json" | ConvertFrom-Json
-        $serverInfo = $buildInfo.servers | Where-Object { $_.Name -eq $env:SERVER_NAME } | Select-Object -First 1
+        - pwsh: |
+            Write-Host "Setting release variables from build info for Docker release for ${{ parameters.ServerName }}..."
+            $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
+            $buildInfo = Get-Content -Raw -Path $buildInfoPath | ConvertFrom-Json
 
-        if (-not $serverInfo) {
-            Write-Error "Server with name '$env:SERVER_NAME' not found in buildInfo.json"
-            exit 1
-        }
+            $serverName = '${{ parameters.ServerName }}'
+            $server = $buildInfo.servers | Where-Object { $_.name -eq $serverName } | Select-Object -First 1
+            if (-not $server) {
+              Write-Error "Server '$serverName' not found in build info."
+              exit 1
+            }
 
-        $imageName = $serverInfo.dockerImageName
-        Write-Host "Setting variable DockerImageName to $imageName"
-        Write-Host "##vso[task.setvariable variable=DockerImageName]$imageName"
+            $version = $server.version
+            $cliName = $server.cliName
+            $dockerImageName = $server.dockerImageName
 
-        $version = $serverInfo.version
-        Write-Host "Setting variable DockerImageVersion to $version"
-        Write-Host "##vso[task.setvariable variable=DockerImageVersion]$version"
+            Write-Host "##vso[task.setvariable variable=DockerImageVersion;isOutput=true]$version"
+            Write-Host "##vso[task.setvariable variable=CliName;isOutput=true]$cliName"
+            Write-Host "##vso[task.setvariable variable=DockerImageName;isOutput=true]$dockerImageName"
+          name: SetReleaseVariables
 
-        $cliName = $serverInfo.cliName
-        $extension = $serverInfo.extension
-        $executableName = "$cliName$extension"
-        Write-Host "Setting variable DockerExecutableName to $executableName"
-        Write-Host "##vso[task.setvariable variable=DockerExecutableName]$executableName"
-    env:
-      SERVER_NAME: ${{ parameters.ServerName }}
+        - script: |
+            set -euo pipefail
+            
+            # Load image from tar
+            echo "Loading image tar for ${{ parameters.ServerName }}"
+            LOADED_IMAGE=$(docker load -i $(Pipeline.Workspace)/docker_output/$(SetReleaseVariables.CliName)-image.tar | grep -oP 'Loaded image: \K.*')
+            echo "Loaded image: $LOADED_IMAGE"
 
-  - task: AzureCLI@2
-    condition: succeeded()
-    displayName: Login to ${{ parameters.ContainerRegistry }}
-    inputs:
-      azureSubscription: "Azure SDK Engineering System"
-      scriptType: pscore
-      scriptLocation: inlineScript
-      inlineScript: |
-        az acr login --name ${{ parameters.ContainerRegistry }}
+            # Verify the loaded image exists
+            docker image inspect "$LOADED_IMAGE" >/dev/null 2>&1 || { 
+              echo "ERROR: Loaded image $LOADED_IMAGE not found after load"; 
+              exit 1; 
+            }
 
-  - task: 1ES.BuildContainerImage@1
-    displayName: Build Docker Image
-    inputs:
-      path: '$(Pipeline.Workspace)/docker_staged/${{ parameters.ServerName }}/linux-x64'
-      image: image:tag
-      buildArguments: >
-        --build-arg PUBLISH_DIR="dist"
-      enableNetwork: true
-      useBuildKit: true
+            # Prepare tags
+            BASE_REPO="${{ parameters.ContainerRegistry }}.azurecr.io/${{ parameters.DeploymentEnvironment }}/$(SetReleaseVariables.DockerImageName)"
+            VERSIONED_TAG="$BASE_REPO:$(SetReleaseVariables.DockerImageVersion)"
+            LATEST_TAG="$BASE_REPO:latest"
+            
+            echo "Tagging $LOADED_IMAGE as:"
+            echo "  Versioned tag: $VERSIONED_TAG"
+            echo "  Latest tag:    $LATEST_TAG"
+            
+            # Tag the images
+            docker tag "$LOADED_IMAGE" "$VERSIONED_TAG"
+            docker tag "$LOADED_IMAGE" "$LATEST_TAG"
+            
+            # Verify tags exist before pushing
+            docker image inspect "$VERSIONED_TAG" >/dev/null 2>&1 || { 
+              echo "ERROR: Versioned tag $VERSIONED_TAG not found after tagging"; 
+              exit 1; 
+            }
+            docker image inspect "$LATEST_TAG" >/dev/null 2>&1 || { 
+              echo "ERROR: Latest tag $LATEST_TAG not found after tagging"; 
+              exit 1; 
+            }
+            
+            # Push both tags
+            echo "Pushing versioned tag..."; docker push "$VERSIONED_TAG"
+            echo "Pushing latest tag...";   docker push "$LATEST_TAG"
+            echo "Publish complete for ${{ parameters.ServerName }}"
+          displayName: Load, tag, and push image
