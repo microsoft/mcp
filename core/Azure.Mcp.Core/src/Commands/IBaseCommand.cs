@@ -45,12 +45,6 @@ public interface IBaseCommand
     /// </summary>
     Command GetCommand();
 
-    internal Task<CommandResponse> InternalExecuteAsync(CommandContext context, ParseResult parseResult)
-    {
-        context.Activity?.SetTag(TagName.ToolId, Id);
-        return ExecuteAsync(context, parseResult);
-    }
-
     /// <summary>
     /// Executes the command
     /// </summary>

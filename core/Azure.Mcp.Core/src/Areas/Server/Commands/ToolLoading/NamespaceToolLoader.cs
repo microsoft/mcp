@@ -384,6 +384,7 @@ public sealed class NamespaceToolLoader(
             }
 
             var currentActivity = Activity.Current;
+            currentActivity?.SetTag(TagName.ToolId, command.Id);
             var commandContext = new CommandContext(_serviceProvider, currentActivity);
             var realCommand = cmd.GetCommand();
 
@@ -404,7 +405,7 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command);
 
-            var commandResponse = await cmd.InternalExecuteAsync(commandContext, commandOptions);
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

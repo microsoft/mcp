@@ -180,7 +180,7 @@ public class CommandFactory
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
             using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
-
+            activity?.SetTag(TagName.ToolId, implementation.Id);
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
             try
@@ -193,7 +193,7 @@ public class CommandFactory
                     return (int)cmdContext.Response.Status;
                 }
 
-                var response = await implementation.InternalExecuteAsync(cmdContext, parseResult);
+                var response = await implementation.ExecuteAsync(cmdContext, parseResult);
 
                 // Calculate execution time
                 var endTime = DateTime.UtcNow;
