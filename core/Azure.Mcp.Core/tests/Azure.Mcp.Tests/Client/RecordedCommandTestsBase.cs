@@ -138,12 +138,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     public override async ValueTask DisposeAsync()
     {
         await StopRecordOrPlayback();
-        await base.DisposeAsync();
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        base.Dispose(disposing);
 
         // On test failure, append proxy stderr for diagnostics.
         if (TestContext.Current?.TestState?.Result == TestResult.Failed && Proxy is not null)
@@ -156,6 +150,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 Output.WriteLine("=== End Test Proxy stderr ===");
             }
         }
+
+        await base.DisposeAsync();
     }
 
     private async Task StartRecordOrPlayback()
