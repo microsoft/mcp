@@ -9,7 +9,7 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.Tenant;
 
-public class TenantService: BaseAzureService, ITenantService
+public class TenantService : BaseAzureService, ITenantService
 {
     private readonly IAzureTokenCredentialProvider _credentialProvider;
     private readonly ICacheService _cacheService;
