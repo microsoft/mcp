@@ -19,6 +19,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
+    public virtual bool EnableDefaultSanitizerAdditions { get; set; } = true;
+
     /// <summary>
     /// Sanitizers that will apply generally across all parts (URI, Body, HeaderValues) of the request/response. This sanitization is applied to to recorded data at rest and during recording, and against test requests during playback.
     /// </summary>
@@ -62,6 +64,30 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// </summary>
     public virtual List<string> DisabledDefaultSanitizers { get; } = new();
 
+
+    /// <summary>
+    /// During recording, variables saved to this dictionary will be propogated to the test-proxy and saved in the recording file.
+    /// During playback, these variables will be available within the test function body, and can be used to ensure that dynamic values from the recording are used where
+    /// specific values should be used.
+    /// </summary>
+    protected readonly Dictionary<string, string> TestVariables = new Dictionary<string, string>();
+
+    public virtual void RegisterVariable(string name, string value)
+    {
+        if (TestMode == TestMode.Live || TestMode == TestMode.Playback)
+        {
+            // no-op in live/playback modes, as during playback the variables will be populated from the recording file automatically.
+            return;
+        }
+
+        if (Proxy is null)
+        {
+            throw new InvalidOperationException("Test proxy is not initialized.");
+        }
+
+        TestVariables[name] = value;
+    }
+
     // used to resolve a recording "path" given an invoking test
     private static readonly RecordingPathResolver _pathResolver = new();
 
@@ -96,6 +122,12 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             await fixture.StartProxyAsync();
             Proxy = fixture.Proxy;
 
+            // onetime on starting the proxy, we have initialized the livetest settings so lets add some additional sanitizers by default
+            if (EnableDefaultSanitizerAdditions)
+            {
+                PopulateDefaultSanitizers();
+            }
+
             // onetime registration of default sanitizers
             // and deregistering default sanitizers that we don't want
             if (Proxy != null)
@@ -103,6 +135,20 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 await DisableSanitizersAsync();
                 await ApplySanitizersAsync();
             }
+        }
+    }
+
+    private void PopulateDefaultSanitizers()
+    {
+        if (EnableDefaultSanitizerAdditions)
+        {
+            // Sanitize out the resource basename by default!
+            // This implies that tests shouldn't use this baseresourcename as part of their validation logic, as sanitization will replace it with "Sanitized" and cause confusion.
+            GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody()
+            {
+                Regex = Settings.ResourceBaseName,
+                Value = "Sanitized",
+            }));
         }
     }
 
@@ -186,7 +232,13 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             Output.WriteLine($"[Playback] Session file: {pathToRecording}");
             try
             {
-                await Proxy.Client.StartPlaybackAsync(bodyContent).ConfigureAwait(false);
+                ClientResult<IReadOnlyDictionary<string, string>>? playbackResult = await Proxy.Client.StartPlaybackAsync(new TestProxyStartInformation(pathToRecording, assetsPath, null)).ConfigureAwait(false);
+
+                foreach (var key in playbackResult.Value.Keys)
+                {
+                    Output.WriteLine($"[Playback] Variable from recording: {key} = {playbackResult.Value[key]}");
+                    TestVariables[key] = playbackResult.Value[key];
+                }
             }
             catch (Exception e)
             {
@@ -243,7 +295,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
         else if (TestMode is TestMode.Record)
         {
-            Proxy.Client.StopRecord("placeholder-ignore", new Dictionary<string, string>());
+            Proxy.Client.StopRecord("placeholder-ignore", TestVariables);
         }
         await Task.CompletedTask;
     }
