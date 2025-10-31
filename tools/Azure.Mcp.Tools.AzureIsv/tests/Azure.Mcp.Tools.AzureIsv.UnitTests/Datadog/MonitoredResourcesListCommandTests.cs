@@ -31,7 +31,7 @@ public class MonitoredResourcesListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsResources_WhenResourcesExist()
+    public async Task ExecuteAsync_ReturnsResources_WhenResourcesExist(CancellationToken cancellationToken)
     {
         var expectedResources = new List<string>
         {
@@ -46,7 +46,7 @@ public class MonitoredResourcesListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -54,7 +54,7 @@ public class MonitoredResourcesListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResources()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResources(CancellationToken cancellationToken)
     {
         // Arrange
         _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1")
@@ -65,14 +65,14 @@ public class MonitoredResourcesListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Missing required arguments: datadog-resource";
@@ -84,7 +84,7 @@ public class MonitoredResourcesListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

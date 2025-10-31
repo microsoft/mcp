@@ -33,7 +33,7 @@ public class DatabaseQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsResults_WhenQuerySucceeds()
+    public async Task ExecuteAsync_ReturnsResults_WhenQuerySucceeds(CancellationToken cancellationToken)
     {
         var expectedResults = new List<string> { "id, name", "1, John", "2, Jane" };
         _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "SELECT * FROM users").Returns(expectedResults);
@@ -49,7 +49,7 @@ public class DatabaseQueryCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -62,7 +62,7 @@ public class DatabaseQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenQueryFails()
+    public async Task ExecuteAsync_ReturnsError_WhenQueryFails(CancellationToken cancellationToken)
     {
         _mysqlService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db1", "INVALID SQL").ThrowsAsync(new InvalidOperationException("Syntax error"));
 
@@ -77,7 +77,7 @@ public class DatabaseQueryCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

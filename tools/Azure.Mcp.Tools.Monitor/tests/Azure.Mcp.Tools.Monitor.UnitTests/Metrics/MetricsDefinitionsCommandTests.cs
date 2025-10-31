@@ -84,7 +84,7 @@ public class MetricsDefinitionsCommandTests
     [InlineData("--subscription sub1", false)]
     [InlineData("--resource test", false)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -117,7 +117,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -136,7 +136,7 @@ public class MetricsDefinitionsCommandTests
     #region Service Interaction Tests
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResults = new List<MetricDefinition>
@@ -169,7 +169,7 @@ public class MetricsDefinitionsCommandTests
             "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --tenant tenant1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -187,7 +187,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSearchString_CallsServiceWithSearchParameter()
+    public async Task ExecuteAsync_WithSearchString_CallsServiceWithSearchParameter(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListMetricDefinitionsAsync(
@@ -214,7 +214,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --search-string cpu");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -233,7 +233,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAllOptionalParameters_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithAllOptionalParameters_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResults = new List<MetricDefinition>
@@ -263,7 +263,7 @@ public class MetricsDefinitionsCommandTests
             "--resource test --subscription sub1 --resource-type Microsoft.Storage/storageAccounts --metric-namespace Microsoft.Storage/storageAccounts --search-string memory --tenant tenant1 --limit 20");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -285,7 +285,7 @@ public class MetricsDefinitionsCommandTests
     #region Error Handling Tests
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListMetricDefinitionsAsync(
@@ -303,7 +303,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -312,7 +312,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException_LogsError()
+    public async Task ExecuteAsync_HandlesServiceException_LogsError(CancellationToken cancellationToken)
     {
         // Arrange
         var exception = new Exception("Service unavailable");
@@ -331,7 +331,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --resource-group rg1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -348,7 +348,7 @@ public class MetricsDefinitionsCommandTests
     #region Result Processing Tests
 
     [Fact]
-    public async Task ExecuteAsync_WithResults_ReturnsCorrectStructure()
+    public async Task ExecuteAsync_WithResults_ReturnsCorrectStructure(CancellationToken cancellationToken)
     {
         // Arrange
         var metricDefinitions = new List<MetricDefinition>
@@ -390,7 +390,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -399,7 +399,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithNoResults_ReturnsNullResults()
+    public async Task ExecuteAsync_WithNoResults_ReturnsNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListMetricDefinitionsAsync(
@@ -417,7 +417,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -425,7 +425,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithNullResults_ReturnsNullResults()
+    public async Task ExecuteAsync_WithNullResults_ReturnsNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListMetricDefinitionsAsync(
@@ -443,7 +443,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -455,7 +455,7 @@ public class MetricsDefinitionsCommandTests
     #region Limit Processing Tests
 
     [Fact]
-    public async Task ExecuteAsync_WithDefaultLimit_TruncatesResultsTo10()
+    public async Task ExecuteAsync_WithDefaultLimit_TruncatesResultsTo10(CancellationToken cancellationToken)
     {
         // Arrange
         var metricDefinitions = GenerateMetricDefinitions(15); // More than default limit of 10
@@ -475,7 +475,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -488,7 +488,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCustomLimit_TruncatesResultsCorrectly()
+    public async Task ExecuteAsync_WithCustomLimit_TruncatesResultsCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var metricDefinitions = GenerateMetricDefinitions(20);
@@ -508,7 +508,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 5");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -521,7 +521,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResultsExceedingLimit_ShowsTruncationMessage()
+    public async Task ExecuteAsync_WithResultsExceedingLimit_ShowsTruncationMessage(CancellationToken cancellationToken)
     {
         // Arrange - Create more results than the limit
         var metricDefinitions = GenerateMetricDefinitions(25);
@@ -541,7 +541,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 8");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -554,7 +554,7 @@ public class MetricsDefinitionsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResultsUnderLimit_ShowsAllResultsMessage()
+    public async Task ExecuteAsync_WithResultsUnderLimit_ShowsAllResultsMessage(CancellationToken cancellationToken)
     {
         // Arrange - Create fewer results than the limit
         var metricDefinitions = GenerateMetricDefinitions(3);
@@ -574,7 +574,7 @@ public class MetricsDefinitionsCommandTests
         var parseResult = _command.GetCommand().Parse("--resource test --subscription sub1 --limit 10");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -590,7 +590,7 @@ public class MetricsDefinitionsCommandTests
     #region Option Binding Tests
 
     [Fact]
-    public async Task ExecuteAsync_BindsOptionsCorrectly()
+    public async Task ExecuteAsync_BindsOptionsCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResults = new List<MetricDefinition>
@@ -620,7 +620,7 @@ public class MetricsDefinitionsCommandTests
             "--subscription test-subscription --resource-type Microsoft.Compute/virtualMachines --resource test-vm --metric-namespace Microsoft.Compute/virtualMachines --search-string performance --tenant test-tenant --limit 25");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

@@ -58,7 +58,7 @@ public class SubscriptionCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
+    public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription(CancellationToken cancellationToken)
     {
         // Arrange
         var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
@@ -83,7 +83,7 @@ public class SubscriptionCommandTests
             var parseResult = _commandDefinition.Parse([]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -104,7 +104,7 @@ public class SubscriptionCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
+    public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption(CancellationToken cancellationToken)
     {
         // Arrange
         var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
@@ -129,7 +129,7 @@ public class SubscriptionCommandTests
             var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.NotNull(response);

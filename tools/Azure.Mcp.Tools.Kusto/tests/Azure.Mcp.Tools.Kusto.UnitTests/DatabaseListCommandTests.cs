@@ -38,7 +38,7 @@ public sealed class DatabaseListCommandTests
 
     [Theory]
     [MemberData(nameof(DatabaseArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsDatabases(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsDatabases(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedDatabases = new List<string> { "db1", "db2" };
@@ -61,7 +61,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -74,7 +74,7 @@ public sealed class DatabaseListCommandTests
 
     [Theory]
     [MemberData(nameof(DatabaseArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         // Arrange
         if (useClusterUri)
@@ -96,7 +96,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -109,7 +109,7 @@ public sealed class DatabaseListCommandTests
 
     [Theory]
     [MemberData(nameof(DatabaseArgumentMatrix))]
-    public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
@@ -132,7 +132,7 @@ public sealed class DatabaseListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -141,14 +141,14 @@ public sealed class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions(CancellationToken cancellationToken)
     {
         var command = new DatabaseListCommand(_logger);
 
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -156,14 +156,14 @@ public sealed class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingAllRequiredOptions()
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingAllRequiredOptions(CancellationToken cancellationToken)
     {
         var command = new DatabaseListCommand(_logger);
 
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

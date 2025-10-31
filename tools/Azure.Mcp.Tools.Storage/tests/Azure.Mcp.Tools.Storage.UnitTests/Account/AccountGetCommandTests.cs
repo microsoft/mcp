@@ -41,7 +41,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -62,7 +62,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -78,7 +78,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccounts(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -94,7 +94,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -108,7 +108,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -125,7 +125,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -147,7 +147,7 @@ public class AccountGetCommandTests
     [InlineData("--subscription sub123 --account mystorageaccount", true)]
     [InlineData("--subscription sub123", true)] // Account is optional
     [InlineData("--account mystorageaccount", false)] // Missing subscription
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var originalSubscriptionEnv = EnvironmentHelpers.GetAzureSubscriptionId();
@@ -174,7 +174,7 @@ public class AccountGetCommandTests
             var parseResult = _commandDefinition.Parse(args);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -196,7 +196,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAccountDetails_WhenAccountExists()
+    public async Task ExecuteAsync_ReturnsAccountDetails_WhenAccountExists(CancellationToken cancellationToken)
     {
         // Arrange
         var account = "mystorageaccount";
@@ -212,7 +212,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -231,7 +231,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         var account = "mystorageaccount";
@@ -244,7 +244,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -253,7 +253,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesNotFound()
+    public async Task ExecuteAsync_HandlesNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var account = "nonexistentaccount";
@@ -266,7 +266,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -274,7 +274,7 @@ public class AccountGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    public async Task ExecuteAsync_HandlesAuthorizationFailure(CancellationToken cancellationToken)
     {
         // Arrange
         var account = "mystorageaccount";
@@ -287,7 +287,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

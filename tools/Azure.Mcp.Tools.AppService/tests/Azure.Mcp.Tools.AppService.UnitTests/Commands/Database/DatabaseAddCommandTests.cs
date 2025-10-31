@@ -115,7 +115,7 @@ public class DatabaseAddCommandTests
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--database-type", "SqlServer")] // Missing database-server, database
     [InlineData("--subscription", "sub123", "--resource-group", "rg1", "--app", "test-app", "--database-type", "SqlServer", "--database-server", "test-server")] // Missing database
     [InlineData("--resource-group", "rg1", "--app", "test-app", "--database-type", "SqlServer", "--database-server", "test-server", "--database", "test-db")] // Missing subscription
-    public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(params string[] commandArgs)
+    public async Task ExecuteAsync_MissingRequiredParameter_ReturnsErrorResponse(string[] commandArgs, CancellationToken cancellationToken)
     {
         // Arrange
         var command = new DatabaseAddCommand(_logger);
@@ -123,7 +123,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -146,12 +146,11 @@ public class DatabaseAddCommandTests
     [InlineData("custom-connection-string", "Server=custom;Database=custom;UserId=user;Password=pass;", null, null, null)]
     [InlineData("tenant", null, "test-tenant-id", null, null)]
     [InlineData("retry-policy", null, null, 3, 1.0)]
-    public async Task ExecuteAsync_WithVariousParameters_AcceptsParameters(
-        string scenario,
+    public async Task ExecuteAsync_WithVariousParameters_AcceptsParameters(string scenario,
         string? connectionString,
         string? tenant,
         int? retryMaxRetries,
-        double? retryDelay)
+        double? retryDelay, CancellationToken cancellationToken)
     {
         var subscription = "sub123";
         var parameters = new Dictionary<string, object?>
@@ -182,7 +181,7 @@ public class DatabaseAddCommandTests
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
         var parseResult = command.GetCommand().Parse(argList);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Test actual command execution and proper error handling
         Assert.NotNull(response);
@@ -217,7 +216,7 @@ public class DatabaseAddCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse()
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorResponse(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -252,7 +251,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

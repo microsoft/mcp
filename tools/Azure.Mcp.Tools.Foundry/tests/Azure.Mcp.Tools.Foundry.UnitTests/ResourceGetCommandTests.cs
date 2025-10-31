@@ -48,7 +48,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ListsAllResources_WhenNoResourceNameProvided()
+    public async Task ExecuteAsync_ListsAllResources_WhenNoResourceNameProvided(CancellationToken cancellationToken)
     {
         var expectedResources = new List<AiResourceInformation>
         {
@@ -86,7 +86,7 @@ public class ResourceGetCommandTests
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -101,7 +101,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ListsResourcesInResourceGroup_WhenResourceGroupProvided()
+    public async Task ExecuteAsync_ListsResourcesInResourceGroup_WhenResourceGroupProvided(CancellationToken cancellationToken)
     {
         var expectedResources = new List<AiResourceInformation>
         {
@@ -128,7 +128,7 @@ public class ResourceGetCommandTests
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub", "--resource-group", "test-rg"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -144,7 +144,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GetsSpecificResource_WhenResourceNameAndGroupProvided()
+    public async Task ExecuteAsync_GetsSpecificResource_WhenResourceNameAndGroupProvided(CancellationToken cancellationToken)
     {
         var expectedResource = new AiResourceInformation
         {
@@ -185,7 +185,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -203,7 +203,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResourcesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResourcesExist(CancellationToken cancellationToken)
     {
         _foundryService.ListAiResourcesAsync(
             Arg.Any<string>(),
@@ -215,7 +215,7 @@ public class ResourceGetCommandTests
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -229,7 +229,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesListException()
+    public async Task ExecuteAsync_HandlesListException(CancellationToken cancellationToken)
     {
         var expectedError = "Failed to list resources";
 
@@ -243,7 +243,7 @@ public class ResourceGetCommandTests
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -251,7 +251,7 @@ public class ResourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGetException()
+    public async Task ExecuteAsync_HandlesGetException(CancellationToken cancellationToken)
     {
         var expectedError = "Resource not found";
 
@@ -270,7 +270,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -281,7 +281,7 @@ public class ResourceGetCommandTests
     [InlineData("--subscription", "test-sub")]
     [InlineData("--subscription", "test-sub", "--resource-group", "test-rg")]
     [InlineData("--subscription", "test-sub", "--resource-group", "test-rg", "--resource-name", "test-resource")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(params string[] args)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string[] args, CancellationToken cancellationToken)
     {
         _foundryService.ListAiResourcesAsync(
             Arg.Any<string>(),
@@ -301,14 +301,14 @@ public class ResourceGetCommandTests
         var command = new ResourceGetCommand(_logger);
         var parsedArgs = command.GetCommand().Parse(args);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parsedArgs, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeserializationValidation()
+    public async Task ExecuteAsync_DeserializationValidation(CancellationToken cancellationToken)
     {
         var resourceWithDeployments = new AiResourceInformation
         {
@@ -360,7 +360,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);

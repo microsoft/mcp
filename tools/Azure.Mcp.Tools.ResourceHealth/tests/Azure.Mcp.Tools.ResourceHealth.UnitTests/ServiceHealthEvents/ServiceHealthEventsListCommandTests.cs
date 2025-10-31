@@ -45,7 +45,7 @@ public class ServiceHealthEventsListCommandTests
     [InlineData("--subscription sub123 --status InvalidStatus", false)]
     [InlineData("--subscription sub123 --tracking-id TRACK123", true)]
     [InlineData("--subscription sub123 --filter startTime ge 2023-01-01", true)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -77,7 +77,7 @@ public class ServiceHealthEventsListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -98,7 +98,7 @@ public class ServiceHealthEventsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidSubscription_ReturnsSuccess()
+    public async Task ExecuteAsync_WithValidSubscription_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var mockEvents = new List<Models.ServiceHealthEvent>();
@@ -117,7 +117,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -126,7 +126,7 @@ public class ServiceHealthEventsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Service error";
@@ -145,7 +145,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(["--subscription", "nonexistent-sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -156,13 +156,13 @@ public class ServiceHealthEventsListCommandTests
     [Theory]
     [InlineData("--subscription", "sub123")]
     [InlineData("--subscription", "sub123", "--event-type", "ServiceIssue", "--status", "Active")]
-    public async Task ExecuteAsync_ReturnsValidJsonStructure(params string[] args)
+    public async Task ExecuteAsync_ReturnsValidJsonStructure(string[] args, CancellationToken cancellationToken)
     {
         // Arrange
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert - Should have proper structure even if empty results
         Assert.NotNull(response);

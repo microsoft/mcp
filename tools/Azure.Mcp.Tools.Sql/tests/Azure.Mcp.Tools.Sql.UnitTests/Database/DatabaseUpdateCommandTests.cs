@@ -49,7 +49,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_UpdatesDatabase()
+    public async Task ExecuteAsync_WithValidParameters_UpdatesDatabase(CancellationToken cancellationToken)
     {
         // Arrange
         var mockDatabase = new SqlDatabase(
@@ -102,7 +102,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -112,7 +112,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.UpdateDatabaseAsync(
@@ -140,7 +140,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -149,7 +149,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesDatabaseNotFound()
+    public async Task ExecuteAsync_HandlesDatabaseNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
@@ -178,7 +178,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -186,7 +186,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesInvalidConfiguration()
+    public async Task ExecuteAsync_HandlesInvalidConfiguration(CancellationToken cancellationToken)
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
@@ -215,7 +215,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -231,7 +231,7 @@ public class DatabaseUpdateCommandTests
     [InlineData("--resource-group rg --server server1 --database testdb", false, "Missing required options")] // Missing subscription
     [InlineData("--subscription sub --server server1 --database testdb", false, "Missing required options")] // Missing resource-group
     [InlineData("--subscription sub --resource-group rg --database testdb", false, "Missing required options")] // Missing server
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -275,7 +275,7 @@ public class DatabaseUpdateCommandTests
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -293,7 +293,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMinimumRequiredParameters_Succeeds()
+    public async Task ExecuteAsync_WithMinimumRequiredParameters_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Test minimum scope with only required parameters
         var mockDatabase = new SqlDatabase(
@@ -339,7 +339,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -371,7 +371,7 @@ public class DatabaseUpdateCommandTests
     [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --sku-capacity 10")]
     [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --collation SQL_Latin1_General_CP1_CI_AS")]
     [InlineData("--subscription sub --resource-group rg --server server1 --database testdb --max-size-bytes 2147483648")]
-    public async Task ExecuteAsync_WithOptionalParameters_Succeeds(string commandArgs)
+    public async Task ExecuteAsync_WithOptionalParameters_Succeeds(string commandArgs, CancellationToken cancellationToken)
     {
         // Arrange - Test that optional parameters work correctly
         var mockDatabase = new SqlDatabase(
@@ -412,7 +412,7 @@ public class DatabaseUpdateCommandTests
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -421,7 +421,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
+    public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Test minimum scope when subscription comes from environment variable
         Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-id");
@@ -470,7 +470,7 @@ public class DatabaseUpdateCommandTests
             ]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -486,7 +486,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithInvalidServerName_HandlesServiceError()
+    public async Task ExecuteAsync_WithInvalidServerName_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange - Test edge case where service throws exception due to invalid input
         _sqlService.UpdateDatabaseAsync(
@@ -514,7 +514,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -522,7 +522,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    public async Task ExecuteAsync_HandlesAuthorizationFailure(CancellationToken cancellationToken)
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
@@ -551,7 +551,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -559,7 +559,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromBasicToStandard_Succeeds()
+    public async Task ExecuteAsync_UpdateFromBasicToStandard_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale up from Basic to Standard (S1)
         var mockDatabase = new SqlDatabase(
@@ -607,7 +607,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -616,7 +616,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromStandardToBasic_Succeeds()
+    public async Task ExecuteAsync_UpdateFromStandardToBasic_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale down from Standard to Basic
         var mockDatabase = new SqlDatabase(
@@ -664,7 +664,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -673,7 +673,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromBasicToPremium_Succeeds()
+    public async Task ExecuteAsync_UpdateFromBasicToPremium_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale up from Basic to Premium (P1)
         var mockDatabase = new SqlDatabase(
@@ -721,7 +721,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -730,7 +730,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromStandardToPremium_Succeeds()
+    public async Task ExecuteAsync_UpdateFromStandardToPremium_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale up from Standard (S2) to Premium (P2)
         var mockDatabase = new SqlDatabase(
@@ -778,7 +778,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -787,7 +787,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromPremiumToStandard_Succeeds()
+    public async Task ExecuteAsync_UpdateFromPremiumToStandard_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale down from Premium to Standard (S3)
         var mockDatabase = new SqlDatabase(
@@ -835,7 +835,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -844,7 +844,7 @@ public class DatabaseUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateFromPremiumToBasic_Succeeds()
+    public async Task ExecuteAsync_UpdateFromPremiumToBasic_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Scale down from Premium to Basic
         var mockDatabase = new SqlDatabase(
@@ -892,7 +892,7 @@ public class DatabaseUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

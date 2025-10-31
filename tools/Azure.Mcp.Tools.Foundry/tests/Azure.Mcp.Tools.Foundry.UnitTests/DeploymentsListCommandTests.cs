@@ -30,7 +30,7 @@ public class DeploymentsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDeployments_WhenDeploymentsExist()
+    public async Task ExecuteAsync_ReturnsDeployments_WhenDeploymentsExist(CancellationToken cancellationToken)
     {
         var endpoint = "https://test-endpoint.com";
         var expectedDeployments = new List<Deployment>
@@ -48,14 +48,14 @@ public class DeploymentsListCommandTests
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDeploymentsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDeploymentsExist(CancellationToken cancellationToken)
     {
         var endpoint = "https://test-endpoint.com";
 
@@ -68,14 +68,14 @@ public class DeploymentsListCommandTests
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var endpoint = "https://test-endpoint.com";
         var expectedError = "Test error";
@@ -89,7 +89,7 @@ public class DeploymentsListCommandTests
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -97,7 +97,7 @@ public class DeploymentsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenMissingEndpoint()
+    public async Task ExecuteAsync_ReturnsError_WhenMissingEndpoint(CancellationToken cancellationToken)
     {
         var endpoint = "https://test-endpoint.com";
         var expectedError = "Test error";
@@ -111,7 +111,7 @@ public class DeploymentsListCommandTests
         var command = new DeploymentsListCommand();
         var args = command.GetCommand().Parse([]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

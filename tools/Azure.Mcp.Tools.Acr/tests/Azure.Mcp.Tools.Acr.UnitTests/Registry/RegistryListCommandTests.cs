@@ -51,7 +51,7 @@ public class RegistryListCommandTests
     [InlineData("--subscription sub", true)]
     [InlineData("--subscription sub --resource-group rg", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Ensure environment variable fallback does not interfere with validation tests
         EnvironmentHelpers.SetAzureSubscriptionId(null);
@@ -69,7 +69,7 @@ public class RegistryListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -84,7 +84,7 @@ public class RegistryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListRegistries(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -93,7 +93,7 @@ public class RegistryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -102,7 +102,7 @@ public class RegistryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_FiltersById_ReturnsFilteredRegistries()
+    public async Task ExecuteAsync_FiltersById_ReturnsFilteredRegistries(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedRegistries = new List<Models.AcrRegistryInfo> { new("registry1", null, null, null, null) };
@@ -112,7 +112,7 @@ public class RegistryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -121,7 +121,7 @@ public class RegistryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults()
+    public async Task ExecuteAsync_EmptyList_ReturnsEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListRegistries("sub", null, Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -130,7 +130,7 @@ public class RegistryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -144,7 +144,7 @@ public class RegistryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsExpectedRegistryProperties()
+    public async Task ExecuteAsync_ReturnsExpectedRegistryProperties(CancellationToken cancellationToken)
     {
         // Arrange
         var registry = new Models.AcrRegistryInfo("myregistry", "eastus", "myregistry.azurecr.io", "Basic", "Basic");
@@ -154,7 +154,7 @@ public class RegistryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

@@ -50,7 +50,7 @@ public class ElasticPoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ReturnsElasticPools()
+    public async Task ExecuteAsync_WithValidParameters_ReturnsElasticPools(CancellationToken cancellationToken)
     {
         // Arrange
         var mockElasticPools = new List<SqlElasticPool>
@@ -85,7 +85,7 @@ public class ElasticPoolListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -95,7 +95,7 @@ public class ElasticPoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyList_ReturnsEmptyResults()
+    public async Task ExecuteAsync_WithEmptyList_ReturnsEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         var mockElasticPools = new List<SqlElasticPool>();
@@ -111,7 +111,7 @@ public class ElasticPoolListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -121,7 +121,7 @@ public class ElasticPoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.GetElasticPoolsAsync(
@@ -135,7 +135,7 @@ public class ElasticPoolListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -144,7 +144,7 @@ public class ElasticPoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
+    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
@@ -159,7 +159,7 @@ public class ElasticPoolListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -167,7 +167,7 @@ public class ElasticPoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
+    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden");
@@ -182,7 +182,7 @@ public class ElasticPoolListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -195,7 +195,7 @@ public class ElasticPoolListCommandTests
     [InlineData("--subscription sub --server server1", false)]   // Missing resource group
     [InlineData("--subscription sub --resource-group rg", false)] // Missing server
     [InlineData("", false)]  // Missing all required options
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -212,7 +212,7 @@ public class ElasticPoolListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)

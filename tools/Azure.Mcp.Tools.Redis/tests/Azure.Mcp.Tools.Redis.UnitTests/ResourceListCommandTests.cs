@@ -37,7 +37,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsCaches_WhenCachesExist()
+    public async Task ExecuteAsync_ReturnsCaches_WhenCachesExist(CancellationToken cancellationToken)
     {
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" }, new() { Name = "cache2" } };
         _redisService.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<RetryPolicyOptions>())
@@ -46,7 +46,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -63,14 +63,14 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCaches()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCaches(CancellationToken cancellationToken)
     {
         _redisService.ListResourcesAsync("sub123").Returns([]);
 
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -83,7 +83,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         _redisService.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<RetryPolicyOptions>())
@@ -94,7 +94,7 @@ public class ResourceListCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -103,7 +103,7 @@ public class ResourceListCommandTests
 
     [Theory]
     [InlineData("--subscription")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new ResourceListCommand(_logger);
         var argsList = new List<string>();
@@ -116,7 +116,7 @@ public class ResourceListCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -124,7 +124,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAccessPolicyAssignments_WhenAssignmentsExist()
+    public async Task ExecuteAsync_ReturnsAccessPolicyAssignments_WhenAssignmentsExist(CancellationToken cancellationToken)
     {
         var expectedAssignments = new AccessPolicyAssignment[]
         {
@@ -139,7 +139,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -163,7 +163,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccessPolicyAssignments()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccessPolicyAssignments(CancellationToken cancellationToken)
     {
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
         _redisService.ListResourcesAsync("sub123", Arg.Any<string>(), Arg.Any<AuthMethod>(), Arg.Any<RetryPolicyOptions>())
@@ -172,7 +172,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -192,7 +192,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist()
+    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist(CancellationToken cancellationToken)
     {
         var expectedDatabases = new Database[]
         {
@@ -223,7 +223,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -246,7 +246,7 @@ public class ResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabases()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabases(CancellationToken cancellationToken)
     {
         var expectedCaches = new CacheModel[] { new() { Name = "cache1" } };
 
@@ -255,7 +255,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);

@@ -69,7 +69,7 @@ public class FileSystemCreateCommandTests
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --location eastus --sku AMLFS-Durable-Premium-125 --size 4 --subnet-id /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1 --maintenance-day Monday --maintenance-time 00:00", false)] // Missing zone
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --location eastus --sku AMLFS-Durable-Premium-125 --size 4 --subnet-id /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1 --zone 1 --maintenance-time 00:00", false)] // Missing maintenance-day
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --location eastus --sku AMLFS-Durable-Premium-125 --size 4 --subnet-id /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.Network/virtualNetworks/vnet1/subnets/sub1 --zone 1 --maintenance-day Monday", false)] // Missing maintenance-time
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -87,7 +87,7 @@ public class FileSystemCreateCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -106,7 +106,7 @@ public class FileSystemCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashNotNone_MissingOtherParams_Returns400()
+    public async Task ExecuteAsync_RootSquashNotNone_MissingOtherParams_Returns400(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -122,14 +122,14 @@ public class FileSystemCreateCommandTests
             "--root-squash-mode", "All"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("root-squash-mode", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashNotNone_WithParams_CallsService()
+    public async Task ExecuteAsync_RootSquashNotNone_WithParams_CallsService(CancellationToken cancellationToken)
     {
         var expected = CreateLustre();
         _svc.CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
@@ -156,7 +156,7 @@ public class FileSystemCreateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
@@ -168,7 +168,7 @@ public class FileSystemCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
+    public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -186,14 +186,14 @@ public class FileSystemCreateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ExecuteAsync_EncryptionEnabledWithoutKey_Returns400()
+    public async Task ExecuteAsync_EncryptionEnabledWithoutKey_Returns400(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -210,14 +210,14 @@ public class FileSystemCreateCommandTests
             "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("key-url", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ExecuteAsync_EncryptionEnabledWithKeyAndVault_CallsService()
+    public async Task ExecuteAsync_EncryptionEnabledWithKeyAndVault_CallsService(CancellationToken cancellationToken)
     {
         var expected = CreateLustre();
         _svc.CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
@@ -245,7 +245,7 @@ public class FileSystemCreateCommandTests
             "--user-assigned-identity-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
             "Monday", "00:00",
@@ -257,7 +257,7 @@ public class FileSystemCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsGeneralException_Returns500()
+    public async Task ExecuteAsync_ServiceThrowsGeneralException_Returns500(CancellationToken cancellationToken)
     {
         _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -279,13 +279,13 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_Conflict()
+    public async Task ExecuteAsync_HandlesRequestFailedException_Conflict(CancellationToken cancellationToken)
     {
         _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -307,13 +307,13 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("conflict", response.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HsmOneContainerMissing_ReturnsErrorFromService()
+    public async Task ExecuteAsync_HsmOneContainerMissing_ReturnsErrorFromService(CancellationToken cancellationToken)
     {
         _svc.CreateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string>(), Arg.Any<string>(),
@@ -336,7 +336,7 @@ public class FileSystemCreateCommandTests
             "--hsm-container", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/acc/blobServices/default/containers/hsm"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("Azure Blob Integration", response.Message, StringComparison.OrdinalIgnoreCase);
     }

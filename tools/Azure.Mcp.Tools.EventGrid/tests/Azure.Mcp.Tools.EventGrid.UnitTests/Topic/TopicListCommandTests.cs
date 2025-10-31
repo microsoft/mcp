@@ -41,7 +41,7 @@ public class TopicListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsTopics()
+    public async Task ExecuteAsync_NoParameters_ReturnsTopics(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "sub123";
@@ -57,7 +57,7 @@ public class TopicListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -73,7 +73,7 @@ public class TopicListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTopics()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTopics(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "sub123";
@@ -84,7 +84,7 @@ public class TopicListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -98,7 +98,7 @@ public class TopicListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -110,7 +110,7 @@ public class TopicListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -124,7 +124,7 @@ public class TopicListCommandTests
     [InlineData("--subscription test-sub --resource-group test-rg", true)]
     [InlineData("--subscription test-sub --resource-group test-rg --tenant test-tenant", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -141,7 +141,7 @@ public class TopicListCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)

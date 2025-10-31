@@ -41,7 +41,7 @@ public class KeyValueLockSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LocksKeyValue_WhenValidParametersProvided()
+    public async Task ExecuteAsync_LocksKeyValue_WhenValidParametersProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -52,7 +52,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -74,7 +74,7 @@ public class KeyValueLockSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LocksKeyValueWithLabel_WhenLabelProvided()
+    public async Task ExecuteAsync_LocksKeyValueWithLabel_WhenLabelProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -86,7 +86,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -109,7 +109,7 @@ public class KeyValueLockSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UnlocksKeyValue_WhenValidParametersProvided()
+    public async Task ExecuteAsync_UnlocksKeyValue_WhenValidParametersProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -119,7 +119,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -140,7 +140,7 @@ public class KeyValueLockSetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UnlocksKeyValueWithLabel_WhenLabelProvided()
+    public async Task ExecuteAsync_UnlocksKeyValueWithLabel_WhenLabelProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -151,7 +151,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -174,7 +174,7 @@ public class KeyValueLockSetCommandTests
     [Theory]
     [InlineData(true)]
     [InlineData(false)]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(bool locked)
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(bool locked, CancellationToken cancellationToken)
     {
         // Arrange
         _appConfigService.SetKeyValueLockState(
@@ -193,7 +193,7 @@ public class KeyValueLockSetCommandTests
         var args = _commandDefinition.Parse(argsToParse);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -206,13 +206,13 @@ public class KeyValueLockSetCommandTests
     [InlineData("--subscription sub123 --account account1")] // Missing key
     [InlineData("--account account1 --key my-key")] // Missing subscription
     [InlineData("--subscription sub123 --key my-key")] // Missing account
-    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args)
+    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string args, CancellationToken cancellationToken)
     {
         // Arrange
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

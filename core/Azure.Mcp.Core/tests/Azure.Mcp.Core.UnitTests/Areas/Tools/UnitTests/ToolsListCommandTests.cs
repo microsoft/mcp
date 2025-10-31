@@ -57,13 +57,13 @@ public class ToolsListCommandTests
     /// </summary>
 
     [Fact]
-    public async Task ExecuteAsync_WithValidContext_ReturnsCommandInfoList()
+    public async Task ExecuteAsync_WithValidContext_ReturnsCommandInfoList(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -98,13 +98,13 @@ public class ToolsListCommandTests
     /// and preserves data integrity during round-trip operations.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_JsonSerializationStressTest_HandlesLargeResults()
+    public async Task ExecuteAsync_JsonSerializationStressTest_HandlesLargeResults(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -125,13 +125,13 @@ public class ToolsListCommandTests
     /// and only returns visible commands in the results.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithValidContext_FiltersHiddenCommands()
+    public async Task ExecuteAsync_WithValidContext_FiltersHiddenCommands(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -151,13 +151,13 @@ public class ToolsListCommandTests
     /// and that option properties are correctly populated.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithValidContext_IncludesOptionsForCommands()
+    public async Task ExecuteAsync_WithValidContext_IncludesOptionsForCommands(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -182,14 +182,14 @@ public class ToolsListCommandTests
     /// and returns appropriate error response.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithNullServiceProvider_HandlesGracefully()
+    public async Task ExecuteAsync_WithNullServiceProvider_HandlesGracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var faultyContext = new CommandContext(null!);
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(faultyContext, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(faultyContext, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -202,7 +202,7 @@ public class ToolsListCommandTests
     /// and returns appropriate error response with error details.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithCorruptedCommandFactory_HandlesGracefully()
+    public async Task ExecuteAsync_WithCorruptedCommandFactory_HandlesGracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var faultyServiceProvider = Substitute.For<IServiceProvider>();
@@ -213,7 +213,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(faultyContext, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(faultyContext, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -226,13 +226,13 @@ public class ToolsListCommandTests
     /// and validates the structure and content of returned commands.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_ReturnsSpecificKnownCommands()
+    public async Task ExecuteAsync_ReturnsSpecificKnownCommands(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -283,13 +283,13 @@ public class ToolsListCommandTests
     /// and follow consistent formatting conventions.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_CommandPathFormattingIsCorrect()
+    public async Task ExecuteAsync_CommandPathFormattingIsCorrect(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -314,13 +314,13 @@ public class ToolsListCommandTests
     /// Verifies that the --namespaces switch returns only distinct top-level namespaces.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly()
+    public async Task ExecuteAsync_WithNamespaceSwitch_ReturnsNamespacesOnly(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse(new[] { "--namespaces" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -368,7 +368,7 @@ public class ToolsListCommandTests
     /// and returns empty results when no commands are available.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_WithEmptyCommandFactory_ReturnsEmptyResults()
+    public async Task ExecuteAsync_WithEmptyCommandFactory_ReturnsEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         var emptyCollection = new ServiceCollection();
@@ -392,7 +392,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(emptyContext, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(emptyContext, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -423,13 +423,13 @@ public class ToolsListCommandTests
     /// Verifies that the command includes metadata for each tool in the output.
     /// </summary>
     [Fact]
-    public async Task ExecuteAsync_IncludesMetadataForAllCommands()
+    public async Task ExecuteAsync_IncludesMetadataForAllCommands(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

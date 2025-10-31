@@ -56,7 +56,7 @@ public sealed class CliInstallCommandTests
     [InlineData("--cli-type az", true)]
     [InlineData("--cli-type func", true)]
     [InlineData("--cli-type wrong_cli_type", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -72,7 +72,7 @@ public sealed class CliInstallCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -84,7 +84,7 @@ public sealed class CliInstallCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeserializationValidation()
+    public async Task ExecuteAsync_DeserializationValidation(CancellationToken cancellationToken)
     {
         // Arrange
         _cliInstallService.GetCliInstallInstructions(Arg.Any<string>())
@@ -96,7 +96,7 @@ public sealed class CliInstallCommandTests
         var parseResult = _commandDefinition.Parse("--cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([200], [(int)response.Status]);
@@ -111,7 +111,7 @@ public sealed class CliInstallCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _cliInstallService.GetCliInstallInstructions(Arg.Any<string>()).ThrowsAsync(new Exception("Test error"));
@@ -119,7 +119,7 @@ public sealed class CliInstallCommandTests
         var parseResult = _commandDefinition.Parse("--cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

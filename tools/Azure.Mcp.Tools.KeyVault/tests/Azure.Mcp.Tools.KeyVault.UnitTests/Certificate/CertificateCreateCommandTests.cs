@@ -43,7 +43,7 @@ public class CertificateCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceCorrectly()
+    public async Task ExecuteAsync_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Expected test error";
@@ -65,7 +65,7 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert - Verify the service was called with correct parameters
         await _keyVaultService.Received(1).CreateCertificate(
@@ -80,7 +80,7 @@ public class CertificateCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfCertificateNameIsEmpty()
+    public async Task ExecuteAsync_ReturnsInvalidObject_IfCertificateNameIsEmpty(CancellationToken cancellationToken)
     {
         // Arrange - No need to mock service since validation should fail before service is called
         var args = _commandDefinition.Parse([
@@ -90,7 +90,7 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -99,7 +99,7 @@ public class CertificateCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -119,7 +119,7 @@ public class CertificateCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

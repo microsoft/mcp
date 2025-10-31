@@ -34,7 +34,7 @@ public class AvailabilityStatusGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAvailabilityStatus_WhenResourceExists()
+    public async Task ExecuteAsync_ReturnsAvailabilityStatus_WhenResourceExists(CancellationToken cancellationToken)
     {
         var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm";
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
@@ -52,7 +52,7 @@ public class AvailabilityStatusGetCommandTests
         var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -69,7 +69,7 @@ public class AvailabilityStatusGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var resourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/rg/providers/Microsoft.Compute/virtualMachines/vm";
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
@@ -83,7 +83,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -93,7 +93,7 @@ public class AvailabilityStatusGetCommandTests
     [Theory]
     [InlineData("--resourceId")]
     [InlineData("--subscription")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new AvailabilityStatusGetCommand(_logger);
         var argsList = new List<string>();
@@ -112,7 +112,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

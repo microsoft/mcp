@@ -17,7 +17,7 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.UnitTests;
 public class LedgerEntryAppendCommandTests
 {
     [Fact]
-    public async Task Execute_Success_ReturnsResult()
+    public async Task Execute_Success_ReturnsResult(CancellationToken cancellationToken)
     {
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryAppendCommand>>();
@@ -31,7 +31,7 @@ public class LedgerEntryAppendCommandTests
         var command = new LedgerEntryAppendCommand(service, logger);
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--content", "data"]);
-        var response = await command.ExecuteAsync(context, parse, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parse, cancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

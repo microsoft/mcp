@@ -31,7 +31,7 @@ public class ModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsModels_WhenModelsExist()
+    public async Task ExecuteAsync_ReturnsModels_WhenModelsExist(CancellationToken cancellationToken)
     {
         var expectedModels = new List<ModelInformation>
         {
@@ -51,7 +51,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -65,7 +65,7 @@ public class ModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsModels_WhenModelsExistWithFlags()
+    public async Task ExecuteAsync_ReturnsModels_WhenModelsExistWithFlags(CancellationToken cancellationToken)
     {
         string publisherName = "TestPublisher";
         string license = "TestLicense";
@@ -88,7 +88,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse(["--search-for-free-playground", "--publisher", publisherName, "--license", license, "--model-name", modelName]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -102,7 +102,7 @@ public class ModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoModels()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoModels(CancellationToken cancellationToken)
     {
         _foundryService.ListModels(
             Arg.Any<bool>(),
@@ -116,7 +116,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -129,7 +129,7 @@ public class ModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error";
 
@@ -145,7 +145,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

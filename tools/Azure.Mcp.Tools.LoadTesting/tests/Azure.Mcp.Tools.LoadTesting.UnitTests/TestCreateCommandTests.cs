@@ -44,7 +44,7 @@ public class TestCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreateLoadTest_WhenExists()
+    public async Task ExecuteAsync_CreateLoadTest_WhenExists(CancellationToken cancellationToken)
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
         _service.CreateTestAsync(
@@ -71,7 +71,7 @@ public class TestCreateCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -88,7 +88,7 @@ public class TestCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesBadRequestErrors()
+    public async Task ExecuteAsync_HandlesBadRequestErrors(CancellationToken cancellationToken)
     {
         var expected = new Test();
         _service.CreateTestAsync(
@@ -105,12 +105,12 @@ public class TestCreateCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         _service.CreateTestAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
@@ -134,7 +134,7 @@ public class TestCreateCommandTests
             "--endpoint", "https://example.com/api/test"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

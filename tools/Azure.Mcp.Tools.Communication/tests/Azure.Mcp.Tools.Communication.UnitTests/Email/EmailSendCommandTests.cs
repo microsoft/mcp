@@ -61,7 +61,7 @@ public class EmailSendCommandTests
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", null, false, "Missing message")]
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "", false, "Empty message")]
     [InlineData("https://example.communication.azure.com", "sender@example.com", "recipient@example.com", "Subject", "Message", true, "Valid parameters")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string? endpoint, string? from, string? to, string? subject, string? message, bool shouldSucceed, string scenario)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string? endpoint, string? from, string? to, string? subject, string? message, bool shouldSucceed, string scenario, CancellationToken cancellationToken)
     {
         // Arrange
         var args = new List<string>();
@@ -105,7 +105,7 @@ public class EmailSendCommandTests
                 .Returns(expectedResult);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -123,7 +123,7 @@ public class EmailSendCommandTests
                 // Runtime validation errors (empty values or command validation)
                 try
                 {
-                    var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+                    var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
                     // If we reach here without exception, check if it's a validation error response
                     if (response.Status == HttpStatusCode.BadRequest)
@@ -147,7 +147,7 @@ public class EmailSendCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidInput_CallsServiceAndReturnsSuccess()
+    public async Task ExecuteAsync_WithValidInput_CallsServiceAndReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         string[] args = [
@@ -183,7 +183,7 @@ public class EmailSendCommandTests
             .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
@@ -218,7 +218,7 @@ public class EmailSendCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         string[] args = [
@@ -249,7 +249,7 @@ public class EmailSendCommandTests
             .Do(x => throw expectedException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert

@@ -32,7 +32,7 @@ public sealed class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsClusters_WhenClustersExist()
+    public async Task ExecuteAsync_ReturnsClusters_WhenClustersExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedClusters = new List<string> { "clusterA", "clusterB" };
@@ -46,7 +46,7 @@ public sealed class ClusterListCommandTests
 
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -60,7 +60,7 @@ public sealed class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist(CancellationToken cancellationToken)
     {
         // Arrange
         _kusto.ListClustersAsync("sub123", null, null)
@@ -71,7 +71,7 @@ public sealed class ClusterListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -85,7 +85,7 @@ public sealed class ClusterListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException_AndSetsException()
+    public async Task ExecuteAsync_HandlesException_AndSetsException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
@@ -100,7 +100,7 @@ public sealed class ClusterListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

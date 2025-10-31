@@ -47,7 +47,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ReturnsSuccess()
+    public async Task ExecuteAsync_WithValidParameters_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -81,7 +81,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -90,7 +90,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithOptionalParameters_ReturnsSuccess()
+    public async Task ExecuteAsync_WithOptionalParameters_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -125,7 +125,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -134,13 +134,13 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
+    public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _command.GetCommand().Parse(["--search", "test"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -149,7 +149,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyResults_ReturnsSuccessWithNullResults()
+    public async Task ExecuteAsync_WithEmptyResults_ReturnsSuccessWithNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -170,7 +170,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -179,7 +179,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -201,7 +201,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -210,7 +210,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMultipleODataOptions_ReturnsSuccess()
+    public async Task ExecuteAsync_WithMultipleODataOptions_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -247,7 +247,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -256,7 +256,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResultsContainingNextCursor_ReturnsNextCursorInResponse()
+    public async Task ExecuteAsync_WithResultsContainingNextCursor_ReturnsNextCursorInResponse(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -297,7 +297,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -312,7 +312,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutNextCursorInResults_DoesNotIncludeNextCursorInResponse()
+    public async Task ExecuteAsync_WithoutNextCursorInResults_DoesNotIncludeNextCursorInResponse(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -347,7 +347,7 @@ public class ProductListCommandTests
         var args = _command.GetCommand().Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -362,7 +362,7 @@ public class ProductListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithExpandOption_ReturnsSuccess()
+    public async Task ExecuteAsync_WithExpandOption_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -395,7 +395,7 @@ public class ProductListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

@@ -40,7 +40,7 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist()
+    public async Task ExecuteAsync_ReturnsAccounts_WhenAccountsExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedAccounts = new List<string> { "account1", "account2" };
@@ -50,7 +50,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -64,7 +64,7 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist(CancellationToken cancellationToken)
     {
         // Arrange
         _cosmosService.GetCosmosAccounts("sub123", null, null)
@@ -73,7 +73,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -87,7 +87,7 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]), CancellationToken.None);
@@ -98,7 +98,7 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -110,7 +110,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -119,7 +119,7 @@ public class AccountListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
+    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "sub123";
@@ -129,7 +129,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);

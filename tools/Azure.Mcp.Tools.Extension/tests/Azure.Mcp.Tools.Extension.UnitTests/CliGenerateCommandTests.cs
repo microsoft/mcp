@@ -56,7 +56,7 @@ public sealed class CliGenerateCommandTests
     [InlineData("--cli-type az", false)]
     [InlineData("--cli-type wrong_cli_type", false)]
     [InlineData("--intent mock_intent --cli-type az", true)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -72,7 +72,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -88,7 +88,7 @@ public sealed class CliGenerateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeserializationValidation()
+    public async Task ExecuteAsync_DeserializationValidation(CancellationToken cancellationToken)
     {
         // Arrange
         _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>())
@@ -100,7 +100,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([200], [(int)response.Status]);
@@ -115,7 +115,7 @@ public sealed class CliGenerateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>()).ThrowsAsync(new Exception("Test error"));
@@ -123,7 +123,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

@@ -50,7 +50,7 @@ public class DatabaseShowCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ReturnsDatabase()
+    public async Task ExecuteAsync_WithValidParameters_ReturnsDatabase(CancellationToken cancellationToken)
     {
         // Arrange
         var mockDatabase = new SqlDatabase(
@@ -83,7 +83,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -93,7 +93,7 @@ public class DatabaseShowCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.GetDatabaseAsync(
@@ -108,7 +108,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -117,7 +117,7 @@ public class DatabaseShowCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesNotFoundDatabase()
+    public async Task ExecuteAsync_HandlesNotFoundDatabase(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.GetDatabaseAsync(
@@ -132,7 +132,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "notfound"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -140,7 +140,7 @@ public class DatabaseShowCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException()
+    public async Task ExecuteAsync_HandlesRequestFailedException(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
@@ -156,7 +156,7 @@ public class DatabaseShowCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);

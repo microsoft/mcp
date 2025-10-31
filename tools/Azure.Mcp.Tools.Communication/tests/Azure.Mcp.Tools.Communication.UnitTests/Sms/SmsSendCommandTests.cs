@@ -59,7 +59,7 @@ public class SmsSendCommandTests
 
     [Theory]
     [MemberData(nameof(ValidParameters))]
-    public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string endpoint, string from, string[] to, string message, bool enableDeliveryReport, string? tag)
+    public async Task ExecuteAsync_WithValidParameters_CallsServiceAndReturnsResults(string endpoint, string from, string[] to, string message, bool enableDeliveryReport, string? tag, CancellationToken cancellationToken)
     {
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
@@ -90,7 +90,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -98,7 +98,7 @@ public class SmsSendCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_HandlesError()
+    public async Task ExecuteAsync_ServiceThrowsException_HandlesError(CancellationToken cancellationToken)
     {
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
@@ -116,7 +116,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -134,7 +134,7 @@ public class SmsSendCommandTests
 
     [Theory]
     [MemberData(nameof(InvalidParameters))]
-    public async Task ExecuteAsync_MissingRequiredParameters_ReturnsError(string? endpoint, string? from, string[]? to, string? message)
+    public async Task ExecuteAsync_MissingRequiredParameters_ReturnsError(string? endpoint, string? from, string[]? to, string? message, CancellationToken cancellationToken)
     {
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
@@ -156,7 +156,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

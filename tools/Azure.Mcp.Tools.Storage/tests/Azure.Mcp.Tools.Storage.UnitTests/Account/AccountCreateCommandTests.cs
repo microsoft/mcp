@@ -57,7 +57,7 @@ public class AccountCreateCommandTests
     [InlineData("--account testaccount --location eastus --subscription sub123", false)] // Missing resource group
     [InlineData("--account testaccount --resource-group testrg --subscription sub123", false)] // Missing location
     [InlineData("", false)] // No parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -97,7 +97,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -119,7 +119,7 @@ public class AccountCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesStorageAccountNameAlreadyExists()
+    public async Task ExecuteAsync_HandlesStorageAccountNameAlreadyExists(CancellationToken cancellationToken)
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Storage account name already exists");
@@ -139,7 +139,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -147,7 +147,7 @@ public class AccountCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesResourceGroupNotFound()
+    public async Task ExecuteAsync_HandlesResourceGroupNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Resource group not found");
@@ -167,7 +167,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -175,7 +175,7 @@ public class AccountCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    public async Task ExecuteAsync_HandlesAuthorizationFailure(CancellationToken cancellationToken)
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
@@ -195,7 +195,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -203,7 +203,7 @@ public class AccountCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _storageService.CreateStorageAccount(
@@ -221,7 +221,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -230,7 +230,7 @@ public class AccountCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var properties = new Dictionary<string, object>
@@ -275,7 +275,7 @@ public class AccountCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

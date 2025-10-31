@@ -39,7 +39,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_check_azure_regions_success()
+    public async Task Should_check_azure_regions_success(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -73,7 +73,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -108,7 +108,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_check_regions_with_cognitive_services_success()
+    public async Task Should_check_regions_with_cognitive_services_success(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -143,7 +143,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -175,7 +175,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_ReturnError_empty_resource_types()
+    public async Task Should_ReturnError_empty_resource_types(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -189,7 +189,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -206,7 +206,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_service_exception()
+    public async Task Should_handle_service_exception(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -229,7 +229,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -238,7 +238,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_parse_multiple_resource_types_with_spaces()
+    public async Task Should_parse_multiple_resource_types_with_spaces(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -266,7 +266,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -286,7 +286,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_return_empty_results_when_no_regions_found()
+    public async Task Should_return_empty_results_when_no_regions_found(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -308,7 +308,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -323,7 +323,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_include_all_cognitive_service_parameters()
+    public async Task Should_include_all_cognitive_service_parameters(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -353,7 +353,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -371,7 +371,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_whitespace_only_resource_types()
+    public async Task Should_handle_whitespace_only_resource_types(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -385,7 +385,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -402,7 +402,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_mixed_casing_in_resource_types()
+    public async Task Should_handle_mixed_casing_in_resource_types(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -430,7 +430,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -450,7 +450,7 @@ public sealed class AvailabilityListCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_very_long_resource_types_list()
+    public async Task Should_handle_very_long_resource_types_list(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subscription-id";
@@ -488,7 +488,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);

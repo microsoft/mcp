@@ -44,7 +44,7 @@ public class GroupListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidSubscription_ReturnsResourceGroups()
+    public async Task ExecuteAsync_WithValidSubscription_ReturnsResourceGroups(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subs-id";
@@ -61,7 +61,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -91,7 +91,7 @@ public class GroupListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenant_PassesTenantToService()
+    public async Task ExecuteAsync_WithTenant_PassesTenantToService(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subs-id";
@@ -111,7 +111,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -123,7 +123,7 @@ public class GroupListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyResourceGroupList_ReturnsNullResults()
+    public async Task ExecuteAsync_EmptyResourceGroupList_ReturnsNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subs-id";
@@ -134,7 +134,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -143,7 +143,7 @@ public class GroupListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorInResponse()
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorInResponse(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-subs-id";
@@ -155,7 +155,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);

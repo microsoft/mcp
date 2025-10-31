@@ -33,7 +33,7 @@ public class ServerConfigGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists()
+    public async Task ExecuteAsync_ReturnsConfig_WhenConfigExists(CancellationToken cancellationToken)
     {
         var expectedConfig = "config123";
         _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123").Returns(expectedConfig);
@@ -42,7 +42,7 @@ public class ServerConfigGetCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -55,14 +55,14 @@ public class ServerConfigGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNull_WhenConfigDoesNotExist()
+    public async Task ExecuteAsync_ReturnsNull_WhenConfigDoesNotExist(CancellationToken cancellationToken)
     {
         _postgresService.GetServerConfigAsync("sub123", "rg1", "user1", "server123").Returns("");
 
         var command = new ServerConfigGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -75,7 +75,7 @@ public class ServerConfigGetCommandTests
     [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new ServerConfigGetCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -86,7 +86,7 @@ public class ServerConfigGetCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

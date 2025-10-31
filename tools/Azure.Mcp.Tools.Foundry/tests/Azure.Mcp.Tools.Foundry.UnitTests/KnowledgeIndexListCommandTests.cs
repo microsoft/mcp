@@ -48,7 +48,7 @@ public class KnowledgeIndexListCommandTests
     [Theory]
     [InlineData("--endpoint https://example.com", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -63,7 +63,7 @@ public class KnowledgeIndexListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -79,7 +79,7 @@ public class KnowledgeIndexListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -88,7 +88,7 @@ public class KnowledgeIndexListCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -97,7 +97,7 @@ public class KnowledgeIndexListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsExpectedResults()
+    public async Task ExecuteAsync_ReturnsExpectedResults(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedIndexes = new List<KnowledgeIndexInformation>
@@ -112,7 +112,7 @@ public class KnowledgeIndexListCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

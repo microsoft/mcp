@@ -60,7 +60,7 @@ public class SessionHostListCommandTests
     [InlineData("--subscription sub123 --hostpool pool1 --hostpool-resource-id /subscriptions/sub123/resourceGroups/rg1/providers/Microsoft.DesktopVirtualization/hostPools/pool1", false)] // Both provided
     [InlineData("--hostpool pool1", false)] // Missing subscription
     [InlineData("", false)] // Missing both
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -98,7 +98,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -116,7 +116,7 @@ public class SessionHostListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidInput_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithValidInput_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSessionHosts = new List<SessionHostModel>
@@ -135,7 +135,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -150,7 +150,7 @@ public class SessionHostListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResourceId_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithResourceId_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSessionHosts = new List<SessionHostModel>
@@ -171,7 +171,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription sub123 --hostpool-resource-id {resourceId}");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -192,7 +192,7 @@ public class SessionHostListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // First test: Can we parse the command line correctly?
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1 --resource-group rg1");
@@ -225,7 +225,7 @@ public class SessionHostListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         // If this fails, let's see what the actual message is
@@ -248,7 +248,7 @@ public class SessionHostListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyResults_ReturnsNullResults()
+    public async Task ExecuteAsync_WithEmptyResults_ReturnsNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListSessionHostsAsync(
@@ -269,7 +269,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -278,7 +278,7 @@ public class SessionHostListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListSessionHostsAsync(
@@ -299,7 +299,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -311,7 +311,7 @@ public class SessionHostListCommandTests
     [InlineData("--subscription")]
     [InlineData("--hostpool")]
     [InlineData("--invalid-option")]
-    public async Task ExecuteAsync_WithInvalidArgs_ReturnsBadRequest(string invalidArgs)
+    public async Task ExecuteAsync_WithInvalidArgs_ReturnsBadRequest(string invalidArgs, CancellationToken cancellationToken)
     {
         // Arrange
         var context = new CommandContext(_serviceProvider);
@@ -320,7 +320,7 @@ public class SessionHostListCommandTests
         try
         {
             var parseResult = _commandDefinition.Parse(invalidArgs);
-            var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
             // If parsing succeeds but validation fails, expect 400
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -50,7 +50,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_RenamesDatabase()
+    public async Task ExecuteAsync_WithValidParameters_RenamesDatabase(CancellationToken cancellationToken)
     {
         // This test also ensures the fix for the bug where new-database-name was not being bound correctly
         var mockDatabase = new SqlDatabase(
@@ -89,7 +89,7 @@ public class DatabaseRenameCommandTests
             "--new-database-name", "newdb"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -118,7 +118,7 @@ public class DatabaseRenameCommandTests
     [InlineData("--subscription sub --server server1 --database olddb --new-database-name newdb", false, "Missing required options")] // Missing resource-group
     [InlineData("--subscription sub --resource-group rg --database olddb --new-database-name newdb", false, "Missing required options")] // Missing server
     [InlineData("--subscription sub --resource-group rg --server server1 --new-database-name newdb", false, "Missing required options")] // Missing database
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -155,7 +155,7 @@ public class DatabaseRenameCommandTests
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -173,7 +173,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesDatabaseNotFound()
+    public async Task ExecuteAsync_HandlesDatabaseNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
@@ -196,7 +196,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -204,7 +204,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesConflictWhenNewNameExists()
+    public async Task ExecuteAsync_HandlesConflictWhenNewNameExists(CancellationToken cancellationToken)
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database name already exists");
@@ -227,7 +227,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -236,7 +236,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesBadRequest()
+    public async Task ExecuteAsync_HandlesBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid rename operation");
@@ -259,7 +259,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -267,7 +267,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGeneralException()
+    public async Task ExecuteAsync_HandlesGeneralException(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.RenameDatabaseAsync(
@@ -289,7 +289,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -298,7 +298,7 @@ public class DatabaseRenameCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
+    public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds(CancellationToken cancellationToken)
     {
         // Arrange - Test when subscription comes from environment variable
         Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-id");
@@ -341,7 +341,7 @@ public class DatabaseRenameCommandTests
             ]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
             // Assert
             Assert.NotNull(response);

@@ -32,7 +32,7 @@ public class OpenAiModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ListsModels_WhenValidOptionsProvided()
+    public async Task ExecuteAsync_ListsModels_WhenValidOptionsProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -84,7 +84,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -114,7 +114,7 @@ public class OpenAiModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyList_WhenNoModelsDeployed()
+    public async Task ExecuteAsync_ReturnsEmptyList_WhenNoModelsDeployed(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai-empty";
@@ -140,7 +140,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -155,7 +155,7 @@ public class OpenAiModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -180,7 +180,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -215,7 +215,7 @@ public class OpenAiModelsListCommandTests
     [InlineData("--subscription sub --resource-group rg", false)] // Missing resource-name
     [InlineData("--resource-name myresource --subscription sub", false)] // Missing resource-group  
     [InlineData("--resource-name myresource --resource-group rg", false)] // Missing subscription
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var command = new OpenAiModelsListCommand();
@@ -238,7 +238,7 @@ public class OpenAiModelsListCommandTests
         var parseResult = command.GetCommand().Parse(args.Split(' '));
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -253,7 +253,7 @@ public class OpenAiModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_VerifiesServiceCall_WithCorrectParameters()
+    public async Task ExecuteAsync_VerifiesServiceCall_WithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-resource";
@@ -280,7 +280,7 @@ public class OpenAiModelsListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert - Verify the service was called with exact parameters
         await _foundryService.Received(1).ListOpenAiModelsAsync(
@@ -293,7 +293,7 @@ public class OpenAiModelsListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceAuthentication_Exception()
+    public async Task ExecuteAsync_HandlesServiceAuthentication_Exception(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -317,7 +317,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

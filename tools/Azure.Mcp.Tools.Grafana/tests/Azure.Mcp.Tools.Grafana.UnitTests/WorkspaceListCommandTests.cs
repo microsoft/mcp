@@ -48,7 +48,7 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsWorkspaces_WhenWorkspacesExist()
+    public async Task ExecuteAsync_ReturnsWorkspaces_WhenWorkspacesExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkspaces = new List<GrafanaWorkspace>
@@ -93,7 +93,7 @@ public sealed class WorkspaceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -106,7 +106,7 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoWorkspacesExist(CancellationToken cancellationToken)
     {
         // Arrange
         _grafana.ListWorkspacesAsync("sub123", null, Arg.Any<RetryPolicyOptions>())
@@ -117,7 +117,7 @@ public sealed class WorkspaceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -131,7 +131,7 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenant_PassesTenantToService()
+    public async Task ExecuteAsync_WithTenant_PassesTenantToService(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkspaces = new List<GrafanaWorkspace>
@@ -161,7 +161,7 @@ public sealed class WorkspaceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -169,7 +169,7 @@ public sealed class WorkspaceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException_AndSetsException()
+    public async Task ExecuteAsync_HandlesException_AndSetsException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
@@ -183,7 +183,7 @@ public sealed class WorkspaceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

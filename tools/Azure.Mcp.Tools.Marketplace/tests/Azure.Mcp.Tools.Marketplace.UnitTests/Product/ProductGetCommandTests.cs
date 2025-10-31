@@ -50,7 +50,7 @@ public class ProductGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ReturnsSuccess()
+    public async Task ExecuteAsync_WithValidParameters_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -79,7 +79,7 @@ public class ProductGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -88,13 +88,13 @@ public class ProductGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError()
+    public async Task ExecuteAsync_WithMissingSubscription_ReturnsValidationError(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse(["--product-id", "test-product"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -103,7 +103,7 @@ public class ProductGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -128,7 +128,7 @@ public class ProductGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--product-id", productId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

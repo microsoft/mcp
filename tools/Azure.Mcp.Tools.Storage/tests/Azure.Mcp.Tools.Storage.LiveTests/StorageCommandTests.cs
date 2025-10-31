@@ -224,7 +224,7 @@ namespace Azure.Mcp.Tools.Storage.LiveTests
         }
 
         [Fact]
-        public async Task Should_upload_blob()
+        public async Task Should_upload_blob(CancellationToken cancellationToken)
         {
             // Create a temporary file to upload
             var tempFileName = $"test-upload-{DateTime.UtcNow.Ticks}.txt";

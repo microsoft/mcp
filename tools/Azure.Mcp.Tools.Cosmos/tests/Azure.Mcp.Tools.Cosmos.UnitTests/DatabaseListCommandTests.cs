@@ -39,7 +39,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist()
+    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedDatabases = new List<string> { "database1", "database2" };
@@ -57,7 +57,7 @@ public class DatabaseListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -70,7 +70,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDataBaseExists()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDataBaseExists(CancellationToken cancellationToken)
     {
         // Arrange
         _cosmosService.ListDatabases(
@@ -87,7 +87,7 @@ public class DatabaseListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -99,7 +99,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -118,7 +118,7 @@ public class DatabaseListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

@@ -15,14 +15,14 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
 {
 
     [Fact]
-    public async Task Should_List_Tools()
+    public async Task Should_List_Tools(CancellationToken cancellationToken)
     {
         var tools = await Client.ListToolsAsync(cancellationToken: TestContext.Current.CancellationToken);
         Assert.NotEmpty(tools);
     }
 
     [Fact]
-    public async Task Client_Should_Invoke_Tool_Successfully()
+    public async Task Client_Should_Invoke_Tool_Successfully(CancellationToken cancellationToken)
     {
         var result = await Client.CallToolAsync("subscription_list", new Dictionary<string, object?> { },
             cancellationToken: TestContext.Current.CancellationToken);
@@ -42,7 +42,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Client_Should_Handle_Invalid_Tools()
+    public async Task Client_Should_Handle_Invalid_Tools(CancellationToken cancellationToken)
     {
         var result = await Client.CallToolAsync("non_existent_tool", new Dictionary<string, object?>(), cancellationToken: TestContext.Current.CancellationToken);
 
@@ -55,14 +55,14 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Client_Should_Ping_Server_Successfully()
+    public async Task Client_Should_Ping_Server_Successfully(CancellationToken cancellationToken)
     {
         await Client.PingAsync(cancellationToken: TestContext.Current.CancellationToken);
         // If no exception is thrown, the ping was successful.
     }
 
     [Fact]
-    public async Task Should_Error_When_Resources_List_Not_Supported()
+    public async Task Should_Error_When_Resources_List_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourcesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -70,7 +70,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Error_When_Resources_Read_Not_Supported()
+    public async Task Should_Error_When_Resources_Read_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ReadResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -78,7 +78,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Error_When_Resources_Templates_List_Not_Supported()
+    public async Task Should_Error_When_Resources_Templates_List_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListResourceTemplatesAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -86,7 +86,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Error_When_Resources_Subscribe_Not_Supported()
+    public async Task Should_Error_When_Resources_Subscribe_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.SubscribeToResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -94,7 +94,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported()
+    public async Task Should_Error_When_Resources_Unsubscribe_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.UnsubscribeFromResourceAsync("test://resource", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -102,13 +102,13 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported()
+    public async Task Should_Not_Hang_On_Logging_SetLevel_Not_Supported(CancellationToken cancellationToken)
     {
         await Client.SetLoggingLevel(LoggingLevel.Info, cancellationToken: TestContext.Current.CancellationToken);
     }
 
     [Fact]
-    public async Task Should_Error_When_Prompts_List_Not_Supported()
+    public async Task Should_Error_When_Prompts_List_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.ListPromptsAsync(cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);
@@ -116,7 +116,7 @@ public class ClientToolTests(ITestOutputHelper output) : CommandTestsBase(output
     }
 
     [Fact]
-    public async Task Should_Error_When_Prompts_Get_Not_Supported()
+    public async Task Should_Error_When_Prompts_Get_Not_Supported(CancellationToken cancellationToken)
     {
         var ex = await Assert.ThrowsAsync<McpProtocolException>(async () => await Client.GetPromptAsync("unsupported_prompt", cancellationToken: TestContext.Current.CancellationToken));
         Assert.Contains("Request failed", ex.Message);

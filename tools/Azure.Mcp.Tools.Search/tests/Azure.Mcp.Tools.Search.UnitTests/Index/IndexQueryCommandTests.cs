@@ -33,7 +33,7 @@ public class IndexQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsResults_WhenSearchSucceeds()
+    public async Task ExecuteAsync_ReturnsResults_WhenSearchSucceeds(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceName = "service123";
@@ -65,7 +65,7 @@ public class IndexQueryCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -78,7 +78,7 @@ public class IndexQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -95,7 +95,7 @@ public class IndexQueryCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -104,7 +104,7 @@ public class IndexQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ValidatesRequiredOptions()
+    public async Task ExecuteAsync_ValidatesRequiredOptions(CancellationToken cancellationToken)
     {
         // Arrange
         var command = new IndexQueryCommand(_logger);
@@ -113,7 +113,7 @@ public class IndexQueryCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

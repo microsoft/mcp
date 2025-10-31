@@ -38,7 +38,7 @@ public sealed class SampleCommandTests
 
     [Theory]
     [MemberData(nameof(SampleArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsSampleResults(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsSampleResults(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedJson = JsonDocument.Parse("[{\"foo\":42}]").RootElement.EnumerateArray().Select(e => e.Clone()).ToList();
@@ -64,7 +64,7 @@ public sealed class SampleCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -81,7 +81,7 @@ public sealed class SampleCommandTests
 
     [Theory]
     [MemberData(nameof(SampleArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoResults(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         if (useClusterUri)
         {
@@ -104,7 +104,7 @@ public sealed class SampleCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -140,21 +140,21 @@ public sealed class SampleCommandTests
     //     var args = command.GetCommand().Parse(cliArgs);
     //     var context = new CommandContext(_serviceProvider);
 
-    //     var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+    //     var response = await command.ExecuteAsync(context, args, cancellationToken);
     //     Assert.NotNull(response);
     //     Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     //     Assert.Equal(expectedError, response.Message);
     // }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions(CancellationToken cancellationToken)
     {
         var command = new SampleCommand(_logger);
 
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

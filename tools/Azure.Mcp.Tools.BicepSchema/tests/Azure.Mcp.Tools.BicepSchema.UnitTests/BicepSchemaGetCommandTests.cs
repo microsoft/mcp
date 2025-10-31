@@ -37,11 +37,11 @@ public class BicepSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists()
+    public async Task ExecuteAsync_ReturnsSchema_WhenResourceTypeExists(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse("--resource-type Microsoft.Sql/servers/databases/schemas");
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -54,12 +54,12 @@ public class BicepSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenResourceTypeDoesNotExist()
+    public async Task ExecuteAsync_ReturnsError_WhenResourceTypeDoesNotExist(CancellationToken cancellationToken)
     {
 
         var args = _commandDefinition.Parse("--resource-type Microsoft.Unknown/virtualRandom");
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 

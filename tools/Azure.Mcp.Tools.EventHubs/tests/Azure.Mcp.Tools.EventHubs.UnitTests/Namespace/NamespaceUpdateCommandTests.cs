@@ -66,7 +66,7 @@ public class NamespaceUpdateCommandTests
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --is-auto-inflate-enabled true", false, "When enabling auto-inflate, maximum-throughput-units must be specified")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --is-auto-inflate-enabled true --maximum-throughput-units 20", true, "")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns --tags {\"env\":\"prod\"}", true, "")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorMessage)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorMessage, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -93,7 +93,7 @@ public class NamespaceUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -113,7 +113,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesNamespaceWithSkuChanges()
+    public async Task ExecuteAsync_UpdatesNamespaceWithSkuChanges(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -144,7 +144,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -167,7 +167,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesNamespaceWithAutoInflateSettings()
+    public async Task ExecuteAsync_UpdatesNamespaceWithAutoInflateSettings(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -197,7 +197,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -205,7 +205,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesNamespaceWithTags()
+    public async Task ExecuteAsync_UpdatesNamespaceWithTags(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -245,7 +245,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -253,7 +253,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesInvalidTagsJson()
+    public async Task ExecuteAsync_HandlesInvalidTagsJson(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -264,7 +264,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -273,7 +273,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesNamespaceWithAllFeatures()
+    public async Task ExecuteAsync_UpdatesNamespaceWithAllFeatures(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -308,7 +308,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -331,7 +331,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -359,7 +359,7 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -367,7 +367,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesKeyNotFoundException()
+    public async Task ExecuteAsync_HandlesKeyNotFoundException(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -395,7 +395,7 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -403,7 +403,7 @@ public class NamespaceUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenant_PassesCorrectParameters()
+    public async Task ExecuteAsync_WithTenant_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -433,7 +433,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

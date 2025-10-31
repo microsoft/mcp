@@ -32,7 +32,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesEmbeddings_WhenValidOptionsProvided()
+    public async Task ExecuteAsync_CreatesEmbeddings_WhenValidOptionsProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -73,7 +73,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--input-text", inputText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -93,7 +93,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_OptionalParameters_PassedToService()
+    public async Task ExecuteAsync_OptionalParameters_PassedToService(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -143,7 +143,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--dimensions", dimensions.ToString()
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -165,7 +165,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -199,7 +199,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--input-text", inputText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -232,7 +232,7 @@ public class OpenAiEmbeddingsCreateCommandTests
     [Theory]
     [InlineData("")]
     [InlineData(null)]
-    public async Task ExecuteAsync_RequiredParameterMissing_ReturnsValidationError(string? inputText)
+    public async Task ExecuteAsync_RequiredParameterMissing_ReturnsValidationError(string? inputText, CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -258,7 +258,7 @@ public class OpenAiEmbeddingsCreateCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

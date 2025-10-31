@@ -50,7 +50,7 @@ public class FileSystemSubnetSizeCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsRequiredIPs()
+    public async Task ExecuteAsync_ReturnsRequiredIPs(CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(
@@ -68,7 +68,7 @@ public class FileSystemSubnetSizeCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response.Results);
@@ -83,14 +83,14 @@ public class FileSystemSubnetSizeCommandTests
     [InlineData("AMLFS-Durable-Premium-125")]
     [InlineData("AMLFS-Durable-Premium-250")]
     [InlineData("AMLFS-Durable-Premium-500")]
-    public async Task ExecuteAsync_ValidSkus_DoNotThrow(string sku)
+    public async Task ExecuteAsync_ValidSkus_DoNotThrow(string sku, CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
         var args = _commandDefinition.Parse(["--sku", sku, "--size", "48", "--subscription", _knownSubscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -102,14 +102,14 @@ public class FileSystemSubnetSizeCommandTests
     [InlineData("--sku AMLFS-Durable-Premium-40 --subscription sub123", false)]
     [InlineData("--sku AMLFS-Durable-Premium-40 --size 48", false)]
     [InlineData("--size 48 --subscription sub123", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()).Returns(10);
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -117,7 +117,7 @@ public class FileSystemSubnetSizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidSku_Returns400()
+    public async Task ExecuteAsync_InvalidSku_Returns400(CancellationToken cancellationToken)
     {
         // Arrange: The command validates SKU in BindOptions and throws ArgumentException
         var args = _commandDefinition.Parse([
@@ -127,7 +127,7 @@ public class FileSystemSubnetSizeCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
@@ -135,7 +135,7 @@ public class FileSystemSubnetSizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrows_IsHandled()
+    public async Task ExecuteAsync_ServiceThrows_IsHandled(CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.GetRequiredAmlFSSubnetsSize(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
@@ -144,7 +144,7 @@ public class FileSystemSubnetSizeCommandTests
         var args = _commandDefinition.Parse(["--sku", "AMLFS-Durable-Premium-40", "--size", "100", "--subscription", _knownSubscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.InternalServerError);

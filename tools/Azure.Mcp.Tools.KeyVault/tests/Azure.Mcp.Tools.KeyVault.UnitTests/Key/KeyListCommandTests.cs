@@ -45,7 +45,7 @@ public class KeyListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsKeys_WhenKeysExist()
+    public async Task ExecuteAsync_ReturnsKeys_WhenKeysExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedKeys = new List<string> { "key1", "key2" };
@@ -64,7 +64,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -78,7 +78,7 @@ public class KeyListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoKeys()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoKeys(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.ListKeys(
@@ -95,7 +95,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -109,7 +109,7 @@ public class KeyListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -128,7 +128,7 @@ public class KeyListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

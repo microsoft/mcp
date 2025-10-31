@@ -44,7 +44,7 @@ public class SecretListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSecrets_WhenSecretsExist()
+    public async Task ExecuteAsync_ReturnsSecrets_WhenSecretsExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSecrets = new List<string> { "secret1", "secret2" };
@@ -62,7 +62,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -76,7 +76,7 @@ public class SecretListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSecrets()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSecrets(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.ListSecrets(
@@ -92,7 +92,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -106,7 +106,7 @@ public class SecretListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -124,7 +124,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

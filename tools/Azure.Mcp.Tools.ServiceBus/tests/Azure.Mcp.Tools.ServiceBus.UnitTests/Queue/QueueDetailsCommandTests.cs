@@ -47,7 +47,7 @@ public class QueueDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsQueueDetails()
+    public async Task ExecuteAsync_ReturnsQueueDetails(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedDetails = new QueueDetails
@@ -73,7 +73,7 @@ public class QueueDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -89,7 +89,7 @@ public class QueueDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesQueueNotFound()
+    public async Task ExecuteAsync_HandlesQueueNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceBusException = new ServiceBusException("Queue not found", ServiceBusFailureReason.MessagingEntityNotFound);
@@ -104,7 +104,7 @@ public class QueueDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -113,7 +113,7 @@ public class QueueDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGenericException()
+    public async Task ExecuteAsync_HandlesGenericException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -128,7 +128,7 @@ public class QueueDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--queue", QueueName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -142,7 +142,7 @@ public class QueueDetailsCommandTests
     [InlineData("--subscription sub123 --queue testQueue", false)]   // Missing namespace
     [InlineData("--subscription sub123 --namespace test.servicebus.windows.net", false)] // Missing queue
     [InlineData("", false)]  // Missing all required options
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -165,7 +165,7 @@ public class QueueDetailsCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)

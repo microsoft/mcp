@@ -33,7 +33,7 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task GetPlan_Should_Return_Expected_Result()
+    public async Task GetPlan_Should_Return_Expected_Result(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -45,7 +45,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -56,7 +56,7 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_plan_with_default_iac_options()
+    public async Task Should_get_plan_with_default_iac_options(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -68,7 +68,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -79,7 +79,7 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_plan_for_kubernetes()
+    public async Task Should_get_plan_for_kubernetes(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -90,7 +90,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -101,7 +101,7 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_plan_with_default_target_service()
+    public async Task Should_get_plan_with_default_target_service(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -111,7 +111,7 @@ public class GetCommandTests
             "--provisioning-tool", "AZD"
         ]);
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);

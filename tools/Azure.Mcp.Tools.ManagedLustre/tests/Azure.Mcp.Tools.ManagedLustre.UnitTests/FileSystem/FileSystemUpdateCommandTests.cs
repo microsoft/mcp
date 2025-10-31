@@ -64,7 +64,7 @@ public class FileSystemUpdateCommandTests
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --maintenance-day Monday", false)]
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --maintenance-time 00:00", false)]
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --no-squash-nid-list nid1,nid2 --squash-uid 1000", false)] // missing gid
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -79,7 +79,7 @@ public class FileSystemUpdateCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -99,7 +99,7 @@ public class FileSystemUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MaintenanceUpdate_CallsServiceAndReturnsResult()
+    public async Task ExecuteAsync_MaintenanceUpdate_CallsServiceAndReturnsResult(CancellationToken cancellationToken)
     {
         var expected = CreateLustre();
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>())
@@ -113,7 +113,7 @@ public class FileSystemUpdateCommandTests
             "--maintenance-time", "01:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>());
 
@@ -124,7 +124,7 @@ public class FileSystemUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashUpdate_CallsService()
+    public async Task ExecuteAsync_RootSquashUpdate_CallsService(CancellationToken cancellationToken)
     {
         var expected = CreateLustre();
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>())
@@ -140,13 +140,13 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsRequestFailed_ReturnsStatus()
+    public async Task ExecuteAsync_ServiceThrowsRequestFailed_ReturnsStatus(CancellationToken cancellationToken)
     {
         _svc.UpdateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
             Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
@@ -161,7 +161,7 @@ public class FileSystemUpdateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -174,7 +174,7 @@ public class FileSystemUpdateCommandTests
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-day Monday --maintenance-time 00:00", true)] // None doesn't require uid/gid
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-time 00:00", false)] // Missing time
     [InlineData("--subscription sub123 --resource-group rg1 --name amlfs-01 --root-squash-mode None --maintenance-day Monday", false)] // Missing day
-    public async Task ExecuteAsync_RootSquashMode_Validation_Works(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_RootSquashMode_Validation_Works(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         if (shouldSucceed)
         {
@@ -186,7 +186,7 @@ public class FileSystemUpdateCommandTests
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (!shouldSucceed)
@@ -200,7 +200,7 @@ public class FileSystemUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashMode_WithUidGid_SucceedsAndCallsService()
+    public async Task ExecuteAsync_RootSquashMode_WithUidGid_SucceedsAndCallsService(CancellationToken cancellationToken)
     {
         var expected = CreateLustre();
         _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>())
@@ -216,13 +216,13 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "3000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>());
     }
 
     [Fact]
-    public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400()
+    public async Task ExecuteAsync_RootSquashNotNone_MissingNoSquashNidList_Returns400(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -233,7 +233,7 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);

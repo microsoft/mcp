@@ -65,7 +65,7 @@ public class ServerListCommandTests
     [InlineData("--subscription sub", false)] // Missing resource group
     [InlineData("--resource-group rg", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -97,7 +97,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -112,7 +112,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ListsServersSuccessfully()
+    public async Task ExecuteAsync_ListsServersSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedServers = new List<SqlServer>
@@ -152,7 +152,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -167,7 +167,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyList_ReturnsSuccessfully()
+    public async Task ExecuteAsync_WithEmptyList_ReturnsSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var emptyServerList = new List<SqlServer>();
@@ -183,7 +183,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -198,7 +198,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse()
+    public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListServersAsync(
@@ -212,7 +212,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -220,7 +220,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenAuthorizationFails_Returns403StatusCode()
+    public async Task ExecuteAsync_WhenAuthorizationFails_Returns403StatusCode(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Forbidden: Insufficient permissions");
@@ -236,7 +236,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -245,7 +245,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenResourceGroupNotFound_Returns404StatusCode()
+    public async Task ExecuteAsync_WhenResourceGroupNotFound_Returns404StatusCode(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Not Found: Resource group does not exist");
@@ -261,7 +261,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group nonexistent-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -270,7 +270,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithGenericRequestFailedException_ReturnsOriginalMessage()
+    public async Task ExecuteAsync_WithGenericRequestFailedException_ReturnsOriginalMessage(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.InternalServerError, "Internal Server Error");
@@ -286,7 +286,7 @@ public class ServerListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

@@ -44,7 +44,7 @@ public class CertificateListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsCertificates_WhenCertificatesExist()
+    public async Task ExecuteAsync_ReturnsCertificates_WhenCertificatesExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedCertificates = new List<string> { "cert1", "cert2" };
@@ -62,7 +62,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -76,7 +76,7 @@ public class CertificateListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCertificates()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoCertificates(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.ListCertificates(
@@ -92,7 +92,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -106,7 +106,7 @@ public class CertificateListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -124,7 +124,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

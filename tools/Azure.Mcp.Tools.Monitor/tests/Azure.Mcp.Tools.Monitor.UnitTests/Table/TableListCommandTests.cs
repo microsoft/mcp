@@ -88,7 +88,7 @@ public sealed class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsTablesList()
+    public async Task ExecuteAsync_ReturnsTablesList(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedTables = new List<string>
@@ -114,7 +114,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -141,7 +141,7 @@ public sealed class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTableTypeParameter_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_WithTableTypeParameter_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedTables = new List<string> { "CustomTable1", "CustomTable2" };
@@ -162,7 +162,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -176,7 +176,7 @@ public sealed class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyWhenNoTables()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoTables(CancellationToken cancellationToken)
     {
         // Arrange
         _monitorService.ListTables(
@@ -195,7 +195,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -209,7 +209,7 @@ public sealed class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _monitorService.ListTables(
@@ -228,7 +228,7 @@ public sealed class TableListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

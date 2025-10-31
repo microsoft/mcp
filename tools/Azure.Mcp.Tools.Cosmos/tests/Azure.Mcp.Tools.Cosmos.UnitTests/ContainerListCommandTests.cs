@@ -39,7 +39,7 @@ public class ContainerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsContainers_WhenContainersExist()
+    public async Task ExecuteAsync_ReturnsContainers_WhenContainersExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedContainers = new List<string> { "container1", "container2" };
@@ -59,7 +59,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -72,7 +72,7 @@ public class ContainerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainersExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoContainersExist(CancellationToken cancellationToken)
     {
         // Arrange
         _cosmosService.ListContainers(
@@ -91,7 +91,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -103,7 +103,7 @@ public class ContainerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -124,7 +124,7 @@ public class ContainerListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

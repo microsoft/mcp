@@ -50,7 +50,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_CreatesDatabase()
+    public async Task ExecuteAsync_WithValidParameters_CreatesDatabase(CancellationToken cancellationToken)
     {
         // Arrange
         var mockDatabase = new SqlDatabase(
@@ -91,7 +91,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -101,7 +101,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithOptionalParameters_CreatesDatabase()
+    public async Task ExecuteAsync_WithOptionalParameters_CreatesDatabase(CancellationToken cancellationToken)
     {
         // Arrange
         var mockDatabase = new SqlDatabase(
@@ -154,7 +154,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -164,7 +164,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _sqlService.CreateDatabaseAsync(
@@ -187,7 +187,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -196,7 +196,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesDatabaseAlreadyExists()
+    public async Task ExecuteAsync_HandlesDatabaseAlreadyExists(CancellationToken cancellationToken)
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database already exists");
@@ -220,7 +220,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -228,7 +228,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServerNotFound()
+    public async Task ExecuteAsync_HandlesServerNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
@@ -252,7 +252,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -260,7 +260,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthorizationFailure()
+    public async Task ExecuteAsync_HandlesAuthorizationFailure(CancellationToken cancellationToken)
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
@@ -284,7 +284,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -292,7 +292,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesInvalidConfiguration()
+    public async Task ExecuteAsync_HandlesInvalidConfiguration(CancellationToken cancellationToken)
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
@@ -316,7 +316,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -329,7 +329,7 @@ public class DatabaseCreateCommandTests
     [InlineData("--subscription sub --resource-group rg", false, "Missing required options")]
     [InlineData("--subscription sub --resource-group rg --server server1", false, "Missing required options")]
     [InlineData("--subscription sub --resource-group rg --server server1 --database testdb", true, null)]
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string commandArgs, bool shouldSucceed, string? expectedError, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -373,7 +373,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -391,7 +391,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithNullSku_CreatesDatabase()
+    public async Task ExecuteAsync_WithNullSku_CreatesDatabase(CancellationToken cancellationToken)
     {
         // Arrange - When no SKU is specified, null values are passed to the service
         var mockDatabase = new SqlDatabase(
@@ -437,7 +437,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -464,7 +464,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithBasicSku_CreatesBasicDatabase()
+    public async Task ExecuteAsync_WithBasicSku_CreatesBasicDatabase(CancellationToken cancellationToken)
     {
         // Arrange - Create database with explicit Basic SKU
         var mockDatabase = new SqlDatabase(
@@ -512,7 +512,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -539,7 +539,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithStandardSku_CreatesStandardDatabase()
+    public async Task ExecuteAsync_WithStandardSku_CreatesStandardDatabase(CancellationToken cancellationToken)
     {
         // Arrange - Create database with explicit Standard SKU
         var mockDatabase = new SqlDatabase(
@@ -587,7 +587,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -614,7 +614,7 @@ public class DatabaseCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithPremiumSku_CreatesPremiumDatabase()
+    public async Task ExecuteAsync_WithPremiumSku_CreatesPremiumDatabase(CancellationToken cancellationToken)
     {
         // Arrange - Create database with explicit Premium SKU
         var mockDatabase = new SqlDatabase(
@@ -662,7 +662,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

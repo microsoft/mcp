@@ -62,7 +62,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidSingleEvent_ReturnsSuccess()
+    public async Task ExecuteAsync_WithValidSingleEvent_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -96,7 +96,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -110,7 +110,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidArrayOfEvents_ReturnsSuccess()
+    public async Task ExecuteAsync_WithValidArrayOfEvents_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -154,7 +154,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -168,7 +168,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithInvalidJson_Returns400()
+    public async Task ExecuteAsync_WithInvalidJson_Returns400(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -189,7 +189,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", invalidEventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -197,7 +197,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTopicNotFound_Returns404()
+    public async Task ExecuteAsync_WithTopicNotFound_Returns404(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -224,7 +224,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // The base command returns InternalServerError for general exceptions by default
@@ -239,7 +239,7 @@ public class EventsPublishCommandTests
     [InlineData("--subscription test-sub --resource-group test-rg --topic test-topic", false)]
     [InlineData("--subscription test-sub --topic test-topic --data '{\"subject\":\"test\"}'", true)]
     [InlineData("--subscription test-sub --resource-group test-rg --topic test-topic --data '{\"subject\":\"test\"}'", true)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -265,7 +265,7 @@ public class EventsPublishCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -282,7 +282,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutResourceGroup_ReturnsSuccess()
+    public async Task ExecuteAsync_WithoutResourceGroup_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -315,7 +315,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -329,7 +329,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCloudEventsSchema_ReturnsSuccess()
+    public async Task ExecuteAsync_WithCloudEventsSchema_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -365,7 +365,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -379,7 +379,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCustomSchema_ReturnsSuccess()
+    public async Task ExecuteAsync_WithCustomSchema_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -414,7 +414,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -431,7 +431,7 @@ public class EventsPublishCommandTests
     [InlineData("EventGrid")]
     [InlineData("CloudEvents")]
     [InlineData("Custom")]
-    public async Task ExecuteAsync_WithDifferentSchemas_PassesSchemaCorrectly(string schema)
+    public async Task ExecuteAsync_WithDifferentSchemas_PassesSchemaCorrectly(string schema, CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -480,14 +480,14 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutEventSchema_DefaultsToEventGrid()
+    public async Task ExecuteAsync_WithoutEventSchema_DefaultsToEventGrid(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -520,14 +520,14 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAccessDenied_Returns403()
+    public async Task ExecuteAsync_WithAccessDenied_Returns403(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -553,7 +553,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -561,7 +561,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithInvalidEventSchema_Returns400()
+    public async Task ExecuteAsync_WithInvalidEventSchema_Returns400(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -587,7 +587,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "InvalidSchema"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -595,7 +595,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithBadRequestError_Returns400()
+    public async Task ExecuteAsync_WithBadRequestError_Returns400(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -621,7 +621,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -629,7 +629,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithLargeEventPayload_ReturnsSuccess()
+    public async Task ExecuteAsync_WithLargeEventPayload_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "test-sub";
@@ -681,7 +681,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -689,7 +689,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCloudEventsMinimalFields_ReturnsSuccess()
+    public async Task ExecuteAsync_WithCloudEventsMinimalFields_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange - Test CloudEvents with only required fields
         var subscriptionId = "test-sub";
@@ -724,7 +724,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -732,7 +732,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCloudEventsDataContentType_ReturnsSuccess()
+    public async Task ExecuteAsync_WithCloudEventsDataContentType_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange - Test CloudEvents with datacontenttype field
         var subscriptionId = "test-sub";
@@ -770,7 +770,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -778,7 +778,7 @@ public class EventsPublishCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMixedSchemaFields_ReturnsSuccess()
+    public async Task ExecuteAsync_WithMixedSchemaFields_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange - Test Custom schema with mixed EventGrid and CloudEvents fields
         var subscriptionId = "test-sub";
@@ -814,7 +814,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -831,7 +831,7 @@ public class EventsPublishCommandTests
     [InlineData("custom")]
     [InlineData("CUSTOM")]
     [InlineData("Custom")]
-    public async Task ExecuteAsync_WithSchemaNameCaseInsensitive_ReturnsSuccess(string schema)
+    public async Task ExecuteAsync_WithSchemaNameCaseInsensitive_ReturnsSuccess(string schema, CancellationToken cancellationToken)
     {
         // Arrange - Test that schema names are case insensitive
         var subscriptionId = "test-sub";
@@ -865,14 +865,14 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithArrayOfMixedSchemaEvents_ReturnsSuccess()
+    public async Task ExecuteAsync_WithArrayOfMixedSchemaEvents_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange - Test array with mixed event formats in Custom schema
         var subscriptionId = "test-sub";
@@ -920,7 +920,7 @@ public class EventsPublishCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

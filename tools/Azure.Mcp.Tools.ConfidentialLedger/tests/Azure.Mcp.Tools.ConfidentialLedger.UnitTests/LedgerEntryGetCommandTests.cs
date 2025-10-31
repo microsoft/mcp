@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.ConfidentialLedger.UnitTests;
 public sealed class LedgerEntryGetCommandTests
 {
     [Fact]
-    public async Task Execute_WithTransactionId_Success_ReturnsResult()
+    public async Task Execute_WithTransactionId_Success_ReturnsResult(CancellationToken cancellationToken)
     {
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
@@ -35,7 +35,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199"]);
 
-        var response = await command.ExecuteAsync(context, parse, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parse, cancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -61,7 +61,7 @@ public sealed class LedgerEntryGetCommandTests
     }
 
     [Fact]
-    public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult()
+    public async Task Execute_WithTransactionId_WithCollectionId_Success_ReturnsResult(CancellationToken cancellationToken)
     {
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
@@ -82,7 +82,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199", "--collection-id", "my-collection"]);
 
-        var response = await command.ExecuteAsync(context, parse, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, parse, cancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

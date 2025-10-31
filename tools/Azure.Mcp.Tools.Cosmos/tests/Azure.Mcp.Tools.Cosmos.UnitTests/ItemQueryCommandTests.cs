@@ -36,7 +36,7 @@ public class ItemQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsItems_WhenQueryIsProvided()
+    public async Task ExecuteAsync_ReturnsItems_WhenQueryIsProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var query = "SELECT * FROM c WHERE c.type = 'test'";
@@ -64,7 +64,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -76,7 +76,7 @@ public class ItemQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsItems_WhenNoQueryProvided()
+    public async Task ExecuteAsync_ReturnsItems_WhenNoQueryProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var query = "SELECT * FROM c";
@@ -106,7 +106,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -117,7 +117,7 @@ public class ItemQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItemsExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItemsExist(CancellationToken cancellationToken)
     {
         // Arrange
         _cosmosService.QueryItems(
@@ -139,7 +139,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -151,7 +151,7 @@ public class ItemQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -176,7 +176,7 @@ public class ItemQueryCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

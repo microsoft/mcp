@@ -92,7 +92,7 @@ public sealed class ResourceLogQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsQueryResults()
+    public async Task ExecuteAsync_ReturnsQueryResults(CancellationToken cancellationToken)
     {
         // Arrange
         var mockResults = new List<JsonNode>
@@ -115,7 +115,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -134,7 +134,7 @@ public sealed class ResourceLogQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var mockResults = new List<JsonNode> { JsonNode.Parse(@"{""result"": ""data""}") ?? new JsonObject() };
@@ -152,7 +152,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -168,7 +168,7 @@ public sealed class ResourceLogQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithDefaultParameters_UsesExpectedDefaults()
+    public async Task ExecuteAsync_WithDefaultParameters_UsesExpectedDefaults(CancellationToken cancellationToken)
     {
         // Arrange
         var mockResults = new List<JsonNode> { JsonNode.Parse(@"{""result"": ""data""}") ?? new JsonObject() };
@@ -186,7 +186,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -202,7 +202,7 @@ public sealed class ResourceLogQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _monitorService.QueryResourceLogs(
@@ -219,7 +219,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -228,7 +228,7 @@ public sealed class ResourceLogQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithComplexResourceId_HandlesCorrectly()
+    public async Task ExecuteAsync_WithComplexResourceId_HandlesCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var complexResourceId = "/subscriptions/12345678-1234-1234-1234-123456789012/resourceGroups/my-rg/providers/Microsoft.Compute/virtualMachines/my-vm";
@@ -249,7 +249,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

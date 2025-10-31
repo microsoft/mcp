@@ -32,7 +32,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsIndexes_WhenIndexesExist()
+    public async Task ExecuteAsync_ReturnsIndexes_WhenIndexesExist(CancellationToken cancellationToken)
     {
         var expectedIndexes = new List<IndexInfo> {
             new("index1", null, null),
@@ -50,7 +50,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -63,7 +63,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoIndexes()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoIndexes(CancellationToken cancellationToken)
     {
         _searchService.GetIndexDetails(
             Arg.Any<string>(),
@@ -76,7 +76,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -89,7 +89,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error";
         var serviceName = "service123";
@@ -105,7 +105,7 @@ public class IndexGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -113,7 +113,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsIndexDefinition_WhenIndexExists()
+    public async Task ExecuteAsync_ReturnsIndexDefinition_WhenIndexExists(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceName = "service123";
@@ -130,7 +130,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -148,7 +148,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenDefinitionIsNull()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenDefinitionIsNull(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceName = "service123";
@@ -163,7 +163,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -175,7 +175,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -194,7 +194,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -203,7 +203,7 @@ public class IndexGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ValidatesRequiredOptions()
+    public async Task ExecuteAsync_ValidatesRequiredOptions(CancellationToken cancellationToken)
     {
         // Arrange
         var command = new IndexGetCommand(_logger);
@@ -212,7 +212,7 @@ public class IndexGetCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

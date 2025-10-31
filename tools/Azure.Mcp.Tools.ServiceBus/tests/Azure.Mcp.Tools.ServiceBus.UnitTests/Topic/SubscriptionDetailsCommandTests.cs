@@ -49,7 +49,7 @@ public class SubscriptionDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSubscriptionDetails()
+    public async Task ExecuteAsync_ReturnsSubscriptionDetails(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedDetails = new SubscriptionDetails
@@ -80,7 +80,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -96,7 +96,7 @@ public class SubscriptionDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesSubscriptionNotFound()
+    public async Task ExecuteAsync_HandlesSubscriptionNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceBusException = new ServiceBusException("Subscription not found", ServiceBusFailureReason.MessagingEntityNotFound);
@@ -117,7 +117,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -126,7 +126,7 @@ public class SubscriptionDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGenericException()
+    public async Task ExecuteAsync_HandlesGenericException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -147,7 +147,7 @@ public class SubscriptionDetailsCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -162,7 +162,7 @@ public class SubscriptionDetailsCommandTests
     [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --subscription-name testSubscription", false)] // Missing topic
     [InlineData("--subscription sub123 --namespace test.servicebus.windows.net --topic testTopic", false)] // Missing subscription-name
     [InlineData("", false)]  // Missing all required options
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -186,7 +186,7 @@ public class SubscriptionDetailsCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)

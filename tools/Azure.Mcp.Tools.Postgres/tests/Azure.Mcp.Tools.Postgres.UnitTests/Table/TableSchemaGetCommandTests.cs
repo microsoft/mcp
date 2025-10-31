@@ -33,7 +33,7 @@ public class TableSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSchema_WhenSchemaExists()
+    public async Task ExecuteAsync_ReturnsSchema_WhenSchemaExists(CancellationToken cancellationToken)
     {
         var expectedSchema = new List<string>(["CREATE TABLE test (id INT);"]);
         _postgresService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db123", "table123").Returns(expectedSchema);
@@ -42,7 +42,7 @@ public class TableSchemaGetCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -53,7 +53,7 @@ public class TableSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenSchemaDoesNotExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenSchemaDoesNotExist(CancellationToken cancellationToken)
     {
         _postgresService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db123", "table123").Returns([]);
 
@@ -61,7 +61,7 @@ public class TableSchemaGetCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--table", "table123"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -80,7 +80,7 @@ public class TableSchemaGetCommandTests
     [InlineData("--server")]
     [InlineData("--database")]
     [InlineData("--table")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new TableSchemaGetCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -93,7 +93,7 @@ public class TableSchemaGetCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

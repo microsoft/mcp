@@ -33,7 +33,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDatabases_WhenSuccessful()
+    public async Task ExecuteAsync_ReturnsDatabases_WhenSuccessful(CancellationToken cancellationToken)
     {
         var expectedDatabases = new List<string> { "db1", "db2", "db3" };
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(expectedDatabases);
@@ -47,7 +47,7 @@ public class DatabaseListCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -61,7 +61,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoDatabasesExist(CancellationToken cancellationToken)
     {
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
@@ -74,7 +74,7 @@ public class DatabaseListCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -87,7 +87,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
+    public async Task ExecuteAsync_ReturnsError_WhenServiceThrows(CancellationToken cancellationToken)
     {
         _mysqlService.ListDatabasesAsync("sub123", "rg1", "user1", "server1")
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
@@ -101,7 +101,7 @@ public class DatabaseListCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

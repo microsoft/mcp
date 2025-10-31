@@ -41,7 +41,7 @@ public class KeyValueDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided()
+    public async Task ExecuteAsync_DeletesKeyValue_WhenValidParametersProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -51,7 +51,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -71,7 +71,7 @@ public class KeyValueDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesKeyValueWithLabel_WhenLabelProvided()
+    public async Task ExecuteAsync_DeletesKeyValueWithLabel_WhenLabelProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -82,7 +82,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -102,7 +102,7 @@ public class KeyValueDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(CancellationToken cancellationToken)
     {
         // Arrange
         _appConfigService.DeleteKeyValue(
@@ -121,7 +121,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -132,13 +132,13 @@ public class KeyValueDeleteCommandTests
     [InlineData("--account", "account1", "--key", "my-key")] // Missing subscription
     [InlineData("--subscription", "sub123", "--key", "my-key")] // Missing account
     [InlineData("--subscription", "sub123", "--account", "account1")] // Missing key
-    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
+    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string[] args, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

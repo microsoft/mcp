@@ -46,7 +46,7 @@ public class AdminSettingsGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSettingsDictionary()
+    public async Task ExecuteAsync_ReturnsSettingsDictionary(CancellationToken cancellationToken)
     {
         // We return null from service (simplest stub); command should still succeed with empty dictionary.
         _keyVaultService.GetVaultSettings(
@@ -61,7 +61,7 @@ public class AdminSettingsGetCommandTests
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -75,7 +75,7 @@ public class AdminSettingsGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error";
         _keyVaultService.GetVaultSettings(
@@ -89,7 +89,7 @@ public class AdminSettingsGetCommandTests
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
@@ -101,7 +101,7 @@ public class AdminSettingsGetCommandTests
     [InlineData("--vault knownVaultName", true)] // Subscription from env var
     [InlineData("--subscription knownSubscription", false, "Missing required vault")] // Missing required vault
     [InlineData("", false, "Missing both")] // Missing both
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "", CancellationToken cancellationToken)
     {
         var originalSub = EnvironmentHelpers.GetAzureSubscriptionId();
         try
@@ -129,7 +129,7 @@ public class AdminSettingsGetCommandTests
             }
 
             var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
             if (!shouldSucceed)

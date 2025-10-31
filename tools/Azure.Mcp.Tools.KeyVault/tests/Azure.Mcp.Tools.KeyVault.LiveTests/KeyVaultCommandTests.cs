@@ -175,7 +175,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
 
 
     [Fact]
-    public async Task Should_import_certificate()
+    public async Task Should_import_certificate(CancellationToken cancellationToken)
     {
         // Generate a self-signed certificate and export to a temporary PFX file with a password
         var fakePassword = "fakePassword";

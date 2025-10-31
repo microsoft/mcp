@@ -89,7 +89,7 @@ public class TelemetryLogRecordEraserTests
     }
 
     [Fact]
-    public async Task OnEnd_HandlesNullAttributes_Gracefully()
+    public async Task OnEnd_HandlesNullAttributes_Gracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var logRecord = CreateLogRecord();
@@ -121,7 +121,7 @@ public class TelemetryLogRecordEraserTests
     }
 
     [Fact]
-    public async Task OnEnd_HandlesNullBody_Gracefully()
+    public async Task OnEnd_HandlesNullBody_Gracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var logRecord = CreateLogRecord();
@@ -137,7 +137,7 @@ public class TelemetryLogRecordEraserTests
     }
 
     [Fact]
-    public async Task OnEnd_HandlesNullFormattedMessage_Gracefully()
+    public async Task OnEnd_HandlesNullFormattedMessage_Gracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var logRecord = CreateLogRecord();

@@ -39,7 +39,7 @@ public sealed class AzqrCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSuccessResult_WhenScanSucceeds()
+    public async Task ExecuteAsync_ReturnsSuccessResult_WhenScanSucceeds(CancellationToken cancellationToken)
     {
         // Arrange
         var fixedDateTime = new DateTime(2024, 1, 15, 10, 30, 45, DateTimeKind.Utc);
@@ -80,7 +80,7 @@ public sealed class AzqrCommandTests
         try
         {
             // Act
-            var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+            var response = await command.ExecuteAsync(context, args, cancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -111,7 +111,7 @@ public sealed class AzqrCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument()
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingSubscriptionArgument(CancellationToken cancellationToken)
     {
         // Arrange
         var command = new AzqrCommand(_logger);
@@ -120,7 +120,7 @@ public sealed class AzqrCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

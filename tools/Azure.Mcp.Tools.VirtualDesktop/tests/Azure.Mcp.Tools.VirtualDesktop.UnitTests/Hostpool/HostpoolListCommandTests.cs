@@ -57,7 +57,7 @@ public class HostpoolListCommandTests
     [InlineData("--subscription test-sub --resource-group test-rg", true)]
     [InlineData("--subscription test-sub --resource-group test-rg --tenant test-tenant", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -76,7 +76,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -92,7 +92,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpools()
+    public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpools(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -103,7 +103,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -111,7 +111,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListHostpoolsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -120,7 +120,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -129,7 +129,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsHostpools_WhenSuccessful()
+    public async Task ExecuteAsync_ReturnsHostpools_WhenSuccessful(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -143,7 +143,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -153,7 +153,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsResourceGroupService_WhenResourceGroupProvided()
+    public async Task ExecuteAsync_CallsResourceGroupService_WhenResourceGroupProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -167,7 +167,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -178,7 +178,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsSubscriptionService_WhenNoResourceGroup()
+    public async Task ExecuteAsync_CallsSubscriptionService_WhenNoResourceGroup(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedHostpools = new List<HostPool>
@@ -192,7 +192,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -203,7 +203,7 @@ public class HostpoolListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpoolsInResourceGroup()
+    public async Task ExecuteAsync_ReturnsEmptyResult_WhenNoHostpoolsInResourceGroup(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListHostpoolsByResourceGroupAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -212,7 +212,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

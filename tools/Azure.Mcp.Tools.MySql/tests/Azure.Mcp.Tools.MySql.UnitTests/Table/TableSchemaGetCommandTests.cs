@@ -33,7 +33,7 @@ public class TableSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful()
+    public async Task ExecuteAsync_ReturnsSchema_WhenSuccessful(CancellationToken cancellationToken)
     {
         var expectedSchema = new List<string> { "id INT PRIMARY KEY", "name VARCHAR(100) NOT NULL", "email VARCHAR(255)" };
         _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "users").Returns(expectedSchema);
@@ -49,7 +49,7 @@ public class TableSchemaGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -62,7 +62,7 @@ public class TableSchemaGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenTableNotFound()
+    public async Task ExecuteAsync_ReturnsError_WhenTableNotFound(CancellationToken cancellationToken)
     {
         _mysqlService.GetTableSchemaAsync("sub123", "rg1", "user1", "server1", "db1", "nonexistent").ThrowsAsync(new ArgumentException("Table not found"));
 
@@ -77,7 +77,7 @@ public class TableSchemaGetCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

@@ -41,7 +41,7 @@ public class ConsumerGroupDeleteCommandTests
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub", false)]
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group", true)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args);
@@ -59,7 +59,7 @@ public class ConsumerGroupDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -75,7 +75,7 @@ public class ConsumerGroupDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesConsumerGroupSuccessfully()
+    public async Task ExecuteAsync_DeletesConsumerGroupSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
@@ -91,7 +91,7 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -108,7 +108,7 @@ public class ConsumerGroupDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
@@ -124,7 +124,7 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Consumer group 'test-consumer-group' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -132,7 +132,7 @@ public class ConsumerGroupDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationError()
+    public async Task ExecuteAsync_HandlesAuthenticationError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
@@ -148,7 +148,7 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -156,7 +156,7 @@ public class ConsumerGroupDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesCorrectParameters()
+    public async Task ExecuteAsync_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         const string subscriptionId = "12345678-1234-1234-1234-123456789012";
@@ -178,7 +178,7 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

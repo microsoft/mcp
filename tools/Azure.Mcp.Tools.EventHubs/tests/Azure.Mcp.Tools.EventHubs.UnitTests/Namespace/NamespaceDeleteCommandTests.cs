@@ -58,7 +58,7 @@ public class NamespaceDeleteCommandTests
     [InlineData("--subscription test-sub", false, "Missing Required")]
     [InlineData("--subscription test-sub --resource-group test-rg", false, "Missing Required")]
     [InlineData("--subscription test-sub --resource-group test-rg --namespace test-ns", true, "")]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorFragment)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedErrorFragment, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -75,7 +75,7 @@ public class NamespaceDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -95,7 +95,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesNamespaceSuccessfully()
+    public async Task ExecuteAsync_DeletesNamespaceSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -113,7 +113,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -127,7 +127,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesNamespaceWithTenant()
+    public async Task ExecuteAsync_DeletesNamespaceWithTenant(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -146,7 +146,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -160,7 +160,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesNamespaceNotFound()
+    public async Task ExecuteAsync_HandlesNamespaceNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -178,7 +178,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -186,7 +186,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAccessDenied()
+    public async Task ExecuteAsync_HandlesAccessDenied(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -204,7 +204,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -212,7 +212,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesConflictError()
+    public async Task ExecuteAsync_HandlesConflictError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -231,7 +231,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(conflictException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -240,7 +240,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationFailure()
+    public async Task ExecuteAsync_HandlesAuthenticationFailure(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -258,7 +258,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new Identity.AuthenticationFailedException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -267,7 +267,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesResourceNotFoundError()
+    public async Task ExecuteAsync_HandlesResourceNotFoundError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -286,7 +286,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(notFoundException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -294,7 +294,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGenericServiceError()
+    public async Task ExecuteAsync_HandlesGenericServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -312,7 +312,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Unexpected error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -320,7 +320,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSuccessMessage()
+    public async Task ExecuteAsync_ReturnsSuccessMessage(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -338,7 +338,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -373,7 +373,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesCorrectParametersToService()
+    public async Task ExecuteAsync_PassesCorrectParametersToService(CancellationToken cancellationToken)
     {
         // Arrange
         var namespaceName = "my-test-namespace";
@@ -397,7 +397,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -410,7 +410,7 @@ public class NamespaceDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutTenant_PassesNullTenant()
+    public async Task ExecuteAsync_WithoutTenant_PassesNullTenant(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse([
@@ -428,7 +428,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

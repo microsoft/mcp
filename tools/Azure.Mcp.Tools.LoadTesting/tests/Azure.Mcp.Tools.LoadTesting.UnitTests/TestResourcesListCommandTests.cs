@@ -45,7 +45,7 @@ public class TestResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsLoadTests_FromResourceGroup()
+    public async Task ExecuteAsync_ReturnsLoadTests_FromResourceGroup(CancellationToken cancellationToken)
     {
         var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" }, new() { Id = "Id2", Name = "loadTest2" } };
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is((string?)null), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
@@ -58,7 +58,7 @@ public class TestResourceListCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -74,7 +74,7 @@ public class TestResourceListCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsLoadTests_FromTestResource()
+    public async Task ExecuteAsync_ReturnsLoadTests_FromTestResource(CancellationToken cancellationToken)
     {
         var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" } };
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("testResourceName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
@@ -88,7 +88,7 @@ public class TestResourceListCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -102,7 +102,7 @@ public class TestResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsLoadTests_WhenLoadTestsNotExist()
+    public async Task ExecuteAsync_ReturnsLoadTests_WhenLoadTestsNotExist(CancellationToken cancellationToken)
     {
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
              .Returns([]);
@@ -115,7 +115,7 @@ public class TestResourceListCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
 
         var json = JsonSerializer.Serialize(response.Results);
@@ -125,7 +125,7 @@ public class TestResourceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<List<TestResource>>(new Exception("Test error")));
@@ -137,7 +137,7 @@ public class TestResourceListCommandTests
             "--test-resource-name", "loadTestName",
             "--tenant", "tenant123"
         ]);
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

@@ -39,7 +39,7 @@ public class EventHubDeleteCommandTests
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub", false)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args);
@@ -56,7 +56,7 @@ public class EventHubDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -72,7 +72,7 @@ public class EventHubDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -88,7 +88,7 @@ public class EventHubDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -96,7 +96,7 @@ public class EventHubDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationError()
+    public async Task ExecuteAsync_HandlesAuthenticationError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -112,7 +112,7 @@ public class EventHubDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -120,7 +120,7 @@ public class EventHubDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_SuccessfullyDeletesEventHub()
+    public async Task ExecuteAsync_SuccessfullyDeletesEventHub(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -136,7 +136,7 @@ public class EventHubDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -144,7 +144,7 @@ public class EventHubDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_IdempotentWhenEventHubNotFound()
+    public async Task ExecuteAsync_IdempotentWhenEventHubNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -160,7 +160,7 @@ public class EventHubDeleteCommandTests
             .Returns(false);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

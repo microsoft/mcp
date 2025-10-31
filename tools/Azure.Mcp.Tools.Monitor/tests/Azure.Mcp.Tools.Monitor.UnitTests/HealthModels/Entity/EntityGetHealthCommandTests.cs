@@ -52,7 +52,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ReturnsEntityHealth()
+    public async Task ExecuteAsync_WithValidParameters_ReturnsEntityHealth(CancellationToken cancellationToken)
     {
         // Arrange
         JsonNode mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy"", ""timestamp"": ""2023-05-01T12:00:00Z""}") ?? "";
@@ -71,7 +71,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -89,12 +89,12 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsBadRequest()
+    public async Task ExecuteAsync_WithMissingRequiredParameters_ReturnsBadRequest(CancellationToken cancellationToken)
     {        // Arrange - missing entity parameter
         var args = _commandDefinition.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -113,7 +113,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EntityNotFound_ReturnsNotFound()
+    public async Task ExecuteAsync_EntityNotFound_ReturnsNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         _monitorHealthService
@@ -130,7 +130,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -148,7 +148,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidArgument_ReturnsBadRequest()
+    public async Task ExecuteAsync_InvalidArgument_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         _monitorHealthService
@@ -165,7 +165,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -183,7 +183,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GeneralException_ReturnsInternalServerError()
+    public async Task ExecuteAsync_GeneralException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Unexpected error occurred";
@@ -201,7 +201,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -219,7 +219,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToService()
+    public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToService(CancellationToken cancellationToken)
     {
         // Arrange
         var mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy""}") ?? "";
@@ -239,7 +239,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -256,7 +256,7 @@ public class EntityGetHealthCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryPolicy_PassesRetryPolicyToService()
+    public async Task ExecuteAsync_WithRetryPolicy_PassesRetryPolicyToService(CancellationToken cancellationToken)
     {
         // Arrange
         var mockResponse = JsonNode.Parse(@"{""entityId"": ""entity123"", ""health"": ""Healthy""}") ?? "";
@@ -277,7 +277,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);

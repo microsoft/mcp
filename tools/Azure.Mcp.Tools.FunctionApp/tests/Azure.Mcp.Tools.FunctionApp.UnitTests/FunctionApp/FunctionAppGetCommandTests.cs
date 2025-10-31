@@ -39,7 +39,7 @@ public sealed class FunctionAppGetCommandTests
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --tenant tenant123", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_Listing_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_Listing_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -62,7 +62,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -78,7 +78,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFunctionAppList()
+    public async Task ExecuteAsync_ReturnsFunctionAppList(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedFunctionApps = new List<FunctionAppInfo>
@@ -98,7 +98,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -127,7 +127,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyWhenNoFunctionApp()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoFunctionApp(CancellationToken cancellationToken)
     {
         // Arrange
         _service.GetFunctionApp(
@@ -142,7 +142,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -156,7 +156,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
@@ -166,7 +166,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -187,7 +187,7 @@ public sealed class FunctionAppGetCommandTests
     [InlineData("--subscription sub123 --resource-group rg1 --function-app app1", true)]
     [InlineData("--subscription sub123 --function-app app1", false)]
     [InlineData("--resource-group rg1 --function-app app1", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         if (shouldSucceed)
         {
@@ -198,13 +198,13 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
 
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFunctionApp()
+    public async Task ExecuteAsync_ReturnsFunctionApp(CancellationToken cancellationToken)
     {
         var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null);
         _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
@@ -213,7 +213,7 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -226,7 +226,7 @@ public sealed class FunctionAppGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyWhenNotFound()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNotFound(CancellationToken cancellationToken)
     {
         _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns((List<FunctionAppInfo>?)null);
@@ -234,7 +234,7 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);

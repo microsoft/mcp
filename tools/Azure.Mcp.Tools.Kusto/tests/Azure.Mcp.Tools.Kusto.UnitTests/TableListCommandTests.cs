@@ -38,7 +38,7 @@ public sealed class TableListCommandTests
 
     [Theory]
     [MemberData(nameof(TableListArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsTables(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsTables(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         var expectedTables = new List<string> { "table1", "table2" };
         if (useClusterUri)
@@ -61,7 +61,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -75,7 +75,7 @@ public sealed class TableListCommandTests
 
     [Theory]
     [MemberData(nameof(TableListArgumentMatrix))]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoTables(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         if (useClusterUri)
         {
@@ -97,7 +97,7 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -110,7 +110,7 @@ public sealed class TableListCommandTests
 
     [Theory]
     [MemberData(nameof(TableListArgumentMatrix))]
-    public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri)
+    public async Task ExecuteAsync_HandlesException_AndSetsException(string cliArgs, bool useClusterUri, CancellationToken cancellationToken)
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         if (useClusterUri)
@@ -133,21 +133,21 @@ public sealed class TableListCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions()
+    public async Task ExecuteAsync_ReturnsBadRequest_WhenMissingRequiredOptions(CancellationToken cancellationToken)
     {
         var command = new TableListCommand(_logger);
 
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

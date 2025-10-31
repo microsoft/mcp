@@ -37,7 +37,7 @@ public class DatabaseQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsQueryResults_WhenQueryIsValid()
+    public async Task ExecuteAsync_ReturnsQueryResults_WhenQueryIsValid(CancellationToken cancellationToken)
     {
         var expectedResults = new List<string> { "result1", "result2" };
 
@@ -47,7 +47,7 @@ public class DatabaseQueryCommandTests
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -60,7 +60,7 @@ public class DatabaseQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenQueryFails(CancellationToken cancellationToken)
     {
         _postgresService.ExecuteQueryAsync("sub123", "rg1", "user1", "server1", "db123", "SELECT * FROM test;")
             .Returns([]);
@@ -69,7 +69,7 @@ public class DatabaseQueryCommandTests
 
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -88,7 +88,7 @@ public class DatabaseQueryCommandTests
     [InlineData("--server")]
     [InlineData("--database")]
     [InlineData("--query")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -101,7 +101,7 @@ public class DatabaseQueryCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -115,7 +115,7 @@ public class DatabaseQueryCommandTests
     [InlineData("SELECT * FROM users /* block comment */")] // block comment
     [InlineData("SELECT * FROM users; SELECT * FROM other;")] // stacked
     [InlineData("UPDATE accounts SET balance=0;")]
-    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery)
+    public async Task ExecuteAsync_InvalidQuery_ValidationError(string badQuery, CancellationToken cancellationToken)
     {
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -128,7 +128,7 @@ public class DatabaseQueryCommandTests
         ]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
@@ -137,7 +137,7 @@ public class DatabaseQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LongQuery_ValidationError()
+    public async Task ExecuteAsync_LongQuery_ValidationError(CancellationToken cancellationToken)
     {
         var longSelect = "SELECT " + new string('a', 6000) + " FROM test"; // exceeds max length
         var command = new DatabaseQueryCommand(_logger);
@@ -151,7 +151,7 @@ public class DatabaseQueryCommandTests
         ]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

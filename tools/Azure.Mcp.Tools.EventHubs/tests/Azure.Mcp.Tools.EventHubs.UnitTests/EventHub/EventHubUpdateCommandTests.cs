@@ -42,7 +42,7 @@ public class EventHubUpdateCommandTests
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace --resource-group test-rg --message-retention-in-hours 168", true)]
     [InlineData("--subscription test-subscription --eventhub test-hub --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --eventhub test-hub", false)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args);
@@ -73,7 +73,7 @@ public class EventHubUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -89,7 +89,7 @@ public class EventHubUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -107,7 +107,7 @@ public class EventHubUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -115,7 +115,7 @@ public class EventHubUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationError()
+    public async Task ExecuteAsync_HandlesAuthenticationError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -133,7 +133,7 @@ public class EventHubUpdateCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -141,7 +141,7 @@ public class EventHubUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_SuccessfullyCreatesEventHub()
+    public async Task ExecuteAsync_SuccessfullyCreatesEventHub(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(
@@ -171,7 +171,7 @@ public class EventHubUpdateCommandTests
             .Returns(eventHub);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

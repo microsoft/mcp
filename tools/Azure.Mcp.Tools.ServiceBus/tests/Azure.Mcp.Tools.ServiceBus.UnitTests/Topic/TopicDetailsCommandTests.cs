@@ -47,7 +47,7 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsTopicDetails()
+    public async Task ExecuteAsync_ReturnsTopicDetails(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedDetails = new TopicDetails
@@ -73,7 +73,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -89,7 +89,7 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesTopicNotFound()
+    public async Task ExecuteAsync_HandlesTopicNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceBusException = new ServiceBusException("Topic not found", ServiceBusFailureReason.MessagingEntityNotFound);
@@ -104,7 +104,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -112,7 +112,7 @@ public class TopicDetailsCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesGenericException()
+    public async Task ExecuteAsync_HandlesGenericException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -127,7 +127,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -141,7 +141,7 @@ public class TopicDetailsCommandTests
     [InlineData("--subscription sub123 --topic testTopic", false)]   // Missing namespace
     [InlineData("--subscription sub123 --namespace test.servicebus.windows.net", false)] // Missing topic
     [InlineData("", false)]  // Missing all required options
-    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesRequiredParameters(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -164,7 +164,7 @@ public class TopicDetailsCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)

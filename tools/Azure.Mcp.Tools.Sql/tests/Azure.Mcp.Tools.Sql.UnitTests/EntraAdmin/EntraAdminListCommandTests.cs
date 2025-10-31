@@ -53,7 +53,7 @@ public class EntraAdminListCommandTests
     [InlineData("--subscription sub --server server", false)] // Missing resource group
     [InlineData("--resource-group rg --server server", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -71,7 +71,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -86,7 +86,7 @@ public class EntraAdminListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAdministratorsSuccessfully()
+    public async Task ExecuteAsync_ReturnsAdministratorsSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var administrators = new List<SqlServerEntraAdministrator>
@@ -108,7 +108,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -117,7 +117,7 @@ public class EntraAdminListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyListWhenNoAdministrators()
+    public async Task ExecuteAsync_ReturnsEmptyListWhenNoAdministrators(CancellationToken cancellationToken)
     {
         // Arrange
         _service.GetEntraAdministratorsAsync(
@@ -132,7 +132,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -141,7 +141,7 @@ public class EntraAdminListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.GetEntraAdministratorsAsync(
@@ -156,7 +156,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -165,7 +165,7 @@ public class EntraAdminListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles404Error()
+    public async Task ExecuteAsync_Handles404Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
@@ -181,7 +181,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -189,7 +189,7 @@ public class EntraAdminListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles403Error()
+    public async Task ExecuteAsync_Handles403Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
@@ -205,7 +205,7 @@ public class EntraAdminListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

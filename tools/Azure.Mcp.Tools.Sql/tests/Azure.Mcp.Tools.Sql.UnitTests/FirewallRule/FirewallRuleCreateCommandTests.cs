@@ -56,7 +56,7 @@ public class FirewallRuleCreateCommandTests
     [InlineData("--subscription sub --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing resource group
     [InlineData("--resource-group rg --server server --firewall-rule-name rule1 --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -84,7 +84,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -99,7 +99,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesFirewallRuleSuccessfully()
+    public async Task ExecuteAsync_CreatesFirewallRuleSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedFirewallRule = new SqlServerFirewallRule(
@@ -124,7 +124,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -133,7 +133,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.CreateFirewallRuleAsync(
@@ -151,7 +151,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -160,7 +160,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles404Error()
+    public async Task ExecuteAsync_Handles404Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
@@ -179,7 +179,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -187,7 +187,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles403Error()
+    public async Task ExecuteAsync_Handles403Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
@@ -206,7 +206,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -214,7 +214,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles409Error()
+    public async Task ExecuteAsync_Handles409Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Conflict, "Conflict - rule already exists");
@@ -233,7 +233,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -241,7 +241,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesArgumentException()
+    public async Task ExecuteAsync_HandlesArgumentException(CancellationToken cancellationToken)
     {
         // Arrange
         var argumentException = new ArgumentException("Invalid IP address format");
@@ -260,7 +260,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address invalid --end-ip-address invalid");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -268,7 +268,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         const string serverName = "testserver";
@@ -300,7 +300,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName} --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         await _service.Received(1).CreateFirewallRuleAsync(
@@ -315,7 +315,7 @@ public class FirewallRuleCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
+    public async Task ExecuteAsync_WithRetryPolicyOptions(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedFirewallRule = new SqlServerFirewallRule(
@@ -340,7 +340,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address 192.168.1.1 --end-ip-address 192.168.1.255 --retry-max-retries 3");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -362,7 +362,7 @@ public class FirewallRuleCreateCommandTests
     [InlineData("10.0.0.1", "10.0.0.1")] // Single IP
     [InlineData("192.168.1.1", "192.168.1.255")] // IP range
     [InlineData("0.0.0.0", "255.255.255.255")] // Full range
-    public async Task ExecuteAsync_HandlesVariousIPFormats(string startIp, string endIp)
+    public async Task ExecuteAsync_HandlesVariousIPFormats(string startIp, string endIp, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedFirewallRule = new SqlServerFirewallRule(
@@ -387,7 +387,7 @@ public class FirewallRuleCreateCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --start-ip-address {startIp} --end-ip-address {endIp}");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

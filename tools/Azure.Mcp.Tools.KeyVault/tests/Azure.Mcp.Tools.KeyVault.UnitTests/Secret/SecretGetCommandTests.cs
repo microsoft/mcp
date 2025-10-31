@@ -50,7 +50,7 @@ public class SecretGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSecret()
+    public async Task ExecuteAsync_ReturnsSecret(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.GetSecret(
@@ -68,7 +68,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -84,7 +84,7 @@ public class SecretGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfSecretNameIsEmpty()
+    public async Task ExecuteAsync_ReturnsInvalidObject_IfSecretNameIsEmpty(CancellationToken cancellationToken)
     {
         // Arrange - No need to mock service since validation should fail before service is called
         var args = _commandDefinition.Parse([
@@ -94,7 +94,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -103,7 +103,7 @@ public class SecretGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -123,7 +123,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

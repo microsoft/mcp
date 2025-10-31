@@ -57,7 +57,7 @@ public class ServerCreateCommandTests
     [InlineData("--subscription sub --server testserver --location eastus --administrator-login admin --administrator-password Password123!", false)] // Missing resource group
     [InlineData("--resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -93,7 +93,7 @@ public class ServerCreateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -108,7 +108,7 @@ public class ServerCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesServerSuccessfully()
+    public async Task ExecuteAsync_CreatesServerSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedServer = new SqlServer(
@@ -141,7 +141,7 @@ public class ServerCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -162,7 +162,7 @@ public class ServerCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithOptionalParameters_PassesAllParameters()
+    public async Task ExecuteAsync_WithOptionalParameters_PassesAllParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedServer = new SqlServer(
@@ -195,7 +195,7 @@ public class ServerCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123! --version 12.0 --public-network-access Disabled");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -215,7 +215,7 @@ public class ServerCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse()
+    public async Task ExecuteAsync_WhenServiceThrowsException_ReturnsErrorResponse(CancellationToken cancellationToken)
     {
         // Arrange
         _service.CreateServerAsync(
@@ -235,7 +235,7 @@ public class ServerCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -243,7 +243,7 @@ public class ServerCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenServerAlreadyExists_Returns409StatusCode()
+    public async Task ExecuteAsync_WhenServerAlreadyExists_Returns409StatusCode(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Conflict, "Conflict: Server already exists");
@@ -265,7 +265,7 @@ public class ServerCreateCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --location eastus --administrator-login admin --administrator-password Password123!");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);

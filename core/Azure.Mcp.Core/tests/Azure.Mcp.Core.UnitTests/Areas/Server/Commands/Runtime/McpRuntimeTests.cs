@@ -272,7 +272,7 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public async Task ListToolsHandler_WithCancellationToken_PassesTokenToToolLoader()
+    public async Task ListToolsHandler_WithCancellationToken_PassesTokenToToolLoader(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();
@@ -297,7 +297,7 @@ public class McpRuntimeTests
     }
 
     [Fact]
-    public async Task CallToolHandler_WithCancellationToken_PassesTokenToToolLoader()
+    public async Task CallToolHandler_WithCancellationToken_PassesTokenToToolLoader(CancellationToken cancellationToken)
     {
         // Arrange
         var serviceProvider = CreateServiceProvider();

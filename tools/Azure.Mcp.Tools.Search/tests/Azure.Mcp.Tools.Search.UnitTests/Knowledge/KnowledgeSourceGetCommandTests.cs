@@ -35,7 +35,7 @@ public class KnowledgeSourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsKnowledgeSources_WhenSourcesExist()
+    public async Task ExecuteAsync_ReturnsKnowledgeSources_WhenSourcesExist(CancellationToken cancellationToken)
     {
         var expectedSources = new List<KnowledgeSourceInfo>
         {
@@ -51,7 +51,7 @@ public class KnowledgeSourceGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -63,7 +63,7 @@ public class KnowledgeSourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSingleKnowledgeSource_WhenNameProvided()
+    public async Task ExecuteAsync_ReturnsSingleKnowledgeSource_WhenNameProvided(CancellationToken cancellationToken)
     {
         var expectedSource = new KnowledgeSourceInfo("source1", "BlobSource", "First source");
 
@@ -75,7 +75,7 @@ public class KnowledgeSourceGetCommandTests
         var args = command.GetCommand().Parse("--service service123 --knowledge-source source1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -88,7 +88,7 @@ public class KnowledgeSourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSources()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSources(CancellationToken cancellationToken)
     {
         _searchService.ListKnowledgeSources(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
 
@@ -97,7 +97,7 @@ public class KnowledgeSourceGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response?.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -107,7 +107,7 @@ public class KnowledgeSourceGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error";
         var serviceName = "service123";
@@ -120,7 +120,7 @@ public class KnowledgeSourceGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

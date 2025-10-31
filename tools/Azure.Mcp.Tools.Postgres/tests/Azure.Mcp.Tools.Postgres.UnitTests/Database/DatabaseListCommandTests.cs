@@ -34,7 +34,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist()
+    public async Task ExecuteAsync_ReturnsDatabases_WhenDatabasesExist(CancellationToken cancellationToken)
     {
         var expectedDatabases = new List<string> { "db1", "db2" };
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns(expectedDatabases);
@@ -43,7 +43,7 @@ public class DatabaseListCommandTests
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -57,7 +57,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist()
+    public async Task ExecuteAsync_ReturnsMessage_WhenNoDatabasesExist(CancellationToken cancellationToken)
     {
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").Returns([]);
 
@@ -65,7 +65,7 @@ public class DatabaseListCommandTests
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -79,14 +79,14 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         _postgresService.ListDatabasesAsync("sub123", "rg1", "user1", "server1").ThrowsAsync(new Exception("Test exception"));
 
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -98,7 +98,7 @@ public class DatabaseListCommandTests
     [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -109,7 +109,7 @@ public class DatabaseListCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

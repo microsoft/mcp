@@ -35,7 +35,7 @@ public class KnowledgeBaseGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsKnowledgeBases_WhenBasesExist()
+    public async Task ExecuteAsync_ReturnsKnowledgeBases_WhenBasesExist(CancellationToken cancellationToken)
     {
         var expectedBases = new List<KnowledgeBaseInfo>
         {
@@ -51,7 +51,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -69,7 +69,7 @@ public class KnowledgeBaseGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSingleKnowledgeBase_WhenNameProvided()
+    public async Task ExecuteAsync_ReturnsSingleKnowledgeBase_WhenNameProvided(CancellationToken cancellationToken)
     {
         var expectedBase = new KnowledgeBaseInfo("base1", "First base", ["source1"]);
 
@@ -81,7 +81,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123 --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -94,7 +94,7 @@ public class KnowledgeBaseGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoBases()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoBases(CancellationToken cancellationToken)
     {
         _searchService.ListKnowledgeBases(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
 
@@ -103,7 +103,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response?.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -113,7 +113,7 @@ public class KnowledgeBaseGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error";
         var serviceName = "service123";
@@ -126,7 +126,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

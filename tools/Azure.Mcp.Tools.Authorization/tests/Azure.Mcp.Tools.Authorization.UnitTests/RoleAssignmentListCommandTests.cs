@@ -34,7 +34,7 @@ public class RoleAssignmentListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsRoleAssignments_WhenRoleAssignmentsExist()
+    public async Task ExecuteAsync_ReturnsRoleAssignments_WhenRoleAssignmentsExist(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
@@ -81,7 +81,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -95,7 +95,7 @@ public class RoleAssignmentListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoRoleAssignments()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoRoleAssignments(CancellationToken cancellationToken)
     {
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
@@ -111,7 +111,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -125,7 +125,7 @@ public class RoleAssignmentListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -143,7 +143,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

@@ -44,7 +44,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSubscriptions = new List<SubscriptionData>
@@ -60,7 +60,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -84,7 +84,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenantId_PassesTenantToService()
+    public async Task ExecuteAsync_WithTenantId_PassesTenantToService(CancellationToken cancellationToken)
     {
         // Arrange
         var tenantId = "test-tenant-id";
@@ -95,7 +95,7 @@ public class SubscriptionListCommandTests
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -106,7 +106,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNotNullResults()
+    public async Task ExecuteAsync_EmptySubscriptionList_ReturnsNotNullResults(CancellationToken cancellationToken)
     {
         // Arrange
         _subscriptionService
@@ -116,7 +116,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -125,7 +125,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorInResponse()
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsErrorInResponse(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error message";
@@ -136,7 +136,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -145,7 +145,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToCommand()
+    public async Task ExecuteAsync_WithAuthMethod_PassesAuthMethodToCommand(CancellationToken cancellationToken)
     {
         // Arrange
         var authMethod = AuthMethod.Credential.ToString().ToLowerInvariant();
@@ -156,7 +156,7 @@ public class SubscriptionListCommandTests
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(result);

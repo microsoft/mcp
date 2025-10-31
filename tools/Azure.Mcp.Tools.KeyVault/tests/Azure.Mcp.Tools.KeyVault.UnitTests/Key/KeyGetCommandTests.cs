@@ -61,7 +61,7 @@ public class KeyGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsKey()
+    public async Task ExecuteAsync_ReturnsKey(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.GetKey(
@@ -79,7 +79,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -95,7 +95,7 @@ public class KeyGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsInvalidObject_IfKeyNameIsEmpty()
+    public async Task ExecuteAsync_ReturnsInvalidObject_IfKeyNameIsEmpty(CancellationToken cancellationToken)
     {
         // Arrange - No need to mock service since validation should fail before service is called
         var args = _commandDefinition.Parse([
@@ -105,7 +105,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -114,7 +114,7 @@ public class KeyGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -134,7 +134,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

@@ -42,7 +42,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSettingsList_WhenSettingsExist()
+    public async Task ExecuteAsync_ReturnsSettingsList_WhenSettingsExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSettings = new List<KeyValueSetting>
@@ -64,7 +64,7 @@ public class KeyValueGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -80,7 +80,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFilteredSettingsList_WhenKeyFilterProvided()
+    public async Task ExecuteAsync_ReturnsFilteredSettingsList_WhenKeyFilterProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSettings = new List<KeyValueSetting>
@@ -101,7 +101,7 @@ public class KeyValueGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--key-filter", "key1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -118,7 +118,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFilteredSettingsList_WhenLabelFilterProvided()
+    public async Task ExecuteAsync_ReturnsFilteredSettingsList_WhenLabelFilterProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSettings = new List<KeyValueSetting>
@@ -139,7 +139,7 @@ public class KeyValueGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--label-filter", "prod"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -156,7 +156,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSettingGet_WhenSettingExists()
+    public async Task ExecuteAsync_ReturnsSettingGet_WhenSettingExists(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSetting = new KeyValueSetting
@@ -186,7 +186,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -202,7 +202,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSettingGet_WhenNoLabelProvided()
+    public async Task ExecuteAsync_ReturnsSettingGet_WhenNoLabelProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSetting = new KeyValueSetting
@@ -231,7 +231,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -247,7 +247,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsException(CancellationToken cancellationToken)
     {
         // Arrange
         _appConfigService.GetKeyValues(
@@ -268,7 +268,7 @@ public class KeyValueGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -278,13 +278,13 @@ public class KeyValueGetCommandTests
     [Theory]
     [InlineData("--account", "account1")] // Missing subscription
     [InlineData("--subscription", "sub123")] // Missing account
-    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(params string[] args)
+    public async Task ExecuteAsync_Returns400_WhenRequiredParametersAreMissing(string[] args, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -292,7 +292,7 @@ public class KeyValueGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenKeyAndKeyFilterAreSpecified()
+    public async Task ExecuteAsync_Returns400_WhenKeyAndKeyFilterAreSpecified(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse([
@@ -302,7 +302,7 @@ public class KeyValueGetCommandTests
             "--key-filter", "keyfilter"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

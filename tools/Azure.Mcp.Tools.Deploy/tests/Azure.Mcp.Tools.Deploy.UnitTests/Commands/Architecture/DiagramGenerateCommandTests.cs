@@ -29,31 +29,31 @@ public class DiagramGenerateCommandTests
 
 
     [Fact]
-    public async Task GenerateArchitectureDiagram_ShouldReturnNoServiceDetected()
+    public async Task GenerateArchitectureDiagram_ShouldReturnNoServiceDetected(CancellationToken cancellationToken)
     {
         var command = new DiagramGenerateCommand(_logger);
         var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "{\"projectName\": \"test\",\"services\": []}"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.Contains("No service detected", response.Message);
     }
 
     [Fact]
-    public async Task GenerateArchitectureDiagram_InvalidJsonInput()
+    public async Task GenerateArchitectureDiagram_InvalidJsonInput(CancellationToken cancellationToken)
     {
         var command = new DiagramGenerateCommand(_logger);
         var args = command.GetCommand().Parse(["--raw-mcp-tool-input", "test"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid JSON format", response.Message);
     }
 
     [Fact]
-    public async Task GenerateArchitectureDiagram_ShouldReturnEncryptedDiagramUrl()
+    public async Task GenerateArchitectureDiagram_ShouldReturnEncryptedDiagramUrl(CancellationToken cancellationToken)
     {
         var command = new DiagramGenerateCommand(_logger);
         var appTopology = new AppTopology()
@@ -127,7 +127,7 @@ public class DiagramGenerateCommandTests
 
         var args = command.GetCommand().Parse(["--raw-mcp-tool-input", JsonSerializer.Serialize(appTopology)]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         // Extract the URL from the response message

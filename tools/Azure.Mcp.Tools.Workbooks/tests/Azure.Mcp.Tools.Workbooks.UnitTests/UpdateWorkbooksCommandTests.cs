@@ -70,7 +70,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesWorkbook_WhenValidParametersProvided()
+    public async Task ExecuteAsync_UpdatesWorkbook_WhenValidParametersProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -105,7 +105,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -122,7 +122,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesOnlyDisplayName_WhenOnlyDisplayNameProvided()
+    public async Task ExecuteAsync_UpdatesOnlyDisplayName_WhenOnlyDisplayNameProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -156,7 +156,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -171,7 +171,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdatesOnlySerializedContent_WhenOnlySerializedContentProvided()
+    public async Task ExecuteAsync_UpdatesOnlySerializedContent_WhenOnlySerializedContentProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -206,7 +206,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -222,7 +222,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesCorrectParameters_ToService()
+    public async Task ExecuteAsync_PassesCorrectParameters_ToService(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/test-sub/resourceGroups/test-rg/providers/microsoft.insights/workbooks/test-workbook";
@@ -261,7 +261,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).UpdateWorkbook(
@@ -273,7 +273,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsError_WhenServiceReturnsNull()
+    public async Task ExecuteAsync_ReturnsError_WhenServiceReturnsNull(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -294,7 +294,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -302,7 +302,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -323,7 +323,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -335,7 +335,7 @@ public class UpdateWorkbooksCommandTests
     [InlineData("")]
     [InlineData("   ")]
     [InlineData(null)]
-    public async Task ExecuteAsync_WithInvalidWorkbookId_ReturnsValidationError(string? invalidWorkbookId)
+    public async Task ExecuteAsync_WithInvalidWorkbookId_ReturnsValidationError(string? invalidWorkbookId, CancellationToken cancellationToken)
     {
         // Arrange
         var args = invalidWorkbookId == null
@@ -348,7 +348,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -356,7 +356,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithComplexSerializedContent_HandlesCorrectly()
+    public async Task ExecuteAsync_WithComplexSerializedContent_HandlesCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/complex";
@@ -415,7 +415,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -434,7 +434,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenant_PassesCorrectParameters()
+    public async Task ExecuteAsync_WithTenant_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -472,7 +472,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).UpdateWorkbook(
@@ -484,7 +484,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
+    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -521,7 +521,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).UpdateWorkbook(
@@ -533,7 +533,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryOptions_PassesCorrectParameters()
+    public async Task ExecuteAsync_WithRetryOptions_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -571,7 +571,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).UpdateWorkbook(
@@ -583,7 +583,7 @@ public class UpdateWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesExceptionCorrectly_WhenExceptionOccurs()
+    public async Task ExecuteAsync_HandlesExceptionCorrectly_WhenExceptionOccurs(CancellationToken cancellationToken)
     {
         // Arrange
         var workbookId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/workbooks/workbook1";
@@ -605,7 +605,7 @@ public class UpdateWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

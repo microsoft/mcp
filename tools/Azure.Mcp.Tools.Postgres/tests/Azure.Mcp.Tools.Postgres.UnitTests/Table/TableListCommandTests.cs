@@ -33,7 +33,7 @@ public class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsTables_WhenTablesExist()
+    public async Task ExecuteAsync_ReturnsTables_WhenTablesExist(CancellationToken cancellationToken)
     {
         var expectedTables = new List<string> { "table1", "table2" };
         _postgresService.ListTablesAsync("sub123", "rg1", "user1", "server1", "db123").Returns(expectedTables);
@@ -41,7 +41,7 @@ public class TableListCommandTests
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -55,14 +55,14 @@ public class TableListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyList_WhenNoTablesExist()
+    public async Task ExecuteAsync_ReturnsEmptyList_WhenNoTablesExist(CancellationToken cancellationToken)
     {
         _postgresService.ListTablesAsync("sub123", "rg1", "user1", "server1", "db123").Returns([]);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server1", "--database", "db123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -81,7 +81,7 @@ public class TableListCommandTests
     [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--database")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -93,7 +93,7 @@ public class TableListCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

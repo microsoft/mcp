@@ -45,7 +45,7 @@ public class TestResourceCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreateLoadTests()
+    public async Task ExecuteAsync_CreateLoadTests(CancellationToken cancellationToken)
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
         _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("testResourceName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
@@ -59,7 +59,7 @@ public class TestResourceCreateCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -73,7 +73,7 @@ public class TestResourceCreateCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_CreateLoadTests_FromDefaultResource()
+    public async Task ExecuteAsync_CreateLoadTests_FromDefaultResource(CancellationToken cancellationToken)
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
         _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is((string?)null), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
@@ -86,7 +86,7 @@ public class TestResourceCreateCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -99,7 +99,7 @@ public class TestResourceCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
             .Returns(Task.FromException<TestResource>(new Exception("Test error")));
@@ -111,7 +111,7 @@ public class TestResourceCreateCommandTests
             "--test-resource-name", "loadTestName",
             "--tenant", "tenant123"
         ]);
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

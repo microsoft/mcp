@@ -34,7 +34,7 @@ public class AvailabilityStatusListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAvailabilityStatuses_WhenResourcesExist()
+    public async Task ExecuteAsync_ReturnsAvailabilityStatuses_WhenResourcesExist(CancellationToken cancellationToken)
     {
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedStatuses = new List<AvailabilityStatusModel>
@@ -61,7 +61,7 @@ public class AvailabilityStatusListCommandTests
         var command = new AvailabilityStatusListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -78,7 +78,7 @@ public class AvailabilityStatusListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFilteredAvailabilityStatuses_WhenResourceGroupProvided()
+    public async Task ExecuteAsync_ReturnsFilteredAvailabilityStatuses_WhenResourceGroupProvided(CancellationToken cancellationToken)
     {
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var resourceGroup = "test-rg";
@@ -99,7 +99,7 @@ public class AvailabilityStatusListCommandTests
         var command = new AvailabilityStatusListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -115,7 +115,7 @@ public class AvailabilityStatusListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
@@ -128,7 +128,7 @@ public class AvailabilityStatusListCommandTests
         var args = command.GetCommand().Parse(["--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -137,7 +137,7 @@ public class AvailabilityStatusListCommandTests
 
     [Theory]
     [InlineData("--subscription")]
-    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenRequiredParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new AvailabilityStatusListCommand(_logger);
         var argsList = new List<string>();
@@ -150,7 +150,7 @@ public class AvailabilityStatusListCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

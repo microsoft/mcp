@@ -37,7 +37,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenValidParametersProvided()
+    public async Task ExecuteAsync_ReturnsDiagnosticResult_WhenValidParametersProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResult = new DiagnosticResult(
@@ -64,7 +64,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -88,7 +88,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenQuestionIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenQuestionIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -104,7 +104,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenResourceIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -120,7 +120,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -136,7 +136,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceGroupIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenResourceGroupIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -152,7 +152,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenResourceTypeIsMissing()
+    public async Task ExecuteAsync_Returns400_WhenResourceTypeIsMissing(CancellationToken cancellationToken)
     {
         // Arrange && Act
         var response = await _command.ExecuteAsync(_context, _command.GetCommand().Parse([
@@ -168,7 +168,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_WhenServiceThrowsGenericException()
+    public async Task ExecuteAsync_Returns500_WhenServiceThrowsGenericException(CancellationToken cancellationToken)
     {
         // Arrange
         _appLensService.DiagnoseResourceAsync(
@@ -188,7 +188,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -196,7 +196,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenServiceThrowsInvalidOperationException()
+    public async Task ExecuteAsync_Returns400_WhenServiceThrowsInvalidOperationException(CancellationToken cancellationToken)
     {
         // Arrange
         _appLensService.DiagnoseResourceAsync(
@@ -216,7 +216,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -224,7 +224,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable()
+    public async Task ExecuteAsync_Returns503_WhenServiceIsUnavailable(CancellationToken cancellationToken)
     {
         // Arrange
         _appLensService.DiagnoseResourceAsync(
@@ -244,7 +244,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
@@ -252,7 +252,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesEmptyDiagnosticResult()
+    public async Task ExecuteAsync_HandlesEmptyDiagnosticResult(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResult = new DiagnosticResult(
@@ -279,7 +279,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -303,8 +303,7 @@ public class ResourceDiagnoseCommandTests
     [InlineData("Why is my app slow?", "myapp", "", "rg1", "Microsoft.Web/sites")]
     [InlineData("Why is my app slow?", "myapp", "sub123", "", "Microsoft.Web/sites")]
     [InlineData("Why is my app slow?", "myapp", "sub123", "rg1", "")]
-    public async Task ExecuteAsync_Returns400_WhenRequiredParameterIsEmpty(
-        string question, string resource, string subscription, string resourceGroup, string resourceType)
+    public async Task ExecuteAsync_Returns400_WhenRequiredParameterIsEmpty(string question, string resource, string subscription, string resourceGroup, string resourceType, CancellationToken cancellationToken)
     {
         // Arrange
         var args = new List<string>();
@@ -322,7 +321,7 @@ public class ResourceDiagnoseCommandTests
         var parseResult = _command.GetCommand().Parse(args.ToArray());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -330,7 +329,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LogsInformationOnSuccess()
+    public async Task ExecuteAsync_LogsInformationOnSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResult = new DiagnosticResult(
@@ -357,7 +356,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         _logger.Received(1).Log(
@@ -369,7 +368,7 @@ public class ResourceDiagnoseCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LogsErrorOnException()
+    public async Task ExecuteAsync_LogsErrorOnException(CancellationToken cancellationToken)
     {
         // Arrange
         _appLensService.DiagnoseResourceAsync(
@@ -389,7 +388,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         _logger.Received(1).Log(

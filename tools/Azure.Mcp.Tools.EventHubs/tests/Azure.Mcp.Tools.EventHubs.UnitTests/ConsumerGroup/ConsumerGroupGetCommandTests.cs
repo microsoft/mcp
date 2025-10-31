@@ -44,7 +44,7 @@ public class ConsumerGroupGetCommandTests
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace", false)]
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub", true)]
     [InlineData("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group", true)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse(args);
@@ -76,7 +76,7 @@ public class ConsumerGroupGetCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -92,7 +92,7 @@ public class ConsumerGroupGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ListsConsumerGroupsSuccessfully()
+    public async Task ExecuteAsync_ListsConsumerGroupsSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub");
@@ -113,7 +113,7 @@ public class ConsumerGroupGetCommandTests
             .Returns(expectedConsumerGroups);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -129,7 +129,7 @@ public class ConsumerGroupGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GetsSingleConsumerGroupSuccessfully()
+    public async Task ExecuteAsync_GetsSingleConsumerGroupSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group test-consumer-group");
@@ -156,7 +156,7 @@ public class ConsumerGroupGetCommandTests
             .Returns(expectedConsumerGroup);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -173,7 +173,7 @@ public class ConsumerGroupGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyListWhenConsumerGroupNotFound()
+    public async Task ExecuteAsync_ReturnsEmptyListWhenConsumerGroupNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub --consumer-group nonexistent-group");
@@ -189,7 +189,7 @@ public class ConsumerGroupGetCommandTests
             .Returns((Models.ConsumerGroup?)null);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -197,7 +197,7 @@ public class ConsumerGroupGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription test-subscription --resource-group test-rg --namespace test-namespace --eventhub test-eventhub");
@@ -212,7 +212,7 @@ public class ConsumerGroupGetCommandTests
             .ThrowsAsync(new InvalidOperationException("Event Hub 'test-eventhub' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -221,7 +221,7 @@ public class ConsumerGroupGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesAuthenticationError()
+    public async Task ExecuteAsync_HandlesAuthenticationError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _command.GetCommand().Parse("--subscription unauthorized-sub --resource-group test-rg --namespace test-namespace --eventhub test-eventhub");
@@ -236,7 +236,7 @@ public class ConsumerGroupGetCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);

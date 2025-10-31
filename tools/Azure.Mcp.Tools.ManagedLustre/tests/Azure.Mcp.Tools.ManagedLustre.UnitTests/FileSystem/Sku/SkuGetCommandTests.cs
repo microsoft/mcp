@@ -49,7 +49,7 @@ public class SkuGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsSkus()
+    public async Task ExecuteAsync_ReturnsSkus(CancellationToken cancellationToken)
     {
         // Arrange
         var expected = new List<ManagedLustreSkuInfo>
@@ -80,7 +80,7 @@ public class SkuGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -100,7 +100,7 @@ public class SkuGetCommandTests
     [InlineData("--subscription sub123", true)]
     [InlineData("--subscription sub123 --location eastus", true)]
     [InlineData(" --location eastus", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         if (shouldSucceed)
         {
@@ -109,7 +109,7 @@ public class SkuGetCommandTests
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }

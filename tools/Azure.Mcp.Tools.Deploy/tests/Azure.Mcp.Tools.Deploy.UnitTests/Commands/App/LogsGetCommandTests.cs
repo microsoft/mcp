@@ -38,7 +38,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_azd_app_logs()
+    public async Task Should_get_azd_app_logs(CancellationToken cancellationToken)
     {
         // arrange
         var expectedLogs = "App logs retrieved:\n[2024-01-01 10:00:00] Application started\n[2024-01-01 10:01:00] Processing request";
@@ -57,7 +57,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -69,7 +69,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_azd_app_logs_with_default_limit()
+    public async Task Should_get_azd_app_logs_with_default_limit(CancellationToken cancellationToken)
     {
         // arrange
         var expectedLogs = "App logs retrieved:\nSample log entry";
@@ -88,7 +88,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -98,7 +98,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_no_logs_found()
+    public async Task Should_handle_no_logs_found(CancellationToken cancellationToken)
     {
         // arrange
         _deployService.GetAzdResourceLogsAsync(
@@ -116,7 +116,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -125,7 +125,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_error_during_log_retrieval()
+    public async Task Should_handle_error_during_log_retrieval(CancellationToken cancellationToken)
     {
         // arrange
         var errorMessage = "Error during retrieval of app logs of azd project:\nNo resource group with tag {\"azd-env-name\": test-env} found.";
@@ -143,7 +143,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -154,7 +154,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_service_exception()
+    public async Task Should_handle_service_exception(CancellationToken cancellationToken)
     {
         // arrange
         _deployService.GetAzdResourceLogsAsync(
@@ -171,7 +171,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -181,7 +181,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_validate_required_parameters()
+    public async Task Should_validate_required_parameters(CancellationToken cancellationToken)
     {
         // arrange - missing required workspace-folder parameter
         var args = _commandDefinition.Parse([
@@ -191,7 +191,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);

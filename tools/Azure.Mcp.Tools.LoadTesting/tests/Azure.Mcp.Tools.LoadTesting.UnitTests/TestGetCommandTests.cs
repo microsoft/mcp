@@ -45,7 +45,7 @@ public class TestGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsLoadTest_WhenExists()
+    public async Task ExecuteAsync_ReturnsLoadTest_WhenExists(CancellationToken cancellationToken)
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
         _service.GetTestAsync(
@@ -61,7 +61,7 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -76,7 +76,7 @@ public class TestGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesBadRequestErrors()
+    public async Task ExecuteAsync_HandlesBadRequestErrors(CancellationToken cancellationToken)
     {
         var expected = new Test();
         _service.GetTestAsync(
@@ -91,12 +91,12 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         _service.GetTestAsync(
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
@@ -111,7 +111,7 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

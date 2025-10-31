@@ -34,14 +34,14 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsServers_WhenServersExist()
+    public async Task ExecuteAsync_ReturnsServers_WhenServersExist(CancellationToken cancellationToken)
     {
         var expectedServers = new List<string> { "server1", "server2" };
         _postgresService.ListServersAsync("sub123", "rg1", "user1").Returns(expectedServers);
         var command = new ServerListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -55,7 +55,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServers()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServers(CancellationToken cancellationToken)
     {
         _postgresService.ListServersAsync("sub123", "rg1", "user1").Returns([]);
 
@@ -63,7 +63,7 @@ public class ServerListCommandTests
 
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -75,7 +75,7 @@ public class ServerListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         _postgresService.ListServersAsync("sub123", "rg1", "user1")
@@ -86,7 +86,7 @@ public class ServerListCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -97,7 +97,7 @@ public class ServerListCommandTests
     [InlineData("--subscription")]
     [InlineData("--resource-group")]
     [InlineData("--user")]
-    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
+    public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter, CancellationToken cancellationToken)
     {
         var command = new ServerListCommand(_logger);
         var args = command.GetCommand().Parse(ArgBuilder.BuildArgs(missingParameter,
@@ -107,7 +107,7 @@ public class ServerListCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -49,7 +49,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_ReturnsWorkloads()
+    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_ReturnsWorkloads(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -67,7 +67,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -76,7 +76,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_HandlesException()
+    public async Task DiscoverPublicWorkloadsCommand_ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<ListWorkloadsCommand>();
@@ -93,7 +93,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -133,7 +133,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetPlatformApisCommand_ExecuteAsync_ReturnsPlatformApis()
+    public async Task GetPlatformApisCommand_ExecuteAsync_ReturnsPlatformApis(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -151,7 +151,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -160,7 +160,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetPlatformApisCommand_ExecuteAsync_HandlesException()
+    public async Task GetPlatformApisCommand_ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetPlatformApisCommand>();
@@ -177,7 +177,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -218,7 +218,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithValidWorkloadType_ReturnsApis()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithValidWorkloadType_ReturnsApis(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -236,7 +236,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -245,7 +245,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -260,7 +260,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -269,7 +269,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithCommonWorkloadType_ReturnsNotFound()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithCommonWorkloadType_ReturnsNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -284,7 +284,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "common"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -294,7 +294,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpNotFoundError_ReturnsNotFound()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpNotFoundError_ReturnsNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -312,7 +312,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -321,7 +321,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpError_ReturnsMappedStatusCode()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithHttpError_ReturnsMappedStatusCode(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -339,7 +339,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, result.Status);
@@ -347,7 +347,7 @@ public class PublicApisCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadApisCommand_ExecuteAsync_WithGeneralException_ReturnsInternalServerError()
+    public async Task GetWorkloadApisCommand_ExecuteAsync_WithGeneralException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadApisCommand>();
@@ -364,7 +364,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);

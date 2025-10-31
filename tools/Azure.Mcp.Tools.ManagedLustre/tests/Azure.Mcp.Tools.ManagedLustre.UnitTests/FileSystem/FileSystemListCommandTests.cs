@@ -53,7 +53,7 @@ public class FileSystemListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsFileSystems()
+    public async Task ExecuteAsync_ReturnsFileSystems(CancellationToken cancellationToken)
     {
         // Arrange
         var expected = new List<LustreFileSystem>
@@ -114,7 +114,7 @@ public class FileSystemListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -134,7 +134,7 @@ public class FileSystemListCommandTests
     [InlineData("--subscription sub123", true)] // Missing resource group
     [InlineData(" --resource-group testrg --subscription sub123", true)]
     [InlineData("", false)] // No parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -176,7 +176,7 @@ public class FileSystemListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -199,7 +199,7 @@ public class FileSystemListCommandTests
 
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItems()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoItems(CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.ListFileSystemsAsync(
@@ -214,7 +214,7 @@ public class FileSystemListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -228,7 +228,7 @@ public class FileSystemListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
+    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound(CancellationToken cancellationToken)
     {
         // Arrange - 404 Not Found
         _amlfsService.ListFileSystemsAsync(
@@ -236,7 +236,7 @@ public class FileSystemListCommandTests
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -244,7 +244,7 @@ public class FileSystemListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
+    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden(CancellationToken cancellationToken)
     {
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
@@ -252,7 +252,7 @@ public class FileSystemListCommandTests
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

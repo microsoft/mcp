@@ -43,7 +43,7 @@ public class TestRunUpdateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_UpdateLoadTestRun_TestNotExisting()
+    public async Task ExecuteAsync_UpdateLoadTestRun_TestNotExisting(CancellationToken cancellationToken)
     {
         var expected = new TestRun { TestId = "testId1", TestRunId = "testRunId1", DisplayName = "displayName" };
         _service.CreateOrUpdateLoadTestRunAsync(
@@ -61,13 +61,13 @@ public class TestRunUpdateCommandTests
             "--display-name", "displayName"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesBadRequestErrors()
+    public async Task ExecuteAsync_HandlesBadRequestErrors(CancellationToken cancellationToken)
     {
         var expected = new TestRun();
         _service.CreateOrUpdateLoadTestRunAsync(
@@ -83,7 +83,7 @@ public class TestRunUpdateCommandTests
             "--testrun-id", "run1"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 }

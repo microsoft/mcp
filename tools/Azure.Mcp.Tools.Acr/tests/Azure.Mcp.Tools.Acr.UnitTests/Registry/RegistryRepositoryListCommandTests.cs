@@ -42,7 +42,7 @@ public class RegistryRepositoryListCommandTests
     [InlineData("--subscription sub --resource-group rg", true)]
     [InlineData("--subscription sub --registry myacr", true)]
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -57,7 +57,7 @@ public class RegistryRepositoryListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -72,7 +72,7 @@ public class RegistryRepositoryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
@@ -81,7 +81,7 @@ public class RegistryRepositoryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -90,7 +90,7 @@ public class RegistryRepositoryListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
+    public async Task ExecuteAsync_Empty_ReturnsEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
@@ -99,7 +99,7 @@ public class RegistryRepositoryListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

@@ -44,7 +44,7 @@ public class DatabaseListCommandTests
     [InlineData("--subscription test-sub", false)]
     [InlineData("--subscription test-sub --resource-group test-rg", false)]
     [InlineData("--subscription test-sub --resource-group test-rg --server test-server", true)]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse(args);
@@ -72,7 +72,7 @@ public class DatabaseListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -87,7 +87,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
@@ -101,7 +101,7 @@ public class DatabaseListCommandTests
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -109,7 +109,7 @@ public class DatabaseListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsExpectedDatabases()
+    public async Task ExecuteAsync_ReturnsExpectedDatabases(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
@@ -129,7 +129,7 @@ public class DatabaseListCommandTests
             .Returns(expectedDatabases);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

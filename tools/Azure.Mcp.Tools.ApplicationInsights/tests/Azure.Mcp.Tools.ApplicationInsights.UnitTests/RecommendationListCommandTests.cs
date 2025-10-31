@@ -30,7 +30,7 @@ public class RecommendationListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenServiceReturnsInsights_SetsResults()
+    public async Task ExecuteAsync_WhenServiceReturnsInsights_SetsResults(CancellationToken cancellationToken)
     {
         var insights = new List<JsonNode?>
         {
@@ -40,7 +40,7 @@ public class RecommendationListCommandTests
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(insights!));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.NotNull(_context.Response.Results);
         var json = JsonSerializer.Serialize(_context.Response.Results);
         var node = JsonNode.Parse(json);
@@ -50,12 +50,12 @@ public class RecommendationListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WhenServiceReturnsNoInsights_NoResults()
+    public async Task ExecuteAsync_WhenServiceReturnsNoInsights_NoResults(CancellationToken cancellationToken)
     {
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(_context, args, cancellationToken);
         Assert.Null(_context.Response.Results);
     }
 }

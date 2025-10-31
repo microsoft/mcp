@@ -77,13 +77,13 @@ public class DesignCommandTests
     [InlineData("--next-question-needed true")]
     [InlineData("--confidence-score 0.8")]
     [InlineData("--question \"App type?\" --question-number 1 --total-questions 5")]
-    public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args)
+    public async Task ExecuteAsync_ReturnsArchitectureDesignText(string args, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -110,7 +110,7 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAllOptionsSet()
+    public async Task ExecuteAsync_WithAllOptionsSet(CancellationToken cancellationToken)
     {
         // Arrange
         var args = new[]
@@ -126,7 +126,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -149,14 +149,14 @@ public class DesignCommandTests
     [InlineData("What's the app's \"main purpose\"?", "What's the app's \"main purpose\"?")]
     [InlineData("Use 'single quotes' here", "Use 'single quotes' here")]
     [InlineData("Mixed \"quotes\" and 'apostrophes'", "Mixed \"quotes\" and 'apostrophes'")]
-    public async Task ExecuteAsync_HandlesQuotesAndEscapingProperly(string questionWithQuotes, string expectedQuestion)
+    public async Task ExecuteAsync_HandlesQuotesAndEscapingProperly(string questionWithQuotes, string expectedQuestion, CancellationToken cancellationToken)
     {
         // Arrange
         var args = new[] { "--question", questionWithQuotes };
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -175,7 +175,7 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesComplexEscapingScenarios()
+    public async Task ExecuteAsync_HandlesComplexEscapingScenarios(CancellationToken cancellationToken)
     {
         // Arrange - Test multiple options with various escaping scenarios
         var complexQuestion = "What is your \"primary\" application 'type' and how \"big\" will it be?";
@@ -194,7 +194,7 @@ public class DesignCommandTests
         Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -236,14 +236,14 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_LoadsEmbeddedResourceText()
+    public async Task ExecuteAsync_LoadsEmbeddedResourceText(CancellationToken cancellationToken)
     {
         // Arrange
         var args = new[] { "--question", "Test question" };
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -258,7 +258,7 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithStateOption()
+    public async Task ExecuteAsync_WithStateOption(CancellationToken cancellationToken)
     {
         // Arrange - Create a simple JSON state object
         var stateJson = "{\"architectureComponents\":[],\"architectureTiers\":{\"infrastructure\":[],\"platform\":[],\"application\":[],\"data\":[],\"security\":[],\"operations\":[]},\"requirements\":{\"explicit\":[],\"implicit\":[],\"assumed\":[]},\"confidenceFactors\":{\"explicitRequirementsCoverage\":0.5,\"implicitRequirementsCertainty\":0.7,\"assumptionRisk\":0.3}}";
@@ -266,7 +266,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -283,7 +283,7 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCompleteOptionSet()
+    public async Task ExecuteAsync_WithCompleteOptionSet(CancellationToken cancellationToken)
     {
         // Arrange - Test all options together including the new ones
         var args = new[]
@@ -299,7 +299,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -490,7 +490,7 @@ public class DesignCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithComplexStateJson_ParsesSuccessfully()
+    public async Task ExecuteAsync_WithComplexStateJson_ParsesSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange - Use the exact JSON from the original error
         var stateJson = """
@@ -557,7 +557,7 @@ public class DesignCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse(args);
-        var result = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -585,7 +585,7 @@ public class DesignCommandTests
     //     var parseResult = _commandDefinition.Parse(args);
 
     //     // Act
-    //     var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+    //     var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
     //     // Assert - The command should handle the error gracefully and return an error response
     //     Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -593,14 +593,14 @@ public class DesignCommandTests
     // }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyState_CreatesDefaultState()
+    public async Task ExecuteAsync_WithEmptyState_CreatesDefaultState(CancellationToken cancellationToken)
     {
         // Arrange
         var args = new[] { "--state", "" };
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, _context.Response.Status);

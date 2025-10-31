@@ -33,10 +33,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GeneralCodeGeneration_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_GeneralCodeGeneration_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "general", "--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -52,10 +52,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GeneralDeployment_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_GeneralDeployment_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "general", "--action", "deployment"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -71,10 +71,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AzureFunctionsCodeGeneration_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_AzureFunctionsCodeGeneration_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -90,10 +90,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AzureFunctionsDeployment_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_AzureFunctionsDeployment_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "deployment"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -111,10 +111,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_StaticWebAppAll_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_StaticWebAppAll_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "static-web-app", "--action", "all"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -132,10 +132,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CodingAgentAll_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_CodingAgentAll_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "coding-agent", "--action", "all"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -150,10 +150,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidResource_ReturnsBadRequest()
+    public async Task ExecuteAsync_InvalidResource_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "invalid", "--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -162,10 +162,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_StaticWebAppWithInvalidAction_ReturnsBadRequest()
+    public async Task ExecuteAsync_StaticWebAppWithInvalidAction_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "static-web-app", "--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -174,10 +174,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CodingAgentWithInvalidAction_ReturnsBadRequest()
+    public async Task ExecuteAsync_CodingAgentWithInvalidAction_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "coding-agent", "--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -186,10 +186,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidAction_ReturnsBadRequest()
+    public async Task ExecuteAsync_InvalidAction_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "general", "--action", "invalid"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -198,10 +198,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_GeneralWithAllAction_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_GeneralWithAllAction_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "general", "--action", "all"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -220,10 +220,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_AzureFunctionsWithAllAction_ReturnsAzureBestPractices()
+    public async Task ExecuteAsync_AzureFunctionsWithAllAction_ReturnsAzureBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "azurefunctions", "--action", "all"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -244,10 +244,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MissingResource_ReturnsBadRequest()
+    public async Task ExecuteAsync_MissingResource_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--action", "code-generation"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -256,10 +256,10 @@ public class BestPracticesCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MissingAction_ReturnsBadRequest()
+    public async Task ExecuteAsync_MissingAction_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse(["--resource", "general"]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

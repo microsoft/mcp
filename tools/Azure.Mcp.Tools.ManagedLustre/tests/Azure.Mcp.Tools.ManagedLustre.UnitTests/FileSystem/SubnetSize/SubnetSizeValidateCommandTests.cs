@@ -49,7 +49,7 @@ public class FileSystemCheckSubnetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Succeeds_ForValidInput()
+    public async Task ExecuteAsync_Succeeds_ForValidInput(CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.CheckAmlFSSubnetAsync(
@@ -66,7 +66,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -79,7 +79,7 @@ public class FileSystemCheckSubnetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_InvalidSku_Returns400()
+    public async Task ExecuteAsync_InvalidSku_Returns400(CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse([
@@ -91,7 +91,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
@@ -99,7 +99,7 @@ public class FileSystemCheckSubnetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrows_IsHandled()
+    public async Task ExecuteAsync_ServiceThrows_IsHandled(CancellationToken cancellationToken)
     {
         // Arrange
         _amlfsService.CheckAmlFSSubnetAsync(
@@ -115,7 +115,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.InternalServerError);
@@ -128,13 +128,13 @@ public class FileSystemCheckSubnetCommandTests
     [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1 --subscription sub123", false)]
     [InlineData(" --size 48 --location eastus --subnet-id /subscriptions/sub123/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet/subnets/sn1 --subscription sub123", false)]
     [InlineData("--sku AMLFS-Durable-Premium-40 --size 48 --location eastus --subscription sub123", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parsedArgs, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

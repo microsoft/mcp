@@ -33,7 +33,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_code_rules()
+    public async Task Should_get_infrastructure_code_rules(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -43,7 +43,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -53,7 +53,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_terraform()
+    public async Task Should_get_infrastructure_rules_for_terraform(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -63,7 +63,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -73,7 +73,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_function_app()
+    public async Task Should_get_infrastructure_rules_for_function_app(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -83,7 +83,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -94,7 +94,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_container_app()
+    public async Task Should_get_infrastructure_rules_for_container_app(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -104,7 +104,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -115,7 +115,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_azcli_deployment_tool()
+    public async Task Should_get_infrastructure_rules_for_azcli_deployment_tool(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -125,7 +125,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -135,7 +135,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_include_necessary_tools_in_response()
+    public async Task Should_include_necessary_tools_in_response(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -145,7 +145,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -158,7 +158,7 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_multiple_resource_types()
+    public async Task Should_handle_multiple_resource_types(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -168,7 +168,7 @@ public class RulesGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);

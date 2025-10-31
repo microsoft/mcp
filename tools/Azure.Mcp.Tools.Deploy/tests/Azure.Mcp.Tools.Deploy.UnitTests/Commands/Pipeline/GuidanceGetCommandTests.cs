@@ -33,7 +33,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline()
+    public async Task Should_generate_pipeline(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -42,7 +42,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -52,7 +52,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline_with_github_details()
+    public async Task Should_generate_pipeline_with_github_details(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -64,7 +64,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -77,7 +77,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline_with_default_azd_pipeline_config()
+    public async Task Should_generate_pipeline_with_default_azd_pipeline_config(CancellationToken cancellationToken)
     {
         // arrange - not providing use-azd-pipeline-config should default to false
         var args = _commandDefinition.Parse([
@@ -85,7 +85,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -96,7 +96,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline_with_minimal_github_info()
+    public async Task Should_generate_pipeline_with_minimal_github_info(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -105,7 +105,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -118,7 +118,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_guid_subscription_id()
+    public async Task Should_handle_guid_subscription_id(CancellationToken cancellationToken)
     {
         // arrange
         var guidSubscriptionId = "12345678-1234-1234-1234-123456789abc";
@@ -128,7 +128,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -138,7 +138,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_handle_non_guid_subscription_id()
+    public async Task Should_handle_non_guid_subscription_id(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -147,7 +147,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -157,7 +157,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_include_service_principal_creation_steps()
+    public async Task Should_include_service_principal_creation_steps(CancellationToken cancellationToken)
     {
         // arrange
         var args = _commandDefinition.Parse([
@@ -166,7 +166,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // assert
         Assert.NotNull(result);

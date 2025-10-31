@@ -51,7 +51,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetBestPracticesCommand_ExecuteAsync_WithValidTopic_ReturnsBestPractices()
+    public async Task GetBestPracticesCommand_ExecuteAsync_WithValidTopic_ReturnsBestPractices(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetBestPracticesCommand>();
@@ -69,7 +69,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -78,7 +78,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetBestPracticesCommand_ExecuteAsync_WithEmptyTopic_ReturnsBadRequest()
+    public async Task GetBestPracticesCommand_ExecuteAsync_WithEmptyTopic_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetBestPracticesCommand>();
@@ -93,7 +93,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -102,7 +102,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetBestPracticesCommand_ExecuteAsync_WithInvalidTopic_ReturnsNotFound()
+    public async Task GetBestPracticesCommand_ExecuteAsync_WithInvalidTopic_ReturnsNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetBestPracticesCommand>();
@@ -119,7 +119,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "invalid-topic"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -127,7 +127,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetBestPracticesCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
+    public async Task GetBestPracticesCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetBestPracticesCommand>();
@@ -144,7 +144,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -189,7 +189,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithValidWorkloadType_ReturnsExamples()
+    public async Task GetExamplesCommand_ExecuteAsync_WithValidWorkloadType_ReturnsExamples(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetExamplesCommand>();
@@ -211,7 +211,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -220,7 +220,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetExamplesCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetExamplesCommand>();
@@ -235,7 +235,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -244,7 +244,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetExamplesCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
+    public async Task GetExamplesCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetExamplesCommand>();
@@ -261,7 +261,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -306,7 +306,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithValidWorkloadType_ReturnsDefinition()
+    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithValidWorkloadType_ReturnsDefinition(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -324,7 +324,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -333,7 +333,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest()
+    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithEmptyWorkloadType_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -348,7 +348,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -357,7 +357,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithInvalidWorkloadType_ReturnsNotFound()
+    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithInvalidWorkloadType_ReturnsNotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -374,7 +374,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -382,7 +382,7 @@ public class BestPracticesCommandsTests
     }
 
     [Fact]
-    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError()
+    public async Task GetWorkloadDefinitionCommand_ExecuteAsync_WithServiceException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<GetWorkloadDefinitionCommand>();
@@ -399,7 +399,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);

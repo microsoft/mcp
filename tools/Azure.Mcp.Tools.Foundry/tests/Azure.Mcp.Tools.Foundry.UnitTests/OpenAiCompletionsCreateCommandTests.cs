@@ -32,7 +32,7 @@ public class OpenAiCompletionsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CreatesCompletion_WhenValidOptionsProvided()
+    public async Task ExecuteAsync_CreatesCompletion_WhenValidOptionsProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -67,7 +67,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--prompt-text", promptText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -84,7 +84,7 @@ public class OpenAiCompletionsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_OptionalParameters_PassedToService()
+    public async Task ExecuteAsync_OptionalParameters_PassedToService(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -123,7 +123,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--temperature", temperature.ToString()
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -144,7 +144,7 @@ public class OpenAiCompletionsCreateCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var resourceName = "test-openai";
@@ -177,7 +177,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--prompt-text", promptText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

@@ -61,7 +61,7 @@ public class FirewallRuleDeleteCommandTests
     [InlineData("--subscription sub --server server --firewall-rule-name rule1", false)] // Missing resource group
     [InlineData("--resource-group rg --server server --firewall-rule-name rule1", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -80,7 +80,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -95,7 +95,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesFirewallRuleSuccessfully()
+    public async Task ExecuteAsync_DeletesFirewallRuleSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         _service.DeleteFirewallRuleAsync(
@@ -111,7 +111,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -120,7 +120,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesIdempotentDelete_WhenRuleDoesNotExist()
+    public async Task ExecuteAsync_HandlesIdempotentDelete_WhenRuleDoesNotExist(CancellationToken cancellationToken)
     {
         // Arrange - Rule doesn't exist, but delete operation should still succeed (idempotent)
         _service.DeleteFirewallRuleAsync(
@@ -136,7 +136,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name NonExistentRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -145,7 +145,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.DeleteFirewallRuleAsync(
@@ -161,7 +161,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -170,7 +170,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles404Error()
+    public async Task ExecuteAsync_Handles404Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
@@ -187,7 +187,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -195,7 +195,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Handles403Error()
+    public async Task ExecuteAsync_Handles403Error(CancellationToken cancellationToken)
     {
         // Arrange
         var requestException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
@@ -212,7 +212,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -220,7 +220,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         const string serverName = "testserver";
@@ -241,7 +241,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName} --firewall-rule-name {ruleName}");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         await _service.Received(1).DeleteFirewallRuleAsync(
@@ -254,7 +254,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryPolicyOptions()
+    public async Task ExecuteAsync_WithRetryPolicyOptions(CancellationToken cancellationToken)
     {
         // Arrange
         _service.DeleteFirewallRuleAsync(
@@ -270,7 +270,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name TestRule --retry-max-retries 3");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -292,7 +292,7 @@ public class FirewallRuleDeleteCommandTests
     [InlineData("Rule-With-Hyphens")]
     [InlineData("Rule_With_Underscores")]
     [InlineData("Rule123")]
-    public async Task ExecuteAsync_HandlesVariousRuleNames(string ruleName)
+    public async Task ExecuteAsync_HandlesVariousRuleNames(string ruleName, CancellationToken cancellationToken)
     {
         // Arrange
         _service.DeleteFirewallRuleAsync(
@@ -308,7 +308,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -325,7 +325,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesArgumentException()
+    public async Task ExecuteAsync_HandlesArgumentException(CancellationToken cancellationToken)
     {
         // Arrange
         var argumentException = new ArgumentException("Invalid firewall rule name");
@@ -342,7 +342,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --firewall-rule-name InvalidRule");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -350,7 +350,7 @@ public class FirewallRuleDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_VerifiesResultContainsExpectedData()
+    public async Task ExecuteAsync_VerifiesResultContainsExpectedData(CancellationToken cancellationToken)
     {
         // Arrange
         const string ruleName = "TestRule";
@@ -367,7 +367,7 @@ public class FirewallRuleDeleteCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription testsub --resource-group testrg --server testserver --firewall-rule-name {ruleName}");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

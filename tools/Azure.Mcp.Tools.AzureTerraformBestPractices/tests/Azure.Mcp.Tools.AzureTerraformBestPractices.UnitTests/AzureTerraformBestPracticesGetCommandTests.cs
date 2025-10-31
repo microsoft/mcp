@@ -29,10 +29,10 @@ public class AzureTerraformBestPracticesGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAzureTerraformBestPractices()
+    public async Task ExecuteAsync_ReturnsAzureTerraformBestPractices(CancellationToken cancellationToken)
     {
         var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

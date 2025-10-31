@@ -70,7 +70,7 @@ public class SttRecognizeCommandTests
     [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file nonexistent.wav", false, "Audio file not found")]
     [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format invalid", false, "Format must be 'simple' or 'detailed'")]
     [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --profanity invalid", false, "Profanity filter must be 'masked', 'removed', or 'raw'")]
-    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
+    public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError, CancellationToken cancellationToken)
     {
         // Create a test file if needed
         if (args.Contains("test.wav"))
@@ -81,7 +81,7 @@ public class SttRecognizeCommandTests
         try
         {
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             if (shouldSucceed)
             {
@@ -104,7 +104,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidParameters_ShouldSucceed()
+    public async Task ExecuteAsync_WithValidParameters_ShouldSucceed(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio.wav";
@@ -127,7 +127,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -149,7 +149,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandlesServiceError(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio.wav";
@@ -170,7 +170,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
@@ -187,7 +187,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithInvalidEndpoint_ShouldReturnBadRequest()
+    public async Task ExecuteAsync_WithInvalidEndpoint_ShouldReturnBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio.wav";
@@ -198,7 +198,7 @@ public class SttRecognizeCommandTests
             // Act - Use an invalid endpoint that's not Azure AI Services
             var args = $"--subscription {_knownSubscription} --endpoint https://example.com --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -215,7 +215,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithValidAzureAiEndpoint_ShouldAcceptEndpoint()
+    public async Task ExecuteAsync_WithValidAzureAiEndpoint_ShouldAcceptEndpoint(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio.wav";
@@ -238,7 +238,7 @@ public class SttRecognizeCommandTests
             // Act - Use a valid Azure AI endpoint
             var args = $"--subscription {_knownSubscription} --endpoint https://myservice.cognitiveservices.azure.com --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -254,7 +254,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithDetailedFormat_ShouldReturnDetailedResult()
+    public async Task ExecuteAsync_WithDetailedFormat_ShouldReturnDetailedResult(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-detailed.wav";
@@ -277,7 +277,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --format detailed";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -309,7 +309,7 @@ public class SttRecognizeCommandTests
     [InlineData("masked")]
     [InlineData("removed")]
     [InlineData("raw")]
-    public async Task ExecuteAsync_WithDifferentProfanityOptions_ShouldPassToService(string profanityOption)
+    public async Task ExecuteAsync_WithDifferentProfanityOptions_ShouldPassToService(string profanityOption, CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-profanity.wav";
@@ -332,7 +332,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -358,7 +358,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithPhraseHints_ShouldPassToService()
+    public async Task ExecuteAsync_WithPhraseHints_ShouldPassToService(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-phrases.wav";
@@ -390,7 +390,7 @@ public class SttRecognizeCommandTests
                 "--phrases", "cognitive services"
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -430,7 +430,7 @@ public class SttRecognizeCommandTests
     [InlineData("es-ES")]
     [InlineData("fr-FR")]
     [InlineData("de-DE")]
-    public async Task ExecuteAsync_WithDifferentLanguages_ShouldPassToService(string language)
+    public async Task ExecuteAsync_WithDifferentLanguages_ShouldPassToService(string language, CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-language.wav";
@@ -453,7 +453,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language {language}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -479,7 +479,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService()
+    public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-retry.wav";
@@ -502,7 +502,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -532,7 +532,7 @@ public class SttRecognizeCommandTests
     [InlineData("TimeoutException", HttpStatusCode.GatewayTimeout, "Speech recognition timed out")]
     [InlineData("InvalidOperationException", HttpStatusCode.InternalServerError, "Invalid operation")]
     [InlineData("ArgumentException", HttpStatusCode.BadRequest, "Invalid argument")]
-    public async Task ExecuteAsync_HandlesSpecificExceptions(string exceptionType, HttpStatusCode expectedStatus, string expectedMessage)
+    public async Task ExecuteAsync_HandlesSpecificExceptions(string exceptionType, HttpStatusCode expectedStatus, string expectedMessage, CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-exception.wav";
@@ -562,7 +562,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(expectedStatus, response.Status);
@@ -579,7 +579,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyAudioFile_ShouldHandleGracefully()
+    public async Task ExecuteAsync_WithEmptyAudioFile_ShouldHandleGracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "empty-audio.wav";
@@ -602,7 +602,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -625,7 +625,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleCorrectly()
+    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "large-audio.wav";
@@ -649,7 +649,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -665,7 +665,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSemicolonSeparatedPhrases_ShouldTreatAsOnePhrase()
+    public async Task ExecuteAsync_WithSemicolonSeparatedPhrases_ShouldTreatAsOnePhrase(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-semicolon-phrases.wav";
@@ -696,7 +696,7 @@ public class SttRecognizeCommandTests
                 "--phrases", "Azure; cognitive services"
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -723,7 +723,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCommaSeparatedPhrases_ShouldSplitIntoSeparatePhrases()
+    public async Task ExecuteAsync_WithCommaSeparatedPhrases_ShouldSplitIntoSeparatePhrases(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-comma-phrases.wav";
@@ -754,7 +754,7 @@ public class SttRecognizeCommandTests
                 "--phrases", "Azure, cognitive services"
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -778,7 +778,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMixedPhrasesSyntax_ShouldCombineCorrectly()
+    public async Task ExecuteAsync_WithMixedPhrasesSyntax_ShouldCombineCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var testFile = "test-audio-mixed-phrases.wav";
@@ -810,7 +810,7 @@ public class SttRecognizeCommandTests
                 "--phrases", "machine learning"            // Single phrase in second argument
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -855,7 +855,7 @@ public class SttRecognizeCommandTests
     [InlineData("test-audio.m4a")]
     [InlineData("test-audio.flac")]
     [InlineData("test-audio.ogg")]
-    public async Task ExecuteAsync_WithDifferentAudioFormats_ShouldSucceed(string fileName)
+    public async Task ExecuteAsync_WithDifferentAudioFormats_ShouldSucceed(string fileName, CancellationToken cancellationToken)
     {
         // Arrange
         await File.WriteAllTextAsync(fileName, "test audio content", TestContext.Current.CancellationToken);
@@ -877,7 +877,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -912,7 +912,7 @@ public class SttRecognizeCommandTests
     [InlineData("invalid-extension.txt")]
     [InlineData("audio-file-without-extension")]
     [InlineData("audio.unknown")]
-    public async Task ExecuteAsync_WithInvalidFileExtensions_ShouldReturnValidationError(string fileName)
+    public async Task ExecuteAsync_WithInvalidFileExtensions_ShouldReturnValidationError(string fileName, CancellationToken cancellationToken)
     {
         // Arrange - Create file with test content
         await File.WriteAllTextAsync(fileName, "test content", TestContext.Current.CancellationToken);
@@ -922,7 +922,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert - The command should return validation error for invalid file extensions
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -949,7 +949,7 @@ public class SttRecognizeCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleGracefully()
+    public async Task ExecuteAsync_WithLargeAudioFile_ShouldHandleGracefully(CancellationToken cancellationToken)
     {
         // Arrange
         var largeFileName = "large-audio-file.wav";
@@ -973,7 +973,7 @@ public class SttRecognizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {largeFileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);

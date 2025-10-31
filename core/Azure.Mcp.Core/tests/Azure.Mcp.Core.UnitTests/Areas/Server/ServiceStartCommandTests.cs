@@ -150,7 +150,7 @@ public class ServiceStartCommandTests
     [InlineData("websocket")]
     [InlineData("http")]
     [InlineData("invalid")]
-    public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport)
+    public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithTransport(invalidTransport);
@@ -158,7 +158,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -170,7 +170,7 @@ public class ServiceStartCommandTests
     [InlineData("invalid")]
     [InlineData("unknown")]
     [InlineData("")]
-    public async Task ExecuteAsync_InvalidMode_ReturnsValidationError(string invalidMode)
+    public async Task ExecuteAsync_InvalidMode_ReturnsValidationError(string invalidMode, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithMode(invalidMode);
@@ -178,7 +178,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -191,7 +191,7 @@ public class ServiceStartCommandTests
     [InlineData("namespace")]
     [InlineData("all")]
     [InlineData(null)] // null should be valid (uses default)
-    public async Task ExecuteAsync_ValidMode_DoesNotReturnValidationError(string? validMode)
+    public async Task ExecuteAsync_ValidMode_DoesNotReturnValidationError(string? validMode, CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithMode(validMode);
@@ -199,7 +199,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert - Should not fail validation, though may fail later due to server startup
         if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
@@ -342,7 +342,7 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError()
+    public async Task ExecuteAsync_WithNamespaceAndTool_ReturnsValidationError(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithNamespaceAndTool();
@@ -350,7 +350,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -453,7 +453,7 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ValidTransport_DoesNotThrow()
+    public async Task ExecuteAsync_ValidTransport_DoesNotThrow(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithTransport("stdio");
@@ -463,7 +463,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown for valid transport
         try
         {
-            await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+            await _command.ExecuteAsync(context, parseResult, cancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -477,7 +477,7 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_OmittedTransport_UsesDefaultAndDoesNotThrow()
+    public async Task ExecuteAsync_OmittedTransport_UsesDefaultAndDoesNotThrow(CancellationToken cancellationToken)
     {
         // Arrange
         var parseResult = CreateParseResultWithoutTransport();
@@ -487,7 +487,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown when transport is omitted
         try
         {
-            await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+            await _command.ExecuteAsync(context, parseResult, cancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {

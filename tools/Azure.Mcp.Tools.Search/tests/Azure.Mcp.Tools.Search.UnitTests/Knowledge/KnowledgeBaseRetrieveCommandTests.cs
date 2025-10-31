@@ -32,7 +32,7 @@ public class KnowledgeBaseRetrieveCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithQuery()
+    public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithQuery(CancellationToken cancellationToken)
     {
         var json = "{\"answer\":\"42\"}";
         _searchService.RetrieveFromKnowledgeBase(
@@ -47,14 +47,14 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithMessages()
+    public async Task ExecuteAsync_ReturnsResult_WhenSuccessful_WithMessages(CancellationToken cancellationToken)
     {
         var json = "{\"conversation\":true}";
         _searchService.RetrieveFromKnowledgeBase(
@@ -69,49 +69,49 @@ public class KnowledgeBaseRetrieveCommandTests
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages()
+    public async Task ExecuteAsync_Returns400_WhenMissingQueryAndMessages(CancellationToken cancellationToken)
     {
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Either --query or at least one --messages", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenHasBothQueryAndMessages()
+    public async Task ExecuteAsync_Returns400_WhenHasBothQueryAndMessages(CancellationToken cancellationToken)
     {
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query life --messages user:Hello");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Specifying both --query and --messages is not allowed.", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid()
+    public async Task ExecuteAsync_Returns400_WhenMessageFormatInvalid(CancellationToken cancellationToken)
     {
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --messages bad-format");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains("Invalid message format", response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         _searchService.RetrieveFromKnowledgeBase(
             Arg.Any<string>(),
@@ -124,7 +124,7 @@ public class KnowledgeBaseRetrieveCommandTests
         var command = new KnowledgeBaseRetrieveCommand(_logger);
         var args = command.GetCommand().Parse("--service svc --knowledge-base base1 --query hi");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test failure", response.Message);
     }

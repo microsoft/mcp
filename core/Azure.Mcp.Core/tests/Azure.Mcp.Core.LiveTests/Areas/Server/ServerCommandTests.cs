@@ -52,7 +52,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     #region Default Mode Tests
 
     [Fact]
-    public async Task DefaultMode_LoadsNamespaceTools()
+    public async Task DefaultMode_LoadsNamespaceTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start");
@@ -81,7 +81,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task DefaultMode_IncludesUtilityCommands()
+    public async Task DefaultMode_IncludesUtilityCommands(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start");
@@ -107,7 +107,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task DefaultMode_CanCallSubscriptionList()
+    public async Task DefaultMode_CanCallSubscriptionList(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start");
@@ -130,7 +130,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task DefaultMode_CanCallGroupList()
+    public async Task DefaultMode_CanCallGroupList(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start");
@@ -210,7 +210,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool()
+    public async Task SingleProxyMode_WithNamespaceFilter_StillLoadsSingleAzureTool(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--namespace", "storage");
@@ -227,7 +227,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool()
+    public async Task SingleProxyMode_WithReadOnlyFlag_LoadsSingleAzureTool(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "single", "--read-only");
@@ -286,7 +286,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools()
+    public async Task NamespaceProxyMode_WithSpecificNamespaces_LoadsNamespaceSpecificTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "storage", "--namespace", "keyvault");
@@ -326,7 +326,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task NamespaceProxyMode_WithDocumentationNamespace_LoadsOnlyDocumentationTool()
+    public async Task NamespaceProxyMode_WithDocumentationNamespace_LoadsOnlyDocumentationTool(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--namespace", "documentation");
@@ -350,7 +350,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands()
+    public async Task NamespaceProxyMode_StorageToolLearnMode_ReturnsStorageCommands(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace");
@@ -422,7 +422,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools()
+    public async Task AllMode_WithNamespaceFilter_LoadsFilteredIndividualTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--namespace", "storage", "--namespace", "keyvault");
@@ -449,7 +449,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools()
+    public async Task AllMode_WithReadOnlyFlag_LoadsOnlyReadOnlyTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "all", "--read-only");
@@ -514,7 +514,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task InvalidNamespace_LoadsGracefully()
+    public async Task InvalidNamespace_LoadsGracefully(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--namespace", "invalid-namespace", "--namespace", "another-invalid");
@@ -558,7 +558,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task VerifyUniqueToolNames_InDefaultMode()
+    public async Task VerifyUniqueToolNames_InDefaultMode(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start");
@@ -609,7 +609,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands()
+    public async Task ConsolidatedProxyMode_ToolLearnMode_ReturnsConsolidatedCommands(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
@@ -649,7 +649,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools()
+    public async Task ConsolidatedProxyMode_WithNamespaceFilter_LoadsFilteredConsolidatedTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--namespace", "storage");
@@ -679,7 +679,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools()
+    public async Task ConsolidatedProxyMode_WithReadOnlyFlag_LoadsOnlyReadOnlyConsolidatedTools(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated", "--read-only");
@@ -721,7 +721,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task ConsolidatedProxyMode_CanCallConsolidatedTool()
+    public async Task ConsolidatedProxyMode_CanCallConsolidatedTool(CancellationToken cancellationToken)
     {
         // Arrange
         await using var client = await CreateClientAsync("server", "start", "--mode", "consolidated");
@@ -769,7 +769,7 @@ public class ServerCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    public async Task ToolMode_OverridesExplicitNamespaceMode()
+    public async Task ToolMode_OverridesExplicitNamespaceMode(CancellationToken cancellationToken)
     {
         // Arrange - Test that --tool switch overrides --mode namespace
         await using var client = await CreateClientAsync("server", "start", "--mode", "namespace", "--tool", "group_list");

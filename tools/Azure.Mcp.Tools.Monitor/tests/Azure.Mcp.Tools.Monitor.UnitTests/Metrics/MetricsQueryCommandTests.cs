@@ -103,7 +103,7 @@ public class MetricsQueryCommandTests
     #region Option Binding Tests
 
     [Fact]
-    public async Task ExecuteAsync_BindsAllOptionsCorrectly()
+    public async Task ExecuteAsync_BindsAllOptionsCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var args = "--subscription sub1 --resource-group rg1 --resource-type Microsoft.Storage/storageAccounts --resource sa1 " +
@@ -131,7 +131,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert - Verify all parameters were passed correctly to the service
         await _service.Received(1).QueryMetricsAsync(
@@ -151,7 +151,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesOptionalParameters()
+    public async Task ExecuteAsync_HandlesOptionalParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var args = "--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines";
@@ -176,7 +176,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert - Verify optional parameters are null when not provided
         await _service.Received(1).QueryMetricsAsync(
@@ -206,7 +206,7 @@ public class MetricsQueryCommandTests
     [InlineData(",", false)]
     [InlineData("CPU,", false)]
     [InlineData(",CPU", false)]
-    public async Task Validate_MetricNames_ValidatesCorrectly(string metricNames, bool shouldBeValid)
+    public async Task Validate_MetricNames_ValidatesCorrectly(string metricNames, bool shouldBeValid, CancellationToken cancellationToken)
     {
         // Arrange
         var args = $"--subscription sub1 --resource sa1 --metric-namespace microsoft.compute/virtualmachines --metric-names \"{metricNames}\"";
@@ -215,7 +215,7 @@ public class MetricsQueryCommandTests
 
         var context = new CommandContext(_serviceProvider);
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var result = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         if (!shouldBeValid)
@@ -240,7 +240,7 @@ public class MetricsQueryCommandTests
     [InlineData("--subscription sub1 --resource-group rg1 --resource-type Microsoft.Storage/storageAccounts --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines")]
     [InlineData("--subscription sub1 --resource sa1 --metric-names CPU,Memory --metric-namespace microsoft.compute/virtualmachines")]
     [InlineData("--subscription sub1 --resource sa1 --metric-namespace microsoft.compute/virtualmachines --metric-names CPU --start-time 2023-01-01T00:00:00Z --end-time 2023-01-02T00:00:00Z")]
-    public async Task ExecuteAsync_ValidInput_ReturnsSuccess(string args)
+    public async Task ExecuteAsync_ValidInput_ReturnsSuccess(string args, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedResults = new List<MetricResult>
@@ -283,7 +283,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -301,7 +301,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithEmptyResults()
+    public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -324,7 +324,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -336,7 +336,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
+    public async Task ExecuteAsync_CallsServiceWithCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -362,7 +362,7 @@ public class MetricsQueryCommandTests
             "--end-time 2023-01-02T00:00:00Z --interval PT1M --aggregation Average");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         await _service.Received(1).QueryMetricsAsync(
@@ -388,14 +388,14 @@ public class MetricsQueryCommandTests
     [Theory]
     [InlineData("--subscription sub1 --metric-names CPU")] // Missing resource
     [InlineData("--subscription sub1 --resource sa1")] // Missing metric-names
-    public async Task ExecuteAsync_InvalidInput_ReturnsBadRequest(string args)
+    public async Task ExecuteAsync_InvalidInput_ReturnsBadRequest(string args, CancellationToken cancellationToken)
     {
         // Arrange
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -408,7 +408,7 @@ public class MetricsQueryCommandTests
     #region ExecuteAsync Tests - Bucket Limit Validation
 
     [Fact]
-    public async Task ExecuteAsync_ExceedsBucketLimit_ReturnsBadRequest()
+    public async Task ExecuteAsync_ExceedsBucketLimit_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var resultsWithTooManyBuckets = new List<MetricResult>
@@ -451,7 +451,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -462,7 +462,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ExceedsCustomBucketLimit_ReturnsBadRequest()
+    public async Task ExecuteAsync_ExceedsCustomBucketLimit_ReturnsBadRequest(CancellationToken cancellationToken)
     {
         // Arrange
         var resultsWithTooManyBuckets = new List<MetricResult>
@@ -505,7 +505,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names Memory --max-buckets 25 --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -520,7 +520,7 @@ public class MetricsQueryCommandTests
     [InlineData("MaxBuckets")]
     [InlineData("TotalBuckets")]
     [InlineData("CountBuckets")]
-    public async Task ExecuteAsync_ChecksAllBucketTypes_ForLimitExceeded(string bucketType)
+    public async Task ExecuteAsync_ChecksAllBucketTypes_ForLimitExceeded(string bucketType, CancellationToken cancellationToken)
     {
         // Arrange
         var timeSeries = new MetricTimeSeries
@@ -582,7 +582,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names TestMetric --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -590,7 +590,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithinBucketLimit_ReturnsSuccess()
+    public async Task ExecuteAsync_WithinBucketLimit_ReturnsSuccess(CancellationToken cancellationToken)
     {
         // Arrange
         var resultsWithinLimit = new List<MetricResult>
@@ -633,7 +633,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -641,7 +641,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_BucketLimitExceeded_LogsWarning()
+    public async Task ExecuteAsync_BucketLimitExceeded_LogsWarning(CancellationToken cancellationToken)
     {
         // Arrange
         var resultsWithTooManyBuckets = new List<MetricResult>
@@ -684,7 +684,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         _logger.Received(1).Log(
@@ -700,7 +700,7 @@ public class MetricsQueryCommandTests
     #region ExecuteAsync Tests - Error Handling
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_ReturnsInternalServerError()
+    public async Task ExecuteAsync_ServiceThrowsException_ReturnsInternalServerError(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedException = new Exception("Service unavailable");
@@ -724,7 +724,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -733,7 +733,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ServiceThrowsException_LogsError()
+    public async Task ExecuteAsync_ServiceThrowsException_LogsError(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedException = new Exception("Service error");
@@ -757,7 +757,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         _logger.Received(1).Log(
@@ -773,7 +773,7 @@ public class MetricsQueryCommandTests
     #region Edge Cases and Integration Tests
 
     [Fact]
-    public async Task ExecuteAsync_MultipleMetricsWithMixedBucketCounts_ValidatesEach()
+    public async Task ExecuteAsync_MultipleMetricsWithMixedBucketCounts_ValidatesEach(CancellationToken cancellationToken)
     {
         // Arrange
         var results = new List<MetricResult>
@@ -824,7 +824,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU,Memory --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -833,7 +833,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_MultipleTimeSeriesPerMetric_ValidatesAll()
+    public async Task ExecuteAsync_MultipleTimeSeriesPerMetric_ValidatesAll(CancellationToken cancellationToken)
     {
         // Arrange
         var results = new List<MetricResult>
@@ -876,7 +876,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -885,7 +885,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NullBuckets_DoesNotCountTowardsLimit()
+    public async Task ExecuteAsync_NullBuckets_DoesNotCountTowardsLimit(CancellationToken cancellationToken)
     {
         // Arrange
         var results = new List<MetricResult>
@@ -928,7 +928,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -936,7 +936,7 @@ public class MetricsQueryCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithEmptyResults()
+    public async Task ExecuteAsync_NullResults_ReturnsSuccessWithEmptyResults(CancellationToken cancellationToken)
     {
         // Arrange
         _service.QueryMetricsAsync(
@@ -959,7 +959,7 @@ public class MetricsQueryCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

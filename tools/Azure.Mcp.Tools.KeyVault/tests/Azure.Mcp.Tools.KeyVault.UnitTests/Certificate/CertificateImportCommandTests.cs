@@ -44,7 +44,7 @@ public class CertificateImportCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsService_WithExpectedParameters()
+    public async Task ExecuteAsync_CallsService_WithExpectedParameters(CancellationToken cancellationToken)
     {
         // Arrange
         _keyVaultService.ImportCertificate(
@@ -65,7 +65,7 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         await _keyVaultService.Received(1).ImportCertificate(
@@ -92,7 +92,7 @@ public class CertificateImportCommandTests
 
     [Theory]
     [MemberData(nameof(RequiredArgumentCases))]
-    public async Task ExecuteAsync_ValidatesRequiredArguments(string argLine, bool shouldPassValidation)
+    public async Task ExecuteAsync_ValidatesRequiredArguments(string argLine, bool shouldPassValidation, CancellationToken cancellationToken)
     {
         // Arrange
         var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
@@ -112,7 +112,7 @@ public class CertificateImportCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         if (shouldPassValidation)
@@ -134,7 +134,7 @@ public class CertificateImportCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceException()
+    public async Task ExecuteAsync_HandlesServiceException(CancellationToken cancellationToken)
     {
         var expected = "boom";
         _keyVaultService.ImportCertificate(
@@ -153,14 +153,14 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsService_WithPemData()
+    public async Task ExecuteAsync_CallsService_WithPemData(CancellationToken cancellationToken)
     {
         // Arrange - minimal mock PEM (not a valid cert, but exercises the code path)
         var pem = "-----BEGIN CERTIFICATE-----\nABCDEF123456\n-----END CERTIFICATE-----";
@@ -183,7 +183,7 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert - ensure the PEM (with header) was passed through untouched
         await _keyVaultService.Received(1).ImportCertificate(
@@ -198,7 +198,7 @@ public class CertificateImportCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsService_WithPassword()
+    public async Task ExecuteAsync_CallsService_WithPassword(CancellationToken cancellationToken)
     {
         var password = "P@ssw0rd!";
 
@@ -220,7 +220,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         await _keyVaultService.Received(1).ImportCertificate(
             _knownVault,
@@ -234,7 +234,7 @@ public class CertificateImportCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_CallsService_WithFilePath()
+    public async Task ExecuteAsync_CallsService_WithFilePath(CancellationToken cancellationToken)
     {
         // Arrange - create temp file to simulate file path input
         var tempPath = Path.GetTempFileName();
@@ -257,7 +257,7 @@ public class CertificateImportCommandTests
                 "--subscription", _knownSubscription
             ]);
             // Act
-            var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+            var response = await _command.ExecuteAsync(_context, args, cancellationToken);
             // Assert - ensure the raw path was passed through
             await _keyVaultService.Received(1).ImportCertificate(
                 _knownVault,
@@ -279,7 +279,7 @@ public class CertificateImportCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_OnInvalidCertificateData()
+    public async Task ExecuteAsync_Returns500_OnInvalidCertificateData(CancellationToken cancellationToken)
     {
         // Simulate service throwing the wrapped invalid data message
         var invalidData = "not-valid-base64-or-path";
@@ -302,14 +302,14 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(errorMessage, response.Message);
     }
 
     [Fact]
-    public async Task ExecuteAsync_Returns500_OnInvalidPassword()
+    public async Task ExecuteAsync_Returns500_OnInvalidPassword(CancellationToken cancellationToken)
     {
         // Simulate password mismatch scenario
         var password = "WrongPassword";
@@ -333,7 +333,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);

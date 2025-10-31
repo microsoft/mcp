@@ -50,7 +50,7 @@ public sealed class NodepoolGetCommandTests
     [InlineData("--subscription sub123 --cluster c1 --nodepool np1", false)] // missing rg
     [InlineData("--resource-group rg1 --cluster c1 --nodepool np1", false)] // missing subscription
     [InlineData("", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -69,7 +69,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -85,7 +85,7 @@ public sealed class NodepoolGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNodePoolsList()
+    public async Task ExecuteAsync_ReturnsNodePoolsList(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedNodePools = new List<Models.NodePool>
@@ -175,7 +175,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -232,7 +232,7 @@ public sealed class NodepoolGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools()
+    public async Task ExecuteAsync_ReturnsEmptyWhenNoNodePools(CancellationToken cancellationToken)
     {
         // Arrange
         _aksService.GetNodePools(
@@ -248,7 +248,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -262,7 +262,7 @@ public sealed class NodepoolGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _aksService.GetNodePools(
@@ -278,7 +278,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -287,7 +287,7 @@ public sealed class NodepoolGetCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsNodePool()
+    public async Task ExecuteAsync_ReturnsNodePool(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedNodePool = new Models.NodePool
@@ -340,7 +340,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1 --nodepool userpool");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

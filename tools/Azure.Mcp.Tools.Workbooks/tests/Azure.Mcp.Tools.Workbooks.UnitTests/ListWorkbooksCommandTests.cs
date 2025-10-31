@@ -69,7 +69,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsWorkbooks_WhenWorkbooksExist()
+    public async Task ExecuteAsync_ReturnsWorkbooks_WhenWorkbooksExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
@@ -121,7 +121,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -147,7 +147,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyResults_WhenNoWorkbooksExist()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenNoWorkbooksExist(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListWorkbooks(
@@ -167,7 +167,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -182,7 +182,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyResults_WhenServiceReturnsNull()
+    public async Task ExecuteAsync_ReturnsEmptyResults_WhenServiceReturnsNull(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListWorkbooks(
@@ -202,7 +202,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -217,7 +217,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.ListWorkbooks(
@@ -237,7 +237,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -246,7 +246,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesCorrectParameters_ToService()
+    public async Task ExecuteAsync_PassesCorrectParameters_ToService(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>();
@@ -267,7 +267,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -279,7 +279,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_PassesNullTenant_WhenTenantNotProvided()
+    public async Task ExecuteAsync_PassesNullTenant_WhenTenantNotProvided(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>();
@@ -299,7 +299,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -311,7 +311,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters()
+    public async Task ExecuteAsync_WithAuthMethod_PassesCorrectParameters(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>();
@@ -332,7 +332,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -346,7 +346,7 @@ public class ListWorkbooksCommandTests
     [Theory]
     [InlineData("")]
     [InlineData("   ")]
-    public async Task ExecuteAsync_WithInvalidResourceGroup_ReturnsValidationError(string invalidResourceGroup)
+    public async Task ExecuteAsync_WithInvalidResourceGroup_ReturnsValidationError(string invalidResourceGroup, CancellationToken cancellationToken)
     {
         // Arrange
         var args = _command.GetCommand().Parse([
@@ -357,7 +357,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -365,7 +365,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithComplexWorkbookData_SerializesCorrectly()
+    public async Task ExecuteAsync_WithComplexWorkbookData_SerializesCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var complexSerializedData = @"{
@@ -414,7 +414,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -434,7 +434,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithKindFilter_PassesCorrectFilter()
+    public async Task ExecuteAsync_WithKindFilter_PassesCorrectFilter(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
@@ -471,7 +471,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -487,7 +487,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithCategoryFilter_PassesCorrectFilter()
+    public async Task ExecuteAsync_WithCategoryFilter_PassesCorrectFilter(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
@@ -524,7 +524,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -540,7 +540,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithSourceIdFilter_PassesCorrectFilter()
+    public async Task ExecuteAsync_WithSourceIdFilter_PassesCorrectFilter(CancellationToken cancellationToken)
     {
         // Arrange
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
@@ -578,7 +578,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -594,7 +594,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithMultipleFilters_PassesCorrectFilters()
+    public async Task ExecuteAsync_WithMultipleFilters_PassesCorrectFilters(CancellationToken cancellationToken)
     {
         // Arrange
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
@@ -634,7 +634,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -650,7 +650,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithAllFiltersApplied_PassesCorrectFilters()
+    public async Task ExecuteAsync_WithAllFiltersApplied_PassesCorrectFilters(CancellationToken cancellationToken)
     {
         // Arrange
         var sourceId = "/subscriptions/sub1/resourceGroups/rg1/providers/microsoft.insights/components/myapp";
@@ -690,7 +690,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -706,7 +706,7 @@ public class ListWorkbooksCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithoutFilters_PassesEmptyFilters()
+    public async Task ExecuteAsync_WithoutFilters_PassesEmptyFilters(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>
@@ -742,7 +742,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -760,7 +760,7 @@ public class ListWorkbooksCommandTests
     [Theory]
     [InlineData("shared")]
     [InlineData("user")]
-    public async Task ExecuteAsync_WithValidKind_AcceptsKindValue(string kind)
+    public async Task ExecuteAsync_WithValidKind_AcceptsKindValue(string kind, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>();
@@ -780,7 +780,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -799,7 +799,7 @@ public class ListWorkbooksCommandTests
     [InlineData("sentinel")]
     [InlineData("TSG")]
     [InlineData("application")]
-    public async Task ExecuteAsync_WithValidCategory_AcceptsCategoryValue(string category)
+    public async Task ExecuteAsync_WithValidCategory_AcceptsCategoryValue(string category, CancellationToken cancellationToken)
     {
         // Arrange
         var expectedWorkbooks = new List<WorkbookInfo>();
@@ -819,7 +819,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

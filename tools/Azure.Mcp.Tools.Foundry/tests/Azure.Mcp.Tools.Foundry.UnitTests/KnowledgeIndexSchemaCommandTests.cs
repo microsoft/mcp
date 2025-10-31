@@ -49,7 +49,7 @@ public class KnowledgeIndexSchemaCommandTests
     [InlineData("--endpoint https://example.com", false)] // Missing index name
     [InlineData("--index test-index", false)] // Missing endpoint
     [InlineData("", false)] // Missing both
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -69,7 +69,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -85,7 +85,7 @@ public class KnowledgeIndexSchemaCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -94,7 +94,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -103,7 +103,7 @@ public class KnowledgeIndexSchemaCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsExpectedResults()
+    public async Task ExecuteAsync_ReturnsExpectedResults(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedSchema = new Models.KnowledgeIndexSchema
@@ -119,7 +119,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

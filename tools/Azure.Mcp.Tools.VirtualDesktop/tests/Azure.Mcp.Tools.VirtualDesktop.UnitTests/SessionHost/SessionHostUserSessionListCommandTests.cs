@@ -64,7 +64,7 @@ public class SessionHostUserSessionListCommandTests
     [InlineData("--subscription test-sub --hostpool test-hostpool --hostpool-resource-id /subscriptions/test-sub/resourceGroups/rg/providers/Microsoft.DesktopVirtualization/hostPools/test-hostpool --sessionhost test-sessionhost", false)] // Both hostpool parameters
     [InlineData("--hostpool test-hostpool --sessionhost test-sessionhost", false)] // Missing subscription
     [InlineData("", false)] // Missing all required parameters
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -110,7 +110,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -128,7 +128,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsUserSessionsSuccessfully()
+    public async Task ExecuteAsync_ReturnsUserSessionsSuccessfully(CancellationToken cancellationToken)
     {
         // Arrange
         var userSessions = new List<UserSession>
@@ -164,7 +164,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -180,7 +180,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResourceId_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithResourceId_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var userSessions = new List<UserSession>
@@ -208,7 +208,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription test-sub --hostpool-resource-id {resourceId} --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -231,7 +231,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly()
+    public async Task ExecuteAsync_WithResourceGroup_CallsServiceCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var userSessions = new List<UserSession>
@@ -259,7 +259,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -290,7 +290,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmptyResultsWhenNoUserSessions()
+    public async Task ExecuteAsync_ReturnsEmptyResultsWhenNoUserSessions(CancellationToken cancellationToken)
     {
         // Arrange
         var userSessions = new List<UserSession>();
@@ -314,7 +314,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -323,7 +323,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _virtualDesktopService.ListUserSessionsAsync(
@@ -345,7 +345,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -354,7 +354,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound()
+    public async Task ExecuteAsync_HandlesRequestFailedException_NotFound(CancellationToken cancellationToken)
     {
         // Arrange
         var exception = new RequestFailedException((int)HttpStatusCode.NotFound, "Session host not found");
@@ -377,7 +377,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -386,7 +386,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden()
+    public async Task ExecuteAsync_HandlesRequestFailedException_Forbidden(CancellationToken cancellationToken)
     {
         // Arrange
         var exception = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
@@ -409,7 +409,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -418,7 +418,7 @@ public class SessionHostUserSessionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTenantParameter()
+    public async Task ExecuteAsync_WithTenantParameter(CancellationToken cancellationToken)
     {
         // Arrange
         var userSessions = new List<UserSession>
@@ -453,7 +453,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --tenant test-tenant");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

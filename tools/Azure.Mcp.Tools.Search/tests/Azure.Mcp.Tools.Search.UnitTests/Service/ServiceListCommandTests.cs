@@ -34,7 +34,7 @@ public class ServiceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsServices_WhenServicesExist()
+    public async Task ExecuteAsync_ReturnsServices_WhenServicesExist(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedServices = new List<string> { "service1", "service2" };
@@ -47,7 +47,7 @@ public class ServiceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -61,7 +61,7 @@ public class ServiceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServices()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoServices(CancellationToken cancellationToken)
     {
         // Arrange
         _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -73,7 +73,7 @@ public class ServiceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -87,7 +87,7 @@ public class ServiceListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         // Arrange
         var expectedError = "Test error";
@@ -102,7 +102,7 @@ public class ServiceListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);

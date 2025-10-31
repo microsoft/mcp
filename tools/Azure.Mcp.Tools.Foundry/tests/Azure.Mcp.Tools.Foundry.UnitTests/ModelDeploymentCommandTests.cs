@@ -30,7 +30,7 @@ public class ModelDeploymentCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeploysModel_WhenValidOptionsProvided()
+    public async Task ExecuteAsync_DeploysModel_WhenValidOptionsProvided(CancellationToken cancellationToken)
     {
         var deploymentName = "test-deployment";
         var modelName = "test-model";
@@ -63,14 +63,14 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_OptionalParameters_PassedToService()
+    public async Task ExecuteAsync_OptionalParameters_PassedToService(CancellationToken cancellationToken)
     {
         var deploymentName = "test-deployment";
         var modelName = "test-model";
@@ -109,14 +109,14 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId, "--model-version", modelVersion, "--model-source", modelSource, "--sku", skuName, "--sku-capacity", skuCapacity.ToString(), "--scale-type", scaleType, "--scale-capacity", scaleCapacity.ToString()]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesException()
+    public async Task ExecuteAsync_HandlesException(CancellationToken cancellationToken)
     {
         var deploymentName = "test-deployment";
         var modelName = "test-model";
@@ -145,7 +145,7 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args, Arg.Any<CancellationToken>());
+        var response = await command.ExecuteAsync(context, args, cancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

@@ -53,7 +53,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions()
+    public async Task ExecuteAsync_NoParameters_ReturnsSubscriptions(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -69,7 +69,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -86,7 +86,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithTopicNameFilter_FiltersCorrectly()
+    public async Task ExecuteAsync_WithTopicNameFilter_FiltersCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -103,7 +103,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic", topicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -119,7 +119,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSubscriptions()
+    public async Task ExecuteAsync_ReturnsEmpty_WhenNoSubscriptions(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -130,7 +130,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -144,7 +144,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithLocationFilter_FiltersCorrectly()
+    public async Task ExecuteAsync_WithLocationFilter_FiltersCorrectly(CancellationToken cancellationToken)
     {
         // Arrange
         var subscription = "sub123";
@@ -160,7 +160,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription, "--location", location]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, args, cancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -176,7 +176,7 @@ public class SubscriptionListCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceErrors()
+    public async Task ExecuteAsync_HandlesServiceErrors(CancellationToken cancellationToken)
     {
         // Arrange
         _eventGridService.GetSubscriptionsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
@@ -185,7 +185,7 @@ public class SubscriptionListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -201,7 +201,7 @@ public class SubscriptionListCommandTests
     [InlineData("", false)]
     [InlineData("--location eastus", false)]
     [InlineData("--resource-group rg", false)]
-    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
+    public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, CancellationToken cancellationToken)
     {
         // Arrange
         if (shouldSucceed)
@@ -220,7 +220,7 @@ public class SubscriptionListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult, Arg.Any<CancellationToken>());
+        var response = await _command.ExecuteAsync(_context, parseResult, cancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
