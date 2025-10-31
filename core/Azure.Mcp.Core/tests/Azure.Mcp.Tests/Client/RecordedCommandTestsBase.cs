@@ -80,11 +80,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        if (Proxy is null)
-        {
-            throw new InvalidOperationException("Test proxy is not initialized.");
-        }
-
         TestVariables[name] = value;
     }
 
