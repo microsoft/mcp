@@ -256,7 +256,7 @@ $env:ASPNETCORE_ENVIRONMENT = "Development"
 $env:ASPNETCORE_URLS = "http://localhost:<port>"
 $env:AzureAd__TenantId = "<your-tenant-id>"
 $env:AzureAd__ClientId = "<your-client-id>"
-$env:AzureAd__Instance = "<endpoint>"
+$env:AzureAd__Instance = "https://login.microsoftonline.com/"
 
 # Run the executable
 ./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
@@ -268,7 +268,7 @@ export ASPNETCORE_ENVIRONMENT="Development"
 export ASPNETCORE_URLS="http://localhost:<port>"
 export AzureAd__TenantId="<your-tenant-id>"
 export AzureAd__ClientId="<your-client-id>"
-export AzureAd__Instance="<endpoint>"
+export AzureAd__Instance="https://login.microsoftonline.com/"
 
 # Run the executable
 ./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
