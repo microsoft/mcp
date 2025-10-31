@@ -37,7 +37,7 @@ public static class PostgresOptionDefinitions
     $"--{PasswordText}"
 )
     {
-        Description = "The user password to access PostgreSQL server, only if PostgreSQL authentication is used.",
+        Description = $"The user password to access PostgreSQL server, Only required for '{AuthTypes.PostgreSQL}' authentication, not needed for '{AuthTypes.MicrosoftEntra}' authentication.",
         Arity = ArgumentArity.ZeroOrOne,
         Required = false
     };
