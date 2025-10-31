@@ -6,6 +6,7 @@ using Azure.Core;
 using Azure.Identity;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tools.Postgres.Options;
 using ModelContextProtocol.Protocol;
 using Npgsql;
 using Xunit;
@@ -150,6 +151,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "subscription", Settings.SubscriptionId },
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername }
             });
 
@@ -178,6 +180,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername }
             });
 
@@ -205,6 +208,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername },
                 { "table", "employees" }
             });
@@ -241,6 +245,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername },
                 { "query", "SELECT first_name, last_name FROM employees WHERE department = 'Engineering';" }
             });
@@ -271,6 +276,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername },
                 { "query", "SELECT department, COUNT(*) as emp_count FROM employees GROUP BY department ORDER BY department;" }
             });
@@ -296,6 +302,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                 { "resource-group", Settings.ResourceGroupName },
                 { "server", ServerName },
                 { "database", TestDatabaseName },
+                { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                 { "user", AdminUsername },
                 { "query", @"SELECT e.first_name, e.last_name, d.location 
                              FROM employees e 
@@ -409,6 +416,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
+                    { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                     { "user", AdminUsername },
                     { "query", "DELETE FROM employees WHERE id = 1;" }
             });
@@ -433,6 +441,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", serverName },
                     { "database", TestDatabaseName },
+                    { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                     { "user", AdminUsername }
                 });
 
@@ -459,6 +468,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", databaseName },
+                    { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                     { "user", AdminUsername }
                 });
 
@@ -482,6 +492,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
                     { "resource-group", Settings.ResourceGroupName },
                     { "server", ServerName },
                     { "database", TestDatabaseName },
+                    { PostgresOptionDefinitions.AuthTypeText, AuthTypes.MicrosoftEntra },
                     { "user", AdminUsername },
                     { "table", tableName }
             });

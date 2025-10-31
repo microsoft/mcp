@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Services;
 using NSubstitute;
 using Xunit;
@@ -38,13 +39,15 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert - Method should accept these parameters without throwing
         // The actual parameterization is tested through integration tests
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, tableName);
+        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName);
 
         // The method will fail at the connection stage, but that's expected in unit tests
         // What we're testing is that the method signature accepts these parameters correctly
@@ -64,14 +67,16 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // The method should not throw due to SQL injection attempts
         // With proper parameterization, malicious input is treated as a literal table name
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, maliciousTableName);
+        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, maliciousTableName);
 
         // The method will fail at the connection stage, but importantly,
         // it won't fail due to SQL parsing errors caused by injection attempts
@@ -85,13 +90,15 @@ public class PostgresServiceParameterizedQueryTests
         string tableName = "table_with_special_chars_123!@#$%^&*()";
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // Should handle special characters safely through parameterization
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, tableName);
+        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName);
         Assert.NotNull(task);
     }
 
@@ -103,13 +110,15 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // Should handle empty/whitespace table names without security issues
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, tableName);
+        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, tableName);
         Assert.NotNull(task);
     }
 
@@ -119,13 +128,15 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // Should handle null table name without security issues
-        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, user, server, database, null!);
+        var task = _postgresService.GetTableSchemaAsync(subscriptionId, resourceGroup, authType, user, password, server, database, null!);
         Assert.NotNull(task);
     }
 
@@ -136,14 +147,16 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
         string maliciousQuery = "DROP TABLE users;";
 
         // Act & Assert
         // The method should fail validation before attempting to connect to database
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, maliciousQuery);
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, maliciousQuery);
 
         // We expect this to eventually throw due to validation, not due to database connection
         // The validation should catch dangerous queries before any database interaction
@@ -159,13 +172,15 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // Valid queries should pass validation and proceed to connection attempt
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, validQuery);
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, validQuery);
         Assert.NotNull(task);
     }
 
@@ -178,7 +193,9 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
@@ -193,7 +210,7 @@ public class PostgresServiceParameterizedQueryTests
 
         // Act & Assert
         // The method should accept complex queries with vector operations and Azure OpenAI functions
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, vectorQuery);
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, vectorQuery);
 
         // Verify the task is created successfully (will fail at connection stage in unit test)
         Assert.NotNull(task);
@@ -211,13 +228,15 @@ public class PostgresServiceParameterizedQueryTests
         // Arrange
         string subscriptionId = "test-sub";
         string resourceGroup = "test-rg";
+        string authType = AuthTypes.MicrosoftEntra;
         string user = "test-user";
+        string? password = null;
         string server = "test-server";
         string database = "test-db";
 
         // Act & Assert
         // Should accept queries with various vector similarity operators
-        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, vectorQuery);
+        var task = _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, password, server, database, vectorQuery);
         Assert.NotNull(task);
     }
 }
