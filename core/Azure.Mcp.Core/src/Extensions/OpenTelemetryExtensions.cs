@@ -19,6 +19,31 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
+    /// <summary>
+    /// Align with --version command.
+    /// https://github.com/dotnet/command-line-api/blob/bcdd4b9b424f0ff6ec855d08665569061a5d741f/src/System.CommandLine/Builder/CommandLineBuilderExtensions.cs#L23-L39
+    /// </summary>
+    private static readonly Lazy<string> _assemblyVersion = new(() =>
+    {
+        var assembly = Assembly.GetEntryAssembly();
+
+        if (assembly == null)
+        {
+            throw new InvalidOperationException("Should be able to get entry assembly.");
+        }
+
+        var assemblyVersionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+
+        if (assemblyVersionAttribute is null)
+        {
+            return assembly.GetName().Version?.ToString() ?? "";
+        }
+        else
+        {
+            return assemblyVersionAttribute.InformationalVersion;
+        }
+    });
+
     private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
@@ -26,12 +51,7 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure(options =>
             {
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName() ?? new AssemblyName();
-                if (assemblyName?.Version != null)
-                {
-                    options.Version = assemblyName.Version.ToString();
-                }
+                options.Version = _assemblyVersion.Value;
 
 #if RELEASE
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
