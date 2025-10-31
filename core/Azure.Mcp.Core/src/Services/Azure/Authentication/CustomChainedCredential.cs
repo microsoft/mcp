@@ -55,9 +55,22 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     {
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
+#if DEBUG
+    private const string PlaybackModeEnvVarName = "AZURE_TOKEN_CREDENTIALS";
+    private static bool IsPlaybackMode() => string.Equals(Environment.GetEnvironmentVariable(PlaybackModeEnvVarName), "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
+#endif
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
+#if DEBUG
+        // Short-circuit for playback to avoid any real auth & interactive prompts.
+        if (IsPlaybackMode())
+        {
+            logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
+            return new PlaybackTokenCredential();
+        }
+#endif
+
         string? authRecordJson = Environment.GetEnvironmentVariable(AuthenticationRecordEnvVarName);
         AuthenticationRecord? authRecord = null;
         if (!string.IsNullOrEmpty(authRecordJson))

@@ -6,13 +6,27 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
 namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
-public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
+public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
+        // should clear out `kid` hostnames of actual vault names
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
+          GroupForReplace = "host",
+        })
+    };
+
+    // Disable `$..id` sanitizer as it interferes with Key Vault tests
+    // This will LIKELY become a global disable exclusion in the future.
+    public override List<string> DisabledDefaultSanitizers => new List<string>() { "AZSDK3430", };
+
     [Fact]
     public async Task Should_list_keys()
     {
@@ -55,20 +69,23 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_create_key()
     {
-        var keyName = Settings.ResourceBaseName + Random.Shared.NextInt64();
+        var keyName = "key" + Random.Shared.NextInt64();
+
+        RegisterVariable("keyName", keyName);
+
         var result = await CallToolAsync(
             "keyvault_key_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
-                { "key", keyName},
+                { "key", TestVariables["keyName"]},
                 { "key-type", KeyType.Rsa.ToString() }
             });
 
         var createdKeyName = result.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, createdKeyName.ValueKind);
-        Assert.Equal(keyName, createdKeyName.GetString());
+        Assert.Equal(TestVariables["keyName"], createdKeyName.GetString());
 
         var keyType = result.AssertProperty("keyType");
         Assert.Equal(JsonValueKind.String, keyType.ValueKind);
@@ -155,19 +172,22 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
     [Fact]
     public async Task Should_create_certificate()
     {
-        var certificateName = Settings.ResourceBaseName + Random.Shared.NextInt64();
+        var certificateName = "certificate" + Random.Shared.NextInt64();
+
+        RegisterVariable("certificateName", certificateName);
+
         var result = await CallToolAsync(
             "keyvault_certificate_create",
             new()
             {
                 { "subscription", Settings.SubscriptionId },
                 { "vault", Settings.ResourceBaseName },
-                { "certificate", certificateName}
+                { "certificate", TestVariables["certificateName"]}
             });
 
         var createdCertificateName = result.AssertProperty("name");
         Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-        Assert.Equal(certificateName, createdCertificateName.GetString());
+        Assert.Equal(TestVariables["certificateName"], createdCertificateName.GetString());
 
         // Verify that the certificate has some expected properties
         ValidateCertificate(result);
@@ -192,20 +212,23 @@ public class KeyVaultCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         try
         {
             await File.WriteAllBytesAsync(tempPath, pfxBytes, TestContext.Current.CancellationToken);
-            var certificateName = Settings.ResourceBaseName + "import" + Random.Shared.NextInt64();
+            var certificateName = "certificateimport" + Random.Shared.NextInt64();
+
+            RegisterVariable("certificateName", certificateName);
+
             var result = await CallToolAsync(
                 "keyvault_certificate_import",
                 new()
                 {
                     { "subscription", Settings.SubscriptionId },
                     { "vault", Settings.ResourceBaseName },
-                    { "certificate", certificateName },
+                    { "certificate", TestVariables["certificateName"] },
                     { "certificate-data", tempPath },
                     { "password", fakePassword }
                 });
             var createdCertificateName = result.AssertProperty("name");
             Assert.Equal(JsonValueKind.String, createdCertificateName.ValueKind);
-            Assert.Equal(certificateName, createdCertificateName.GetString());
+            Assert.Equal(TestVariables["certificateName"], createdCertificateName.GetString());
             // Validate basic certificate properties
             ValidateCertificate(result);
         }
