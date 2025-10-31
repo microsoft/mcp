@@ -371,6 +371,135 @@ dotnet run -- onelake file-delete --workspace-id "47242da5-ff3b-46fb-a94f-977909
 }
 ```
 
+#### List Files as Blobs
+
+Lists files and directories in OneLake storage as blobs. Browse the contents of a lakehouse or specific directory path with optional recursive listing in blob format.
+
+```bash
+dotnet run -- onelake list-blobs --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**With path and recursive options:**
+```bash
+dotnet run -- onelake list-blobs --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "raw_data" --recursive
+```
+
+**Parameters:**
+- `--workspace-id`: The ID of the Microsoft Fabric workspace (GUID)
+- `--item-id`: The ID of the Fabric item (GUID)
+- `--path`: (Optional) The path to list in OneLake storage (defaults to root)
+- `--recursive`: (Optional) Whether to perform the operation recursively
+
+**Example Output:**
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "results": {
+    "files": [
+      {
+        "name": "data.json",
+        "path": "0e67ed13-2bb6-49be-9c87-a1105a4ea342/Files/raw_data/data.json",
+        "isDirectory": false,
+        "size": 76443,
+        "lastModified": "2025-10-28T19:23:21+00:00",
+        "contentType": "application/octet-stream",
+        "etag": null
+      },
+      {
+        "name": "reports",
+        "path": "0e67ed13-2bb6-49be-9c87-a1105a4ea342/Files/raw_data/reports",
+        "isDirectory": true,
+        "size": 0,
+        "lastModified": "2025-10-28T18:10:09+00:00",
+        "contentType": "application/x-directory",
+        "etag": null
+      }
+    ],
+    "basePath": ""
+  }
+}
+```
+
+**Use Case:** Best for discovering all files in a flat structure, similar to Azure Blob Storage. Provides a comprehensive list of all files and directories with basic metadata.
+
+#### List Path Structure
+
+Lists files and directories in OneLake storage using a filesystem-style hierarchical view, similar to Azure Data Lake Storage Gen2. Shows directory structure with paths, sizes, timestamps, and metadata.
+
+```bash
+dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
+```
+
+**With recursive exploration:**
+```bash
+dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --recursive
+```
+
+**With specific path:**
+```bash
+dotnet run -- onelake path-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --item-id "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "analytics/reports"
+```
+
+**Parameters:**
+- `--workspace-id`: The ID of the Microsoft Fabric workspace (GUID)
+- `--item-id`: The ID of the Fabric item (GUID)
+- `--path`: (Optional) The path to list in OneLake storage (defaults to root)
+- `--recursive`: (Optional) Whether to perform the operation recursively
+
+**Example Output:**
+```json
+{
+  "status": 200,
+  "message": "Success",
+  "results": {
+    "items": [
+      {
+        "name": "analytics",
+        "path": "0e67ed13-2bb6-49be-9c87-a1105a4ea342/Files/analytics",
+        "type": "directory",
+        "size": null,
+        "lastModified": "2025-10-29T18:51:17+00:00",
+        "contentType": "application/x-directory",
+        "etag": "0x8DE171C24C7962C",
+        "permissions": "rwxr-x---",
+        "owner": "7cc5a2eb-b514-4973-ab35-81f11a1d043f",
+        "group": "7cc5a2eb-b514-4973-ab35-81f11a1d043f",
+        "isDirectory": true,
+        "children": null
+      },
+      {
+        "name": "report.json",
+        "path": "0e67ed13-2bb6-49be-9c87-a1105a4ea342/Files/report.json",
+        "type": "file",
+        "size": 80,
+        "lastModified": "2025-10-29T18:50:49+00:00",
+        "contentType": "application/octet-stream",
+        "etag": "0x8DE171C13EFD42D",
+        "permissions": "rw-r-----",
+        "owner": "7cc5a2eb-b514-4973-ab35-81f11a1d043f",
+        "group": "7cc5a2eb-b514-4973-ab35-81f11a1d043f",
+        "isDirectory": false,
+        "children": null
+      }
+    ]
+  }
+}
+```
+
+**Use Case:** Best for exploring OneLake content in a filesystem format with rich metadata including POSIX-style permissions, ownership, and ETags. Ideal for traditional file system navigation patterns.
+
+#### API Comparison: Blob vs Path Listing
+
+| Feature | `list-blobs` | `path-list` |
+|---------|-------------|-------------|
+| **API Endpoint** | OneLake Blob Storage | OneLake DFS (Data Lake File System) |
+| **Output Style** | Flat blob listing | Hierarchical filesystem view |
+| **Metadata Depth** | Basic (size, modified, contentType) | Rich (permissions, owner, group, etag) |
+| **Best For** | File discovery, bulk operations | Navigation, permissions management |
+| **Recursive Default** | Shows all files when recursive | Shows directory structure when recursive |
+| **Path Format** | Full blob paths | Filesystem-style paths |
+
 ### Directory Operations
 
 #### Create Directory
@@ -475,13 +604,37 @@ dotnet run -- onelake onelake-workspace-list
 # 2. List items in a workspace
 dotnet run -- onelake onelake-item-list --workspace-id "WORKSPACE_ID"
 
-# 3. Read analysis results
+# 3. Explore data structure using hierarchical view
+dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/reports"
+
+# 4. Get comprehensive file inventory with blob listing
+dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data" --recursive
+
+# 5. Read analysis results
 dotnet run -- onelake file-read --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --file-path "reports/monthly_summary.json"
 
-# 4. Archive old reports
+# 6. Archive old reports
 dotnet run -- onelake directory-create --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "archive/2024"
 # Move files to archive (requires multiple file operations)
 dotnet run -- onelake directory-delete --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --directory-path "reports/old" --recursive
+```
+
+### Data Discovery and Exploration
+
+```bash
+# 1. Quick overview of lakehouse structure using DFS API (shows directories and permissions)
+dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Tables"
+
+# 2. Comprehensive file search using Blob API (finds all files including nested)
+dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "Files" --recursive
+
+# 3. Compare structure views - hierarchical vs flat
+dotnet run -- onelake path-list --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
+dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --path "data/processed"
+
+# 4. Find specific file types across the entire lakehouse
+dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.parquet"
+dotnet run -- onelake list-blobs --workspace-id "WORKSPACE_ID" --item-id "ITEM_ID" --recursive | grep "\.delta"
 ```
 
 ## Error Handling

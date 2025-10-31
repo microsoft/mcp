@@ -38,7 +38,14 @@ public interface IOneLakeService
     
     // Data Operations (OneLake Data Plane)
     Task<OneLakeFileInfo> GetFileInfoAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
-    Task<IEnumerable<OneLakeFileInfo>> ListFilesAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<IEnumerable<OneLakeFileInfo>> ListBlobsIntelligentAsync(string workspaceId, string itemId, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<List<FileSystemItem>> ListPathIntelligentAsync(string workspaceId, string itemId, bool recursive = false, CancellationToken cancellationToken = default);
+    
+    // Raw Response Methods for Debug/Analysis
+    Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
+    Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default);
     Task<Stream> ReadFileAsync(string workspaceId, string itemId, string filePath, CancellationToken cancellationToken = default);
     Task WriteFileAsync(string workspaceId, string itemId, string filePath, Stream content, bool overwrite = false, CancellationToken cancellationToken = default);
     Task CreateDirectoryAsync(string workspaceId, string itemId, string directoryPath, CancellationToken cancellationToken = default);

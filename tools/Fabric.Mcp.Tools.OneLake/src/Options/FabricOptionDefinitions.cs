@@ -67,6 +67,13 @@ public static class FabricOptionDefinitions
         Required = false
     };
 
+    public const string PathName = "path";
+    public static readonly Option<string> Path = new($"--{PathName}")
+    {
+        Description = "The path to list in OneLake storage (optional, defaults to root).",
+        Required = false
+    };
+
     // Shortcut options
     public const string ShortcutNameName = "shortcut-name";
     public static readonly Option<string> ShortcutName = new($"--{ShortcutNameName}")

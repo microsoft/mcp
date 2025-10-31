@@ -10,6 +10,6 @@ public static class OneLakeOptionDefinitions
     public const string FormatName = "format";
     public static readonly Option<string> Format = new($"--{FormatName}")
     {
-        Description = "Output format for OneLake API responses. Use 'json' for parsed workspace objects or 'xml' for raw API response. Supported values: 'json' (default), 'xml'."
+        Description = "Output format for OneLake API responses. Use 'json' for parsed objects, 'xml' for raw XML API response, or 'raw' for unprocessed API response. Supported values: 'json' (default), 'xml', 'raw'."
     };
 }

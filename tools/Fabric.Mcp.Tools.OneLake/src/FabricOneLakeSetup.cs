@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Commands;
 using Fabric.Mcp.Tools.OneLake.Commands.Workspace;
 using Fabric.Mcp.Tools.OneLake.Commands.Item;
 using Fabric.Mcp.Tools.OneLake.Commands.File;
+using Fabric.Mcp.Tools.OneLake.Commands;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -33,6 +34,8 @@ public class FabricOneLakeSetup : IAreaSetup
         services.AddSingleton<FileReadCommand>();
         services.AddSingleton<FileWriteCommand>();
         services.AddSingleton<FileDeleteCommand>();
+        services.AddSingleton<BlobListCommand>();
+        services.AddSingleton<PathListCommand>();
         services.AddSingleton<DirectoryCreateCommand>();
         services.AddSingleton<DirectoryDeleteCommand>();
     }
@@ -74,6 +77,12 @@ public class FabricOneLakeSetup : IAreaSetup
 
         var fileDeleteCommand = serviceProvider.GetRequiredService<FileDeleteCommand>();
         fabricOneLake.AddCommand(fileDeleteCommand.Name, fileDeleteCommand);
+
+        var blobListCommand = serviceProvider.GetRequiredService<BlobListCommand>();
+        fabricOneLake.AddCommand(blobListCommand.Name, blobListCommand);
+
+        var pathListCommand = serviceProvider.GetRequiredService<PathListCommand>();
+        fabricOneLake.AddCommand(pathListCommand.Name, pathListCommand);
 
         var directoryCreateCommand = serviceProvider.GetRequiredService<DirectoryCreateCommand>();
         fabricOneLake.AddCommand(directoryCreateCommand.Name, directoryCreateCommand);

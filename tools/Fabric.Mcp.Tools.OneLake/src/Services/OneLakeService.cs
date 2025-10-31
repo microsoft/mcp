@@ -88,8 +88,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         }
         catch (Exception ex)
         {
-                        throw new InvalidOperationException($"Failed to parse OneLake workspace list response: {ex.Message}", ex);
-            throw new InvalidOperationException($"Failed to parse OneLake response: {ex.Message}");
+            throw new InvalidOperationException($"Failed to parse OneLake workspace list response: {ex.Message}", ex);
         }
     }
 
@@ -230,22 +229,357 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         };
     }
 
-    public async Task<IEnumerable<OneLakeFileInfo>> ListFilesAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
+    public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/Files";
-        if (!string.IsNullOrEmpty(path))
+        // If no path is specified, intelligently discover and search top-level folders
+        if (string.IsNullOrEmpty(path))
         {
-            url += $"/{path.TrimStart('/')}";
+            return await ListBlobsIntelligentAsync(workspaceId, itemId, recursive, cancellationToken);
         }
-        url += $"?resource=filesystem&recursive={recursive.ToString().ToLower()}";
+
+        // Use the OneLake blob endpoint to list files for specific path
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
+        
+        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
+        // or a sub-path within Files
+        var trimmedPath = path.TrimStart('/');
+        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
+        {
+            // Path already includes Files prefix
+            url += $"/{trimmedPath}";
+        }
+        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
+        {
+            // Explicitly requesting Files folder
+            url += "/Files";
+        }
+        else if (IsTopLevelFolder(trimmedPath))
+        {
+            // Top-level folder like Tables, Files, etc.
+            url += $"/{trimmedPath}";
+        }
+        else
+        {
+            // Assume it's a sub-path within Files for backward compatibility
+            url += $"/Files/{trimmedPath}";
+        }
+        
+        url += $"?restype=container&comp=list";
+        if (recursive)
+        {
+            url += "&recursive=true";
+        }
 
         var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
         var content = await response.Content.ReadAsStringAsync(cancellationToken);
         
-        // Parse directory listing response (simplified)
+        // Parse XML response to extract file information
+        var files = ParseBlobListResponse(content);
+        return files.OrderBy(f => f.IsDirectory ? 0 : 1).ThenBy(f => f.Name);
+    }
+
+    private static bool IsTopLevelFolder(string path)
+    {
+        // Check if the path represents a top-level folder in OneLake
+        // Common top-level folders include Tables, Files, and potentially others
+        var folder = path.Split('/')[0]; // Get the first segment
+        return folder.Equals("Tables", StringComparison.OrdinalIgnoreCase) ||
+               folder.Equals("Files", StringComparison.OrdinalIgnoreCase);
+    }
+
+    public async Task<IEnumerable<OneLakeFileInfo>> ListBlobsIntelligentAsync(string workspaceId, string itemId, bool recursive, CancellationToken cancellationToken)
+    {
+        // Intelligent discovery: Try to list contents from both Files and Tables folders
+        var allFiles = new List<OneLakeFileInfo>();
+        var topLevelFolders = new[] { "Files", "Tables" };
+
+        foreach (var folder in topLevelFolders)
+        {
+            try
+            {
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                url += $"?restype=container&comp=list";
+                if (recursive)
+                {
+                    url += "&recursive=true";
+                }
+
+                var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                
+                // Parse XML response to extract file information
+                var files = ParseBlobListResponse(content);
+                allFiles.AddRange(files);
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+            {
+                // Folder doesn't exist, skip it
+                continue;
+            }
+            catch (Exception)
+            {
+                // Other errors, skip this folder but continue with others
+                continue;
+            }
+        }
+
+        return allFiles.OrderBy(f => f.IsDirectory ? 0 : 1).ThenBy(f => f.Name);
+    }
+
+    private List<OneLakeFileInfo> ParseBlobListResponse(string xmlContent)
+    {
         var files = new List<OneLakeFileInfo>();
-        // Implementation would parse the actual response format
+        try
+        {
+            var doc = XDocument.Parse(xmlContent);
+            var ns = doc.Root?.GetDefaultNamespace() ?? XNamespace.None;
+            
+            // Parse blob elements (files and directories)
+            var blobs = doc.Descendants(ns + "Blob");
+            foreach (var blob in blobs)
+            {
+                var nameElement = blob.Element(ns + "Name");
+                var propertiesElement = blob.Element(ns + "Properties");
+                
+                if (nameElement?.Value == null || propertiesElement == null) continue;
+                
+                var fileName = nameElement.Value;
+                var lastModified = propertiesElement.Element(ns + "Last-Modified")?.Value;
+                var contentLength = propertiesElement.Element(ns + "Content-Length")?.Value;
+                var contentType = propertiesElement.Element(ns + "Content-Type")?.Value;
+                var resourceType = propertiesElement.Element(ns + "ResourceType")?.Value;
+                
+                var size = long.TryParse(contentLength, out var parsedSize) ? parsedSize : 0;
+                
+                // Use ResourceType to determine if this is a directory
+                var isDirectory = string.Equals(resourceType, "directory", StringComparison.OrdinalIgnoreCase);
+                
+                files.Add(new OneLakeFileInfo
+                {
+                    Name = Path.GetFileName(fileName),
+                    Path = fileName,
+                    Size = size,
+                    LastModified = DateTime.TryParse(lastModified, out var modifiedDate) ? modifiedDate : null,
+                    ContentType = isDirectory ? "application/x-directory" : (contentType ?? "application/octet-stream"),
+                    IsDirectory = isDirectory
+                });
+            }
+            
+            // Parse blob prefixes (directories) - Note: OneLake typically doesn't return these
+            var blobPrefixes = doc.Descendants(ns + "BlobPrefix");
+            foreach (var prefix in blobPrefixes)
+            {
+                var nameElement = prefix.Element(ns + "Name");
+                if (nameElement?.Value != null)
+                {
+                    var dirName = nameElement.Value.TrimEnd('/');
+                    files.Add(new OneLakeFileInfo
+                    {
+                        Name = Path.GetFileName(dirName),
+                        Path = dirName,
+                        Size = 0,
+                        LastModified = null,
+                        ContentType = "application/x-directory",
+                        IsDirectory = true
+                    });
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Failed to parse OneLake file listing response: {ex.Message}", ex);
+        }
+        
         return files;
+    }
+
+    public async Task<List<FileSystemItem>> ListPathIntelligentAsync(string workspaceId, string itemId, bool recursive, CancellationToken cancellationToken)
+    {
+        // Intelligent discovery: Try to list contents from both Files and Tables folders using DFS API
+        var allItems = new List<FileSystemItem>();
+        var topLevelFolders = new[] { "Files", "Tables" };
+
+        foreach (var folder in topLevelFolders)
+        {
+            try
+            {
+                var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+
+                var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+                var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                
+                var items = ParsePathListResponse(content);
+                allItems.AddRange(items);
+            }
+            catch (HttpRequestException ex) when (ex.Message.Contains("404"))
+            {
+                // Folder doesn't exist, skip it
+                continue;
+            }
+            catch (Exception)
+            {
+                // Other errors, skip this folder but continue with others
+                continue;
+            }
+        }
+
+        return allItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
+    }
+
+    private List<FileSystemItem> ParsePathListResponse(string jsonContent)
+    {
+        var fileSystemItems = new List<FileSystemItem>();
+        
+        try
+        {
+            // Parse JSON response from ADLS Gen2 API
+            using var document = JsonDocument.Parse(jsonContent);
+            var root = document.RootElement;
+            
+            if (root.TryGetProperty("paths", out var pathsElement))
+            {
+                foreach (var pathItem in pathsElement.EnumerateArray())
+                {
+                    var name = pathItem.TryGetProperty("name", out var nameElement) ? nameElement.GetString() : "";
+                    var isDirectory = false;
+                    
+                    if (pathItem.TryGetProperty("isDirectory", out var isDirElement))
+                    {
+                        isDirectory = isDirElement.GetBoolean();
+                    }
+                    
+                    var contentLength = pathItem.TryGetProperty("contentLength", out var lengthElement) ? lengthElement.GetInt64() : 0;
+                    var lastModified = pathItem.TryGetProperty("lastModified", out var modElement) 
+                        ? DateTime.TryParse(modElement.GetString(), out var modDate) ? modDate : (DateTime?)null
+                        : null;
+                    var etag = pathItem.TryGetProperty("etag", out var etagElement) ? etagElement.GetString() : null;
+                    var permissions = pathItem.TryGetProperty("permissions", out var permsElement) ? permsElement.GetString() : null;
+                    var owner = pathItem.TryGetProperty("owner", out var ownerElement) ? ownerElement.GetString() : null;
+                    var group = pathItem.TryGetProperty("group", out var groupElement) ? groupElement.GetString() : null;
+                    
+                    if (!string.IsNullOrEmpty(name))
+                    {
+                        var item = new FileSystemItem
+                        {
+                            Name = Path.GetFileName(name),
+                            Path = name,
+                            Type = isDirectory ? "directory" : "file",
+                            Size = isDirectory ? null : contentLength,
+                            LastModified = lastModified,
+                            ContentType = isDirectory ? "application/x-directory" : "application/octet-stream",
+                            ETag = etag,
+                            Permissions = permissions,
+                            Owner = owner,
+                            Group = group,
+                            Children = null
+                        };
+                        
+                        fileSystemItems.Add(item);
+                    }
+                }
+            }
+        }
+        catch (JsonException ex)
+        {
+            throw new InvalidOperationException($"Failed to parse OneLake path listing response: {ex.Message}", ex);
+        }
+        
+        return fileSystemItems;
+    }
+
+    public async Task<List<FileSystemItem>> ListPathAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
+    {
+        // If no path is specified, intelligently discover and search top-level folders
+        if (string.IsNullOrEmpty(path))
+        {
+            return await ListPathIntelligentAsync(workspaceId, itemId, recursive, cancellationToken);
+        }
+
+        // Use ADLS Gen2 filesystem API format instead of blob container format
+        var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
+        
+        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
+        // or a sub-path within Files
+        var trimmedPath = path.TrimStart('/');
+        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
+        {
+            // Path already includes Files prefix
+            url += $"/{trimmedPath}";
+        }
+        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
+        {
+            // Explicitly requesting Files folder
+            url += "/Files";
+        }
+        else if (IsTopLevelFolder(trimmedPath))
+        {
+            // Top-level folder like Tables, Files, etc.
+            url += $"/{trimmedPath}";
+        }
+        else
+        {
+            // Assume it's a sub-path within Files for backward compatibility
+            url += $"/Files/{trimmedPath}";
+        }
+        
+        url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
+
+        var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+        var content = await response.Content.ReadAsStringAsync(cancellationToken);
+        
+        var fileSystemItems = ParsePathListResponse(content);
+        
+        return fileSystemItems.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
+    }
+
+    private List<FileSystemItem> BuildHierarchicalStructure(List<FileSystemItem> flatItems, string basePath)
+    {
+        var root = new List<FileSystemItem>();
+        var pathPrefix = basePath.TrimEnd('/') + "/";
+        
+        // Group items by their immediate parent directory
+        var grouped = flatItems
+            .Where(item => item.Path.StartsWith(pathPrefix, StringComparison.OrdinalIgnoreCase) || item.Path == basePath.TrimEnd('/'))
+            .GroupBy(item =>
+            {
+                var relativePath = item.Path.Substring(pathPrefix.Length);
+                var firstSlash = relativePath.IndexOf('/');
+                return firstSlash == -1 ? "" : relativePath.Substring(0, firstSlash);
+            });
+        
+        foreach (var group in grouped)
+        {
+            if (string.IsNullOrEmpty(group.Key))
+            {
+                // Direct children of the base path
+                root.AddRange(group);
+            }
+            else
+            {
+                // Create directory entry with children
+                var dirPath = $"{pathPrefix}{group.Key}";
+                var directoryItem = group.FirstOrDefault(item => item.Path == dirPath && item.Type == "directory");
+                
+                if (directoryItem == null)
+                {
+                    directoryItem = new FileSystemItem
+                    {
+                        Name = group.Key,
+                        Path = dirPath,
+                        Type = "directory",
+                        Size = null,
+                        LastModified = null,
+                        ContentType = "application/x-directory"
+                    };
+                }
+                
+                directoryItem.Children = group.Where(item => item.Path != dirPath).ToList();
+                root.Add(directoryItem);
+            }
+        }
+        
+        return root.OrderBy(f => f.Type == "directory" ? 0 : 1).ThenBy(f => f.Name).ToList();
     }
 
     public async Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
@@ -318,6 +652,148 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         {
             throw new InvalidOperationException($"Failed to parse OneLake items list response: {ex.Message}", ex);
         }
+    }
+
+    public async Task<string> ListBlobsRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
+    {
+        // If no path is specified, intelligently discover and search top-level folders
+        if (string.IsNullOrEmpty(path))
+        {
+            // For intelligent discovery, combine responses from multiple folders
+            var allResponses = new List<string>();
+            var topLevelFolders = new[] { "Files", "Tables" };
+
+            foreach (var folder in topLevelFolders)
+            {
+                try
+                {
+                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                    url += $"?restype=container&comp=list";
+                    if (recursive)
+                    {
+                        url += "&recursive=true";
+                    }
+
+                    var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
+                    allResponses.Add($"<!-- Response for folder: {folder} -->\n{content}");
+                }
+                catch (Exception ex)
+                {
+                    allResponses.Add($"<!-- Error accessing folder {folder}: {ex.Message} -->");
+                }
+            }
+
+            return string.Join("\n\n", allResponses);
+        }
+
+        // Use the OneLake blob endpoint to list files for specific path
+        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/{workspaceId}/{itemId}";
+        
+        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
+        // or a sub-path within Files
+        var trimmedPath = path.TrimStart('/');
+        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
+        {
+            // Path already includes Files prefix
+            singleUrl += $"/{trimmedPath}";
+        }
+        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
+        {
+            // Explicitly requesting Files folder
+            singleUrl += "/Files";
+        }
+        else if (IsTopLevelFolder(trimmedPath))
+        {
+            // Top-level folder like Tables, Files, etc.
+            singleUrl += $"/{trimmedPath}";
+        }
+        else
+        {
+            // Assume it's a sub-path within Files for backward compatibility
+            singleUrl += $"/Files/{trimmedPath}";
+        }
+        
+        singleUrl += $"?restype=container&comp=list";
+        if (recursive)
+        {
+            singleUrl += "&recursive=true";
+        }
+
+        var singleResponse = await SendDataPlaneRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
+        return await singleResponse.Content.ReadAsStringAsync(cancellationToken);
+    }
+
+    public async Task<string> ListPathRawAsync(string workspaceId, string itemId, string? path = null, bool recursive = false, CancellationToken cancellationToken = default)
+    {
+        // If no path is specified, intelligently discover and search top-level folders
+        if (string.IsNullOrEmpty(path))
+        {
+            // For intelligent discovery, combine responses from multiple folders
+            var allResponses = new List<string>();
+            var topLevelFolders = new[] { "Files", "Tables" };
+
+            foreach (var folder in topLevelFolders)
+            {
+                try
+                {
+                    var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{folder}";
+                    url += $"?resource=filesystem";
+                    if (recursive)
+                    {
+                        url += "&recursive=true";
+                    }
+
+                    var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+                    using var responseReader = new StreamReader(response);
+                    var content = await responseReader.ReadToEndAsync(cancellationToken);
+                    allResponses.Add($"/* Response for folder: {folder} */\n{content}");
+                }
+                catch (Exception ex)
+                {
+                    allResponses.Add($"/* Error accessing folder {folder}: {ex.Message} */");
+                }
+            }
+
+            return string.Join("\n\n", allResponses);
+        }
+
+        // Use ADLS Gen2 filesystem API format instead of blob container format
+        var singleUrl = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}";
+        
+        // If path is specified, check if it's a top-level folder (Tables, Files, etc.)
+        // or a sub-path within Files
+        var trimmedPath = path.TrimStart('/');
+        if (trimmedPath.StartsWith("Files/", StringComparison.OrdinalIgnoreCase))
+        {
+            // Path already includes Files prefix
+            singleUrl += $"/{trimmedPath}";
+        }
+        else if (trimmedPath.Equals("Files", StringComparison.OrdinalIgnoreCase))
+        {
+            // Explicitly requesting Files folder
+            singleUrl += "/Files";
+        }
+        else if (IsTopLevelFolder(trimmedPath))
+        {
+            // Top-level folder like Tables, Files, etc.
+            singleUrl += $"/{trimmedPath}";
+        }
+        else
+        {
+            // Assume it's a sub-path within Files for backward compatibility
+            singleUrl += $"/Files/{trimmedPath}";
+        }
+        
+        singleUrl += $"?resource=filesystem";
+        if (recursive)
+        {
+            singleUrl += "&recursive=true";
+        }
+
+        var singleResponse = await SendOneLakeApiRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
+        using var finalReader = new StreamReader(singleResponse);
+        return await finalReader.ReadToEndAsync(cancellationToken);
     }
 
     public async Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)

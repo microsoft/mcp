@@ -296,6 +296,46 @@ public class OneLakeEndpoint
     public string? ProvisioningStatus { get; set; }
 }
 
+// File system models for hierarchical directory views
+public class FileSystemItem
+{
+    [JsonPropertyName("name")]
+    public string Name { get; set; } = string.Empty;
+
+    [JsonPropertyName("path")]
+    public string Path { get; set; } = string.Empty;
+
+    [JsonPropertyName("type")]
+    public string Type { get; set; } = string.Empty; // "file" or "directory"
+
+    [JsonPropertyName("size")]
+    public long? Size { get; set; }
+
+    [JsonPropertyName("lastModified")]
+    public DateTimeOffset? LastModified { get; set; }
+
+    [JsonPropertyName("contentType")]
+    public string? ContentType { get; set; }
+
+    [JsonPropertyName("etag")]
+    public string? ETag { get; set; }
+
+    [JsonPropertyName("permissions")]
+    public string? Permissions { get; set; }
+
+    [JsonPropertyName("owner")]
+    public string? Owner { get; set; }
+
+    [JsonPropertyName("group")]
+    public string? Group { get; set; }
+
+    [JsonPropertyName("isDirectory")]
+    public bool IsDirectory => Type == "directory";
+
+    [JsonPropertyName("children")]
+    public List<FileSystemItem>? Children { get; set; }
+}
+
 // Configuration and constants
 public static class OneLakeEndpoints
 {
