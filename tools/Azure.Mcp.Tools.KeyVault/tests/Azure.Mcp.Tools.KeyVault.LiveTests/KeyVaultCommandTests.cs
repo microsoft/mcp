@@ -7,6 +7,7 @@ using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Security.KeyVault.Keys;
 using Xunit;
 
@@ -14,6 +15,14 @@ namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
 public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
+        // should clear out `kid` hostnames of actual vault names
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
+          GroupForReplace = "host",
+        })
+    };
+
     [Fact]
     public async Task Should_list_keys()
     {
