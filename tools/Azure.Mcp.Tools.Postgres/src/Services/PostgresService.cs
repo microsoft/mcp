@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net;
 using Azure.Core;
+using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -86,7 +88,20 @@ public class PostgresService : BaseAzureService, IPostgresService
             var row = new List<string>();
             for (int i = 0; i < reader.FieldCount; i++)
             {
-                row.Add(reader[i]?.ToString() ?? "NULL");
+                try
+                {
+                    row.Add(reader[i]?.ToString() ?? "NULL");
+                }
+                catch (InvalidCastException)
+                {
+                    throw new CommandValidationException($"E_QUERY_UNSUPPORTED_COMPLEX_TYPES. The PostgreSQL query failed because it returned one or more columns with non-standard data types (extension or user-defined) unsupported by the MCP agent.\nColumn that failed: '{columnNames[i]}'.\n" +
+                        $"Action required:\n" +
+                        $"1. Obtain the exact schema for all the tables involved in the query.\n" +
+                        $"2. Identify which columns have non-standard data types.\n" +
+                        $"3. Modify the query to convert them to a supported type (e.g. using CAST or converting to text, integer, or the appropriate standard type).\n" +
+                        $"4. Re-execute the modified query.\n" +
+                        $"Please perform steps 1-4 now and re-execute.", HttpStatusCode.BadRequest);
+                }
             }
             rows.Add(string.Join(", ", row));
         }
