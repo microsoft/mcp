@@ -3,13 +3,13 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 
 namespace Azure.Mcp.Tools.Deploy.Services;
 
-public class DeployService() : BaseAzureService, IDeployService
+public class DeployService(ITenantService tenantService) : BaseAzureService(tenantService), IDeployService
 {
-
     public async Task<string> GetAzdResourceLogsAsync(
          string workspaceFolder,
          string azdEnvName,

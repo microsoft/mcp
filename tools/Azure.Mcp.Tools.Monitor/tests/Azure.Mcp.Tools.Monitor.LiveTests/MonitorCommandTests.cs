@@ -43,7 +43,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
         var tenantService = new TenantService(tokenProvider, cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
+        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
         var httpClientOptions = new HttpClientOptions();
         var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
