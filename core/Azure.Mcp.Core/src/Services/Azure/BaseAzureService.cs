@@ -7,11 +7,10 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
-public abstract class BaseAzureService(ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
+public abstract class BaseAzureService
 {
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
@@ -19,9 +18,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
     private ArmClient? _armClient;
     private string? _lastArmClientTenantId;
     private RetryPolicyOptions? _lastRetryPolicy;
-    private readonly ILoggerFactory? _loggerFactory = loggerFactory;
-
-    protected ILoggerFactory LoggerFactory => _loggerFactory ?? Microsoft.Extensions.Logging.Abstractions.NullLoggerFactory.Instance;
+    private ITenantService? _tenantServiceDoNotUseDirectly;
 
     static BaseAzureService()
     {
@@ -34,16 +31,50 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
         s_sharedUserAgentPolicy = new UserAgentPolicy(DefaultUserAgent);
     }
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BaseAzureService"/> class.
+    /// </summary>
+    /// <param name="tenantService">
+    /// An <see cref="ITenantService"/> used for Azure API calls.
+    /// </param>
+    protected BaseAzureService(ITenantService tenantService)
+    {
+        ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
+        _tenantServiceDoNotUseDirectly = tenantService;
+    }
+
+    /// <summary>
+    /// DO NOT USE THIS CONSTRUCTOR.
+    /// </summary>
+    /// <remarks>
+    /// This is only to be used by <see cref="Tenant.TenantService"/> to overcome a circular dependency on itself.</remarks>
+    internal BaseAzureService()
+    {
+    }
+
     protected string UserAgent { get; } = DefaultUserAgent;
 
     /// <summary>
-    /// Gets or sets the tenant service for resolving tenant IDs and obtaining credentials.
+    /// Gets or initializes the tenant service for resolving tenant IDs and obtaining credentials.
     /// </summary>
     /// <remarks>
-    /// Do not set this. The setter is just for <see cref="Tenant.TenantService"/> to
-    /// overcome a circular dependency on itself.
+    /// Do not <see langword="init"/> this. The initializer is just for <see cref="Tenant.TenantService"/>
+    /// to overcome a circular dependency on itself. In all other cases, pass the constructor
+    /// a non-null <see cref="ITenantService"/>.
     /// </remarks>
-    protected ITenantService? TenantService { get; init; } = tenantService;
+    protected ITenantService TenantService
+    {
+        get
+        {
+            return _tenantServiceDoNotUseDirectly
+                ?? throw new InvalidOperationException($"{nameof(TenantService)} is not set. This is a code bug. Use the {nameof(BaseAzureService)} constructor with a non-null {nameof(ITenantService)}.");
+        }
+
+        init
+        {
+            _tenantServiceDoNotUseDirectly = value;
+        }
+    }
 
     /// <summary>
     /// Escapes a string value for safe use in KQL queries to prevent injection attacks.
@@ -64,7 +95,7 @@ public abstract class BaseAzureService(ITenantService? tenantService = null, ILo
 
     protected async Task<string?> ResolveTenantIdAsync(string? tenant)
     {
-        if (tenant == null || TenantService == null)
+        if (tenant == null)
             return tenant;
         return await TenantService.GetTenantId(tenant);
     }

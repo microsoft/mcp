@@ -10,8 +10,11 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Core.Services.Azure.ResourceGroup;
 
-public class ResourceGroupService(ICacheService cacheService, ISubscriptionService subscriptionService)
-    : BaseAzureService, IResourceGroupService
+public class ResourceGroupService(
+    ICacheService cacheService,
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService)
+    : BaseAzureService(tenantService), IResourceGroupService
 {
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
