@@ -6,6 +6,7 @@ using Azure.AI.Projects;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 
 namespace Azure.Mcp.Tools.Foundry.Services;
 
@@ -87,7 +88,9 @@ public interface IFoundryService
         AuthMethod authMethod = AuthMethod.Credential,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null,
+    Task<List<PersistentAgent>> ListAgents(
+        string endpoint,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null);
 
     Task<AgentsConnectResult> ConnectAgent(
@@ -148,4 +151,36 @@ public interface IFoundryService
         string resourceName,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<AgentsCreateResult> CreateAgent(
+        string projectEndpoint,
+        string modelDeploymentName,
+        string agentName,
+        string systemInstruction,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<ThreadListResult> ListThreads(
+        string projectEndpoint,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<ThreadCreateResult> CreateThread(
+        string projectEndpoint,
+        string userMessage,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null
+    );
+
+    Task<ThreadGetMessagesResult> GetMessages(
+        string projectEndpoint,
+        string threadId,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null);
+
+    AgentsGetSdkCodeSampleResult GetSdkCodeSample(
+        string programmingLanguage
+    );
 }

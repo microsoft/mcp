@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
-using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.Mcp.Tools.Foundry.Services;
 using Azure.Mcp.Tools.Foundry.Services.Models;
 using Microsoft.Extensions.AI;
@@ -56,8 +56,13 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(AgentsConnectResult))]
 [JsonSerializable(typeof(AgentsQueryAndEvaluateResult))]
 [JsonSerializable(typeof(AgentsEvaluateResult))]
+[JsonSerializable(typeof(AgentsGetSdkCodeSampleResult))]
 [JsonSerializable(typeof(CognitiveServicesAccountDeploymentData))]
 [JsonSerializable(typeof(FoundryService.ToolDefinitionAIFunction))]
 [JsonSerializable(typeof(List<FoundryService.ToolDefinitionAIFunction>))]
+[JsonSerializable(typeof(AgentsCreateResult))]
+[JsonSerializable(typeof(ThreadCreateResult))]
+[JsonSerializable(typeof(ThreadListResult))]
+[JsonSerializable(typeof(ThreadGetMessagesResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;

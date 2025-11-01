@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsAotCompatible>true</IsAotCompatible>
   </PropertyGroup>
@@ -9,7 +9,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Azure.AI.Projects" />
     <PackageReference Include="Azure.ResourceManager" />
@@ -23,5 +22,11 @@
     <PackageReference Include="Microsoft.Extensions.AI.Evaluation.Quality" />
     <PackageReference Include="ModelContextProtocol" />
     <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Resources\AgentSdkSamples\" />
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="**\Resources\**\*.md" />
   </ItemGroup>
 </Project>
