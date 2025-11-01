@@ -6,6 +6,7 @@ using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
@@ -1009,9 +1010,11 @@ public class FoundryCommandTests(ITestOutputHelper output)
 
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
     {
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
         var client = new PersistentAgentsClient(
             projectEndpoint,
-            new CustomChainedCredential());
+            await tokenProvider.GetTokenCredentialAsync(default, default));
 
         var bingConnectionId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.CognitiveServices/accounts/{Settings.ResourceBaseName}/projects/{Settings.ResourceBaseName}-ai-projects/connections/{Settings.ResourceBaseName}-bing-connection";
 

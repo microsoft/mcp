@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Models;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tools.Storage.Commands;
 using Azure.Mcp.Tools.Storage.Models;
 using Azure.Mcp.Tools.Storage.Services.Models;
@@ -22,16 +21,10 @@ namespace Azure.Mcp.Tools.Storage.Services;
 public class StorageService(
     ISubscriptionService subscriptionService,
     ITenantService tenantService,
-    ICacheService cacheService,
-    ILogger<StorageService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
+    ILogger<StorageService> logger)
+    : BaseAzureResourceService(subscriptionService, tenantService), IStorageService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly ILogger<StorageService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
-    private const string CacheGroup = "storage";
-    private const string StorageAccountsCacheKey = "accounts";
-    private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
     public async Task<List<StorageAccountInfo>> GetAccountDetails(
         string? account,

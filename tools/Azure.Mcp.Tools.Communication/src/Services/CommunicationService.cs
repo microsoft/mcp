@@ -3,8 +3,6 @@
 
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
-using Azure.Core;
-using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -14,10 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
+public class CommunicationService(ITenantService tenantService, ILogger<CommunicationService> logger)
     : BaseAzureService(tenantService), ICommunicationService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<SmsResult>> SendSmsAsync(

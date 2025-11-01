@@ -12,20 +12,6 @@ namespace Azure.Mcp.Tools.MySql.UnitTests.Services;
 
 public class MySqlServiceRowLimitTests
 {
-    private readonly IResourceGroupService _resourceGroupService;
-    private readonly ITenantService _tenantService;
-    private readonly ILogger<MySqlService> _logger;
-    private readonly MySqlService _mysqlService;
-
-    public MySqlServiceRowLimitTests()
-    {
-        _resourceGroupService = Substitute.For<IResourceGroupService>();
-        _tenantService = Substitute.For<ITenantService>();
-        _logger = Substitute.For<ILogger<MySqlService>>();
-
-        _mysqlService = new MySqlService(_resourceGroupService, _tenantService, _logger);
-    }
-
     [Fact]
     public void ValidateQuerySafety_WithValidQuery_ShouldPassValidation()
     {

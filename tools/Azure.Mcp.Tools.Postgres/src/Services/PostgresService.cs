@@ -4,6 +4,7 @@
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
 
@@ -15,7 +16,10 @@ public class PostgresService : BaseAzureService, IPostgresService
     private string? _cachedEntraIdAccessToken;
     private DateTime _tokenExpiryTime;
 
-    public PostgresService(IResourceGroupService resourceGroupService)
+    public PostgresService(
+        IResourceGroupService resourceGroupService,
+        ITenantService tenantService)
+        : base(tenantService)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     }

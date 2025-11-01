@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Core;
 using Azure.Data.AppConfiguration;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Core.Options;
@@ -19,7 +18,6 @@ using ETag = Core.Models.ETag;
 public sealed class AppConfigService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AppConfigService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IAppConfigService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AppConfigService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<AppConfigurationAccount>> GetAppConfigAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)

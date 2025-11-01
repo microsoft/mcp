@@ -15,20 +15,47 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// InteractiveBrowserCredential to provide a seamless authentication experience.
 /// </summary>
 /// <remarks>
+/// <para>
+/// DO NOT INSTANTIATE THIS CLASS DIRECTLY. Use dependency injection to get an instance of
+/// <see cref="TokenCredential"/> from <see cref="IAzureTokenCredentialProvider"/>.
+/// </para>
+/// <para>
 /// The credential chain behavior can be controlled via the AZURE_TOKEN_CREDENTIALS environment variable:
-/// - "dev": Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
-/// - "prod": Environment → Workload Identity → Managed Identity
-/// - Specific credential name (e.g., "AzureCliCredential"): Only that credential
-/// - Not set or empty: Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)
-/// 
+/// </para>
+/// <list type="table">
+/// <listheader>
+/// <term>Value</term>
+/// <description>Behavior</description>
+/// </listheader>
+/// <item>
+/// <term>"dev"</term>
+/// <description>Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI</description>
+/// </item>
+/// <item>
+/// <term>"prod"</term>
+/// <description>Environment → Workload Identity → Managed Identity</description>
+/// </item>
+/// <item>
+/// <term>Specific credential name</term>
+/// <description>Only that credential (e.g., "AzureCliCredential")</description>
+/// </item>
+/// <item>
+/// <term>Not set or empty</term>
+/// <description>Development chain (Environment → Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI)</description>
+/// </item>
+/// </list>
+/// <para>
 /// By default, production credentials (Workload Identity and Managed Identity) are excluded unless explicitly requested via AZURE_TOKEN_CREDENTIALS="prod".
-/// 
+/// </para>
+/// <para>
 /// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
 /// Visual Studio Code credential is automatically prioritized first in the chain.
-/// 
+/// </para>
+/// <para>
 /// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
+/// </para>
 /// </remarks>
-public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
+internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
 {
     private TokenCredential? _credential;
     private readonly ILogger<CustomChainedCredential>? _logger = logger;

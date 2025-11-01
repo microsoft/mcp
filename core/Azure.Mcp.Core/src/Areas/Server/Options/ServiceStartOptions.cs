@@ -64,4 +64,18 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("insecureDisableElicitation")]
     public bool InsecureDisableElicitation { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets whether the server should run as a remote HTTP service.
+    /// When true, the server will require authentication and authorization.
+    /// </summary>
+    [JsonPropertyName("runAsRemoteHttpService")]
+    public bool RunAsRemoteHttpService { get; set; } = false;
+
+    /// <summary>
+    /// Gets or sets the outgoing authentication strategy for Azure service requests.
+    /// Determines whether to use hosting environment identity or on-behalf-of flow.
+    /// </summary>
+    [JsonPropertyName("outgoingAuthStrategy")]
+    public OutgoingAuthStrategy OutgoingAuthStrategy { get; set; } = OutgoingAuthStrategy.NotSet;
 }

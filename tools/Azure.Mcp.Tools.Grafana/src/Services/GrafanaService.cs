@@ -15,12 +15,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Grafana.Services;
 
-public class GrafanaService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<GrafanaService> logger)
+public class GrafanaService(ISubscriptionService subscriptionService, ITenantService tenantService)
     : BaseAzureResourceService(subscriptionService, tenantService), IGrafanaService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ILogger<GrafanaService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
     public async Task<IEnumerable<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? tenant = null,

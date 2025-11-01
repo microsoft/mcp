@@ -5,8 +5,6 @@ using System.ClientModel;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks.Dataflow;
-using Azure;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
@@ -19,16 +17,12 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
-using Azure.Mcp.Tools.Foundry.Services.Models;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
-using Azure.ResourceManager.CognitiveServices.Models;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;
 using OpenAI.Chat;
-using OpenAI.Embeddings;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -37,7 +31,8 @@ namespace Azure.Mcp.Tools.Foundry.Services;
 public class FoundryService(
     IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService) : BaseAzureResourceService(subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
+    ITenantService tenantService)
+    : BaseAzureResourceService(subscriptionService, tenantService), IFoundryService
 {
     private static readonly Dictionary<string, Func<IEvaluator>> AgentEvaluatorDictionary = new()
     {
