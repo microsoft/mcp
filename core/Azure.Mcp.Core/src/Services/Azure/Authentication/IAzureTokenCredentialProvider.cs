@@ -10,7 +10,7 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// <summary>
 /// Providers instances of <see cref="TokenCredential"/> appropriate for the current environment.
 /// Implementations are expected to be of <see cref="ServiceLifetime.Singleton"/>, however, in
-/// multi-user enviornments using on-behalf-of downstream authentication, the implementation
+/// multi-user environments using on-behalf-of downstream authentication, the implementation
 /// must return credentials within the context of the user in the current execution context.
 /// </summary>
 /// <remarks>

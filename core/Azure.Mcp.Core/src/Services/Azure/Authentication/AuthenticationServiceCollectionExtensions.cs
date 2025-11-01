@@ -23,7 +23,7 @@ public static class AuthenticationServiceCollectionExtensions
     /// <para>
     /// This method registers the single identity token credential provider which uses the hosting
     /// environment's identity (e.g., a Managed Identity or a user principal using Azure CLI, Visual
-	/// Studio, etc.).
+    /// Studio, etc.).
     /// </para>
     /// This method will not override any existing <see cref="IAzureTokenCredentialProvider"/>
     /// registration. It can be overridden as needed for on-behalf-of web APIs using

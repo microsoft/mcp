@@ -26,14 +26,13 @@ public interface ITenantService
     /// </summary>
     /// <param name="tenantIdOrName">The tenant ID or tenant name.</param>
     /// <returns>
-    /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
-    /// if not found.
+    /// A task representing the asynchronous operation resulting in a tenant ID.
     /// </returns>
     /// <exception cref="Exception">
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantId(string tenantIdOrName);
 
@@ -42,14 +41,13 @@ public interface ITenantService
     /// </summary>
     /// <param name="tenantName">The tenant name.</param>
     /// <returns>
-    /// A task representing the asynchronous operation, with the tenant ID or <see langword="null"/>
-    /// if not found.
+    /// A task representing the asynchronous operation resulting in a tenant ID.
     /// </returns>
     /// <exception cref="Exception">
     /// Thrown when a tenant with the specified name is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> TenantId.
+    /// Thrown when the tenant has a <see langword="null"/> TenantId.
     /// </exception>
     Task<string> GetTenantIdByName(string tenantName);
 
@@ -58,13 +56,13 @@ public interface ITenantService
     /// </summary>
     /// <param name="tenantId">The tenant ID.</param>
     /// <returns>
-    /// A task representing the asynchronous operation, with the tenant name or <see langword="null"/> if not found.
+    /// A task representing the asynchronous operation with the tenant name.
     /// </returns>
     /// <exception cref="Exception">
     /// Thrown when a tenant with the specified ID is not found.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when the tenant has a <see langword="null"> DisplayName.
+    /// Thrown when the tenant has a <see langword="null"/> DisplayName.
     /// </exception>
     Task<string> GetTenantNameById(string tenantId);
 

@@ -36,19 +36,17 @@ public class HttpOnBehalfOfTokenCredentialProvider : IAzureTokenCredentialProvid
                 "The current HTTP request must be authenticated to make an on-behalf-of token request.");
         }
 
-        if (tenantId is not null)
+        if (tenantId is not null
+            && httpContext.User.FindFirst("tid")?.Value is string tidClaim
+            && tidClaim != tenantId)
         {
-            if (httpContext.User.FindFirst("tid")?.Value is string tidClaim
-                && tidClaim != tenantId)
-            {
-                _logger.LogWarning(
-                    "The requested token tenant '{GetTokenTenant}' does not match the tenant of the authenticated user '{TidClaim}'. Going to throw.",
-                    tenantId,
-                    tidClaim);
+            _logger.LogWarning(
+                "The requested token tenant '{GetTokenTenant}' does not match the tenant of the authenticated user '{TidClaim}'. Going to throw.",
+                tenantId,
+                tidClaim);
 
-                throw new InvalidOperationException(
-                    $"The requested token tenant '{tenantId}' does not match the tenant of the authenticated user '{tidClaim}'.");
-            }
+            throw new InvalidOperationException(
+                $"The requested token tenant '{tenantId}' does not match the tenant of the authenticated user '{tidClaim}'.");
         }
 
         // MicrosoftIdentityTokenCredential is registered as scoped, so we

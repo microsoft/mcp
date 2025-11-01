@@ -29,8 +29,8 @@ public static class TenantServiceCollectionExtensions
     /// <list type="bullet">
     /// <item>
     /// <description>
-    /// <see cref="IAzureTokenCredentialProvider"/> via <see cref="Authentication.AuthenticationServiceCollectionExtensions.AddSingleIdentityTokenCredentialProvider"/>.
-    /// This can be overridden using <see cref="Authentication.AuthenticationServiceCollectionExtensions.AddAzureTokenCredentialProvider"/>
+    /// <see cref="IAzureTokenCredentialProvider"/> via <see cref="AuthenticationServiceCollectionExtensions.AddSingleIdentityTokenCredentialProvider"/>.
+    /// This can be overridden using <see cref="AuthenticationServiceCollectionExtensions.AddHttpOnBehalfOfTokenCredentialProvider"/>
     /// based on parsed command line arguments and environment variables.
     /// </description>
     /// </item>

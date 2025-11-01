@@ -80,7 +80,7 @@ public class TenantService : BaseAzureService, ITenantService
         if (tenantId == null)
             throw new InvalidOperationException($"Tenant {tenantName} has a null TenantId");
 
-        return tenantId.ToString();
+        return tenantId;
     }
 
     /// <inheritdoc/>
