@@ -71,7 +71,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
@@ -113,7 +112,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -156,7 +154,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -214,7 +211,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         Assert.NotNull(resultObj);
         Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -255,7 +251,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
@@ -287,7 +282,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
         // Assert
         Assert.NotNull(result);
-        Output.WriteLine("Recognition Result: " + result);
+
         var resultText = result.ToString();
         Assert.NotNull(resultText);
         Assert.Contains("Invalid endpoint or connectivity issue.", resultText, StringComparison.OrdinalIgnoreCase);
@@ -318,7 +313,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-            Output.WriteLine("Recognition Result: " + result);
 
             // STRICT REQUIREMENT: Speech recognition must return a result
             Assert.NotNull(resultObj);
@@ -363,7 +357,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             using var doc = JsonDocument.Parse(result.Value.GetRawText());
             var inner = doc.RootElement.GetProperty("result").GetRawText();
             var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-            Output.WriteLine("Recognition Result: " + result);
 
             Assert.NotNull(resultObj);
             Assert.Equal(RecognizerType.Realtime, resultObj.RecognizerType);
@@ -466,7 +459,6 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         using var doc = JsonDocument.Parse(result.Value.GetRawText());
         var inner = doc.RootElement.GetProperty("result").GetRawText();
         var resultObj = JsonSerializer.Deserialize<SpeechRecognitionResult>(inner);
-        Output.WriteLine("Recognition Result: " + result);
 
         // STRICT REQUIREMENT: Speech recognition must return a result
         Assert.NotNull(resultObj);
