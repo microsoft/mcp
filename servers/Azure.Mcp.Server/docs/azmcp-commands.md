@@ -179,7 +179,9 @@ The `azmcp server start` command supports the following options:
 | `--namespace` | No | All namespaces | Specific Azure service namespaces to expose (can be repeated). Works with all exiting modes to filter tools. |
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
-| `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--debug` | No | `false` | Enable debug logging to stderr (Debug level) |
+| `--log-level` | No | `Information` | Set logging level: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical` |
+| `--log-file` | No | None | Write logs to specified file path. Supports `{timestamp}` and `{pid}` placeholders |
 | `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
@@ -196,6 +198,56 @@ The `azmcp server start` command supports the following options:
 > # For automated scenarios only - bypasses security prompts
 > azmcp server start --insecure-disable-elicitation
 > ```
+
+#### Enhanced Logging Configuration
+
+The Azure MCP Server uses standard ASP.NET Core logging configuration for debugging and troubleshooting:
+
+```bash
+# Enable debug logging to stderr (Debug level)
+azmcp server start --debug
+
+# Set specific log level for maximum detail (Trace level)
+azmcp server start --log-level Trace
+
+# Write logs to a file with timestamp and process ID
+azmcp server start --log-file "C:\temp\azmcp_{timestamp}_{pid}.log"
+
+# Combine maximum logging with file output
+azmcp server start --log-level Trace --log-file "/tmp/azmcp_{timestamp}_{pid}.log"
+```
+
+**Configuration via appsettings.json:**
+```json
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Debug",
+      "Microsoft": "Warning"
+    }
+  }
+}
+```
+
+**Configuration via Environment Variables:**
+```bash
+# Set log levels using standard ASP.NET Core environment variables
+export LOGGING__LOGLEVEL__DEFAULT=Trace
+export LOGGING__LOGLEVEL__MICROSOFT=Warning
+
+# Set file logging path
+export AZMCP_LOG_FILE=C:\temp\debug.log
+
+azmcp server start
+```
+
+**Available Log Levels:** `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`
+
+**Environment Variables:**
+- `AZMCP_LOG_LEVEL`: Set log level (Trace, Debug, Information, Warning, Error, Critical)
+- `AZMCP_LOG_FILE`: File path for log output
+- `LOGGING__LOGLEVEL__DEFAULT`: Set default log level using standard ASP.NET Core format
+- `LOGGING__FILE__PATH`: File path for log output using standard ASP.NET Core format
 
 ### Azure AI Foundry Operations
 

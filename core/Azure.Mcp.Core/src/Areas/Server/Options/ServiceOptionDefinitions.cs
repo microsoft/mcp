@@ -13,6 +13,8 @@ public static class ServiceOptionDefinitions
     public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
+    public const string LogLevelName = "log-level";
+    public const string LogFileName = "log-file";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -82,5 +84,19 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
         DefaultValueFactory = _ => false
+    };
+
+    public static readonly Option<string?> LogLevel = new($"--{LogLevelName}")
+    {
+        Required = false,
+        Description = "Set logging level: Trace, Debug, Information, Warning, Error, Critical. Default is 'Information'.",
+        DefaultValueFactory = _ => null
+    };
+
+    public static readonly Option<string?> LogFile = new($"--{LogFileName}")
+    {
+        Required = false,
+        Description = "Write logs to specified file path. Supports {timestamp} and {pid} placeholders.",
+        DefaultValueFactory = _ => null
     };
 }
