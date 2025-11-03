@@ -59,27 +59,27 @@ function Get-ToolMetadataString {
     
     # Order: destructive, idempotent, openWorld, readOnly, secret, localRequired
     if ($null -ne $Metadata.destructive) {
-        $lines += Get-MetadataLine "destructive" $Metadata.destructive
+        $lines += Get-MetadataLine "destructive" $Metadata.destructive.value
     }
     
     if ($null -ne $Metadata.idempotent) {
-        $lines += Get-MetadataLine "idempotent" $Metadata.idempotent
+        $lines += Get-MetadataLine "idempotent" $Metadata.idempotent.value
     }
     
     if ($null -ne $Metadata.openWorld) {
-        $lines += Get-MetadataLine "openWorld" $Metadata.openWorld
+        $lines += Get-MetadataLine "openWorld" $Metadata.openWorld.value
     }
     
     if ($null -ne $Metadata.readOnly) {
-        $lines += Get-MetadataLine "readOnly" $Metadata.readOnly
+        $lines += Get-MetadataLine "readOnly" $Metadata.readOnly.value
     }
     
     if ($null -ne $Metadata.secret) {
-        $lines += Get-MetadataLine "secret" $Metadata.secret
+        $lines += Get-MetadataLine "secret" $Metadata.secret.value
     }
     
     if ($null -ne $Metadata.localRequired) {
-        $lines += Get-MetadataLine "localRequired" $Metadata.localRequired
+        $lines += Get-MetadataLine "localRequired" $Metadata.localRequired.value
     }
     
     if ($lines.Count -gt 0) {

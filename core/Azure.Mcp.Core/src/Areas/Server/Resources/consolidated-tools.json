@@ -4,12 +4,30 @@
       "name": "get_azure_subscriptions_and_resource_groups",
       "description": "Get information about Azure subscriptions and resource groups that the user has access to.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "group_list",
@@ -20,12 +38,30 @@
       "name": "get_azure_app_resource_details",
       "description": "Get details about Azure application platform services, such as Azure Functions.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "functionapp_get"
@@ -35,12 +71,30 @@
       "name": "add_azure_app_service_database",
       "description": "Add and configure database integrations for Azure App Service applications.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": true,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "appservice_database_add"
@@ -50,12 +104,30 @@
       "name": "get_azure_databases_details",
       "description": "Comprehensive Azure database management tool for MySQL, PostgreSQL, SQL Database, SQL Server, and Cosmos DB. List and query databases, retrieve server configurations and parameters, explore table schemas, execute database queries, manage Cosmos DB containers and items, list and view detailed information about SQL servers, and view database server details across all Azure database services.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "mysql_database_list",
@@ -86,12 +158,30 @@
       "name": "create_azure_sql_databases_and_servers",
       "description": "Create new Azure SQL databases and SQL servers with configurable performance tiers and settings.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "sql_db_create",
@@ -102,12 +192,30 @@
       "name": "rename_azure_sql_databases",
       "description": "Rename Azure SQL databases to a new name within the same SQL server.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "sql_db_rename"
@@ -117,12 +225,30 @@
       "name": "edit_azure_sql_databases_and_servers",
       "description": "Update and delete Azure SQL databases and SQL servers. Modify database configurations or permanently remove servers and databases.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "sql_db_update",
@@ -134,12 +260,30 @@
       "name": "edit_azure_databases",
       "description": "Edit Azure MySQL and PostgreSQL database server parameters",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "mysql_server_param_set",
@@ -150,12 +294,30 @@
       "name": "get_azure_resource_and_app_health_status",
       "description": "Get Azure resource and application health status, metrics, availability, and service health events. Query Log Analytics, list Log Analytics workspaces, list activity logs, get the current availability status of Azure resources, list service health events and incidents, list Grafana instances, view Datadog monitored resources, perform App Lens diagnostics for comprehensive application troubleshooting, retrieve Application Insights recommendations for performance optimization, manage web tests for application monitoring, and get health status of entities in Azure Monitor health models.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "applicationinsights_recommendation_list",
@@ -182,12 +344,30 @@
       "name": "create_azure_monitor_webtests",
       "description": "Create Azure Monitor web tests for application availability monitoring.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "monitor_webtests_create"
@@ -197,12 +377,30 @@
       "name": "update_azure_monitor_webtests",
       "description": "Update Azure Monitor web tests for application availability monitoring.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "monitor_webtests_update"
@@ -212,12 +410,30 @@
       "name": "deploy_azure_resources_and_applications",
       "description": "Deploy resources and applications to Azure. Retrieve application logs, access Bicep and Terraform rules, get CI/CD pipeline guidance, and generate deployment plans.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "deploy_app_logs_get",
@@ -230,12 +446,30 @@
       "name": "deploy_azure_ai_models",
       "description": "Deploy AI models to Azure AI Foundry for machine learning inference and production use.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "foundry_models_deploy"
@@ -245,12 +479,30 @@
       "name": "get_azure_app_config_settings",
       "description": "Get details about Azure App Configuration settings",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "appconfig_account_list",
@@ -261,12 +513,30 @@
       "name": "edit_azure_app_config_settings",
       "description": "Delete or set Azure App Configuration settings with write operations.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "appconfig_kv_delete",
@@ -277,12 +547,30 @@
       "name": "lock_unlock_azure_app_config_settings",
       "description": "Lock and unlock Azure App Configuration settings",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "appconfig_kv_lock_set"
@@ -292,12 +580,30 @@
       "name": "edit_azure_workbooks",
       "description": "Update or delete Azure Monitor Workbooks",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "workbooks_delete",
@@ -308,12 +614,30 @@
       "name": "create_azure_workbooks",
       "description": "Create new Azure Monitor Workbooks",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "workbooks_create"
@@ -323,12 +647,30 @@
       "name": "get_azure_workbooks_details",
       "description": "Get details about Azure Monitor Workbooks including listing workbooks and viewing specific workbook configurations.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "workbooks_list",
@@ -339,12 +681,30 @@
       "name": "audit_azure_resources_compliance",
       "description": "Generate compliance and security audit reports for Azure resources using Azure Quick Review (azqr).",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "extension_azqr"
@@ -354,12 +714,30 @@
       "name": "generate_azure_cli_commands",
       "description": "Generate Azure CLI commands from natural language descriptions to help answer questions about Azure environments and operations",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "extension_cli_generate"
@@ -369,12 +747,30 @@
       "name": "install_azure_cli_extensions",
       "description": "Install Azure CLI extensions to extend Azure CLI functionality with additional commands and features.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": true
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution environment or local resources to function properly."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "extension_cli_install"
@@ -384,12 +780,30 @@
       "name": "get_azure_security_configurations",
       "description": "List Azure RBAC role assignments",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "role_assignment_list"
@@ -399,12 +813,30 @@
       "name": "get_azure_key_vault_items",
       "description": "View and retrieve Azure Key Vault security artifacts, including certificates, keys (both listing and individual key details), secret names and properties (listing only, not secret values), and admin settings.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "keyvault_certificate_get",
@@ -419,12 +851,30 @@
       "name": "get_azure_key_vault_secret_values",
       "description": "Retrieve the actual secret values from Azure Key Vault. Use this tool when you need to access the sensitive content of a secret, not just its metadata or properties.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": true,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "keyvault_secret_get"
@@ -434,12 +884,30 @@
       "name": "create_azure_key_vault_items",
       "description": "Create new security artifacts in Azure Key Vault including certificates and keys.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "keyvault_certificate_create",
@@ -450,12 +918,30 @@
       "name": "create_azure_key_vault_secrets",
       "description": "Create new secrets in Azure Key Vault.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": true,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": true,
+          "description": "This tool handles sensitive data such as secrets, credentials, keys, or other confidential information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "keyvault_secret_create"
@@ -465,12 +951,30 @@
       "name": "import_azure_key_vault_certificates",
       "description": "Import external certificates into Azure Key Vault",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": true
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution environment or local resources to function properly."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "keyvault_certificate_import"
@@ -480,12 +984,30 @@
       "name": "get_azure_best_practices",
       "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "azureterraformbestpractices_get",
@@ -497,12 +1019,30 @@
       "name": "design_azure_architecture",
       "description": "Comprehensive Azure architecture design and visualization tool. Provide cloud architecture consulting and recommend optimal Azure solutions following Well-Architected Framework principles. Also generates visual Mermaid diagrams from application topologies.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "cloudarchitect_design",
@@ -513,12 +1053,30 @@
       "name": "get_azure_load_testing_details",
       "description": "Get Azure Load Testing test configurations, results, and test resources including listing load testing resources.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "loadtesting_testresource_list",
@@ -531,12 +1089,30 @@
       "name": "create_azure_load_testing",
       "description": "Create Load Testing resource or execute Azure Load Testing tests.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "loadtesting_test_create",
@@ -548,12 +1124,30 @@
       "name": "update_azure_load_testing_configurations",
       "description": "Update Azure Load Testing configurations and test run settings.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "loadtesting_testrun_update"
@@ -563,12 +1157,30 @@
       "name": "get_azure_ai_resources_details",
       "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, knowledge base and source information, and listing AI Foundry agents and resources.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "search_service_list",
@@ -589,12 +1201,30 @@
       "name": "retrieve_azure_ai_knowledge_base_content",
       "description": "Retrieve content from Azure AI Search knowledge bases using semantic search queries to find relevant information.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": true,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "search_knowledge_base_retrieve"
@@ -604,12 +1234,30 @@
       "name": "use_azure_openai_models",
       "description": "Generate text completions, chat responses, and embeddings using Azure OpenAI models in AI Foundry. Create conversational AI interactions and vector embeddings for semantic search and analysis.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "foundry_openai_create-completion",
@@ -621,12 +1269,30 @@
       "name": "connect_azure_ai_foundry_agents",
       "description": "Connect to Azure AI Foundry agents for establishing agent connections and communication channels.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": true,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "foundry_agents_connect"
@@ -636,12 +1302,30 @@
       "name": "query_and_evaluate_azure_ai_foundry_agents",
       "description": "Query Azure AI Foundry agents with prompts and evaluate their responses using various metrics for comprehensive performance assessment.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": true,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "foundry_agents_query-and-evaluate"
@@ -651,12 +1335,30 @@
       "name": "evaluate_azure_ai_foundry_agents",
       "description": "Evaluate Azure AI Foundry agents for performance assessment and testing of agent capabilities using evaluation metrics.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "foundry_agents_evaluate"
@@ -666,12 +1368,30 @@
       "name": "get_azure_storage_details",
       "description": "Get details about Azure Storage resources including Storage accounts, blob containers, and blob data. Also manage Azure Managed Lustre (AMLFS) filesystems: list filesystems with provisioning state and capacity, retrieve available SKUs with bandwidth and scale targets, calculate required subnet sizes for deployment planning, and validate subnet configurations against SKU and size requirements.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "managedlustre_fs_list",
@@ -687,12 +1407,30 @@
       "name": "create_azure_storage",
       "description": "Create Azure Storage accounts, blob containers, and Azure Managed Lustre filesystems.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "storage_account_create",
@@ -704,12 +1442,30 @@
       "name": "update_azure_managed_lustre_filesystems",
       "description": "Update existing Azure Managed Lustre filesystem configurations.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "managedlustre_fs_update"
@@ -719,12 +1475,30 @@
       "name": "upload_azure_storage_blobs",
       "description": "Upload files and data to Azure Storage blob containers.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": true
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution environment or local resources to function properly."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "storage_blob_upload"
@@ -734,12 +1508,30 @@
       "name": "get_azure_cache_for_redis_details",
       "description": "Get details about Azure Redis resources including Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "redis_list"
@@ -749,12 +1541,30 @@
       "name": "browse_azure_marketplace_products",
       "description": "Browse products and offers in the Azure Marketplace",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "marketplace_product_list",
@@ -765,12 +1575,30 @@
       "name": "get_azure_capacity",
       "description": "Check Azure resource capacity, quotas, available regions, and usage limits",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "quota_region_availability_list",
@@ -781,12 +1609,30 @@
       "name": "get_azure_messaging_service_details",
       "description": "Get details about Azure messaging services including Service Bus queues, topics, subscriptions, Event Grid topics and subscriptions, and Event Hubs namespaces, event hubs, consumer groups, and streaming event ingestion resources.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "eventgrid_topic_list",
@@ -803,12 +1649,30 @@
       "name": "edit_azure_data_analytics_resources",
       "description": "Update and delete Azure Event Hubs resources including namespaces, event hubs, and consumer groups.",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "eventhubs_namespace_update",
@@ -823,12 +1687,30 @@
       "name": "publish_azure_eventgrid_events",
       "description": "Publish custom events to Azure Event Grid topics for event-driven architectures with schema validation and delivery guarantees.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "eventgrid_events_publish"
@@ -838,12 +1720,30 @@
       "name": "get_azure_data_explorer_kusto_details",
       "description": "Get details about Azure Data Explorer (Kusto). List clusters, execute KQL queries, manage databases, explore table schemas, and get data samples.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "kusto_cluster_list",
@@ -859,12 +1759,30 @@
       "name": "create_azure_database_admin_configurations",
       "description": "Create Azure SQL Server firewall rules",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "sql_server_firewall-rule_create"
@@ -874,12 +1792,30 @@
       "name": "delete_azure_database_admin_configurations",
       "description": "Delete Azure SQL Server firewall rules",
       "toolMetadata": {
-        "destructive": true,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": true,
+          "description": "This tool may delete or modify existing resources in its environment."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "sql_server_firewall-rule_delete"
@@ -889,12 +1825,30 @@
       "name": "get_azure_database_admin_configuration_details",
       "description": "Get details about Azure SQL Server Administration configurations including elastic pools, Entra admin assignments, and firewall rules.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "sql_elastic-pool_list",
@@ -906,12 +1860,30 @@
       "name": "get_azure_container_details",
       "description": "Get details about Azure container services including Azure Container Registry (ACR) and Azure Kubernetes Service (AKS). View registries, repositories, nodepools, clusters, cluster configurations, and individual nodepool details.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "acr_registry_list",
@@ -924,12 +1896,30 @@
       "name": "get_azure_virtual_desktop_details",
       "description": "Get details about Azure Virtual Desktop resources. List host pools in subscriptions or resource groups. Retrieve session hosts (virtual machines) within host pools including their status, availability, and configuration. View active user sessions on session hosts with details such as user principal name, session state, application type, and creation time.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "virtualdesktop_hostpool_list",
@@ -941,12 +1931,30 @@
       "name": "get_azure_signalr_details",
       "description": "Get details about Azure SignalR Service resources including runtime information, identity, network ACLs, and upstream templates.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "signalr_runtime_get"
@@ -956,12 +1964,30 @@
       "name": "get_azure_confidential_ledger_entries",
       "description": "Retrieve tamper-proof entries from Azure Confidential Ledger instances.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "confidentialledger_entries_get"
@@ -971,12 +1997,30 @@
       "name": "append_azure_confidential_ledger_entries",
       "description": "Append tamper-proof entries to Azure Confidential Ledger instances and retrieve transaction identifiers.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "confidentialledger_entries_append"
@@ -986,12 +2030,30 @@
       "name": "send_azure_communication_messages",
       "description": "Send SMS and email messages to one or more recipients using Azure Communication Services with delivery status tracking.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": true,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": false
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool can operate remotely without local dependencies."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": true,
+          "description": "This tool may interact with an unpredictable or dynamic set of external entities."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        }
       },
       "mappedToolList": [
         "communication_sms_send",
@@ -1002,12 +2064,30 @@
       "name": "recognize_speech_from_audio",
       "description": "Convert speech from audio files to text using Azure AI Services Speech recognition. Supports various audio formats including WAV, MP3, OPUS/OGG, FLAC, and more.",
       "toolMetadata": {
-        "destructive": false,
-        "idempotent": true,
-        "openWorld": false,
-        "readOnly": true,
-        "secret": false,
-        "localRequired": true
+        "readOnly": {
+          "value": true,
+          "description": "This tool only performs read operations without modifying any state or data."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool requires local execution environment or local resources to function properly."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        }
       },
       "mappedToolList": [
         "speech_stt_recognize"
