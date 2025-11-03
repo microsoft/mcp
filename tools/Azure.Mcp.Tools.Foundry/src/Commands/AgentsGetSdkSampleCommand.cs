@@ -8,7 +8,7 @@ using Azure.Mcp.Tools.Foundry.Services;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
-public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions>
+public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
 {
     private const string CommandTitle = "Get code samples to interact with a Foundry Agent using AI Foundry SDK and programming language of your choice";
     public override string Id => "38cc4070-6704-49be-af1b-be55aec8d6d6";
@@ -37,8 +37,10 @@ public class AgentsGetSdkSampleCommand : GlobalCommand<AgentsGetSdkSampleOptions
 
     protected override AgentsGetSdkSampleOptions BindOptions(ParseResult parseResult)
     {
-        var options = base.BindOptions(parseResult);
-        options.ProgrammingLanguage = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ProgrammingLanguageOption);
+        var options = new AgentsGetSdkSampleOptions
+        {
+            ProgrammingLanguage = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ProgrammingLanguageOption)
+        };
         return options;
     }
 
