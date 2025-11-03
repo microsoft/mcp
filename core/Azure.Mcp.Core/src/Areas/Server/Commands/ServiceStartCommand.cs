@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
+using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -447,6 +448,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             services.AddSingleIdentityTokenCredentialProvider();
         }
 
+        // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
+        services.AddHttpServiceCacheService();
+
+
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
 
@@ -581,6 +586,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure services
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
+
+        // We still use the multi-user, HTTP context-aware caching strategy here
+        // because we don't yet know what security model we want for this "insecure" mode.
+        // As a positive, it gives some isolation locally, but that's not a
+        // design strategy we've fully vetted or endorsed.
+        services.AddHttpServiceCacheService();
 
         WebApplication app = builder.Build();
 
