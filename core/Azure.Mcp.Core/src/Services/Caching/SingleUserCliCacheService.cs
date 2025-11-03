@@ -6,7 +6,19 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace Azure.Mcp.Core.Services.Caching;
 
-public class CacheService(IMemoryCache memoryCache) : ICacheService
+/// <summary>
+/// An implementation of <see cref="ICacheService"/> for single-user CLI scenarios using in-memory caching.
+/// </summary>
+/// <param name="memoryCache">A memory cache.</param>
+/// <remarks>
+/// <para>
+/// Do not instantiate directly. Use <see cref="CachingServiceCollectionExtensions.AddSingleUserCliCacheService"/>.
+/// </para>
+/// <para>
+/// For multi-user web API scenarios, use <see cref="HttpServiceCacheService"/>.
+/// </para>
+/// </remarks>
+public class SingleUserCliCacheService(IMemoryCache memoryCache) : ICacheService
 {
     private readonly IMemoryCache _memoryCache = memoryCache;
     private static readonly ConcurrentDictionary<string, HashSet<string>> s_groupKeys = new();

@@ -13,8 +13,6 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public class PostgresService : BaseAzureService, IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
 
     public PostgresService(
         IResourceGroupService resourceGroupService,
@@ -24,22 +22,14 @@ public class PostgresService : BaseAzureService, IPostgresService
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     }
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken = default)
     {
-        if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedEntraIdAccessToken;
-        }
-
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-        _cachedEntraIdAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
+        TokenCredential tokenCredential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, cancellationToken);
 
-        return _cachedEntraIdAccessToken;
+        return accessToken.Token;
     }
 
     private static string NormalizeServerName(string server)

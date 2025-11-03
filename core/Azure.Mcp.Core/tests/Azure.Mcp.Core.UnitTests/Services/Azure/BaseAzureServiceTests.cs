@@ -30,7 +30,7 @@ public class BaseAzureServiceTests
     }
 
     [Fact]
-    public async Task CreateArmClientAsync_CreatesAndUsesCachedClient()
+    public async Task CreateArmClientAsync_DoesNotReuseClient()
     {
         // Act
         var tenantName2 = "Other-Tenant-Name";
@@ -48,11 +48,15 @@ public class BaseAzureServiceTests
         var client = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
         var client2 = await _azureService.GetArmClientAsync(TenantName, retryPolicyArgs);
 
-        Assert.Equal(client, client2);
+        Assert.NotEqual(client, client2);
 
         var otherClient = await _azureService.GetArmClientAsync(tenantName2, retryPolicyArgs);
 
         Assert.NotEqual(client, otherClient);
+
+        // Not tested: we'd like to, but can't, verify the TokenCredential is reused
+        // between client and client2 but NOT with otherClient. ArmClient doesn't expose
+        // the credential nor the HttpPipeline the credential is included within.
     }
 
     [Fact]

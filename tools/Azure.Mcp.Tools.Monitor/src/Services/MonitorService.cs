@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Net.Http.Headers;
-using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Core;
 using Azure.Mcp.Core.Options;
@@ -30,11 +29,6 @@ public class MonitorService(
     private const string ActivityLogApiVersion = "2017-03-01-preview";
     private const string ActivityLogEndpointFormat
         = "https://management.azure.com/subscriptions/{0}/providers/Microsoft.Insights/eventtypes/management/values";
-
-    // Token caching fields
-    private string? _cachedManagementToken;
-    private DateTimeOffset _managementTokenExpiryTime;
-    private const int TokenExpirationBufferSeconds = 300; // 5 minutes buffer
 
     public async Task<List<JsonNode>> QueryResourceLogs(
         string subscription,
@@ -391,7 +385,7 @@ public class MonitorService(
                 ?? throw new ArgumentException($"Unable to extract subscription ID from resource ID: {resourceId}");
 
             // Get the activity logs from the Azure Management API
-            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy);
+            var activityLogs = await CallActivityLogApiAsync(subscriptionId, resourceId, hours, eventLevel, tenant, retryPolicy, CancellationToken.None);
 
             // Take only the requested number of logs
             return activityLogs.Take(top).ToList();
@@ -408,7 +402,8 @@ public class MonitorService(
         double hours,
         ActivityLogEventLevel? eventLevel,
         string? tenant,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         var returnValue = new List<ActivityLogEventData>();
 
@@ -433,14 +428,16 @@ public class MonitorService(
         query += $"&$filter={Uri.EscapeDataString(filter)}";
         uriBuilder.Query = query;
 
-        // Get cached access token
-        var tokenString = await GetCachedManagementTokenAsync(tenant);
+        TokenCredential credential = await GetCredential(tenant, cancellationToken);
+        AccessToken accessToken = await credential.GetTokenAsync(
+            new TokenRequestContext(["https://management.azure.com/.default"]),
+            cancellationToken);
 
         // Make paginated requests
         string? nextRequestUrl = uriBuilder.Uri.ToString();
         do
         {
-            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, tokenString);
+            ActivityLogListResponse listResponse = await MakeActivityLogRequestAsync(nextRequestUrl, accessToken.Token);
             returnValue.AddRange(listResponse.Value);
             nextRequestUrl = listResponse.NextLink;
         } while (!string.IsNullOrEmpty(nextRequestUrl));
@@ -510,17 +507,5 @@ public class MonitorService(
         }
 
         return (matchingWorkspace.CustomerId, matchingWorkspace.Name);
-    }
-
-    private async Task<string> GetCachedManagementTokenAsync(string? tenant)
-    {
-        return await GetCachedTokenAsync(
-            "https://management.azure.com",
-            () => _cachedManagementToken,
-            token => _cachedManagementToken = token,
-            () => _managementTokenExpiryTime,
-            expiry => _managementTokenExpiryTime = expiry,
-            tenant,
-            TokenExpirationBufferSeconds);
     }
 }

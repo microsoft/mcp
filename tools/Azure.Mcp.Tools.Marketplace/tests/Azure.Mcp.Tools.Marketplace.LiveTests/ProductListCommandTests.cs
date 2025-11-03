@@ -24,7 +24,7 @@ public class ProductListCommandTests : CommandTestsBase
     public ProductListCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new CacheService(memoryCache);
+        var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
         var tenantService = new TenantService(tokenProvider, cacheService);
         _marketplaceService = new MarketplaceService(tenantService);
