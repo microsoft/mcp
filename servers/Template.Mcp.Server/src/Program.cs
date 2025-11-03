@@ -119,10 +119,10 @@ internal class Program
     /// <para>
     /// This large doc comment is copy/pasta in each Program.cs file of this repo, so if
     /// you're reading this, please keep them in sync and/or add specific warnings per
-    /// project if needed. Below is the of known differences:
+    /// project if needed. Below is the list of known differences:
     /// </para>
     /// <list type="bullet">
-    /// <item>No differences. This is also copy/pasta as a placeholder for this project.</item>
+    /// <item>Template's Program.cs doesn't add ITenantService.</item>
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>

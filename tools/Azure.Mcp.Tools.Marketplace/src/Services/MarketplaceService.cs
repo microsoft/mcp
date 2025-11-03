@@ -71,7 +71,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="select">OData select expression. Renamed from 'select' to avoid reserved word.</param>
     /// <param name="nextCursor">Pagination cursor.</param>
     /// <param name="expand">OData expand expression to include related data.</param>
-    /// <param name="tenant">Optional. The Azure tenantId ID for authentication.</param>
+    /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A list of ProductSummary objects containing the marketplace products.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
@@ -85,14 +85,14 @@ public class MarketplaceService(ITenantService tenantService)
         string? select = null,
         string? nextCursor = null,
         string? expand = null,
-        string? tenant = null,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
-        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenant, retryPolicy);
+        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy);
     }
 
     private static string BuildProductsListUrl(
