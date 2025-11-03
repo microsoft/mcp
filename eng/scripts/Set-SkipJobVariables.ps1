@@ -31,15 +31,12 @@ if ($changedFiles) {
     $changedFiles | ForEach-Object {
     Write-Host "Checking file: $_"
     $fileName = [System.IO.Path]::GetFileName($_)
+    Write-Host "  -> File name: $fileName"
     $isSkipFile = $skipFiles -contains $fileName
 
-    $relativeFile = $_ -replace [regex]::Escape($RepoRoot), ''
-    $relativeFile = $relativeFile.TrimStart('/')
-
-    Write-Host "  -> Relative file path: $relativeFile"
     $isInSkipDirectory = $false
     foreach ($dir in $skipDirectories) {
-        if ($relativeFile.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
+        if ($_.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
             $isInSkipDirectory = $true
             break
         }
