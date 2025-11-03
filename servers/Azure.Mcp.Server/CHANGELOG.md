@@ -10,7 +10,13 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+- Use assembly's `InformationalVersion` rather than its `Version` when setting `AzureMcpServerConfiguration`. [[#1027](https://github.com/microsoft/mcp/pull/1027)]
+
 ### Other Changes
+
+- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 

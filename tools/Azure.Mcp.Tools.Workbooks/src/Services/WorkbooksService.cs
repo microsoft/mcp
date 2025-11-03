@@ -3,18 +3,17 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Workbooks.Models;
-using Microsoft.Extensions.Logging;
-
-namespace Azure.Mcp.Tools.Workbooks.Services;
-
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Workbooks.Models;
 using Azure.ResourceManager.ApplicationInsights;
 using Azure.ResourceManager.ApplicationInsights.Models;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
+using Microsoft.Extensions.Logging;
+
+namespace Azure.Mcp.Tools.Workbooks.Services;
 
 public class WorkbooksService(ISubscriptionService _subscriptionService, ITenantService tenantService, ILogger<WorkbooksService> logger) : BaseAzureService(tenantService), IWorkbooksService
 {

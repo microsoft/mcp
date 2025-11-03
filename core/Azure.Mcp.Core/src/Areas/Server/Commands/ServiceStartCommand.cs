@@ -3,15 +3,22 @@
 
 using System.CommandLine.Parsing;
 using System.Net;
+using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Telemetry;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+using Microsoft.Identity.Web;
+using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -69,6 +76,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.Debug);
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
+#if ENABLE_REMOTE
+        command.Options.Add(ServiceOptionDefinitions.RunAsRemoteHttpService);
+        command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
+#endif
         command.Validators.Add(commandResult =>
         {
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
@@ -78,6 +89,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
+#if ENABLE_REMOTE
+            ValidateOutgoingAuthStrategy(
+                commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name),
+                commandResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name),
+                commandResult);
+#endif
         });
     }
 
@@ -97,6 +114,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             mode = ModeTypes.All;
         }
 
+        var (runAsRemoteHttpService, outgoingAuthStrategy) = ResolveServiceModeAndAuthStrategy(parseResult);
+
         var options = new ServiceStartOptions
         {
             Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
@@ -106,7 +125,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             ReadOnly = parseResult.GetValueOrDefault<bool?>(ServiceOptionDefinitions.ReadOnly.Name),
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             EnableInsecureTransports = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name),
-            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name)
+            InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
+            RunAsRemoteHttpService = runAsRemoteHttpService,
+            OutgoingAuthStrategy = outgoingAuthStrategy
         };
         return options;
     }
@@ -246,6 +267,26 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
+    /// Validates that the outgoing authentication strategy is compatible with the hosting mode.
+    /// </summary>
+    /// <param name="runAsRemoteHttpService">Whether the server is running as a remote HTTP service.</param>
+    /// <param name="outgoingAuthStrategy">The outgoing authentication strategy.</param>
+    /// <param name="commandResult">Command result to update on failure.</param>
+    private static void ValidateOutgoingAuthStrategy(
+        bool runAsRemoteHttpService,
+        OutgoingAuthStrategy outgoingAuthStrategy,
+        CommandResult commandResult)
+    {
+        // UseOnBehalfOf is only valid when running as a remote HTTP service
+        if (!runAsRemoteHttpService && outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        {
+            commandResult.AddError($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication" +
+                $" strategy is only valid when running as a remote HTTP service " +
+                $"(--{ServiceOptionDefinitions.RunAsRemoteHttpServiceName}).");
+        }
+    }
+
+    /// <summary>
     /// Provides custom error messages for specific exception types to improve user experience.
     /// </summary>
     /// <param name="ex">The exception to format an error message for.</param>
@@ -258,6 +299,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Invalid mode option specified. Use --mode single, namespace, or all for the supported modes.",
         ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
+        ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
+            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires --{ServiceOptionDefinitions.RunAsRemoteHttpServiceName} to be enabled.",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
@@ -272,8 +315,14 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (serverOptions.EnableInsecureTransports)
         {
+            return CreateUnAuthenticatedHttpHost(serverOptions);
+        }
+#if ENABLE_REMOTE
+        else if (serverOptions.RunAsRemoteHttpService)
+        {
             return CreateHttpHost(serverOptions);
         }
+#endif
         else
         {
             return CreateStdioHost(serverOptions);
@@ -315,6 +364,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             })
             .ConfigureServices(services =>
             {
+                // Configure the outgoing authentication strategy.
+                services.AddSingleIdentityTokenCredentialProvider();
+
                 ConfigureServices(services);
                 ConfigureMcpServer(services, serverOptions);
             })
@@ -328,46 +380,216 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
     private IHost CreateHttpHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.ConfigureOpenTelemetryLogger();
+        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole();
+
+        IServiceCollection services = builder.Services;
+
+        // Configure outgoing and incoming authentication and authorization.
+        //
+        // Configure incoming authentication and authorization.
+        MicrosoftIdentityWebApiAuthenticationBuilderWithConfiguration authBuilder = services
+            .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+            .AddMicrosoftIdentityWebApi(builder.Configuration);
+
+        // Configure incoming auth JWT Bearer events for OAuth protected resource metadata.
+        services.Configure<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme, options =>
+        {
+            options.Events = new JwtBearerEvents
             {
-                logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
-                logging.AddEventSourceLogger();
-                logging.AddConsole();
-            })
-            .ConfigureWebHostDefaults(webBuilder =>
+                OnChallenge = context =>
+                {
+                    // Add resource_metadata parameter to WWW-Authenticate header
+                    if (!context.Response.HasStarted)
+                    {
+                        HttpRequest request = context.Request;
+                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                        // Modify the WWW-Authenticate header to include resource_metadata
+                        context.Response.Headers.WWWAuthenticate =
+                            $"Bearer realm=\"{request.Host}\", resource_metadata=\"{resourceMetadataUrl}\"";
+                    }
+                    return Task.CompletedTask;
+                }
+            };
+        });
+
+        // Configure authorization policy for MCP access.
+        services.AddAuthorizationBuilder()
+            .SetFallbackPolicy(null)
+            .AddPolicy("McpAccess", policy =>
             {
-                webBuilder.ConfigureServices(services =>
+                policy.RequireAuthenticatedUser();
+
+                // Naming conventions used based on well-known Microsoft services, like MS Graph:
+                // - Scopes for delegated permissions: Mcp.Tools.Verb
+                // - App roles for application permissions: Mcp.Tools.Verb.All
+                // As of Oct 2025, we only have ReadWrite as a verb, but this can be extended
+                // in the future as needed. Other scenarios that aren't "MCP" or "Tools" can
+                // also be added in the future as they become relevant.
+                policy.RequireScopeOrAppPermission(
+                    allowedScopeValues: ["Mcp.Tools.ReadWrite"],
+                    allowedAppPermissionValues: ["Mcp.Tools.ReadWrite.All"]);
+            });
+
+        // Configure outgoing authentication strategy
+        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        {
+            services.AddHttpOnBehalfOfTokenCredentialProvider(authBuilder);
+        }
+        else
+        {
+            services.AddSingleIdentityTokenCredentialProvider();
+        }
+
+        // Configure non-MCP controllers/endpoints/routes/etc.
+        services.AddHealthChecks();
+
+        // Configure CORS
+        // We're allowing all origins, methods, and headers to support any web
+        // browser clients.
+        // Non-browser clients are unaffected by CORS.
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+
+        // Configure services
+        ConfigureServices(services); // Our static callback hook
+        ConfigureMcpServer(services, serverOptions);
+
+        WebApplication app = builder.Build();
+
+        // Configure middleware pipeline
+        app.UseCors("AllowAll");
+        app.UseRouting();
+
+        // Add OAuth protected resource metadata middleware
+        //
+        app.Use(async (context, next) =>
+        {
+            if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
+                context.Request.Method == "GET")
+            {
+                IOptionsMonitor<MicrosoftIdentityOptions> azureAdOptionsMonitor = context
+                    .RequestServices
+                    .GetRequiredService<IOptionsMonitor<MicrosoftIdentityOptions>>();
+                MicrosoftIdentityOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
+                HttpRequest request = context.Request;
+                string baseUrl = $"{request.Scheme}://{request.Host}";
+                string? clientId = azureAdOptions.ClientId;
+                string? tenantId = azureAdOptions.TenantId;
+                string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
+
+                var metadata = new OAuthProtectedResourceMetadata
                 {
-                    services.AddCors(options =>
-                    {
-                        options.AddPolicy("AllowAll", policy =>
-                        {
-                            policy.AllowAnyOrigin()
-                                  .AllowAnyMethod()
-                                  .AllowAnyHeader();
-                        });
-                    });
+                    Resource = baseUrl,
+                    AuthorizationServers = [$"{instance}/{tenantId}/v2.0"],
 
-                    ConfigureServices(services);
-                    ConfigureMcpServer(services, serverOptions);
-                });
+                    // Only delegated permissions for user principal authorization is listed here.
+                    // Client with users send these scopes to the identity platform to acquire an
+                    // access token.
+                    // However, special to Entra, service principals are expected to always
+                    // request the special `app-id/.default` scope because service principals use
+                    // app roles/app permissions instead of scopes. At time of writing (Oct 2025),
+                    // we don't solve this problem here. Instead we expect any service principal
+                    // clients to be hardcoded to use the `app-id/.default` scope when requesting
+                    // access tokens for our endpoint and for the owners of the client and MCP
+                    // server's service principals to ensure the necessary app roles are assigned
+                    // upfront.
+                    ScopesSupported = [$"{clientId}/Mcp.Tools.ReadWrite"],
+                    BearerMethodsSupported = ["header"],
 
-                webBuilder.Configure(app =>
-                {
-                    app.UseCors("AllowAll");
-                    app.UseRouting();
-                    app.UseEndpoints(endpoints =>
-                    {
-                        endpoints.MapMcp();
-                    });
-                });
+                    // Intentionally pointing to MCP repo for documentation. Could eventually
+                    // have a dedicated usage doc page, potentially provided by this service itself.
+                    ResourceDocumentation = "https://github.com/Microsoft/mcp"
+                };
 
-                var url = GetSafeAspNetCoreUrl();
-                webBuilder.UseUrls(url);
-            })
-            .Build();
+                context.Response.ContentType = "application/json";
+                await JsonSerializer.SerializeAsync(
+                    context.Response.Body,
+                    metadata,
+                    OAuthMetadataJsonContext.Default.OAuthProtectedResourceMetadata);
+                return;
+            }
+
+            await next(context);
+        });
+
+        // AuthN/Z are always required in the remote HTTP service scenario.
+        app.UseAuthentication();
+        app.UseAuthorization();
+
+        IEndpointConventionBuilder mcpEndpointBuilder = app.MapMcp();
+        // All MCP endpoints require MCP.All scope or role
+        mcpEndpointBuilder.RequireAuthorization("McpAccess");
+
+        // Map non-MCP endpoints.
+        // Health checks are anonymous (no authentication required)
+        app.MapHealthChecks("/health")
+            .AllowAnonymous();
+
+        return app;
+    }
+
+    /// <summary>
+    /// Creates a host for HTTP transport without authentication.
+    /// </summary>
+    /// <param name="serverOptions">The server configuration options.</param>
+    /// <returns>An IHost instance configured for HTTP transport.</returns>
+    private IHost CreateUnAuthenticatedHttpHost(ServiceStartOptions serverOptions)
+    {
+        WebApplicationBuilder builder = WebApplication.CreateBuilder();
+
+        InitializeListingUrls(builder, serverOptions);
+
+        // Configure logging
+        builder.Logging.ClearProviders();
+        builder.Logging.ConfigureOpenTelemetryLogger();
+        builder.Logging.AddEventSourceLogger();
+        builder.Logging.AddConsole();
+
+        IServiceCollection services = builder.Services;
+
+        // Configure single identity token credential provider for outgoing authentication
+        services.AddSingleIdentityTokenCredentialProvider();
+
+        // Configure CORS
+        // We're allowing all origins, methods, and headers to support any web
+        // browser clients.
+        // Non-browser clients are unaffected by CORS.
+        services.AddCors(options =>
+        {
+            options.AddPolicy("AllowAll", policy =>
+            {
+                policy.AllowAnyOrigin()
+                    .AllowAnyMethod()
+                    .AllowAnyHeader();
+            });
+        });
+
+        // Configure services
+        ConfigureServices(services); // Our static callback hook
+        ConfigureMcpServer(services, serverOptions);
+
+        WebApplication app = builder.Build();
+
+        // Configure middleware pipeline
+        app.UseCors("AllowAll");
+        app.UseRouting();
+        app.MapMcp();
+
+        return app;
     }
 
     /// <summary>
@@ -381,11 +603,17 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Gets a safe ASP.NET Core URL with security validation.
+    /// Initializes the URL for ASP.NET Core to bind to.
     /// </summary>
-    /// <returns>A validated URL string for ASP.NET Core binding.</returns>
-    private static string GetSafeAspNetCoreUrl()
+    private static void InitializeListingUrls(WebApplicationBuilder builder, ServiceStartOptions options)
     {
+        if (options.RunAsRemoteHttpService)
+        {
+            // When running as a remote HTTP service, let the typical IConfiguration
+            // binding handle the ASPNETCORE_URLS value without additional validation.
+            return;
+        }
+
         string url = Environment.GetEnvironmentVariable("ASPNETCORE_URLS") ?? "http://127.0.0.1:5001";
 
         if (url.Contains(';'))
@@ -422,6 +650,31 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                 $"Set ALLOW_INSECURE_EXTERNAL_BINDING=true if you intentionally want to bind beyond loopback.");
         }
 
-        return url;
+        builder.WebHost.UseUrls(url);
+    }
+
+    /// <summary>
+    /// Resolves the service mode and outgoing authentication strategy based on parsed command line options, applying appropriate defaults.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>A tuple containing whether to run as remote HTTP service and the outgoing auth strategy.</returns>
+    private static (bool RunAsRemoteHttpService, OutgoingAuthStrategy OutgoingAuthStrategy)
+        ResolveServiceModeAndAuthStrategy(ParseResult parseResult)
+    {
+#if ENABLE_REMOTE
+        var runAsRemoteHttpService = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name);
+        var outgoingAuthStrategy = parseResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
+        // Apply safe defaults for outgoing authentication strategy based on hosting mode
+        if (outgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
+        {
+            outgoingAuthStrategy = runAsRemoteHttpService
+                ? OutgoingAuthStrategy.UseOnBehalfOf
+                : OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+        }
+#else
+        var runAsRemoteHttpService = false;
+        var outgoingAuthStrategy = OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+#endif
+        return (runAsRemoteHttpService, outgoingAuthStrategy);
     }
 }
