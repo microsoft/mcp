@@ -10,6 +10,8 @@ using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTelemetry;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -120,7 +122,7 @@ public static class OpenTelemetryExtensions
             builder.AddSource(serverConfig.Value.Name);
         });
 
-        services.AddOpenTelemetry()
+        var otelBuilder = services.AddOpenTelemetry()
             .ConfigureResource(r =>
             {
                 var version = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
@@ -137,5 +139,12 @@ public static class OpenTelemetryExtensions
 #endif
                 options.ConnectionString = appInsightsConnectionString;
             });
+
+        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
+        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
+        {
+            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
+                .WithMetrics(metrics => metrics.AddOtlpExporter());
+        }
     }
 }

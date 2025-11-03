@@ -180,7 +180,7 @@ public class CommandFactory
             _logger.LogTrace("Executing '{Command}'.", command.Name);
 
             using var activity = _telemetryService.StartActivity(ActivityName.CommandExecuted);
-
+            activity?.SetTag(TagName.ToolId, implementation.Id);
             var cmdContext = new CommandContext(_serviceProvider, activity);
             var startTime = DateTime.UtcNow;
             try
