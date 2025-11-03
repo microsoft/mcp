@@ -56,7 +56,7 @@ Idempotent. Safe to re-run. Designed to be executed from repo root or script dir
 param(
     [Parameter(Mandatory)][ValidateSet('Consolidated','Namespace','Both')][string]$Mode,
     [string]$ConsolidatedToolsPath = "../../../core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json",
-    [string]$NamespaceToolsPath = "./namespace-tools.json",
+    [string]$NamespaceToolsPath = "./namespace-tools.json", # This file contains the output of the `azmcp tools list --namespaces` command.
     [string]$PromptsPath = "./prompts.json",
     [string]$ToolsPath = "./tools.json",
     [string]$OutputPath,
