@@ -17,7 +17,6 @@ public class EventHubsService(ISubscriptionService subscriptionService, ITenantS
     : BaseAzureResourceService(subscriptionService, tenantService), IEventHubsService
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService;
-    private readonly ITenantService _tenantService = tenantService;
     private readonly ILogger<EventHubsService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<Namespace>> GetNamespacesAsync(

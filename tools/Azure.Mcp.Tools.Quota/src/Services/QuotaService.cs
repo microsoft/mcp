@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Quota.Models;
 using Azure.Mcp.Tools.Quota.Services.Util;
@@ -11,7 +12,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Quota.Services;
 
-public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientService? httpClientService = null) : BaseAzureService(loggerFactory: loggerFactory), IQuotaService
+public class QuotaService(
+    ITenantService tenantService,
+    ILoggerFactory loggerFactory,
+    IHttpClientService httpClientService)
+    : BaseAzureService(tenantService), IQuotaService
 {
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
 
@@ -26,7 +31,7 @@ public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientServi
             resourceTypes,
             subscriptionId,
             location,
-            LoggerFactory,
+            loggerFactory,
             _httpClientService
             );
         return quotaByResourceTypes;
@@ -55,7 +60,7 @@ public class QuotaService(ILoggerFactory? loggerFactory = null, IHttpClientServi
             };
         }
 
-        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(armClient, resourceTypes, subscriptionId, LoggerFactory, cognitiveServiceProperties);
+        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(armClient, resourceTypes, subscriptionId, loggerFactory, cognitiveServiceProperties);
         var allRegions = availableRegions.Values
             .Where(regions => regions.Count > 0)
             .SelectMany(regions => regions)
