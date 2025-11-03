@@ -6,6 +6,7 @@ using Azure.Developer.LoadTesting;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.LoadTesting.Commands;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTest;
 using Azure.Mcp.Tools.LoadTesting.Models.LoadTestResource;
@@ -16,7 +17,10 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.LoadTesting.Services;
 
-public class LoadTestingService(ISubscriptionService subscriptionService) : BaseAzureService, ILoadTestingService
+public class LoadTestingService(
+    ISubscriptionService subscriptionService,
+    ITenantService tenantService)
+    : BaseAzureService(tenantService), ILoadTestingService
 {
     ISubscriptionService _subscriptionService = subscriptionService;
     public async Task<List<TestResource>> GetLoadTestResourcesAsync(string subscription, string? resourceGroup = null, string? testResourceName = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)

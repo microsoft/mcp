@@ -64,14 +64,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         // Register tool loader strategies
         services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton(sp =>
-        {
-            return new RegistryToolLoader(
-                sp.GetRequiredService<RegistryDiscoveryStrategy>(),
-                sp.GetRequiredService<IOptions<ToolLoaderOptions>>(),
-                sp.GetRequiredService<ILogger<RegistryToolLoader>>()
-            );
-        });
+        services.AddSingleton<RegistryToolLoader>();
 
         services.AddSingleton<SingleProxyToolLoader>();
         services.AddSingleton<CompositeToolLoader>();
@@ -243,7 +236,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.EnableInsecureTransports)
+        if (serviceStartOptions.EnableInsecureTransports || serviceStartOptions.RunAsRemoteHttpService)
         {
             mcpServerBuilder.WithHttpTransport();
         }
