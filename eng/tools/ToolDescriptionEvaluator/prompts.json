@@ -1,105 +1,33 @@
 {
-  "foundry_agents_connect": [
-    "Query an agent in my AI foundry project"
+  "acr_registry_list": [
+    "List all Azure Container Registries in my subscription",
+    "Show me my Azure Container Registries",
+    "Show me the container registries in my subscription",
+    "List container registries in resource group <resource_group_name>",
+    "Show me the container registries in resource group <resource_group_name>"
   ],
-  "foundry_agents_evaluate": [
-    "Evaluate the full query and response I got from my agent for task_adherence"
+  "acr_registry_repository_list": [
+    "List all container registry repositories in my subscription",
+    "Show me my container registry repositories",
+    "List repositories in the container registry <registry_name>",
+    "Show me the repositories in the container registry <registry_name>"
   ],
-  "foundry_agents_list": [
-    "List all agents in my AI Foundry project",
-    "Show me the available agents in my AI Foundry project"
+  "aks_cluster_get": [
+    "Get the configuration of AKS cluster <cluster-name>",
+    "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
+    "Show me the network configuration for AKS cluster <cluster-name>",
+    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
+    "List all AKS clusters in my subscription",
+    "Show me my Azure Kubernetes Service clusters",
+    "What AKS clusters do I have?"
   ],
-  "foundry_agents_query-and-evaluate": [
-    "Query and evaluate an agent in my AI Foundry project for task_adherence"
-  ],
-  "foundry_knowledge_index_list": [
-    "List all knowledge indexes in my AI Foundry project",
-    "Show me the knowledge indexes in my AI Foundry project"
-  ],
-  "foundry_knowledge_index_schema": [
-    "Show me the schema for knowledge index <index-name> in my AI Foundry project",
-    "Get the schema configuration for knowledge index <index-name>"
-  ],
-  "foundry_models_deploy": [
-    "Deploy a GPT4o instance on my resource <resource-name>"
-  ],
-  "foundry_models_deployments_list": [
-    "List all AI Foundry model deployments",
-    "Show me all AI Foundry model deployments"
-  ],
-  "foundry_models_list": [
-    "List all AI Foundry models",
-    "Show me the available AI Foundry models"
-  ],
-  "foundry_openai_chat-completions-create": [
-    "Create a chat completion with the message \"Hello, how are you today?\""
-  ],
-  "foundry_openai_create-completion": [
-    "Create a completion with the prompt \"What is Azure?\""
-  ],
-  "foundry_openai_embeddings-create": [
-    "Generate embeddings for the text \"Azure OpenAI Service\"",
-    "Create vector embeddings for my text using Azure OpenAI"
-  ],
-  "foundry_openai_models-list": [
-    "List all available OpenAI models in my Azure resource",
-    "Show me the OpenAI model deployments"
-  ],
-  "foundry_resource_get": [
-    "List all AI Foundry resources in my subscription",
-    "Show me the AI Foundry resources in resource group <resource_group_name>",
-    "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>"
-  ],
-  "search_knowledge_base_get": [
-    "List all knowledge bases in the Azure AI Search service <service-name>",
-    "Show me the knowledge bases in the Azure AI Search service <service-name>",
-    "List all knowledge bases in the search service <service-name>",
-    "Show me the knowledge bases in the search service <service-name>",
-    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
-    "Show me the knowledge base <agent-name> in search service <service-name>"
-  ],
-  "search_knowledge_base_retrieve": [
-    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
-    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
-    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
-    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
-    "Query knowledge base <agent-name> in search service <service-name> about <query>",
-    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
-    "What does knowledge base <agent-name> in search service <service-name> know about <query>",
-    "Find information about <query> using knowledge base <agent-name> in search service <service-name>"
-  ],
-  "search_knowledge_source_get": [
-    "List all knowledge sources in the Azure AI Search service <service-name>",
-    "Show me the knowledge sources in the Azure AI Search service <service-name>",
-    "List all knowledge sources in the search service <service-name>",
-    "Show me the knowledge sources in the search service <service-name>",
-    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
-    "Show me the knowledge source <source-name> in search service <service-name>"
-  ],
-  "search_index_get": [
-    "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
-    "List all indexes in the Cognitive Search service <service-name>",
-    "Show me the indexes in the Cognitive Search service <service-name>"
-  ],
-  "search_index_query": [
-    "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>"
-  ],
-  "search_service_list": [
-    "List all Cognitive Search services in my subscription",
-    "Show me the Cognitive Search services in my subscription",
-    "Show me my Cognitive Search services"
-  ],
-  "speech_stt_recognize": [
-    "Convert this audio file to text using Azure Speech Services",
-    "Recognize speech from my audio file with language detection",
-    "Transcribe speech from audio file <file_path> with profanity filtering",
-    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
-    "Transcribe the audio file <file_path> in Spanish language",
-    "Convert speech to text with detailed output format from audio file <file_path>",
-    "Recognize speech from <file_path> with phrase hints for better accuracy",
-    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
-    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
-    "Transcribe audio with raw profanity output from file <file_path>"
+  "aks_nodepool_get": [
+    "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
+    "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
+    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
+    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
+    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
+    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
   "appconfig_account_list": [
     "List all App Configuration stores in my subscription",
@@ -127,45 +55,36 @@
     "Use app lens to check why my app is slow?",
     "What does app lens say is wrong with my service?"
   ],
-  "appservice_database_add": [
-    "Add a database connection to my app service <app_name> in resource group <resource_group>",
-    "Configure a SQL Server database for app service <app_name>",
-    "Add a MySQL database to app service <app_name>",
-    "Add a PostgreSQL database to app service <app_name>",
-    "Add a CosmosDB database to app service <app_name>",
-    "Add database <database_name> on server <database_server> to app service <app_name>",
-    "Set connection string for database <database_name> in app service <app_name>",
-    "Configure tenant <tenant> for database <database_name> in app service <app_name>",
-    "Add database <database_name> with retry policy to app service <app_name>"
-  ],
   "applicationinsights_recommendation_list": [
     "List code optimization recommendations across my Application Insights components",
     "Show me code optimization recommendations for all Application Insights resources in my subscription",
     "List profiler recommendations for Application Insights in resource group <resource_group_name>",
     "Show me performance improvement recommendations from Application Insights"
   ],
-  "extension_cli_generate": [
-    "Create a Storage account with name <storage_account_name> using Azure CLI",
-    "List all virtual machines in my subscription using Azure CLI",
-    "Show me the details of the storage account <account_name> with Azure CLI commands"
+  "appservice_database_add": [
+    "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
+    "Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group>",
+    "Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group>",
+    "Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group>",
+    "Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>",
+    "Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group>"
   ],
-  "extension_cli_install": [
-    "<uninstall az cli on your machine and run test prompts for extension_cli_generate>",
-    "How to install azd",
-    "What is Azure Functions Core tools and how to install it"
+  "azureterraformbestpractices_get": [
+    "Fetch the Azure Terraform best practices",
+    "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
   ],
-  "acr_registry_list": [
-    "List all Azure Container Registries in my subscription",
-    "Show me my Azure Container Registries",
-    "Show me the container registries in my subscription",
-    "List container registries in resource group <resource_group_name>",
-    "Show me the container registries in resource group <resource_group_name>"
+  "bicepschema_get": [
+    "How can I use Bicep to create an Azure OpenAI service?"
   ],
-  "acr_registry_repository_list": [
-    "List all container registry repositories in my subscription",
-    "Show me my container registry repositories",
-    "List repositories in the container registry <registry_name>",
-    "Show me the repositories in the container registry <registry_name>"
+  "cloudarchitect_design": [
+    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service",
+    "Help me design an Azure cloud service that will serve as an ATM for users",
+    "I want to design a cloud app for ordering groceries",
+    "How can I design a cloud service in Azure that will store and present videos for users?"
   ],
   "communication_email_send": [
     "Send an email to <email-address> with subject <subject>",
@@ -214,86 +133,9 @@
     "List all the databases in the cosmosdb account <account_name>",
     "Show me the databases in the cosmosdb account <account_name>"
   ],
-  "kusto_cluster_get": [
-    "Show me the details of the Data Explorer cluster <cluster_name>"
-  ],
-  "kusto_cluster_list": [
-    "List all Data Explorer clusters in my subscription",
-    "Show me my Data Explorer clusters",
-    "Show me the Data Explorer clusters in my subscription"
-  ],
-  "kusto_database_list": [
-    "List all databases in the Data Explorer cluster <cluster_name>",
-    "Show me the databases in the Data Explorer cluster <cluster_name>"
-  ],
-  "kusto_query": [
-    "Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>"
-  ],
-  "kusto_sample": [
-    "Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>"
-  ],
-  "kusto_table_list": [
-    "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
-    "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
-  ],
-  "kusto_table_schema": [
-    "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
-  ],
-  "mysql_database_list": [
-    "List all MySQL databases in server <server>",
-    "Show me the MySQL databases in server <server>"
-  ],
-  "mysql_database_query": [
-    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
-  ],
-  "mysql_server_config_get": [
-    "Show me the configuration of MySQL server <server>"
-  ],
-  "mysql_server_list": [
-    "List all MySQL servers in my subscription",
-    "Show me my MySQL servers",
-    "Show me the MySQL servers in my subscription"
-  ],
-  "mysql_server_param_get": [
-    "Show me the value of connection timeout in seconds in my MySQL server <server>"
-  ],
-  "mysql_server_param_set": [
-    "Set connection timeout to 20 seconds for my MySQL server <server>"
-  ],
-  "mysql_table_list": [
-    "List all tables in the MySQL database <database> in server <server>",
-    "Show me the tables in the MySQL database <database> in server <server>"
-  ],
-  "mysql_table_schema_get": [
-    "Show me the schema of table <table> in the MySQL database <database> in server <server>"
-  ],
-  "postgres_database_list": [
-    "List all PostgreSQL databases in server <server>",
-    "Show me the PostgreSQL databases in server <server>"
-  ],
-  "postgres_database_query": [
-    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
-  ],
-  "postgres_server_config_get": [
-    "Show me the configuration of PostgreSQL server <server>"
-  ],
-  "postgres_server_list": [
-    "List all PostgreSQL servers in my subscription",
-    "Show me my PostgreSQL servers",
-    "Show me the PostgreSQL servers in my subscription"
-  ],
-  "postgres_server_param_get": [
-    "Show me if the parameter my PostgreSQL server <server> has replication enabled"
-  ],
-  "postgres_server_param_set": [
-    "Enable replication for my PostgreSQL server <server>"
-  ],
-  "postgres_table_list": [
-    "List all tables in the PostgreSQL database <database> in server <server>",
-    "Show me the tables in the PostgreSQL database <database> in server <server>"
-  ],
-  "postgres_table_schema_get": [
-    "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
+  "datadog_monitoredresources_list": [
+    "List all monitored resources in the Datadog resource <resource_name>",
+    "Show me the monitored resources in the Datadog resource <resource_name>"
   ],
   "deploy_app_logs_get": [
     "Show me the log of the application deployed by azd"
@@ -315,12 +157,6 @@
     "Publish event to my Event Grid topic <topic_name> with the following events <event_data>",
     "Send an event to Event Grid topic <topic_name> in resource group <resource_group_name> with <event_data>"
   ],
-  "eventgrid_topic_list": [
-    "List all Event Grid topics in my subscription",
-    "Show me the Event Grid topics in my subscription",
-    "List all Event Grid topics in subscription <subscription>",
-    "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
-  ],
   "eventgrid_subscription_list": [
     "Show me all Event Grid subscriptions for topic <topic_name>",
     "List Event Grid subscriptions for topic <topic_name> in subscription <subscription>",
@@ -330,14 +166,20 @@
     "Show Event Grid subscriptions in resource group <resource_group_name> in subscription <subscription>",
     "List Event Grid subscriptions for subscription <subscription> in location <location>"
   ],
-  "eventhubs_consumergroup_delete": [
+  "eventgrid_topic_list": [
+    "List all Event Grid topics in my subscription",
+    "Show me the Event Grid topics in my subscription",
+    "List all Event Grid topics in subscription <subscription>",
+    "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>"
+  ],
+  "eventhubs_eventhub_consumergroup_delete": [
     "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
   ],
-  "eventhubs_consumergroup_get": [
+  "eventhubs_eventhub_consumergroup_get": [
     "List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>",
     "Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
   ],
-  "eventhubs_consumergroup_update": [
+  "eventhubs_eventhub_consumergroup_update": [
     "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>"
   ],
@@ -363,6 +205,72 @@
     "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
   ],
+  "extension_azqr": [
+    "Check my Azure subscription for any compliance issues or recommendations",
+    "Provide compliance recommendations for my current Azure subscription",
+    "Scan my Azure subscription for compliance recommendations"
+  ],
+  "extension_cli_generate": [
+    "Create a Storage account with name <storage_account_name> using Azure CLI",
+    "List all virtual machines in my subscription using Azure CLI",
+    "Show me the details of the storage account <account_name> with Azure CLI commands"
+  ],
+  "extension_cli_install": [
+    "uninstall az cli on your machine and run test prompts for extension_cli_generate",
+    "How to install azd",
+    "What is Azure Functions Core tools and how to install it"
+  ],
+  "foundry_agents_connect": [
+    "Query an agent in my Azure AI foundry resource"
+  ],
+  "foundry_agents_evaluate": [
+    "Evaluate the full query and response I got from my agent for task_adherence"
+  ],
+  "foundry_agents_list": [
+    "List all agents in my Azure AI Foundry resource",
+    "Show me the available agents in my Azure AI Foundry resource"
+  ],
+  "foundry_agents_query-and-evaluate": [
+    "Query and evaluate an agent in my Azure AI Foundry resource for task_adherence"
+  ],
+  "foundry_knowledge_index_list": [
+    "List all knowledge indexes in my AI Foundry project",
+    "Show me the knowledge indexes in my AI Foundry project"
+  ],
+  "foundry_knowledge_index_schema": [
+    "Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource",
+    "Get the schema configuration for knowledge index <index-name>"
+  ],
+  "foundry_models_deploy": [
+    "Deploy a GPT4o instance on my resource <resource-name>"
+  ],
+  "foundry_models_deployments_list": [
+    "List all AI Foundry model deployments",
+    "Show me all AI Foundry model deployments"
+  ],
+  "foundry_models_list": [
+    "List all AI Foundry models",
+    "Show me the available AI Foundry models"
+  ],
+  "foundry_openai_chat-completions-create": [
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Azure AI Foundry resource"
+  ],
+  "foundry_openai_create-completion": [
+    "Create a completion with the prompt \"What is Azure?\" using my Azure AI Foundry resource"
+  ],
+  "foundry_openai_embeddings-create": [
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Azure AI Foundry resource",
+    "Create vector embeddings for my text using my Azure AI Foundry resource"
+  ],
+  "foundry_openai_models-list": [
+    "List all available OpenAI models in my Azure AI Foundry resource",
+    "Show me the OpenAI model deployments in my Azure AI Foundry resource"
+  ],
+  "foundry_resource_get": [
+    "List all AI Foundry resources in my subscription",
+    "Show me the AI Foundry resources in resource group <resource_group_name>",
+    "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>"
+  ],
   "functionapp_get": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
@@ -376,6 +284,25 @@
     "List all function apps in my subscription",
     "Show me my Azure function apps",
     "What function apps do I have?"
+  ],
+  "get_bestpractices_get": [
+    "Get the latest Azure code generation best practices",
+    "Get the latest Azure deployment best practices",
+    "Get the latest Azure best practices",
+    "Get the latest Azure Functions code generation best practices",
+    "Get the latest Azure Functions deployment best practices",
+    "Get the latest Azure Functions best practices",
+    "Get the latest Azure Static Web Apps best practices",
+    "What are azure function best practices?",
+    "configure azure mcp in coding agent for my repo"
+  ],
+  "grafana_list": [
+    "List all Azure Managed Grafana in one subscription"
+  ],
+  "group_list": [
+    "List all resource groups in my subscription",
+    "Show me my resource groups",
+    "Show me the resource groups in my subscription"
   ],
   "keyvault_admin_settings_get": [
     "Get the account settings for my key vault <key_vault_account_name>",
@@ -455,22 +382,30 @@
     "Enumerate secrets in key vault <key_vault_account_name>",
     "Show secrets names in the key vault <key_vault_account_name>"
   ],
-  "aks_cluster_get": [
-    "Get the configuration of AKS cluster <cluster-name>",
-    "Show me the details of AKS cluster <cluster-name> in resource group <resource-group>",
-    "Show me the network configuration for AKS cluster <cluster-name>",
-    "What are the details of my AKS cluster <cluster-name> in <resource-group>?",
-    "List all AKS clusters in my subscription",
-    "Show me my Azure Kubernetes Service clusters",
-    "What AKS clusters do I have?"
+  "kusto_cluster_get": [
+    "Show me the details of the Data Explorer cluster <cluster_name>"
   ],
-  "aks_nodepool_get": [
-    "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
-    "Show me the configuration for nodepool <nodepool-name> in AKS cluster <cluster-name> in resource group <resource-group>",
-    "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
-    "List nodepools for AKS cluster <cluster-name> in <resource-group>",
-    "Show me the nodepool list for AKS cluster <cluster-name> in <resource-group>",
-    "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
+  "kusto_cluster_list": [
+    "List all Data Explorer clusters in my subscription",
+    "Show me my Data Explorer clusters",
+    "Show me the Data Explorer clusters in my subscription"
+  ],
+  "kusto_database_list": [
+    "List all databases in the Data Explorer cluster <cluster_name>",
+    "Show me the databases in the Data Explorer cluster <cluster_name>"
+  ],
+  "kusto_query": [
+    "Show me all items that contain the word <search_term> in the Data Explorer table <table_name> in cluster <cluster_name>"
+  ],
+  "kusto_sample": [
+    "Show me a data sample from the Data Explorer table <table_name> in cluster <cluster_name>"
+  ],
+  "kusto_table_list": [
+    "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
+    "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
+  ],
+  "kusto_table_schema": [
+    "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
   "loadtesting_test_create": [
     "Create a basic URL test using the following endpoint URL <test-url> that runs for 30 minutes with 45 virtual users. The test name is <sample-name> with the test id <test-id> and the load testing resource is <load-test-resource> in the resource group <resource-group> in my subscription"
@@ -496,26 +431,23 @@
   "loadtesting_testrun_update": [
     "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
   ],
-  "grafana_list": [
-    "List all Azure Managed Grafana in one subscription"
-  ],
-  "managedlustre_filesystem_create": [
+  "managedlustre_fs_create": [
     "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>"
   ],
-  "managedlustre_filesystem_list": [
+  "managedlustre_fs_list": [
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>"
   ],
-  "managedlustre_filesystem_sku_get": [
+  "managedlustre_fs_sku_get": [
     "List the Azure Managed Lustre SKUs available in location <location>"
   ],
-  "managedlustre_filesystem_subnetsize_ask": [
+  "managedlustre_fs_subnetsize_ask": [
     "Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
-  "managedlustre_filesystem_subnetsize_validate": [
+  "managedlustre_fs_subnetsize_validate": [
     "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
-  "managedlustre_filesystem_update": [
+  "managedlustre_fs_update": [
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
   "marketplace_product_get": [
@@ -525,20 +457,10 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "get_bestpractices_get": [
-    "Get the latest Azure code generation best practices",
-    "Get the latest Azure deployment best practices",
-    "Get the latest Azure best practices",
-    "Get the latest Azure Functions code generation best practices",
-    "Get the latest Azure Functions deployment best practices",
-    "Get the latest Azure Functions best practices",
-    "Get the latest Azure Static Web Apps best practices",
-    "What are azure function best practices?"
-  ],
   "monitor_activitylog_list": [
     "List the activity logs of the last month for <resource_name>"
   ],
-  "monitor_healthmodels_entity_gethealth": [
+  "monitor_healthmodels_entity_get": [
     "Show me the health status of entity <entity_id> using the health model <health_model_name>"
   ],
   "monitor_metrics_definitions": [
@@ -586,14 +508,61 @@
   "monitor_workspace_log_query": [
     "Show me the logs for the past hour in the Log Analytics workspace <workspace_name>"
   ],
-  "datadog_monitoredresources_list": [
-    "List all monitored resources in the Datadog resource <resource_name>",
-    "Show me the monitored resources in the Datadog resource <resource_name>"
+  "mysql_database_list": [
+    "List all MySQL databases in server <server>",
+    "Show me the MySQL databases in server <server>"
   ],
-  "extension_azqr": [
-    "Check my Azure subscription for any compliance issues or recommendations",
-    "Provide compliance recommendations for my current Azure subscription",
-    "Scan my Azure subscription for compliance recommendations"
+  "mysql_database_query": [
+    "Show me all items that contain the word <search_term> in the MySQL database <database> in server <server>"
+  ],
+  "mysql_server_config_get": [
+    "Show me the configuration of MySQL server <server>"
+  ],
+  "mysql_server_list": [
+    "List all MySQL servers in my subscription",
+    "Show me my MySQL servers",
+    "Show me the MySQL servers in my subscription"
+  ],
+  "mysql_server_param_get": [
+    "Show me the value of connection timeout in seconds in my MySQL server <server>"
+  ],
+  "mysql_server_param_set": [
+    "Set connection timeout to 20 seconds for my MySQL server <server>"
+  ],
+  "mysql_table_list": [
+    "List all tables in the MySQL database <database> in server <server>",
+    "Show me the tables in the MySQL database <database> in server <server>"
+  ],
+  "mysql_table_schema_get": [
+    "Show me the schema of table <table> in the MySQL database <database> in server <server>"
+  ],
+  "postgres_database_list": [
+    "List all PostgreSQL databases in server <server>",
+    "Show me the PostgreSQL databases in server <server>"
+  ],
+  "postgres_database_query": [
+    "Show me all items that contain the word <search_term> in the PostgreSQL database <database> in server <server>"
+  ],
+  "postgres_server_config_get": [
+    "Show me the configuration of PostgreSQL server <server>"
+  ],
+  "postgres_server_list": [
+    "List all PostgreSQL servers in my subscription",
+    "Show me my PostgreSQL servers",
+    "Show me the PostgreSQL servers in my subscription"
+  ],
+  "postgres_server_param_get": [
+    "Show me if the parameter my PostgreSQL server <server> has replication enabled"
+  ],
+  "postgres_server_param_set": [
+    "Enable replication for my PostgreSQL server <server>"
+  ],
+  "postgres_table_list": [
+    "List all tables in the PostgreSQL database <database> in server <server>",
+    "Show me the tables in the PostgreSQL database <database> in server <server>"
+  ],
+  "postgres_table_schema_get": [
+    "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
   ],
   "quota_region_availability_list": [
     "Show me the available regions for these resource types <resource_types>"
@@ -601,21 +570,12 @@
   "quota_usage_check": [
     "Check usage information for <resource_type> in region <region>"
   ],
-  "role_assignment_list": [
-    "List all available role assignments in my subscription",
-    "Show me the available role assignments in my subscription"
-  ],
   "redis_list": [
     "List all Redis resources in my subscription",
     "Show me my Redis resources",
     "Show me the Redis resources in my subscription",
     "Show me my Redis caches",
     "Get Redis clusters"
-  ],
-  "group_list": [
-    "List all resource groups in my subscription",
-    "Show me my resource groups",
-    "Show me the resource groups in my subscription"
   ],
   "resourcehealth_availability-status_get": [
     "Get the availability status for resource <resource_name>",
@@ -627,12 +587,55 @@
     "Show me the health status of all my Azure resources",
     "What resources in resource group <resource_group_name> have health issues?"
   ],
-  "resourcehealth_service-health-events_list": [
+  "resourcehealth_health-events_list": [
     "List all service health events in my subscription",
     "Show me Azure service health events for subscription <subscription_id>",
     "What service issues have occurred in the last 30 days?",
     "List active service health events in my subscription",
     "Show me planned maintenance events for my Azure services"
+  ],
+  "role_assignment_list": [
+    "List all available role assignments in my subscription",
+    "Show me the available role assignments in my subscription"
+  ],
+  "search_index_get": [
+    "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
+    "List all indexes in the Cognitive Search service <service-name>",
+    "Show me the indexes in the Cognitive Search service <service-name>"
+  ],
+  "search_index_query": [
+    "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>"
+  ],
+  "search_knowledge_base_get": [
+    "List all knowledge bases in the Azure AI Search service <service-name>",
+    "Show me the knowledge bases in the Azure AI Search service <service-name>",
+    "List all knowledge bases in the search service <service-name>",
+    "Show me the knowledge bases in the search service <service-name>",
+    "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge base <agent-name> in search service <service-name>"
+  ],
+  "search_knowledge_base_retrieve": [
+    "Run a retrieval with knowledge base <agent-name> in Azure AI Search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Run a retrieval with knowledge base <agent-name> in search service <service-name> for the query <query>",
+    "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
+    "Query knowledge base <agent-name> in search service <service-name> about <query>",
+    "Search knowledge base <agent-name> in Azure AI Search service <service-name> for <query>",
+    "What does knowledge base <agent-name> in search service <service-name> know about <query>",
+    "Find information about <query> using knowledge base <agent-name> in search service <service-name>"
+  ],
+  "search_knowledge_source_get": [
+    "List all knowledge sources in the Azure AI Search service <service-name>",
+    "Show me the knowledge sources in the Azure AI Search service <service-name>",
+    "List all knowledge sources in the search service <service-name>",
+    "Show me the knowledge sources in the search service <service-name>",
+    "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
+    "Show me the knowledge source <source-name> in search service <service-name>"
+  ],
+  "search_service_list": [
+    "List all Cognitive Search services in my subscription",
+    "Show me the Cognitive Search services in my subscription",
+    "Show me my Cognitive Search services"
   ],
   "servicebus_queue_details": [
     "Show me the details of service bus <service_bus_name> queue <queue_name>"
@@ -650,6 +653,18 @@
     "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
     "Show all the SignalRs information in <resource_group_name>",
     "List all SignalRs in my subscription"
+  ],
+  "speech_stt_recognize": [
+    "Convert this audio file to text using Azure Speech Services",
+    "Recognize speech from my audio file with language detection",
+    "Transcribe speech from audio file <file_path> with profanity filtering",
+    "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
+    "Transcribe the audio file <file_path> in Spanish language",
+    "Convert speech to text with detailed output format from audio file <file_path>",
+    "Recognize speech from <file_path> with phrase hints for better accuracy",
+    "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
+    "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
+    "Transcribe audio with raw profanity output from file <file_path>"
   ],
   "sql_db_create": [
     "Create a new SQL database named <database_name> in server <server_name>",
@@ -758,18 +773,14 @@
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "azureterraformbestpractices_get": [
-    "Fetch the Azure Terraform best practices",
-    "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
+  "virtualdesktop_hostpool_host_list": [
+    "List all session hosts in host pool <hostpool_name>"
+  ],
+  "virtualdesktop_hostpool_host_user-list": [
+    "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
   ],
   "virtualdesktop_hostpool_list": [
     "List all host pools in my subscription"
-  ],
-  "virtualdesktop_hostpool_sessionhost_list": [
-    "List all session hosts in host pool <hostpool_name>"
-  ],
-  "virtualdesktop_hostpool_sessionhost_usersession-list": [
-    "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
   ],
   "workbooks_create": [
     "Create a new workbook named <workbook_name>"
@@ -787,14 +798,5 @@
   ],
   "workbooks_update": [
     "Update the workbook <workbook_resource_id> with a new text step"
-  ],
-  "bicepschema_get": [
-    "How can I use Bicep to create an Azure OpenAI service?"
-  ],
-  "cloudarchitect_design": [
-    "Please help me design an architecture for a large-scale file upload, storage, and retrieval service",
-    "Help me create a cloud service that will serve as ATM for users",
-    "I want to design a cloud app for ordering groceries",
-    "How can I design a cloud service in Azure that will store and present videos for users?"
   ]
 }

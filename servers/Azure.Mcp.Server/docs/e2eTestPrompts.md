@@ -132,7 +132,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
 | extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-| extension_cli_install | <uninstall az cli on your machine and run test prompts for extension_cli_generate> |
+| extension_cli_install | uninstall az cli on your machine and run test prompts for extension_cli_generate |
 | extension_cli_install | How to install azd |
 | extension_cli_install | What is Azure Functions Core tools and how to install it |
 

@@ -50,15 +50,16 @@
     "Show me performance improvement recommendations from Application Insights"
   ],
   "azmcp_appservice": [
-    "Add a CosmosDB database to app service <app_name>",
-    "Add a database connection to my app service <app_name> in resource group <resource_group>",
-    "Add a MySQL database to app service <app_name>",
-    "Add a PostgreSQL database to app service <app_name>",
-    "Add database <database_name> on server <database_server> to app service <app_name>",
-    "Add database <database_name> with retry policy to app service <app_name>",
-    "Configure a SQL Server database for app service <app_name>",
-    "Configure tenant <tenant> for database <database_name> in app service <app_name>",
-    "Set connection string for database <database_name> in app service <app_name>"
+    "Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group>",
+    "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
+    "Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group>",
+    "Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group>",
+    "Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group>",
+    "Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>"
   ],
   "azmcp_azureterraformbestpractices": [
     "Fetch the Azure Terraform best practices",
@@ -68,7 +69,7 @@
     "How can I use Bicep to create an Azure OpenAI service?"
   ],
   "azmcp_cloudarchitect": [
-    "Help me create a cloud service that will serve as ATM for users",
+    "Help me design an Azure cloud service that will serve as an ATM for users",
     "How can I design a cloud service in Azure that will store and present videos for users?",
     "I want to design a cloud app for ordering groceries",
     "Please help me design an architecture for a large-scale file upload, storage, and retrieval service"
@@ -155,29 +156,29 @@
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
   ],
   "azmcp_foundry": [
-    "Create a chat completion with the message \"Hello, how are you today?\"",
-    "Create a completion with the prompt \"What is Azure?\"",
-    "Create vector embeddings for my text using Azure OpenAI",
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Azure AI Foundry resource",
+    "Create a completion with the prompt \"What is Azure?\" using my Azure AI Foundry resource",
+    "Create vector embeddings for my text using my Azure AI Foundry resource",
     "Deploy a GPT4o instance on my resource <resource-name>",
     "Evaluate the full query and response I got from my agent for task_adherence",
-    "Generate embeddings for the text \"Azure OpenAI Service\"",
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Azure AI Foundry resource",
     "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>",
     "Get the schema configuration for knowledge index <index-name>",
-    "List all agents in my AI Foundry project",
+    "List all agents in my Azure AI Foundry resource",
     "List all AI Foundry model deployments",
     "List all AI Foundry models",
     "List all AI Foundry resources in my subscription",
-    "List all available OpenAI models in my Azure resource",
+    "List all available OpenAI models in my Azure AI Foundry resource",
     "List all knowledge indexes in my AI Foundry project",
-    "Query an agent in my AI foundry project",
-    "Query and evaluate an agent in my AI Foundry project for task_adherence",
+    "Query an agent in my Azure AI foundry resource",
+    "Query and evaluate an agent in my Azure AI Foundry resource for task_adherence",
     "Show me all AI Foundry model deployments",
     "Show me the AI Foundry resources in resource group <resource_group_name>",
-    "Show me the available agents in my AI Foundry project",
+    "Show me the available agents in my Azure AI Foundry resource",
     "Show me the available AI Foundry models",
     "Show me the knowledge indexes in my AI Foundry project",
-    "Show me the OpenAI model deployments",
-    "Show me the schema for knowledge index <index-name> in my AI Foundry project"
+    "Show me the OpenAI model deployments in my Azure AI Foundry resource",
+    "Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource"
   ],
   "azmcp_functionapp": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
@@ -194,6 +195,7 @@
     "What is the status of function app <function_app_name>?"
   ],
   "azmcp_get_bestpractices": [
+    "configure azure mcp in coding agent for my repo",
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
@@ -525,9 +527,15 @@
     "Update the workbook <workbook_resource_id> with a new text step",
     "What workbooks do I have in resource group <resource_group_name>?"
   ],
-  "azmcp_extension_azqr": [
+  "azmcp_extension": [
     "Check my Azure subscription for any compliance issues or recommendations",
+    "Create a Storage account with name <storage_account_name> using Azure CLI",
+    "How to install azd",
+    "List all virtual machines in my subscription using Azure CLI",
     "Provide compliance recommendations for my current Azure subscription",
-    "Scan my Azure subscription for compliance recommendations"
+    "Scan my Azure subscription for compliance recommendations",
+    "Show me the details of the storage account <account_name> with Azure CLI commands",
+    "uninstall az cli on your machine and run test prompts for extension_cli_generate",
+    "What is Azure Functions Core tools and how to install it"
   ]
 }

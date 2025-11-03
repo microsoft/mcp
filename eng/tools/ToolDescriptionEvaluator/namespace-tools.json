@@ -213,9 +213,9 @@
       "command": "azmcp workbooks"
     },
     {
-      "name": "azqr",
-      "description": "Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.\r\nThis tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.\r\nRequires a subscription id and optionally a resource group name. Returns the generated report file's path.\r\nNote that Azure Quick Review CLI (azqr) is different from Azure CLI (az).",
-      "command": "azmcp extension azqr"
+        "name": "extension",
+        "description": "Extension commands for additional Azure tooling functionality. Includes running Azure Quick Review (azqr) commands directly from the MCP server to get service recommendations, generating Azure CLI commands from user intent, and getting installation instructions for Azure CLI, Azure Developer CLI and Azure Core Function Tools CLI.",
+        "command": "azmcp extension"
     }
   ],
   "duration": 12

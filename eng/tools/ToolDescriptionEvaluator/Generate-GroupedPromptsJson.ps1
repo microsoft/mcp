@@ -5,7 +5,7 @@ Generates prompts JSON files for consolidated tools, namespace tools, or both.
 .DESCRIPTION
 Modes:
     Consolidated - Produces consolidated-prompts.json mapping each consolidated tool name to aggregated prompts.
-    Namespace    - Produces namespace-prompts.json mapping each namespace to aggregated prompts from all descendant subcommands. Keys are prefixed with 'azmcp_' for consistency with per-command prompt keys.
+    Namespace    - Produces namespace-prompts.json mapping each namespace to aggregated prompts from all descendant subcommands.
     Both         - Produces both outputs in a single run.
 
 Reads:
@@ -131,7 +131,7 @@ function Resolve-PromptsForCommands {
 
     Previously the structure contained recursive subcommands; the old recursive walker is retained
     only for backwards compatibility scenarios (not currently invoked). The new logic derives the
-    leaf command set for a namespace by scanning all prompt keys with the prefix 'azmcp_<ns>_'.
+    leaf command set for a namespace by scanning all prompt keys with the prefix '<ns>_'.
     Surfaced leaf commands simply aggregate their own prompts.
 #>
 function Get-NamespaceCommandStrings {
@@ -148,7 +148,7 @@ function Get-NamespaceCommandStrings {
     if ($cmd -match '^(azmcp)\s+([^\s]+)$') {
         $ns = $Matches[2]
         # Collect all prompt keys beginning with azmcp_<ns>_ (leaf commands)
-        $prefix = "azmcp_${ns}_"
+        $prefix = "${ns}_"
         $matchingLeafKeys = $AllPromptKeys | Where-Object { $_.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase) }
         foreach ($k in $matchingLeafKeys) {
             # Convert prompt key back to command string: underscores -> spaces
@@ -237,7 +237,6 @@ function Invoke-NamespaceGeneration {
         $isNamespace = $ns.command -match '^(azmcp)\s+([^\s]+)$'
         if ($isNamespace) {
             $nsName = $Matches[2]
-            switch ($nsName) { 'azqr' { $nsName = 'extension_azqr'; break } }
             if (-not $nsName.StartsWith('azmcp_')) { $nsName = 'azmcp_' + $nsName }
             $resolved = Resolve-PromptsForCommands -CommandStrings $commandStrings -PromptsJson $PromptsJson -AllPromptKeys $AllPromptKeys -Warnings ([ref]$warnings) -VerboseWarnings:$VerboseWarnings
             $outputMap[$nsName] = @($resolved)
