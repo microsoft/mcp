@@ -286,7 +286,7 @@ public class CustomChainedCredentialTests : IDisposable
     {
         var assembly = typeof(global::Azure.Mcp.Core.Services.Azure.Authentication.IAzureTokenCredentialProvider).Assembly;
         var customChainedCredentialType = assembly.GetType("Azure.Mcp.Core.Services.Azure.Authentication.CustomChainedCredential");
-        
+
         Assert.NotNull(customChainedCredentialType);
 
         var constructor = customChainedCredentialType.GetConstructors(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)

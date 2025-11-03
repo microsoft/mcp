@@ -287,11 +287,11 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     {
         // Check if AZURE_CLIENT_ID is set for User-Assigned Managed Identity
         string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
-        
+
         ManagedIdentityCredential managedIdentityCredential = string.IsNullOrEmpty(clientId)
             ? new ManagedIdentityCredential() // System-Assigned MI
             : new ManagedIdentityCredential(clientId); // User-Assigned MI
-        
+
         credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
 
