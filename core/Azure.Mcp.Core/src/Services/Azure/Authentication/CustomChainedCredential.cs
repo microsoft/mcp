@@ -26,6 +26,10 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
 /// Visual Studio Code credential is automatically prioritized first in the chain.
 /// 
+/// Managed Identity Support:
+/// - AZURE_CLIENT_ID: Configures User-Assigned Managed Identity with the specified client ID
+/// - If AZURE_CLIENT_ID is not set or empty, System-Assigned Managed Identity is used (default)
+/// 
 /// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
 /// </remarks>
 public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
@@ -92,7 +96,14 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        // Only add InteractiveBrowserCredential if no explicit credential is specified
+        // When AZURE_TOKEN_CREDENTIALS is set to "prod" or a specific credential,
+        // we should NOT fall back to interactive browser (which fails in production environments)
+        if (!hasExplicitCredentialSetting)
+        {
+            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        }
+        
         return new ChainedTokenCredential([.. creds]);
     }
 
@@ -233,7 +244,22 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
     private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
     {
-        credentials.Add(new SafeTokenCredential(new ManagedIdentityCredential(), "ManagedIdentityCredential"));
+        // Check for AZURE_CLIENT_ID to support User-Assigned Managed Identity
+        string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+        
+        ManagedIdentityCredential managedIdentityCredential;
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            // User-Assigned Managed Identity with explicit client ID
+            managedIdentityCredential = new ManagedIdentityCredential(clientId);
+        }
+        else
+        {
+            // System-Assigned Managed Identity (default)
+            managedIdentityCredential = new ManagedIdentityCredential();
+        }
+        
+        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
 
     private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)

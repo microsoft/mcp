@@ -382,24 +382,33 @@ To use only **production credentials** (Environment, Workload Identity, Managed 
 AZURE_TOKEN_CREDENTIALS=prod
 ```
 
+When `prod` is used:
+- The credential chain becomes: `Environment → Workload Identity → Managed Identity`
+- **No interactive browser fallback** is added (fail fast if credentials unavailable)
+- For **User-Assigned Managed Identity**, also set `AZURE_CLIENT_ID` to the client ID of the managed identity
+
+```bash
+# System-Assigned Managed Identity (default)
+AZURE_TOKEN_CREDENTIALS=prod
+
+# User-Assigned Managed Identity
+AZURE_TOKEN_CREDENTIALS=prod
+AZURE_CLIENT_ID="<managed-identity-client-id>"
+```
+
 To use only **development credentials** (Visual Studio, Visual Studio Code, Azure CLI, Azure PowerShell, Azure Developer CLI), set:
 ```bash
 AZURE_TOKEN_CREDENTIALS=dev
 ```
 
-When `prod` is used, the credential chain becomes:
-```
-Environment → Workload Identity → Managed Identity
-```
-
 When `dev` is used, the credential chain becomes:
 ```
-Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential fallback
 ```
 
 #### Use Specific Credentials Only
 
-To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the name of a single credential:
+To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the name of a single credential. **Note: No interactive browser fallback will be added.**
 
 ```bash
 # Use only Azure CLI credential
@@ -410,6 +419,13 @@ AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
 AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
+
+# Use only Managed Identity credential
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
+
+# For User-Assigned Managed Identity, also set AZURE_CLIENT_ID
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
+AZURE_CLIENT_ID="<managed-identity-client-id>"
 
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
