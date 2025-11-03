@@ -1,5 +1,5 @@
 {
-  "azmcp_acr": [
+  "acr": [
     "List all Azure Container Registries in my subscription",
     "List all container registry repositories in my subscription",
     "List container registries in resource group <resource_group_name>",
@@ -10,7 +10,7 @@
     "Show me the container registries in resource group <resource_group_name>",
     "Show me the repositories in the container registry <registry_name>"
   ],
-  "azmcp_aks": [
+  "aks": [
     "Get details for nodepool <nodepool-name> in AKS cluster <cluster-name> in <resource-group>",
     "Get the configuration of AKS cluster <cluster-name>",
     "List all AKS clusters in my subscription",
@@ -25,7 +25,7 @@
     "What is the setup of nodepool <nodepool-name> for AKS cluster <cluster-name> in <resource-group>?",
     "What nodepools do I have for AKS cluster <cluster-name> in <resource-group>"
   ],
-  "azmcp_appconfig": [
+  "appconfig": [
     "Delete the key <key_name> in App Configuration store <app_config_store_name>",
     "List all App Configuration stores in my subscription",
     "List all key-value settings in App Configuration store <app_config_store_name>",
@@ -38,18 +38,18 @@
     "Show the content for the key <key_name> in App Configuration store <app_config_store_name>",
     "Unlock the key <key_name> in App Configuration store <app_config_store_name>"
   ],
-  "azmcp_applens": [
+  "applens": [
     "Please help me diagnose issues with my app using app lens",
     "Use app lens to check why my app is slow?",
     "What does app lens say is wrong with my service?"
   ],
-  "azmcp_applicationinsights": [
+  "applicationinsights": [
     "List code optimization recommendations across my Application Insights components",
     "List profiler recommendations for Application Insights in resource group <resource_group_name>",
     "Show me code optimization recommendations for all Application Insights resources in my subscription",
     "Show me performance improvement recommendations from Application Insights"
   ],
-  "azmcp_appservice": [
+  "appservice": [
     "Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group>",
     "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
     "Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group>",
@@ -61,20 +61,20 @@
     "Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group>",
     "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>"
   ],
-  "azmcp_azureterraformbestpractices": [
+  "azureterraformbestpractices": [
     "Fetch the Azure Terraform best practices",
     "Show me the Azure Terraform best practices and generate code sample to get a secret from Azure Key Vault"
   ],
-  "azmcp_bicepschema": [
+  "bicepschema": [
     "How can I use Bicep to create an Azure OpenAI service?"
   ],
-  "azmcp_cloudarchitect": [
+  "cloudarchitect": [
     "Help me design an Azure cloud service that will serve as an ATM for users",
     "How can I design a cloud service in Azure that will store and present videos for users?",
     "I want to design a cloud app for ordering groceries",
     "Please help me design an architecture for a large-scale file upload, storage, and retrieval service"
   ],
-  "azmcp_communication": [
+  "communication": [
     "Send an email from my communication service to <email-address>",
     "Send an email to <email-address> with subject <subject>",
     "Send an email with BCC recipients",
@@ -92,7 +92,7 @@
     "Send SMS to multiple recipients: <phone-number-1>, <phone-number-2>",
     "Send SMS with delivery reporting enabled"
   ],
-  "azmcp_confidentialledger": [
+  "confidentialledger": [
     "Append {\"hello\": \"from mcp\"} to my confidential ledger <ledger_name> in collection <collection_id>",
     "Append an entry to my ledger <ledger_name> with data {\"key\": \"value\"}",
     "Create an immutable ledger entry in <ledger_name> with content {\"audit\": \"log\"}",
@@ -101,7 +101,7 @@
     "Write a tamper-proof entry to ledger <ledger_name> containing {\"transaction\": \"data\"}",
     "Write an entry to confidential ledger <ledger_name>"
   ],
-  "azmcp_cosmos": [
+  "cosmos": [
     "List all cosmosdb accounts in my subscription",
     "List all the containers in the database <database_name> for the cosmosdb account <account_name>",
     "List all the databases in the cosmosdb account <account_name>",
@@ -111,18 +111,18 @@
     "Show me the databases in the cosmosdb account <account_name>",
     "Show me the items that contain the word <search_term> in the container <container_name> in the database <database_name> for the cosmosdb account <account_name>"
   ],
-  "azmcp_datadog": [
+  "datadog": [
     "List all monitored resources in the Datadog resource <resource_name>",
     "Show me the monitored resources in the Datadog resource <resource_name>"
   ],
-  "azmcp_deploy": [
+  "deploy": [
     "Create a plan to deploy this application to azure",
     "Generate the azure architecture diagram for this application",
     "How can I create a CI/CD pipeline to deploy this app to Azure?",
     "Show me the log of the application deployed by azd",
     "Show me the rules to generate bicep scripts"
   ],
-  "azmcp_eventgrid": [
+  "eventgrid": [
     "List all Event Grid subscriptions in subscription <subscription>",
     "List all Event Grid topics in my subscription",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>",
@@ -138,7 +138,7 @@
     "Show me all Event Grid subscriptions for topic <topic_name>",
     "Show me the Event Grid topics in my subscription"
   ],
-  "azmcp_eventhubs": [
+  "eventhubs": [
     "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
@@ -155,7 +155,7 @@
     "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
   ],
-  "azmcp_foundry": [
+  "foundry": [
     "Create a chat completion with the message \"Hello, how are you today?\" using my Azure AI Foundry resource",
     "Create a completion with the prompt \"What is Azure?\" using my Azure AI Foundry resource",
     "Create vector embeddings for my text using my Azure AI Foundry resource",
@@ -180,7 +180,7 @@
     "Show me the OpenAI model deployments in my Azure AI Foundry resource",
     "Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource"
   ],
-  "azmcp_functionapp": [
+  "functionapp": [
     "Describe the function app <function_app_name> in resource group <resource_group_name>",
     "Get configuration for function app <function_app_name>",
     "Get function app status for <function_app_name>",
@@ -194,7 +194,7 @@
     "What function apps do I have?",
     "What is the status of function app <function_app_name>?"
   ],
-  "azmcp_get_bestpractices": [
+  "get_bestpractices": [
     "configure azure mcp in coding agent for my repo",
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
@@ -205,15 +205,15 @@
     "Get the latest Azure Static Web Apps best practices",
     "What are azure function best practices?"
   ],
-  "azmcp_grafana": [
+  "grafana": [
     "List all Azure Managed Grafana in one subscription"
   ],
-  "azmcp_group": [
+  "group": [
     "List all resource groups in my subscription",
     "Show me my resource groups",
     "Show me the resource groups in my subscription"
   ],
-  "azmcp_keyvault": [
+  "keyvault": [
     "Add a new version of secret <secret_name> with value <secret_value> in vault <key_vault_account_name>",
     "Add existing certificate file <file_path> to the key vault <key_vault_account_name> with name <certificate_name>",
     "Create a new certificate called <certificate_name> in the key vault <key_vault_account_name>",
@@ -271,7 +271,7 @@
     "What secrets are in the key vault <key_vault_account_name>?",
     "What's the value of the <setting_name> setting in my key vault with name <key_vault_account_name>"
   ],
-  "azmcp_kusto": [
+  "kusto": [
     "List all Data Explorer clusters in my subscription",
     "List all databases in the Data Explorer cluster <cluster_name>",
     "List all tables in the Data Explorer database <database_name> in cluster <cluster_name>",
@@ -284,7 +284,7 @@
     "Show me the schema for table <table_name> in the Data Explorer database <database_name> in cluster <cluster_name>",
     "Show me the tables in the Data Explorer database <database_name> in cluster <cluster_name>"
   ],
-  "azmcp_loadtesting": [
+  "loadtesting": [
     "Create a basic URL test using the following endpoint URL <test-url> that runs for 30 minutes with 45 virtual users. The test name is <sample-name> with the test id <test-id> and the load testing resource is <load-test-resource> in the resource group <resource-group> in my subscription",
     "Create a load test resource <load-test-resource-name> in the resource group <resource-group> in my subscription",
     "Create a test run using the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>. Use the name of test run <display-name> and description as <description>",
@@ -294,7 +294,7 @@
     "List all load testing resources in the resource group <resource-group> in my subscription",
     "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
   ],
-  "azmcp_managedlustre": [
+  "managedlustre": [
     "Create an Azure Managed Lustre filesystem with name <filesystem_name>, size <filesystem_size>, SKU <sku>, and subnet <subnet_id> for availability zone <zone> in location <location>. Maintenance should occur on <maintenance_window_day> at <maintenance_window_time>",
     "List the Azure Managed Lustre filesystems in my resource group <resource_group_name>",
     "List the Azure Managed Lustre filesystems in my subscription <subscription_name>",
@@ -303,12 +303,12 @@
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>",
     "Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku>"
   ],
-  "azmcp_marketplace": [
+  "marketplace": [
     "Get details about marketplace product <product_name>",
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "azmcp_monitor": [
+  "monitor": [
     "Analyze the performance trends and response times for Application Insights resource <resource_name> over the last <time_period>",
     "Check the availability metrics for my Application Insights resource <resource_name> for the last <time_period>",
     "Create a new Standard Web Test with name <webtest_resource_name> in my subscription in <resource_group> in a given <appinsights_component>",
@@ -335,7 +335,7 @@
     "What metric definitions are available for the Application Insights resource <resource_name>",
     "What's the request per second rate for my Application Insights resource <resource_name> over the last <time_period>"
   ],
-  "azmcp_mysql": [
+  "mysql": [
     "List all MySQL databases in server <server>",
     "List all MySQL servers in my subscription",
     "List all tables in the MySQL database <database> in server <server>",
@@ -349,7 +349,7 @@
     "Show me the tables in the MySQL database <database> in server <server>",
     "Show me the value of connection timeout in seconds in my MySQL server <server>"
   ],
-  "azmcp_postgres": [
+  "postgres": [
     "Enable replication for my PostgreSQL server <server>",
     "List all PostgreSQL databases in server <server>",
     "List all PostgreSQL servers in my subscription",
@@ -363,18 +363,18 @@
     "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>",
     "Show me the tables in the PostgreSQL database <database> in server <server>"
   ],
-  "azmcp_quota": [
+  "quota": [
     "Check usage information for <resource_type> in region <region>",
     "Show me the available regions for these resource types <resource_types>"
   ],
-  "azmcp_redis": [
+  "redis": [
     "Get Redis clusters",
     "List all Redis resources in my subscription",
     "Show me my Redis caches",
     "Show me my Redis resources",
     "Show me the Redis resources in my subscription"
   ],
-  "azmcp_resourcehealth": [
+  "resourcehealth": [
     "Get the availability status for resource <resource_name>",
     "List active service health events in my subscription",
     "List all service health events in my subscription",
@@ -387,11 +387,11 @@
     "What resources in resource group <resource_group_name> have health issues?",
     "What service issues have occurred in the last 30 days?"
   ],
-  "azmcp_role": [
+  "role": [
     "List all available role assignments in my subscription",
     "Show me the available role assignments in my subscription"
   ],
-  "azmcp_search": [
+  "search": [
     "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
     "Find information about <query> using knowledge base <agent-name> in search service <service-name>",
     "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
@@ -419,12 +419,12 @@
     "Show me the knowledge sources in the search service <service-name>",
     "What does knowledge base <agent-name> in search service <service-name> know about <query>"
   ],
-  "azmcp_servicebus": [
+  "servicebus": [
     "Show me the details of service bus <service_bus_name> queue <queue_name>",
     "Show me the details of service bus <service_bus_name> subscription <subscription_name>",
     "Show me the details of service bus <service_bus_name> topic <topic_name>"
   ],
-  "azmcp_signalr": [
+  "signalr": [
     "Describe the SignalR runtime <signalr_name> in resource group <resource_group_name>",
     "Get information about my SignalR runtime <signalr_name> in <resource_group_name>",
     "List all SignalRs in my subscription",
@@ -432,7 +432,7 @@
     "Show me the details of SignalR <signalr_name>",
     "Show me the network information of SignalR runtime <signalr_name>"
   ],
-  "azmcp_speech": [
+  "speech": [
     "Convert speech to text from audio file <file_path> using endpoint <endpoint>",
     "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
     "Convert speech to text with detailed output format from audio file <file_path>",
@@ -444,7 +444,7 @@
     "Transcribe speech from audio file <file_path> with profanity filtering",
     "Transcribe the audio file <file_path> in Spanish language"
   ],
-  "azmcp_sql": [
+  "sql": [
     "Add a firewall rule to allow access from IP range <start_ip> to <end_ip> for SQL server <server_name>",
     "Create a firewall rule for my Azure SQL server <server_name>",
     "Create a new Azure SQL server named <server_name> in resource group <resource_group_name>",
@@ -486,7 +486,7 @@
     "What firewall rules are configured for my SQL server <server_name>?",
     "What Microsoft Entra ID administrators are set up for my SQL server <server_name>?"
   ],
-  "azmcp_storage": [
+  "storage": [
     "Create a new blob container named documents with container public access in storage account <account>",
     "Create a new storage account called testaccount123 in East US region",
     "Create a new storage account with Data Lake Storage Gen2 enabled",
@@ -507,18 +507,18 @@
     "Show me the storage accounts in my subscription and include HTTPS-only and public blob access settings",
     "Upload file <local-file-path> to storage blob <blob> in container <container> in storage account <account>"
   ],
-  "azmcp_subscription": [
+  "subscription": [
     "List all subscriptions for my account",
     "Show me my subscriptions",
     "What is my current subscription?",
     "What subscriptions do I have?"
   ],
-  "azmcp_virtualdesktop": [
+  "virtualdesktop": [
     "List all host pools in my subscription",
     "List all session hosts in host pool <hostpool_name>",
     "List all user sessions on session host <sessionhost_name> in host pool <hostpool_name>"
   ],
-  "azmcp_workbooks": [
+  "workbooks": [
     "Create a new workbook named <workbook_name>",
     "Delete the workbook with resource ID <workbook_resource_id>",
     "Get information about the workbook with resource ID <workbook_resource_id>",
@@ -527,15 +527,19 @@
     "Update the workbook <workbook_resource_id> with a new text step",
     "What workbooks do I have in resource group <resource_group_name>?"
   ],
-  "azmcp_extension": [
+  "extension_azqr": [
     "Check my Azure subscription for any compliance issues or recommendations",
-    "Create a Storage account with name <storage_account_name> using Azure CLI",
-    "How to install azd",
-    "List all virtual machines in my subscription using Azure CLI",
     "Provide compliance recommendations for my current Azure subscription",
-    "Scan my Azure subscription for compliance recommendations",
-    "Show me the details of the storage account <account_name> with Azure CLI commands",
-    "uninstall az cli on your machine and run test prompts for extension_cli_generate",
+    "Scan my Azure subscription for compliance recommendations"
+  ],
+  "extension_cli_generate": [
+    "Create a Storage account with name <storage_account_name> using Azure CLI",
+    "List all virtual machines in my subscription using Azure CLI",
+    "Show me the details of the storage account <account_name> with Azure CLI commands"
+  ],
+  "extension_cli_install": [
+    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
+    "How to install azd",
     "What is Azure Functions Core tools and how to install it"
   ]
 }

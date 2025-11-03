@@ -12,7 +12,7 @@ Reads:
     - consolidated-tools.json (contains consolidated_tools array; each tool has an mappedToolList list)
     - namespace-tools.json (contains top-level namespaces with recursive subcommands)
     - tools.json (optional for future enrichment / validation)
-    - prompts.json (maps individual command keys to prompt examples; e.g. command "azmcp acr registry list" => key "azmcp_acr_registry_list")
+    - prompts.json (maps individual command keys to prompt examples; e.g. command "acr registry list" => key "acr_registry_list")
 
 For every entity (consolidated tool name OR namespace name) the script:
     1. Resolves its underlying command strings
@@ -126,8 +126,8 @@ function Resolve-PromptsForCommands {
 
 <#
     NOTE: Namespace tools JSON is now a FLAT list where each element is either:
-      1. A top-level namespace entry:   { name, command: "azmcp <ns>" }
-      2. A surfaced leaf command entry: { name, command: "azmcp extension <leaf>" }
+      1. A top-level namespace entry:   { name, command: "<ns>" }
+      2. A surfaced leaf command entry: { name, command: "extension <leaf>" }
 
     Previously the structure contained recursive subcommands; the old recursive walker is retained
     only for backwards compatibility scenarios (not currently invoked). The new logic derives the
@@ -144,10 +144,10 @@ function Get-NamespaceCommandStrings {
     if ($null -eq $Node -or -not $Node.command) { return $acc }
     $cmd = ($Node.command -replace '\s+', ' ').Trim()
 
-    # Pattern: azmcp <namespace>
-    if ($cmd -match '^(azmcp)\s+([^\s]+)$') {
-        $ns = $Matches[2]
-        # Collect all prompt keys beginning with azmcp_<ns>_ (leaf commands)
+    # Pattern: <namespace>
+    if ($cmd -match '^([^\s]+)$') {
+        $ns = $Matches[1]
+        # Collect all prompt keys beginning with <ns>_ (leaf commands)
         $prefix = "${ns}_"
         $matchingLeafKeys = $AllPromptKeys | Where-Object { $_.StartsWith($prefix, [System.StringComparison]::OrdinalIgnoreCase) }
         foreach ($k in $matchingLeafKeys) {
@@ -157,7 +157,7 @@ function Get-NamespaceCommandStrings {
         return ($acc | Sort-Object -Unique)
     }
 
-    # Surfaced leaf (e.g., azmcp extension azqr) – aggregate only itself
+    # Surfaced leaf (e.g., extension azqr) – aggregate only itself
     $acc += $cmd
     return $acc
 }
@@ -233,11 +233,11 @@ function Invoke-NamespaceGeneration {
 
         $commandStrings = @(Get-NamespaceCommandStrings -Node $ns -AllPromptKeys $AllPromptKeys)
 
-        # Determine aggregation key: namespace entries get 'azmcp_<ns>', surfaced leaf commands keep their converted key
-        $isNamespace = $ns.command -match '^(azmcp)\s+([^\s]+)$'
+        # Determine aggregation key: namespace entries get '<ns>', surfaced leaf commands keep their converted key
+
+        $isNamespace = $ns.command -match '^([^\s]+)$'
         if ($isNamespace) {
-            $nsName = $Matches[2]
-            if (-not $nsName.StartsWith('azmcp_')) { $nsName = 'azmcp_' + $nsName }
+            $nsName = $Matches[1]
             $resolved = Resolve-PromptsForCommands -CommandStrings $commandStrings -PromptsJson $PromptsJson -AllPromptKeys $AllPromptKeys -Warnings ([ref]$warnings) -VerboseWarnings:$VerboseWarnings
             $outputMap[$nsName] = @($resolved)
         }

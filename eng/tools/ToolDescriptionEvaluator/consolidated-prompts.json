@@ -203,8 +203,8 @@
     "Show me the details of the storage account <account_name> with Azure CLI commands"
   ],
   "install_azure_cli_extensions": [
+    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
     "How to install azd",
-    "uninstall az cli on your machine and run test prompts for extension_cli_generate",
     "What is Azure Functions Core tools and how to install it"
   ],
   "get_azure_security_configurations": [
