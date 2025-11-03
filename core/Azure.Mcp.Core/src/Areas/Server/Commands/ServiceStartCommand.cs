@@ -448,11 +448,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             services.AddSingleIdentityTokenCredentialProvider();
         }
 
-        // Configure caching strategy based on authentication mode
-        if (serverOptions.OutgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
-        {
-            services.AddHttpServiceCacheService();
-        }
+        // Add a multi-user, HTTP context-aware caching strategy to isolate cache entries.
+        services.AddHttpServiceCacheService();
+
 
         // Configure non-MCP controllers/endpoints/routes/etc.
         services.AddHealthChecks();
@@ -588,6 +586,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         // Configure services
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
+
+        // We still use the multi-user, HTTP context-aware caching strategy here
+        // because we don't yet know what security model we want for this "insecure" mode.
+        // As a positive, it gives some isolation locally, but that's not a
+        // design strategy we've fully vetted or endorsed.
+        services.AddHttpServiceCacheService();
 
         WebApplication app = builder.Build();
 

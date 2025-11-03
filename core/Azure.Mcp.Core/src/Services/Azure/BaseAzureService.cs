@@ -15,7 +15,7 @@ public abstract class BaseAzureService
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
 
-    private ITenantService? _tenantServiceDoNotUseDirectly;
+    private readonly ITenantService? _tenantServiceDoNotUseDirectly;
 
     static BaseAzureService()
     {
@@ -37,7 +37,7 @@ public abstract class BaseAzureService
     protected BaseAzureService(ITenantService tenantService)
     {
         ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
-        _tenantServiceDoNotUseDirectly = tenantService;
+        TenantService = tenantService;
     }
 
     /// <summary>
