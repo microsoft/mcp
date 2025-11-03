@@ -13,9 +13,6 @@ public class CommandMetadataSyncTests
     [Fact]
     public void AzCommandsMetadata_Should_Be_Synchronized()
     {
-        // var isPipelineRun = string.Equals(Environment.GetEnvironmentVariable("TF_BUILD"), "true", StringComparison.OrdinalIgnoreCase);
-        // Assert.SkipWhen(isPipelineRun, "Long running test should be reimplemented in Analyze-Code.ps1");
-
         // Arrange
         var docsPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "docs", "azmcp-commands.md");
         var updateScriptPath = Path.Combine(_repoRoot, "eng", "scripts", "Update-AzCommandsMetadata.ps1");
