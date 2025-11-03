@@ -31,7 +31,6 @@ if ($changedFiles) {
     $changedFiles | ForEach-Object {
     Write-Host "Checking file: $_"
     $fileName = [System.IO.Path]::GetFileName($_)
-    Write-Host "  -> File name: $fileName"
     $isSkipFile = $skipFiles -contains $fileName
 
     $isInSkipDirectory = $false
