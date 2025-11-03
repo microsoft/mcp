@@ -66,7 +66,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
 
     /// <summary>
-    /// During recording, variables saved to this dictionary will be propogated to the test-proxy and saved in the recording file.
+    /// During recording, variables saved to this dictionary will be propagated to the test-proxy and saved in the recording file.
     /// During playback, these variables will be available within the test function body, and can be used to ensure that dynamic values from the recording are used where
     /// specific values should be used.
     /// </summary>
