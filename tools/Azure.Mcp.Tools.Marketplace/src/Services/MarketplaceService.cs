@@ -31,7 +31,7 @@ public class MarketplaceService(ITenantService tenantService)
     /// <param name="skuId">Filter by SKU ID.</param>
     /// <param name="includeServiceInstructionTemplates">Include service instruction templates.</param>
     /// <param name="pricingAudience">Pricing audience.</param>
-    /// <param name="tenant">Optional. The Azure tenantId ID for authentication.</param>
+    /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
     /// <returns>A JSON node containing the product information.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
@@ -47,7 +47,7 @@ public class MarketplaceService(ITenantService tenantService)
         string? skuId = null,
         bool? includeServiceInstructionTemplates = null,
         string? pricingAudience = null,
-        string? tenant = null,
+        string? tenantId = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters(
@@ -57,7 +57,7 @@ public class MarketplaceService(ITenantService tenantService)
         string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
-        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenant, retryPolicy);
+        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy);
     }
 
     /// <summary>
