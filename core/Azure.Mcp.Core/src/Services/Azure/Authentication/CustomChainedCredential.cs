@@ -103,7 +103,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
         {
             creds.Add(CreateBrowserCredential(tenantId, authRecord));
         }
-        
+
         return new ChainedTokenCredential([.. creds]);
     }
 
@@ -246,7 +246,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
     {
         // Check for AZURE_CLIENT_ID to support User-Assigned Managed Identity
         string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
-        
+
         ManagedIdentityCredential managedIdentityCredential;
         if (!string.IsNullOrWhiteSpace(clientId))
         {
@@ -258,7 +258,7 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             // System-Assigned Managed Identity (default)
             managedIdentityCredential = new ManagedIdentityCredential();
         }
-        
+
         credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
 

@@ -241,7 +241,7 @@ public class CustomChainedCredentialTests : IDisposable
 
         // Assert - Verify the credential was created successfully
         Assert.NotNull(credential);
-        
+
         // Verify AZURE_CLIENT_ID environment variable is set correctly
         var actualClientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
         Assert.Equal(expectedClientId, actualClientId);
@@ -288,7 +288,7 @@ public class CustomChainedCredentialTests : IDisposable
         // Assert
         Assert.NotNull(credential);
         Assert.IsAssignableFrom<TokenCredential>(credential);
-        
+
         // Verify AZURE_CLIENT_ID is still set
         var actualClientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
         Assert.Equal(expectedClientId, actualClientId);
