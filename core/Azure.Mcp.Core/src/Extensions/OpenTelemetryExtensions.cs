@@ -11,6 +11,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTelemetry;
+using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
@@ -33,14 +34,10 @@ public static class OpenTelemetryExtensions
                     options.Version = assemblyName.Version.ToString();
                 }
 
-#if RELEASE
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
                 options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry)
                     || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-#else
-                options.IsTelemetryEnabled = false;
-#endif
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
@@ -109,22 +106,21 @@ public static class OpenTelemetryExtensions
 
                 r.AddService("azmcp", version)
                     .AddTelemetrySdk();
-            })
-            .UseAzureMonitorExporter(options =>
-            {
-#if DEBUG
-                options.EnableLiveMetrics = true;
-                options.Diagnostics.IsLoggingEnabled = true;
-                options.Diagnostics.IsLoggingContentEnabled = true;
-#endif
-                options.ConnectionString = appInsightsConnectionString;
             });
+
+#if RELEASE
+        otelBuilder.UseAzureMonitorExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
+        });
+#endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
             otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
-                .WithMetrics(metrics => metrics.AddOtlpExporter());
+                .WithMetrics(metrics => metrics.AddOtlpExporter())
+                .WithLogging(logging => logging.AddOtlpExporter());
         }
     }
 }
