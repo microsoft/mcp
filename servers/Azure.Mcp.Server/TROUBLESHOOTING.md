@@ -391,11 +391,13 @@ When `prod` is used, the credential chain becomes:
 ```
 Environment → Workload Identity → Managed Identity
 ```
+**Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
 When `dev` is used, the credential chain becomes:
 ```
-Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential
 ```
+**Note:** `InteractiveBrowserCredential` IS added as fallback for development scenarios.
 
 #### Use Specific Credentials Only
 
@@ -413,7 +415,12 @@ AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
+
+# Use only Managed Identity credential (for Azure-hosted apps)
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 ```
+
+**Important:** When using a specific credential name, `InteractiveBrowserCredential` is NOT added as fallback (except when explicitly requesting `InteractiveBrowserCredential`). Authentication will fail fast if the specified credential is unavailable. This ensures production scenarios (like Azure Web Apps with Managed Identity) fail immediately rather than attempting interactive browser authentication.
 
 **Available credential names:**
 - `AzureCliCredential`
@@ -425,6 +432,22 @@ AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 - `VisualStudioCodeCredential`
 - `VisualStudioCredential`
 - `WorkloadIdentityCredential`
+
+#### Using Managed Identity in Azure
+
+For Azure-hosted applications (Web Apps, Function Apps, Container Apps, AKS, etc.), use Managed Identity:
+
+```bash
+# For System-Assigned Managed Identity
+AZURE_TOKEN_CREDENTIALS=prod
+# or
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
+
+# For User-Assigned Managed Identity, also set:
+AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
+The `AZURE_CLIENT_ID` environment variable specifies which User-Assigned Managed Identity to use. If not set, System-Assigned Managed Identity will be used.
 
 ### Primary Access Token from Wrong Issuer
 
