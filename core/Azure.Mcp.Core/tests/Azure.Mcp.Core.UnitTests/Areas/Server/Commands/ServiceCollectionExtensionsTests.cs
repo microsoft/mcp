@@ -17,7 +17,7 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
 public class ServiceCollectionExtensionsTests
 {
     // TransportTypes is internal, so we'll use strings directly
-    private const string StdioTransport = "stdio";
+    private const TransportTypes StdioTransport = TransportTypes.StdIo;
 
     private IServiceCollection SetupBaseServices()
     {

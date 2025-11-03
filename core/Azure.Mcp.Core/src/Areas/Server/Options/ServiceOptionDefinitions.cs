@@ -13,10 +13,9 @@ public static class ServiceOptionDefinitions
     public const string DebugName = "debug";
     public const string EnableInsecureTransportsName = "enable-insecure-transports";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
-    public const string RunAsRemoteHttpServiceName = "run-as-remote-http-service";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
 
-    public static readonly Option<string> Transport = new($"--{TransportName}")
+    public static readonly Option<TransportTypes> Transport = new($"--{TransportName}")
     {
         Description = "Transport mechanism to use for Azure MCP Server.",
         DefaultValueFactory = _ => TransportTypes.StdIo,
@@ -83,14 +82,6 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
-        DefaultValueFactory = _ => false
-    };
-
-    public static readonly Option<bool> RunAsRemoteHttpService = new(
-        $"--{RunAsRemoteHttpServiceName}")
-    {
-        Required = false,
-        Description = "Run the server as a remote HTTP service requiring authentication and authorization on incoming MCP requests.",
         DefaultValueFactory = _ => false
     };
 

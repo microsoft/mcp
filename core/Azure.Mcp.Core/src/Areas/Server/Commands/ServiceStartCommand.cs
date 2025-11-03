@@ -78,23 +78,21 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.EnableInsecureTransports);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
 #if ENABLE_REMOTE
-        command.Options.Add(ServiceOptionDefinitions.RunAsRemoteHttpService);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
 #endif
         command.Validators.Add(commandResult =>
         {
+            TransportTypes transport = commandResult.GetValueOrDefault<TransportTypes>(ServiceOptionDefinitions.Transport);
+            bool enableInsecureTransports = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports);
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
-            ValidateTransport(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Transport), commandResult);
-            ValidateInsecureTransportsConfiguration(commandResult.GetValueOrDefault(ServiceOptionDefinitions.EnableInsecureTransports), commandResult);
+            ValidateTransport(transport, enableInsecureTransports, commandResult);
+            ValidateInsecureTransportsConfiguration(transport, enableInsecureTransports, commandResult);
             ValidateNamespaceAndToolMutualExclusion(
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
                 commandResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Tool.Name),
                 commandResult);
 #if ENABLE_REMOTE
-            ValidateOutgoingAuthStrategy(
-                commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name),
-                commandResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name),
-                commandResult);
+            ValidateOutgoingAuthStrategy(commandResult);
 #endif
         });
     }
@@ -119,7 +117,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         var options = new ServiceStartOptions
         {
-            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo,
+            Transport = parseResult.GetValueOrDefault<TransportTypes>(ServiceOptionDefinitions.Transport.Name),
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
             Mode = mode,
             Tool = tools,
@@ -216,27 +214,58 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// Validates if the provided transport is valid.
     /// </summary>
     /// <param name="transport">The transport to validate.</param>
+    /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
     /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateTransport(string? transport, CommandResult commandResult)
+    private static void ValidateTransport(TransportTypes transport, bool enableInsecureTransports, CommandResult commandResult)
     {
-        if (transport is null || transport == TransportTypes.StdIo)
+        if (transport == TransportTypes.StdIo)
         {
-            return; // Success
+            if (enableInsecureTransports)
+            {
+                commandResult.AddError($"The --enable-insecure-transports option cannot be used with the default {TransportTypes.StdIo} transport. To use this option, specify {TransportTypes.Http} transport with --transport http.");
+            }
+            return;
         }
 
-        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}.");
+        if (transport == TransportTypes.Http)
+        {
+#if ENABLE_REMOTE
+            // For the untrimmed build, the HTTP server enforces authentication (secure) by default, unless the user explicitly opts out of
+            // this enforcement using the --enable-insecure-transports option.
+            return;
+#else
+            if (!enableInsecureTransports)
+            {
+                // For the trimmed build, don’t default to the insecure option - instead, display a caution message and allow the user
+                // to explicitly opt in if they agree.
+                commandResult.AddError($"Using {TransportTypes.Http} transport requires explicit opt-in with --enable-insecure-transports. " +
+                    "Note: Opting in this option enables insecure, unauthenticated transport over streamable HTTP. " +
+                    "Use with extreme caution, as this disables all transport security and may expose sensitive data to interception.");
+            }
+            return;
+#endif
+        }
+
+        commandResult.AddError($"Invalid transport '{transport}'. Valid transports are: {TransportTypes.StdIo}, {TransportTypes.Http}.");
     }
 
     /// <summary>
     /// Validates if the insecure transport configuration is valid.
     /// </summary>
+    /// <param name="transport">The transport type.</param>
     /// <param name="enableInsecureTransports">Whether insecure transports are enabled.</param>
     /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateInsecureTransportsConfiguration(bool enableInsecureTransports, CommandResult commandResult)
+    private static void ValidateInsecureTransportsConfiguration(TransportTypes transport, bool enableInsecureTransports, CommandResult commandResult)
     {
         // If insecure transports are not enabled, configuration is valid
         if (!enableInsecureTransports)
         {
+            return; // Success
+        }
+
+        if (transport == TransportTypes.StdIo)
+        {
+            // The ValidateTransport(..) method already errors out if --enable-insecure-transport is used with stdio transport
             return; // Success
         }
 
@@ -270,20 +299,17 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <summary>
     /// Validates that the outgoing authentication strategy is compatible with the hosting mode.
     /// </summary>
-    /// <param name="runAsRemoteHttpService">Whether the server is running as a remote HTTP service.</param>
-    /// <param name="outgoingAuthStrategy">The outgoing authentication strategy.</param>
     /// <param name="commandResult">Command result to update on failure.</param>
-    private static void ValidateOutgoingAuthStrategy(
-        bool runAsRemoteHttpService,
-        OutgoingAuthStrategy outgoingAuthStrategy,
-        CommandResult commandResult)
+    private static void ValidateOutgoingAuthStrategy(CommandResult commandResult)
     {
-        // UseOnBehalfOf is only valid when running as a remote HTTP service
-        if (!runAsRemoteHttpService && outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
+        var outgoingAuthStrategy = commandResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
+        if (outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
-            commandResult.AddError($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication" +
-                $" strategy is only valid when running as a remote HTTP service " +
-                $"(--{ServiceOptionDefinitions.RunAsRemoteHttpServiceName}).");
+            // In untrimmed build, the 'UseOnBehalfOf' is only valid when running as a authenticated/secured HTTP service
+            if (!IsAuthenticatedHttpServiceRequested(commandResult))
+            {
+                commandResult.AddError($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.EnableInsecureTransportsName}).");
+            }
         }
     }
 
@@ -301,7 +327,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ArgumentException argEx when argEx.Message.Contains("--namespace and --tool options cannot be used together") =>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
-            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires --{ServiceOptionDefinitions.RunAsRemoteHttpServiceName} to be enabled.",
+            $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.EnableInsecureTransportsName}).",
         InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
             "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
@@ -316,7 +342,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (serverOptions.EnableInsecureTransports)
         {
-            return CreateUnAuthenticatedHttpHost(serverOptions);
+            return CreateUnauthenticatedHttpHost(serverOptions);
         }
 #if ENABLE_REMOTE
         else if (serverOptions.RunAsRemoteHttpService)
@@ -552,7 +578,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     /// <param name="serverOptions">The server configuration options.</param>
     /// <returns>An IHost instance configured for HTTP transport.</returns>
-    private IHost CreateUnAuthenticatedHttpHost(ServiceStartOptions serverOptions)
+    private IHost CreateUnauthenticatedHttpHost(ServiceStartOptions serverOptions)
     {
         WebApplicationBuilder builder = WebApplication.CreateBuilder();
 
@@ -665,6 +691,30 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
+    /// Determines if the server is requested to run as an authenticated HTTP service.
+    /// </summary>
+    /// <param name="commandResult">The command result to check.</param>
+    /// <returns>True if running as authenticated HTTP service (HTTP transport without insecure transports), false otherwise.</returns>
+    private static bool IsAuthenticatedHttpServiceRequested(CommandResult commandResult)
+    {
+        TransportTypes transport = commandResult.GetValueOrDefault<TransportTypes>(ServiceOptionDefinitions.Transport);
+        bool isInsecureTransport = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports);
+        return (transport == TransportTypes.Http) && !isInsecureTransport;
+    }
+
+    /// <summary>
+    /// Determines if the server is requested to run as an authenticated HTTP service.
+    /// </summary>
+    /// <param name="parseResult">The parse result to check.</param>
+    /// <returns>True if running as authenticated HTTP service (HTTP transport without insecure transports), false otherwise.</returns>
+    private static bool IsAuthenticatedHttpServiceRequested(ParseResult parseResult)
+    {
+        TransportTypes transport = parseResult.GetValueOrDefault<TransportTypes>(ServiceOptionDefinitions.Transport.Name);
+        bool isInsecureTransport = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.EnableInsecureTransports.Name);
+        return (transport == TransportTypes.Http) && !isInsecureTransport;
+    }
+
+    /// <summary>
     /// Resolves the service mode and outgoing authentication strategy based on parsed command line options, applying appropriate defaults.
     /// </summary>
     /// <param name="parseResult">The parsed command line arguments.</param>
@@ -673,7 +723,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         ResolveServiceModeAndAuthStrategy(ParseResult parseResult)
     {
 #if ENABLE_REMOTE
-        var runAsRemoteHttpService = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.RunAsRemoteHttpService.Name);
+        var runAsRemoteHttpService = IsAuthenticatedHttpServiceRequested(parseResult);
         var outgoingAuthStrategy = parseResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
         // Apply safe defaults for outgoing authentication strategy based on hosting mode
         if (outgoingAuthStrategy == OutgoingAuthStrategy.NotSet)

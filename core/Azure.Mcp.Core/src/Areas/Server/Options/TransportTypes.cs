@@ -1,20 +1,23 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Text.Json.Serialization;
+
 namespace Azure.Mcp.Core.Areas.Server.Options;
 
 /// <summary>
 /// Defines the supported transport mechanisms for the Azure MCP server.
 /// </summary>
-internal static class TransportTypes
+[JsonConverter(typeof(JsonStringEnumConverter))]
+public enum TransportTypes
 {
     /// <summary>
-    /// Standard Input/Output transport mechanism.
+    /// Standard Input/Output transport mechanism (default).
     /// </summary>
-    public const string StdIo = "stdio";
+    StdIo,
 
     /// <summary>
-    /// MCP's bespoke transport called Streamable HTTP.
+    /// HTTP transport mechanism.
     /// </summary>
-    public const string Http = "http";
+    Http
 }

@@ -35,9 +35,9 @@ public class ServiceStartCommandTests
     }
 
     [Theory]
-    [InlineData(null, "", "stdio")]
-    [InlineData("storage", "storage", "stdio")]
-    public void ServiceOption_ParsesCorrectly(string? inputService, string expectedService, string expectedTransport)
+    [InlineData(null, "", TransportTypes.StdIo)]
+    [InlineData("storage", "storage", TransportTypes.StdIo)]
+    public void ServiceOption_ParsesCorrectly(string? inputService, string expectedService, TransportTypes expectedTransport)
     {
         // Arrange
         var parseResult = CreateParseResult(inputService);
@@ -218,7 +218,7 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
         Assert.True(options.ReadOnly);
@@ -241,7 +241,7 @@ public class ServiceStartCommandTests
         Assert.NotNull(options.Tool);
         Assert.Single(options.Tool);
         Assert.Equal(expectedTool, options.Tool[0]);
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal("all", options.Mode);
     }
 
@@ -272,7 +272,7 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport); // Default transport
+        Assert.Equal(TransportTypes.StdIo, options.Transport); // Default transport
         Assert.Null(options.Namespace);
         Assert.Equal("namespace", options.Mode); // Default mode
         Assert.False(options.ReadOnly); // Default readonly
@@ -507,7 +507,7 @@ public class ServiceStartCommandTests
         // Arrange
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = "test-transport",
+            Transport = TransportTypes.StdIo,
             Mode = "test-mode",
             Tool = ["test-tool1", "test-tool2"],
             ReadOnly = false,
@@ -559,7 +559,7 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = "test-transport",
+            Transport = TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,
