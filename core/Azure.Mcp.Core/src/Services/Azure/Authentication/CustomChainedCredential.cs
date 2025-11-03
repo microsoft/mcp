@@ -82,16 +82,18 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
     {
         return EnvironmentHelpers.GetEnvironmentVariableAsBool(OnlyUseBrokerCredentialEnvVarName);
     }
-#if DEBUG
-    private const string PlaybackModeEnvVarName = "AZURE_TOKEN_CREDENTIALS";
-    private static bool IsPlaybackMode() => string.Equals(Environment.GetEnvironmentVariable(PlaybackModeEnvVarName), "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
-#endif
 
     private static TokenCredential CreateCredential(string? tenantId, ILogger<CustomChainedCredential>? logger = null)
     {
+
+        // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
+        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
+        bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
+
 #if DEBUG
+        bool isPlaybackMode = string.Equals(tokenCredentials, "PlaybackTokenCredential", StringComparison.OrdinalIgnoreCase);
         // Short-circuit for playback to avoid any real auth & interactive prompts.
-        if (IsPlaybackMode())
+        if (isPlaybackMode)
         {
             logger?.LogDebug("Playback mode detected: using PlaybackTokenCredential.");
             return new PlaybackTokenCredential();
@@ -116,10 +118,6 @@ internal class CustomChainedCredential(string? tenantId = null, ILogger<CustomCh
 
         // Check if we are running in a VS Code context. VSCODE_PID is set by VS Code when launching processes, and is a reliable indicator for VS Code-hosted processes.
         bool isVsCodeContext = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("VSCODE_PID"));
-
-        // Check if AZURE_TOKEN_CREDENTIALS is explicitly set
-        string? tokenCredentials = Environment.GetEnvironmentVariable(TokenCredentialsEnvVarName);
-        bool hasExplicitCredentialSetting = !string.IsNullOrEmpty(tokenCredentials);
 
         if (isVsCodeContext && !hasExplicitCredentialSetting)
         {

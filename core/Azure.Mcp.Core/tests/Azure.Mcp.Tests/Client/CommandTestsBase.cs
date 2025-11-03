@@ -18,7 +18,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
-    public LiveTestSettings Settings { get; set; } = default!;
+    protected LiveTestSettings Settings { get; private set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
 
@@ -228,5 +228,4 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     {
         await Client.DisposeAsync().ConfigureAwait(false);
     }
-
 }

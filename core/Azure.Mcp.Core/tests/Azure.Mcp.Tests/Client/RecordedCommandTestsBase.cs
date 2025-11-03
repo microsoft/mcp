@@ -202,7 +202,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        if (Proxy is null)
+        if (Proxy == null)
         {
             throw new InvalidOperationException("Test proxy is not initialized.");
         }
@@ -222,7 +222,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         }
         var bodyContent = BinaryContentHelper.FromObject(recordOptions);
 
-        if (TestMode is TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             Output.WriteLine($"[Playback] Session file: {pathToRecording}");
             try
@@ -237,18 +237,11 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             }
             catch (Exception e)
             {
-                if (Proxy is not null)
-                {
-                    Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start playback.{e.ToString()}");
-                }
-                else
-                {
-                    Output.WriteLine($"Proxy is null while attempting to snapshot stderr. Facing exception during start playback.{e.ToString()}");
-                }
+                Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start playback.{e.ToString()}");
                 throw;
             }
         }
-        else if (TestMode is TestMode.Record)
+        else if (TestMode == TestMode.Record)
         {
             Output.WriteLine($"[Record] Session file: {pathToRecording}");
             try
@@ -257,14 +250,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             }
             catch (Exception e)
             {
-                if (Proxy is not null)
-                {
-                    Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start record.{e.ToString()}");
-                }
-                else
-                {
-                    Output.WriteLine($"Proxy is null while attempting to snapshot stderr. Facing exception during start recording.{e.ToString()}");
-                }
+                Output.WriteLine(Proxy.SnapshotStdErr() ?? $"Proxy is null while attempting to snapshot stderr. Facing exception during start record.{e.ToString()}");
                 throw;
             }
         }
@@ -279,16 +265,16 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        if (Proxy is null)
+        if (Proxy == null)
         {
             throw new InvalidOperationException("Test proxy is not initialized.");
         }
 
-        if (TestMode is TestMode.Playback)
+        if (TestMode == TestMode.Playback)
         {
             await Proxy.Client.StopPlaybackAsync("placeholder-ignore").ConfigureAwait(false);
         }
-        else if (TestMode is TestMode.Record)
+        else if (TestMode == TestMode.Record)
         {
             Proxy.Client.StopRecord("placeholder-ignore", TestVariables);
         }
