@@ -3,6 +3,8 @@
     <Version>0.0.12</Version>
     <CliName>mcptmp</CliName>
     <AssemblyTitle>Template MCP Server</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <Description>Template MCP Server - Basic Model Context Protocol implementation</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Template.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Template.Mcp.Server/README.md</ReadmePath>

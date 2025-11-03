@@ -3,6 +3,8 @@
     <Version>0.0.1</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
