@@ -42,7 +42,7 @@ public class SubscriptionCommandTests
     {
         // Arrange
         var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        SetAzureSubscriptionId("env-subs");
         try
         {
             var parseResult = _commandDefinition.Parse([]);
@@ -53,7 +53,7 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
+            SetAzureSubscriptionId(originalValue);
         }
     }
 
@@ -62,7 +62,7 @@ public class SubscriptionCommandTests
     {
         // Arrange
         var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        SetAzureSubscriptionId("env-subs");
 
         try
         {
@@ -99,7 +99,7 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
+            SetAzureSubscriptionId(originalValue);
         }
     }
 
@@ -108,7 +108,7 @@ public class SubscriptionCommandTests
     {
         // Arrange
         var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
-        EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
+        SetAzureSubscriptionId("env-subs");
 
         try
         {
@@ -151,7 +151,17 @@ public class SubscriptionCommandTests
         finally
         {
             // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
+            SetAzureSubscriptionId(originalValue);
         }
+    }
+
+    /// <summary>
+    /// Sets the AZURE_SUBSCRIPTION_ID environment variable. 
+    /// This method is primarily intended for testing scenarios.
+    /// </summary>
+    /// <param name="subscriptionId">The subscription ID to set, or null to clear the variable.</param>
+    private static void SetAzureSubscriptionId(string? subscriptionId)
+    {
+        Environment.SetEnvironmentVariable(EnvironmentHelpers.AzureSubscriptionIdEnvironmentVariable, subscriptionId);
     }
 }
