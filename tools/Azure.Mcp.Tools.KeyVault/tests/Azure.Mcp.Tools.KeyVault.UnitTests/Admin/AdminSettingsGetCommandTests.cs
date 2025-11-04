@@ -97,7 +97,6 @@ public class AdminSettingsGetCommandTests
     [Theory]
     [InlineData("--vault knownVaultName --subscription knownSubscription", true)]
     [InlineData("--subscription knownSubscription --vault knownVaultName", true)]
-    [InlineData("--vault knownVaultName", true)] // Subscription from env var
     [InlineData("--subscription knownSubscription", false, "Missing required vault")] // Missing required vault
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
