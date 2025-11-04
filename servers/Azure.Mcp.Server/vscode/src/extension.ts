@@ -4,8 +4,7 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-
-const packageJson = require('../../package.json');
+import packageJson from '../../package.json';
 
 function isMcpAutoStartEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('chat.mcp');
