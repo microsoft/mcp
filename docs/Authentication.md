@@ -61,7 +61,18 @@ For Kubernetes workloads or Azure-hosted apps, set the following environment var
 export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order.
+This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order. No interactive browser fallback is added.
+
+#### User-Assigned Managed Identity
+
+To use a User-Assigned Managed Identity in production environments (Azure Web Apps, Function Apps, Container Apps, AKS, etc.), set both environment variables:
+
+```bash
+export AZURE_TOKEN_CREDENTIALS=prod
+export AZURE_CLIENT_ID="<managed-identity-client-id>"
+```
+
+If `AZURE_CLIENT_ID` is not set, the system will use System-Assigned Managed Identity by default.
 
 ### Development Environments
 

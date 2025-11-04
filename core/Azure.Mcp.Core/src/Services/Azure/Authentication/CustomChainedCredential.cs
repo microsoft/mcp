@@ -26,6 +26,10 @@ namespace Azure.Mcp.Core.Services.Azure.Authentication;
 /// Special behavior: When running in VS Code context (VSCODE_PID environment variable is set) and AZURE_TOKEN_CREDENTIALS is not explicitly specified,
 /// Visual Studio Code credential is automatically prioritized first in the chain.
 /// 
+/// Managed Identity Support:
+/// - AZURE_CLIENT_ID: Configures User-Assigned Managed Identity with the specified client ID
+/// - If AZURE_CLIENT_ID is not set or empty, System-Assigned Managed Identity is used (default)
+/// 
 /// After the credential chain, Interactive Browser Authentication with Identity Broker is always added as the final fallback.
 /// </remarks>
 public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChainedCredential>? logger = null) : TokenCredential
@@ -92,7 +96,20 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        // Only add InteractiveBrowserCredential as fallback when:
+        // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
+        // 2. AZURE_TOKEN_CREDENTIALS explicitly requests it
+        // 3. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
+        // Do NOT add it for "prod" or specific credential names (user wants only those credentials)
+        bool shouldAddBrowserFallback = !hasExplicitCredentialSetting ||
+                                       (tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                       (tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false);
+
+        if (shouldAddBrowserFallback)
+        {
+            creds.Add(CreateBrowserCredential(tenantId, authRecord));
+        }
+
         return new ChainedTokenCredential([.. creds]);
     }
 
@@ -233,7 +250,22 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
 
     private static void AddManagedIdentityCredential(List<TokenCredential> credentials)
     {
-        credentials.Add(new SafeTokenCredential(new ManagedIdentityCredential(), "ManagedIdentityCredential"));
+        // Check for AZURE_CLIENT_ID to support User-Assigned Managed Identity
+        string? clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+
+        ManagedIdentityCredential managedIdentityCredential;
+        if (!string.IsNullOrWhiteSpace(clientId))
+        {
+            // User-Assigned Managed Identity with explicit client ID
+            managedIdentityCredential = new ManagedIdentityCredential(clientId);
+        }
+        else
+        {
+            // System-Assigned Managed Identity (default)
+            managedIdentityCredential = new ManagedIdentityCredential();
+        }
+
+        credentials.Add(new SafeTokenCredential(managedIdentityCredential, "ManagedIdentityCredential"));
     }
 
     private static void AddVisualStudioCredential(List<TokenCredential> credentials, string? tenantId)
