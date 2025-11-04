@@ -124,7 +124,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
@@ -147,7 +148,8 @@ public class MetricsQueryCommandTests
             "Average", // aggregation
             "dimension eq 'value'", // filter
             null, // tenant
-            Arg.Any<RetryPolicyOptions?>()); // retry policy
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -169,7 +171,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
@@ -192,7 +195,8 @@ public class MetricsQueryCommandTests
             Arg.Is<string?>(t => t == null), // aggregation (not provided)
             Arg.Is<string?>(t => t == null), // filter (not provided)
             Arg.Is<string?>(t => t == null), // tenant
-            Arg.Any<RetryPolicyOptions?>()); // retry policy
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -276,7 +280,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var context = new CommandContext(_serviceProvider);
@@ -317,7 +322,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
@@ -352,7 +358,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(new List<MetricResult>());
 
         var context = new CommandContext(_serviceProvider);
@@ -378,7 +385,8 @@ public class MetricsQueryCommandTests
             "Average",
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -444,7 +452,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
         var context = new CommandContext(_serviceProvider);
@@ -498,7 +507,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
         var context = new CommandContext(_serviceProvider);
@@ -575,7 +585,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(results);
 
         var context = new CommandContext(_serviceProvider);
@@ -626,7 +637,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resultsWithinLimit);
 
         var context = new CommandContext(_serviceProvider);
@@ -677,7 +689,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resultsWithTooManyBuckets);
 
         var context = new CommandContext(_serviceProvider);
@@ -717,7 +730,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>()))
             .Do(x => throw expectedException);
 
         var context = new CommandContext(_serviceProvider);
@@ -750,7 +764,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>()))
             .Do(x => throw expectedException);
 
         var context = new CommandContext(_serviceProvider);
@@ -817,7 +832,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(results);
 
         var context = new CommandContext(_serviceProvider);
@@ -869,7 +885,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(results);
 
         var context = new CommandContext(_serviceProvider);
@@ -921,7 +938,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(results);
 
         var context = new CommandContext(_serviceProvider);
@@ -952,7 +970,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult((List<MetricResult>)null!));
 
         var context = new CommandContext(_serviceProvider);

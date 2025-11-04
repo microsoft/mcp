@@ -47,7 +47,7 @@ public class RegistryRepositoryListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
                 .Returns(new Dictionary<string, List<string>>
                 {
                     ["myacr"] = ["repo1", "repo2"]
@@ -75,7 +75,7 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Dictionary<string, List<string>>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
@@ -93,7 +93,7 @@ public class RegistryRepositoryListCommandTests
     public async Task ExecuteAsync_Empty_ReturnsEmptyResults()
     {
         // Arrange
-        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListRegistryRepositories(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);

@@ -66,7 +66,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseWor
                 options.Workspace!,
                 options.TableType,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(tables ?? []), MonitorJsonContext.Default.TableListCommandResult);
         }

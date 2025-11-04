@@ -52,7 +52,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
             var accounts = await appConfigService.GetAppConfigAccounts(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(accounts ?? []), AppConfigJsonContext.Default.AccountListCommandResult);
         }

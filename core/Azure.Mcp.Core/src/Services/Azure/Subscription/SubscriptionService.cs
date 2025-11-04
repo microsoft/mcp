@@ -17,7 +17,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
     private const string SubscriptionCacheKey = "subscription";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(12);
 
-    public async Task<List<SubscriptionData>> GetSubscriptions(string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<SubscriptionData>> GetSubscriptions(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         // Try to get from cache first
         var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : $"{CacheKey}_{tenant}";
@@ -28,11 +28,11 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         }
 
         // If not in cache, fetch from Azure
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
         var subscriptions = armClient.GetSubscriptions();
         var results = new List<SubscriptionData>();
 
-        await foreach (var subscription in subscriptions)
+        await foreach (var subscription in subscriptions.WithCancellation(cancellationToken))
         {
             results.Add(subscription.Data);
         }
@@ -43,12 +43,12 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         return results;
     }
 
-    public async Task<SubscriptionResource> GetSubscription(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<SubscriptionResource> GetSubscription(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         // Get the subscription ID first, whether the input is a name or ID
-        var subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy);
+        var subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy, cancellationToken);
 
         // Use subscription ID for cache key
         var cacheKey = string.IsNullOrEmpty(tenant)
@@ -60,8 +60,8 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
             return cachedSubscription;
         }
 
-        var armClient = await CreateArmClientAsync(tenant, retryPolicy);
-        var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync();
+        var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
+        var response = await armClient.GetSubscriptionResource(SubscriptionResource.CreateResourceIdentifier(subscriptionId)).GetAsync(cancellationToken);
         if (response?.Value == null)
         {
             throw new Exception($"Could not retrieve subscription {subscription}");
@@ -78,31 +78,31 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         return Guid.TryParse(subscription, out _);
     }
 
-    public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<string> GetSubscriptionIdByName(string subscriptionName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptions = await GetSubscriptions(tenant, retryPolicy);
+        var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.DisplayName.Equals(subscriptionName, StringComparison.OrdinalIgnoreCase)) ??
             throw new Exception($"Could not find subscription with name {subscriptionName}");
 
         return subscription.SubscriptionId;
     }
 
-    public async Task<string> GetSubscriptionNameById(string subscriptionId, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<string> GetSubscriptionNameById(string subscriptionId, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        var subscriptions = await GetSubscriptions(tenant, retryPolicy);
+        var subscriptions = await GetSubscriptions(tenant, retryPolicy, cancellationToken);
         var subscription = subscriptions.FirstOrDefault(s => s.SubscriptionId.Equals(subscriptionId, StringComparison.OrdinalIgnoreCase)) ??
             throw new Exception($"Could not find subscription with ID {subscriptionId}");
 
         return subscription.DisplayName;
     }
 
-    private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy)
+    private async Task<string> GetSubscriptionId(string subscription, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         if (IsSubscriptionId(subscription))
         {
             return subscription;
         }
 
-        return await GetSubscriptionIdByName(subscription, tenant, retryPolicy);
+        return await GetSubscriptionIdByName(subscription, tenant, retryPolicy, cancellationToken);
     }
 }
