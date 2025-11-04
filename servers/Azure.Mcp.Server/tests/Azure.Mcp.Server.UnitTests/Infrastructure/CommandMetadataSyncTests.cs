@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Diagnostics;
+using Azure.Mcp.Core.Services.ProcessExecution;
 using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;
@@ -11,7 +11,7 @@ public class CommandMetadataSyncTests
     private static readonly string _repoRoot = GetRepoRoot();
 
     [Fact]
-    public void AzCommandsMetadata_Should_Be_Synchronized()
+    public async Task AzCommandsMetadata_Should_Be_Synchronized()
     {
         // Arrange
         var docsPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "docs", "azmcp-commands.md");
@@ -30,11 +30,12 @@ public class CommandMetadataSyncTests
         // Get the original content before running the update script
         var originalContent = File.ReadAllText(docsPath);
 
-        // Act - Run the update script
-        var updateResult = RunCommand(
-            "pwsh",
-            $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"",
-            _repoRoot);
+        // Act - Run the update script using ExternalProcessService
+        var processService = new ExternalProcessService();
+        var pwshPath = FindPowerShellExecutable();
+        var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
+
+        var updateResult = await processService.ExecuteAsync(pwshPath, arguments);
 
         Assert.True(updateResult.ExitCode == 0,
             $"Update script failed with exit code {updateResult.ExitCode}. Output: {updateResult.Output}. Error: {updateResult.Error}");
@@ -52,45 +53,56 @@ public class CommandMetadataSyncTests
             "This ensures that tool metadata in the documentation stays synchronized with the actual command implementations.");
     }
 
-    private static (int ExitCode, string Output, string Error) RunCommand(string command, string arguments, string workingDirectory)
+    private static string FindPowerShellExecutable()
     {
-        var processInfo = new ProcessStartInfo
-        {
-            FileName = command,
-            Arguments = arguments,
-            WorkingDirectory = workingDirectory,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true
-        };
-
-        using var process = new Process { StartInfo = processInfo };
-        var outputBuilder = new System.Text.StringBuilder();
-        var errorBuilder = new System.Text.StringBuilder();
-
-        process.OutputDataReceived += (sender, args) =>
-        {
-            if (args.Data != null)
+        // Try common PowerShell paths
+        var commonPaths = OperatingSystem.IsWindows()
+            ? new[]
             {
-                outputBuilder.AppendLine(args.Data);
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "PowerShell", "7", "pwsh.exe"),
+                Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles), "PowerShell", "pwsh.exe"),
+                "C:\\Program Files\\PowerShell\\7\\pwsh.exe",
+                "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe"
             }
-        };
+            : new[] { "/usr/local/bin/pwsh", "/usr/bin/pwsh" };
 
-        process.ErrorDataReceived += (sender, args) =>
+        foreach (var path in commonPaths)
         {
-            if (args.Data != null)
+            if (File.Exists(path))
             {
-                errorBuilder.AppendLine(args.Data);
+                return path;
             }
-        };
+        }
 
-        process.Start();
-        process.BeginOutputReadLine();
-        process.BeginErrorReadLine();
-        process.WaitForExit();
+        // Search in PATH environment variable
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (pathEnv != null)
+        {
+            var exeName = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
+            foreach (var directory in pathEnv.Split(Path.PathSeparator))
+            {
+                var fullPath = Path.Combine(directory, exeName);
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
 
-        return (process.ExitCode, outputBuilder.ToString(), errorBuilder.ToString());
+            // Also try powershell.exe on Windows as fallback
+            if (OperatingSystem.IsWindows())
+            {
+                foreach (var directory in pathEnv.Split(Path.PathSeparator))
+                {
+                    var fullPath = Path.Combine(directory, "powershell.exe");
+                    if (File.Exists(fullPath))
+                    {
+                        return fullPath;
+                    }
+                }
+            }
+        }
+
+        throw new FileNotFoundException("PowerShell executable not found. Please ensure PowerShell 7+ (pwsh) or Windows PowerShell is installed.");
     }
 
     private static string GetRepoRoot()
