@@ -21,7 +21,6 @@ public sealed class KustoService(
     IHttpClientService httpClientService,
     ILogger<KustoService> logger) : BaseAzureResourceService(subscriptionService, tenantService), IKustoService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ICacheService _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
     private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
     private readonly ILogger<KustoService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

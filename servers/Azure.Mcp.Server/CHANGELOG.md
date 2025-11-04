@@ -2,6 +2,23 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 2.0.0-beta.2 (Unreleased)
+
+### Features Added
+
+- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+
+### Breaking Changes
+
+### Bugs Fixed
+
+- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+
+### Other Changes
+
+- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+
 ## 2.0.0-beta.1 (2025-10-29)
 
 - Initial beta release to validate updated release infrastructure and versioning strategy. No functional changes from 1.x series.

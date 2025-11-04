@@ -4,7 +4,7 @@
 using System.Diagnostics;
 using Xunit;
 
-namespace Azure.Mcp.Core.UnitTests.Infrastructure;
+namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 
 public class CommandMetadataSyncTests
 {
@@ -14,25 +14,18 @@ public class CommandMetadataSyncTests
     public void AzCommandsMetadata_Should_Be_Synchronized()
     {
         // Arrange
-        var serverProjectPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "src", "Azure.Mcp.Server.csproj");
         var docsPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "docs", "azmcp-commands.md");
         var updateScriptPath = Path.Combine(_repoRoot, "eng", "scripts", "Update-AzCommandsMetadata.ps1");
 
         // Verify files exist
-        Assert.True(File.Exists(serverProjectPath), $"Server project not found at {serverProjectPath}");
         Assert.True(File.Exists(docsPath), $"Documentation file not found at {docsPath}");
         Assert.True(File.Exists(updateScriptPath), $"Update script not found at {updateScriptPath}");
 
-        // Act - Build the server project
-        var buildResult = RunCommand("dotnet", $"build \"{serverProjectPath}\" -c Debug", _repoRoot);
-
-        Assert.True(buildResult.ExitCode == 0, $"Build failed with exit code {buildResult.ExitCode}. Output: {buildResult.Output}. Error: {buildResult.Error}");
-
-        // Determine the executable path (OS-specific)
+        // Determine the executable path (OS-specific) - assumes build has already happened
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
         var azmcpPath = Path.Combine(_repoRoot, "servers", "Azure.Mcp.Server", "src", "bin", "Debug", "net9.0", exeName);
 
-        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath} after build");
+        Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
         // Get the original content before running the update script
         var originalContent = File.ReadAllText(docsPath);

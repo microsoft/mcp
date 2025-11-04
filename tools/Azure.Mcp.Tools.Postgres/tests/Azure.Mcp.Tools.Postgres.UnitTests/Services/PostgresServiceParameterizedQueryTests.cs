@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Services;
 using NSubstitute;
 using Xunit;
@@ -20,7 +21,8 @@ public class PostgresServiceParameterizedQueryTests
     public PostgresServiceParameterizedQueryTests()
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
-        _postgresService = new PostgresService(_resourceGroupService);
+        var tenantService = Substitute.For<ITenantService>();
+        _postgresService = new PostgresService(_resourceGroupService, tenantService);
     }
 
     [Theory]
