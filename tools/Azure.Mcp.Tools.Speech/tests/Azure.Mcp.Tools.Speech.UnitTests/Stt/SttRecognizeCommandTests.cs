@@ -59,14 +59,11 @@ public class SttRecognizeCommandTests : IDisposable
 
     public void Dispose()
     {
-        foreach (var file in _testFilesToCleanup)
+        foreach (var file in _testFilesToCleanup.Where(File.Exists))
         {
-            if (File.Exists(file))
-            {
-                try
-                { File.Delete(file); }
-                catch { /* Ignore cleanup errors */ }
-            }
+            try
+            { File.Delete(file); }
+            catch { /* Ignore cleanup errors */ }
         }
         _testFilesToCleanup.Clear();
     }

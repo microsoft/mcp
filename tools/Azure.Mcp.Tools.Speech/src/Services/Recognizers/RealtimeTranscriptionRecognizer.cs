@@ -463,40 +463,38 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 
             if (!string.IsNullOrEmpty(jsonProperty))
             {
-                using (var jsonResult = JsonDocument.Parse(jsonProperty))
+                using var jsonResult = JsonDocument.Parse(jsonProperty);
+                if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
                 {
-                    if (jsonResult.RootElement.TryGetProperty("NBest", out var nbestArray))
+                    foreach (var item in nbestArray.EnumerateArray())
                     {
-                        foreach (var item in nbestArray.EnumerateArray())
+                        var confidence = item.TryGetProperty("Confidence", out var confidenceProp) ? confidenceProp.GetDouble() : 0.0;
+                        var lexical = item.TryGetProperty("Lexical", out var lexicalProp) ? lexicalProp.GetString() : "";
+                        var itn = item.TryGetProperty("ITN", out var itnProp) ? itnProp.GetString() : "";
+                        var maskedITN = item.TryGetProperty("MaskedITN", out var maskedITNProp) ? maskedITNProp.GetString() : "";
+                        var display = item.TryGetProperty("Display", out var displayProp) ? displayProp.GetString() : "";
+
+                        // Extract words if available
+                        List<RealtimeRecognitionWordResult>? words = null;
+                        if (item.TryGetProperty("Words", out var wordsArray))
                         {
-                            var confidence = item.TryGetProperty("Confidence", out var confidenceProp) ? confidenceProp.GetDouble() : 0.0;
-                            var lexical = item.TryGetProperty("Lexical", out var lexicalProp) ? lexicalProp.GetString() : "";
-                            var itn = item.TryGetProperty("ITN", out var itnProp) ? itnProp.GetString() : "";
-                            var maskedITN = item.TryGetProperty("MaskedITN", out var maskedITNProp) ? maskedITNProp.GetString() : "";
-                            var display = item.TryGetProperty("Display", out var displayProp) ? displayProp.GetString() : "";
-
-                            // Extract words if available
-                            List<RealtimeRecognitionWordResult>? words = null;
-                            if (item.TryGetProperty("Words", out var wordsArray))
+                            words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult
                             {
-                                words = wordsArray.EnumerateArray().Select(wordItem => new RealtimeRecognitionWordResult
-                                {
-                                    Word = wordItem.TryGetProperty("Word", out var wordProp) ? wordProp.GetString() : "",
-                                    Offset = wordItem.TryGetProperty("Offset", out var offsetProp) ? (ulong)offsetProp.GetInt64() : null,
-                                    Duration = wordItem.TryGetProperty("Duration", out var durationProp) ? (ulong)durationProp.GetInt64() : null
-                                }).ToList();
-                            }
-
-                            nbestResults.Add(new RealtimeRecognitionNBestResult
-                            {
-                                Confidence = confidence,
-                                Lexical = lexical,
-                                ITN = itn,
-                                MaskedITN = maskedITN,
-                                Display = display,
-                                Words = words
-                            });
+                                Word = wordItem.TryGetProperty("Word", out var wordProp) ? wordProp.GetString() : "",
+                                Offset = wordItem.TryGetProperty("Offset", out var offsetProp) ? (ulong)offsetProp.GetInt64() : null,
+                                Duration = wordItem.TryGetProperty("Duration", out var durationProp) ? (ulong)durationProp.GetInt64() : null
+                            }).ToList();
                         }
+
+                        nbestResults.Add(new RealtimeRecognitionNBestResult
+                        {
+                            Confidence = confidence,
+                            Lexical = lexical,
+                            ITN = itn,
+                            MaskedITN = maskedITN,
+                            Display = display,
+                            Words = words
+                        });
                     }
                 }
             }
