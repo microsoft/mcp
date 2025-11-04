@@ -79,58 +79,84 @@ public class CertificateImportCommandTests
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
 
-    public static IEnumerable<object[]> RequiredArgumentCases()
+    public static IEnumerable<object[]> InvalidArgumentCases()
     {
-        // Build scenarios without embedding an arbitrary-looking base64 literal in source.
-        yield return new object[] { "", false };
-        yield return new object[] { "--vault knownVault", false };
-        yield return new object[] { "--vault knownVault --certificate knownCertificate", false };
-        yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription", false };
-        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64}", false };
-        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64} --subscription knownSubscription", true };
+        // Build scenarios with missing required parameters
+        yield return new object[] { "" };
+        yield return new object[] { "--vault knownVault" };
+        yield return new object[] { "--vault knownVault --certificate knownCertificate" };
+        yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription" };
+        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64}" };
     }
 
     [Theory]
-    [MemberData(nameof(RequiredArgumentCases))]
-    public async Task ExecuteAsync_ValidatesRequiredArguments(string argLine, bool shouldPassValidation)
+    [MemberData(nameof(InvalidArgumentCases))]
+    public async Task ExecuteAsync_RejectsInvalidArguments(string argLine)
     {
         // Arrange
         var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-        if (shouldPassValidation)
-        {
-            // Service will throw to avoid constructing a KeyVaultCertificateWithPolicy instance; this still proves validation passed
-            _keyVaultService.ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                _fakePfxBase64,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>())
-                .ThrowsAsync(new Exception("Test error"));
-        }
+        // Configure mock
+        _keyVaultService.ImportCertificate(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error - service should not be called for invalid inputs"));
 
         // Act
         var response = await _command.ExecuteAsync(_context, args);
 
         // Assert
-        if (shouldPassValidation)
-        {
-            Assert.NotEqual(HttpStatusCode.BadRequest, response.Status); // could be 500 due to forced exception, but not a validation failure
-            await _keyVaultService.Received(1).ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                _fakePfxBase64,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>());
-        }
-        else
-        {
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        }
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await _keyVaultService.DidNotReceive().ImportCertificate(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>());
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_AcceptsValidArguments()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse([
+            "--vault", _knownVault,
+            "--certificate", _knownCertName,
+            "--certificate-data", _fakePfxBase64,
+            "--subscription", _knownSubscription
+        ]);
+
+
+        _keyVaultService.ImportCertificate(
+            _knownVault,
+            _knownCertName,
+            _fakePfxBase64,
+            null,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>())
+            .ThrowsAsync(new Exception("Test error"));
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotEqual(HttpStatusCode.BadRequest, response.Status);
+        await _keyVaultService.Received(1).ImportCertificate(
+            _knownVault,
+            _knownCertName,
+            _fakePfxBase64,
+            null,
+            _knownSubscription,
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>());
     }
 
     [Fact]

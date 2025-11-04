@@ -8,14 +8,18 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`.
 -
 
+- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 - Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
-- Use assembly's `InformationalVersion` rather than its `Version` when setting `AzureMcpServerConfiguration`. [[#1027](https://github.com/microsoft/mcp/pull/1027)]
 
 ### Other Changes
+
+- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 

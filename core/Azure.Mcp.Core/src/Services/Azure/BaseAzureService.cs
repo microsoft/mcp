@@ -15,10 +15,7 @@ public abstract class BaseAzureService
     private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
     public static readonly string DefaultUserAgent;
 
-    private ArmClient? _armClient;
-    private string? _lastArmClientTenantId;
-    private RetryPolicyOptions? _lastRetryPolicy;
-    private ITenantService? _tenantServiceDoNotUseDirectly;
+    private readonly ITenantService? _tenantServiceDoNotUseDirectly;
 
     static BaseAzureService()
     {
@@ -40,7 +37,7 @@ public abstract class BaseAzureService
     protected BaseAzureService(ITenantService tenantService)
     {
         ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
-        _tenantServiceDoNotUseDirectly = tenantService;
+        TenantService = tenantService;
     }
 
     /// <summary>
@@ -165,76 +162,32 @@ public abstract class BaseAzureService
     }
 
     /// <summary>
-    /// Creates an Azure Resource Manager client with optional retry policy
+    /// Creates an Azure Resource Manager client with an optional retry policy.
     /// </summary>
-    /// <param name="tenant">Optional Azure tenant ID or name</param>
-    /// <param name="retryPolicy">Optional retry policy configuration</param>
-    /// <param name="armClientOptions">Optional ARM client options</param>
-    protected async Task<ArmClient> CreateArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, ArmClientOptions? armClientOptions = null)
+    /// <param name="tenantIdOrName">Optional Azure tenant ID or name.</param>
+    /// <param name="retryPolicy">Optional retry policy configuration.</param>
+    /// <param name="armClientOptions">Optional ARM client options.</param>
+    protected async Task<ArmClient> CreateArmClientAsync(
+        string? tenantIdOrName = null,
+        RetryPolicyOptions? retryPolicy = null,
+        ArmClientOptions? armClientOptions = null,
+        CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(tenant);
-
-        // Return cached client if parameters match
-        if (_armClient != null &&
-            _lastArmClientTenantId == tenantId &&
-            armClientOptions == null &&
-            RetryPolicyOptions.AreEqual(_lastRetryPolicy, retryPolicy))
-        {
-            return _armClient;
-        }
+        var tenantId = await ResolveTenantIdAsync(tenantIdOrName);
 
         try
         {
-            var credential = await GetCredential(tenantId);
-            var options = armClientOptions ?? new ArmClientOptions();
+            TokenCredential credential = await GetCredential(tenantId, cancellationToken);
+            ArmClientOptions options = armClientOptions ?? new();
             ConfigureRetryPolicy(AddDefaultPolicies(options), retryPolicy);
 
-            _armClient = new ArmClient(credential, default, options);
-            _lastArmClientTenantId = tenantId;
-            _lastRetryPolicy = retryPolicy;
-
-            return _armClient;
+            ArmClient armClient = new(credential, defaultSubscriptionId: default, options);
+            return armClient;
         }
         catch (Exception ex)
         {
             throw new Exception($"Failed to create ARM client: {ex.Message}", ex);
         }
-    }
-
-    /// <summary>
-    /// Generic token caching mechanism that handles token acquisition and caching with expiration
-    /// </summary>
-    /// <param name="resource">The Azure resource scope for which to get the token</param>
-    /// <param name="getCachedToken">Function to get the currently cached token</param>
-    /// <param name="setCachedToken">Action to set/cache the new token</param>
-    /// <param name="getExpiryTime">Function to get the current token expiry time</param>
-    /// <param name="setExpiryTime">Action to set the new token expiry time</param>
-    /// <param name="tenant">Optional tenant for credential acquisition</param>
-    /// <param name="tokenExpirationBufferSeconds">Buffer seconds before actual expiration (default: 300)</param>
-    /// <returns>A valid access token</returns>
-    protected async Task<string> GetCachedTokenAsync(
-        string resource,
-        Func<string?> getCachedToken,
-        Action<string> setCachedToken,
-        Func<DateTimeOffset> getExpiryTime,
-        Action<DateTimeOffset> setExpiryTime,
-        string? tenant = null,
-        int tokenExpirationBufferSeconds = 300)
-    {
-        var cachedToken = getCachedToken();
-        if (cachedToken != null && DateTimeOffset.UtcNow < getExpiryTime())
-        {
-            return cachedToken;
-        }
-
-        var credential = await GetCredential(tenant);
-        var tokenRequestContext = new TokenRequestContext([$"{resource}/.default"]);
-        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
-
-        setCachedToken(accessToken.Token);
-        setExpiryTime(accessToken.ExpiresOn.AddSeconds(-tokenExpirationBufferSeconds));
-
-        return accessToken.Token;
     }
 
     /// <summary>
