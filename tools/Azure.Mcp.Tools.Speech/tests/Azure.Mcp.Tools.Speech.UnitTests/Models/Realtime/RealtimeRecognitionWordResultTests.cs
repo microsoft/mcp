@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Speech.Models;
+using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
 
-public class WordResultTests
+public class RealtimeRecognitionWordResultTests
 {
     [Fact]
-    public void WordResult_DefaultValues_ShouldBeNull()
+    public void RealtimeRecognitionWordResult_DefaultValues_ShouldBeNull()
     {
         // Arrange & Act
-        var result = new WordResult();
+        var result = new RealtimeRecognitionWordResult();
 
         // Assert
         Assert.Null(result.Word);
@@ -23,10 +23,10 @@ public class WordResultTests
     }
 
     [Fact]
-    public void WordResult_SetProperties_ShouldRetainValues()
+    public void RealtimeRecognitionWordResult_SetProperties_ShouldRetainValues()
     {
         // Arrange & Act
-        var result = new WordResult
+        var result = new RealtimeRecognitionWordResult
         {
             Word = "Hello",
             Offset = 1000,
@@ -42,10 +42,10 @@ public class WordResultTests
     }
 
     [Fact]
-    public void WordResult_JsonSerialization_ShouldSerializeCorrectly()
+    public void RealtimeRecognitionWordResult_JsonSerialization_ShouldSerializeCorrectly()
     {
         // Arrange
-        var result = new WordResult
+        var result = new RealtimeRecognitionWordResult
         {
             Word = "Hello",
             Offset = 1000,
@@ -63,7 +63,7 @@ public class WordResultTests
     }
 
     [Fact]
-    public void WordResult_JsonDeserialization_ShouldDeserializeCorrectly()
+    public void RealtimeRecognitionWordResult_JsonDeserialization_ShouldDeserializeCorrectly()
     {
         // Arrange
         var json = """
@@ -75,7 +75,7 @@ public class WordResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<WordResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionWordResult>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -86,7 +86,7 @@ public class WordResultTests
     }
 
     [Fact]
-    public void WordResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
+    public void RealtimeRecognitionWordResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
     {
         // Arrange
         var json = """
@@ -98,7 +98,7 @@ public class WordResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<WordResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionWordResult>(json);
 
         // Assert
         Assert.NotNull(result);

@@ -6,9 +6,13 @@ using System.Net;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Commands.Stt;
 using Azure.Mcp.Tools.Speech.Models;
+using Azure.Mcp.Tools.Speech.Models.FastTranscription;
+using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Azure.Mcp.Tools.Speech.Services;
+using Azure.Mcp.Tools.Speech.Services.Recognizers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -17,21 +21,33 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Stt;
 
-public class SttRecognizeCommandTests
+public class SttRecognizeCommandTests : IDisposable
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly ISpeechService _speechService;
+    private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
+    private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
+    private readonly ITenantService _tenantService;
     private readonly ILogger<SttRecognizeCommand> _logger;
+    private readonly ILogger<SpeechService> _speechServiceLogger;
     private readonly SttRecognizeCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _knownEndpoint = "https://eastus.cognitiveservices.azure.com/";
     private readonly string _knownSubscription = "sub123";
+    private readonly List<string> _testFilesToCleanup = new();
 
     public SttRecognizeCommandTests()
     {
-        _speechService = Substitute.For<ISpeechService>();
+        // Mock the recognizers and their dependencies
+        _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
+        _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
+        _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
+        _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
+
+        // Create real SpeechService with mocked dependencies
+        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer);
 
         var collection = new ServiceCollection().AddSingleton(_speechService);
 
@@ -40,6 +56,121 @@ public class SttRecognizeCommandTests
         _context = new(_serviceProvider);
         _commandDefinition = _command.GetCommand();
     }
+
+    public void Dispose()
+    {
+        foreach (var file in _testFilesToCleanup)
+        {
+            if (File.Exists(file))
+            {
+                try
+                { File.Delete(file); }
+                catch { /* Ignore cleanup errors */ }
+            }
+        }
+        _testFilesToCleanup.Clear();
+    }
+
+    private async Task<string> CreateTestFileAsync(string fileName, string content = "test audio content")
+    {
+        await File.WriteAllTextAsync(fileName, content, TestContext.Current.CancellationToken);
+        _testFilesToCleanup.Add(fileName);
+        return fileName;
+    }
+
+    private void SetupFastTranscriptionMock(string expectedText = "Hello world")
+    {
+        var fastResult = new FastTranscriptionResult
+        {
+            CombinedPhrases = new List<FastTranscriptionCombinedPhrase>
+            {
+                new FastTranscriptionCombinedPhrase { Text = expectedText }
+            },
+            DurationMilliseconds = 5000
+        };
+
+        _fastTranscriptionRecognizer.RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(fastResult);
+    }
+
+    private void SetupRealtimeTranscriptionMock(string expectedText = "Hello world", string reason = "RecognizedSpeech")
+    {
+        var realtimeResult = new RealtimeRecognitionContinuousResult
+        {
+            FullText = expectedText,
+            Segments = new List<RealtimeRecognitionResult>
+            {
+                new RealtimeRecognitionResult { Text = expectedText, Reason = reason }
+            }
+        };
+
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(realtimeResult);
+    }
+
+    private void SetupRealtimeTranscriptionDetailedMock(string expectedText = "Hello world")
+    {
+        var realtimeResult = new RealtimeRecognitionContinuousResult
+        {
+            FullText = expectedText,
+            Segments = new List<RealtimeRecognitionResult>
+            {
+                new RealtimeRecognitionDetailedResult
+                {
+                    Text = expectedText,
+                    Reason = "RecognizedSpeech",
+                    NBest = new List<RealtimeRecognitionNBestResult>
+                    {
+                        new RealtimeRecognitionNBestResult { Display = expectedText, Confidence = 0.95 }
+                    }
+                }
+            }
+        };
+
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            "detailed",
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(realtimeResult);
+    }
+
+    private async Task<CommandResponse> ExecuteCommandAsync(string args)
+    {
+        var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        return await _command.ExecuteAsync(_context, parseResult);
+    }
+
+    private async Task<CommandResponse> ExecuteCommandAsync(string[] args)
+    {
+        var parseResult = _commandDefinition.Parse(args);
+        return await _command.ExecuteAsync(_context, parseResult);
+    }
+
+    private static SttRecognizeCommand.SttRecognizeCommandResult DeserializeResult(CommandResponse response)
+    {
+        return JsonSerializer.Deserialize(
+            JsonSerializer.Serialize(response.Results),
+            SpeechJsonContext.Default.SttRecognizeCommandResult)!;
+    }
+
+
 
     [Fact]
     public void Constructor_WithValidLogger_ShouldCreateInstance()
@@ -75,87 +206,183 @@ public class SttRecognizeCommandTests
         // Create a test file if needed
         if (args.Contains("test.wav"))
         {
-            await File.WriteAllTextAsync("test.wav", "test content", TestContext.Current.CancellationToken);
+            await CreateTestFileAsync("test.wav");
         }
 
-        try
-        {
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await ExecuteCommandAsync(args);
 
-            if (shouldSucceed)
-            {
-                Assert.Equal(HttpStatusCode.OK, response.Status);
-            }
-            else
-            {
-                Assert.NotEqual(HttpStatusCode.OK, response.Status);
-                Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);
-            }
-        }
-        finally
+        if (shouldSucceed)
         {
-            // Clean up test file
-            if (File.Exists("test.wav"))
-            {
-                File.Delete("test.wav");
-            }
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+        }
+        else
+        {
+            Assert.NotEqual(HttpStatusCode.OK, response.Status);
+            Assert.Contains(expectedError, response.Message, StringComparison.OrdinalIgnoreCase);
         }
     }
+
+    [Theory]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav", RecognizerType.Fast)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --format detailed", RecognizerType.Fast)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language en-US --format detailed", RecognizerType.Realtime)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language fr-FR", RecognizerType.Fast)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language es-ES", RecognizerType.Fast)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language af-ZA", RecognizerType.Realtime)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language am-ET", RecognizerType.Realtime)]
+    [InlineData("--subscription sub123 --endpoint https://test.cognitiveservices.azure.com/ --file test.wav --language as-IN", RecognizerType.Realtime)]
+    public async Task ExecuteAsync_DifferentInput_ShouldUseDifferentRecognizer(string args, RecognizerType expectedRecognizer)
+    {
+        // Arrange
+        await CreateTestFileAsync("test.wav");
+        var expectedText = "Hello world";
+
+        // Set up both mocks to always return results
+        SetupFastTranscriptionMock(expectedText);
+        SetupRealtimeTranscriptionMock(expectedText);
+
+        // Act
+        var response = await ExecuteCommandAsync(args);
+        var result = DeserializeResult(response);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.NotNull(result);
+
+        Assert.Equal(expectedText, result.Result.Text);
+        Assert.Equal(expectedRecognizer, result.Result.RecognizerType);
+
+        // Verify the correct recognizer was called
+        if (expectedRecognizer == RecognizerType.Fast)
+        {
+            await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+
+            await _realtimeTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+
+            Assert.NotNull(result.Result.FastTranscriptionResult);
+            Assert.Null(result.Result.RealtimeContinuousResult);
+        }
+        else
+        {
+            await _realtimeTranscriptionRecognizer.Received(1).RecognizeAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+
+            await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>());
+
+            Assert.NotNull(result.Result.RealtimeContinuousResult);
+            Assert.Null(result.Result.FastTranscriptionResult);
+        }
+    }
+
 
     [Fact]
     public async Task ExecuteAsync_WithValidParameters_ShouldSucceed()
     {
         // Arrange
-        var testFile = "test-audio.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio.wav");
+        var expectedText = "Hello world";
+        SetupRealtimeTranscriptionMock(expectedText);
 
-        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech");
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
+        var response = await ExecuteCommandAsync(args);
+        var result = DeserializeResult(response);
 
-        _speechService.RecognizeSpeechFromFile(
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result.RealtimeContinuousResult);
+        Assert.Equal(expectedText, result.Result.RealtimeContinuousResult.FullText);
+        Assert.Equal(expectedText, result.Result.Text);
+        Assert.Equal(RecognizerType.Realtime, result.Result.RecognizerType);
+    }
+
+    [Fact]
+    public async Task ExecuteAsync_FastRecognizerFails_ShouldFallbackToRealtimeRecognizer()
+    {
+        // Arrange
+        var testFile = await CreateTestFileAsync("test-audio.wav");
+
+        // Mock fast transcription to throw error (since no language is specified, it should use fast transcription)
+        _fastTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+        // Mock realtime transcription to return valid result. When fast fails, it should fallback to realtime.
+        SetupRealtimeTranscriptionMock("Hello world");
 
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-            Assert.NotNull(response.Results);
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+        var response = await ExecuteCommandAsync(args);
 
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
-            Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.FullText);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Assert
+        // 1. Fast recognizer was called and failed because of UnauthorizedAccessException
+        await _fastTranscriptionRecognizer
+        .Received(1)
+        .RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>());
+
+        // 2. Realtime recognizer was called as a fallback
+        await _realtimeTranscriptionRecognizer
+       .Received(1)
+       .RecognizeAsync(
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<string[]>(),
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<RetryPolicyOptions>());
+
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
+
     [Fact]
-    public async Task ExecuteAsync_HandlesServiceError()
+    public async Task ExecuteAsync_HandleServiceErrorWhenRealtimeTranscription()
     {
         // Arrange
-        var testFile = "test-audio.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio.wav");
 
-        _speechService.RecognizeSpeechFromFile(
+        // Mock realtime transcription to return invalid result.
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -165,144 +392,93 @@ public class SttRecognizeCommandTests
             Arg.Any<RetryPolicyOptions>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
+        var response = await ExecuteCommandAsync(args);
 
-            // Assert
-            Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
-            Assert.Contains("Access denied", response.Message);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Assert
+        // 1. Fast recognizer was not called
+        await _fastTranscriptionRecognizer
+        .Received(0)
+        .RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>());
+
+        // 2. Realtime recognizer was called and failed
+        await _realtimeTranscriptionRecognizer
+       .Received(1)
+       .RecognizeAsync(
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<string[]>(),
+           Arg.Any<string>(),
+           Arg.Any<string>(),
+           Arg.Any<RetryPolicyOptions>());
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
+        Assert.Contains("Access denied", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_WithInvalidEndpoint_ShouldReturnBadRequest()
     {
         // Arrange
-        var testFile = "test-audio.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio.wav");
 
-        try
-        {
-            // Act - Use an invalid endpoint that's not Azure AI Services
-            var args = $"--subscription {_knownSubscription} --endpoint https://example.com --file {testFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+        // Act - Use an invalid endpoint that's not Azure AI Services
+        var args = $"--subscription {_knownSubscription} --endpoint https://example.com --file {testFile}";
+        var response = await ExecuteCommandAsync(args);
 
-            // Assert
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-            Assert.Contains("must be a valid Azure AI Services endpoint", response.Message);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        Assert.Contains("must be a valid Azure AI Services endpoint", response.Message);
     }
 
     [Fact]
     public async Task ExecuteAsync_WithValidAzureAiEndpoint_ShouldAcceptEndpoint()
     {
         // Arrange
-        var testFile = "test-audio.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio.wav");
+        SetupRealtimeTranscriptionMock("Test result");
 
-        var expectedResult = CreateContinuousRecognitionResult("Test result", "RecognizedSpeech");
+        // Act - Use a valid Azure AI endpoint
+        var args = $"--subscription {_knownSubscription} --endpoint https://myservice.cognitiveservices.azure.com --file {testFile} --language en-US --format simple";
+        var response = await ExecuteCommandAsync(args);
 
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
-
-        try
-        {
-            // Act - Use a valid Azure AI endpoint
-            var args = $"--subscription {_knownSubscription} --endpoint https://myservice.cognitiveservices.azure.com --file {testFile}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
     }
 
     [Fact]
     public async Task ExecuteAsync_WithDetailedFormat_ShouldReturnDetailedResult()
     {
         // Arrange
-        var testFile = "test-audio-detailed.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio-detailed.wav");
+        SetupRealtimeTranscriptionDetailedMock("Hello world");
 
-        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech", true);
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format detailed";
+        var response = await ExecuteCommandAsync(args);
+        var result = DeserializeResult(response);
 
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            "detailed",
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Result.RealtimeContinuousResult);
+        Assert.Equal("Hello world", result.Result.RealtimeContinuousResult.FullText);
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --format detailed";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-            Assert.NotNull(response.Results);
-
-            var result = JsonSerializer.Deserialize(
-                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
-            Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.FullText);
-
-            // Verify it's a detailed result
-            Assert.Single(result.Result.Segments);
-            Assert.IsType<DetailedSpeechRecognitionResult>(result.Result.Segments[0]);
-            var detailedResult = (DetailedSpeechRecognitionResult)result.Result.Segments[0];
-            Assert.NotNull(detailedResult.NBest);
-            Assert.Single(detailedResult.NBest);
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Verify it's a detailed result
+        Assert.Single(result.Result.RealtimeContinuousResult.Segments);
+        Assert.IsType<RealtimeRecognitionDetailedResult>(result.Result.RealtimeContinuousResult.Segments[0]);
+        var detailedResult = (RealtimeRecognitionDetailedResult)result.Result.RealtimeContinuousResult.Segments[0];
+        Assert.NotNull(detailedResult.NBest);
+        Assert.Single(detailedResult.NBest);
     }
 
     [Theory]
@@ -312,117 +488,83 @@ public class SttRecognizeCommandTests
     public async Task ExecuteAsync_WithDifferentProfanityOptions_ShouldPassToService(string profanityOption)
     {
         // Arrange
-        var testFile = "test-audio-profanity.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio-profanity.wav");
+        SetupFastTranscriptionMock("Hello world");
 
-        var expectedResult = CreateContinuousRecognitionResult("Filtered text", "RecognizedSpeech");
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}";
+        var response = await ExecuteCommandAsync(args);
 
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            profanityOption,
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --profanity {profanityOption}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-
-            // Verify the service was called with correct profanity option
-            await _speechService.Received(1).RecognizeSpeechFromFile(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                profanityOption,
-                Arg.Any<RetryPolicyOptions>());
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Verify the service was called with correct profanity option
+        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string[]>(),
+        profanityOption,
+        Arg.Any<RetryPolicyOptions>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WithPhraseHints_ShouldPassToService()
     {
         // Arrange
-        var testFile = "test-audio-phrases.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio-phrases.wav");
 
-        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
-
-        // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
-        _speechService.RecognizeSpeechFromFile(
+        var fastResult = new FastTranscriptionResult
+        {
+            CombinedPhrases = new List<FastTranscriptionCombinedPhrase>
+            {
+                new FastTranscriptionCombinedPhrase { Text = "Azure cognitive services" }
+            },
+            DurationMilliseconds = 5000
+        };
+
+        _fastTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .Returns(fastResult);
 
-        try
+        // Act - Use a different approach to handle quoted arguments
+        var args = new string[]
         {
-            // Act - Use a different approach to handle quoted arguments
-            var args = new string[]
-            {
-                "--subscription", _knownSubscription,
-                "--endpoint", _knownEndpoint,
-                "--file", testFile,
-                "--phrases", "Azure",
-                "--phrases", "cognitive services"
-            };
-            var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            "--subscription", _knownSubscription,
+            "--endpoint", _knownEndpoint,
+            "--file", testFile,
+            "--phrases", "Azure",
+            "--phrases", "cognitive services"
+        };
+        var response = await ExecuteCommandAsync(args);
 
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
-            // Verify that phrases were captured and contain expected values
-            Assert.NotNull(capturedPhrases);
-            Assert.Equal(2, capturedPhrases.Length);
-            Assert.Contains("Azure", capturedPhrases);
-            Assert.Contains("cognitive services", capturedPhrases);
+        // Verify that phrases were captured and contain expected values
+        Assert.NotNull(capturedPhrases);
+        Assert.Equal(2, capturedPhrases.Length);
+        Assert.Contains("Azure", capturedPhrases);
+        Assert.Contains("cognitive services", capturedPhrases);
 
-            // Verify the service was called with the expected phrases
-            await _speechService.Received(1).RecognizeSpeechFromFile(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Is<string[]>(phrases =>
-                    phrases != null &&
-                    phrases.Length == 2 &&
-                    phrases.Contains("Azure") &&
-                    phrases.Contains("cognitive services")),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Verify the service was called with the expected phrases
+        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Is<string[]>(phrases =>
+            phrases != null &&
+            phrases.Length == 2 &&
+            phrases.Contains("Azure") &&
+            phrases.Contains("cognitive services")),
+        Arg.Any<string>(),
+        Arg.Any<RetryPolicyOptions>());
     }
 
     [Theory]
@@ -433,98 +575,48 @@ public class SttRecognizeCommandTests
     public async Task ExecuteAsync_WithDifferentLanguages_ShouldPassToService(string language)
     {
         // Arrange
-        var testFile = "test-audio-language.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio-language.wav");
+        SetupFastTranscriptionMock("Azure cognitive services");
 
-        var expectedResult = CreateContinuousRecognitionResult("Recognized text", "RecognizedSpeech");
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language {language}";
+        var response = await ExecuteCommandAsync(args);
 
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            language,
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language {language}";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-
-            // Verify the service was called with correct language
-            await _speechService.Received(1).RecognizeSpeechFromFile(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                language,
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Verify the service was called with correct language
+        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        language,
+        Arg.Any<string[]>(),
+        Arg.Any<string>(),
+        Arg.Any<RetryPolicyOptions>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WithRetryPolicy_ShouldPassToService()
     {
         // Arrange
-        var testFile = "test-audio-retry.wav";
-        await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
+        var testFile = await CreateTestFileAsync("test-audio-retry.wav");
+        SetupFastTranscriptionMock("Hello with retry");
 
-        var expectedResult = CreateContinuousRecognitionResult("Retry succeeded", "RecognizedSpeech");
+        // Act
+        var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5";
+        var response = await ExecuteCommandAsync(args);
 
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5))
-            .Returns(expectedResult);
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
 
-        try
-        {
-            // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --retry-max-retries 5";
-            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-
-            // Verify the service was called with retry policy
-            await _speechService.Received(1).RecognizeSpeechFromFile(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string[]>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5));
-        }
-        finally
-        {
-            // Clean up
-            if (File.Exists(testFile))
-            {
-                File.Delete(testFile);
-            }
-        }
+        // Verify the service was called with retry policy
+        await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string[]>(),
+        Arg.Any<string>(),
+        Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5));
     }
 
     [Theory]
@@ -547,7 +639,7 @@ public class SttRecognizeCommandTests
             _ => new Exception("Unknown error")
         };
 
-        _speechService.RecognizeSpeechFromFile(
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -560,7 +652,7 @@ public class SttRecognizeCommandTests
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
@@ -585,9 +677,18 @@ public class SttRecognizeCommandTests
         var testFile = "empty-audio.wav";
         await File.WriteAllTextAsync(testFile, "", TestContext.Current.CancellationToken); // Empty file
 
-        var expectedResult = CreateContinuousRecognitionResult("", "NoMatch");
+        var expectedText = ""; // empty result
+        var realtimeResult = new RealtimeRecognitionContinuousResult
+        {
+            FullText = expectedText,
+            Segments = new List<RealtimeRecognitionResult>
+            {
+                new RealtimeRecognitionResult { Text = expectedText, Reason = "NoMatch" }
+            }
+        };
 
-        _speechService.RecognizeSpeechFromFile(
+        // Mock realtime transcription since en-US + format should use realtime
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -595,12 +696,12 @@ public class SttRecognizeCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .Returns(realtimeResult);
 
         try
         {
             // Act
-            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
             var response = await _command.ExecuteAsync(_context, parseResult);
 
@@ -608,11 +709,12 @@ public class SttRecognizeCommandTests
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+            var result = JsonSerializer.Deserialize(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("", result.Result.FullText);
-            Assert.Equal("NoMatch", result.Result.Segments[0].Reason);
+            Assert.NotNull(result.Result.RealtimeContinuousResult);
+            Assert.Equal("", result.Result.RealtimeContinuousResult.FullText);
+            Assert.Equal("NoMatch", result.Result.RealtimeContinuousResult.Segments[0].Reason);
         }
         finally
         {
@@ -632,17 +734,9 @@ public class SttRecognizeCommandTests
         var largeContent = new string('A', 10000); // Create a large file
         await File.WriteAllTextAsync(testFile, largeContent, TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Long audio content recognition result", "RecognizedSpeech");
-
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        var expectedText = "Long audio content recognition result";
+        // Set up both mocks to always return results, then verify which one was called
+        SetupFastTranscriptionMock(expectedText);
 
         try
         {
@@ -671,19 +765,25 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-semicolon-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
+        var expectedText = "Azure cognitive services";
+        var fastResult = new FastTranscriptionResult
+        {
+            CombinedPhrases = new List<FastTranscriptionCombinedPhrase>
+            {
+                new FastTranscriptionCombinedPhrase { Text = expectedText }
+            },
+            DurationMilliseconds = 5000
+        };
 
-        // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
-        _speechService.RecognizeSpeechFromFile(
+        _fastTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .Returns(fastResult);
 
         try
         {
@@ -729,19 +829,25 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-comma-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services", "RecognizedSpeech");
+        var expectedText = "Azure cognitive services";
+        var fastResult = new FastTranscriptionResult
+        {
+            CombinedPhrases = new List<FastTranscriptionCombinedPhrase>
+            {
+                new FastTranscriptionCombinedPhrase { Text = expectedText }
+            },
+            DurationMilliseconds = 5000
+        };
 
-        // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
-        _speechService.RecognizeSpeechFromFile(
+        _fastTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .Returns(fastResult);
 
         try
         {
@@ -784,19 +890,25 @@ public class SttRecognizeCommandTests
         var testFile = "test-audio-mixed-phrases.wav";
         await File.WriteAllTextAsync(testFile, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Azure cognitive services machine learning", "RecognizedSpeech");
+        var expectedText = "Azure cognitive services machine learning";
+        var fastResult = new FastTranscriptionResult
+        {
+            CombinedPhrases = new List<FastTranscriptionCombinedPhrase>
+            {
+                new FastTranscriptionCombinedPhrase { Text = expectedText }
+            },
+            DurationMilliseconds = 5000
+        };
 
-        // Capture what phrases are actually passed for verification
         string[]? capturedPhrases = null;
-        _speechService.RecognizeSpeechFromFile(
+        _fastTranscriptionRecognizer.RecognizeAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+            .Returns(fastResult);
 
         try
         {
@@ -825,19 +937,18 @@ public class SttRecognizeCommandTests
             Assert.Contains("machine learning", capturedPhrases);
 
             // Verify the service was called with all expected phrases
-            await _speechService.Received(1).RecognizeSpeechFromFile(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Is<string[]>(phrases =>
-                    phrases != null &&
-                    phrases.Length == 3 &&
-                    phrases.Contains("Azure") &&
-                    phrases.Contains("cognitive services") &&
-                    phrases.Contains("machine learning")),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+            await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string[]>(phrases =>
+                phrases != null &&
+                phrases.Length == 3 &&
+                phrases.Contains("Azure") &&
+                phrases.Contains("cognitive services") &&
+                phrases.Contains("machine learning")),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>());
         }
         finally
         {
@@ -855,22 +966,13 @@ public class SttRecognizeCommandTests
     [InlineData("test-audio.m4a")]
     [InlineData("test-audio.flac")]
     [InlineData("test-audio.ogg")]
-    public async Task ExecuteAsync_WithDifferentAudioFormats_ShouldSucceed(string fileName)
+    public async Task ExecuteAsync_WithDifferentAudioFormatsAndFastTranscription_ShouldSucceed(string fileName)
     {
         // Arrange
         await File.WriteAllTextAsync(fileName, "test audio content", TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Hello world", "RecognizedSpeech");
-
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        var expectedText = "Hello world";
+        SetupFastTranscriptionMock(expectedText);
 
         try
         {
@@ -883,13 +985,82 @@ public class SttRecognizeCommandTests
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+            var result = JsonSerializer.Deserialize(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Hello world", result.Result.FullText);
+            Assert.NotNull(result.Result.FastTranscriptionResult);
+            Assert.Equal("Hello world", result.Result.FastTranscriptionResult.CombinedPhrases[0].Text);
 
             // Verify the service was called with the correct file path
-            await _speechService.Received(1).RecognizeSpeechFromFile(
+            await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
+            Arg.Any<string>(),
+            fileName,
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>());
+        }
+        finally
+        {
+            // Clean up
+            if (File.Exists(fileName))
+            {
+                File.Delete(fileName);
+            }
+        }
+    }
+
+
+    [Theory]
+    [InlineData("test-audio.wav")]
+    [InlineData("test-audio.mp3")]
+    [InlineData("test-audio.m4a")]
+    [InlineData("test-audio.flac")]
+    [InlineData("test-audio.ogg")]
+    public async Task ExecuteAsync_WithDifferentAudioFormatsAndRealtimeTranscription_ShouldSucceed(string fileName)
+    {
+        // Arrange
+        await File.WriteAllTextAsync(fileName, "test audio content", TestContext.Current.CancellationToken);
+
+        var expectedText = "Hello world";
+        var realtimeResult = new RealtimeRecognitionContinuousResult
+        {
+            FullText = expectedText,
+            Segments = new List<RealtimeRecognitionResult>
+            {
+                new RealtimeRecognitionResult { Text = expectedText, Reason = "RecognizedSpeech" }
+            }
+        };
+
+        _realtimeTranscriptionRecognizer.RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>())
+            .Returns(realtimeResult);
+
+        try
+        {
+            // Act
+            var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName} --language en-US --format simple";
+            var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+            var response = await _command.ExecuteAsync(_context, parseResult);
+
+            // Assert
+            Assert.Equal(HttpStatusCode.OK, response.Status);
+            Assert.NotNull(response.Results);
+
+            var result = JsonSerializer.Deserialize(
+                JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
+            Assert.NotNull(result);
+            Assert.NotNull(result.Result.RealtimeContinuousResult);
+            Assert.Equal("Hello world", result.Result.RealtimeContinuousResult.FullText);
+
+            // Verify the service was called with the correct file path
+            await _realtimeTranscriptionRecognizer.Received(1).RecognizeAsync(
                 Arg.Any<string>(),
                 fileName,
                 Arg.Any<string>(),
@@ -929,7 +1100,7 @@ public class SttRecognizeCommandTests
             Assert.Contains("Unsupported audio file format", response.Message);
 
             // Verify the service was NOT called with invalid file extensions
-            await _speechService.DidNotReceive().RecognizeSpeechFromFile(
+            await _realtimeTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -937,6 +1108,14 @@ public class SttRecognizeCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<RetryPolicyOptions>());
+
+            await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>());
         }
         finally
         {
@@ -956,17 +1135,8 @@ public class SttRecognizeCommandTests
         var largeContent = new string('A', 10_000_000); // 10MB of content
         await File.WriteAllTextAsync(largeFileName, largeContent, TestContext.Current.CancellationToken);
 
-        var expectedResult = CreateContinuousRecognitionResult("Large file processed", "RecognizedSpeech");
-
-        _speechService.RecognizeSpeechFromFile(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
-            .Returns(expectedResult);
+        var expectedText = "Large file processed";
+        SetupFastTranscriptionMock(expectedText);
 
         try
         {
@@ -979,10 +1149,11 @@ public class SttRecognizeCommandTests
             Assert.Equal(HttpStatusCode.OK, response.Status);
             Assert.NotNull(response.Results);
 
-            var result = JsonSerializer.Deserialize<SttRecognizeCommand.SttRecognizeCommandResult>(
+            var result = JsonSerializer.Deserialize(
                 JsonSerializer.Serialize(response.Results), SpeechJsonContext.Default.SttRecognizeCommandResult);
             Assert.NotNull(result);
-            Assert.Equal("Large file processed", result.Result.FullText);
+            Assert.NotNull(result.Result.FastTranscriptionResult);
+            Assert.Equal("Large file processed", result.Result.FastTranscriptionResult.CombinedPhrases[0].Text);
         }
         finally
         {
@@ -992,31 +1163,6 @@ public class SttRecognizeCommandTests
                 File.Delete(largeFileName);
             }
         }
-    }
-
-    private static ContinuousRecognitionResult CreateContinuousRecognitionResult(string text, string reason, bool isDetailed = false)
-    {
-        var segment = isDetailed
-            ? new DetailedSpeechRecognitionResult
-            {
-                Text = text,
-                Reason = reason,
-                NBest = new List<NBestResult>
-                {
-                    new NBestResult { Display = text, Confidence = 0.95 }
-                }
-            }
-            : new SpeechRecognitionResult
-            {
-                Text = text,
-                Reason = reason
-            };
-
-        return new ContinuousRecognitionResult
-        {
-            FullText = text,
-            Segments = new List<SpeechRecognitionResult> { segment }
-        };
     }
 }
 

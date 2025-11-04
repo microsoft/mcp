@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Speech.Models;
+using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
 
-public class NBestResultTests
+public class RealtimeRecognitionNBestResultTests
 {
     [Fact]
-    public void NBestResult_DefaultValues_ShouldBeNull()
+    public void RealtimeRecognitionNBestResult_DefaultValues_ShouldBeNull()
     {
         // Arrange & Act
-        var result = new NBestResult();
+        var result = new RealtimeRecognitionNBestResult();
 
         // Assert
         Assert.Null(result.Display);
@@ -22,17 +22,17 @@ public class NBestResultTests
     }
 
     [Fact]
-    public void NBestResult_SetProperties_ShouldRetainValues()
+    public void RealtimeRecognitionNBestResult_SetProperties_ShouldRetainValues()
     {
         // Arrange
-        var words = new List<WordResult>
+        var words = new List<RealtimeRecognitionWordResult>
         {
             new() { Word = "Hello",  },
             new() { Word = "world",  }
         };
 
         // Act
-        var result = new NBestResult
+        var result = new RealtimeRecognitionNBestResult
         {
             Display = "Hello world",
 
@@ -48,14 +48,14 @@ public class NBestResultTests
     }
 
     [Fact]
-    public void NBestResult_JsonSerialization_ShouldSerializeCorrectly()
+    public void RealtimeRecognitionNBestResult_JsonSerialization_ShouldSerializeCorrectly()
     {
         // Arrange
-        var result = new NBestResult
+        var result = new RealtimeRecognitionNBestResult
         {
             Display = "Hello world",
 
-            Words = new List<WordResult>
+            Words = new List<RealtimeRecognitionWordResult>
             {
                 new() { Word = "Hello",  Offset = 100, Duration = 500 },
                 new() { Word = "world",  Offset = 600, Duration = 400 }
@@ -73,7 +73,7 @@ public class NBestResultTests
     }
 
     [Fact]
-    public void NBestResult_JsonDeserialization_ShouldDeserializeCorrectly()
+    public void RealtimeRecognitionNBestResult_JsonDeserialization_ShouldDeserializeCorrectly()
     {
         // Arrange
         var json = """
@@ -95,7 +95,7 @@ public class NBestResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<NBestResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionNBestResult>(json);
 
         // Assert
         Assert.NotNull(result);
