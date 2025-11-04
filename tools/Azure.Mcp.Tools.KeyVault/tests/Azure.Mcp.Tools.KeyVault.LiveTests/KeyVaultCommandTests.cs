@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Security.KeyVault.Keys;
@@ -195,6 +196,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
 
     [Fact]
+    [CustomMatcher(compareBody: false)]
     public async Task Should_import_certificate()
     {
         // Generate a self-signed certificate and export to a temporary PFX file with a password

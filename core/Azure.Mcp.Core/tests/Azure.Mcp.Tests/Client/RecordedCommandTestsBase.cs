@@ -2,10 +2,13 @@
 // Licensed under the MIT License.
 
 using System.ClientModel;
+using System.ClientModel.Primitives;
+using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Threading;
+using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
@@ -18,6 +21,8 @@ namespace Azure.Mcp.Tests.Client;
 public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestProxyFixture fixture) : CommandTestsBase(output), IClassFixture<TestProxyFixture>
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
+
+    private string RecordingId { get; set; } = String.Empty;
 
     public virtual bool EnableDefaultSanitizerAdditions { get; set; } = true;
 
@@ -72,6 +77,8 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// </summary>
     protected readonly Dictionary<string, string> TestVariables = new Dictionary<string, string>();
 
+    private CustomMatcherAttribute? _appliedMatcherAttribute;
+
     public virtual void RegisterVariable(string name, string value)
     {
         if (TestMode == TestMode.Playback)
@@ -107,6 +114,47 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         // start recording/playback session
         await StartRecordOrPlayback();
+
+        // apply custom matcher if test has attribute
+        await ApplyAttributeSettings();
+    }
+
+    private async Task ApplyAttributeSettings()
+    {
+        if (Proxy == null || TestMode == TestMode.Live)
+        {
+            return;
+        }
+
+        var testName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName;
+        if (string.IsNullOrEmpty(testName))
+        {
+            return;
+        }
+
+        // Use reflection to find the test method on the derived class
+        var testMethod = GetType().GetMethod(testName.Split('(')[0].Trim());
+        if (testMethod == null)
+        {
+            return;
+        }
+
+        var attr = testMethod.GetCustomAttribute<CustomMatcherAttribute>();
+        if (attr != null)
+        {
+            _appliedMatcherAttribute = attr;
+            var matcher = new CustomDefaultMatcher
+            {
+                IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
+                CompareBodies = attr.CompareBodies,
+            };
+
+            var options = new RequestOptions();
+            options.AddHeader("x-recording-id", RecordingId);
+
+            Output.WriteLine($"[CustomMatcher] Applying: CompareBodies={attr.CompareBodies}, IgnoreQueryOrdering={attr.IgnoreQueryOrdering}");
+            await Proxy.AdminClient.SetMatcherAsync("CustomDefaultMatcher", matcher, options);
+        }
     }
 
     public async Task StartProxyAsync(TestProxyFixture fixture)
@@ -181,7 +229,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StopRecordOrPlayback();
 
         // On test failure, append proxy stderr for diagnostics.
-        if (TestContext.Current?.TestState?.Result == TestResult.Failed && Proxy is not null)
+        if (TestContext.Current?.TestState?.Result == TestResult.Failed && Proxy != null)
         {
             var stderr = Proxy.SnapshotStdErr();
             if (!string.IsNullOrWhiteSpace(stderr))
@@ -197,7 +245,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
     private async Task StartRecordOrPlayback()
     {
-        if (TestMode is TestMode.Live)
+        if (TestMode == TestMode.Live)
         {
             return;
         }
@@ -229,6 +277,13 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             {
                 ClientResult<IReadOnlyDictionary<string, string>>? playbackResult = await Proxy.Client.StartPlaybackAsync(new TestProxyStartInformation(pathToRecording, assetsPath, null)).ConfigureAwait(false);
 
+                // Extract recording ID from response header
+                if (playbackResult.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId) && recordingId != null)
+                {
+                    RecordingId = recordingId;
+                    Output.WriteLine($"[Playback] Recording ID: {RecordingId}");
+                }
+
                 foreach (var key in playbackResult.Value.Keys)
                 {
                     Output.WriteLine($"[Playback] Variable from recording: {key} = {playbackResult.Value[key]}");
@@ -246,7 +301,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             Output.WriteLine($"[Record] Session file: {pathToRecording}");
             try
             {
-                Proxy.Client.StartRecord(bodyContent);
+                ClientResult result = Proxy.Client.StartRecord(bodyContent);
+
+                // Extract recording ID from response header
+                if (result.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId) && recordingId != null)
+                {
+                    RecordingId = recordingId;
+                    Output.WriteLine($"[Record] Recording ID: {RecordingId}");
+                }
             }
             catch (Exception e)
             {
