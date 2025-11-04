@@ -8,16 +8,15 @@ namespace Azure.Mcp.Core.Areas.Server.Options;
 /// <summary>
 /// Defines the supported transport mechanisms for the Azure MCP server.
 /// </summary>
-[JsonConverter(typeof(JsonStringEnumConverter))]
-public enum TransportTypes
+internal static class TransportType
 {
     /// <summary>
-    /// Standard Input/Output transport mechanism (default).
+    /// Standard Input/Output transport mechanism.
     /// </summary>
-    StdIo,
+    public const string StdIo = "stdio";
 
     /// <summary>
-    /// HTTP transport mechanism.
+    /// MCP's bespoke transport called Streamable HTTP.
     /// </summary>
-    Http
+    public const string Http = "http";
 }

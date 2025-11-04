@@ -236,7 +236,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.EnableInsecureTransports || serviceStartOptions.RunAsRemoteHttpService)
+        if (serviceStartOptions.Transport == TransportType.Http)
         {
             mcpServerBuilder.WithHttpTransport();
         }

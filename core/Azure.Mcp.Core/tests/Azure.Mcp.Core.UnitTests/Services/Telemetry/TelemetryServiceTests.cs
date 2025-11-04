@@ -127,7 +127,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = TransportTypes.StdIo
+            Transport = TransportType.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
@@ -239,7 +239,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = TransportTypes.StdIo
+            Transport = TransportType.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
