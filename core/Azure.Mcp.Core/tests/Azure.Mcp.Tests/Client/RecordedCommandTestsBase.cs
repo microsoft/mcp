@@ -116,12 +116,12 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         await StartRecordOrPlayback();
 
         // apply custom matcher if test has attribute
-        await ApplyAttributeSettings();
+        await ApplyAttributeMatcherSettings();
     }
 
-    private async Task ApplyAttributeSettings()
+    private async Task ApplyAttributeMatcherSettings()
     {
-        if (Proxy == null || TestMode == TestMode.Live)
+        if (Proxy == null || TestMode != TestMode.Playback)
         {
             return;
         }

@@ -24,6 +24,17 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         })
     };
 
+    // register a sanitizer so that we can redact private key material from certificate responses
+    // we shouldn't be verifying this specific value anyway, so it should be safe to redact.
+    public override List<BodyKeySanitizer> BodyKeySanitizers => new List<BodyKeySanitizer>() {
+        // should clear out `id` fields containing actual vault names
+        new BodyKeySanitizer(new BodyKeySanitizerBody("value")
+        {
+            Regex = "-----BEGIN PRIVATE KEY-----\\n(.+\\n)*-----END PRIVATE KEY-----\\n",
+            Value = "\"-----BEGIN PRIVATE KEY-----\\\\nREDACTED\\\\n-----END PRIVATE KEY-----\\\\n\""
+        })
+    };
+
     // Disable `$..id` sanitizer as it interferes with Key Vault tests
     // This will LIKELY become a global disable exclusion in the future.
     public override List<string> DisabledDefaultSanitizers => new List<string>() { "AZSDK3430", };
