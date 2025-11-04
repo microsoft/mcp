@@ -4,7 +4,6 @@
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Security.KeyVault.Administration;
 using Azure.Security.KeyVault.Certificates;
 using Azure.Security.KeyVault.Keys;
@@ -12,10 +11,8 @@ using Azure.Security.KeyVault.Secrets;
 
 namespace Azure.Mcp.Tools.KeyVault.Services;
 
-public sealed class KeyVaultService(ITenantService tenantService, IHttpClientService httpClientService) : BaseAzureService(tenantService), IKeyVaultService
+public sealed class KeyVaultService(ITenantService tenantService) : BaseAzureService(tenantService), IKeyVaultService
 {
-    private readonly IHttpClientService _httpClientService = httpClientService ?? throw new ArgumentNullException(nameof(httpClientService));
-
     public async Task<List<string>> ListKeys(
         string vaultName,
         bool includeManagedKeys,
@@ -26,7 +23,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var keys = new List<string>();
 
         try
@@ -54,7 +51,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -78,7 +75,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
 
         var type = new KeyType(keyType);
         var credential = await GetCredential(tenantId);
-        var client = CreateKeyClient(vaultName, credential, retryPolicy);
+        var client = new KeyClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -99,7 +96,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var secrets = new List<string>();
 
         try
@@ -128,7 +125,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -150,7 +147,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateSecretClient(vaultName, credential, retryPolicy);
+        var client = new SecretClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -172,7 +169,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
         var certificates = new List<string>();
 
         try
@@ -200,7 +197,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -222,7 +219,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -246,7 +243,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
 
         var credential = await GetCredential(tenantId);
-        var client = CreateCertificateClient(vaultName, credential, retryPolicy);
+        var client = new CertificateClient(new Uri($"https://{vaultName}.vault.azure.net"), credential);
 
         try
         {
@@ -290,39 +287,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         {
             throw new Exception($"Error importing certificate '{certificateName}' into vault {vaultName}: {ex.Message}", ex);
         }
-
     }
-
-    private static Uri BuildVaultUri(string vaultName) => new($"https://{vaultName}.vault.azure.net");
-
-    // Create clients with injected HttpClient, this will enable record/playback during testing.
-    private KeyClient CreateKeyClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
-    {
-        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
-        var options = new KeyClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new KeyClient(BuildVaultUri(vaultName), credential, options);
-    }
-
-    private SecretClient CreateSecretClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
-    {
-        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
-        var options = new SecretClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new SecretClient(BuildVaultUri(vaultName), credential, options);
-    }
-
-    private CertificateClient CreateCertificateClient(string vaultName, Azure.Core.TokenCredential credential, RetryPolicyOptions? retry)
-    {
-        var httpClient = _httpClientService.CreateClient(BuildVaultUri(vaultName));
-        var options = new CertificateClientOptions();
-        options = ConfigureRetryPolicy(AddDefaultPolicies(options), retry);
-        options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
-        return new CertificateClient(BuildVaultUri(vaultName), credential, options);
-    }
-
 
     public async Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
