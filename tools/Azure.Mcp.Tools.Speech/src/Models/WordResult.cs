@@ -3,9 +3,9 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Speech.Models.Realtime;
+namespace Azure.Mcp.Tools.Speech.Models;
 
-public record RealtimeRecognitionWordResult
+public record WordResult
 {
     [JsonPropertyName("word")]
     public string? Word { get; set; }

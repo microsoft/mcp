@@ -3,13 +3,13 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Speech.Models.Realtime;
+namespace Azure.Mcp.Tools.Speech.Models;
 
-public record RealtimeRecognitionContinuousResult
+public record ContinuousRecognitionResult
 {
     [JsonPropertyName("fullText")]
     public string? FullText { get; set; }
 
     [JsonPropertyName("segments")]
-    public List<RealtimeRecognitionResult> Segments { get; set; } = new();
+    public List<SpeechRecognitionResult> Segments { get; set; } = new();
 }
