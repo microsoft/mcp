@@ -134,7 +134,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     .Where(name => !string.IsNullOrEmpty(name));
 
                 // Apply namespace filtering if specified (using underscore separator for tokenized names)
-                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, '_');
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, CommandFactory.Separator);
 
                 var toolNames = await Task.Run(() => allToolNames
                     .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
@@ -175,11 +175,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             return names;
         }
 
-        // For tokenized names (using underscore), include "azmcp_" prefix
-        // For command strings (using space), don't include "azmcp " prefix
-        var namespacePrefixes = separator == '_'
-            ? namespaces.Select(ns => $"{ns}{separator}").ToList()
-            : namespaces.Select(ns => $"{ns}{separator}").ToList();
+        var namespacePrefixes = namespaces.Select(ns => $"{ns}{separator}").ToList();
 
         return names.Where(name =>
             namespacePrefixes.Any(prefix => name.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)));
@@ -197,17 +193,13 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             .ToList();
 
         var fullCommand = tokenizedName.Replace(CommandFactory.Separator, ' ');
-        // Strip the "azmcp " prefix from the command
-        var commandWithoutPrefix = fullCommand.StartsWith("azmcp ", StringComparison.OrdinalIgnoreCase)
-            ? fullCommand.Substring(6) // Remove "azmcp "
-            : fullCommand;
 
         return new CommandInfo
         {
             Id = command.Id,
             Name = commandDetails.Name,
             Description = commandDetails.Description ?? string.Empty,
-            Command = commandWithoutPrefix,
+            Command = fullCommand,
             Options = optionInfos,
             Metadata = command.Metadata
         };
