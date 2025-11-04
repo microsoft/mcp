@@ -6,16 +6,23 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Enhanced `azmcp tools list` command with new filtering and output options:
+- Enhanced `azmcp tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
   - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
   - Added `--name-only` option to return only tool names without descriptions or metadata
-  - Renamed `--namespaces` to `--namespace-mode` for better clarity when listing top-level service namespaces
+- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
 
 ### Breaking Changes
 
+- Renamed `azmcp tools list` command `--namespaces` switch to `--namespace-mode` for better clarity when listing top-level service namespaces [[#741](https://github.com/microsoft/mcp/pull/741)]
+
 ### Bugs Fixed
 
+- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+
 ### Other Changes
+
+- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 

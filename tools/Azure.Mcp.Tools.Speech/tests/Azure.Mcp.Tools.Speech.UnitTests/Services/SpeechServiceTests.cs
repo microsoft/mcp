@@ -13,14 +13,11 @@ public class SpeechServiceTests
 {
     private readonly ITenantService _tenantService;
     private readonly ILogger<SpeechService> _logger;
-    private readonly SpeechService _speechService;
 
     public SpeechServiceTests()
     {
         _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SpeechService>>();
-
-        _speechService = new SpeechService(_tenantService, _logger);
     }
 
     [Fact]
