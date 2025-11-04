@@ -27,12 +27,7 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure(options =>
             {
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName() ?? new AssemblyName();
-                if (assemblyName?.Version != null)
-                {
-                    options.Version = assemblyName.Version.ToString();
-                }
+                options.Version = GetServerVersion(Assembly.GetCallingAssembly());
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
@@ -122,5 +117,32 @@ public static class OpenTelemetryExtensions
                 .WithMetrics(metrics => metrics.AddOtlpExporter())
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
+    }
+
+    /// <summary>
+    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
+    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
+    /// </summary>
+    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <returns>A version string.</returns>
+    internal static string GetServerVersion(Assembly callerAssembly)
+    {
+        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (versionAttribute == null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+        }
+
+        string version = versionAttribute.InformationalVersion;
+
+        int hashSeparator = version.IndexOf('+');
+        if (hashSeparator != -1)
+        {
+            version = version.Substring(0, hashSeparator);
+        }
+
+        return version;
     }
 }
