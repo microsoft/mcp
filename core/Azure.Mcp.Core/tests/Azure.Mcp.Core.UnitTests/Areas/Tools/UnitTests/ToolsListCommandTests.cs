@@ -848,7 +848,7 @@ public class ToolsListCommandTests
             var isKeyvaultNamespace = command.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase);
             var isStorageCommand = command.Command.StartsWith("storage ", StringComparison.OrdinalIgnoreCase);
             var isKeyvaultCommand = command.Command.StartsWith("keyvault ", StringComparison.OrdinalIgnoreCase);
-            
+
             Assert.True(isStorageNamespace || isKeyvaultNamespace || isStorageCommand || isKeyvaultCommand,
                 $"Command '{command.Command}' (Name: '{command.Name}') should be from storage or keyvault namespace");
         }
