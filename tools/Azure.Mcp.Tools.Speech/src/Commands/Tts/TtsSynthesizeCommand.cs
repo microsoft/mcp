@@ -21,6 +21,8 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
 
     public override string Name => "synthesize";
 
+    public override string Id => "d6f6687f-feee-4e15-9b98-71aea4076e04";
+
     public override string Description =>
         """
         Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.
