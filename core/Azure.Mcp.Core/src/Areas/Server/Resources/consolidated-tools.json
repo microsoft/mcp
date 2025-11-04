@@ -584,8 +584,8 @@
                 "foundry_openai_models-list",
                 "foundry_agents_list",
                 "foundry_resource_get",
-                "foundry_thread_list",
-                "foundry_thread_get_messages"
+                "foundry_threads_list",
+                "foundry_threads_get_messages"
             ]
         },
         {
@@ -633,7 +633,7 @@
       },
       "mappedToolList": [
         "foundry_agents_create",
-        "foundry_thread_create"
+        "foundry_threads_create"
       ]
     },
     {
