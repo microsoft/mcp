@@ -15,7 +15,7 @@ public class ServiceStartOptions
     /// Defaults to standard I/O (stdio).
     /// </summary>
     [JsonPropertyName("transport")]
-    public string Transport { get; set; } = TransportType.StdIo;
+    public string Transport { get; set; } = TransportTypes.StdIo;
 
     /// <summary>
     /// Gets or sets the service namespaces to expose through the server.

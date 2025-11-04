@@ -13,7 +13,7 @@ using NSubstitute;
 using Xunit;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
-using TransportType = Azure.Mcp.Core.Areas.Server.Options.TransportType;
+using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -219,7 +219,7 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal(TransportType.StdIo, options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
         Assert.True(options.ReadOnly);
@@ -242,7 +242,7 @@ public class ServiceStartCommandTests
         Assert.NotNull(options.Tool);
         Assert.Single(options.Tool);
         Assert.Equal(expectedTool, options.Tool[0]);
-        Assert.Equal(TransportType.StdIo, options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal("all", options.Mode);
     }
 
@@ -273,7 +273,7 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal(TransportType.StdIo, options.Transport); // Default transport
+        Assert.Equal(TransportTypes.StdIo, options.Transport); // Default transport
         Assert.Null(options.Namespace);
         Assert.Equal("namespace", options.Mode); // Default mode
         Assert.False(options.ReadOnly); // Default readonly
@@ -508,7 +508,7 @@ public class ServiceStartCommandTests
         // Arrange
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = TransportType.StdIo,
+            Transport = TransportTypes.StdIo,
             Mode = "test-mode",
             Tool = ["test-tool1", "test-tool2"],
             ReadOnly = false,
@@ -560,7 +560,7 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = Core.Areas.Server.Options.TransportType.StdIo,
+            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,

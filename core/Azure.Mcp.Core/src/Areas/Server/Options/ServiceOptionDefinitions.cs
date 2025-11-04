@@ -18,7 +18,7 @@ public static class ServiceOptionDefinitions
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
         Description = "Transport mechanism to use for Azure MCP Server.",
-        DefaultValueFactory = _ => TransportType.StdIo,
+        DefaultValueFactory = _ => TransportTypes.StdIo,
         Required = false
     };
 

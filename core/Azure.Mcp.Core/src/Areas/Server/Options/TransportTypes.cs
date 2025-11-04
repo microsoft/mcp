@@ -6,7 +6,7 @@ namespace Azure.Mcp.Core.Areas.Server.Options;
 /// <summary>
 /// Defines the supported transport mechanisms for the Azure MCP server.
 /// </summary>
-internal static class TransportType
+internal static class TransportTypes
 {
     /// <summary>
     /// Standard Input/Output transport mechanism.

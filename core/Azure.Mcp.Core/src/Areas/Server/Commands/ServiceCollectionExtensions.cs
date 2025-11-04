@@ -236,7 +236,7 @@ public static class AzureMcpServiceCollectionExtensions
 
         var mcpServerBuilder = services.AddMcpServer();
 
-        if (serviceStartOptions.Transport == TransportType.Http)
+        if (serviceStartOptions.Transport == TransportTypes.Http)
         {
             mcpServerBuilder.WithHttpTransport();
         }
