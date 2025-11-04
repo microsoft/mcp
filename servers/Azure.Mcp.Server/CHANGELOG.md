@@ -6,8 +6,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 - Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`.
--
-
 - Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
 
 ### Breaking Changes

@@ -315,27 +315,19 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         }
 
         // For compressed formats, check if GStreamer is available
-        var isCompressedFormat = extension is ".mp3" or ".ogg" or ".opus" or ".flac" or ".alaw" or ".mulaw" or ".mp4" or ".m4a" or ".aac";
-
-        if (isCompressedFormat)
+        return extension switch
         {
-            return extension switch
-            {
-                ".mp3" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MP3),
-                ".ogg" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
-                ".opus" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
-                ".flac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.FLAC),
-                ".alaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ALAW),
-                ".mulaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MULAW),
-                ".mp4" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
-                ".m4a" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
-                ".aac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
-                _ => throw new NotSupportedException($"Audio format {extension} is not supported")
-            };
-        }
-
-        // Throw exception for unsupported formats
-        throw new NotSupportedException($"Audio format '{extension}' is not supported. Supported formats are: .wav, .mp3, .ogg, .opus, .flac, .alaw, .mulaw, .mp4, .m4a, .aac");
+            ".mp3" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MP3),
+            ".ogg" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
+            ".opus" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.OGG_OPUS),
+            ".flac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.FLAC),
+            ".alaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ALAW),
+            ".mulaw" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.MULAW),
+            ".mp4" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+            ".m4a" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+            ".aac" => CreateCompressedAudioConfig(filePath, AudioStreamContainerFormat.ANY),
+            _ => throw new NotSupportedException($"Audio format '{extension}' is not supported. Supported formats are: .wav, .mp3, .ogg, .opus, .flac, .alaw, .mulaw, .mp4, .m4a, .aac")
+        };
     }
 
     /// <summary>
@@ -357,6 +349,19 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         return AudioConfig.FromStreamInput(pullStream);
     }
 
+    private static readonly string[] GStreamerErrorPatterns =
+    {
+        "gstreamer",
+        "0x27", // SPXERR_GSTREAMER_INTERNAL_ERROR
+        "spxerr_gstreamer",
+        "compressed audio",
+        "codec",
+        "audio format not supported",
+        "audio stream format",
+        "pipeline",
+        "element",
+        "decoder"
+    };
     /// <summary>
     /// Determines if an exception indicates that GStreamer is missing or not properly configured.
     /// </summary>
@@ -368,22 +373,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         var message = ex.Message?.ToLowerInvariant() ?? "";
         var innerMessage = ex.InnerException?.Message?.ToLowerInvariant() ?? "";
 
-        // Common GStreamer error indicators
-        var gstreamerErrorPatterns = new[]
-        {
-            "gstreamer",
-            "0x27", // SPXERR_GSTREAMER_INTERNAL_ERROR
-            "spxerr_gstreamer",
-            "compressed audio",
-            "codec",
-            "audio format not supported",
-            "audio stream format",
-            "pipeline",
-            "element",
-            "decoder"
-        };
-
-        return gstreamerErrorPatterns.Any(pattern =>
+        return GStreamerErrorPatterns.Any(pattern =>
             message.Contains(pattern) || innerMessage.Contains(pattern));
     }
 
