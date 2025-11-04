@@ -96,10 +96,16 @@ public class CustomChainedCredential(string? tenantId = null, ILogger<CustomChai
             creds.Add(CreateDefaultCredential(tenantId));
         }
 
-        // Only add InteractiveBrowserCredential if no explicit credential is specified
-        // When AZURE_TOKEN_CREDENTIALS is set to "prod" or a specific credential,
-        // we should NOT fall back to interactive browser (which fails in production environments)
-        if (!hasExplicitCredentialSetting)
+        // Only add InteractiveBrowserCredential as fallback when:
+        // 1. AZURE_TOKEN_CREDENTIALS is not set (default behavior)
+        // 2. AZURE_TOKEN_CREDENTIALS explicitly requests it
+        // 3. AZURE_TOKEN_CREDENTIALS="dev" (development credentials with interactive fallback)
+        // Do NOT add it for "prod" or specific credential names (user wants only those credentials)
+        bool shouldAddBrowserFallback = !hasExplicitCredentialSetting ||
+                                       (tokenCredentials?.Equals("dev", StringComparison.OrdinalIgnoreCase) ?? false) ||
+                                       (tokenCredentials?.Equals("interactivebrowsercredential", StringComparison.OrdinalIgnoreCase) ?? false);
+
+        if (shouldAddBrowserFallback)
         {
             creds.Add(CreateBrowserCredential(tenantId, authRecord));
         }
