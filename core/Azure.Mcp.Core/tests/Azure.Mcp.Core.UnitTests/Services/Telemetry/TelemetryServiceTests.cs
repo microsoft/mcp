@@ -16,20 +16,20 @@ public class TelemetryServiceTests
 {
     private const string TestDeviceId = "test-device-id";
     private const string TestMacAddressHash = "test-hash";
-    private readonly AzureMcpServerConfiguration _testConfiguration = new()
+    private readonly McpServerConfiguration _testConfiguration = new()
     {
         Name = "TestService",
         Version = "1.0.0",
         IsTelemetryEnabled = true
     };
-    private readonly IOptions<AzureMcpServerConfiguration> _mockOptions;
+    private readonly IOptions<McpServerConfiguration> _mockOptions;
     private readonly IMachineInformationProvider _mockInformationProvider;
     private readonly IOptions<ServiceStartOptions> _mockServiceOptions;
     private readonly ILogger<TelemetryService> _logger;
 
     public TelemetryServiceTests()
     {
-        _mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        _mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         _mockOptions.Value.Returns(_testConfiguration);
 
         _mockServiceOptions = Substitute.For<IOptions<ServiceStartOptions>>();
@@ -98,8 +98,8 @@ public class TelemetryServiceTests
     public void Constructor_WithNullConfiguration_ShouldThrowNullReferenceException()
     {
         // Arrange
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
-        mockOptions.Value.Returns((AzureMcpServerConfiguration)null!);
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
+        mockOptions.Value.Returns((McpServerConfiguration)null!);
 
         // Act & Assert
         Assert.Throws<NullReferenceException>(() => new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger));
@@ -145,14 +145,14 @@ public class TelemetryServiceTests
     public async Task StartActivity_WithInvalidActivityId_ShouldHandleGracefully(string activityId)
     {
         // Arrange
-        var configuration = new AzureMcpServerConfiguration
+        var configuration = new McpServerConfiguration
         {
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
 
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
@@ -175,14 +175,14 @@ public class TelemetryServiceTests
     public void StartActivity_WithoutInitialization_Throws()
     {
         // Arrange
-        var configuration = new AzureMcpServerConfiguration
+        var configuration = new McpServerConfiguration
         {
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
 
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
@@ -206,14 +206,14 @@ public class TelemetryServiceTests
         // Arrange
         var informationProvider = new ExceptionalInformationProvider();
 
-        var configuration = new AzureMcpServerConfiguration
+        var configuration = new McpServerConfiguration
         {
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
 
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
         var implementation = new Implementation
@@ -243,14 +243,14 @@ public class TelemetryServiceTests
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
-        var configuration = new AzureMcpServerConfiguration
+        var configuration = new McpServerConfiguration
         {
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
         var operationName = "an-activity-id";
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);
@@ -275,14 +275,14 @@ public class TelemetryServiceTests
     public async Task InitializeAsync_InvokedOnce()
     {
         // Arrange
-        var configuration = new AzureMcpServerConfiguration
+        var configuration = new McpServerConfiguration
         {
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
 
-        var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        var mockOptions = Substitute.For<IOptions<McpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
         using var service = new TelemetryService(_mockInformationProvider, mockOptions, _mockServiceOptions, _logger);

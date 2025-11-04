@@ -35,7 +35,7 @@ internal class TelemetryService : ITelemetryService
     internal ActivitySource Parent { get; }
 
     public TelemetryService(IMachineInformationProvider informationProvider,
-        IOptions<AzureMcpServerConfiguration> options,
+        IOptions<McpServerConfiguration> options,
         IOptions<ServiceStartOptions>? serverOptions,
         ILogger<TelemetryService> logger)
     {

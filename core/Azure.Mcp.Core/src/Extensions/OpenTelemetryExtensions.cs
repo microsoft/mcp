@@ -98,7 +98,7 @@ public static class OpenTelemetryExtensions
 
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
-            var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+            var serverConfig = sp.GetRequiredService<IOptions<McpServerConfiguration>>();
             if (!serverConfig.Value.IsTelemetryEnabled)
             {
                 return;
