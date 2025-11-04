@@ -126,14 +126,14 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        var testName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName;
-        if (string.IsNullOrEmpty(testName))
+        var methodName = TestContext.Current?.TestMethod?.MethodName;
+        if (string.IsNullOrEmpty(methodName))
         {
             return;
         }
 
         // Use reflection to find the test method on the derived class
-        var testMethod = GetType().GetMethod(testName.Split('(')[0].Trim());
+        var testMethod = GetType().GetMethod(methodName);
         if (testMethod == null)
         {
             return;
@@ -278,9 +278,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 ClientResult<IReadOnlyDictionary<string, string>>? playbackResult = await Proxy.Client.StartPlaybackAsync(new TestProxyStartInformation(pathToRecording, assetsPath, null)).ConfigureAwait(false);
 
                 // Extract recording ID from response header
-                if (playbackResult.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId) && recordingId != null)
+                if (playbackResult.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId))
                 {
-                    RecordingId = recordingId;
+                    RecordingId = recordingId ?? String.Empty;
                     Output.WriteLine($"[Playback] Recording ID: {RecordingId}");
                 }
 
@@ -304,9 +304,9 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 ClientResult result = Proxy.Client.StartRecord(bodyContent);
 
                 // Extract recording ID from response header
-                if (result.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId) && recordingId != null)
+                if (result.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId))
                 {
-                    RecordingId = recordingId;
+                    RecordingId = recordingId ?? String.Empty;
                     Output.WriteLine($"[Record] Recording ID: {RecordingId}");
                 }
             }
