@@ -101,7 +101,7 @@ public class AdminSettingsGetCommandTests
     [InlineData("--subscription knownSubscription", false, "Missing required vault")] // Missing required vault
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
-{
+    {
         if (shouldSucceed)
         {
             // Service returns null result -> treated as empty settings
