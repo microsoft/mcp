@@ -28,25 +28,25 @@ $changedFilesScriptPath = "$RepoRoot/eng/common/scripts/get-changedfiles.ps1"
 $changedFiles = & $changedFilesScriptPath -DiffFilterType ''
 
 if ($changedFiles) {
-    $changedFiles | ForEach-Object {
-    Write-Host "Checking file: $_"
-    $fileName = [System.IO.Path]::GetFileName($_)
-    $isSkipFile = $skipFiles -contains $fileName
+    foreach ($file in $changedFiles) {
+        Write-Host "Checking file: $file"
+        $fileName = [System.IO.Path]::GetFileName($file)
+        $isSkipFile = $skipFiles -contains $fileName
 
-    $isInSkipDirectory = $false
-    foreach ($dir in $skipDirectories) {
-        if ($_.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
-            $isInSkipDirectory = $true
-            break
+        $isInSkipDirectory = $false
+        foreach ($dir in $skipDirectories) {
+            if ($file.StartsWith($dir, [System.StringComparison]::OrdinalIgnoreCase)) {
+                $isInSkipDirectory = $true
+                break
+            }
         }
-    }
 
-    Write-Host "  -> File: $fileName, IsSkipFile: $isSkipFile, IsInSkipDir: $isInSkipDirectory"
-    if (-not $isSkipFile -and -not $isInSkipDirectory) {
-        $skipBuildAndTest = $false
-        Write-Host "  -> File: $_ requires build and test!"
-        return
-    }
+        Write-Host "  -> File: $fileName, IsSkipFile: $isSkipFile, IsInSkipDir: $isInSkipDirectory"
+        if (-not $isSkipFile -and -not $isInSkipDirectory) {
+            $skipBuildAndTest = $false
+            Write-Host "  -> File: $file requires build and test!"
+            return
+        }
     }
 }
 
