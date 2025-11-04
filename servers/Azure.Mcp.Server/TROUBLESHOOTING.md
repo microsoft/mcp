@@ -993,12 +993,6 @@ TOKEN=$(az account get-access-token --resource api://<client-id> --query accessT
 curl -H "Authorization: Bearer $TOKEN" http://localhost:1031/mcp/v1/tools/list
 ```
 
-### Additional Resources
-
-- [CONTRIBUTING.md - Remote MCP Server](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#remote-mcp-server-streamable-http-transport) - Detailed setup guide
-- [MCP Specification - Streamable HTTP](https://spec.modelcontextprotocol.io/specification/2025-11-05/architecture/#http-with-sse-transport)
-- [Microsoft Identity Platform - On-Behalf-Of flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow)
-
 ## Logging and Diagnostics
 
 ### Logging
