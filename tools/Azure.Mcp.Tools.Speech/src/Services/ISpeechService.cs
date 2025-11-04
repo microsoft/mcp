@@ -2,13 +2,12 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Options;
-using Azure.Mcp.Tools.Speech.Models;
 
 namespace Azure.Mcp.Tools.Speech.Services;
 
 public interface ISpeechService
 {
-    Task<SpeechRecognitionResult> RecognizeSpeechFromFile(
+    Task<Models.ContinuousRecognitionResult> RecognizeSpeechFromFile(
         string endpoint,
         string filePath,
         string? language = null,

@@ -42,7 +42,7 @@ public static class SpeechOptionDefinitions
     public static readonly Option<string?> Format = new(
         $"--{FormatName}")
     {
-        Description = "Output format: simple or detailed."
+        Description = "Output format: simple or detailed. Default is simple."
     };
 
     public static readonly Option<string?> Profanity = new(

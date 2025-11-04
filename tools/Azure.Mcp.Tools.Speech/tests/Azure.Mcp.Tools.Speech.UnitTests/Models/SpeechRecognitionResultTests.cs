@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Speech.Models.Realtime;
+using Azure.Mcp.Tools.Speech.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
 
-public class RealtimeRecognitionResultTests
+public class SpeechRecognitionResultTests
 {
     [Fact]
-    public void RealtimeRecognitionResult_DefaultValues_ShouldBeNull()
+    public void SpeechRecognitionResult_DefaultValues_ShouldBeNull()
     {
         // Arrange & Act
-        var result = new RealtimeRecognitionResult();
+        var result = new SpeechRecognitionResult();
 
         // Assert
         Assert.Null(result.Text);
@@ -25,10 +25,10 @@ public class RealtimeRecognitionResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionResult_SetProperties_ShouldRetainValues()
+    public void SpeechRecognitionResult_SetProperties_ShouldRetainValues()
     {
         // Arrange
-        var result = new RealtimeRecognitionResult();
+        var result = new SpeechRecognitionResult();
 
         // Act
         result.Text = "Hello world";
@@ -46,10 +46,10 @@ public class RealtimeRecognitionResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionResult_JsonSerialization_ShouldSerializeCorrectly()
+    public void SpeechRecognitionResult_JsonSerialization_ShouldSerializeCorrectly()
     {
         // Arrange
-        var result = new RealtimeRecognitionResult
+        var result = new SpeechRecognitionResult
         {
             Text = "Hello world",
 
@@ -71,7 +71,7 @@ public class RealtimeRecognitionResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionResult_JsonDeserialization_ShouldDeserializeCorrectly()
+    public void SpeechRecognitionResult_JsonDeserialization_ShouldDeserializeCorrectly()
     {
         // Arrange
         var json = """
@@ -85,7 +85,7 @@ public class RealtimeRecognitionResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionResult>(json);
+        var result = JsonSerializer.Deserialize<SpeechRecognitionResult>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -98,7 +98,7 @@ public class RealtimeRecognitionResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
+    public void SpeechRecognitionResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
     {
         // Arrange
         var json = """
@@ -112,7 +112,7 @@ public class RealtimeRecognitionResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionResult>(json);
+        var result = JsonSerializer.Deserialize<SpeechRecognitionResult>(json);
 
         // Assert
         Assert.NotNull(result);

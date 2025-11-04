@@ -2,40 +2,40 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Speech.Models.Realtime;
+using Azure.Mcp.Tools.Speech.Models;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
 
-public class RealtimeRecognitionDetailedResultTests
+public class DetailedSpeechRecognitionResultTests
 {
     [Fact]
-    public void RealtimeRecognitionDetailedResult_InheritsFromRealtimeRecognitionResult()
+    public void DetailedSpeechRecognitionResult_InheritsFromSpeechRecognitionResult()
     {
         // Arrange & Act
-        var result = new RealtimeRecognitionDetailedResult();
+        var result = new DetailedSpeechRecognitionResult();
 
         // Assert
-        Assert.IsAssignableFrom<RealtimeRecognitionResult>(result);
+        Assert.IsAssignableFrom<SpeechRecognitionResult>(result);
         Assert.Null(result.NBest);
     }
 
     [Fact]
-    public void RealtimeRecognitionDetailedResult_WithRealtimeRecognitionNBestResults_ShouldRetainValues()
+    public void DetailedSpeechRecognitionResult_WithNBestResults_ShouldRetainValues()
     {
         // Arrange
-        var nBestResults = new List<RealtimeRecognitionNBestResult>
+        var nbestResults = new List<NBestResult>
         {
             new() { Display = "Hello world",  },
             new() { Display = "Hello word",  }
         };
 
         // Act
-        var result = new RealtimeRecognitionDetailedResult
+        var result = new DetailedSpeechRecognitionResult
         {
             Text = "Hello world",
 
-            NBest = nBestResults
+            NBest = nbestResults
         };
 
         // Assert
@@ -47,14 +47,14 @@ public class RealtimeRecognitionDetailedResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionDetailedResult_JsonSerialization_ShouldIncludeNBest()
+    public void DetailedSpeechRecognitionResult_JsonSerialization_ShouldIncludeNBest()
     {
         // Arrange
-        var result = new RealtimeRecognitionDetailedResult
+        var result = new DetailedSpeechRecognitionResult
         {
             Text = "Hello world",
 
-            NBest = new List<RealtimeRecognitionNBestResult>
+            NBest = new List<NBestResult>
             {
                 new() { Display = "Hello world",  },
                 new() { Display = "Hello word",  }
@@ -71,7 +71,7 @@ public class RealtimeRecognitionDetailedResultTests
     }
 
     [Fact]
-    public void RealtimeRecognitionDetailedResult_JsonDeserialization_ShouldDeserializeNBest()
+    public void DetailedSpeechRecognitionResult_JsonDeserialization_ShouldDeserializeNBest()
     {
         // Arrange
         var json = """
@@ -89,7 +89,7 @@ public class RealtimeRecognitionDetailedResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<RealtimeRecognitionDetailedResult>(json);
+        var result = JsonSerializer.Deserialize<DetailedSpeechRecognitionResult>(json);
 
         // Assert
         Assert.NotNull(result);

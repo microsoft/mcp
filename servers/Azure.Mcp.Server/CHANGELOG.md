@@ -5,7 +5,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.2 (Unreleased)
 
 ### Features Added
-- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`.
+
 - Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
 
 ### Breaking Changes
@@ -35,7 +35,7 @@ The Azure MCP Server now offers:
 
 - **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
-- **Flexible Server Modes**:
+- **Flexible Server Modes**: 
   - Namespace mode (default): Organizes tools by service for easy discovery
   - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
   - Single mode: All tools behind one unified "azure" tool
