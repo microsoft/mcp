@@ -54,7 +54,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         return new ToolsListOptions
         {
             NamespaceMode = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NamespaceMode),
-            Name = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NameOnly),
+            NameOnly = parseResult.GetValueOrDefault(ToolsListOptionDefinitions.NameOnly),
             Namespaces = namespaces.ToList()
         };
     }
@@ -67,7 +67,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             var options = BindOptions(parseResult);
 
             // If the --name-only flag is set, return only tool names
-            if (options.Name)
+            if (options.NameOnly)
             {
                 // Get all visible commands and extract their tokenized names (full command paths)
                 var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)

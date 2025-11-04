@@ -701,7 +701,7 @@ public class ToolsListCommandTests
 
         // Assert
         Assert.NotNull(options);
-        Assert.True(options.Name);
+        Assert.True(options.NameOnly);
         Assert.False(options.NamespaceMode);
         Assert.Equal(2, options.Namespaces.Count);
         Assert.Contains("storage", options.Namespaces);
