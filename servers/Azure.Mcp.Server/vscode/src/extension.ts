@@ -5,6 +5,8 @@ import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
 
+const packageJson = require('../../package.json');
+
 function isMcpAutoStartEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('chat.mcp');
     const autostart = config.get<string>('autostart');
@@ -102,7 +104,8 @@ export function activate(context: vscode.ExtensionContext) {
                         'Azure MCP',
                         binPath,
                         args,
-                        env
+                        env,
+                        packageJson.version
                     )
                 ];
             },
