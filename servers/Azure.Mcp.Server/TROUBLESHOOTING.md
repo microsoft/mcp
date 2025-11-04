@@ -816,16 +816,188 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ## Remote MCP Server
 
-### SSE Transport
+The Azure MCP Server supports remote hosting over HTTP using the **Streamable HTTP transport protocol**. For detailed configuration and deployment guidance, see the [Remote MCP Server section in CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#remote-mcp-server-streamable-http-transport).
 
->[!WARNING]
->**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
->
-> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+### Quick Start
 
-### Streamable HTTP Transport
+**Server Configuration:**
+```bash
+azmcp server start \
+  --run-as-remote-http-service \
+  --outgoing-auth-strategy UseOnBehalfOf
+```
 
-See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+**Client Configuration:**
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "https://your-server.azurewebsites.net/",
+      "type": "http"
+    }
+  }
+}
+```
+
+### Common Issues
+
+#### 401 Unauthorized - Invalid Token
+
+**Causes:** Token expired, wrong audience, or missing bearer token.
+
+**Resolution:**
+1. Verify token acquisition:
+   ```bash
+   az account get-access-token --resource api://<your-client-id>
+   ```
+
+2. Validate token claims at [jwt.ms](https://jwt.ms):
+   - `aud`: Must match server's ClientId
+   - `tid`: Must match server's TenantId
+   - `scp`: Must include `Mcp.Tools.ReadWrite`
+
+#### 403 Forbidden - Insufficient Permissions
+
+**Causes:** Missing scope/app role or user not assigned to application.
+
+**Resolution:**
+1. For delegated permissions, check scope in token:
+   ```bash
+   az ad app permission admin-consent --id <client-id>
+   ```
+
+2. Verify user assignment in Azure Portal:
+   - Entra ID → Enterprise Applications → [Your App] → Users and groups
+
+#### OBO Token Exchange Failures
+
+**Causes:** Server app missing API permissions or client token lacks scopes.
+
+**Resolution:**
+1. Grant Azure Management API permissions:
+   ```bash
+   az ad app permission add \
+     --id <server-client-id> \
+     --api https://management.azure.com/ \
+     --api-permissions user_impersonation=Scope
+   
+   az ad app permission admin-consent --id <server-client-id>
+   ```
+
+2. Add `knownClientApplications` to server's app manifest:
+   ```json
+   {
+     "knownClientApplications": ["<client-app-id>"]
+   }
+   ```
+
+#### Azure Service Access Denied
+
+**Causes:** Missing RBAC permissions on Azure resources.
+
+**Resolution:**
+
+**For OBO (per-user):**
+```bash
+az role assignment create \
+  --assignee user@domain.com \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg>
+```
+
+**For Hosting Environment (managed identity):**
+```bash
+IDENTITY_ID=$(az webapp identity show \
+  --name <app-name> \
+  --resource-group <rg> \
+  --query principalId -o tsv)
+
+az role assignment create \
+  --assignee $IDENTITY_ID \
+  --role Reader \
+  --scope /subscriptions/<sub-id>
+```
+
+### Testing & Deployment
+
+#### Quick Deploy to Azure App Service
+
+Deploy the remote MCP server to your Azure subscription for testing:
+
+```bash
+# 1. Create resource group
+az group create --name mcp-test-rg --location eastus
+
+# 2. Create App Service plan
+az appservice plan create \
+  --name mcp-test-plan \
+  --resource-group mcp-test-rg \
+  --sku B1 \
+  --is-linux
+
+# 3. Deploy container
+az webapp create \
+  --name mcp-test-<unique-suffix> \
+  --resource-group mcp-test-rg \
+  --plan mcp-test-plan \
+  --deployment-container-image-name mcr.microsoft.com/azure-sdk/azure-mcp:latest
+
+# 4. Configure authentication (replace with your values)
+az webapp config appsettings set \
+  --name mcp-test-<unique-suffix> \
+  --resource-group mcp-test-rg \
+  --settings \
+    AzureAd__TenantId=<your-tenant-id> \
+    AzureAd__ClientId=<your-client-id>
+
+# 5. Enable managed identity
+az webapp identity assign \
+  --name mcp-test-<unique-suffix> \
+  --resource-group mcp-test-rg
+
+# 6. Grant permissions to managed identity
+IDENTITY_ID=$(az webapp identity show \
+  --name mcp-test-<unique-suffix> \
+  --resource-group mcp-test-rg \
+  --query principalId -o tsv)
+
+az role assignment create \
+  --assignee $IDENTITY_ID \
+  --role Reader \
+  --scope /subscriptions/<sub-id>
+```
+
+#### Verify Deployment
+
+```bash
+# Check health endpoint
+curl https://mcp-test-<unique-suffix>.azurewebsites.net/health
+
+# Test with authentication
+TOKEN=$(az account get-access-token --resource api://<client-id> --query accessToken -o tsv)
+curl -H "Authorization: Bearer $TOKEN" \
+  https://mcp-test-<unique-suffix>.azurewebsites.net/mcp/v1/tools/list
+```
+
+#### Local Testing (Development)
+
+Test locally before deploying:
+
+```bash
+# Run server locally
+cd servers/Azure.Mcp.Server/src
+dotnet run --launch-profile debug-remotemcp
+
+# In another terminal, test endpoints
+TOKEN=$(az account get-access-token --resource api://<client-id> --query accessToken -o tsv)
+curl -H "Authorization: Bearer $TOKEN" http://localhost:1031/mcp/v1/tools/list
+```
+
+### Additional Resources
+
+- [CONTRIBUTING.md - Remote MCP Server](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#remote-mcp-server-streamable-http-transport) - Detailed setup guide
+- [MCP Specification - Streamable HTTP](https://spec.modelcontextprotocol.io/specification/2025-11-05/architecture/#http-with-sse-transport)
+- [Microsoft Identity Platform - On-Behalf-Of flow](https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow)
 
 ## Logging and Diagnostics
 

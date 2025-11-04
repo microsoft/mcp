@@ -558,6 +558,18 @@ To debug the Azure MCP Server (`azmcp`) when running live tests in VS Code:
 5. Open the Command Palette (`Cmd+Shift+P` on Mac, `Ctrl+Shift+P` on Windows/Linux), select **Debug: Attach to .NET 5+ or .NET Core process**, and enter the `azmcp` process ID
 6. Hit F5 to "Continue" debugging, the debugger should attach to `azmcp` and hit the breakpoint in command file
 
+> [!TIP]
+> **Testing Remote HTTP Mode Locally**
+>
+> The Azure MCP Server supports remote deployment with HTTP transport. For deployment and configuration details, see [TROUBLESHOOTING.md - Remote MCP Server](servers/Azure.Mcp.Server/TROUBLESHOOTING.md#remote-mcp-server).
+>
+> To test HTTP mode during development:
+> ```bash
+> dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
+> ```
+> 
+> This starts the server locally on `http://localhost:1031` for testing remote MCP functionality before deployment.
+
 ## Quality and Standards
 
 ### Code Style
