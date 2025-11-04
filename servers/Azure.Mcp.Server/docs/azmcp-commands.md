@@ -454,11 +454,13 @@ The `--format` parameter accepts the following values:
 
 ```bash
 # Basic text-to-speech synthesis
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
     --text "Hello, welcome to Azure AI Services Speech" \
     --outputAudio welcome.wav
 
 # Synthesize with specific language and voice
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
     --text "Hola, bienvenido a los servicios de voz de Azure" \
     --outputAudio spanish-greeting.wav \
@@ -466,12 +468,14 @@ azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure
     --voice es-ES-ElviraNeural
 
 # Generate MP3 output with high quality
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
     --text "This is a high quality audio output" \
     --outputAudio output.mp3 \
     --format Audio48Khz192KBitRateMonoMp3
 
 # Use custom voice model
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
 azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
     --text "This uses my custom trained voice" \
     --outputAudio custom-voice.wav \
