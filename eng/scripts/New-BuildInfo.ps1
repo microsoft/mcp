@@ -379,7 +379,7 @@ function Get-BuildMatrices {
         | Where-Object { $_.operatingSystem -eq $os }
         # Reduce the platform objects to unique combinations of architecture, native, and trimmed
         # Select-Object -Unique doesn't work here because we're working with hashtable
-        | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64
+        | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64, non-native before native, non-special before special purpose
 
         foreach($platform in $supportedPlatforms) {
             $arch = $platform.architecture
