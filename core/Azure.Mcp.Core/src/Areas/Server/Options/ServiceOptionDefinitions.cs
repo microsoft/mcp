@@ -11,9 +11,8 @@ public static class ServiceOptionDefinitions
     public const string ToolName = "tool";
     public const string ReadOnlyName = "read-only";
     public const string DebugName = "debug";
-    public const string EnableInsecureTransportsName = "enable-insecure-transports";
+    public const string DangerouslyDisableHttpIncomingAuthName = "dangerously-disable-http-incoming-auth";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
-    public const string RunAsRemoteHttpServiceName = "run-as-remote-http-service";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
@@ -69,12 +68,11 @@ public static class ServiceOptionDefinitions
         DefaultValueFactory = _ => false
     };
 
-    public static readonly Option<bool> EnableInsecureTransports = new(
-        $"--{EnableInsecureTransportsName}")
+    public static readonly Option<bool> DangerouslyDisableHttpIncomingAuth = new(
+        $"--{DangerouslyDisableHttpIncomingAuthName}")
     {
         Required = false,
-        Hidden = true,
-        Description = "Enables insecure, unauthenticated transport over streamable HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
+        Description = "Dangerously disables HTTP incoming authentication, exposing the server to unauthenticated access over HTTP. Use with extreme caution, this disables all transport security and may expose sensitive data to interception.",
         DefaultValueFactory = _ => false
     };
 
@@ -83,14 +81,6 @@ public static class ServiceOptionDefinitions
     {
         Required = false,
         Description = "Disable elicitation (user confirmation) before allowing high risk commands to run, such as returning Secrets (passwords) from KeyVault.",
-        DefaultValueFactory = _ => false
-    };
-
-    public static readonly Option<bool> RunAsRemoteHttpService = new(
-        $"--{RunAsRemoteHttpServiceName}")
-    {
-        Required = false,
-        Description = "Run the server as a remote HTTP service requiring authentication and authorization on incoming MCP requests.",
         DefaultValueFactory = _ => false
     };
 

@@ -180,7 +180,7 @@ The `azmcp server start` command supports the following options:
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
-| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
+| `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**

@@ -30,7 +30,7 @@ internal static class TelemetryConstants
         public const string ToolCount = "ToolCount";
         public const string InsecureDisableElicitation = "InsecureDisableElicitation";
         public const string IsDebug = "IsDebug";
-        public const string EnableInsecureTransports = "EnableInsecureTransports";
+        public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
         public const string Tool = "Tool";
     }
 

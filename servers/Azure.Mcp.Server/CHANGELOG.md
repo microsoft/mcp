@@ -7,6 +7,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+- Adds support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[1020](https://github.com/microsoft/mcp/pull/1020)]
+- Adds support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access [[1037](https://github.com/microsoft/mcp/pull/1037)].
 
 ### Breaking Changes
 

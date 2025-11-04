@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(PublishTrimmed)' != 'true'">
-    <DefineConstants>$(DefineConstants);ENABLE_REMOTE</DefineConstants>
+    <DefineConstants>$(DefineConstants);ENABLE_HTTP</DefineConstants>
   </PropertyGroup>
 
     <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
