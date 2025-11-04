@@ -6,6 +6,7 @@ using System.Net;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
@@ -19,7 +20,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -470,6 +470,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
+        // Update telemetry configuration to set the transport mode
+        services.PostConfigure<AzureMcpServerConfiguration>(config =>
+        {
+            config.Transport = serverOptions.Transport;
+
+            // Telemetry is disabled in HTTP transport mode
+            config.IsTelemetryEnabled = false;
+        });
+
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
@@ -584,6 +593,15 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
+        // Update telemetry configuration to set the transport mode
+        services.PostConfigure<AzureMcpServerConfiguration>(config =>
+        {
+            config.Transport = serverOptions.Transport;
+
+            // Telemetry is disabled in insecure HTTP transport mode
+            config.IsTelemetryEnabled = false;
+        });
+
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 

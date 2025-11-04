@@ -12,4 +12,6 @@ public class AzureMcpServerConfiguration
     public string Version { get; set; } = "1.0.0-beta";
 
     public bool IsTelemetryEnabled { get; set; } = true;
+
+    public string? Transport { get; set; }
 }
