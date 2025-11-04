@@ -55,7 +55,7 @@ Remove-Item -Path $OutputPath -Recurse -Force -ErrorAction SilentlyContinue -Pro
 Push-Location $RepoRoot
 try {
     $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json
-    $platformName = "linux-x64"
+    $platformName = "linux-x64-untrimmed"
 
     foreach($server in $buildInfo.servers) {
         $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }

@@ -107,10 +107,11 @@ function BuildServer($server) {
             | Where-Object {
                 ($_.operatingSystem -eq $os) -and
                 ($_.architecture -eq $arch) -and
-                ($_.native -eq $Native) })
+                ($_.native -eq $Native) -and
+                ($_.trimmed -eq $Trimmed) })
 
             if ($filteredPlatforms.Count -eq 0) {
-                LogError "No build configuration found for $serverName on $os-$arch with Native=$Native"
+                LogError "No build configuration found for $serverName on $os-$arch with Native=$Native and Trimmed=$Trimmed"
                 $script:exitCode = 1
                 continue
             } elseif ($filteredPlatforms.Count -gt 1) {
