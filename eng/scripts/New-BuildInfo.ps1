@@ -33,7 +33,8 @@ $nativePlatforms = @(
 #     $nativePlatforms = @('linux-x64-native')
 # }
 
-# To support hosted mcp servers, we need to ensure there are untrimmed versions of certain platforms available to the docker packaging step
+# Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
+# are untrimmed versions of certain platforms available to the docker packaging step
 $additionalUntrimmedPlatforms = @(
     'linux-x64'
 )
