@@ -80,7 +80,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
         command.Validators.Add(commandResult =>
         {
-            string transport = commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport) ?? TransportType.StdIo;
+            string transport = ResolveTransport(commandResult);
             bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
             ValidateMode(commandResult.GetValueOrDefault(ServiceOptionDefinitions.Mode), commandResult);
             ValidateTransportConfiguration(transport, httpIncomingAuthDisabled, commandResult);
@@ -112,7 +112,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         var options = new ServiceStartOptions
         {
-            Transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportType.StdIo,
+            Transport = ResolveTransport(parseResult),
             Namespace = parseResult.GetValueOrDefault<string[]?>(ServiceOptionDefinitions.Namespace.Name),
             Mode = mode,
             Tool = tools,
@@ -263,7 +263,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         if (outgoingAuthStrategy == OutgoingAuthStrategy.UseOnBehalfOf)
         {
 #if ENABLE_HTTP
-            if (!IsIncomingHttpAuthEnabled(commandResult))
+            string transport = ResolveTransport(commandResult);
+            bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
+
+            if (transport != TransportType.Http || httpIncomingAuthDisabled)
             {
                 commandResult.AddError($"The {OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).");
             }
@@ -658,30 +661,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Determines if the server is requested to run as an authenticated HTTP service.
-    /// </summary>
-    /// <param name="commandResult">The command result to check.</param>
-    /// <returns>True if running as authenticated HTTP service (HTTP transport without insecure transports), false otherwise.</returns>
-    private static bool IsIncomingHttpAuthEnabled(CommandResult commandResult)
-    {
-        string? transport = commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport);
-        bool httpIncomingAuthDisabled = commandResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
-        return (transport == TransportType.Http) && !httpIncomingAuthDisabled;
-    }
-
-    /// <summary>
-    /// Determines if the server is requested to run as an authenticated HTTP service.
-    /// </summary>
-    /// <param name="parseResult">The parse result to check.</param>
-    /// <returns>True if running as authenticated HTTP service (HTTP transport without insecure transports), false otherwise.</returns>
-    private static bool IsIncomingHttpAuthEnabled(ParseResult parseResult)
-    {
-        string? transport = parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name);
-        bool httpIncomingAuthDisabled = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name);
-        return (transport == TransportType.Http) && !httpIncomingAuthDisabled;
-    }
-
-    /// <summary>
     /// Resolves the service mode and outgoing authentication strategy based on parsed command line options, applying appropriate defaults.
     /// </summary>
     /// <param name="parseResult">The parsed command line arguments.</param>
@@ -689,17 +668,45 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static OutgoingAuthStrategy ResolveAuthStrategy(ParseResult parseResult)
     {
 #if ENABLE_HTTP
-        var isIncomingAuthEnabled = IsIncomingHttpAuthEnabled(parseResult);
         var outgoingAuthStrategy = parseResult.GetValueOrDefault<OutgoingAuthStrategy>(ServiceOptionDefinitions.OutgoingAuthStrategy.Name);
         if (outgoingAuthStrategy == OutgoingAuthStrategy.NotSet)
         {
-            return isIncomingAuthEnabled
-                ? OutgoingAuthStrategy.UseOnBehalfOf
-                : OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+            string transport = ResolveTransport(parseResult);
+            if (transport == TransportType.Http)
+            {
+                bool httpIncomingAuthDisabled = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name);
+                return httpIncomingAuthDisabled
+                    ? OutgoingAuthStrategy.UseHostingEnvironmentIdentity
+                    : OutgoingAuthStrategy.UseOnBehalfOf;
+            }
+            else
+            {
+                return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
+            }
         }
         return outgoingAuthStrategy;
 #else
         return OutgoingAuthStrategy.UseHostingEnvironmentIdentity;
 #endif
+    }
+
+    /// <summary>
+    /// Resolves the transport type from parsed command line arguments, defaulting to STDIO if not specified.
+    /// </summary>
+    /// <param name="parseResult">The parsed command line arguments.</param>
+    /// <returns>The transport type string (stdio or http).</returns>
+    private static string ResolveTransport(ParseResult parseResult)
+    {
+        return parseResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportType.StdIo;
+    }
+
+    /// <summary>
+    /// Resolves the transport type from command result, defaulting to STDIO if not specified.
+    /// </summary>
+    /// <param name="commandResult">The command result to extract transport from.</param>
+    /// <returns>The transport type string (stdio or http).</returns>
+    private static string ResolveTransport(CommandResult commandResult)
+    {
+        return commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportType.StdIo;
     }
 }

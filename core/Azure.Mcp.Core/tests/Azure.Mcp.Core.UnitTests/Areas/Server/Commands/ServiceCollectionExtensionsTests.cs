@@ -12,13 +12,12 @@ using Microsoft.Extensions.Options;
 using ModelContextProtocol.Server;
 using Xunit;
 
+using TransportType = Azure.Mcp.Core.Areas.Server.Options.TransportType;
+
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands;
 
 public class ServiceCollectionExtensionsTests
 {
-    // TransportTypes is internal, so we'll use strings directly
-    private const string StdioTransport = TransportType.StdIo;
-
     private IServiceCollection SetupBaseServices()
     {
         var services = CommandFactoryHelpers.SetupCommonServices();
@@ -34,7 +33,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport
+            Transport = TransportType.StdIo
         };
 
         // Act
@@ -64,7 +63,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Mode = "single"
         };
 
@@ -90,7 +89,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Mode = "namespace"
         };
 
@@ -118,7 +117,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             // No mode specified - should use default "namespace" mode
         };
 
@@ -140,7 +139,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             // Define proxy as "single" to prevent CompositeDiscoveryStrategy error
             Mode = "single"
         };
@@ -166,7 +165,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport
+            Transport = TransportType.StdIo,
         };
 
         // Act
@@ -193,7 +192,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             ReadOnly = true
         };
 
@@ -220,7 +219,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             ReadOnly = true
         };
 
@@ -247,7 +246,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Namespace = ["keyvault", "storage"]
         };
 
@@ -279,7 +278,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Namespace = [serviceArea]
         };
 
@@ -305,7 +304,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Mode = "invalid-mode"
         };
 
@@ -326,7 +325,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Mode = null
         };
 
@@ -347,7 +346,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport,
+            Transport = TransportType.StdIo,
             Mode = "all"
         };
 
@@ -373,7 +372,7 @@ public class ServiceCollectionExtensionsTests
         var services = SetupBaseServices();
         var options = new ServiceStartOptions
         {
-            Transport = StdioTransport
+            Transport = TransportType.StdIo
         };
 
         // Act
