@@ -71,7 +71,7 @@ jobs:
         -Native:$$(Native)
         -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
-        -Trimmed
+        -Trimmed:$$(Trimmed)
         -SingleFile
 
   - task: Powershell@2
