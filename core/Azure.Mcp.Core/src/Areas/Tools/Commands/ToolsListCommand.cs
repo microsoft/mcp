@@ -86,7 +86,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 return context.Response;
             }
 
-            // If the --namespace-mode flag is set, return distinct top‑level namespaces (child groups beneath root 'azmcp').
+            // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
             if (options.NamespaceMode)
             {
                 var ignored = new HashSet<string>(StringComparer.OrdinalIgnoreCase) { "server", "tools" };
