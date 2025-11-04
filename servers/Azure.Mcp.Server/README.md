@@ -343,11 +343,19 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ### 🧮 Azure AI Foundry
 
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
+* List AI Foundry models
+* Deploy AI Foundry models
+* List AI Foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
+* Create AI Foundry agents
+* List AI Fondry agents
+* Connect and query AI Foundry agents
+* Evaluate AI Foundry agents
+* Get SDK samples for interacting with AI Foundry agent
+* Create AI Foundry agent threads
+* List AI Foundry agent threads
+* Get messages of an AI Foundry thread
   
 ### 🔎 Azure AI Search
 

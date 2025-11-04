@@ -200,6 +200,13 @@ The `azmcp server start` command supports the following options:
 ### Azure AI Foundry Operations
 
 ```bash
+# Create an agent in an AI Foundry project
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents create --endpoint <endpoint> \
+                            --model-deployment <model-deployment> \
+                            --agent-name <agent-name> \
+                            --systemInstruction <system-instruction>
+
 # Connect to an agent in an AI Foundry project and query it
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents connect --agent-id <agent-id> \
@@ -228,6 +235,21 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
 # List all Azure AI Agents available in the configured project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents list --endpoint <endpoint>
+
+# Get SDK samples for interacting with an AI Foundry agent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|c#>
+
+# Create an AI Foundry agent thread
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry thread create --endpoint <endpoint> --user-message <user-message>
+
+# List AI Foundry agent threads in a Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry thread list --endpoint <endpoint>
+
+# Get messages of an AI Foundry agent thread
+azmcp foundry thread get-messages --<endpoint> --thread-id <thread-id>
 
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
