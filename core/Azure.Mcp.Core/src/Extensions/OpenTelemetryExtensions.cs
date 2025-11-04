@@ -141,8 +141,6 @@ public static class OpenTelemetryExtensions
 
         string version = versionAttribute.InformationalVersion;
 
-        string assemblyName = callerAssembly.GetName().Name!;
-
         int hashSeparator = version.IndexOf('+');
         if (hashSeparator != -1)
         {
