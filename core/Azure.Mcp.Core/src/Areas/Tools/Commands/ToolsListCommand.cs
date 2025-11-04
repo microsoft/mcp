@@ -66,26 +66,6 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
             var factory = context.GetService<CommandFactory>();
             var options = BindOptions(parseResult);
 
-            // If the --name-only flag is set, return only tool names
-            if (options.NameOnly)
-            {
-                // Get all visible commands and extract their tokenized names (full command paths)
-                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
-                    .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
-                    .Where(name => !string.IsNullOrEmpty(name));
-
-                // Apply namespace filtering if specified (using underscore separator for tokenized names)
-                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, '_');
-
-                var toolNames = await Task.Run(() => allToolNames
-                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
-                    .ToList());
-
-                var result = new ToolNamesResult(toolNames);
-                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
-                return context.Response;
-            }
-
             // If the --namespace-mode flag is set, return distinct top‑level namespaces (e.g. child groups beneath root 'azmcp').
             if (options.NamespaceMode)
             {
@@ -95,6 +75,8 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
 
                 var namespaceCommands = rootGroup.SubGroup
                     .Where(g => !ignored.Contains(g.Name) && !surfaced.Contains(g.Name))
+                    // Apply namespace filtering if specified
+                    .Where(g => options.Namespaces.Count == 0 || options.Namespaces.Contains(g.Name, StringComparer.OrdinalIgnoreCase))
                     .Select(g => new CommandInfo
                     {
                         Name = g.Name,
@@ -108,6 +90,10 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                 // Add the commands to be surfaced directly to the list.
                 foreach (var name in surfaced)
                 {
+                    // Apply namespace filtering for surfaced commands too
+                    if (options.Namespaces.Count > 0 && !options.Namespaces.Contains(name, StringComparer.OrdinalIgnoreCase))
+                        continue;
+
                     var subgroup = rootGroup.SubGroup.FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
                     if (subgroup is not null)
                     {
@@ -126,7 +112,36 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     }
                 }
 
+                // If --name-only is also specified, return only the names
+                if (options.NameOnly)
+                {
+                    var namespaceNames = namespaceCommands.Select(nc => nc.Command).ToList();
+                    var result = new ToolNamesResult(namespaceNames);
+                    context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
+                    return context.Response;
+                }
+
                 context.Response.Results = ResponseResult.Create(namespaceCommands, ModelsJsonContext.Default.ListCommandInfo);
+                return context.Response;
+            }
+
+            // If the --name-only flag is set (without namespace mode), return only tool names
+            if (options.NameOnly)
+            {
+                // Get all visible commands and extract their tokenized names (full command paths)
+                var allToolNames = CommandFactory.GetVisibleCommands(factory.AllCommands)
+                    .Select(kvp => kvp.Key) // Use the tokenized key instead of just the command name
+                    .Where(name => !string.IsNullOrEmpty(name));
+
+                // Apply namespace filtering if specified (using underscore separator for tokenized names)
+                allToolNames = ApplyNamespaceFilterToNames(allToolNames, options.Namespaces, '_');
+
+                var toolNames = await Task.Run(() => allToolNames
+                    .OrderBy(name => name, StringComparer.OrdinalIgnoreCase)
+                    .ToList());
+
+                var result = new ToolNamesResult(toolNames);
+                context.Response.Results = ResponseResult.Create(result, ModelsJsonContext.Default.ToolNamesResult);
                 return context.Response;
             }
 

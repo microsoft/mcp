@@ -738,4 +738,123 @@ public class ToolsListCommandTests
         Assert.Contains("storage", namespaces3);
         Assert.Contains("keyvault", namespaces3);
     }
+
+    /// <summary>
+    /// Verifies that --namespace-mode and --name-only work together correctly.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceModeAndNameOnly_ReturnsNamespaceNamesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--name-only" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeToolNamesResult(response.Results);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Names);
+        Assert.NotEmpty(result.Names);
+
+        // Validate that the response only contains Names field and no other fields
+        var json = JsonSerializer.Serialize(response.Results);
+        var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+
+        // Verify that only the "names" property exists
+        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+
+        // Count the number of properties - should only be 1 (names)
+        var propertyCount = jsonElement.EnumerateObject().Count();
+        Assert.Equal(1, propertyCount);
+
+        // Should contain only namespace names (not individual commands)
+        Assert.Contains(result.Names, name => name.Equals("subscription", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Names, name => name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result.Names, name => name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// Verifies that --namespace-mode, --name-only, and --namespace filtering work together correctly.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceModeNameOnlyAndNamespaceFilter_ReturnsFilteredNamespaceNamesOnly()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--name-only", "--namespace", "storage" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeToolNamesResult(response.Results);
+        Assert.NotNull(result);
+        Assert.NotNull(result.Names);
+        Assert.NotEmpty(result.Names);
+
+        // Validate that the response only contains Names field and no other fields
+        var json = JsonSerializer.Serialize(response.Results);
+        var jsonElement = JsonSerializer.Deserialize<JsonElement>(json);
+
+        // Verify that only the "names" property exists
+        Assert.True(jsonElement.TryGetProperty("names", out _), "Response should contain 'names' property");
+
+        // Count the number of properties - should only be 1 (names)
+        var propertyCount = jsonElement.EnumerateObject().Count();
+        Assert.Equal(1, propertyCount);
+
+        // Should contain only storage namespace (and possibly surfaced storage-related commands)
+        foreach (var name in result.Names)
+        {
+            Assert.True(name.Equals("storage", StringComparison.OrdinalIgnoreCase) ||
+                       name.StartsWith("storage ", StringComparison.OrdinalIgnoreCase),
+                       $"Name '{name}' should be from storage namespace");
+        }
+    }
+
+    /// <summary>
+    /// Verifies that --namespace-mode with multiple namespace filters works correctly.
+    /// </summary>
+    [Fact]
+    public async Task ExecuteAsync_WithNamespaceModeAndMultipleNamespaces_ReturnsFilteredNamespaces()
+    {
+        // Arrange
+        var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--namespace", "storage", "--namespace", "keyvault" });
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args);
+
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+
+        var result = DeserializeResults(response.Results);
+        Assert.NotNull(result);
+        Assert.NotEmpty(result);
+
+        // Should contain only storage and keyvault namespaces
+        foreach (var command in result)
+        {
+            var isStorageNamespace = command.Name.Equals("storage", StringComparison.OrdinalIgnoreCase);
+            var isKeyvaultNamespace = command.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase);
+            var isStorageCommand = command.Command.StartsWith("storage ", StringComparison.OrdinalIgnoreCase);
+            var isKeyvaultCommand = command.Command.StartsWith("keyvault ", StringComparison.OrdinalIgnoreCase);
+            
+            Assert.True(isStorageNamespace || isKeyvaultNamespace || isStorageCommand || isKeyvaultCommand,
+                $"Command '{command.Command}' (Name: '{command.Name}') should be from storage or keyvault namespace");
+        }
+
+        // Should contain both namespaces
+        Assert.Contains(result, cmd => cmd.Name.Equals("storage", StringComparison.OrdinalIgnoreCase));
+        Assert.Contains(result, cmd => cmd.Name.Equals("keyvault", StringComparison.OrdinalIgnoreCase));
+    }
 }
