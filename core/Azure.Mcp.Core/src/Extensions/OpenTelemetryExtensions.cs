@@ -126,7 +126,7 @@ public static class OpenTelemetryExtensions
     /// <summary>
     /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
     /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
-    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.1"
+    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
     /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
     /// <returns>A version string.</returns>
