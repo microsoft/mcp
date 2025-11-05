@@ -175,7 +175,7 @@ public class BaseToolLoaderTests
 
         // Assert - verify handler validates null request
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Handlers.SamplingHandler(null!, default!, CancellationToken.None));
+            await options.Handlers.SamplingHandler(null!, default!, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -220,7 +220,7 @@ public class BaseToolLoaderTests
         var options = loader.CreateClientOptionsPublic(mockServer);
         Assert.NotNull(options.Handlers.SamplingHandler);
 
-        await options.Handlers.SamplingHandler(samplingRequest, default!, CancellationToken.None);
+        await options.Handlers.SamplingHandler(samplingRequest, default!, TestContext.Current.CancellationToken);
 
         // Assert - verify SendRequestAsync was called with sampling method
         await mockServer.Received(1).SendRequestAsync(
@@ -258,7 +258,7 @@ public class BaseToolLoaderTests
         var options = loader.CreateClientOptionsPublic(mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
-        await options.Handlers.ElicitationHandler(elicitationRequest, CancellationToken.None);
+        await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
 
         // Assert - verify SendRequestAsync was called with elicitation method
         await mockServer.Received(1).SendRequestAsync(
@@ -284,7 +284,7 @@ public class BaseToolLoaderTests
 
         // Assert - verify handler validates null request
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Handlers.ElicitationHandler.Invoke(null!, CancellationToken.None));
+            await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
     internal sealed class TestableBaseToolLoader : BaseToolLoader

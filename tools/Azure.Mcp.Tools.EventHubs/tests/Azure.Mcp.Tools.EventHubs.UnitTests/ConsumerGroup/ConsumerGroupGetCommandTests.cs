@@ -76,7 +76,7 @@ public class ConsumerGroupGetCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -113,7 +113,7 @@ public class ConsumerGroupGetCommandTests
             .Returns(expectedConsumerGroups);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -156,7 +156,7 @@ public class ConsumerGroupGetCommandTests
             .Returns(expectedConsumerGroup);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -189,7 +189,7 @@ public class ConsumerGroupGetCommandTests
             .Returns((Models.ConsumerGroup?)null);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -212,7 +212,7 @@ public class ConsumerGroupGetCommandTests
             .ThrowsAsync(new InvalidOperationException("Event Hub 'test-eventhub' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -236,7 +236,7 @@ public class ConsumerGroupGetCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);

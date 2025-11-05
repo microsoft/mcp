@@ -49,11 +49,13 @@ public class CertificateListCommandTests
         // Arrange
         var expectedCertificates = new List<string> { "cert1", "cert2" };
 
-        _keyVaultService.ListCertificates(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListCertificates(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedCertificates);
 
         var args = _commandDefinition.Parse([
@@ -62,7 +64,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -79,11 +81,13 @@ public class CertificateListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoCertificates()
     {
         // Arrange
-        _keyVaultService.ListCertificates(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListCertificates(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -92,7 +96,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -111,11 +115,13 @@ public class CertificateListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.ListCertificates(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListCertificates(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -124,7 +130,7 @@ public class CertificateListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

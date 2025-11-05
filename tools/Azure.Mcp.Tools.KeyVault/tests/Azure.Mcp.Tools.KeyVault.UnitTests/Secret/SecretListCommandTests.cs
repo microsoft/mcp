@@ -49,11 +49,13 @@ public class SecretListCommandTests
         // Arrange
         var expectedSecrets = new List<string> { "secret1", "secret2" };
 
-        _keyVaultService.ListSecrets(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListSecrets(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedSecrets);
 
         var args = _commandDefinition.Parse([
@@ -62,7 +64,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -79,11 +81,13 @@ public class SecretListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoSecrets()
     {
         // Arrange
-        _keyVaultService.ListSecrets(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListSecrets(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -92,7 +96,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -111,11 +115,13 @@ public class SecretListCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.ListSecrets(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ListSecrets(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -124,7 +130,7 @@ public class SecretListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

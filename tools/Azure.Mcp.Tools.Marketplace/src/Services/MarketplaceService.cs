@@ -48,7 +48,8 @@ public class MarketplaceService(ITenantService tenantService)
         bool? includeServiceInstructionTemplates = null,
         string? pricingAudience = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(productId), productId),
@@ -57,7 +58,7 @@ public class MarketplaceService(ITenantService tenantService)
         string productUrl = BuildProductUrl(subscription, productId, includeStopSoldPlans, language, market,
             lookupOfferInTenantLevel, planId, skuId, includeServiceInstructionTemplates);
 
-        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy);
+        return await GetMarketplaceSingleProductResponseAsync(productUrl, tenantId, retryPolicy, cancellationToken);
     }
 
     /// <summary>
@@ -86,13 +87,14 @@ public class MarketplaceService(ITenantService tenantService)
         string? nextCursor = null,
         string? expand = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         string productsUrl = BuildProductsListUrl(subscription, language, search, filter, orderBy, select, nextCursor, expand);
 
-        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy);
+        return await GetMarketplaceListProductsResponseAsync(productsUrl, tenantId, retryPolicy, cancellationToken);
     }
 
     private static string BuildProductsListUrl(
@@ -137,10 +139,10 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products?{queryString}";
     }
 
-    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
+    private async Task<ProductListResponseWithNextCursor> GetMarketplaceListProductsResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var productsListResponse = await ExecuteMarketplaceRequestAsync(
-            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant);
+            url, MarketplaceJsonContext.Default.ProductsListResponse, retryPolicy, tenant, cancellationToken);
 
         var result = new ProductListResponseWithNextCursor
         {
@@ -192,13 +194,14 @@ public class MarketplaceService(ITenantService tenantService)
         return $"{ManagementApiBaseUrl}/subscriptions/{subscription}/providers/Microsoft.Marketplace/products/{productId}?{queryString}";
     }
 
-    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy = null)
+    private async Task<ProductDetails> GetMarketplaceSingleProductResponseAsync(string url, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
         var productDetails = await ExecuteMarketplaceRequestAsync(
             url,
             MarketplaceJsonContext.Default.ProductDetails,
             retryPolicy,
-            tenant
+            tenant,
+            cancellationToken
         );
         return productDetails ?? throw new JsonException("Failed to deserialize marketplace response to ProductDetails.");
     }
@@ -214,8 +217,9 @@ public class MarketplaceService(ITenantService tenantService)
     private async Task<T> ExecuteMarketplaceRequestAsync<T>(
         string url,
         JsonTypeInfo<T> jsonTypeInfo,
-        RetryPolicyOptions? retryPolicy = null,
-        string? tenant = null
+        RetryPolicyOptions? retryPolicy,
+        string? tenant,
+        CancellationToken cancellationToken
     )
     {
         // Use Azure Core pipeline approach consistently
@@ -234,7 +238,7 @@ public class MarketplaceService(ITenantService tenantService)
         // Create pipeline
         var pipeline = HttpPipelineBuilder.Build(clientOptions);
 
-        string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, CancellationToken.None)).Token;
+        string accessToken = (await GetArmAccessTokenAsync(tenantId: tenant, cancellationToken)).Token;
         ValidateRequiredParameters((nameof(accessToken), accessToken));
 
         var request = pipeline.CreateRequest();
@@ -242,7 +246,7 @@ public class MarketplaceService(ITenantService tenantService)
         request.Uri.Reset(new Uri(url));
         request.Headers.Add("Authorization", $"Bearer {accessToken}");
 
-        var response = await pipeline.SendRequestAsync(request, CancellationToken.None);
+        var response = await pipeline.SendRequestAsync(request, cancellationToken);
 
         if (!response.IsError)
         {
