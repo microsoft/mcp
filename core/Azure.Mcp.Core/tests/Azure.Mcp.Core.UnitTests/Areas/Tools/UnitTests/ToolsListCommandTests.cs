@@ -485,7 +485,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--name-only" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -537,7 +537,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespace", "storage" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -568,7 +568,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -603,7 +603,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--name-only", "--namespace", "storage" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -646,7 +646,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--name-only", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -750,7 +750,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--name-only" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -789,7 +789,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--name-only", "--namespace", "storage" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -831,7 +831,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespace-mode", "--namespace", "storage", "--namespace", "keyvault" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
