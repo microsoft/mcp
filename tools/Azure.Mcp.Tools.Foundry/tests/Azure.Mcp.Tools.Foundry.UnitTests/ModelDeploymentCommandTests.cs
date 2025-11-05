@@ -57,7 +57,8 @@ public class ModelDeploymentCommandTests
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Any<int?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResponse);
 
         var command = new ModelDeploymentCommand();
@@ -103,7 +104,8 @@ public class ModelDeploymentCommandTests
             Arg.Is<int?>(skuCapacity),
             Arg.Is<string?>(scaleType),
             Arg.Is<int?>(scaleCapacity),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResponse);
 
         var command = new ModelDeploymentCommand();
@@ -139,7 +141,8 @@ public class ModelDeploymentCommandTests
             Arg.Any<int?>(),
             Arg.Any<string>(),
             Arg.Any<int?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelDeploymentCommand();
