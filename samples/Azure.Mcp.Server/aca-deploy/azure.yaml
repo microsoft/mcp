@@ -1,0 +1,52 @@
+# yaml-language-server: $schema=https://raw.githubusercontent.com/Azure/azure-dev/main/schemas/v1.0/azure.yaml.json
+
+name: azure-mcp-server
+metadata:
+  template: azure-mcp-server@0.0.1-beta
+
+infra:
+  provider: bicep
+  path: ./infra
+  outputs:
+    AZURE_RESOURCE_GROUP: AZURE_RESOURCE_GROUP
+    CONTAINER_REGISTRY_LOGIN_SERVER: CONTAINER_REGISTRY_LOGIN_SERVER
+    CONTAINER_APP_NAME: CONTAINER_APP_NAME
+
+services:
+  api:
+    resourceName: ${CONTAINER_APP_NAME}
+    project: .
+    host: containerapp
+    language: docker
+    docker:
+      path: ./docker/Dockerfile
+      context: .
+      remoteBuild: false
+      registry: ${CONTAINER_REGISTRY_LOGIN_SERVER}
+    dependsOn:
+      - infra
+
+hooks:
+  preprovision:
+    shell: sh
+    run: echo "Starting 'Azure MCP Postgres Server' infrastructure provisioning..."
+    continueOnError: false
+  
+  postprovision:
+    shell: sh  
+    run: |
+      echo "Success: Infrastructure provisioned"
+    continueOnError: false
+
+  predeploy:
+    shell: sh
+    run: echo "Building and deploying 'Azure MCP Postgres Server' application..."
+    continueOnError: false
+
+  postdeploy:
+    shell: sh
+    run: |
+      echo "Success: 'Azure MCP Postgres Server' deployed"
+      echo "Saving deployment info to azd-deployment-info.json..."
+      azd env get-values -o json > azd-deployment-info.json
+    continueOnError: false
