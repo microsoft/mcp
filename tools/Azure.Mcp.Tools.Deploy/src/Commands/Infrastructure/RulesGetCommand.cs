@@ -32,7 +32,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Description =>
         """
-        This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with the azd tool and adhere to best practices.
+        This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure using Azure CLI. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with Azure CLI deployment workflows.
         """;
 
     protected override void RegisterOptions(Command command)
@@ -63,6 +63,15 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
         try
         {
+            // Validate deployment tool - only AzCli is supported
+            if (!string.IsNullOrEmpty(options.DeploymentTool) && 
+                !options.DeploymentTool.Equals(DeploymentTool.AzCli, StringComparison.OrdinalIgnoreCase))
+            {
+                context.Response.Error = $"Invalid deployment tool '{options.DeploymentTool}'. Only '{DeploymentTool.AzCli}' is supported.";
+                context.Response.StatusCode = 400;
+                return Task.FromResult(context.Response);
+            }
+
             context.Activity?
                 .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
                 .AddTag(DeployTelemetryTags.IacType, options.IacType)
@@ -73,10 +82,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
                 .Where(rt => !string.IsNullOrWhiteSpace(rt))
                 .ToArray();
 
-            string iacRules = IaCRulesTemplateUtil.GetIaCRules(
-                options.DeploymentTool,
-                options.IacType,
-                resourceTypes);
+            string iacRules = TemplateService.LoadTemplate("IaCRules/azcli-rules");
 
             context.Response.Message = iacRules;
         }

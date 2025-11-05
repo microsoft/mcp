@@ -37,7 +37,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "bicep",
             "--resource-types", "appservice, azurestorage"
         ]);
@@ -49,7 +49,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Deployment Tool azd rules", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("Deployment Tool AzCli rules", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -57,7 +57,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "terraform",
             "--resource-types", "containerapp, azurecosmosdb"
         ]);
@@ -77,7 +77,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "bicep",
             "--resource-types", "function"
         ]);
@@ -98,7 +98,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "bicep",
             "--resource-types", "containerapp"
         ]);
@@ -139,7 +139,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "terraform",
             "--resource-types", "containerapp"
         ]);
@@ -153,7 +153,6 @@ public class RulesGetCommandTests
         Assert.NotNull(result.Message);
         Assert.Contains("Tools needed:", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("az cli", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("azd", result.Message, StringComparison.OrdinalIgnoreCase);
         Assert.Contains("docker", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
@@ -162,7 +161,7 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "azd",
+            "--deployment-tool", "AzCli",
             "--iac-type", "bicep",
             "--resource-types", "appservice,containerapp,function"
         ]);

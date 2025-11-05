@@ -3,7 +3,6 @@ namespace Azure.Mcp.Tools.Deploy.Models;
 
 public static class DeploymentTool
 {
-    public const string Azd = "AZD";
     public const string AzCli = "AzCli";
 }
 
