@@ -59,7 +59,7 @@ public class ConsumerGroupDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -91,7 +91,7 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -124,7 +124,7 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Consumer group 'test-consumer-group' could not be found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -148,7 +148,7 @@ public class ConsumerGroupDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -178,7 +178,7 @@ public class ConsumerGroupDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

@@ -114,7 +114,7 @@ public class FileSystemListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -176,7 +176,7 @@ public class FileSystemListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -214,7 +214,7 @@ public class FileSystemListCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -236,7 +236,7 @@ public class FileSystemListCommandTests
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -252,7 +252,7 @@ public class FileSystemListCommandTests
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

@@ -2,12 +2,14 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Tools.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Models.Option;
+using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Areas.Tools.Commands;
@@ -59,7 +61,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         };
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -88,6 +90,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     .ToList();
 
                 // Add the commands to be surfaced directly to the list.
+                // For commands in the surfaced list, each command is exposed as a separate tool in the namespace mode.
                 foreach (var name in surfaced)
                 {
                     // Apply namespace filtering for surfaced commands too
@@ -97,18 +100,9 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
                     var subgroup = rootGroup.SubGroup.FirstOrDefault(g => string.Equals(g.Name, name, StringComparison.OrdinalIgnoreCase));
                     if (subgroup is not null)
                     {
-                        var commands = CommandFactory.GetVisibleCommands(subgroup.Commands).Select(kvp =>
-                            {
-                                var command = kvp.Value.GetCommand();
-                                return new CommandInfo
-                                {
-                                    Name = command.Name,
-                                    Description = command.Description ?? string.Empty,
-                                    Command = $"{subgroup.Name} {command.Name}"
-                                    // Omit Options and Subcommands for surfaced commands as well.
-                                };
-                            });
-                        namespaceCommands.AddRange(commands);
+                        List<CommandInfo> foundCommands = [];
+                        searchCommandInCommandGroup("", subgroup, foundCommands);
+                        namespaceCommands.AddRange(foundCommands);
                     }
                 }
 
@@ -206,4 +200,23 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
     }
 
     public record ToolNamesResult(List<string> Names);
+    private void searchCommandInCommandGroup(string commandPrefix, CommandGroup searchedGroup, List<CommandInfo> foundCommands)
+    {
+        var commands = CommandFactory.GetVisibleCommands(searchedGroup.Commands).Select(kvp =>
+        {
+            var command = kvp.Value.GetCommand();
+            return new CommandInfo
+            {
+                Name = $"{commandPrefix.Replace(" ", "_")}{searchedGroup.Name}_{command.Name}",
+                Description = command.Description ?? string.Empty,
+                Command = $"{(!string.IsNullOrEmpty(commandPrefix) ? commandPrefix : "")}{searchedGroup.Name} {command.Name}"
+                // Omit Options and Subcommands for surfaced commands as well.
+            };
+        });
+        foundCommands.AddRange(commands);
+        foreach (CommandGroup nextLevelSubGroup in searchedGroup.SubGroup)
+        {
+            searchCommandInCommandGroup($"{commandPrefix}{searchedGroup.Name} ", nextLevelSubGroup, foundCommands);
+        }
+    }
 }

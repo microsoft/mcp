@@ -69,7 +69,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -94,7 +94,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -119,7 +119,7 @@ public class KnowledgeIndexSchemaCommandTests
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
