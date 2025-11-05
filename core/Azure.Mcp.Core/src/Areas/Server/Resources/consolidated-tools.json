@@ -26,7 +26,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -60,7 +60,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -93,7 +93,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -126,7 +126,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -180,7 +180,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -214,7 +214,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -247,7 +247,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -282,7 +282,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -316,7 +316,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -366,7 +366,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -399,7 +399,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -432,7 +432,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -468,7 +468,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -501,7 +501,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -535,7 +535,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -569,7 +569,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -602,7 +602,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -636,7 +636,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -669,7 +669,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -703,7 +703,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -736,7 +736,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -769,7 +769,7 @@
         },
         "localRequired": {
           "value": true,
-          "description": "This tool requires local execution environment or local resources to function properly."
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
         }
       },
       "mappedToolList": [
@@ -802,7 +802,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -835,7 +835,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -873,7 +873,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -906,7 +906,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -940,7 +940,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -973,7 +973,7 @@
         },
         "localRequired": {
           "value": true,
-          "description": "This tool requires local execution environment or local resources to function properly."
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
         }
       },
       "mappedToolList": [
@@ -1006,7 +1006,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1041,7 +1041,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1075,7 +1075,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1111,7 +1111,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1146,7 +1146,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1179,7 +1179,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1223,7 +1223,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1256,7 +1256,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1291,7 +1291,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1324,7 +1324,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1357,7 +1357,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1390,7 +1390,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1429,7 +1429,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1464,7 +1464,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1497,7 +1497,7 @@
         },
         "localRequired": {
           "value": true,
-          "description": "This tool requires local execution environment or local resources to function properly."
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
         }
       },
       "mappedToolList": [
@@ -1530,7 +1530,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1563,7 +1563,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1597,7 +1597,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1631,7 +1631,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1671,7 +1671,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1709,7 +1709,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1742,7 +1742,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1781,7 +1781,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1814,7 +1814,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1847,7 +1847,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1882,7 +1882,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1918,7 +1918,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1953,7 +1953,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -1986,7 +1986,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -2019,7 +2019,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -2052,7 +2052,7 @@
         },
         "localRequired": {
           "value": false,
-          "description": "This tool can operate remotely without local dependencies."
+          "description": "This tool is available in both local and remote server modes."
         }
       },
       "mappedToolList": [
@@ -2086,7 +2086,7 @@
         },
         "localRequired": {
           "value": true,
-          "description": "This tool requires local execution environment or local resources to function properly."
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
         }
       },
       "mappedToolList": [

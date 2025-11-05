@@ -207,8 +207,8 @@ public sealed class ToolMetadata
     {
         Value = _localRequired,
         Description = _localRequired
-            ? "This tool requires local execution environment or local resources to function properly."
-            : "This tool can operate remotely without local dependencies."
+            ? "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+            : "This tool is available in both local and remote server modes."
     };
 
     /// <summary>
