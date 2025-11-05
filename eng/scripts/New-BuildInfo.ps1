@@ -567,7 +567,7 @@ function Get-ServerMatrix {
     Write-Host "Forming server matrix"
 
     $serverMatrix = [ordered]@{}
-    $platformName = "linux-x64"
+    $platformName = "linux-x64-untrimmed"
     
     foreach ($server in $servers) {
         $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
