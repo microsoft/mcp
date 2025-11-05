@@ -19,7 +19,7 @@
 			"type": "process",
 			"args": [
 				"build",
-				"${workspaceFolder}/eng/tools/ToolDescriptionEvaluator/ToolDescriptionEvaluator.csproj",
+				"${workspaceFolder}/eng/tools/ToolDescriptionEvaluator/src/ToolDescriptionEvaluator.csproj",
 				"/property:GenerateFullPaths=true",
 				"/consoleloggerparameters:NoSummary"
 			],
