@@ -33,6 +33,12 @@ $nativePlatforms = @(
 #     $nativePlatforms = @('linux-x64-native')
 # }
 
+# Until https://github.com/microsoft/mcp/issues/1051 is fixed, to support hosted mcp servers, we need to ensure there
+# are untrimmed versions of certain platforms available to the docker packaging step
+$additionalUntrimmedPlatforms = @(
+    'linux-x64'
+)
+
 if ($BuildId -eq 0) {
     if ($isPipelineRun) {
         LogError 'A non-zero BuildId is required when running in a pipeline.'
@@ -421,6 +427,7 @@ function Get-ServerDetails {
                         architecture = $arch
                         extension = $os.extension
                         native = $false
+                        trimmed = $true
                     }
                 }
 
@@ -438,6 +445,23 @@ function Get-ServerDetails {
                         architecture = $arch
                         extension = $os.extension
                         native = $true
+                        trimmed = $false
+                    }
+                }
+
+                if($additionalUntrimmedPlatforms -contains $name) {
+                    $untrimmedName = "$name-untrimmed"
+                    $platforms += [ordered]@{
+                        name = $untrimmedName
+                        artifactPath = "$serverName/$untrimmedName"
+                        operatingSystem = $os.name
+                        nodeOs = $os.nodeName
+                        dotnetOs = $os.dotnetName
+                        architecture = $arch
+                        extension = $os.extension
+                        native = $false
+                        trimmed = $false
+                        specialPurpose = 'untrimmed'
                     }
                 }
             }
@@ -485,7 +509,9 @@ function Get-BuildMatrices {
 
         $supportedPlatforms = $servers.platforms
         | Where-Object { $_.operatingSystem -eq $os }
-        | Sort-Object { "$($_.architecture)-$(!$_.native)" } -Unique -Descending # x64 before arm64, non-native before native
+        # Reduce the platform objects to unique combinations of architecture, native, and trimmed
+        # Select-Object -Unique doesn't work here because we're working with hashtable
+        | Sort-Object { "$($_.architecture)-$(!$_.native)-$($_.specialPurpose)" } -Descending -Unique  # x64 before arm64, non-native before native, non-special before special purpose
 
         foreach($platform in $supportedPlatforms) {
             $arch = $platform.architecture
@@ -508,15 +534,18 @@ function Get-BuildMatrices {
                 'macos' { $macVmImage }
             }
 
+            $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
+
             $buildMatrix[$legName] = [ordered]@{
                 Pool = $pool
                 OSVmImage = $vmImage
                 Architecture = $arch
                 Native = $platform.native
-                RunUnitTests = $arch -eq 'x64' -and -not $platform.native
+                Trimmed = $platform.trimmed
+                RunUnitTests = $runUnitTests
             }
 
-            if(!$platform.Native -and $arch -eq 'x64') {
+            if($runUnitTests) {
                 $smokeTestMatrix[$legName] = [ordered]@{
                     Pool = $pool
                     OSVmImage = $vmImage

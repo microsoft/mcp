@@ -65,7 +65,7 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

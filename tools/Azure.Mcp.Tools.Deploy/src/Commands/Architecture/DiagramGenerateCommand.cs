@@ -52,7 +52,7 @@ public sealed class DiagramGenerateCommand(ILogger<DiagramGenerateCommand> logge
         return options;
     }
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

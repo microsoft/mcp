@@ -67,7 +67,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--prompt-text", promptText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -123,7 +123,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--temperature", temperature.ToString()
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -177,7 +177,7 @@ public class OpenAiCompletionsCreateCommandTests
             "--prompt-text", promptText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

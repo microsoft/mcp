@@ -110,7 +110,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -164,7 +164,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -208,7 +208,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription test-sub --hostpool-resource-id {resourceId} --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -259,7 +259,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -314,7 +314,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -345,7 +345,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -377,7 +377,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -409,7 +409,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -453,7 +453,7 @@ public class SessionHostUserSessionListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --hostpool test-hostpool --sessionhost test-sessionhost --tenant test-tenant");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

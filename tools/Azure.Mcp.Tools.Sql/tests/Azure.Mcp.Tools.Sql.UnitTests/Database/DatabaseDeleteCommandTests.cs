@@ -66,20 +66,21 @@ public class DatabaseDeleteCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _sqlService.DeleteDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+            _sqlService
+                .DeleteDatabaseAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(true);
         }
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -96,18 +97,19 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_DeletesDatabaseSuccessfully()
     {
-        _sqlService.DeleteDatabaseAsync(
-            "server1",
-            "db1",
-            "rg1",
-            "sub1",
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                "server1",
+                "db1",
+                "rg1",
+                "sub1",
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(true);
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
 
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -117,18 +119,19 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_IdempotentWhenDatabaseMissing()
     {
-        _sqlService.DeleteDatabaseAsync(
-            "server1",
-            "missingdb",
-            "rg1",
-            "sub1",
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                "server1",
+                "missingdb",
+                "rg1",
+                "sub1",
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(false);
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database missingdb");
 
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -138,17 +141,18 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
@@ -159,17 +163,18 @@ public class DatabaseDeleteCommandTests
     public async Task ExecuteAsync_Handles404Error()
     {
         var requestFailed = new RequestFailedException((int)HttpStatusCode.NotFound, "Not found");
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestFailed));
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("SQL server or database not found", response.Message);
@@ -179,17 +184,18 @@ public class DatabaseDeleteCommandTests
     public async Task ExecuteAsync_Handles403Error()
     {
         var requestFailed = new RequestFailedException((int)HttpStatusCode.Forbidden, "Access denied");
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(requestFailed));
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
         Assert.Contains("Authorization failed", response.Message);
@@ -203,17 +209,18 @@ public class DatabaseDeleteCommandTests
         const string server = "server1";
         const string database = "db1";
 
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(true);
 
         var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {server} --database {database}");
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         await _sqlService.Received(1).DeleteDatabaseAsync(
             server,
@@ -227,17 +234,18 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_WithRetryPolicyOptions()
     {
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(true);
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1 --retry-max-retries 5");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _sqlService.Received(1).DeleteDatabaseAsync(
@@ -257,17 +265,18 @@ public class DatabaseDeleteCommandTests
     [InlineData("db123")]
     public async Task ExecuteAsync_HandlesVariousDatabaseNames(string dbName)
     {
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(true);
 
         var parseResult = _commandDefinition.Parse($"--subscription sub1 --resource-group rg1 --server server1 --database {dbName}");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _sqlService.Received(1).DeleteDatabaseAsync(
@@ -283,17 +292,18 @@ public class DatabaseDeleteCommandTests
     public async Task ExecuteAsync_HandlesArgumentException()
     {
         var argumentException = new ArgumentException("Invalid database name");
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(argumentException));
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database invalidDb");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Invalid database name", response.Message);
@@ -302,17 +312,18 @@ public class DatabaseDeleteCommandTests
     [Fact]
     public async Task ExecuteAsync_VerifiesResultContainsExpectedData()
     {
-        _sqlService.DeleteDatabaseAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .DeleteDatabaseAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(true);
 
         var parseResult = _commandDefinition.Parse("--subscription sub1 --resource-group rg1 --server server1 --database db1");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);

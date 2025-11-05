@@ -414,7 +414,7 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command).SetTag(TagName.ToolId, cmd.Id);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions);
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, CancellationToken.None);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

@@ -32,7 +32,7 @@ public class AzureTerraformBestPracticesGetCommandTests
     public async Task ExecuteAsync_ReturnsAzureTerraformBestPractices()
     {
         var args = _commandDefinition.Parse([]);
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

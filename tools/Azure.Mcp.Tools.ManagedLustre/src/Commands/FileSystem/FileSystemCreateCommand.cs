@@ -97,7 +97,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     }
 
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         try

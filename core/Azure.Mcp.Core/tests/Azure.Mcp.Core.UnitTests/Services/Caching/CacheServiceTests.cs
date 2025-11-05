@@ -15,7 +15,7 @@ public class CacheServiceTests
     public CacheServiceTests()
     {
         _memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        _cacheService = new CacheService(_memoryCache);
+        _cacheService = new SingleUserCliCacheService(_memoryCache);
     }
 
     [Fact]

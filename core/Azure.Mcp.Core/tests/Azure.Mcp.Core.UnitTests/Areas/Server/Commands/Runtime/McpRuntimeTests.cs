@@ -205,7 +205,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<ListToolsResult>(expectedResult));
 
         // Act
-        var result = await runtime.ListToolsHandler(request, CancellationToken.None);
+        var result = await runtime.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -249,7 +249,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<CallToolResult>(expectedResult));
 
         // Act
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -345,7 +345,7 @@ public class McpRuntimeTests
 
         // Act & Assert
         var actualException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            runtime.ListToolsHandler(request, CancellationToken.None).AsTask());
+            runtime.ListToolsHandler(request, TestContext.Current.CancellationToken).AsTask());
 
         Assert.Equal(expectedException.Message, actualException.Message);
 
@@ -382,7 +382,7 @@ public class McpRuntimeTests
         Assert.NotNull(request.Params);
 
         var actualException = await Assert.ThrowsAsync<Exception>(() =>
-            runtime.CallToolHandler(request, CancellationToken.None).AsTask());
+            runtime.CallToolHandler(request, TestContext.Current.CancellationToken).AsTask());
         Assert.Equal(expectedException.Message, actualException.Message);
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
@@ -449,8 +449,8 @@ public class McpRuntimeTests
             .Returns(new ValueTask<CallToolResult>(callToolResult));
 
         // Act & Assert - Interface methods should be available
-        var listResult = await runtime.ListToolsHandler(CreateListToolsRequest(), CancellationToken.None);
-        var callResult = await runtime.CallToolHandler(CreateCallToolRequest(), CancellationToken.None);
+        var listResult = await runtime.ListToolsHandler(CreateListToolsRequest(), TestContext.Current.CancellationToken);
+        var callResult = await runtime.CallToolHandler(CreateCallToolRequest(), TestContext.Current.CancellationToken);
 
         Assert.Equal(listToolsResult, listResult);
         Assert.Equal(callToolResult, callResult);
@@ -471,7 +471,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<ListToolsResult>(expectedResult));
 
         // Act
-        var result = await runtime.ListToolsHandler(null!, CancellationToken.None);
+        var result = await runtime.ListToolsHandler(null!, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -495,7 +495,7 @@ public class McpRuntimeTests
         var runtime = new McpRuntime(mockToolLoader, options, mockTelemetry, logger);
 
         // Act
-        var result = await runtime.CallToolHandler(null!, CancellationToken.None);
+        var result = await runtime.CallToolHandler(null!, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -627,7 +627,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<CallToolResult>(expectedResult));
 
         // Act - Call tool directly without listing tools first
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -679,7 +679,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<CallToolResult>(expectedResult));
 
         // Act - Call tool directly without listing tools first
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResult, result);
@@ -809,7 +809,7 @@ public class McpRuntimeTests
             .Returns(new ValueTask<CallToolResult>(expectedResult));
 
         // Act
-        var result = await runtime.CallToolHandler(request, CancellationToken.None);
+        var result = await runtime.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         mockTelemetry.Received(1).StartActivity(ActivityName.ToolExecuted, Arg.Any<Implementation?>());
         Assert.Equal(ActivityStatusCode.Error, activity.Status);

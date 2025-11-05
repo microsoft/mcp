@@ -61,7 +61,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -111,7 +111,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -134,7 +134,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -155,7 +155,7 @@ public class GroupListCommandTests
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
