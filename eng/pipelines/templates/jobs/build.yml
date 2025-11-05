@@ -71,7 +71,7 @@ jobs:
         -Native:$$(Native)
         -ReleaseBuild:$${{ ne(parameters.PublishTarget, 'none') }}
         -SelfContained
-        -Trimmed
+        -Trimmed:$$(Trimmed)
         -SingleFile
 
   - task: Powershell@2
@@ -85,6 +85,8 @@ jobs:
         -CollectCoverage:$${{ eq(parameters.OSName, 'linux') }}
         -TestResultsPath '$(Build.ArtifactStagingDirectory)/testResults'
       workingDirectory: $(Build.SourcesDirectory)
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
   - task: PublishTestResults@2
     displayName: "Publish Results"

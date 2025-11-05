@@ -10,7 +10,7 @@ namespace Azure.Mcp.Tools.AzureIsv.Services.Datadog;
 
 public partial class DatadogService : BaseAzureService, IDatadogService
 {
-    public DatadogService(ITenantService? tenantService = null) : base(tenantService)
+    public DatadogService(ITenantService tenantService) : base(tenantService)
     {
     }
 
@@ -19,7 +19,7 @@ public partial class DatadogService : BaseAzureService, IDatadogService
         try
         {
             var tenantId = await ResolveTenantIdAsync(null);
-            var armClient = await CreateArmClientAsync(tenant: tenantId, retryPolicy: null);
+            var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null);
 
             var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 

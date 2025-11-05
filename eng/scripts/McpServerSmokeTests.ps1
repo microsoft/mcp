@@ -72,7 +72,7 @@ function Test-NugetPackages {
     Remove-Item -Path $tempDirectory -Recurse -Force -ErrorAction SilentlyContinue -ProgressAction SilentlyContinue
     New-Item -ItemType Directory -Path $tempDirectory | Out-Null
 
-    $artifactsPath = "$ArtifactsDirectory/packages_dnx/$($Server.artifactPath)"
+    $artifactsPath = "$ArtifactsDirectory/packages_nuget_signed/$($Server.artifactPath)"
     if( -not (Test-Path $artifactsPath) ) {
         $message = "Artifacts path $artifactsPath does not exist."
         if ($ignoreMissingArtifacts) {
@@ -128,8 +128,8 @@ function Test-NpmPackages {
         }
     }
 
-    $mainPackage = Get-ChildItem -Path $artifactsPath -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
-    $platformPackage = Get-ChildItem -Path $artifactsPath -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
+    $mainPackage = Get-ChildItem -Path "$artifactsPath/wrapper" -Filter "*.tgz" | Where-Object { $_.Name -notmatch '-(linux|darwin|win32)-' } | Select-Object -First 1
+    $platformPackage = Get-ChildItem -Path "$artifactsPath/platform" -Filter "*-$artifactOs-$TargetArch-*.tgz" | Select-Object -First 1
 
     $originalLocation = Get-Location
     Set-Location $tempDirectory

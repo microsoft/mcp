@@ -17,9 +17,6 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 {
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     private readonly ILogger<MySqlService> _logger = logger;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
-    private readonly object _tokenLock = new object();
 
     // Maximum number of items to return to prevent DoS attacks and performance issues
     private const int MaxResultLimit = 10000;
@@ -67,29 +64,13 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
         "ENCODE(", "DECODE(", "PASSWORD(", "OLD_PASSWORD("
     ];
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken)
     {
-        lock (_tokenLock)
-        {
-            if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-            {
-                return _cachedEntraIdAccessToken;
-            }
-        }
-
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-
-        lock (_tokenLock)
-        {
-            _cachedEntraIdAccessToken = accessToken.Token;
-            _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
-        }
-
-        return _cachedEntraIdAccessToken;
+        TokenCredential tokenCredential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, cancellationToken);
+        return accessToken.Token;
     }
 
     private static string NormalizeServerName(string server)
@@ -103,7 +84,7 @@ public class MySqlService(IResourceGroupService resourceGroupService, ITenantSer
 
     private async Task<string> BuildConnectionStringAsync(string server, string user, string database)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        var entraIdAccessToken = await GetEntraIdAccessTokenAsync(CancellationToken.None);
         var host = NormalizeServerName(server);
         return $"Server={host};Database={database};User ID={user};Password={entraIdAccessToken};SSL Mode=Required;";
     }

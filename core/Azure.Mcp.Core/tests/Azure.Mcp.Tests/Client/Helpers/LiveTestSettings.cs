@@ -16,5 +16,6 @@ public class LiveTestSettings
     public string SettingsDirectory { get; set; } = string.Empty;
     public string TestPackage { get; set; } = string.Empty;
     public bool DebugOutput { get; set; }
-    public Dictionary<string, string> DeploymentOutputs { get; set; } = new();
+    public Dictionary<string, string> DeploymentOutputs { get; set; } = [];
+    public Dictionary<string, string> EnvironmentVariables { get; set; } = [];
 }

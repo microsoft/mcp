@@ -1,3 +1,4 @@
+﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.0.31903.59
@@ -544,9 +545,13 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Workbooks.U
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{294AC723-70DA-F50A-2C7A-AC6C0AEA0A62}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Tools.PublicApi.Tests", "tools\Fabric.Mcp.Tools.PublicApi\tests\Fabric.Mcp.Tools.PublicApi.Tests.csproj", "{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fabric.Mcp.Tools.PublicApi.UnitTests", "tools\Fabric.Mcp.Tools.PublicApi\tests\Fabric.Mcp.Tools.PublicApi.UnitTests\Fabric.Mcp.Tools.PublicApi.UnitTests.csproj", "{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Tools.Postgres.LiveTests", "tools\Azure.Mcp.Tools.Postgres\tests\Azure.Mcp.Tools.Postgres.LiveTests\Azure.Mcp.Tools.Postgres.LiveTests.csproj", "{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{319B94CD-694C-16E8-9E3A-9577B99158DD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Azure.Mcp.Server.UnitTests", "servers\Azure.Mcp.Server\tests\Azure.Mcp.Server.UnitTests\Azure.Mcp.Server.UnitTests.csproj", "{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -2082,6 +2087,18 @@ Global
 		{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE}.Release|x64.Build.0 = Release|Any CPU
 		{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE}.Release|x86.ActiveCfg = Release|Any CPU
 		{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE}.Release|x86.Build.0 = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|x64.Build.0 = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Debug|x86.Build.0 = Debug|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|x64.ActiveCfg = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|x64.Build.0 = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|x86.ActiveCfg = Release|Any CPU
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -2356,6 +2373,8 @@ Global
 		{294AC723-70DA-F50A-2C7A-AC6C0AEA0A62} = {9072C7AF-9EB2-E481-3974-77957587AC76}
 		{D3F46C2D-3AFD-FD9C-9C6A-180B1514DD2F} = {294AC723-70DA-F50A-2C7A-AC6C0AEA0A62}
 		{BF0354AE-3748-A8DC-F79D-B21FDDEDDFAE} = {37B0CE47-14C8-F5BF-BDDD-13EEBE580A88}
+		{319B94CD-694C-16E8-9E3A-9577B99158DD} = {F7E192D1-DE6C-42A2-B52F-02849D482450}
+		{ADF14627-FCB5-4BD3-B65F-DDCC3A3F727C} = {319B94CD-694C-16E8-9E3A-9577B99158DD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {926577F9-9246-44E4-BCE9-25DB003F1C51}
