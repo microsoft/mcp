@@ -3,6 +3,8 @@
 
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas.Server.Models;
+using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Models.Metadata;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 
@@ -19,6 +21,8 @@ namespace Azure.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(List<Tool>))]
 [JsonSerializable(typeof(ToolInputSchema))]
 [JsonSerializable(typeof(ToolPropertySchema))]
+[JsonSerializable(typeof(ToolMetadata))]
+[JsonSerializable(typeof(MetadataDefinition))]
 [JsonSerializable(typeof(ConsolidatedToolDefinition))]
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(

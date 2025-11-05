@@ -19,6 +19,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
 - Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
+- Adds descriptions to the tools metadata, to ensure enough information is present in the cli to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)] 
 
 ### Other Changes
 
