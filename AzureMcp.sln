@@ -297,7 +297,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "eng", "eng", "{7525B257-249
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tools", "tools", "{DAAE2FFB-70A9-DCEF-23A0-0ABAED0A9720}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator", "eng\tools\ToolDescriptionEvaluator\ToolDescriptionEvaluator.csproj", "{1CB18013-ABED-48C1-8576-1E8ABCD70293}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator", "eng\tools\ToolDescriptionEvaluator\src\ToolDescriptionEvaluator.csproj", "{1CB18013-ABED-48C1-8576-1E8ABCD70293}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Fabric.Mcp.Server", "Fabric.Mcp.Server", "{F4EFF172-8E25-E6E4-AFDD-640B2A635C0F}"
 EndProject

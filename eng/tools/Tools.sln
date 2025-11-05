@@ -1,0 +1,29 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolDescriptionEvaluator", "ToolDescriptionEvaluator", "{89C7D52E-46CB-E5E4-EB56-C23691DF38B5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ToolDescriptionEvaluator", "ToolDescriptionEvaluator\src\ToolDescriptionEvaluator.csproj", "{CE346AEC-0DD6-C210-A058-B6D879AF55B1}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CE346AEC-0DD6-C210-A058-B6D879AF55B1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CE346AEC-0DD6-C210-A058-B6D879AF55B1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CE346AEC-0DD6-C210-A058-B6D879AF55B1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CE346AEC-0DD6-C210-A058-B6D879AF55B1}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CE346AEC-0DD6-C210-A058-B6D879AF55B1} = {89C7D52E-46CB-E5E4-EB56-C23691DF38B5}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {FE4B2877-CB8E-40CE-92EA-A30A5B9C07EE}
+	EndGlobalSection
+EndGlobal
