@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -27,9 +26,15 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<KnowledgeIndexSchemaCommand>();
 
         services.AddSingleton<AgentsListCommand>();
+        services.AddSingleton<AgentsCreateCommand>();
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
+        services.AddSingleton<AgentsGetSdkSampleCommand>();
+
+        services.AddSingleton<ThreadCreateCommand>();
+        services.AddSingleton<ThreadListCommand>();
+        services.AddSingleton<ThreadGetMessagesCommand>();
 
         services.AddSingleton<ResourceGetCommand>();
     }
@@ -72,18 +77,27 @@ public class FoundrySetup : IAreaSetup
         openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
         openai.AddCommand("models-list", new OpenAiModelsListCommand());
         openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
-        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
+        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, creating, querying, and evaluating agents in AI Foundry.");
         foundry.AddSubGroup(agents);
 
         agents.AddCommand("list", serviceProvider.GetRequiredService<AgentsListCommand>());
+        agents.AddCommand("create", serviceProvider.GetRequiredService<AgentsCreateCommand>());
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());
+        agents.AddCommand("get-sdk-sample", serviceProvider.GetRequiredService<AgentsGetSdkSampleCommand>());
 
         var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Azure AI Foundry resources.");
         foundry.AddSubGroup(resources);
 
         resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
+
+        var threads = new CommandGroup("threads", "Foundry agent threads operations - Commands for listing, creating threads and getting messages in a thread in AI Foundry.");
+        foundry.AddSubGroup(threads);
+
+        threads.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
+        threads.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
+        threads.AddCommand("get-messages", serviceProvider.GetRequiredService<ThreadGetMessagesCommand>());
 
         return foundry;
     }

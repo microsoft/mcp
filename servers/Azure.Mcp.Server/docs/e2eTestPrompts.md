@@ -10,7 +10,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
 | foundry_agents_list | List all agents in my Azure AI Foundry resource |
 | foundry_agents_list | Show me the available agents in my Azure AI Foundry resource |
+| foundry_agents_create | Create a new Azure AI Foundry agent using instructions in the active editor |
 | foundry_agents_query-and-evaluate | Query and evaluate an agent in my Azure AI Foundry resource for task_adherence |
+| foundry_agents_get-sdk-sample | Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK |
+| foundry_threads_create | Create an Azure AI Foundry thread to hold the conversation |
+| foundry_threads_list | List my AI Foundry threads |
+| foundry_threads_get-messages | Show me the messages in the AI Foundry thread with id <thread_id> |
 | foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Azure AI Foundry resource |

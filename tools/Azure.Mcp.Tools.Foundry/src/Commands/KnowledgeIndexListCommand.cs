@@ -73,7 +73,8 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
             var indexes = await service.ListKnowledgeIndexes(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryJsonContext.Default.KnowledgeIndexListCommandResult);
         }

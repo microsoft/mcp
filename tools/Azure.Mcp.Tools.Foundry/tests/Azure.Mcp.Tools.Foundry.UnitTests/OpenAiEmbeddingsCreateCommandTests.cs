@@ -60,7 +60,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -128,7 +129,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Is<int?>(i => i == dimensions),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -161,7 +163,8 @@ public class OpenAiEmbeddingsCreateCommandTests
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -186,7 +189,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act

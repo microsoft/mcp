@@ -125,7 +125,8 @@ public sealed class OpenAiChatCompletionsCreateCommand : SubscriptionCommand<Ope
                 options.User,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiChatCompletionsCreateCommandResult>(
                 new OpenAiChatCompletionsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!),

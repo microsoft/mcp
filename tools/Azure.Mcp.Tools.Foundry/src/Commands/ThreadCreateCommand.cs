@@ -1,35 +1,31 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Tools.Foundry.Options;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.Mcp.Tools.Foundry.Services;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
-public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
+public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
 {
-    private const string CommandTitle = "List Evaluation Agents";
+    private const string CommandTitle = "Create an AI Foundry Agent Thread";
+    public override string Id => "2a30ef19-fac5-4157-8a86-30591b15818a";
+    public override string Name => "create";
 
-    public override string Id => "8238b073-a302-49e6-8a27-8aab04c848fe";
-
-    public override string Name => "list";
 
     public override string Description =>
         """
-        List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, 
-        evaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
+            Creates an AI Foundry Agent Thread that holds the messages between the Agent and the user.
         """;
-
-    public override string Title => CommandTitle;
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
-        Idempotent = true,
+        Idempotent = false,
         OpenWorld = false,
-        ReadOnly = true,
+        ReadOnly = false,
         LocalRequired = false,
         Secret = false
     };
@@ -38,14 +34,18 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
     {
         base.RegisterOptions(command);
         command.Options.Add(FoundryOptionDefinitions.EndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.UserMessageOption);
     }
 
-    protected override AgentsListOptions BindOptions(ParseResult parseResult)
+    protected override ThreadCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
+        options.UserMessage = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.UserMessage);
         return options;
     }
+
+    public override string Title => CommandTitle;
 
     public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
@@ -59,17 +59,16 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
         try
         {
             var service = context.GetService<IFoundryService>();
-            var agents = await service.ListAgents(
+            ThreadCreateResult result = await service.CreateThread(
                 options.Endpoint!,
+                options.UserMessage!,
                 options.Tenant,
-                options.RetryPolicy,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
-            context.Response.Results = agents?.Count > 0 ?
-                ResponseResult.Create(
-                    new AgentsListCommandResult(agents),
-                    FoundryJsonContext.Default.AgentsListCommandResult) :
-                null;
+            context.Response.Results = ResponseResult.Create(
+                result,
+                FoundryJsonContext.Default.ThreadCreateResult);
         }
         catch (Exception ex)
         {
@@ -78,6 +77,4 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 
         return context.Response;
     }
-
-    internal record AgentsListCommandResult(IEnumerable<PersistentAgent> Agents);
 }

@@ -75,7 +75,8 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
                 options.Response!,
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
-                options.ToolDefinitions);
+                options.ToolDefinitions,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsEvaluateCommandResult(result),

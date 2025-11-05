@@ -11,6 +11,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
     - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
     - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
 
+- Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_thread_create`, `foundry_thread_list`, `foundry_thread_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
+
 ### Breaking Changes
 
 ### Bugs Fixed

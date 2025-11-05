@@ -1,31 +1,31 @@
-// Copyright (c) Microsoft Corporation.
+﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Foundry.Models;
 using Azure.Mcp.Tools.Foundry.Options;
+using Azure.Mcp.Tools.Foundry.Options.Agents;
 using Azure.Mcp.Tools.Foundry.Services;
 
 namespace Azure.Mcp.Tools.Foundry.Commands;
 
-public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
+public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
 {
-    private const string CommandTitle = "Connect to AI Agent and Run a Query";
-    public override string Id => "2f0184c9-a19e-41a5-87cc-f96b08fafccb";
+    private const string CommandTitle = "Create an AI Foundry Agent";
+    public override string Id => "6de93935-7df0-4161-8618-8daf624dbb23";
+    public override string Name => "create";
 
-    public override string Name => "connect";
 
     public override string Description =>
         """
-        Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows — instead, use agents_query-and-evaluate or agents_evaluate.
+            Creates an AI Foundry Agent that processes messages according to a given system instruction using an existing AI Foundry model deployment.
         """;
 
     public override ToolMetadata Metadata => new()
     {
         Destructive = false,
         Idempotent = false,
-        OpenWorld = true,
+        OpenWorld = false,
         ReadOnly = false,
         LocalRequired = false,
         Secret = false
@@ -34,17 +34,19 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FoundryOptionDefinitions.AgentIdOption);
-        command.Options.Add(FoundryOptionDefinitions.QueryOption);
         command.Options.Add(FoundryOptionDefinitions.EndpointOption);
+        command.Options.Add(FoundryOptionDefinitions.ModelDeploymentNameOption);
+        command.Options.Add(FoundryOptionDefinitions.AgentNameOption);
+        command.Options.Add(FoundryOptionDefinitions.SystemInstructionOption);
     }
 
-    protected override AgentsConnectOptions BindOptions(ParseResult parseResult)
+    protected override AgentsCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.AgentId = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AgentIdOption);
-        options.Query = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.QueryOption);
         options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
+        options.ModelDeploymentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.ModelDeploymentNameOption);
+        options.AgentName = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.AgentNameOption);
+        options.SystemInstruction = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.SystemInstructionOption);
         return options;
     }
 
@@ -62,17 +64,18 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
         try
         {
             var service = context.GetService<IFoundryService>();
-            var response = await service.ConnectAgent(
-                options.AgentId!,
-                options.Query!,
+            AgentsCreateResult result = await service.CreateAgent(
                 options.Endpoint!,
+                options.ModelDeploymentName!,
+                options.AgentName!,
+                options.SystemInstruction!,
                 options.Tenant,
-                options.RetryPolicy,
-                cancellationToken: cancellationToken);
+                cancellationToken: cancellationToken
+            );
 
             context.Response.Results = ResponseResult.Create(
-                new AgentsConnectCommandResult(response),
-                FoundryJsonContext.Default.AgentsConnectCommandResult);
+                result,
+                FoundryJsonContext.Default.AgentsCreateResult);
         }
         catch (Exception ex)
         {
@@ -81,6 +84,5 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
         return context.Response;
     }
-
-    internal record AgentsConnectCommandResult(AgentsConnectResult Response);
 }
+

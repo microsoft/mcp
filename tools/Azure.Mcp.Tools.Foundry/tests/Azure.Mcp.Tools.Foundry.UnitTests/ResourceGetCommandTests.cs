@@ -80,7 +80,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         var command = new ResourceGetCommand(_logger);
@@ -122,7 +123,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Is("test-rg"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         var command = new ResourceGetCommand(_logger);
@@ -175,7 +177,8 @@ public class ResourceGetCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-resource"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResource);
 
         var command = new ResourceGetCommand(_logger);
@@ -209,7 +212,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new ResourceGetCommand(_logger);
@@ -237,7 +241,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ResourceGetCommand(_logger);
@@ -260,7 +265,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ResourceGetCommand(_logger);
@@ -287,7 +293,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         _foundryService.GetAiResourceAsync(
@@ -295,7 +302,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(new AiResourceInformation());
 
         var command = new ResourceGetCommand(_logger);
@@ -350,7 +358,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resourceWithDeployments);
 
         var command = new ResourceGetCommand(_logger);

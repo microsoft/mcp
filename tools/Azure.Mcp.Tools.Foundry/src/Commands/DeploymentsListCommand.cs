@@ -67,7 +67,8 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
             var deployments = await service.ListDeployments(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deployments ?? []), FoundryJsonContext.Default.DeploymentsListCommandResult);
         }

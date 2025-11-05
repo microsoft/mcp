@@ -62,7 +62,7 @@ public class KnowledgeIndexSchemaCommandTests
                 Description = "desc",
                 Tags = new Dictionary<string, string?> { { "env", "test" } }
             };
-            _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(mockSchema);
         }
 
@@ -88,7 +88,7 @@ public class KnowledgeIndexSchemaCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Models.KnowledgeIndexSchema>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);
@@ -113,7 +113,7 @@ public class KnowledgeIndexSchemaCommandTests
             Version = "1.0"
         };
 
-        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.GetKnowledgeIndexSchema(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSchema);
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com", "--index", "test-index"]);

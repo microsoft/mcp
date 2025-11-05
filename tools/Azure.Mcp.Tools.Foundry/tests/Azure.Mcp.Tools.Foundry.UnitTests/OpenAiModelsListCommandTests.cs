@@ -73,7 +73,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -129,7 +130,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -169,7 +171,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
@@ -231,7 +234,8 @@ public class OpenAiModelsListCommandTests
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
                     Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                    Arg.Any<RetryPolicyOptions?>())
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
 
@@ -268,7 +272,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var command = new OpenAiModelsListCommand();
@@ -289,7 +294,8 @@ public class OpenAiModelsListCommandTests
             resourceGroup,
             Arg.Any<string?>(),
             AuthMethod.Credential,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -306,7 +312,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act

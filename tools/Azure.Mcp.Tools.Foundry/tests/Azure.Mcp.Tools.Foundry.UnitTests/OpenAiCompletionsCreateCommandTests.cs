@@ -54,7 +54,8 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Any<double?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -108,7 +109,8 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Is<double?>(d => d == temperature),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -140,7 +142,8 @@ public class OpenAiCompletionsCreateCommandTests
             Arg.Any<double?>(),
             Arg.Any<string?>(),
             Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -164,7 +167,8 @@ public class OpenAiCompletionsCreateCommandTests
                 Arg.Any<double?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act

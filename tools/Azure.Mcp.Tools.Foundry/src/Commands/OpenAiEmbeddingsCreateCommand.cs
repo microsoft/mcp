@@ -88,7 +88,8 @@ public sealed class OpenAiEmbeddingsCreateCommand : SubscriptionCommand<OpenAiEm
                 options.Dimensions,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiEmbeddingsCreateCommandResult>(
                 new OpenAiEmbeddingsCreateCommandResult(result, options.ResourceName!, options.DeploymentName!, options.InputText!),

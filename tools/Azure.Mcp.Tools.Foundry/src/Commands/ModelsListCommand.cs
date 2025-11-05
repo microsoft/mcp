@@ -81,7 +81,8 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
                 options.LicenseName ?? "",
                 options.ModelName ?? "",
                 3,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(models ?? []), FoundryJsonContext.Default.ModelsListCommandResult);
         }

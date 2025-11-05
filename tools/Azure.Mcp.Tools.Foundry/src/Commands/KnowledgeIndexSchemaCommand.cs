@@ -74,7 +74,8 @@ public sealed class KnowledgeIndexSchemaCommand : GlobalCommand<KnowledgeIndexSc
                 options.Endpoint!,
                 options.IndexName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             if (indexSchema == null)
             {
