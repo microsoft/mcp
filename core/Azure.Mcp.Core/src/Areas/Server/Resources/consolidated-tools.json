@@ -1271,13 +1271,31 @@
     {
       "name": "create_azure_ai_foundry_agent_resources",
       "description": "Create Azure AI Foundry agent or thread.",
-      "toolMetadata": {
-        "destructive": false,
-        "idempotent": false,
-        "openWorld": false,
-        "readOnly": false,
-        "secret": false,
-        "localRequired": false
+       "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": false,
+          "description": "Running this operation multiple times with the same arguments may have additional effects or produce different results."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": false,
+          "description": "This tool is available in both local and remote server modes."
+        }
       },
       "mappedToolList": [
         "foundry_agents_create",
