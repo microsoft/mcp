@@ -169,6 +169,11 @@ function Test-DockerImages {
         [hashtable] $Server
     )
 
+    if ($TargetOs -ne "linux") {
+        Write-Host "Skipping Docker image test for non-linux VM: $TargetOs"
+        return $true
+    }
+
     $artifactsPath = "$ArtifactsDirectory/docker_output"
     if( -not (Test-Path $artifactsPath) ) {
         $message = "Artifacts path $artifactsPath does not exist."
