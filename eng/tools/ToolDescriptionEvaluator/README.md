@@ -15,7 +15,7 @@ The application:
 ## Project Structure
 
 ```text
-.
+./src/
 ├── Program.cs                              # Main application logic
 ├── Models/                                 # Data models for tools, prompts, and results
 ├── Services/                               # Embedding and analysis services
