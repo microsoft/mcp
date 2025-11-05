@@ -10,6 +10,7 @@ namespace Azure.Mcp.Core.Commands;
 /// Provides metadata about an MCP tool describing its behavioral characteristics.
 /// This metadata helps MCP clients understand how the tool operates and its potential effects.
 /// </summary>
+[JsonConverter(typeof(ToolMetadataConverter))]
 public sealed class ToolMetadata
 {
     private bool _destructive = true;
@@ -44,8 +45,8 @@ public sealed class ToolMetadata
     {
         Value = _destructive,
         Description = _destructive
-        ? "This tool may delete or modify existing resources in its environment."
-        : "This tool performs only additive updates without deleting or modifying existing resources."
+            ? "This tool may delete or modify existing resources in its environment."
+            : "This tool performs only additive updates without deleting or modifying existing resources."
     };
 
     /// <summary>
@@ -210,4 +211,22 @@ public sealed class ToolMetadata
     public ToolMetadata()
     {
     }
+
+    [JsonConstructor]
+    public ToolMetadata(
+        MetadataDefinition destructive,
+        MetadataDefinition idempotent,
+        MetadataDefinition openWorld,
+        MetadataDefinition readOnly,
+        MetadataDefinition secret,
+        MetadataDefinition localRequired)
+    {
+        _destructive = destructive?.Value ?? true;
+        _idempotent = idempotent?.Value ?? false;
+        _openWorld = openWorld?.Value ?? true;
+        _readOnly = readOnly?.Value ?? false;
+        _secret = secret?.Value ?? false;
+        _localRequired = localRequired?.Value ?? false;
+    }
+
 }
