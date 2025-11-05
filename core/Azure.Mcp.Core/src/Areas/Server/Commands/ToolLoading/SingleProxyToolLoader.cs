@@ -133,11 +133,11 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             learn = true;
         }
 
-        if (learn && string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        if (learn && string.IsNullOrEmpty(tool))
         {
             return await RootLearnModeAsync(request, intent ?? "", cancellationToken);
         }
-        else if (learn && !string.IsNullOrEmpty(tool) && string.IsNullOrEmpty(command))
+        else if (learn && !string.IsNullOrEmpty(tool))
         {
             return await ToolLearnModeAsync(request, intent ?? "", tool!, cancellationToken);
         }
