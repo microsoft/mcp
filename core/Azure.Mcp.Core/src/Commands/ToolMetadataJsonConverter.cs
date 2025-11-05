@@ -5,6 +5,7 @@ using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Metadata;
 
+namespace Azure.Mcp.Core.Commands;
 public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
 {
     public override ToolMetadata Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
