@@ -433,7 +433,7 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var accounts = Settings.ResourceBaseName;
         var agentName = $"test-agent-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
         var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
-        // Model deployname hardcoded in the test-resources.bicep
+        // Model deployment name hardcoded in the test-resources.bicep
         var modelDeploymentName = "gpt-4o";
         var systemInstruction = "Help user with your knowledge";
         var result = await CallToolAsync(
