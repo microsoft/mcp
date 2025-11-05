@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Acr.Commands;
@@ -53,8 +52,6 @@ public class RegistryListCommandTests
     [InlineData("", false)]
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Ensure environment variable fallback does not interfere with validation tests
-        EnvironmentHelpers.SetAzureSubscriptionId(null);
         // Arrange
         if (shouldSucceed)
         {
