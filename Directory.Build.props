@@ -19,7 +19,10 @@
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(PublishTrimmed)' != 'true'">
+    <!-- HTTP transport is unsupported for native and trimmed variants. ENABLE_HTTP is not set for these build variants.
+       See https://github.com/AzureAD/microsoft-identity-web/issues/3576 -->
+
+  <PropertyGroup Condition="'$(PublishTrimmed)' != 'true' and '$(BuildNative)' != 'true'">
     <DefineConstants>$(DefineConstants);ENABLE_HTTP</DefineConstants>
   </PropertyGroup>
 
