@@ -20,7 +20,8 @@ public interface IMarketplaceService
         bool? includeServiceInstructionTemplates = null,
         string? pricingAudience = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<ProductListResponseWithNextCursor> ListProducts(
         string subscription,
@@ -32,5 +33,6 @@ public interface IMarketplaceService
         string? nextCursor = null,
         string? expand = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

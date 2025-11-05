@@ -91,7 +91,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -122,21 +122,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: true
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is("S0"),
-            Arg.Is("Standard"),
-            Arg.Is(10),
-            Arg.Is("SQL_Latin1_General_CP1_CI_AS"),
-            Arg.Is(2147483648L),
-            Arg.Any<string?>(),
-            Arg.Is(true),
-            Arg.Is("Disabled"),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("S0"),
+                Arg.Is("Standard"),
+                Arg.Is(10),
+                Arg.Is("SQL_Latin1_General_CP1_CI_AS"),
+                Arg.Is(2147483648L),
+                Arg.Any<string?>(),
+                Arg.Is(true),
+                Arg.Is("Disabled"),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -154,7 +155,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -167,7 +168,8 @@ public class DatabaseCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -187,7 +189,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -200,7 +202,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database already exists");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -220,7 +223,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -232,7 +235,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Server not found");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -252,7 +256,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -264,7 +268,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var authException = new RequestFailedException((int)HttpStatusCode.Forbidden, "Authorization failed");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -284,7 +289,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -296,7 +301,8 @@ public class DatabaseCreateCommandTests
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid configuration");
-        _sqlService.CreateDatabaseAsync(
+        _sqlService
+            .CreateDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -316,7 +322,7 @@ public class DatabaseCreateCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub", "--resource-group", "rg", "--server", "server1", "--database", "testdb"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -352,28 +358,29 @@ public class DatabaseCreateCommandTests
                 ZoneRedundant: false
             );
 
-            _sqlService.CreateDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string?>(),
-                Arg.Any<string?>(),
-                Arg.Any<int?>(),
-                Arg.Any<string?>(),
-                Arg.Any<long?>(),
-                Arg.Any<string?>(),
-                Arg.Any<bool?>(),
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
+            _sqlService
+                .CreateDatabaseAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<int?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<long?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<bool?>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
         }
 
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -412,21 +419,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is((string?)null),
-            Arg.Is((string?)null),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is((string?)null),
+                Arg.Is((string?)null),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -437,7 +445,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -485,21 +493,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is("Basic"),
-            Arg.Is("Basic"),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("Basic"),
+                Arg.Is("Basic"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -512,7 +521,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -560,21 +569,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is("S1"),
-            Arg.Is("Standard"),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("S1"),
+                Arg.Is("Standard"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -587,7 +597,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -635,21 +645,22 @@ public class DatabaseCreateCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.CreateDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("testdb"),
-            Arg.Is("rg"),
-            Arg.Is("sub"),
-            Arg.Is("P1"),
-            Arg.Is("Premium"),
-            Arg.Any<int?>(),
-            Arg.Any<string?>(),
-            Arg.Any<long?>(),
-            Arg.Any<string?>(),
-            Arg.Any<bool?>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .CreateDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("testdb"),
+                Arg.Is("rg"),
+                Arg.Is("sub"),
+                Arg.Is("P1"),
+                Arg.Is("Premium"),
+                Arg.Any<int?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<bool?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
         var args = _commandDefinition.Parse([
@@ -662,7 +673,7 @@ public class DatabaseCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

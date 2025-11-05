@@ -651,7 +651,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(expectedStatus, response.Status);
@@ -700,7 +700,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile} --language en-US --format simple";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -740,7 +740,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {testFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -793,7 +793,7 @@ public class SttRecognizeCommandTests : IDisposable
                 "--phrases", "Azure; cognitive services"
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -857,7 +857,7 @@ public class SttRecognizeCommandTests : IDisposable
                 "--phrases", "Azure, cognitive services"
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -919,7 +919,7 @@ public class SttRecognizeCommandTests : IDisposable
                 "--phrases", "machine learning"            // Single phrase in second argument
             };
             var parseResult = _commandDefinition.Parse(args);
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -976,7 +976,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -1090,7 +1090,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert - The command should return validation error for invalid file extensions
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -1140,7 +1140,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {largeFileName}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);

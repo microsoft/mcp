@@ -63,7 +63,7 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -79,7 +79,8 @@ public sealed class ServerListCommand(ILogger<ServerListCommand> logger)
             var servers = await sqlService.ListServersAsync(
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new ServerListResult(servers ?? []),

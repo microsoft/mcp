@@ -74,7 +74,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -108,7 +108,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -135,7 +135,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -163,7 +163,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).DeleteWorkbook(
@@ -191,7 +191,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).DeleteWorkbook(
@@ -220,7 +220,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).DeleteWorkbook(
@@ -242,7 +242,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -258,7 +258,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -284,7 +284,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -317,7 +317,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -352,7 +352,7 @@ public class DeleteWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).DeleteWorkbook(

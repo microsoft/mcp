@@ -21,7 +21,7 @@ with the same base file name as the source markdown file (e.g. prompts.md -> pro
 Generates a prompts.json file based on the specified markdown in the current directory.
 
 .EXAMPLE
-./Generate-PromptsJsonFromMarkdown.ps1 -PromptsSource ./prompts.md -OutputPath ./eng/tools/ToolDescriptionEvaluator/myprompts.json
+./Generate-PromptsJsonFromMarkdown.ps1 -PromptsSource ./prompts.md -OutputPath ./myprompts.json
 Generates a JSON file with the specified name and path. If no filename is provided, the same name as the source markdown
 is used with a .json extension.
 
@@ -87,7 +87,6 @@ function Get-ToolPrompts([string]$Path) {
         if ($parts.Count -lt 2) { return }
         $tool = $parts[0]
         $prompt = $parts[1]
-        if (-not $tool.StartsWith('azmcp_')) { return }
         if (-not $prompt) { return }
         if (-not $result.ContainsKey($tool)) { $result[$tool] = @() }
         $result[$tool] += (Convert-Special-Characters $prompt)

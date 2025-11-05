@@ -35,7 +35,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         RetryPolicyOptions? retryPolicy,
         CancellationToken cancellationToken = default)
     {
-        var armClient = await CreateArmClientAsync(null, retryPolicy);
+        var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
         var subscriptionResource = armClient.GetSubscriptionResource(
             ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
         var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
@@ -254,7 +254,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName);
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
             var databaseData = databaseResource.Value.Data;
 
             if (!string.IsNullOrEmpty(skuName) || !string.IsNullOrEmpty(skuTier) || skuCapacity.HasValue)
@@ -355,7 +355,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
             throw new ArgumentException("New database name cannot be null or empty.", nameof(newDatabaseName));
         try
         {
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
 
             var currentDatabaseId = SqlDatabaseResource.CreateResourceIdentifier(
                 subscription,
@@ -662,7 +662,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string subscription,
         string firewallRuleName,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -675,7 +675,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName);
+            var firewallRuleResource = await sqlServerResource.GetSqlFirewallRules().GetAsync(firewallRuleName, cancellationToken);
 
             await firewallRuleResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
@@ -728,7 +728,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         string? version,
         string? publicNetworkAccess,
         RetryPolicyOptions? retryPolicy,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken)
     {
         ValidateRequiredParameters(
             (nameof(serverName), serverName),
@@ -742,9 +742,9 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         try
         {
             // Use ARM client directly for create operations
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
-            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
 
             var serverData = new SqlServerData(location)
             {
@@ -870,7 +870,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
 
         try
         {
-            var armClient = await CreateArmClientAsync(null, retryPolicy);
+            var armClient = await CreateArmClientAsync(null, retryPolicy, null, cancellationToken);
             var subscriptionResource = armClient.GetSubscriptionResource(Azure.ResourceManager.Resources.SubscriptionResource.CreateResourceIdentifier(subscription));
 
             Azure.ResourceManager.Resources.ResourceGroupResource resourceGroupResource;
@@ -974,7 +974,7 @@ public class SqlService(ISubscriptionService subscriptionService, ITenantService
         {
             var sqlServerResource = await GetSqlServerResourceAsync(serverName, resourceGroup, subscription, retryPolicy, cancellationToken);
 
-            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName);
+            var databaseResource = await sqlServerResource.GetSqlDatabases().GetAsync(databaseName, cancellationToken);
 
             await databaseResource.Value.DeleteAsync(WaitUntil.Completed, cancellationToken);
 

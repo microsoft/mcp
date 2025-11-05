@@ -51,7 +51,7 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +67,8 @@ public sealed class ClusterGetCommand(ILogger<ClusterGetCommand> logger) : Subsc
                 options.Subscription!,
                 options.ClusterName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = cluster is null ?
                 null : ResponseResult.Create(new(cluster), KustoJsonContext.Default.ClusterGetCommandResult);

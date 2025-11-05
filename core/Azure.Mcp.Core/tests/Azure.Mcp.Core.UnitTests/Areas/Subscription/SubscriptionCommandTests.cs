@@ -83,7 +83,7 @@ public class SubscriptionCommandTests
             var parseResult = _commandDefinition.Parse([]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -129,7 +129,7 @@ public class SubscriptionCommandTests
             var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(response);
