@@ -262,7 +262,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         {
             while (!ct.IsCancellationRequested && !reader.EndOfStream)
             {
-                var line = await reader.ReadLineAsync().ConfigureAwait(false);
+                var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
                 if (line == null)
                     break;
                 lock (sink)
