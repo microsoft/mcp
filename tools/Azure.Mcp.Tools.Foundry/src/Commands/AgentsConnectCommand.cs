@@ -67,7 +67,8 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
                 options.Query!,
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsConnectCommandResult(response),
