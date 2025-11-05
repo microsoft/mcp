@@ -353,7 +353,8 @@ public class ToolsListCommandTests
             else
             {
                 // Surfaced extension command: Command is "{namespace} {commandName}", Name is just "{commandName}"
-                Assert.EndsWith(ns.Name, ns.Command);
+                // When Azure MCP presents the commands as tools, the spaces in the commands are replaced by underscore
+                Assert.EndsWith(ns.Name, ns.Command.Replace(" ", "_"));
             }
 
             Assert.Equal(ns.Name, ns.Name.Trim());
