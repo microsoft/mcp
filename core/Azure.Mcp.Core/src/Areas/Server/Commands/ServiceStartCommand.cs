@@ -466,13 +466,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        // Update telemetry configuration to set the transport mode
-        services.PostConfigure<AzureMcpServerConfiguration>(config =>
-        {
-            // Telemetry is disabled in HTTP transport mode
-            config.IsTelemetryEnabled = false;
-        });
-
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
@@ -587,13 +580,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        // Update telemetry configuration to set the transport mode
-        services.PostConfigure<AzureMcpServerConfiguration>(config =>
-        {
-            // Telemetry is disabled in insecure HTTP transport mode
-            config.IsTelemetryEnabled = false;
-        });
-
         ConfigureServices(services); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
