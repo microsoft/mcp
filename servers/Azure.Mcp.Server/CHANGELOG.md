@@ -15,6 +15,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Bugs Fixed
 
 - Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+- Always run learning no matter if `command` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
 
 ### Other Changes
 
