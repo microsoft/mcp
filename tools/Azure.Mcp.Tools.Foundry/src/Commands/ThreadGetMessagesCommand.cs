@@ -48,7 +48,7 @@ public class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -63,7 +63,8 @@ public class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
             ThreadGetMessagesResult result = await service.GetMessages(
                 options.Endpoint!,
                 options.ThreadId!,
-                options.Tenant
+                options.Tenant,
+                cancellationToken: cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(

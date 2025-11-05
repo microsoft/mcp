@@ -18,13 +18,15 @@ public interface IFoundryService
         string licenseName = "",
         string modelName = "",
         int maxPages = 3,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<List<Deployment>> ListDeployments(
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<ModelDeploymentResult> DeployModel(string deploymentName,
@@ -39,21 +41,22 @@ public interface IFoundryService
         int? skuCapacity = null,
         string? scaleType = null,
         int? scaleCapacity = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
-    );
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
         string endpoint,
         string indexName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
-    );
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<CompletionResult> CreateCompletionAsync(
         string resourceName,
@@ -65,7 +68,9 @@ public interface IFoundryService
         double? temperature = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<EmbeddingResult> CreateEmbeddingsAsync(
         string resourceName,
@@ -78,7 +83,9 @@ public interface IFoundryService
         int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<OpenAiModelsListResult> ListOpenAiModelsAsync(
         string resourceName,
@@ -86,19 +93,25 @@ public interface IFoundryService
         string resourceGroup,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<List<PersistentAgent>> ListAgents(
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<AgentsConnectResult> ConnectAgent(
         string agentId,
         string query,
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<AgentsQueryAndEvaluateResult> QueryAndEvaluateAgent(
         string agentId,
@@ -108,7 +121,9 @@ public interface IFoundryService
         string azureOpenAIDeployment,
         string? tenantId = null,
         List<string>? evaluatorNames = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<AgentsEvaluateResult> EvaluateAgent(
         string evaluatorName,
@@ -118,7 +133,9 @@ public interface IFoundryService
         string azureOpenAIDeployment,
         string? toolDefinitions,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<ChatCompletionResult> CreateChatCompletionsAsync(
         string resourceName,
@@ -137,20 +154,26 @@ public interface IFoundryService
         string? user = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<List<AiResourceInformation>> ListAiResourcesAsync(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<AiResourceInformation> GetAiResourceAsync(
         string subscription,
         string resourceGroup,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     Task<AgentsCreateResult> CreateAgent(
         string projectEndpoint,
@@ -158,27 +181,32 @@ public interface IFoundryService
         string agentName,
         string systemInstruction,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<ThreadListResult> ListThreads(
         string projectEndpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<ThreadCreateResult> CreateThread(
         string projectEndpoint,
         string userMessage,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     );
 
     Task<ThreadGetMessagesResult> GetMessages(
         string projectEndpoint,
         string threadId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
+    );
 
     AgentsGetSdkCodeSampleResult GetSdkCodeSample(
         string programmingLanguage

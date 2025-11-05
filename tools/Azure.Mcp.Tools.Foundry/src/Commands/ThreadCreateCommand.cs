@@ -47,7 +47,7 @@ public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -62,7 +62,8 @@ public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
             ThreadCreateResult result = await service.CreateThread(
                 options.Endpoint!,
                 options.UserMessage!,
-                options.Tenant
+                options.Tenant,
+                cancellationToken: cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(

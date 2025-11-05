@@ -45,7 +45,7 @@ public class ThreadListCommand : GlobalCommand<ThreadListOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -59,7 +59,8 @@ public class ThreadListCommand : GlobalCommand<ThreadListOptions>
             var service = context.GetService<IFoundryService>();
             ThreadListResult result = await service.ListThreads(
                 options.Endpoint!,
-                options.Tenant
+                options.Tenant,
+                cancellationToken: cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(

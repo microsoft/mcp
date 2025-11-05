@@ -38,7 +38,7 @@ public class ThreadGetMessagesCommandTests
         var command = new ThreadGetMessagesCommand();
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, CancellationToken.None);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -61,13 +61,14 @@ public class ThreadGetMessagesCommandTests
             Arg.Is(endpoint),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var command = new ThreadGetMessagesCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint, "--thread-id", threadId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, CancellationToken.None);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);

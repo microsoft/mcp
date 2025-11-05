@@ -37,7 +37,7 @@ public class ThreadCreateCommandTests
         var command = new ThreadCreateCommand();
         var args = command.GetCommand().Parse(argsString);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, CancellationToken.None);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -59,13 +59,14 @@ public class ThreadCreateCommandTests
             Arg.Is(endpoint),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var command = new ThreadCreateCommand();
         var args = command.GetCommand().Parse(["--endpoint", endpoint, "--user-message", userMessage]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, CancellationToken.None);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);

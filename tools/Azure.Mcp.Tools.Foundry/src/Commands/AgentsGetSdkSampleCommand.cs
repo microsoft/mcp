@@ -46,7 +46,7 @@ public class AgentsGetSdkSampleCommand : BaseCommand<AgentsGetSdkSampleOptions>
 
     public override string Title => CommandTitle;
 
-    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {

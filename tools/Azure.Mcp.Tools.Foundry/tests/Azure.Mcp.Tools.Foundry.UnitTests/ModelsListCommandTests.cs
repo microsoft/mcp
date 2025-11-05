@@ -45,7 +45,8 @@ public class ModelsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -82,7 +83,8 @@ public class ModelsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedModels);
 
         var command = new ModelsListCommand();
@@ -110,7 +112,8 @@ public class ModelsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new ModelsListCommand();
@@ -139,7 +142,8 @@ public class ModelsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ModelsListCommand();

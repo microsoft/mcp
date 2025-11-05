@@ -52,7 +52,7 @@ public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -69,7 +69,8 @@ public class AgentsCreateCommand : GlobalCommand<AgentsCreateOptions>
                 options.ModelDeploymentName!,
                 options.AgentName!,
                 options.SystemInstruction!,
-                options.Tenant
+                options.Tenant,
+                cancellationToken: cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(
