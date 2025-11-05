@@ -76,7 +76,7 @@ public class ServerToolLoaderTests
 
         // Act - Call CallToolHandler WITHOUT calling ListToolsHandler first
         // This should work without requiring ListToolsHandler to be called first
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - The tool call should succeed
         Assert.NotNull(result);
@@ -95,7 +95,7 @@ public class ServerToolLoaderTests
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -119,7 +119,7 @@ public class ServerToolLoaderTests
         var request = CreateRequest();
 
         // Act
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

@@ -73,7 +73,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -143,7 +143,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -189,7 +189,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -229,7 +229,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -266,7 +266,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -308,7 +308,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -353,7 +353,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -385,7 +385,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -430,7 +430,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -488,7 +488,7 @@ public sealed class AvailabilityListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

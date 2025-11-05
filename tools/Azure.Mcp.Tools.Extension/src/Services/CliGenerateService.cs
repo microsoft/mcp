@@ -14,13 +14,13 @@ internal class CliGenerateService(IHttpClientService httpClientService, IAzureTo
     private readonly IHttpClientService _httpClientService = httpClientService;
     private readonly IAzureTokenCredentialProvider _tokenCredentialProvider = tokenCredentialProvider;
 
-    public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent)
+    public async Task<HttpResponseMessage> GenerateAzureCLICommandAsync(string intent, CancellationToken cancellationToken)
     {
         // AzCli copilot 1P app scope
         const string apiScope = "a5ede409-60d3-4a6c-93e6-eb2e7271e8e3/.default";
 
-        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, CancellationToken.None);
-        var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), CancellationToken.None);
+        var credential = await _tokenCredentialProvider.GetTokenCredentialAsync(tenantId: null, cancellationToken);
+        var accessToken = await credential.GetTokenAsync(new TokenRequestContext([apiScope]), cancellationToken);
 
         // AzCli copilot API endpoint
         const string url = "https://azclis-copilot-apim-prod-eus.azure-api.net/azcli/copilot";
@@ -43,7 +43,7 @@ internal class CliGenerateService(IHttpClientService httpClientService, IAzureTo
             Content = content
         };
         requestMessage.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", accessToken.Token);
-        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage);
+        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }
 }

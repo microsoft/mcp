@@ -71,7 +71,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -94,7 +94,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -130,7 +130,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -165,7 +165,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -201,7 +201,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -239,7 +239,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -277,7 +277,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

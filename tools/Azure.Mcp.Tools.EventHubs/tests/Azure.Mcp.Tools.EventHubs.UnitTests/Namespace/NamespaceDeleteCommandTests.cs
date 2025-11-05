@@ -75,7 +75,7 @@ public class NamespaceDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -113,7 +113,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -146,7 +146,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -178,7 +178,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -204,7 +204,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -231,7 +231,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(conflictException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -258,7 +258,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new Identity.AuthenticationFailedException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -286,7 +286,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(notFoundException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -312,7 +312,7 @@ public class NamespaceDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Unexpected error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -338,7 +338,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -397,7 +397,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -428,7 +428,7 @@ public class NamespaceDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

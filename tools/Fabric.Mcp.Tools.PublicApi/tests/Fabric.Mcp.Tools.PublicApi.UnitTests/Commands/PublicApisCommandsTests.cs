@@ -67,7 +67,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -93,7 +93,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -151,7 +151,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -177,7 +177,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -236,7 +236,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -260,7 +260,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -284,7 +284,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "common"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -312,7 +312,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -339,7 +339,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, result.Status);
@@ -364,7 +364,7 @@ public class PublicApisCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);

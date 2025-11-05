@@ -50,7 +50,7 @@ public sealed class ToolsListCommand(ILogger<ToolsListCommand> logger) : BaseCom
         };
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

@@ -46,7 +46,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -70,7 +70,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -94,7 +94,7 @@ public class ResourceListCommandTests
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -116,7 +116,7 @@ public class ResourceListCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -139,7 +139,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -172,7 +172,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -223,7 +223,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -255,7 +255,7 @@ public class ResourceListCommandTests
         var command = new ResourceListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);

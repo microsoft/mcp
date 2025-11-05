@@ -121,7 +121,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -167,7 +167,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -202,7 +202,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -237,7 +237,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -267,7 +267,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -299,7 +299,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -332,7 +332,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -357,7 +357,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -414,7 +414,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -471,7 +471,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -524,7 +524,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -578,7 +578,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -634,7 +634,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -690,7 +690,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -742,7 +742,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -780,7 +780,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -819,7 +819,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

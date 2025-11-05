@@ -69,7 +69,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -93,7 +93,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -119,7 +119,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "invalid-topic"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -144,7 +144,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--topic", "pagination"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -211,7 +211,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -235,7 +235,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), []);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -261,7 +261,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);
@@ -324,7 +324,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, result.Status);
@@ -348,7 +348,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), Array.Empty<string>());
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, result.Status);
@@ -374,7 +374,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "invalid-workload"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, result.Status);
@@ -399,7 +399,7 @@ public class BestPracticesCommandsTests
         var parseResult = CreateParseResult(command.GetCommand(), ["--workload-type", "notebook"]);
 
         // Act
-        var result = await command.ExecuteAsync(context, parseResult);
+        var result = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, result.Status);

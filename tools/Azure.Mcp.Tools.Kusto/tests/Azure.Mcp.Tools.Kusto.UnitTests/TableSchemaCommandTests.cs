@@ -48,14 +48,14 @@ public sealed class TableSchemaCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
         else
         {
             _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedSchema);
         }
         var command = new TableSchemaCommand(_logger);
@@ -63,7 +63,7 @@ public sealed class TableSchemaCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         var json = System.Text.Json.JsonSerializer.Serialize(response.Results);
@@ -87,14 +87,14 @@ public sealed class TableSchemaCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         else
         {
             _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
         }
         var command = new TableSchemaCommand(_logger);
@@ -102,7 +102,7 @@ public sealed class TableSchemaCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -121,14 +121,14 @@ public sealed class TableSchemaCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<string>(new Exception("Test error")));
         }
         else
         {
             _kusto.GetTableSchemaAsync(
                 "sub1", "mycluster", "db1", "table1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<string>(new Exception("Test error")));
         }
         var command = new TableSchemaCommand(_logger);
@@ -136,7 +136,7 @@ public sealed class TableSchemaCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Equal(expectedError, response.Message);
@@ -150,7 +150,7 @@ public sealed class TableSchemaCommandTests
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }

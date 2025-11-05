@@ -62,7 +62,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -98,7 +98,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -142,7 +142,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -166,7 +166,7 @@ public sealed class FunctionAppGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -198,7 +198,7 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse(args);
 
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
     }
@@ -213,7 +213,7 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -234,7 +234,7 @@ public sealed class FunctionAppGetCommandTests
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --function-app app1");
 
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);

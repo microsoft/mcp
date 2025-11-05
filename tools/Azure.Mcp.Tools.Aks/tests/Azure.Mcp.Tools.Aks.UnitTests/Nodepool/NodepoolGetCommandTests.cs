@@ -69,7 +69,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -175,7 +175,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -248,7 +248,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -278,7 +278,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -340,7 +340,7 @@ public sealed class NodepoolGetCommandTests
         var parseResult = _command.GetCommand().Parse("--subscription sub123 --resource-group rg1 --cluster c1 --nodepool userpool");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

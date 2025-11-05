@@ -123,7 +123,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -182,7 +182,7 @@ public class DatabaseAddCommandTests
         var argList = parameters.SelectMany(kvp => new[] { $"--{kvp.Key}", kvp.Value?.ToString() ?? string.Empty }).ToArray();
         var parseResult = command.GetCommand().Parse(argList);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Test actual command execution and proper error handling
         Assert.NotNull(response);
@@ -252,7 +252,7 @@ public class DatabaseAddCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         // Assert
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

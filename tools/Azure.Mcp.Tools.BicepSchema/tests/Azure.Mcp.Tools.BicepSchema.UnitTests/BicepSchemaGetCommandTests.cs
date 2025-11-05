@@ -41,7 +41,7 @@ public class BicepSchemaGetCommandTests
     {
         var args = _commandDefinition.Parse("--resource-type Microsoft.Sql/servers/databases/schemas");
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 
@@ -59,7 +59,7 @@ public class BicepSchemaGetCommandTests
 
         var args = _commandDefinition.Parse("--resource-type Microsoft.Unknown/virtualRandom");
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
 

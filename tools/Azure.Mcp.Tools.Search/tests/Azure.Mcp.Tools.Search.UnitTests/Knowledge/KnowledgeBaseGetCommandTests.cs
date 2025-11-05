@@ -51,7 +51,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -81,7 +81,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123 --knowledge-base base1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -103,7 +103,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse("--service service123");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response?.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -126,7 +126,7 @@ public class KnowledgeBaseGetCommandTests
         var args = command.GetCommand().Parse($"--service {serviceName}");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

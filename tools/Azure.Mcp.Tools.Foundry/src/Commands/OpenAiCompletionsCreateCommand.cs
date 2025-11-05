@@ -64,7 +64,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

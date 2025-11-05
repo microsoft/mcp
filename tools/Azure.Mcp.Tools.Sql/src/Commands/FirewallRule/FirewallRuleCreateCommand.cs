@@ -58,7 +58,7 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -78,7 +78,8 @@ public sealed class FirewallRuleCreateCommand(ILogger<FirewallRuleCreateCommand>
                 options.FirewallRuleName!,
                 options.StartIpAddress!,
                 options.EndIpAddress!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(firewallRule), SqlJsonContext.Default.FirewallRuleCreateResult);
         }

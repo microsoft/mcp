@@ -46,13 +46,13 @@ public class AvailabilityStatusGetCommandTests
             DetailedStatus = "Virtual machine is running normally"
         };
 
-        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>())
+        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedStatus);
 
         var command = new AvailabilityStatusGetCommand(_logger);
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -75,7 +75,7 @@ public class AvailabilityStatusGetCommandTests
         var subscriptionId = "12345678-1234-1234-1234-123456789012";
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
 
-        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>())
+        _resourceHealthService.GetAvailabilityStatusAsync(resourceId, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new AvailabilityStatusGetCommand(_logger);
@@ -83,7 +83,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse(["--resourceId", resourceId, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -112,7 +112,7 @@ public class AvailabilityStatusGetCommandTests
         var args = command.GetCommand().Parse([.. argsList]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

@@ -97,7 +97,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -139,7 +139,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -167,7 +167,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -195,7 +195,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -221,7 +221,7 @@ public class AccountCreateCommandTests
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -275,7 +275,7 @@ public class AccountCreateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

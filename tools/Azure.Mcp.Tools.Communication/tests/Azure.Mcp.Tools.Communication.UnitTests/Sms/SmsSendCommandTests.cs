@@ -90,7 +90,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -116,7 +116,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args);
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -156,7 +156,7 @@ public class SmsSendCommandTests
         var parseResult = cmd.Parse(args.ToArray());
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

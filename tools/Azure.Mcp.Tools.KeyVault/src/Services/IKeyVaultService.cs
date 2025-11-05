@@ -19,13 +19,15 @@ public interface IKeyVaultService
     /// <param name="subscriptionId">The subscription ID or name</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>The certificate operation</returns>
     Task<CertificateOperation> CreateCertificate(
         string vaultName,
         string certificateName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new key in an Azure Key Vault.
@@ -43,7 +45,8 @@ public interface IKeyVaultService
         string keyType,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Creates a new secret in an Azure Key Vault.
@@ -61,7 +64,8 @@ public interface IKeyVaultService
         string secretValue,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a certificate from an Azure Key Vault.
@@ -77,7 +81,8 @@ public interface IKeyVaultService
         string certificateName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a key from an Azure Key Vault.
@@ -93,7 +98,8 @@ public interface IKeyVaultService
         string keyName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Gets a secret from a Key Vault.
@@ -109,7 +115,8 @@ public interface IKeyVaultService
         string secretName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// List all certificates in a Key Vault.
@@ -123,7 +130,8 @@ public interface IKeyVaultService
         string vaultName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// List all keys in a Key Vault.
@@ -138,7 +146,8 @@ public interface IKeyVaultService
         bool includeManagedKeys,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// List all secrets in a Key Vault.
@@ -152,7 +161,8 @@ public interface IKeyVaultService
         string vaultName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Imports an existing certificate (PFX or PEM) into an Azure Key Vault.
@@ -172,7 +182,8 @@ public interface IKeyVaultService
         string? password,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Retrieves account settings for a Key Vault.
@@ -186,5 +197,6 @@ public interface IKeyVaultService
         string vaultName,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

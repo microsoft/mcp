@@ -98,7 +98,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -135,7 +135,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -171,7 +171,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription sub123 --hostpool-resource-id {resourceId}");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -225,7 +225,7 @@ public class SessionHostListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         // If this fails, let's see what the actual message is
@@ -269,7 +269,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -299,7 +299,7 @@ public class SessionHostListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub123 --hostpool pool1");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -320,7 +320,7 @@ public class SessionHostListCommandTests
         try
         {
             var parseResult = _commandDefinition.Parse(invalidArgs);
-            var response = await _command.ExecuteAsync(context, parseResult);
+            var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
             // If parsing succeeds but validation fails, expect 400
             Assert.Equal(HttpStatusCode.BadRequest, response.Status);

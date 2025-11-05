@@ -105,7 +105,7 @@ public class EmailSendCommandTests
                 .Returns(expectedResult);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -123,7 +123,7 @@ public class EmailSendCommandTests
                 // Runtime validation errors (empty values or command validation)
                 try
                 {
-                    var response = await _command.ExecuteAsync(_context, parseResult);
+                    var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
                     // If we reach here without exception, check if it's a validation error response
                     if (response.Status == HttpStatusCode.BadRequest)
@@ -183,7 +183,7 @@ public class EmailSendCommandTests
             .Returns(expectedResult);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert
@@ -249,7 +249,7 @@ public class EmailSendCommandTests
             .Do(x => throw expectedException);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
         Console.WriteLine($"Response: {JsonSerializer.Serialize(response)}");
 
         // Assert

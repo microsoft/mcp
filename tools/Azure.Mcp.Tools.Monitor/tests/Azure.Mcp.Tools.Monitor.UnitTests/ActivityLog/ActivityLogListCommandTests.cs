@@ -82,7 +82,7 @@ public sealed class ActivityLogListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);
@@ -136,7 +136,7 @@ public sealed class ActivityLogListCommandTests
             .Returns(expectedActivityLogs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)200, response.Status);
@@ -182,7 +182,7 @@ public sealed class ActivityLogListCommandTests
             .Returns(new List<ActivityLogEventData>());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)200, response.Status);
@@ -212,7 +212,7 @@ public sealed class ActivityLogListCommandTests
             .Returns(Task.FromException<List<ActivityLogEventData>>(new Exception("Test error")));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)500, response.Status);
@@ -254,7 +254,7 @@ public sealed class ActivityLogListCommandTests
             });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);

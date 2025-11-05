@@ -127,7 +127,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>());
@@ -163,7 +163,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -194,7 +194,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // Exception handling returns 500, not 404
@@ -217,7 +217,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>());
@@ -239,7 +239,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(argArray);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -267,7 +267,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -291,7 +291,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         _logger.Received(1).Log(

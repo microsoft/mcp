@@ -40,7 +40,7 @@ public class RecommendationListCommandTests
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(insights!));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(_context.Response.Results);
         var json = JsonSerializer.Serialize(_context.Response.Results);
         var node = JsonNode.Parse(json);
@@ -55,7 +55,7 @@ public class RecommendationListCommandTests
         _serviceMock.GetProfilerInsightsAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
             .Returns(Task.FromResult<IEnumerable<JsonNode>>(Array.Empty<JsonNode>()));
         var args = _command.GetCommand().Parse(["--subscription", "sub1"]);
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Null(_context.Response.Results);
     }
 }

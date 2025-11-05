@@ -79,7 +79,7 @@ public class FileSystemUpdateCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -113,7 +113,7 @@ public class FileSystemUpdateCommandTests
             "--maintenance-time", "01:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>());
 
@@ -140,7 +140,7 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>());
     }
@@ -161,7 +161,7 @@ public class FileSystemUpdateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -186,7 +186,7 @@ public class FileSystemUpdateCommandTests
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
         if (!shouldSucceed)
@@ -216,7 +216,7 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "3000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>());
     }
@@ -233,7 +233,7 @@ public class FileSystemUpdateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);

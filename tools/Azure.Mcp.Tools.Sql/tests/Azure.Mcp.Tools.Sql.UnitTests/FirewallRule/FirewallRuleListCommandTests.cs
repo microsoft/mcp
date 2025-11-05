@@ -71,7 +71,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -109,7 +109,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -133,7 +133,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -157,7 +157,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -182,7 +182,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -206,7 +206,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -233,7 +233,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse($"--subscription {subscription} --resource-group {resourceGroup} --server {serverName}");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListFirewallRulesAsync(
@@ -266,7 +266,7 @@ public class FirewallRuleListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription testsub --resource-group testrg --server testserver --retry-max-retries 3");
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

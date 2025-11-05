@@ -84,7 +84,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -140,7 +140,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -180,7 +180,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -238,7 +238,7 @@ public class OpenAiModelsListCommandTests
         var parseResult = command.GetCommand().Parse(args.Split(' '));
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -280,7 +280,7 @@ public class OpenAiModelsListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, args);
+        await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert - Verify the service was called with exact parameters
         await _foundryService.Received(1).ListOpenAiModelsAsync(
@@ -317,7 +317,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

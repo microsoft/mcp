@@ -63,7 +63,7 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -109,7 +109,7 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId, "--model-version", modelVersion, "--model-source", modelSource, "--sku", skuName, "--sku-capacity", skuCapacity.ToString(), "--scale-type", scaleType, "--scale-capacity", scaleCapacity.ToString()]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -145,7 +145,7 @@ public class ModelDeploymentCommandTests
         var command = new ModelDeploymentCommand();
         var args = command.GetCommand().Parse(["--deployment", deploymentName, "--model-name", modelName, "--model-format", modelFormat, "--azure-ai-services", aiServicesName, "--resource-group", resourceGroup, "--subscription", subscriptionId]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

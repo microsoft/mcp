@@ -73,7 +73,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -104,7 +104,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -127,7 +127,7 @@ public class TopicDetailsCommandTests
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -164,7 +164,7 @@ public class TopicDetailsCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)

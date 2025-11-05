@@ -87,7 +87,7 @@ public class FileSystemCreateCommandTests
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -122,7 +122,7 @@ public class FileSystemCreateCommandTests
             "--root-squash-mode", "All"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("root-squash-mode", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -156,7 +156,7 @@ public class FileSystemCreateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
@@ -186,7 +186,7 @@ public class FileSystemCreateCommandTests
             "--squash-gid", "1000"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("no-squash", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -210,7 +210,7 @@ public class FileSystemCreateCommandTests
             "--source-vault", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.KeyVault/vaults/kv"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("key-url", response.Message, StringComparison.OrdinalIgnoreCase);
@@ -245,7 +245,7 @@ public class FileSystemCreateCommandTests
             "--user-assigned-identity-id", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await _svc.Received(1).CreateFileSystemAsync(Sub, Rg, Name, Location, Sku, Size, SubnetId, Zone,
             "Monday", "00:00",
@@ -279,7 +279,7 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("error", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -307,7 +307,7 @@ public class FileSystemCreateCommandTests
             "--maintenance-time", "00:00"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
         Assert.Contains("conflict", response.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -336,7 +336,7 @@ public class FileSystemCreateCommandTests
             "--hsm-container", "/subscriptions/sub/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/acc/blobServices/default/containers/hsm"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
         Assert.Contains("Azure Blob Integration", response.Message, StringComparison.OrdinalIgnoreCase);
     }

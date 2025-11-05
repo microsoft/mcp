@@ -56,7 +56,7 @@ public class EventHubDeleteCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -88,7 +88,7 @@ public class EventHubDeleteCommandTests
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -112,7 +112,7 @@ public class EventHubDeleteCommandTests
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -136,7 +136,7 @@ public class EventHubDeleteCommandTests
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -160,7 +160,7 @@ public class EventHubDeleteCommandTests
             .Returns(false);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

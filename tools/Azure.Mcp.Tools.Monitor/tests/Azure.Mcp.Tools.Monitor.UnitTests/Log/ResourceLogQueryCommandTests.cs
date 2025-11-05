@@ -76,7 +76,7 @@ public sealed class ResourceLogQueryCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -115,7 +115,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -152,7 +152,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -186,7 +186,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -219,7 +219,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -249,7 +249,7 @@ public sealed class ResourceLogQueryCommandTests
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

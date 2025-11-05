@@ -31,7 +31,7 @@ public class LedgerEntryAppendCommandTests
         var command = new LedgerEntryAppendCommand(service, logger);
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--content", "data"]);
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

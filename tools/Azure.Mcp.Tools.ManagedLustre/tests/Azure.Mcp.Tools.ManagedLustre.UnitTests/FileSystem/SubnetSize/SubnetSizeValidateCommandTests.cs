@@ -66,7 +66,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -91,7 +91,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.BadRequest);
@@ -115,7 +115,7 @@ public class FileSystemCheckSubnetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.True(response.Status >= HttpStatusCode.InternalServerError);
@@ -134,7 +134,7 @@ public class FileSystemCheckSubnetCommandTests
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

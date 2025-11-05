@@ -72,7 +72,7 @@ public sealed class FileSystemUpdateCommand(ILogger<FileSystemUpdateCommand> log
         options.SquashGid = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.SquashGidOption.Name);
         return options;
     }
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {

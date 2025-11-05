@@ -69,7 +69,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -103,7 +103,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription, "--resource-group", resourceGroup, "--topic", topicName]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -130,7 +130,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -160,7 +160,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription, "--location", location]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -185,7 +185,7 @@ public class SubscriptionListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -220,7 +220,7 @@ public class SubscriptionListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
