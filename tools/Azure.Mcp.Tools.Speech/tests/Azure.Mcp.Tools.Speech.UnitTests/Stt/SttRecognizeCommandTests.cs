@@ -151,13 +151,13 @@ public class SttRecognizeCommandTests : IDisposable
     private async Task<CommandResponse> ExecuteCommandAsync(string args)
     {
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        return await _command.ExecuteAsync(_context, parseResult);
+        return await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
     }
 
     private async Task<CommandResponse> ExecuteCommandAsync(string[] args)
     {
         var parseResult = _commandDefinition.Parse(args);
-        return await _command.ExecuteAsync(_context, parseResult);
+        return await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
     }
 
     private static SttRecognizeCommand.SttRecognizeCommandResult DeserializeResult(CommandResponse response)
@@ -1044,7 +1044,7 @@ public class SttRecognizeCommandTests : IDisposable
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --file {fileName} --language en-US --format simple";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
