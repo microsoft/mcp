@@ -825,7 +825,68 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ### Streamable HTTP Transport
 
-See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+#### Running Azure MCP Server Locally for Development
+
+When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
+
+**HTTP Mode (Remote)**
+
+This option runs the built Azure MCP Server executable in HTTP mode for local testing.
+
+**Prerequisites:**
+
+1. Install Azure MCP Server via your preferred method:
+   - **NuGet:** `dotnet tool install --global Azure.Mcp`
+   - **NPM:** `npm install -g @azure/mcp`
+   - Or use the locally built executable from `servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]`
+
+**Run the server:**
+
+**PowerShell:**
+```powershell
+# Set environment variables
+$env:ASPNETCORE_ENVIRONMENT = "Development"
+$env:ASPNETCORE_URLS = "http://localhost:1031"
+$env:AzureAd__TenantId = "<your-tenant-id>"
+$env:AzureAd__ClientId = "<your-client-id>"
+$env:AzureAd__ClientSecret = "<your-client-secret>"  # Only needed for Hosting Environment Identity
+$env:AzureAd__Instance = "https://login.microsoftonline.com/"
+
+# Run the server
+azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+**Bash:**
+```bash
+# Set environment variables
+export ASPNETCORE_ENVIRONMENT="Development"
+export ASPNETCORE_URLS="http://localhost:1031"
+export AzureAd__TenantId="<your-tenant-id>"
+export AzureAd__ClientId="<your-client-id>"
+export AzureAd__ClientSecret="<your-client-secret>"  # Only needed for Hosting Environment Identity
+export AzureAd__Instance="https://login.microsoftonline.com/"
+
+# Run the server
+azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+```
+
+**Alternative: Using On-Behalf-Of Flow:**
+```bash
+azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseOnBehalfOfFlow
+```
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "http://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
 
 ## Logging and Diagnostics
 
@@ -903,94 +964,6 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 ## Development Environment
 
 ### Development in VS Code
-
-#### Running Azure MCP Server Locally for Development
-
-When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
-
-**Option 1: HTTP Mode (Remote)**
-
-**Prerequisites: Create launchSettings.json**
-
-> [!NOTE]
-> Internal contributors may skip this step as the `launchSettings.json` file is already provided in the repository.
-
-Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
-
-1. Create the directory (if it doesn't exist):
-   ```bash
-   mkdir -p servers/Azure.Mcp.Server/src/Properties
-   ```
-
-2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
-   ```json
-   {
-     "profiles": {
-       "debug-remotemcp": {
-         "commandName": "Project",
-         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
-         "environmentVariables": {
-           "ASPNETCORE_ENVIRONMENT": "Development",
-           "ASPNETCORE_URLS": "http://localhost:<port>",
-           "AzureAd__TenantId": "<your-tenant-id>",
-           "AzureAd__ClientId": "<your-client-id>",
-           "AzureAd__Instance": "https://login.microsoftonline.com/"
-         }
-       }
-     }
-   }
-   ```
-
-3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
-
-```bash
-dotnet build
-dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
-```
-
-This starts the MCP server in **remote HTTP mode** with the following configuration:
-- **Command line arguments:** `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
-- **Environment variables** for Entra ID authentication and ASP.NET Core settings
-- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
-
-**To connect to the MCP server, configure your mcp.json:**
-
-```json
-{
-  "servers": {
-    "Azure MCP Server": {
-      "url": "http://localhost:1031/",
-      "type": "http"
-    }
-  }
-}
-```
-
-**Option 2: Stdio Mode (Local)**
-
-If you need to test the server in stdio mode (standard input/output), first build the project and then run the executable directly:
-
-```bash
-dotnet build
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
-```
-
-This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
-
-**To connect to the MCP server, configure your mcp.json:**
-
-```json
-{
-  "servers": {
-    "azure-mcp-server": {
-      "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
-      "args": ["server", "start"]
-    }
-  }
-}
-```
 
 #### Bring your own language model key
 
