@@ -189,7 +189,7 @@ public class McpServerElicitationExtensionsTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NotSupportedException>(
-            () => server.RequestElicitationAsync(request, CancellationToken.None));
+            () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
 
         Assert.Contains("elicitation", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -222,7 +222,7 @@ public class McpServerElicitationExtensionsTests
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            () => server.RequestElicitationAsync(request, CancellationToken.None));
+            () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
     }
 
     private static McpServer CreateMockServer()

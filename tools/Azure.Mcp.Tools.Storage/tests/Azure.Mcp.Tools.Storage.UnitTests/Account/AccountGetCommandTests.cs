@@ -62,7 +62,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -94,7 +94,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -125,7 +125,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -174,7 +174,7 @@ public class AccountGetCommandTests
             var parseResult = _commandDefinition.Parse(args);
 
             // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -212,7 +212,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -244,7 +244,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -266,7 +266,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -287,7 +287,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

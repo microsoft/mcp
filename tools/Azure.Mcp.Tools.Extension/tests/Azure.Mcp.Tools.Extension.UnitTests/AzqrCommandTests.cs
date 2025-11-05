@@ -80,7 +80,7 @@ public sealed class AzqrCommandTests
         try
         {
             // Act
-            var response = await command.ExecuteAsync(context, args);
+            var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -120,7 +120,7 @@ public sealed class AzqrCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
