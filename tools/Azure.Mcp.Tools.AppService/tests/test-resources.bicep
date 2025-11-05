@@ -220,7 +220,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
 }
 
 // Role assignment for test application - Web App Contributor
-// See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#website-contributor
+// See https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#website-contributor
 resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(webApp.id, testApplicationOid, 'de139f84-1756-47ae-9be6-808fbbe84772')
   scope: webApp
@@ -231,7 +231,7 @@ resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignment
 }
 
 // Role assignment for test application - SQL DB Contributor
-// See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#sql-db-contributor
+// See https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#sql-db-contributor
 resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(sqlServer.id, testApplicationOid, '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec')
   scope: sqlServer
