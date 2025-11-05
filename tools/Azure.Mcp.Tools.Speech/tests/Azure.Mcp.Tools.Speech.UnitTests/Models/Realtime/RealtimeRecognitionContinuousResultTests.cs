@@ -2,18 +2,18 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using Azure.Mcp.Tools.Speech.Models;
+using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Speech.UnitTests.Models;
 
-public class ContinuousRecognitionResultTests
+public class RealtimeRecognitionContinuousResultTests
 {
     [Fact]
-    public void ContinuousRecognitionResult_DefaultValues_ShouldBeCorrect()
+    public void RealtimeRecognitionContinuousResult_DefaultValues_ShouldBeCorrect()
     {
         // Arrange & Act
-        var result = new ContinuousRecognitionResult();
+        var result = new RealtimeRecognitionContinuousResult();
 
         // Assert
         Assert.Null(result.FullText);
@@ -22,17 +22,17 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_SetProperties_ShouldRetainValues()
+    public void RealtimeRecognitionContinuousResult_SetProperties_ShouldRetainValues()
     {
         // Arrange
-        var segments = new List<SpeechRecognitionResult>
+        var segments = new List<RealtimeRecognitionResult>
         {
             new() { Text = "Hello", Offset = 0, Duration = 1000 },
             new() { Text = "world", Offset = 1000, Duration = 1500 }
         };
 
         // Act
-        var result = new ContinuousRecognitionResult
+        var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Hello world",
             Segments = segments
@@ -47,13 +47,13 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_WithEmptySegments_ShouldHandleCorrectly()
+    public void RealtimeRecognitionContinuousResult_WithEmptySegments_ShouldHandleCorrectly()
     {
         // Arrange & Act
-        var result = new ContinuousRecognitionResult
+        var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Complete text",
-            Segments = new List<SpeechRecognitionResult>()
+            Segments = new List<RealtimeRecognitionResult>()
         };
 
         // Assert
@@ -63,13 +63,13 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_JsonSerialization_ShouldSerializeCorrectly()
+    public void RealtimeRecognitionContinuousResult_JsonSerialization_ShouldSerializeCorrectly()
     {
         // Arrange
-        var result = new ContinuousRecognitionResult
+        var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Hello world test",
-            Segments = new List<SpeechRecognitionResult>
+            Segments = new List<RealtimeRecognitionResult>
             {
                 new() { Text = "Hello", Offset = 0, Duration = 1000, Language = "en-US" },
                 new() { Text = "world", Offset = 1000, Duration = 1200, Language = "en-US" },
@@ -89,7 +89,7 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_JsonDeserialization_ShouldDeserializeCorrectly()
+    public void RealtimeRecognitionContinuousResult_JsonDeserialization_ShouldDeserializeCorrectly()
     {
         // Arrange
         var json = """
@@ -122,7 +122,7 @@ public class ContinuousRecognitionResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<ContinuousRecognitionResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -145,7 +145,7 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
+    public void RealtimeRecognitionContinuousResult_JsonDeserialization_WithNullValues_ShouldHandleGracefully()
     {
         // Arrange
         var json = """
@@ -156,7 +156,7 @@ public class ContinuousRecognitionResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<ContinuousRecognitionResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -166,7 +166,7 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_JsonDeserialization_WithMissingSegments_ShouldUseDefault()
+    public void RealtimeRecognitionContinuousResult_JsonDeserialization_WithMissingSegments_ShouldUseDefault()
     {
         // Arrange
         var json = """
@@ -176,7 +176,7 @@ public class ContinuousRecognitionResultTests
         """;
 
         // Act
-        var result = JsonSerializer.Deserialize<ContinuousRecognitionResult>(json);
+        var result = JsonSerializer.Deserialize<RealtimeRecognitionContinuousResult>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -186,10 +186,10 @@ public class ContinuousRecognitionResultTests
     }
 
     [Fact]
-    public void ContinuousRecognitionResult_WithSingleSegment_ShouldWorkCorrectly()
+    public void RealtimeRecognitionContinuousResult_WithSingleSegment_ShouldWorkCorrectly()
     {
         // Arrange
-        var segment = new SpeechRecognitionResult
+        var segment = new RealtimeRecognitionResult
         {
             Text = "Single segment",
             Offset = 500,
@@ -199,10 +199,10 @@ public class ContinuousRecognitionResultTests
         };
 
         // Act
-        var result = new ContinuousRecognitionResult
+        var result = new RealtimeRecognitionContinuousResult
         {
             FullText = "Single segment",
-            Segments = new List<SpeechRecognitionResult> { segment }
+            Segments = new List<RealtimeRecognitionResult> { segment }
         };
 
         // Assert
