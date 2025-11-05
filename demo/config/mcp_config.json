@@ -1,0 +1,53 @@
+{
+  "mcpServers": {
+    "azure-mcp": {
+      "command": "dnx",
+      "args": [
+        "Azure.Mcp",
+        "--source",
+        "https://api.nuget.org/v3/index.json",
+        "--yes",
+        "--",
+        "azmcp",
+        "server",
+        "start"
+      ],
+      "type": "stdio",
+      "description": "Azure MCP Server - Proporciona acceso a 40+ servicios de Azure",
+      "capabilities": [
+        "storage",
+        "keyvault",
+        "cosmos",
+        "sql",
+        "search",
+        "functions",
+        "appservice",
+        "aks",
+        "monitor",
+        "communication"
+      ]
+    },
+    "fabric-mcp": {
+      "command": "../servers/Fabric.Mcp.Server/src/bin/Release/fabmcp",
+      "args": [
+        "server",
+        "start",
+        "--mode",
+        "all"
+      ],
+      "type": "stdio",
+      "description": "Microsoft Fabric MCP Server - APIs públicas de Fabric",
+      "capabilities": [
+        "publicapis",
+        "itemdefinitions",
+        "bestpractices",
+        "examples"
+      ]
+    }
+  },
+  "settings": {
+    "timeout": 30000,
+    "maxRetries": 3,
+    "logLevel": "INFO"
+  }
+}

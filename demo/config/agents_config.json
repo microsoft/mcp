@@ -1,0 +1,144 @@
+{
+  "agents": {
+    "orchestrator": {
+      "name": "Orchestrator Agent",
+      "description": "Coordina las interacciones entre todos los agentes especializados",
+      "capabilities": [
+        "task_distribution",
+        "result_aggregation",
+        "workflow_management"
+      ],
+      "dependencies": ["*"]
+    },
+    "azure_storage": {
+      "name": "Azure Storage Agent",
+      "description": "Gestiona operaciones con Azure Blob Storage",
+      "mcp_server": "azure-mcp",
+      "tools": [
+        "storage.list",
+        "storage.create",
+        "storage.upload",
+        "storage.download",
+        "storage.delete"
+      ],
+      "capabilities": [
+        "blob_management",
+        "container_management",
+        "file_upload",
+        "file_download"
+      ]
+    },
+    "azure_ai": {
+      "name": "Azure AI Agent",
+      "description": "Interactúa con Azure AI Search y servicios cognitivos",
+      "mcp_server": "azure-mcp",
+      "tools": [
+        "search.list",
+        "search.create",
+        "search.query",
+        "search.index"
+      ],
+      "capabilities": [
+        "semantic_search",
+        "index_management",
+        "vector_search"
+      ]
+    },
+    "azure_data": {
+      "name": "Azure Data Agent",
+      "description": "Gestiona Azure Cosmos DB y Azure SQL Database",
+      "mcp_server": "azure-mcp",
+      "tools": [
+        "cosmos.list",
+        "cosmos.query",
+        "cosmos.insert",
+        "sql.list",
+        "sql.query",
+        "sql.execute"
+      ],
+      "capabilities": [
+        "nosql_operations",
+        "sql_operations",
+        "data_migration"
+      ]
+    },
+    "azure_security": {
+      "name": "Azure Security Agent",
+      "description": "Gestiona Azure Key Vault (secretos, claves, certificados)",
+      "mcp_server": "azure-mcp",
+      "tools": [
+        "keyvault.list",
+        "keyvault.get",
+        "keyvault.set",
+        "keyvault.delete"
+      ],
+      "capabilities": [
+        "secret_management",
+        "key_management",
+        "certificate_management"
+      ]
+    },
+    "azure_infra": {
+      "name": "Azure Infrastructure Agent",
+      "description": "Gestiona recursos de Azure (grupos, App Service, Functions)",
+      "mcp_server": "azure-mcp",
+      "tools": [
+        "resourcegroup.list",
+        "resourcegroup.create",
+        "appservice.list",
+        "appservice.deploy",
+        "functions.list",
+        "functions.deploy"
+      ],
+      "capabilities": [
+        "resource_management",
+        "app_deployment",
+        "function_deployment"
+      ]
+    },
+    "fabric": {
+      "name": "Fabric Agent",
+      "description": "Accede a APIs públicas de Microsoft Fabric",
+      "mcp_server": "fabric-mcp",
+      "tools": [
+        "publicapis.list",
+        "publicapis.get",
+        "itemdefinition.get",
+        "bestpractices.get",
+        "examples.get"
+      ],
+      "capabilities": [
+        "api_discovery",
+        "schema_generation",
+        "best_practices",
+        "example_retrieval"
+      ]
+    }
+  },
+  "workflows": {
+    "data_pipeline": {
+      "name": "Pipeline de Datos Completo",
+      "description": "Crea un pipeline end-to-end desde ingesta hasta análisis",
+      "agents": ["azure_storage", "azure_data", "azure_ai", "fabric"],
+      "coordinator": "orchestrator"
+    },
+    "secure_app": {
+      "name": "Aplicación Segura",
+      "description": "Despliega aplicación web con secretos seguros",
+      "agents": ["azure_security", "azure_infra", "azure_storage"],
+      "coordinator": "orchestrator"
+    },
+    "intelligent_search": {
+      "name": "Búsqueda Inteligente",
+      "description": "Sistema de búsqueda semántica con vectores",
+      "agents": ["azure_storage", "azure_ai", "azure_data"],
+      "coordinator": "orchestrator"
+    },
+    "fabric_infrastructure": {
+      "name": "Infraestructura Fabric",
+      "description": "Genera y despliega infraestructura de datos con Fabric",
+      "agents": ["fabric", "azure_infra", "azure_data"],
+      "coordinator": "orchestrator"
+    }
+  }
+}
