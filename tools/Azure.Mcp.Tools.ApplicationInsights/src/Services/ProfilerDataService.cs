@@ -124,7 +124,7 @@ public class ProfilerDataService(
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
-        TokenCredential tokenCredential = await GetCredential().ConfigureAwait(false);
+        TokenCredential tokenCredential = await GetCredential(cancellationToken).ConfigureAwait(false);
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);

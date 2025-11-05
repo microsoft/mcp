@@ -50,7 +50,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -73,7 +73,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -90,7 +90,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_Returns400_WhenSubscriptionIsMissing()
     {
         // Arrange && Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse([]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -110,7 +110,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -129,7 +129,7 @@ public class AccountListCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);

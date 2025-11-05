@@ -89,7 +89,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateListToolsRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
@@ -119,7 +119,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateListToolsRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
@@ -143,7 +143,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateListToolsRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.Empty(result.Tools);
@@ -179,11 +179,11 @@ public class CompositeToolLoaderTests
 
         // First populate the tool map by calling ListToolsHandler
         var listRequest = CreateListToolsRequest();
-        await toolLoader.ListToolsHandler(listRequest, CancellationToken.None);
+        await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Now try to call an unknown tool
         var callRequest = CreateCallToolRequest("unknown-tool");
-        var result = await toolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
@@ -218,11 +218,11 @@ public class CompositeToolLoaderTests
 
         // First populate the tool map
         var listRequest = CreateListToolsRequest();
-        await toolLoader.ListToolsHandler(listRequest, CancellationToken.None);
+        await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Now call the known tool
         var callRequest = CreateCallToolRequest("test-tool");
-        var result = await toolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.False(result.IsError);
@@ -261,11 +261,11 @@ public class CompositeToolLoaderTests
 
         // First populate the tool map
         var listRequest = CreateListToolsRequest();
-        await toolLoader.ListToolsHandler(listRequest, CancellationToken.None);
+        await toolLoader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         // Call tool2 which should be handled by mockLoader2
         var callRequest = CreateCallToolRequest("tool2");
-        var result = await toolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.False(result.IsError);
@@ -291,7 +291,7 @@ public class CompositeToolLoaderTests
             Params = null
         };
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
@@ -315,7 +315,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateCallToolRequest("test-tool");
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
@@ -338,7 +338,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateListToolsRequest();
 
-        var result = await toolLoader.ListToolsHandler(request, CancellationToken.None);
+        var result = await toolLoader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.NotNull(result.Tools);
@@ -370,7 +370,7 @@ public class CompositeToolLoaderTests
 
         // Call tool directly WITHOUT first calling ListToolsHandler
         var callRequest = CreateCallToolRequest("test-tool");
-        var result = await toolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Verify the tool was found and executed successfully
         Assert.NotNull(result);
@@ -404,7 +404,7 @@ public class CompositeToolLoaderTests
 
         // Call tool directly WITHOUT first calling ListToolsHandler
         var callRequest = CreateCallToolRequest("unknown-tool");
-        var result = await toolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Verify the tool was not found
         Assert.NotNull(result);
@@ -451,7 +451,7 @@ public class CompositeToolLoaderTests
         for (int i = 0; i < concurrentCalls; i++)
         {
             var callRequest = CreateCallToolRequest("test-tool");
-            tasks.Add(toolLoader.CallToolHandler(callRequest, CancellationToken.None).AsTask());
+            tasks.Add(toolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken).AsTask());
         }
 
         var results = await Task.WhenAll(tasks);
@@ -502,7 +502,7 @@ public class CompositeToolLoaderTests
 
         // Act - Call the tool directly without first calling ListToolsHandler
         var callRequest = CreateCallToolRequest("valid-tool");
-        var result = await compositeToolLoader.CallToolHandler(callRequest, CancellationToken.None);
+        var result = await compositeToolLoader.CallToolHandler(callRequest, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -534,7 +534,7 @@ public class CompositeToolLoaderTests
         var toolLoader = new CompositeToolLoader(toolLoaders, logger);
         var request = CreateCallToolRequest("test-tool");
 
-        var result = await toolLoader.CallToolHandler(request, CancellationToken.None);
+        var result = await toolLoader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         Assert.NotNull(result);
         Assert.True(result.IsError);
