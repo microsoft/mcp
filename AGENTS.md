@@ -28,7 +28,6 @@
 - Always review your own code for consistency, maintainability, and testability
 - Always ask for clarifications if the request is ambiguous or lacks sufficient context
 - Write transport-agnostic commands that work in both stdio and HTTP modes
-- Use `IAzureTokenCredentialProvider` for all Azure authentication needs
 - Keep commands stateless and thread-safe for multi-user remote scenarios
 - Test commands with different RBAC permissions for OBO scenarios
 

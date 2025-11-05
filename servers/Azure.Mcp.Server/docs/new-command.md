@@ -2450,16 +2450,6 @@ Lists storage accounts in a subscription.
 - All users share server's permission level
 ```
 
-### Key Takeaways
-
-1. **Write transport-agnostic commands** - they should work identically in stdio and HTTP modes
-2. **Use dependency injection** - let `IAzureTokenCredentialProvider` handle authentication complexity
-3. **Keep commands stateless** - essential for multi-user remote scenarios
-4. **Test with RBAC in mind** - especially for OBO flow where user permissions matter
-5. **Don't check transport type** - abstractions handle differences automatically
-6. **Handle tenant context properly** - use `ITenantService` for tenant resolution
-7. **Provide helpful error messages** - explain permission requirements for remote scenarios
-
 ## Checklist
 
 Before submitting:
