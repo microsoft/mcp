@@ -19,6 +19,13 @@ public sealed class ToolMetadata
     private bool _readOnly = false;
     private bool _secret = false;
     private bool _localRequired = false;
+
+    private MetadataDefinition? _destructiveProperty;
+    private MetadataDefinition? _idempotentProperty;
+    private MetadataDefinition? _openWorldProperty;
+    private MetadataDefinition? _readOnlyProperty;
+    private MetadataDefinition? _secretProperty;
+    private MetadataDefinition? _localRequiredProperty;
     /// <summary>
     /// Gets or sets whether the tool may perform destructive updates to its environment.
     /// </summary>
@@ -41,7 +48,7 @@ public sealed class ToolMetadata
 
 
     [JsonPropertyName("destructive")]
-    public MetadataDefinition DestructiveProperty => new MetadataDefinition
+    public MetadataDefinition DestructiveProperty => _destructiveProperty ??= new MetadataDefinition
     {
         Value = _destructive,
         Description = _destructive
@@ -69,7 +76,7 @@ public sealed class ToolMetadata
     }
 
     [JsonPropertyName("idempotent")]
-    public MetadataDefinition IdempotentProperty => new MetadataDefinition
+    public MetadataDefinition IdempotentProperty => _idempotentProperty ??= new MetadataDefinition
     {
         Value = _idempotent,
         Description = _idempotent
@@ -97,12 +104,12 @@ public sealed class ToolMetadata
     }
 
     [JsonPropertyName("openWorld")]
-    public MetadataDefinition OpenWorldProperty => new MetadataDefinition
+    public MetadataDefinition OpenWorldProperty => _openWorldProperty ??= new MetadataDefinition
     {
         Value = _openWorld,
         Description = _openWorld
             ? "This tool may interact with an unpredictable or dynamic set of entities (like web search)."
-            : "This tool's domain of interaction is closed and well-defined (like memory access)."
+            : "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities (like memory access)."
     };
 
     /// <summary>
@@ -129,11 +136,11 @@ public sealed class ToolMetadata
     }
 
     [JsonPropertyName("readOnly")]
-    public MetadataDefinition ReadOnlyProperty => new MetadataDefinition
+    public MetadataDefinition ReadOnlyProperty => _readOnlyProperty ??= new MetadataDefinition
     {
         Value = _readOnly,
         Description = _readOnly
-            ? "This tool performs read operations without modifying any state or data."
+            ? "This tool only performs read operations without modifying any state or data."
             : "This tool may modify its environment and perform write operations (create, update, delete)."
     };
 
@@ -161,7 +168,7 @@ public sealed class ToolMetadata
     }
 
     [JsonPropertyName("secret")]
-    public MetadataDefinition SecretProperty => new MetadataDefinition
+    public MetadataDefinition SecretProperty => _secretProperty ??= new MetadataDefinition
     {
         Value = _secret,
         Description = _secret
@@ -196,12 +203,12 @@ public sealed class ToolMetadata
     /// Gets the localRequired metadata property with value and description for serialization.
     /// </summary>
     [JsonPropertyName("localRequired")]
-    public MetadataDefinition LocalRequiredProperty => new MetadataDefinition
+    public MetadataDefinition LocalRequiredProperty => _localRequiredProperty ??= new MetadataDefinition
     {
         Value = _localRequired,
         Description = _localRequired
             ? "This tool requires local execution environment or local resources to function properly."
-            : "This tool can operate without local dependencies."
+            : "This tool can operate remotely without local dependencies."
     };
 
     /// <summary>

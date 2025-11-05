@@ -12,7 +12,7 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
         using var jsonDoc = JsonDocument.ParseValue(ref reader);
         var root = jsonDoc.RootElement;
 
-        MetadataDefinition GetMeta(string name, bool defaultValue)
+        MetadataDefinition GetMetadata(string name, bool defaultValue)
         {
             if (!root.TryGetProperty(name, out var prop))
                 return new MetadataDefinition { Value = defaultValue, Description = string.Empty };
@@ -22,12 +22,12 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
             return meta;
         }
         return new ToolMetadata(
-            GetMeta("destructive", true),
-            GetMeta("idempotent", false),
-            GetMeta("openWorld", true),
-            GetMeta("readOnly", false),
-            GetMeta("secret", false),
-            GetMeta("localRequired", false)
+            GetMetadata("destructive", true),
+            GetMetadata("idempotent", false),
+            GetMetadata("openWorld", true),
+            GetMetadata("readOnly", false),
+            GetMetadata("secret", false),
+            GetMetadata("localRequired", false)
         );
     }
 
@@ -35,18 +35,18 @@ public sealed class ToolMetadataConverter : JsonConverter<ToolMetadata>
     {
         writer.WriteStartObject();
 
-        void WriteMeta(string name, MetadataDefinition def)
+        void WriteMetadata(string name, MetadataDefinition def)
         {
             writer.WritePropertyName(name);
             JsonSerializer.Serialize(writer, def, ServerJsonContext.Default.MetadataDefinition);
         }
 
-        WriteMeta("destructive", value.DestructiveProperty);
-        WriteMeta("idempotent", value.IdempotentProperty);
-        WriteMeta("openWorld", value.OpenWorldProperty);
-        WriteMeta("readOnly", value.ReadOnlyProperty);
-        WriteMeta("secret", value.SecretProperty);
-        WriteMeta("localRequired", value.LocalRequiredProperty);
+        WriteMetadata("destructive", value.DestructiveProperty);
+        WriteMetadata("idempotent", value.IdempotentProperty);
+        WriteMetadata("openWorld", value.OpenWorldProperty);
+        WriteMetadata("readOnly", value.ReadOnlyProperty);
+        WriteMetadata("secret", value.SecretProperty);
+        WriteMetadata("localRequired", value.LocalRequiredProperty);
 
         writer.WriteEndObject();
     }
