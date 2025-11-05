@@ -982,7 +982,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, and deployment best practices.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, deployment best practices and AI Foundry sdk code samples.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1012,7 +1012,8 @@
       "mappedToolList": [
         "azureterraformbestpractices_get",
         "bicepschema_get",
-        "get_bestpractices_get"
+        "get_bestpractices_get",
+        "foundry_agents_get-sdk-sample"
       ]
     },
     {
@@ -1155,7 +1156,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, knowledge base and source information, and listing AI Foundry agents and resources.",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, knowledge base and source information, and listing AI Foundry , threads, messages and resources.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1194,7 +1195,9 @@
         "foundry_knowledge_index_schema",
         "foundry_openai_models-list",
         "foundry_agents_list",
-        "foundry_resource_get"
+        "foundry_resource_get",
+        "foundry_threads_list",
+        "foundry_threads_get-messages"
       ]
     },
     {
@@ -1263,6 +1266,22 @@
         "foundry_openai_create-completion",
         "foundry_openai_embeddings-create",
         "foundry_openai_chat-completions-create"
+      ]
+    },
+    {
+      "name": "create_azure_ai_foundry_agent_resources",
+      "description": "Create Azure AI Foundry agent or thread.",
+      "toolMetadata": {
+        "destructive": false,
+        "idempotent": false,
+        "openWorld": false,
+        "readOnly": false,
+        "secret": false,
+        "localRequired": false
+      },
+      "mappedToolList": [
+        "foundry_agents_create",
+        "foundry_threads_create"
       ]
     },
     {

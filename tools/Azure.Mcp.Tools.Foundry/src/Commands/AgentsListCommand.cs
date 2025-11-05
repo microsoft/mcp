@@ -62,7 +62,8 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
             var agents = await service.ListAgents(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = agents?.Count > 0 ?
                 ResponseResult.Create(
