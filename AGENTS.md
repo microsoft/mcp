@@ -609,8 +609,6 @@ Azure MCP Server supports **stdio** (local) and **HTTP** (remote) transports wit
 
 | Aspect | Stdio Mode | Remote HTTP Mode |
 |--------|-----------|------------------|
-| **Authentication** | Local identity (CLI, VS Code) | Entra ID OAuth 2.0 |
-| **Authorization** | Single user's RBAC | Per-user (OBO) or service-level |
 | **Concurrency** | Single user | Multiple concurrent users |
 | **State Management** | Can use instance fields | Must be stateless |
 | **Deployment** | Local binaries | Cloud hosting (App Service, AKS) |
@@ -659,12 +657,6 @@ var httpContext = _httpContextAccessor.HttpContext;
 5. Enable Application Insights for monitoring
 6. Validate token claims (audience, issuer, scopes)
 7. Use Managed Identity when possible
-
-### Additional Resources
-
-- **Implementation Details**: See `servers/Azure.Mcp.Server/docs/new-command.md` - Remote MCP Server Considerations section
-- **Deployment & Troubleshooting**: See `servers/Azure.Mcp.Server/TROUBLESHOOTING.md` - Remote MCP Server section
-- **Authentication Guide**: See `docs/Authentication.md`
 
 ## External MCP Server Integration
 
