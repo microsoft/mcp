@@ -1,10 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Helpers;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
@@ -20,7 +22,9 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
 
-    private string[]? _customArguments;
+    public string[]? CustomArguments;
+    public TestMode TestMode = TestMode.Live;
+
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -28,15 +32,43 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     /// <param name="arguments">Custom arguments to pass to the server (e.g., ["server", "start", "--mode", "single"])</param>
     public void SetArguments(params string[] arguments)
     {
-        _customArguments = arguments;
+        CustomArguments = arguments;
     }
 
     public virtual async ValueTask InitializeAsync()
     {
-        // Initialize settings
-        var settingsFixture = new LiveTestSettingsFixture();
-        await settingsFixture.InitializeAsync();
-        Settings = settingsFixture.Settings;
+        await InitializeAsyncInternal(null);
+    }
+
+    protected virtual async ValueTask LoadSettingsAsync()
+    {
+        try
+        {
+            // Try to load LiveTestSettings from .testsettings.json (authoritative source)
+            var settingsFixture = new LiveTestSettingsFixture();
+            await settingsFixture.InitializeAsync();
+            Settings = settingsFixture.Settings;
+            TestMode = Settings.TestMode;
+        }
+        catch (FileNotFoundException)
+        {
+            // No .testsettings.json found - assume playback mode with sanitized values
+            Settings = new LiveTestSettings
+            {
+                SubscriptionId = "00000000-0000-0000-0000-000000000000",
+                TenantId = "00000000-0000-0000-0000-000000000000",
+                ResourceBaseName = "Sanitized",
+                SubscriptionName = "Sanitized",
+                TenantName = "Sanitized",
+                TestMode = TestMode.Playback
+            };
+            TestMode = TestMode.Playback;
+        }
+    }
+
+    protected virtual async ValueTask InitializeAsyncInternal(TestProxyFixture? proxy = null)
+    {
+        await LoadSettingsAsync();
 
         string executablePath = McpTestUtilities.GetAzMcpExecutablePath();
 
@@ -46,7 +78,19 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         string[] defaultArgs = enableDebug
             ? ["server", "start", "--mode", "all", "--debug"]
             : ["server", "start", "--mode", "all"];
-        var arguments = _customArguments ?? defaultArgs;
+        var arguments = CustomArguments ?? defaultArgs;
+
+        var envVarDictionary = new Dictionary<string, string?> {
+            // Propagate playback signaling & sanitized identifiers to server process.
+            { "AZURE_TOKEN_CREDENTIALS", TestMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
+            { "AZURE_TENANT_ID", Settings.TenantId },
+            { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
+        };
+
+        if (proxy != null && proxy.Proxy != null)
+        {
+            envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
+        }
 
         StdioClientTransportOptions transportOptions = new()
         {
@@ -54,7 +98,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             Command = executablePath,
             Arguments = arguments,
             // Direct stderr to test output helper as required by task
-            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}")
+            StandardErrorLines = line => Output.WriteLine($"[MCP Server] {line}"),
+            EnvironmentVariables = envVarDictionary
         };
 
         if (!string.IsNullOrEmpty(Settings.TestPackage))
@@ -65,8 +110,8 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         }
 
         var clientTransport = new StdioClientTransport(transportOptions);
+        Output.WriteLine("Attempting to start MCP Client");
         Client = await McpClient.CreateAsync(clientTransport);
-
         Output.WriteLine("MCP client initialized successfully");
     }
 
@@ -146,7 +191,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         GC.SuppressFinalize(this);
     }
 
-    public async ValueTask DisposeAsync()
+    public virtual async ValueTask DisposeAsync()
     {
         await DisposeAsyncCore().ConfigureAwait(false);
         Dispose(disposing: false);
