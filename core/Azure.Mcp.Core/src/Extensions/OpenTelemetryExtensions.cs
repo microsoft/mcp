@@ -32,11 +32,13 @@ public static class OpenTelemetryExtensions
 
                 var transport = serviceStartOptions.Value.Transport;
 
+                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+
+                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
+
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = (string.IsNullOrEmpty(collectTelemetry)
-                    || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect))
-                    && (string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase));
+                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
