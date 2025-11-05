@@ -561,7 +561,7 @@ To debug the Azure MCP Server (`azmcp`) when running live tests in VS Code:
 > [!TIP]
 > **Testing Remote HTTP Mode Locally**
 >
-> The Azure MCP Server supports remote deployment with HTTP transport. For deployment and configuration details, see [TROUBLESHOOTING.md - Remote MCP Server](servers/Azure.Mcp.Server/TROUBLESHOOTING.md#remote-mcp-server).
+> The Azure MCP Server supports remote deployment with HTTP transport. For deployment and configuration details, see [TROUBLESHOOTING.md - Remote MCP Server](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#remote-mcp-server).
 >
 > To test HTTP mode during development:
 > ```bash
