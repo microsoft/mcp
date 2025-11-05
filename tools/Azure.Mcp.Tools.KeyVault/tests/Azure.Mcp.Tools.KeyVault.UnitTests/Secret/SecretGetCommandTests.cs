@@ -53,12 +53,14 @@ public class SecretGetCommandTests
     public async Task ExecuteAsync_ReturnsSecret()
     {
         // Arrange
-        _keyVaultService.GetSecret(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownSecretName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetSecret(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownSecretName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultSecret);
 
         var args = _commandDefinition.Parse([
@@ -68,7 +70,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -94,7 +96,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -108,12 +110,14 @@ public class SecretGetCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.GetSecret(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetSecret(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -123,7 +127,7 @@ public class SecretGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

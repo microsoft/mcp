@@ -13,6 +13,8 @@ using NSubstitute;
 using Xunit;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
+using TransportTypes = Azure.Mcp.Core.Areas.Server.Options.TransportTypes;
+
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
 public class ServiceStartCommandTests
@@ -148,7 +150,6 @@ public class ServiceStartCommandTests
     [Theory]
     [InlineData("sse")]
     [InlineData("websocket")]
-    [InlineData("http")]
     [InlineData("invalid")]
     public async Task ExecuteAsync_InvalidTransport_ReturnsValidationError(string invalidTransport)
     {
@@ -158,12 +159,12 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
         Assert.Contains($"Invalid transport '{invalidTransport}'", response.Message);
-        Assert.Contains("Valid transports are: stdio.", response.Message);
+        Assert.Contains("Valid transports are: stdio, http.", response.Message);
     }
 
     [Theory]
@@ -178,7 +179,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -199,7 +200,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert - Should not fail validation, though may fail later due to server startup
         if (response.Status == HttpStatusCode.BadRequest && response.Message?.Contains("Invalid mode") == true)
@@ -218,12 +219,12 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal(new[] { "storage", "keyvault" }, options.Namespace);
         Assert.Equal("all", options.Mode);
         Assert.True(options.ReadOnly);
         Assert.True(options.Debug);
-        Assert.False(options.EnableInsecureTransports);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.True(options.InsecureDisableElicitation);
     }
 
@@ -241,7 +242,7 @@ public class ServiceStartCommandTests
         Assert.NotNull(options.Tool);
         Assert.Single(options.Tool);
         Assert.Equal(expectedTool, options.Tool[0]);
-        Assert.Equal("stdio", options.Transport);
+        Assert.Equal(TransportTypes.StdIo, options.Transport);
         Assert.Equal("all", options.Mode);
     }
 
@@ -272,12 +273,12 @@ public class ServiceStartCommandTests
         var options = GetBoundOptions(parseResult);
 
         // Assert
-        Assert.Equal("stdio", options.Transport); // Default transport
+        Assert.Equal(TransportTypes.StdIo, options.Transport); // Default transport
         Assert.Null(options.Namespace);
         Assert.Equal("namespace", options.Mode); // Default mode
         Assert.False(options.ReadOnly); // Default readonly
         Assert.False(options.Debug);
-        Assert.False(options.EnableInsecureTransports);
+        Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
     }
 
@@ -350,7 +351,7 @@ public class ServiceStartCommandTests
         var context = new CommandContext(serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, parseResult);
+        var response = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -463,7 +464,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown for valid transport
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -487,7 +488,7 @@ public class ServiceStartCommandTests
         // Act & Assert - Check that ArgumentException is not thrown when transport is omitted
         try
         {
-            await _command.ExecuteAsync(context, parseResult);
+            await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
         }
         catch (ArgumentException ex) when (ex.Message.Contains("transport"))
         {
@@ -507,14 +508,14 @@ public class ServiceStartCommandTests
         // Arrange
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = "test-transport",
+            Transport = TransportTypes.StdIo,
             Mode = "test-mode",
             Tool = ["test-tool1", "test-tool2"],
             ReadOnly = false,
             Debug = true,
             Namespace = ["storage", "keyvault"],
             InsecureDisableElicitation = false,
-            EnableInsecureTransports = true,
+            DangerouslyDisableHttpIncomingAuth = true,
         };
         var activity = new Activity("test-activity");
         var mockTelemetry = Substitute.For<ITelemetryService>();
@@ -527,8 +528,8 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
-        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
 
         var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
         Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
@@ -559,12 +560,12 @@ public class ServiceStartCommandTests
         // Tool, Mode, and Namespace are null
         var serviceStartOptions = new ServiceStartOptions
         {
-            Transport = "test-transport",
+            Transport = Core.Areas.Server.Options.TransportTypes.StdIo,
             Mode = null,
             ReadOnly = true,
             Debug = false,
             InsecureDisableElicitation = true,
-            EnableInsecureTransports = false,
+            DangerouslyDisableHttpIncomingAuth = false,
         };
         var activity = new Activity("test-activity");
         var mockTelemetry = Substitute.For<ITelemetryService>();
@@ -579,8 +580,8 @@ public class ServiceStartCommandTests
         // Assert
         mockTelemetry.Received(1).StartActivity(ActivityName.ServerStarted);
 
-        var enableInsecureTransports = GetAndAssertTagKeyValue(activity, TagName.EnableInsecureTransports);
-        Assert.Equal(serviceStartOptions.EnableInsecureTransports, enableInsecureTransports);
+        var dangerouslyDisableHttpIncomingAuth = GetAndAssertTagKeyValue(activity, TagName.DangerouslyDisableHttpIncomingAuth);
+        Assert.Equal(serviceStartOptions.DangerouslyDisableHttpIncomingAuth, dangerouslyDisableHttpIncomingAuth);
 
         var insecureDisableElicitation = GetAndAssertTagKeyValue(activity, TagName.InsecureDisableElicitation);
         Assert.Equal(serviceStartOptions.InsecureDisableElicitation, insecureDisableElicitation);
