@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
@@ -149,6 +148,7 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
+        activity?.SetTag(TagName.ToolId, command.Id);
         var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive data
@@ -190,7 +190,7 @@ public sealed class CommandFactoryToolLoader(
 
         try
         {
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions);
+            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, CancellationToken.None);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

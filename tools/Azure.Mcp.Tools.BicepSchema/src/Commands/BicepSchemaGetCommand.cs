@@ -49,7 +49,7 @@ namespace Azure.Mcp.Tools.BicepSchema.Commands
             });
         }
 
-        public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+        public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
         {
             if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             {

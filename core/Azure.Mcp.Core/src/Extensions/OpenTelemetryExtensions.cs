@@ -10,6 +10,9 @@ using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTelemetry;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 
@@ -17,31 +20,6 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    /// <summary>
-    /// Align with --version command.
-    /// https://github.com/dotnet/command-line-api/blob/bcdd4b9b424f0ff6ec855d08665569061a5d741f/src/System.CommandLine/Builder/CommandLineBuilderExtensions.cs#L23-L39
-    /// </summary>
-    private static readonly Lazy<string> _assemblyVersion = new(() =>
-    {
-        var assembly = Assembly.GetEntryAssembly();
-
-        if (assembly == null)
-        {
-            throw new InvalidOperationException("Should be able to get entry assembly.");
-        }
-
-        var assemblyVersionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-
-        if (assemblyVersionAttribute is null)
-        {
-            return assembly.GetName().Version?.ToString() ?? "";
-        }
-        else
-        {
-            return assemblyVersionAttribute.InformationalVersion;
-        }
-    });
-
     private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
@@ -49,16 +27,12 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure(options =>
             {
-                options.Version = _assemblyVersion.Value;
+                options.Version = GetServerVersion(Assembly.GetCallingAssembly());
 
-#if RELEASE
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
                 options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry)
                     || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-#else
-                options.IsTelemetryEnabled = false;
-#endif
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
@@ -120,22 +94,55 @@ public static class OpenTelemetryExtensions
             builder.AddSource(serverConfig.Value.Name);
         });
 
-        services.AddOpenTelemetry()
+        var otelBuilder = services.AddOpenTelemetry()
             .ConfigureResource(r =>
             {
                 var version = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
 
                 r.AddService("azmcp", version)
                     .AddTelemetrySdk();
-            })
-            .UseAzureMonitorExporter(options =>
-            {
-#if DEBUG
-                options.EnableLiveMetrics = true;
-                options.Diagnostics.IsLoggingEnabled = true;
-                options.Diagnostics.IsLoggingContentEnabled = true;
-#endif
-                options.ConnectionString = appInsightsConnectionString;
             });
+
+#if RELEASE
+        otelBuilder.UseAzureMonitorExporter(options =>
+        {
+            options.ConnectionString = appInsightsConnectionString;
+        });
+#endif
+
+        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
+        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
+        {
+            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
+                .WithMetrics(metrics => metrics.AddOtlpExporter())
+                .WithLogging(logging => logging.AddOtlpExporter());
+        }
+    }
+
+    /// <summary>
+    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
+    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
+    /// </summary>
+    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <returns>A version string.</returns>
+    internal static string GetServerVersion(Assembly callerAssembly)
+    {
+        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (versionAttribute == null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+        }
+
+        string version = versionAttribute.InformationalVersion;
+
+        int hashSeparator = version.IndexOf('+');
+        if (hashSeparator != -1)
+        {
+            version = version.Substring(0, hashSeparator);
+        }
+
+        return version;
     }
 }

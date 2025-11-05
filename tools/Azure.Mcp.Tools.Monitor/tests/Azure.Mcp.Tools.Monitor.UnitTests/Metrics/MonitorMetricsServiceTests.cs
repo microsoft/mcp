@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
@@ -17,6 +18,7 @@ public class MonitorMetricsServiceTests
     private readonly IResourceResolverService _resourceResolverService;
     private readonly IMetricsQueryClientService _metricsQueryClientService;
     private readonly MetricsQueryClient _metricsQueryClient;
+    private readonly ITenantService _tenantService;
     private readonly MonitorMetricsService _service;
 
     private const string TestSubscription = "12345678-1234-1234-1234-123456789012";
@@ -31,7 +33,8 @@ public class MonitorMetricsServiceTests
         _resourceResolverService = Substitute.For<IResourceResolverService>();
         _metricsQueryClientService = Substitute.For<IMetricsQueryClientService>();
         _metricsQueryClient = Substitute.For<MetricsQueryClient>();
-        _service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        _tenantService = Substitute.For<ITenantService>();
+        _service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService, _tenantService);
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
@@ -55,7 +58,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        var service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService, _tenantService);
         Assert.NotNull(service);
     }
 
@@ -64,7 +67,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(null!, _metricsQueryClientService));
+            new MonitorMetricsService(null!, _metricsQueryClientService, _tenantService));
     }
 
     [Fact]
@@ -72,7 +75,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(_resourceResolverService, null!));
+            new MonitorMetricsService(_resourceResolverService, null!, _tenantService));
     }
 
     #endregion

@@ -63,7 +63,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -104,7 +104,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -131,7 +131,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -157,7 +157,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -189,7 +189,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(faultyContext, args);
+        var response = await _command.ExecuteAsync(faultyContext, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -213,7 +213,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(faultyContext, args);
+        var response = await _command.ExecuteAsync(faultyContext, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -232,7 +232,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -289,7 +289,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -320,7 +320,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse(new[] { "--namespaces" });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -353,7 +353,8 @@ public class ToolsListCommandTests
             else
             {
                 // Surfaced extension command: Command is "{namespace} {commandName}", Name is just "{commandName}"
-                Assert.EndsWith(ns.Name, ns.Command);
+                // When Azure MCP presents the commands as tools, the spaces in the commands are replaced by underscore
+                Assert.EndsWith(ns.Name, ns.Command.Replace(" ", "_"));
             }
 
             Assert.Equal(ns.Name, ns.Name.Trim());
@@ -392,7 +393,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(emptyContext, args);
+        var response = await _command.ExecuteAsync(emptyContext, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -429,7 +430,7 @@ public class ToolsListCommandTests
         var args = _commandDefinition.Parse([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
