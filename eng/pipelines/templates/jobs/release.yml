@@ -58,6 +58,11 @@ jobs:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: TagRepository
 
+- template: /eng/pipelines/templates/jobs/release-mcp-repository.yml
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    DependsOn: TagRepository
+
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
     parameters:
