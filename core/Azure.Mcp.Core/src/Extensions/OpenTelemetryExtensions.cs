@@ -5,12 +5,11 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Monitor.OpenTelemetry.Exporter;
+using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -113,7 +112,7 @@ public static class OpenTelemetryExtensions
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
-            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
+            otelBuilder = otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
                 .WithMetrics(metrics => metrics.AddOtlpExporter())
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
