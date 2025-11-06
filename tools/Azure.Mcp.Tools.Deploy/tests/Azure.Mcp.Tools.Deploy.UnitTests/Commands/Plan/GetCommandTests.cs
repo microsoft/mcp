@@ -40,8 +40,7 @@ public class GetCommandTests
             "--workspace-folder", "C:/",
             "--project-name", "django",
             "--target-app-service", "ContainerApp",
-            "--provisioning-tool", "AZD",
-            "--azd-iac-options", "bicep"
+            "--provisioning-tool", "AzCli"
         ]);
 
         // act
@@ -56,15 +55,14 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_plan_with_default_iac_options()
+    public async Task Should_get_plan_with_default_provisioning_tool()
     {
         // arrange
         var args = _commandDefinition.Parse([
             "--workspace-folder", "C:/test",
             "--project-name", "myapp",
-            "--target-app-service", "WebApp",
-            "--provisioning-tool", "azd"
-            // No azd-iac-options provided - should default to "bicep"
+            "--target-app-service", "WebApp"
+            // No provisioning-tool provided - should default to "AzCli"
         ]);
 
         // act
@@ -108,7 +106,7 @@ public class GetCommandTests
             "--workspace-folder", "C:/",
             "--project-name", "default-app",
             "--target-app-service", "unknown-service", // This should default to Container Apps
-            "--provisioning-tool", "AZD"
+            "--provisioning-tool", "AzCli"
         ]);
         // act
         var result = await _command.ExecuteAsync(_context, args);

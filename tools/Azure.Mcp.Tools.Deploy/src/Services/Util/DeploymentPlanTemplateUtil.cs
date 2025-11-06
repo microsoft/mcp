@@ -17,18 +17,10 @@ public static class DeploymentPlanTemplateUtil
     /// </summary>
     /// <param name="projectName">The name of the project. Can be null or empty.</param>
     /// <param name="targetAppService">The target Azure service.</param>
-    /// <param name="provisioningTool">The provisioning tool.</param>
-    /// <param name="azdIacOptions">The Infrastructure as Code options for AZD.</param>
     /// <returns>A formatted deployment plan template string.</returns>
-    public static string GetPlanTemplate(string projectName, string targetAppService, string provisioningTool, string? azdIacOptions = "")
+    public static string GetPlanTemplate(string projectName, string targetAppService)
     {
-        // Default values for optional parameters
-        if (provisioningTool == "azd" && string.IsNullOrWhiteSpace(azdIacOptions))
-        {
-            azdIacOptions = "bicep";
-        }
-
-        DeploymentPlanTemplateParameters parameters = CreateTemplateParameters(projectName, targetAppService, provisioningTool, azdIacOptions);
+        DeploymentPlanTemplateParameters parameters = CreateTemplateParameters(projectName, targetAppService);
         var executionSteps = GenerateExecutionSteps(parameters);
 
         parameters.ExecutionSteps = executionSteps;
@@ -41,9 +33,7 @@ public static class DeploymentPlanTemplateUtil
     /// </summary>
     private static DeploymentPlanTemplateParameters CreateTemplateParameters(
         string projectName,
-        string targetAppService,
-        string provisioningTool,
-        string? azdIacOptions)
+        string targetAppService)
     {
         var azureComputeHost = GetAzureComputeHost(targetAppService);
         var title = string.IsNullOrWhiteSpace(projectName)
@@ -55,8 +45,6 @@ public static class DeploymentPlanTemplateUtil
             Title = title,
             ProjectName = projectName,
             TargetAppService = targetAppService,
-            ProvisioningTool = provisioningTool,
-            IacType = azdIacOptions ?? "bicep",
             AzureComputeHost = azureComputeHost,
         };
     }
@@ -84,50 +72,11 @@ public static class DeploymentPlanTemplateUtil
         var steps = new List<string>();
         var isAks = parameters.TargetAppService.ToLowerInvariant() == "aks";
 
-        if (parameters.ProvisioningTool.ToLowerInvariant() == "azd")
-        {
-            steps.AddRange(GenerateAzdSteps(parameters, isAks));
-        }
-        else if (parameters.ProvisioningTool.Equals(DeploymentTool.AzCli, StringComparison.OrdinalIgnoreCase))
-        {
-            steps.AddRange(GenerateAzCliSteps(parameters, isAks));
-        }
+        steps.AddRange(GenerateAzCliSteps(parameters, isAks));
 
         return string.Join(Environment.NewLine, steps);
     }
 
-    /// <summary>
-    /// Generates AZD-specific execution steps.
-    /// </summary>
-    private static List<string> GenerateAzdSteps(DeploymentPlanTemplateParameters parameters, bool isAks)
-    {
-        var steps = new List<string>();
-
-        var deployTitle = isAks ? "" : " And Deploy the Application";
-        var checkLog = isAks ? "" : "6. Check the application log with tool `azd-app-log-get` to ensure the services are running.";
-
-        var azdStepReplacements = new Dictionary<string, string>
-        {
-            { "DeployTitle", deployTitle },
-            { "IacType", parameters.IacType },
-            { "CheckLog", checkLog }
-        };
-
-        var azdSteps = TemplateService.ProcessTemplate("Plan/azd-steps", azdStepReplacements);
-        steps.Add(azdSteps);
-
-        if (isAks)
-        {
-            steps.Add(TemplateService.LoadTemplate("Plan/aks-steps"));
-            steps.Add(TemplateService.ProcessTemplate("Plan/summary-steps", new Dictionary<string, string> { { "StepNumber", "4" } }));
-        }
-        else
-        {
-            steps.Add(TemplateService.ProcessTemplate("Plan/summary-steps", new Dictionary<string, string> { { "StepNumber", "2" } }));
-        }
-
-        return steps;
-    }
 
     /// <summary>
     /// Generates Azure CLI-specific execution steps.

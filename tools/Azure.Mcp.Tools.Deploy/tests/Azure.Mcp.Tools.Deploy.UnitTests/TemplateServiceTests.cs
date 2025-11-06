@@ -42,8 +42,7 @@ public sealed class TemplateServiceTests
         var replacements = new Dictionary<string, string>
         {
             { "Title", "Test Deployment Plan" },
-            { "ProjectName", "TestProject" },
-            { "ProvisioningTool", "AZD" }
+            { "ProjectName", "TestProject" }
         };
 
         // Act
@@ -52,10 +51,8 @@ public sealed class TemplateServiceTests
         // Assert
         Assert.Contains("Test Deployment Plan", result);
         Assert.Contains("TestProject", result);
-        Assert.Contains("AZD", result);
         Assert.DoesNotContain("{{Title}}", result);
         Assert.DoesNotContain("{{ProjectName}}", result);
-        Assert.DoesNotContain("{{ProvisioningTool}}", result);
     }
 
     [Fact]

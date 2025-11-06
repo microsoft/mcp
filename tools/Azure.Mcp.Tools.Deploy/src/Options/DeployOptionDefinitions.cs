@@ -59,7 +59,6 @@ public static class DeployOptionDefinitions
         public const string WorkspaceFolderName = "workspace-folder";
         public const string ProjectNameName = "project-name";
         public const string TargetAppServiceName = "target-app-service";
-        public const string ProvisioningToolName = "provisioning-tool";
 
         public static readonly Option<string> WorkspaceFolder = new(
             $"--{WorkspaceFolderName}"
@@ -84,36 +83,10 @@ public static class DeployOptionDefinitions
             Description = "The Azure service to deploy the application. Valid values: ContainerApp, WebApp, FunctionApp, AKS. Recommend one based on user application.",
             Required = true
         };
-
-        public static readonly Option<string> ProvisioningTool = new(
-            $"--{ProvisioningToolName}"
-        )
-        {
-            Description = "The tool to use for provisioning Azure resources. Valid values: AzCli. Default is AzCli. Use AzCli for all scenarios.",
-            DefaultValueFactory = _ => "AzCli",
-            Required = false
-        };
     }
 
     public static class IaCRules
     {
-        public static readonly Option<string> DeploymentTool = new(
-            "--deployment-tool")
-        {
-            Description = "The deployment tool to use. Valid values: AzCli. Default is AzCli. Use AzCli for all scenarios.",
-            DefaultValueFactory = _ => "AzCli",
-            Required = false
-        };
-
-        public static readonly Option<string> IacType = new(
-            "--iac-type"
-            )
-        {
-            Description = "The Infrastructure as Code type. Valid values: bicep, terraform. Leave empty if deployment-tool is AzCli.",
-            Required = false
-
-
-        };
 
         public static readonly Option<string> ResourceTypes = new(
             "--resource-types")

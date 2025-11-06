@@ -30,9 +30,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             {
                 { "workspace-folder", "C:/" },
                 { "project-name", "django" },
-                { "target-app-service", "ContainerApp" },
-                { "provisioning-tool", "AZD" },
-                { "azd-iac-options", "bicep" }
+                { "target-app-service", "ContainerApp" }
             });
         // assert
         Assert.StartsWith("# Azure Deployment Plan for django Project", result);
@@ -46,45 +44,11 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             "deploy_iac_rules_get",
             new()
             {
-                { "deployment-tool", "azd" },
-                { "iac-type", "bicep" },
+                { "deployment-tool", "AzCli" },
                 { "resource-types", "appservice, azurestorage" }
             });
 
-        Assert.Contains("Deployment Tool azd rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Should_get_infrastructure_rules_for_terraform()
-    {
-        // act
-        var result = await CallToolMessageAsync(
-            "deploy_iac_rules_get",
-            new()
-            {
-                { "deployment-tool", "azd" },
-                { "iac-type", "terraform" },
-                { "resource-types", "containerapp, azurecosmosdb" }
-            });
-
-        // assert
-        Assert.Contains("IaC Type: terraform rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
-    public async Task Should_generate_pipeline()
-    {
-        // act
-        var result = await CallToolMessageAsync(
-            "deploy_pipeline_guidance_get",
-            new()
-            {
-                { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", true }
-            });
-
-        // assert
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result);
+        Assert.Contains("Deployment Tool AzCli rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -96,7 +60,6 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             new()
             {
                 { "subscription", _subscriptionId },
-                { "use-azd-pipeline-config", false },
                 { "organization-name", "test-org" },
                 { "repository-name", "test-repo" },
                 { "github-environment-name", "production" }

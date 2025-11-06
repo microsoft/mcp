@@ -1,1 +1,0 @@
-- Resource names should use Azure CAF naming convention. This is required for deployments. Add aztfmod/azurecaf in the required provider. DO NOT use random_length. NO suffixes needed.

@@ -9,21 +9,17 @@ namespace Azure.Mcp.Tools.Deploy.UnitTests;
 public sealed class DeploymentPlanTemplateUtilV2Tests
 {
     [Theory]
-    [InlineData("TestProject", "ContainerApp", "AZD", "bicep")]
-    [InlineData("", "WebApp", "AzCli", "")]
-    [InlineData("MyApp", "AKS", "AZD", "terraform")]
+    [InlineData("", "WebApp", "AzCli")]
+    [InlineData("TestProject", "ContainerApp", "AzCli")]
     public void GetPlanTemplate_ValidInputs_ReturnsFormattedTemplate(
         string projectName,
-        string targetAppService,
-        string provisioningTool,
-        string azdIacOptions)
+        string targetAppService)
     {
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             projectName,
-            targetAppService,
-            provisioningTool,
-            azdIacOptions);
+            targetAppService
+        );
 
         // Assert
         Assert.NotNull(result);
@@ -38,17 +34,9 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
 
         // Should not contain unprocessed placeholders for main content
         Assert.DoesNotContain("{{Title}}", result);
-        Assert.DoesNotContain("{{ProvisioningTool}}", result);
 
-        // Should contain appropriate provisioning tool
-        if (provisioningTool.ToLowerInvariant() == "azd")
-        {
-            Assert.Contains("azd up", result);
-        }
-        else
-        {
-            Assert.Contains("Azure CLI", result);
-        }
+        // Should contain Azure CLI content
+        Assert.Contains("Azure CLI", result);
     }
 
     [Fact]
@@ -58,8 +46,8 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "",
             "ContainerApp",
-            "AZD",
-            "bicep");
+            "AzCli",
+            "");
 
         // Assert
         Assert.Contains("Azure Deployment Plan", result);
@@ -76,8 +64,8 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             projectName,
             "ContainerApp",
-            "AZD",
-            "bicep");
+            "AzCli",
+            "");
 
         // Assert
         Assert.Contains($"Azure Deployment Plan for {projectName} Project", result);
@@ -97,25 +85,11 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "TestProject",
             targetAppService,
-            "AZD",
-            "bicep");
-
-        // Assert
-        Assert.Contains(expectedAzureHost, result);
-    }
-
-    [Fact]
-    public void GetPlanTemplate_AzdWithoutIacOptions_DefaultsToBicep()
-    {
-        // Act
-        var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
-            "TestProject",
-            "ContainerApp",
-            "azd",
+            "AzCli",
             "");
 
         // Assert
-        Assert.Contains("bicep", result);
+        Assert.Contains(expectedAzureHost, result);
     }
 
     [Fact]
@@ -125,8 +99,8 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "TestProject",
             "AKS",
-            "AZD",
-            "bicep");
+            "AzCli",
+            "");
 
         // Assert
         Assert.Contains("kubectl apply", result);

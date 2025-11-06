@@ -57,7 +57,7 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline_with_default_azd_pipeline_config()
+    public async Task Should_generate_pipeline_with_default_config()
     {
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id"

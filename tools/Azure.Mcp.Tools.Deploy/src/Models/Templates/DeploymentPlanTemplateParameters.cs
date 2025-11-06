@@ -24,16 +24,6 @@ public sealed class DeploymentPlanTemplateParameters
     public string TargetAppService { get; set; } = string.Empty;
 
     /// <summary>
-    /// The provisioning tool (AZD, AzCli).
-    /// </summary>
-    public string ProvisioningTool { get; set; } = string.Empty;
-
-    /// <summary>
-    /// The Infrastructure as Code type (bicep, terraform).
-    /// </summary>
-    public string IacType { get; set; } = string.Empty;
-
-    /// <summary>
     /// The Azure compute host display name.
     /// </summary>
     public string AzureComputeHost { get; set; } = string.Empty;
@@ -54,8 +44,6 @@ public sealed class DeploymentPlanTemplateParameters
             { nameof(Title), Title },
             { nameof(ProjectName), ProjectName },
             { nameof(TargetAppService), TargetAppService },
-            { nameof(ProvisioningTool), ProvisioningTool },
-            { nameof(IacType), IacType },
             { nameof(AzureComputeHost), AzureComputeHost },
             { nameof(ExecutionSteps), ExecutionSteps },
         };

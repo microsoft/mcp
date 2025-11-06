@@ -15,7 +15,4 @@ public sealed class GetOptions
 
     [JsonPropertyName("targetAppService")]
     public string TargetAppService { get; set; } = string.Empty;
-
-    [JsonPropertyName("provisioningTool")]
-    public string ProvisioningTool { get; set; } = string.Empty;
 }

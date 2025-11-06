@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Tools.Deploy.Models;
 using Azure.Mcp.Tools.Deploy.Options;
 using Azure.Mcp.Tools.Deploy.Options.Infrastructure;
+using Azure.Mcp.Tools.Deploy.Services.Templates;
 using Azure.Mcp.Tools.Deploy.Services.Util;
 using Microsoft.Extensions.Logging;
 
@@ -38,16 +39,12 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.IaCRules.DeploymentTool);
-        command.Options.Add(DeployOptionDefinitions.IaCRules.IacType);
         command.Options.Add(DeployOptionDefinitions.IaCRules.ResourceTypes);
     }
 
     protected override RulesGetOptions BindOptions(ParseResult parseResult)
     {
         var options = new RulesGetOptions();
-        options.DeploymentTool = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.DeploymentTool.Name) ?? string.Empty;
-        options.IacType = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.IacType.Name) ?? string.Empty;
         options.ResourceTypes = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.IaCRules.ResourceTypes.Name) ?? string.Empty;
         return options;
     }
@@ -63,18 +60,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
         try
         {
-            // Validate deployment tool - only AzCli is supported
-            if (!string.IsNullOrEmpty(options.DeploymentTool) && 
-                !options.DeploymentTool.Equals(DeploymentTool.AzCli, StringComparison.OrdinalIgnoreCase))
-            {
-                context.Response.Error = $"Invalid deployment tool '{options.DeploymentTool}'. Only '{DeploymentTool.AzCli}' is supported.";
-                context.Response.StatusCode = 400;
-                return Task.FromResult(context.Response);
-            }
-
             context.Activity?
-                .AddTag(DeployTelemetryTags.DeploymentTool, options.DeploymentTool)
-                .AddTag(DeployTelemetryTags.IacType, options.IacType)
                 .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
             var resourceTypes = options.ResourceTypes.Split(',')
