@@ -2,40 +2,43 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.2 (Unreleased)
+## 2.0.0-beta.2 (2025-11-06)
 
 ### Features Added
-- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1021](https://github.com/microsoft/mcp/issues/1021)]
-- Added support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+
+- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
+- Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
 - Added the following features for deploying as a `Remote MCP Server`:
     - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
     - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
-- Enhanced `azmcp tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
-  - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
-  - Added `--name-only` option to return only tool names without descriptions or metadata
-- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
-- Adds support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[1020](https://github.com/microsoft/mcp/pull/1020)]
-- Adds support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access [[1037](https://github.com/microsoft/mcp/pull/1037)].
-- Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_thread_create`, `foundry_thread_list`, `foundry_thread_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
+- Enhanced the `tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
+  - Added the `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault').
+  - Added the `--name-only` option to return only tool names without descriptions or metadata.
+- Added the following AI Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
+  - `foundry_agents_create`: Create a new AI Foundry agent.
+  - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the AI Foundry SDK.
+  - `foundry_threads_create`: Create a new AI Foundry Agent Thread.
+  - `foundry_threads_list`: List all AI Foundry Agent Threads.
+  - `foundry_threads_get-messages`: Get messages in an AI Foundry Agent Thread.
 
 ### Breaking Changes
 
-- Renamed `azmcp tools list` command `--namespaces` switch to `--namespace-mode` for better clarity when listing top-level service namespaces [[#741](https://github.com/microsoft/mcp/pull/741)]
+- Renamed the `--namespaces` option to `--namespace-mode` in the `tools list` command for better clarity when listing top-level service namespaces. [[#741](https://github.com/microsoft/mcp/pull/741)]
 
 ### Bugs Fixed
 
-- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
-- Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
-- Adds descriptions to the tools metadata, to ensure enough information is present in the cli to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)] 
+- Fixed an issue that spawned child processes per namespace for consolidated mode. [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+- Improved the agent learning experience by ignoring the `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
+- Added descriptions to tool metadata to ensure enough information is present in the CLI to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)]
 
 ### Other Changes
 
-- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
-- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
-- Updates `AzureMcpServerConfiguration.Version` to use value from `AssemblyInformationalVersionAttribute` rather than file version to support semver conventions such as -beta.1. [[#1040](https://github.com/microsoft/mcp/pull/1040)]
-- Added a `CancellationToken` parameter `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Added a `CancellationToken` parameter to `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
 - Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces  [[#1056](https://github.com/microsoft/mcp/pull/1056)]
-- Disabled telemetry for HTTP transport [[#1072](https://github.com/microsoft/mcp/pull/1072)]
+- Telemetry:
+  - Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+  - Added support for exporting telemetry to OTLP exporters by configuring the environment variable `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+  - Disabled telemetry for the HTTP transport. [[#1072](https://github.com/microsoft/mcp/pull/1072)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 
