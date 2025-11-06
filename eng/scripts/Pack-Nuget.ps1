@@ -64,59 +64,6 @@ if($exitCode -ne 0) {
     exit $exitCode
 }
 
-function ExportServerJson {
-    param(
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $Description,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $CommandName,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $PackageId,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $Version,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $RepositoryUrl,
-
-        [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
-        [string] $OutputPath
-    )
-
-    $output = [ordered]@{
-        '$schema' = "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
-        description = $Description
-        name = "com.microsoft/$CommandName"
-        version = $Version
-        packages = @(
-            [ordered]@{
-                registryType = "nuget"
-                identifier = $PackageId
-                version = $Version
-                transport = [ordered]@{
-                    type = "stdio"
-                }
-                packageArguments = @(
-                    [ordered]@{ type = "positional"; value = "server" },
-                    [ordered]@{ type = "positional"; value = "start" }
-                )
-            }
-        )
-        repository = [ordered]@{
-            url = $RepositoryUrl
-            source = "github"
-        }
-    }
-
-    $output | ConvertTo-Json -Depth 10 | Out-File -Path $OutputPath -Encoding utf8
-
-    Write-Host "`n== Generated $OutputPath` =="
-    Get-Content $OutputPath | Out-Host
-    Write-Host ""
-}
-
 function ExportWrapperToolSettings {
     param(
         [parameter(Mandatory)][ValidateNotNullOrWhiteSpace()]
@@ -506,13 +453,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force
 
     # Export ServerJson
-    ExportServerJson `
-        -Description $description `
-        -CommandName $server.cliName `
-        -PackageId $packageId `
-        -Version $server.version `
-        -RepositoryUrl $buildInfo.repositoryUrl `
-        -OutputPath "$tempFolder/.mcp/server.json"
+    Copy-Item -Path $server.serverJsonPath -Destination "$tempFolder/.mcp/server.json" -Force
 
     # Export WrapperPackageNuspec
     ExportWrapperPackageNuspec `
