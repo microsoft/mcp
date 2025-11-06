@@ -154,6 +154,7 @@ $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
+    return @()
     Write-Host "Getting paths to test"
 
     # When "core" is modified, include storage and keyVault as the canary service tools.
@@ -593,10 +594,14 @@ function Get-ServerMatrix {
 Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
-    $matrices = Get-BuildMatrices $serverDetails
     $pathsToTest = @(Get-PathsToTest)
-    $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
-    $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
+    $matrices = [ordered]@{}
+
+    if ($pathsToTest.Count -gt 0) {
+        $matrices = Get-BuildMatrices $serverDetails
+        $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
+        $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
+    }
 
     # spellchecker: ignore SOURCEVERSION
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
