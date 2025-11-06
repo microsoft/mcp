@@ -23,13 +23,13 @@ public class SpeechSetup : IAreaSetup
         // New recognizer-based architecture for STT
         services.AddSingleton<IFastTranscriptionRecognizer, FastTranscriptionRecognizer>();
         services.AddSingleton<IRealtimeTranscriptionRecognizer, RealtimeTranscriptionRecognizer>();
-        
+
         // New synthesizer-based architecture for TTS
         services.AddSingleton<IRealtimeTtsSynthesizer, RealtimeTtsSynthesizer>();
-        
+
         // Orchestration service
         services.AddSingleton<ISpeechService, SpeechService>();
-        
+
         // Commands
         services.AddSingleton<SttRecognizeCommand>();
         services.AddSingleton<TtsSynthesizeCommand>();
