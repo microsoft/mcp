@@ -3,9 +3,9 @@
 
 using System.Text.Json.Serialization;
 
-namespace Azure.Mcp.Tools.Speech.Models;
+namespace Azure.Mcp.Tools.Speech.Models.Realtime;
 
-public record NBestResult
+public record RealtimeRecognitionNBestResult
 {
     [JsonPropertyName("confidence")]
     public double? Confidence { get; set; }
@@ -23,5 +23,5 @@ public record NBestResult
     public string? Display { get; set; }
 
     [JsonPropertyName("words")]
-    public List<WordResult>? Words { get; set; }
+    public List<RealtimeRecognitionWordResult>? Words { get; set; }
 }

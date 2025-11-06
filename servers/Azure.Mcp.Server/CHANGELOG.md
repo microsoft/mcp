@@ -5,16 +5,28 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.2 (Unreleased)
 
 ### Features Added
-
+- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1021](https://github.com/microsoft/mcp/issues/1021)]
+- Added support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+- Added the following features for deploying as a `Remote MCP Server`:
+    - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
+    - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
+- Enhanced `azmcp tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
+  - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
+  - Added `--name-only` option to return only tool names without descriptions or metadata
 - Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
 - Adds support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[1020](https://github.com/microsoft/mcp/pull/1020)]
 - Adds support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access [[1037](https://github.com/microsoft/mcp/pull/1037)].
+- Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_thread_create`, `foundry_thread_list`, `foundry_thread_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
 
 ### Breaking Changes
+
+- Renamed `azmcp tools list` command `--namespaces` switch to `--namespace-mode` for better clarity when listing top-level service namespaces [[#741](https://github.com/microsoft/mcp/pull/741)]
 
 ### Bugs Fixed
 
 - Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+- Improvement to learning experience by ignoring `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
+- Adds descriptions to the tools metadata, to ensure enough information is present in the cli to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)] 
 
 ### Other Changes
 
@@ -23,6 +35,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Updates `AzureMcpServerConfiguration.Version` to use value from `AssemblyInformationalVersionAttribute` rather than file version to support semver conventions such as -beta.1. [[#1040](https://github.com/microsoft/mcp/pull/1040)]
 - Added a `CancellationToken` parameter `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
 - Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces  [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Disabled telemetry for HTTP transport [[#1072](https://github.com/microsoft/mcp/pull/1072)]
 - Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 
 ## 2.0.0-beta.1 (2025-10-29)

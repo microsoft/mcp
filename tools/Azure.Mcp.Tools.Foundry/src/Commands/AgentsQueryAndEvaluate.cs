@@ -77,7 +77,8 @@ public sealed class AgentsQueryAndEvaluateCommand : GlobalCommand<AgentsQueryAnd
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
                 options.Tenant,
-                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList());
+                options.Evaluators?.Split(',').Select(e => e.Trim()).ToList(),
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsQueryAndEvaluateCommandResult(result),

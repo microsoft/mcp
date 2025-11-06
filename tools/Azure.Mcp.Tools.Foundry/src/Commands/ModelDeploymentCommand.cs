@@ -93,7 +93,8 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
                 options.SkuCapacity,
                 options.ScaleType,
                 options.ScaleCapacity,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deploymentResource), FoundryJsonContext.Default.ModelDeploymentCommandResult);
         }

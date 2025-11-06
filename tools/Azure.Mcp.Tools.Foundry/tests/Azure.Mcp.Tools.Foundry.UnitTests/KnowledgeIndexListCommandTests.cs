@@ -53,7 +53,7 @@ public class KnowledgeIndexListCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(
                 [
                     new() { Name = "test-index", Type = "aisearch", Version = "1.0", Description = "Test index" }
@@ -82,7 +82,7 @@ public class KnowledgeIndexListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<KnowledgeIndexInformation>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
@@ -106,7 +106,7 @@ public class KnowledgeIndexListCommandTests
             new() { Name = "test-index2", Type = "aisearch", Version = "1.1", Description = "Second test index" }
         };
 
-        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service.ListKnowledgeIndexes(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedIndexes);
 
         var parseResult = _commandDefinition.Parse(["--endpoint", "https://example.com"]);
