@@ -17,7 +17,7 @@ public interface ISpeechService
         string? profanity = null,
         RetryPolicyOptions? retryPolicy = null);
 
-    Task<Models.SynthesisResult> SynthesizeSpeechToFile(
+    Task<SynthesisResult> SynthesizeSpeechToFile(
         string endpoint,
         string text,
         string outputFilePath,

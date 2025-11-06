@@ -73,7 +73,7 @@ public class TtsSynthesizeCommandTests
     public async Task ExecuteAsync_ValidatesInput(string args, bool shouldSucceed, string expectedError)
     {
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         if (shouldSucceed)
         {
@@ -118,7 +118,7 @@ public class TtsSynthesizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -176,7 +176,7 @@ public class TtsSynthesizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile} --language {language} --voice {voice} --format {format} --endpointId {endpointId}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -224,7 +224,7 @@ public class TtsSynthesizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -263,7 +263,7 @@ public class TtsSynthesizeCommandTests
             // Act
             var args = $"--subscription {_knownSubscription} --endpoint {_knownEndpoint} --text {text} --outputAudio {outputFile}";
             var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
+            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(HttpStatusCode.Unauthorized, response.Status);

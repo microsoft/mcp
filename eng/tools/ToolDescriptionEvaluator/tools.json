@@ -10987,7 +10987,7 @@
     },
     {
       "name": "synthesize",
-      "description": "Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.\nOptional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.\nThe command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.",
+      "description": "Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.\r\nOptional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.\r\nThe command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.",
       "command": "speech tts synthesize",
       "option": [
         {
@@ -11070,7 +11070,7 @@
         },
         {
           "name": "--format",
-          "description": "Output format: simple or detailed. Default is simple.",
+          "description": "Output format: simple or detailed.",
           "type": "string",
           "required": null
         },
@@ -13269,6 +13269,7 @@
   ],
   "consolidated_tools": null,
 <<<<<<< HEAD
+<<<<<<< HEAD
   "duration": 53
 =======
 <<<<<<< HEAD
@@ -13277,4 +13278,7 @@
   "duration": 49
 >>>>>>> 84ad4f44 (update prompts and tool description evaluator)
 >>>>>>> 58ab8585 (update prompts and tool description evaluator)
+=======
+  "duration": 55
+>>>>>>> e2fd2eac (refactor tts mcp tool)
 }
