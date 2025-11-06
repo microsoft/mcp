@@ -9,6 +9,9 @@
     <ServerJsonPath>$(RepoRoot)/servers/Azure.Mcp.Server/server.json</ServerJsonPath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
 
+    <!-- Official MCP repository settings -->
+    <McpRepositoryName>com.microsoft/azure-mcp</McpRepositoryName>
+
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
     <NpmPackageKeywords>azure,mcp,model-context-protocol</NpmPackageKeywords>

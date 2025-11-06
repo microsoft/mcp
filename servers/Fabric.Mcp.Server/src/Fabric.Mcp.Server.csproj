@@ -6,10 +6,13 @@
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
+    <ServerJsonPath>$(RepoRoot)/servers/Fabric.Mcp.Server/server.json</ServerJsonPath>
 
     <!--
     Defaults to the microsoft logo if not specified.
     <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric_icon.png</PackageIcon>
+
+    <McpRepositoryName>com.microsoft/{PLACEHOLDER_FOR_REAL_NAME}</McpRepositoryName>
     -->
 
     <!-- npm settings -->
