@@ -3,6 +3,7 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
@@ -24,14 +25,21 @@ public static class OpenTelemetryExtensions
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
         services.AddOptions<AzureMcpServerConfiguration>()
-            .Configure(options =>
+            .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
             {
                 options.Version = GetServerVersion(Assembly.GetCallingAssembly());
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
-                options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry)
-                    || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+                var transport = serviceStartOptions.Value.Transport;
+
+                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+
+                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
+
+                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
+                // telemetry is disabled for HTTP transport
+                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
