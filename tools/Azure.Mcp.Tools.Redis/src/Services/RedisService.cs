@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Tools.Redis.Commands;
 using Azure.Mcp.Tools.Redis.Models;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
@@ -13,6 +14,8 @@ using Azure.ResourceManager.Redis;
 using Azure.ResourceManager.Redis.Models;
 using Azure.ResourceManager.RedisEnterprise;
 using Azure.ResourceManager.Resources;
+using Azure.ResourceManager.Resources.Models;
+using System.Text.Json;
 
 namespace Azure.Mcp.Tools.Redis.Services;
 
@@ -22,7 +25,6 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
         string subscription,
         string? tenant = null,
-        AuthMethod? authMethod = null,
         RetryPolicyOptions? retryPolicy = null)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
@@ -58,6 +60,95 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         catch (Exception ex)
         {
             throw new Exception($"Error retrieving Redis resources: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<Resource> CreateResourceAsync(
+        string subscription,
+        string resourceGroup,
+        string name,
+        string location,
+        string? sku,
+        bool? accessKeyAuthenticationEnabled = false,
+        string[]? modules = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null
+    )
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(name), name),
+            (nameof(location), location)
+        );
+
+        if (string.IsNullOrWhiteSpace(sku))
+        {
+            sku = "Balanced_B0";
+        }
+
+        try
+        {
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+                ?? throw new Exception($"Subscription '{subscription}' not found");
+
+            var resourceGroups = subscriptionResource.GetResourceGroups();
+            var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup);
+
+            if (resourceGroupResource.Value == null)
+            {
+                throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
+            }
+
+            var accessKeyAuthenticationString = accessKeyAuthenticationEnabled == true
+                ? "Enabled"
+                : "Disabled";
+
+            var bicepTemplate = GetCreateResourceBicepTemplate();
+
+            var requestedModules = new ModuleList()
+            {
+                Value = modules?.Select(m => new Module { Name = m }).ToArray() ?? []
+            };
+
+            var parameters = new RedisCreateParameters
+            {
+                ResourceName = new BicepParameter() { Value = name },
+                Location = new BicepParameter() { Value = location },
+                SkuName = new BicepParameter() { Value = sku },
+                AccessKeyAuthenticationEnabled = new BicepParameter() { Value = accessKeyAuthenticationString },
+                Modules = requestedModules
+            };
+
+            var parametersJson = JsonSerializer.Serialize(parameters, RedisJsonContext.Default.RedisCreateParameters);
+
+            var deploymentProperties = new ArmDeploymentProperties(ArmDeploymentMode.Incremental)
+            {
+                Template = BinaryData.FromString(bicepTemplate),
+                Parameters = BinaryData.FromString(parametersJson)
+            };
+
+            var deploymentOperation = await resourceGroupResource.Value.GetArmDeployments()
+                .CreateOrUpdateAsync(
+                WaitUntil.Started,
+                $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+                new ArmDeploymentContent(deploymentProperties)
+            );
+
+            return new Resource
+            {
+                Name = name,
+                Type = "AzureManagedRedis",
+                ResourceGroupName = resourceGroup,
+                SubscriptionId = subscription,
+                Location = location,
+                Sku = sku,
+                Status = "Creating"
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Error creating Redis resource: {ex.Message}", ex);
         }
     }
 
@@ -215,7 +306,7 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 }
             }
             catch (Exception) { }
-
+            
             resources.Add(new()
             {
                 Name = resource.Name,
@@ -254,5 +345,66 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         }
 
         return resources;
+    }
+
+    private static string GetCreateResourceBicepTemplate()
+    {
+        return """
+            {
+              "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+              "contentVersion": "1.0.0.0",
+              "parameters": {
+                "resourceName": {
+                  "type": "string"
+                },
+                "location": {
+                  "type": "string"
+                },
+                "skuName": {
+                  "type": "string"
+                },
+                "accessKeyAuthenticationEnabled": {
+                  "type": "string",
+                  "defaultValue": "Disabled"
+                },
+                "modules": {
+                  "type": "array",
+                  "defaultValue": []
+                }
+              },
+              "resources": [
+                {
+                  "type": "Microsoft.Cache/redisEnterprise",
+                  "apiVersion": "2025-07-01",
+                  "name": "[parameters('resourceName')]",
+                  "location": "[parameters('location')]",
+                  "sku": {
+                    "name": "[parameters('skuName')]"
+                  },
+                  "properties": {
+                    "highAvailability": "Enabled",
+                    "minimumTlsVersion": "1.2",
+                    "publicNetworkAccess": "Enabled"
+                  }
+                },
+                {
+                  "type": "Microsoft.Cache/redisEnterprise/databases",
+                  "apiVersion": "2025-07-01",
+                  "name": "[format('{0}/default', parameters('resourceName'))]",
+                  "properties": {
+                    "clientProtocol": "Encrypted",
+                    "clusteringPolicy": "OSSCluster",
+                    "evictionPolicy": "NoEviction",
+                    "deferUpgrade": "NotDeferred",
+                    "accessKeysAuthentication": "[parameters('accessKeyAuthenticationEnabled')]",
+                    "modules": "[parameters('modules')]"
+                  },
+                  "dependsOn": [
+                    "[resourceId('Microsoft.Cache/redisEnterprise', parameters('resourceName'))]"
+                  ]
+                }
+              ]
+            }
+            """;
     }
 }

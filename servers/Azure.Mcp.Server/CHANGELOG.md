@@ -6,8 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 - PostgreSQL MCP tools now support both Microsoft Entra authentication and native database authentication. The default is Entra authentication, users can switch to native database authentication by providing the `--auth-type` parameter with the value `PostgreSQL`. If native authentication is selected, the user must also provide the user password via the `--password` parameter. [[#1011](https://github.com/microsoft/mcp/pull/1011)]
-
 - Enabled telemetry collection for HTTP transport mode. Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams. Added `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default). [[#1150](https://github.com/microsoft/mcp/pull/1150)]
+- Added `redis_create` command to create new Redis resources. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
 
 ### Breaking Changes
 
