@@ -1346,12 +1346,41 @@ azmcp get bestpractices get --resource <resource> --action <action>
 
 ### Azure MCP Tools
 
+The `azmcp tools list` command provides flexible ways to explore and discover available tools in the Azure MCP server. It supports multiple modes and filtering options that can be combined for precise control over the output format and content.
+
+**Available Options:**
+- `--namespace-mode`: List only top-level service namespaces instead of individual tools
+- `--name-only`: Return only tool/namespace names without descriptions, options, or metadata
+- `--namespace <namespace>`: Filter results to specific namespace(s). Can be used multiple times to include multiple namespaces
+
+**Option Combinations:**
+- Use `--name-only` alone to get a simple list of all tool names
+- Use `--namespace-mode` alone to see available service namespaces with full details
+- Combine `--namespace-mode` and `--name-only` to get just the namespace names
+- Use `--namespace` with any other option to filter results to specific services
+- All options can be combined for maximum flexibility
+
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
 
 # List only the available top-level service namespaces
-azmcp tools list --namespaces
+azmcp tools list --namespace-mode
+
+# List only tool names without descriptions or metadata
+azmcp tools list --name-only
+
+# Filter tools by specific namespace(s)
+azmcp tools list --namespace storage
+azmcp tools list --namespace storage --namespace keyvault
+
+# Combine options: get namespace names only for specific namespaces
+azmcp tools list --namespace-mode --name-only
+azmcp tools list --namespace-mode --name-only --namespace storage
+
+# Combine options: get tool names only for specific namespace(s)
+azmcp tools list --name-only --namespace storage
+azmcp tools list --name-only --namespace storage --namespace keyvault
 ```
 
 ### Azure Monitor Operations
@@ -2065,7 +2094,7 @@ All responses follow a consistent JSON format:
 
 ### Tool and Namespace Result Objects
 
-When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
 | Field | Description |
 |-------|-------------|
