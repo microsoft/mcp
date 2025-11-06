@@ -21,7 +21,7 @@ public abstract class BaseSqlCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
-        command.Options.Add(SqlOptionDefinitions.Server.AsRequired());
+        command.Options.Add(SqlOptionDefinitions.Server);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
