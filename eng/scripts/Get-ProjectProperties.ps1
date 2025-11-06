@@ -39,6 +39,7 @@ $propertyList = @(
     'Description',
     'ReadmeUrl',
     'ReadmePath',
+    'ServerJsonPath',
     'PackageIcon',
 
     'NpmPackageName',
