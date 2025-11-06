@@ -60,8 +60,6 @@ if ($BuildOnly) {
     exit 0
 }
 
-
-
 # log in using Key Vault
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
 
