@@ -478,7 +478,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
 
     $insertPayload = @{
         ToolTitle = '.NET Tool'
-        MCPRepositoryMetadata = "<!-- mcp-name: $(server.McpRepositoryName) -->"
+        MCPRepositoryMetadata = "<!-- mcp-name: $($server.McpRepositoryName) -->"
     }
 
     & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
