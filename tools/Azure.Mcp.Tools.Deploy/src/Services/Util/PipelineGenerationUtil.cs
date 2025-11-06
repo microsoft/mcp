@@ -19,15 +19,8 @@ public static class PipelineGenerationUtil
     /// <returns>A formatted pipeline guidelines string.</returns>
     public static string GeneratePipelineGuidelines(GuidanceGetOptions options)
     {
-        if (options.UseAZDPipelineConfig)
-        {
-            return TemplateService.LoadTemplate("Pipeline/azd-pipeline");
-        }
-        else
-        {
-            var parameters = CreatePipelineParameters(options);
-            return TemplateService.ProcessTemplate("Pipeline/azcli-pipeline", parameters.ToDictionary());
-        }
+        var parameters = CreatePipelineParameters(options);
+        return TemplateService.ProcessTemplate("Pipeline/azcli-pipeline", parameters.ToDictionary());
     }
 
     /// <summary>

@@ -18,7 +18,4 @@ public sealed class GetOptions
 
     [JsonPropertyName("provisioningTool")]
     public string ProvisioningTool { get; set; } = string.Empty;
-
-    [JsonPropertyName("azdIacOptions")]
-    public string? AzdIacOptions { get; set; } = string.Empty;
 }

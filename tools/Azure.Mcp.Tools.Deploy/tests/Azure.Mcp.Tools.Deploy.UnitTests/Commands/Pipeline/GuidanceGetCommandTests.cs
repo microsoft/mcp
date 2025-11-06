@@ -33,31 +33,11 @@ public class GuidanceGetCommandTests
     }
 
     [Fact]
-    public async Task Should_generate_pipeline()
-    {
-        // arrange
-        var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "true"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("Run \"azd pipeline config\" to help the user create a deployment pipeline.", result.Message);
-    }
-
-    [Fact]
     public async Task Should_generate_pipeline_with_github_details()
     {
         // arrange
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false",
             "--organization-name", "test-org",
             "--repository-name", "test-repo",
             "--github-environment-name", "production"
@@ -79,7 +59,6 @@ public class GuidanceGetCommandTests
     [Fact]
     public async Task Should_generate_pipeline_with_default_azd_pipeline_config()
     {
-        // arrange - not providing use-azd-pipeline-config should default to false
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id"
         ]);
@@ -100,8 +79,7 @@ public class GuidanceGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false"
+            "--subscription", "test-subscription-id"
         ]);
 
         // act
@@ -123,8 +101,7 @@ public class GuidanceGetCommandTests
         // arrange
         var guidSubscriptionId = "12345678-1234-1234-1234-123456789abc";
         var args = _commandDefinition.Parse([
-            "--subscription", guidSubscriptionId,
-            "--use-azd-pipeline-config", "false"
+            "--subscription", guidSubscriptionId
         ]);
 
         // act
@@ -142,8 +119,7 @@ public class GuidanceGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--subscription", "my-subscription-name",
-            "--use-azd-pipeline-config", "false"
+            "--subscription", "my-subscription-name"
         ]);
 
         // act
@@ -161,8 +137,7 @@ public class GuidanceGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--use-azd-pipeline-config", "false"
+            "--subscription", "test-subscription-id"
         ]);
 
         // act

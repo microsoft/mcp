@@ -1870,12 +1870,6 @@
           "required": null
         },
         {
-          "name": "--use-azd-pipeline-config",
-          "description": "Whether to use azd tool to set up the deployment pipeline. Set to true ONLY if azure.yaml is provided or the context suggests AZD tools.",
-          "type": "string",
-          "required": null
-        },
-        {
           "name": "--organization-name",
           "description": "The name of the organization or the user account name of the current Github repository. DO NOT fill this in if you're not sure.",
           "type": "string",

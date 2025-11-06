@@ -948,8 +948,7 @@ azmcp deploy iac rules get --deployment-tool <deployment-tool> \
 
 # Get the ci/cd pipeline guidance
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy pipeline guidance get [--use-azd-pipeline-config <use-azd-pipeline-config>] \
-                                   [--organization-name <organization-name>] \
+azmcp deploy pipeline guidance get [--organization-name <organization-name>] \
                                    [--repository-name <repository-name>] \
                                    [--github-environment-name <github-environment-name>]
 

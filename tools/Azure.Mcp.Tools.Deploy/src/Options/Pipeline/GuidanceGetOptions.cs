@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.Deploy.Options.Pipeline;
 
 public class GuidanceGetOptions : SubscriptionOptions
 {
-    [JsonPropertyName("useAZDPipelineConfig")]
-    public bool UseAZDPipelineConfig { get; set; }
-
     [JsonPropertyName("organizationName")]
     public string? OrganizationName { get; set; }
 

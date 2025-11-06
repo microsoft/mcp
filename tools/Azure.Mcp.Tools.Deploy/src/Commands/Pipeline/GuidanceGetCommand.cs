@@ -40,7 +40,6 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig);
         command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName);
         command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName);
         command.Options.Add(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName);
@@ -49,7 +48,6 @@ public sealed class GuidanceGetCommand(ILogger<GuidanceGetCommand> logger)
     protected override GuidanceGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.UseAZDPipelineConfig = parseResult.GetValueOrDefault<bool>(DeployOptionDefinitions.PipelineGenerateOptions.UseAZDPipelineConfig.Name);
         options.OrganizationName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.OrganizationName.Name);
         options.RepositoryName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.RepositoryName.Name);
         options.GithubEnvironmentName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.PipelineGenerateOptions.GithubEnvironmentName.Name);
