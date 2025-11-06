@@ -10,10 +10,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added the following features for deploying as a `Remote MCP Server`:
     - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
     - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
-
+- Enhanced `azmcp tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
+  - Added `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault')
+  - Added `--name-only` option to return only tool names without descriptions or metadata
+- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+- Adds support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[1020](https://github.com/microsoft/mcp/pull/1020)]
+- Adds support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access [[1037](https://github.com/microsoft/mcp/pull/1037)].
 - Added `foundry_agents_create`, `foundry_agents_get-sdk-sample`, `foundry_thread_create`, `foundry_thread_list`, `foundry_thread_get-messages` tools for AI Foundry scenarios. [[#945](https://github.com/microsoft/mcp/pull/945)]
 
 ### Breaking Changes
+
+- Renamed `azmcp tools list` command `--namespaces` switch to `--namespace-mode` for better clarity when listing top-level service namespaces [[#741](https://github.com/microsoft/mcp/pull/741)]
 
 ### Bugs Fixed
 
