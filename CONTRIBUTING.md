@@ -235,7 +235,7 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
      "profiles": {
        "debug-remotemcp": {
          "commandName": "Project",
-         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
          "environmentVariables": {
            "ASPNETCORE_ENVIRONMENT": "Development",
            "ASPNETCORE_URLS": "http://localhost:<port>",
@@ -267,7 +267,7 @@ $env:AzureAd__ClientId = "<your-client-id>"
 $env:AzureAd__Instance = "https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 ```bash
@@ -279,7 +279,7 @@ export AzureAd__ClientId="<your-client-id>"
 export AzureAd__Instance="https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 > **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
