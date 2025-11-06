@@ -154,7 +154,6 @@ $linuxVmImage = CheckVariable 'LINUXVMIMAGE'
 $macVmImage = CheckVariable 'MACVMIMAGE'
 
 function Get-PathsToTest {
-    return @()
     Write-Host "Getting paths to test"
 
     # When "core" is modified, include storage and keyVault as the canary service tools.
@@ -209,6 +208,19 @@ function Get-PathsToTest {
     $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 
     if($isPullRequestBuild) {
+        # Set of files that don't require build or test when changed
+        $skipFiles = @(
+            'CHANGELOG.md',
+            'README.md',
+            'SUPPORT.md',
+            'TROUBLESHOOTING.md',
+            'CONTRIBUTING.md',
+            'CODE_OF_CONDUCT.md',
+            'SECURITY.md',
+            'NOTICE.txt',
+            'LICENSE'
+        )
+
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
         # Assuming $changedFiles = [
@@ -223,6 +235,7 @@ function Get-PathsToTest {
         # For example, updating a markdown file in a service path will still trigger tests for that path.
         # Updating a file outside of the defined paths will be seen as a change to the core path.
         $changedPaths = @($changedFiles
+        | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
         | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
         | Sort-Object -Unique)
 
