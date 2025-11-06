@@ -17,19 +17,6 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
     private readonly DefaultAzureCredential _credential = new();
 
     // Workspace Operations
-    public async Task<IEnumerable<Workspace>> ListWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces";
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
-        }
-
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        var result = await JsonSerializer.DeserializeAsync<WorkspacesResponse>(response, OneLakeJsonContext.Default.WorkspacesResponse, cancellationToken);
-        return result?.Value ?? [];
-    }
-
     public async Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default)
     {
         var url = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/?comp=list";
@@ -107,37 +94,7 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         return await reader.ReadToEndAsync(cancellationToken);
     }
 
-    public async Task<Workspace> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
-    }
-
     // Item Operations
-    public async Task<IEnumerable<OneLakeItem>> ListItemsAsync(string workspaceId, string? itemType = null, bool recursive = true, string? rootFolderId = null, string? continuationToken = null, CancellationToken cancellationToken = default)
-    {
-        var queryParams = new List<string>();
-        if (!string.IsNullOrEmpty(itemType)) queryParams.Add($"type={Uri.EscapeDataString(itemType)}");
-        queryParams.Add($"recursive={recursive.ToString().ToLower()}");
-        if (!string.IsNullOrEmpty(rootFolderId)) queryParams.Add($"rootFolderId={Uri.EscapeDataString(rootFolderId)}");
-        if (!string.IsNullOrEmpty(continuationToken)) queryParams.Add($"continuationToken={Uri.EscapeDataString(continuationToken)}");
-
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
-        if (queryParams.Any()) url += "?" + string.Join("&", queryParams);
-
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        var result = await JsonSerializer.DeserializeAsync<ItemsResponse>(response, OneLakeJsonContext.Default.ItemsResponse, cancellationToken);
-        return result?.Value ?? [];
-    }
-
-    public async Task<OneLakeItem> GetItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
-    }
-
     public async Task<OneLakeItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default)
     {
         var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items";
@@ -146,39 +103,12 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
         return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
     }
 
-    public async Task<OneLakeItem> UpdateItemAsync(string workspaceId, string itemId, UpdateItemRequest request, CancellationToken cancellationToken = default)
+    // Private helper method for internal use
+    private async Task<Workspace> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default)
     {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
-        var jsonContent = JsonSerializer.Serialize(request, OneLakeJsonContext.Default.UpdateItemRequest);
-        var response = await SendFabricApiRequestAsync(new HttpMethod("PATCH"), url, jsonContent, null, cancellationToken);
-        return await JsonSerializer.DeserializeAsync<OneLakeItem>(response, OneLakeJsonContext.Default.OneLakeItem, cancellationToken) ?? new OneLakeItem();
-    }
-
-    public async Task DeleteItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/items/{itemId}";
-        await SendFabricApiRequestAsync(HttpMethod.Delete, url, cancellationToken: cancellationToken);
-    }
-
-    // Lakehouse Operations
-    public async Task<IEnumerable<Lakehouse>> ListLakehousesAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/lakehouses";
-        if (!string.IsNullOrEmpty(continuationToken))
-        {
-            url += $"?continuationToken={Uri.EscapeDataString(continuationToken)}";
-        }
-
+        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}";
         var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        var result = await JsonSerializer.DeserializeAsync<LakehousesResponse>(response, OneLakeJsonContext.Default.LakehousesResponse, cancellationToken);
-        return result?.Value ?? [];
-    }
-
-    public async Task<Lakehouse> GetLakehouseAsync(string workspaceId, string lakehouseId, CancellationToken cancellationToken = default)
-    {
-        var url = $"{OneLakeEndpoints.GetFabricApiBaseUrl()}/workspaces/{workspaceId}/lakehouses/{lakehouseId}";
-        var response = await SendFabricApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-        return await JsonSerializer.DeserializeAsync<Lakehouse>(response, OneLakeJsonContext.Default.Lakehouse, cancellationToken) ?? new Lakehouse();
+        return await JsonSerializer.DeserializeAsync<Workspace>(response, OneLakeJsonContext.Default.Workspace, cancellationToken) ?? new Workspace();
     }
 
     // OneLake Shortcuts Operations  
@@ -446,10 +376,33 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                     
                     if (pathItem.TryGetProperty("isDirectory", out var isDirElement))
                     {
-                        isDirectory = isDirElement.GetBoolean();
+                        // Handle both boolean and string representations
+                        if (isDirElement.ValueKind == JsonValueKind.True)
+                        {
+                            isDirectory = true;
+                        }
+                        else if (isDirElement.ValueKind == JsonValueKind.False)
+                        {
+                            isDirectory = false;
+                        }
+                        else if (isDirElement.ValueKind == JsonValueKind.String)
+                        {
+                            isDirectory = bool.TryParse(isDirElement.GetString(), out var boolValue) && boolValue;
+                        }
                     }
                     
-                    var contentLength = pathItem.TryGetProperty("contentLength", out var lengthElement) ? lengthElement.GetInt64() : 0;
+                    var contentLength = 0L;
+                    if (pathItem.TryGetProperty("contentLength", out var lengthElement))
+                    {
+                        if (lengthElement.ValueKind == JsonValueKind.Number)
+                        {
+                            contentLength = lengthElement.GetInt64();
+                        }
+                        else if (lengthElement.ValueKind == JsonValueKind.String)
+                        {
+                            long.TryParse(lengthElement.GetString(), out contentLength);
+                        }
+                    }
                     var lastModified = pathItem.TryGetProperty("lastModified", out var modElement) 
                         ? DateTime.TryParse(modElement.GetString(), out var modDate) ? modDate : (DateTime?)null
                         : null;
@@ -738,15 +691,10 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
                 try
                 {
                     var url = $"{OneLakeEndpoints.OneLakeDataPlaneDfsBaseUrl}/{workspaceId}/{itemId}/{folder}";
-                    url += $"?resource=filesystem";
-                    if (recursive)
-                    {
-                        url += "&recursive=true";
-                    }
+                    url += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
-                    var response = await SendOneLakeApiRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
-                    using var responseReader = new StreamReader(response);
-                    var content = await responseReader.ReadToEndAsync(cancellationToken);
+                    var response = await SendDataPlaneRequestAsync(HttpMethod.Get, url, cancellationToken: cancellationToken);
+                    var content = await response.Content.ReadAsStringAsync(cancellationToken);
                     allResponses.Add($"/* Response for folder: {folder} */\n{content}");
                 }
                 catch (Exception ex)
@@ -785,15 +733,10 @@ public class OneLakeService(HttpClient httpClient) : IOneLakeService
             singleUrl += $"/Files/{trimmedPath}";
         }
         
-        singleUrl += $"?resource=filesystem";
-        if (recursive)
-        {
-            singleUrl += "&recursive=true";
-        }
+        singleUrl += $"?resource=filesystem&recursive={recursive.ToString().ToLowerInvariant()}";
 
-        var singleResponse = await SendOneLakeApiRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
-        using var finalReader = new StreamReader(singleResponse);
-        return await finalReader.ReadToEndAsync(cancellationToken);
+        var singleResponse = await SendDataPlaneRequestAsync(HttpMethod.Get, singleUrl, cancellationToken: cancellationToken);
+        return await singleResponse.Content.ReadAsStringAsync(cancellationToken);
     }
 
     public async Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default)

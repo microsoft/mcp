@@ -11,24 +11,14 @@ namespace Fabric.Mcp.Tools.OneLake.Services;
 public interface IOneLakeService
 {
     // Workspace Operations
-    Task<IEnumerable<Workspace>> ListWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<Workspace>> ListOneLakeWorkspacesAsync(string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<string> ListOneLakeWorkspacesXmlAsync(string? continuationToken = null, CancellationToken cancellationToken = default);
-    Task<Workspace> GetWorkspaceAsync(string workspaceId, CancellationToken cancellationToken = default);
     
     // Item Operations
-    Task<IEnumerable<OneLakeItem>> ListItemsAsync(string workspaceId, string? itemType = null, bool recursive = true, string? rootFolderId = null, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<IEnumerable<OneLakeItem>> ListOneLakeItemsAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<string> ListOneLakeItemsXmlAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
     Task<string> ListOneLakeItemsDfsJsonAsync(string workspaceId, bool recursive = true, string? continuationToken = null, CancellationToken cancellationToken = default);
-    Task<OneLakeItem> GetItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
     Task<OneLakeItem> CreateItemAsync(string workspaceId, CreateItemRequest request, CancellationToken cancellationToken = default);
-    Task<OneLakeItem> UpdateItemAsync(string workspaceId, string itemId, UpdateItemRequest request, CancellationToken cancellationToken = default);
-    Task DeleteItemAsync(string workspaceId, string itemId, CancellationToken cancellationToken = default);
-    
-    // Lakehouse Operations
-    Task<IEnumerable<Lakehouse>> ListLakehousesAsync(string workspaceId, string? continuationToken = null, CancellationToken cancellationToken = default);
-    Task<Lakehouse> GetLakehouseAsync(string workspaceId, string lakehouseId, CancellationToken cancellationToken = default);
     
     // OneLake Shortcuts Operations
     Task<IEnumerable<OneLakeShortcut>> ListShortcutsAsync(string workspaceId, string itemId, string path, CancellationToken cancellationToken = default);
