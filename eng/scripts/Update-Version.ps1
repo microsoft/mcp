@@ -73,7 +73,7 @@ if ($jsonObject.PSObject.Properties.Name -contains "packages" -and $jsonObject.p
         $package = $jsonObject.packages[$i]
         
         if ($package -is [PSCustomObject] -and $package.PSObject.Properties.Name -contains "version") {
-            $packageName = if ($package.PSObject.Properties.Name -contains "identifier") { $package.identifier } else { $packageName = $null }
+            $packageName = if ($package.PSObject.Properties.Name -contains "identifier") { $package.identifier } else { $null }
 
             if ($packageName) {
                 Write-Debug "  Updating version in $packageName`: $($package.version) → $Version"
