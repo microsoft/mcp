@@ -17,9 +17,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added the following AI Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
   - `foundry_agents_create`: Create a new AI Foundry agent.
   - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the AI Foundry SDK.
-  - `foundry_thread_create`: Create a new AI Foundry Agent Thread.
-  - `foundry_thread_list`: List all AI Foundry Agent Threads.
-  - `foundry_thread_get-messages`: Get messages in an AI Foundry Agent Thread.
+  - `foundry_threads_create`: Create a new AI Foundry Agent Thread.
+  - `foundry_threads_list`: List all AI Foundry Agent Threads.
+  - `foundry_threads_get-messages`: Get messages in an AI Foundry Agent Thread.
 
 ### Breaking Changes
 
@@ -29,7 +29,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Fixed an issue that spawned child processes per namespace for consolidated mode. [[#1002](https://github.com/microsoft/mcp/pull/1002)]
 - Improved the agent learning experience by ignoring the `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
-- Added descriptions to tool metadata to ensure enough information is present in the CLI to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)] 
+- Added descriptions to tool metadata to ensure enough information is present in the CLI to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)]
 
 ### Other Changes
 

@@ -15,9 +15,9 @@
 - Added the following AI Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
   - `foundry_agents_create`: Create a new AI Foundry agent.
   - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the AI Foundry SDK.
-  - `foundry_thread_create`: Create a new AI Foundry Agent Thread.
-  - `foundry_thread_list`: List all AI Foundry Agent Threads.
-  - `foundry_thread_get-messages`: Get messages in an AI Foundry Agent Thread.
+  - `foundry_threads_create`: Create a new AI Foundry Agent Thread.
+  - `foundry_threads_list`: List all AI Foundry Agent Threads.
+  - `foundry_threads_get-messages`: Get messages in an AI Foundry Agent Thread.
 
 ### Changed
 
