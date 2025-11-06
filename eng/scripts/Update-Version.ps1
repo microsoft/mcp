@@ -61,21 +61,27 @@ $jsonObject = $jsonContent | ConvertFrom-Json
 
 # Update top-level version field
 if ($jsonObject.PSObject.Properties.Name -contains "version") {
-    Write-Debug "  Updating top-level version: $($jsonObject.version) → $Version"
+    Write-Debug "Updating top-level version: $($jsonObject.version) => $Version"
     $jsonObject.version = $Version
 }
 
 # Update version fields in packages array
 if ($jsonObject.PSObject.Properties.Name -contains "packages" -and $jsonObject.packages -is [Array]) {
-    Write-Debug "  Processing packages array..."
+    Write-Debug "Processing packages array..."
 
     for ($i = 0; $i -lt $jsonObject.packages.Count; $i++) {
         $package = $jsonObject.packages[$i]
         
         if ($package -is [PSCustomObject] -and $package.PSObject.Properties.Name -contains "version") {
-            $packageName = if ($package.PSObject.Properties.Name -contains "identifier") { $package.identifier } else { "Package $($i + 1)" }
-            Write-Debug "    Updating version in $packageName`: $($package.version) → $Version"
-            $package.version = $Version
+            $packageName = if ($package.PSObject.Properties.Name -contains "identifier") { $package.identifier } else { $packageName = $null }
+
+            if ($packageName) {
+                Write-Debug "  Updating version in $packageName`: $($package.version) → $Version"
+                $package.version = $Version
+            } else {
+                Write-Debug "  Package at index $i has no identifier."
+            }
+
         }
     }
 }
