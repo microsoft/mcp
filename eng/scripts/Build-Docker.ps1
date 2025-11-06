@@ -74,9 +74,6 @@ if ($LastExitCode -ne 0) {
 }
 
 # Move x64 folder to amd64 to match Docker naming conventions
-foreach ($os in $operatingSystems) {
-    
-}
 
 [string[]]$identifiers = @()
 foreach($os in $operatingSystems) {
