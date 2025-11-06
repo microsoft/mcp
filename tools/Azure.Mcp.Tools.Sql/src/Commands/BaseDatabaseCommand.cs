@@ -4,6 +4,7 @@
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Sql.Options;
 using Microsoft.Extensions.Logging;
 
@@ -16,7 +17,7 @@ public abstract class BaseDatabaseCommand<
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(SqlOptionDefinitions.Database);
+        command.Options.Add(SqlOptionDefinitions.Database.AsRequired());
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
