@@ -143,7 +143,7 @@ if ($jobInputs.Count -eq 1 -or !$Parallel) {
 } else {
     Write-Host "Deploying resources in parallel for $($jobInputs.Count) paths..." -ForegroundColor Yellow
     Write-Host "Cancelling this script (Ctrl-C) will not stop its background jobs. To stop the jobs, you must run:" -ForegroundColor Yellow
-    Write-Host "  Get-Job | Stop-Job -PassThrough | Remove-Job`n" -ForegroundColor Yellow
+    Write-Host "  Get-Job | Stop-Job -PassThru | Remove-Job`n" -ForegroundColor Yellow
 
     Start-Sleep -Seconds 2
 

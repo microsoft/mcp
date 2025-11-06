@@ -928,7 +928,7 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
      "profiles": {
        "debug-remotemcp": {
          "commandName": "Project",
-         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
          "environmentVariables": {
            "ASPNETCORE_ENVIRONMENT": "Development",
            "ASPNETCORE_URLS": "http://localhost:<port>",
@@ -949,7 +949,7 @@ dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remote
 ```
 
 This starts the MCP server in **remote HTTP mode** with the following configuration:
-- **Command line arguments:** `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+- **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
 - **Environment variables** for Entra ID authentication and ASP.NET Core settings
 - **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
 

@@ -126,7 +126,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>());
@@ -155,7 +155,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>());
@@ -200,7 +200,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(argArray);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -227,7 +227,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -248,7 +248,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>());
@@ -268,7 +268,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(argArray);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -294,7 +294,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -316,7 +316,7 @@ public class WebTestsListCommandTests
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         _logger.Received(1).Log(

@@ -76,7 +76,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act
-        var result = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -108,8 +108,8 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act - Call twice
-        var result1 = await loader.ListToolsHandler(request, CancellationToken.None);
-        var result2 = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result1 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Should return same cached instance
         Assert.Same(result1.Tools, result2.Tools);
@@ -132,7 +132,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateListToolsRequest();
 
         // Act
-        var result = await loader.ListToolsHandler(request, CancellationToken.None);
+        var result = await loader.ListToolsHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result.Tools);
@@ -153,7 +153,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -179,8 +179,8 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act - Call twice
-        var result1 = await loader.CallToolHandler(request, CancellationToken.None);
-        var result2 = await loader.CallToolHandler(request, CancellationToken.None);
+        var result1 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
+        var result2 = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert - Both should succeed and return same cached content
         Assert.False(result1.IsError);
@@ -204,7 +204,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -226,7 +226,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -246,7 +246,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await loader.CallToolHandler(request, CancellationToken.None));
+            await loader.CallToolHandler(request, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -258,7 +258,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequest(toolName, new Dictionary<string, object?>());
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -288,7 +288,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequestWithJsonElements(toolName, arguments);
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -313,7 +313,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var request = CreateCallToolRequest(toolName, arguments);
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -335,7 +335,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         });
 
         // Act
-        var result = await loader.CallToolHandler(request, CancellationToken.None);
+        var result = await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -352,7 +352,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         // Get two different namespaces
         var listRequest = CreateListToolsRequest();
-        var tools = await loader.ListToolsHandler(listRequest, CancellationToken.None);
+        var tools = await loader.ListToolsHandler(listRequest, TestContext.Current.CancellationToken);
 
         if (tools.Tools.Count < 2)
         {
@@ -370,7 +370,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        await loader.CallToolHandler(request1, CancellationToken.None);
+        await loader.CallToolHandler(request1, TestContext.Current.CancellationToken);
 
         // Now access second namespace
         var request2 = CreateCallToolRequest(namespace2, new Dictionary<string, object?>
@@ -379,7 +379,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        var result2 = await loader.CallToolHandler(request2, CancellationToken.None);
+        var result2 = await loader.CallToolHandler(request2, TestContext.Current.CancellationToken);
 
         // Assert - Both should succeed, proving lazy loading works
         Assert.NotNull(result2);
@@ -402,7 +402,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
                 ["intent"] = "concurrent test"
             });
 
-            return await loader.CallToolHandler(request, CancellationToken.None);
+            return await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
         });
 
         var results = await Task.WhenAll(tasks);
@@ -437,7 +437,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
             ["intent"] = "test"
         });
 
-        await loader.CallToolHandler(request, CancellationToken.None);
+        await loader.CallToolHandler(request, TestContext.Current.CancellationToken);
 
         // Act
         await loader.DisposeAsync();
@@ -516,7 +516,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
         var options = CallCreateClientOptions(loader, mockServer);
         Assert.NotNull(options.Handlers.ElicitationHandler);
 
-        await options.Handlers.ElicitationHandler(elicitationRequest, CancellationToken.None);
+        await options.Handlers.ElicitationHandler(elicitationRequest, TestContext.Current.CancellationToken);
 
         // Assert - verify SendRequestAsync was called with elicitation method
         await mockServer.Received(1).SendRequestAsync(
@@ -542,7 +542,7 @@ public sealed class NamespaceToolLoaderTests : IDisposable
 
         // Assert - verify handler validates null request
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
-            await options.Handlers.ElicitationHandler.Invoke(null!, CancellationToken.None));
+            await options.Handlers.ElicitationHandler.Invoke(null!, TestContext.Current.CancellationToken));
     }
 
     // Helper methods

@@ -37,7 +37,7 @@ public sealed class KustoClient(
         return await SendRequestAsync(_httpClient, httpRequest, cancellationToken).ConfigureAwait(false);
     }
 
-    private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken = default)
+    private async Task<HttpRequestMessage> GenerateRequestAsync(string uri, string database, string text, CancellationToken cancellationToken)
     {
         var httpRequest = new HttpRequestMessage(HttpMethod.Post, uri);
         var scopes = new string[]
@@ -70,12 +70,12 @@ public sealed class KustoClient(
         return httpRequest;
     }
 
-    private async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken = default)
+    private async Task<KustoResult> SendRequestAsync(HttpClient httpClient, HttpRequestMessage httpRequest, CancellationToken cancellationToken)
     {
         var httpResponse = await httpClient.SendAsync(httpRequest, HttpCompletionOption.ResponseContentRead, cancellationToken);
         if (!httpResponse.IsSuccessStatusCode)
         {
-            string errorContent = await httpResponse.Content.ReadAsStringAsync();
+            string errorContent = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
             throw new HttpRequestException($"Request failed with status code {httpResponse.StatusCode}: {errorContent}");
         }
         return KustoResult.FromHttpResponseMessage(httpResponse);

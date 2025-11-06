@@ -11,26 +11,30 @@ public interface IKustoService
     Task<List<string>> ListClustersAsync(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<KustoClusterModel> GetClusterAsync(
         string subscription,
         string clusterName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListDatabasesAsync(
         string clusterUri,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListDatabasesAsync(
         string subscription,
         string clusterName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryItemsAsync(
         string clusterUri,
@@ -38,7 +42,8 @@ public interface IKustoService
         string query,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<JsonElement>> QueryItemsAsync(
         string subscriptionId,
@@ -47,14 +52,16 @@ public interface IKustoService
         string query,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTablesAsync(
         string clusterUri,
         string databaseName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTablesAsync(
         string subscriptionId,
@@ -62,7 +69,8 @@ public interface IKustoService
         string databaseName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<string> GetTableSchemaAsync(
         string clusterUri,
@@ -70,7 +78,8 @@ public interface IKustoService
         string tableName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<string> GetTableSchemaAsync(
         string subscriptionId,
@@ -79,5 +88,6 @@ public interface IKustoService
         string tableName,
         string? tenant = null,
         AuthMethod? authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

@@ -42,7 +42,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -64,7 +64,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -85,7 +85,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -105,7 +105,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -128,7 +128,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -147,7 +147,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -166,7 +166,7 @@ public class GuidanceGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);

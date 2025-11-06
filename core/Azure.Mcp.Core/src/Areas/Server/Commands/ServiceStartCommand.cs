@@ -19,7 +19,6 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
-using Microsoft.IdentityModel.Tokens;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -131,7 +130,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <param name="context">The command execution context.</param>
     /// <param name="parseResult">The parsed command options.</param>
     /// <returns>A command response indicating the result of the operation.</returns>
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -146,12 +145,12 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
             await InitializeServicesAsync(host.Services);
 
-            await host.StartAsync(CancellationToken.None);
+            await host.StartAsync(cancellationToken);
 
             var telemetryService = host.Services.GetRequiredService<ITelemetryService>();
             LogStartTelemetry(telemetryService, options);
 
-            await host.WaitForShutdownAsync(CancellationToken.None);
+            await host.WaitForShutdownAsync(cancellationToken);
 
             return context.Response;
         }
