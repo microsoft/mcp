@@ -445,13 +445,15 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "agent-name", agentName },
                 { "system-instruction", systemInstruction }
             });
-        var response = result.AssertProperty("response");
-        Assert.Equal(JsonValueKind.Object, response.ValueKind);
-        Assert.NotEmpty(response.EnumerateObject());
-        response.AssertProperty("agentId");
-        response.AssertProperty("agentName");
-        response.AssertProperty("projectEndpoint");
-        response.AssertProperty("modelDeploymentName");
+
+        var agentIdResult = result.AssertProperty("agentId");
+        var agentNameResult = result.AssertProperty("agentName");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        var modelDeploymentNameResult = result.AssertProperty("modelDeploymentName");
+        Assert.Equal(JsonValueKind.String, agentIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, agentNameResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, modelDeploymentNameResult.ValueKind);
     }
 
     [Fact]
@@ -1072,10 +1074,8 @@ public class FoundryCommandTests(ITestOutputHelper output)
             {
                 { "endpoint", endpoint }
             });
-        var response = result.AssertProperty("response");
-        Assert.Equal(JsonValueKind.Object, response.ValueKind);
-        Assert.NotEmpty(response.EnumerateObject());
-        response.AssertProperty("threads");
+        var threads = result.AssertProperty("threads");
+        Assert.Equal(JsonValueKind.Array, threads.ValueKind);
     }
 
     [Fact]
@@ -1093,11 +1093,10 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "endpoint", endpoint },
                 { "thread-id", threadId }
             });
-        var response = result.AssertProperty("response");
-        Assert.Equal(JsonValueKind.Object, response.ValueKind);
-        Assert.NotEmpty(response.EnumerateObject());
-        response.AssertProperty("threadId");
-        response.AssertProperty("messages");
+        var threadIdResult = result.AssertProperty("threadId");
+        var messagesResult = result.AssertProperty("messages");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.Array, messagesResult.ValueKind);
     }
 
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
