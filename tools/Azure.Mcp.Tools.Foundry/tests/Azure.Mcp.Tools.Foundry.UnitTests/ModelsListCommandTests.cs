@@ -51,7 +51,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -88,7 +88,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse(["--search-for-free-playground", "--publisher", publisherName, "--license", license, "--model-name", modelName]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -116,7 +116,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -145,7 +145,7 @@ public class ModelsListCommandTests
         var command = new ModelsListCommand();
         var args = command.GetCommand().Parse("");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

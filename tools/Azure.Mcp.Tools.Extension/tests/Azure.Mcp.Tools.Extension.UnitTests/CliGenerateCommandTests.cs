@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using System.CommandLine;
@@ -61,7 +61,7 @@ public sealed class CliGenerateCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>())
+            _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("Command")
@@ -72,7 +72,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal([shouldSucceed ? 200 : 400], [(int)response.Status]);
@@ -91,7 +91,7 @@ public sealed class CliGenerateCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>())
+        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("Command")
@@ -100,7 +100,7 @@ public sealed class CliGenerateCommandTests
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal([200], [(int)response.Status]);
@@ -118,12 +118,12 @@ public sealed class CliGenerateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>()).ThrowsAsync(new Exception("Test error"));
+        _cliGenerateService.GenerateAzureCLICommandAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse("--intent mock_intent --cli-type az");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal([500], [(int)response.Status]);

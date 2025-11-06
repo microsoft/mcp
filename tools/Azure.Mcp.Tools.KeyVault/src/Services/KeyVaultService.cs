@@ -21,17 +21,18 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         bool includeManagedKeys,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
         var keys = new List<string>();
 
         try
         {
-            await foreach (var key in client.GetPropertiesOfKeysAsync().Where(x => x.Managed == includeManagedKeys))
+            await foreach (var key in client.GetPropertiesOfKeysAsync(cancellationToken).Where(x => x.Managed == includeManagedKeys))
             {
                 keys.Add(key.Name);
             }
@@ -49,16 +50,17 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string keyName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
         {
-            return await client.GetKeyAsync(keyName);
+            return await client.GetKeyAsync(keyName, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -72,17 +74,18 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string keyType,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(keyName), keyName), (nameof(keyType), keyType), (nameof(subscriptionId), subscriptionId));
 
         var type = new KeyType(keyType);
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateKeyClient(vaultName, credential, retryPolicy);
 
         try
         {
-            return await client.CreateKeyAsync(keyName, type);
+            return await client.CreateKeyAsync(keyName, type, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -94,17 +97,18 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string vaultName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
         var secrets = new List<string>();
 
         try
         {
-            await foreach (var secret in client.GetPropertiesOfSecretsAsync())
+            await foreach (var secret in client.GetPropertiesOfSecretsAsync(cancellationToken))
             {
                 secrets.Add(secret.Name);
             }
@@ -123,16 +127,17 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string secretValue,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(secretValue), secretValue), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
         try
         {
-            return await client.SetSecretAsync(secretName, secretValue);
+            return await client.SetSecretAsync(secretName, secretValue, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -145,16 +150,17 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string secretName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(secretName), secretName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateSecretClient(vaultName, credential, retryPolicy);
 
         try
         {
-            var response = await client.GetSecretAsync(secretName);
+            var response = await client.GetSecretAsync(secretName, cancellationToken: cancellationToken);
             return response.Value;
         }
         catch (Exception ex)
@@ -167,17 +173,18 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string vaultName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
         var certificates = new List<string>();
 
         try
         {
-            await foreach (var certificate in client.GetPropertiesOfCertificatesAsync())
+            await foreach (var certificate in client.GetPropertiesOfCertificatesAsync(cancellationToken: cancellationToken))
             {
                 certificates.Add(certificate.Name);
             }
@@ -195,16 +202,17 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string certificateName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
         {
-            return await client.GetCertificateAsync(certificateName);
+            return await client.GetCertificateAsync(certificateName, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -217,16 +225,17 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string certificateName,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
         {
-            return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default);
+            return await client.StartCreateCertificateAsync(certificateName, CertificatePolicy.Default, cancellationToken: cancellationToken);
         }
         catch (Exception ex)
         {
@@ -241,11 +250,12 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string? password,
         string subscriptionId,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(certificateName), certificateName), (nameof(certificateData), certificateData), (nameof(subscriptionId), subscriptionId));
 
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var client = CreateCertificateClient(vaultName, credential, retryPolicy);
 
         try
@@ -263,7 +273,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
                 // Try base64, fallback to file path if exists
                 if (File.Exists(certificateData))
                 {
-                    bytes = await File.ReadAllBytesAsync(certificateData);
+                    bytes = await File.ReadAllBytesAsync(certificateData, cancellationToken);
                 }
                 else
                 {
@@ -283,7 +293,7 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
                 Password = string.IsNullOrEmpty(password) ? null : password
             };
 
-            var response = await client.ImportCertificateAsync(importOptions);
+            var response = await client.ImportCertificateAsync(importOptions, cancellationToken);
             return response.Value;
         }
         catch (Exception ex)
@@ -328,15 +338,16 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         string vaultName,
         string subscription,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(vaultName), vaultName), (nameof(subscription), subscription));
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(tenantId, cancellationToken);
         var hsmUri = new Uri($"https://{vaultName}.managedhsm.azure.net");
         try
         {
             var hsmClient = new KeyVaultSettingsClient(hsmUri, credential);
-            var hsmResponse = await hsmClient.GetSettingsAsync();
+            var hsmResponse = await hsmClient.GetSettingsAsync(cancellationToken);
             return hsmResponse.Value;
         }
         catch (Exception ex)

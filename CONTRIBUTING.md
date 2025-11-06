@@ -56,7 +56,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ## Getting Started
 
-> [!IMPORTANT] 
+> [!IMPORTANT]
 > If you are a **Microsoft employee** then please also review our [Azure Internal Onboarding Documentation](https://aka.ms/azmcp/intake) for getting setup
 
 ### Prerequisites
@@ -104,7 +104,7 @@ If you are contributing significant changes, or if the issue is already assigned
 
 ### Adding a New Command
 
-> [!TIP]  
+> [!TIP]
 > **Submit One Tool Per Pull Request**
 >
 > We strongly recommend submitting **one tool per pull request** to streamline the review process and provide better onboarding experience. This approach results in:
@@ -145,7 +145,7 @@ If you are contributing significant changes, or if the issue is already assigned
 7. **Add new tool to consolidated mode**:
    - Open `core/Azure.Mcp.Core/src/Areas/Server/Resources/consolidated-tools.json` file, where the tool grouping definition is stored for consolidated mode. In Agent mode, add it to the chat as context.
    - Paste the follow prompt for Copilot to generate the change to add the new tool:
-      ```txt 
+      ```txt
       I have this list of tools which haven't been matched with any consolidated tools in this file. Help me add them to the one with the best matching category and exact matching toolMetadata. Update existing consolidated tools where newly mapped tools are added. If you can't find one, suggest a new consolidated tool.
 
       <Add new tool name here>
@@ -188,6 +188,14 @@ Requirements:
 - Tests should cover success and error scenarios
 - Mock external service calls
 - Test argument validation
+
+#### Cancellation plumbing
+
+To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
+
+Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+
+Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
 
 ### End-to-end Tests
 
@@ -642,7 +650,7 @@ Supported comment annotations:
   ```
 
 - Section Insert
-  - **Purpose:** Insert a chunk of text into a line for a specified package type. 
+  - **Purpose:** Insert a chunk of text into a line for a specified package type.
   - **Example:**
   `<!-- insert-section: nuget;vsix;npm {{Text to be inserted}} -->`
 

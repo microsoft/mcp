@@ -6,17 +6,23 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
+- Adds support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[1020](https://github.com/microsoft/mcp/pull/1020)]
+- Adds support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access [[1037](https://github.com/microsoft/mcp/pull/1037)].
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 - Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
-- Use assembly's `InformationalVersion` rather than its `Version` when setting `AzureMcpServerConfiguration`. [[#1027](https://github.com/microsoft/mcp/pull/1027)]
 
 ### Other Changes
 
 - Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
 - Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Updates `AzureMcpServerConfiguration.Version` to use value from `AssemblyInformationalVersionAttribute` rather than file version to support semver conventions such as -beta.1. [[#1040](https://github.com/microsoft/mcp/pull/1040)]
+- Added a `CancellationToken` parameter `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces  [[#1056](https://github.com/microsoft/mcp/pull/1056)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 
@@ -34,7 +40,7 @@ The Azure MCP Server now offers:
 
 - **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
-- **Flexible Server Modes**: 
+- **Flexible Server Modes**:
   - Namespace mode (default): Organizes tools by service for easy discovery
   - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
   - Single mode: All tools behind one unified "azure" tool

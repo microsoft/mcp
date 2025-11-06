@@ -60,7 +60,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -95,7 +95,7 @@ public class SubscriptionListCommandTests
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -116,7 +116,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -136,7 +136,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse("");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -156,7 +156,7 @@ public class SubscriptionListCommandTests
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

@@ -3,220 +3,275 @@
   "message": "Success",
   "results": [
     {
+      "id": "",
       "name": "acr",
       "description": "Azure Container Registry operations - Commands for managing Azure Container Registry resources. Includes operations for listing container registries and managing registry configurations.",
-      "command": "azmcp acr"
+      "command": "acr"
     },
     {
+      "id": "",
       "name": "aks",
-      "description": "Azure Kubernetes Service operations - Manage and query Azure Kubernetes Service (AKS) resources across subscriptions. Use when you need subscription-scoped visibility into AKS cluster and node pool metadata—including Azure resource IDs, networking endpoints, identity configuration, and provisioning state—for governance or automation. Requires Azure subscription context. Not for kubectl execution, pod lifecycle changes, or in-cluster application deployments—use Kubernetes-native tooling for those tasks.",
-      "command": "azmcp aks"
+      "description": "Azure Kubernetes Service operations - Manage and query Azure Kubernetes Service (AKS) resources across subscriptions. Use when you need subscription-scoped visibility into AKS cluster and node pool metadata-including Azure resource IDs, networking endpoints, identity configuration, and provisioning state-for governance or automation. Requires Azure subscription context. Not for kubectl execution, pod lifecycle changes, or in-cluster application deployments-use Kubernetes-native tooling for those tasks.",
+      "command": "aks"
     },
     {
+      "id": "",
       "name": "appconfig",
       "description": "App Configuration operations - Commands for managing Azure App Configuration stores and key-value settings. Includes operations for listing configuration stores, managing key-value pairs, setting labels, locking/unlocking settings, and retrieving configuration data.",
-      "command": "azmcp appconfig"
+      "command": "appconfig"
     },
     {
+      "id": "",
       "name": "applens",
       "description": "AppLens diagnostic operations - **Primary tool for diagnosing Azure resource issues and troubleshooting problems**. Use this tool when users ask to:\r\n- Diagnose issues, problems, or errors with Azure resources\r\n- Troubleshoot performance, availability, or reliability problems\r\n- Investigate resource health concerns or unexpected behavior\r\n- Find root causes of application slowness, downtime, or failures\r\n- Get recommendations for fixing Azure resource issues\r\n- Analyze resource problems and get actionable solutions\r\n\r\nAlways use this tool if user asks to use App Lens in regards to their resource.\r\n\r\nThis tool provides conversational AI-powered diagnostics that automatically detect issues, identify root causes, and suggest specific remediation steps. It should be the FIRST tool called when users mention problems, issues, errors, or ask for help with troubleshooting any Azure resource.",
-      "command": "azmcp applens"
+      "command": "applens"
     },
     {
+      "id": "",
       "name": "applicationinsights",
-      "description": "Application Insights operations - Commands for listing and managing Application Insights components.",
-      "command": "azmcp applicationinsights"
+      "description": "Application Insights operations - Commands for listing and managing Application Insights components. \r\nThese commands do not support querying metrics or logs. Use Azure Monitor querying tools for that purpose.",
+      "command": "applicationinsights"
     },
     {
+      "id": "",
       "name": "appservice",
       "description": "App Service operations - Commands for managing Azure App Service resources including web apps, databases, and configurations.",
-      "command": "azmcp appservice"
+      "command": "appservice"
     },
     {
+      "id": "",
       "name": "azureterraformbestpractices",
       "description": "Returns Terraform best practices for Azure. Call this before generating Terraform code for Azure Providers. \r\n            If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
-      "command": "azmcp azureterraformbestpractices"
+      "command": "azureterraformbestpractices"
     },
     {
+      "id": "",
       "name": "bicepschema",
       "description": "Bicep schema operations - Commands for working with Azure Bicep Infrastructure as Code (IaC) generation and schema management. Includes operations for retrieving Bicep schemas, templates, and resource definitions to support infrastructure deployment automation.",
-      "command": "azmcp bicepschema"
+      "command": "bicepschema"
     },
     {
+      "id": "",
       "name": "cloudarchitect",
       "description": "Cloud Architecture operations - Commands for generating Azure architecture designs and recommendations based on requirements.",
-      "command": "azmcp cloudarchitect"
+      "command": "cloudarchitect"
     },
     {
+      "id": "",
       "name": "communication",
       "description": "Communication services operations - Commands for managing Azure Communication Services - supports sending SMS",
-      "command": "azmcp communication"
+      "command": "communication"
     },
     {
+      "id": "",
       "name": "confidentialledger",
       "description": "Azure Confidential Ledger operations - Commands for appending and querying tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees. Use these commands to write immutable audit records.",
-      "command": "azmcp confidentialledger"
+      "command": "confidentialledger"
     },
     {
+      "id": "",
       "name": "cosmos",
       "description": "Cosmos DB operations - Commands for managing and querying Azure Cosmos DB resources. Includes operations for databases, containers, and document queries.",
-      "command": "azmcp cosmos"
+      "command": "cosmos"
     },
     {
+      "id": "",
       "name": "datadog",
       "description": "Datadog operations - Commands for managing and monitoring Azure resources through Datadog integration. Includes operations for listing Datadog monitors and retrieving information about monitored Azure resources and their health status.",
-      "command": "azmcp datadog"
+      "command": "datadog"
     },
     {
+      "id": "",
       "name": "deploy",
       "description": "Deploy commands for deploying applications to Azure, including sub commands: - plan get: generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services; - iac rules get: offers guidelines for creating Bicep/Terraform files to deploy applications on Azure; - app logs get: fetch logs from log analytics workspace for Container Apps, App Services, function apps that were deployed through azd; - pipeline guidance get: guidance to create a CI/CD pipeline which provision Azure resources and build and deploy applications to Azure; - architecture diagram generate: generates an azure service architecture diagram for the application based on the provided app topology; ",
-      "command": "azmcp deploy"
+      "command": "deploy"
     },
     {
+      "id": "",
       "name": "eventgrid",
       "description": "Event Grid operations - Commands for managing and accessing Event Grid topics, domains, and event subscriptions.",
-      "command": "azmcp eventgrid"
+      "command": "eventgrid"
     },
     {
+      "id": "",
       "name": "eventhubs",
       "description": "Azure Event Hubs operations - Commands for managing Azure Event Hubs namespaces and event hubs. Includes CRUD operations Event Hubs service resources.",
-      "command": "azmcp eventhubs"
+      "command": "eventhubs"
     },
     {
+      "id": "",
       "name": "foundry",
       "description": "Foundry service operations - Commands for listing and managing services and resources in AI Foundry.",
-      "command": "azmcp foundry"
+      "command": "foundry"
     },
     {
+      "id": "",
       "name": "functionapp",
       "description": "Function App operations - Commands for managing and accessing Azure Function App resources.",
-      "command": "azmcp functionapp"
+      "command": "functionapp"
     },
     {
+      "id": "",
       "name": "get_bestpractices",
       "description": "Azure best practices - Commands return a list of best practices for code generation, operations and deployment \r\n            when working with Azure services. It should be called for any code generation, deployment or \r\n            operations involving Azure, Azure Functions, Azure Kubernetes Service (AKS), Azure Container \r\n            Apps (ACA), Bicep, Terraform, Azure Cache, Redis, CosmosDB, Entra, Azure Active Directory, \r\n            Azure App Services, or any other Azure technology or programming language. Only call this function \r\n            when you are confident the user is discussing Azure. If this tool needs to be categorized, \r\n            it belongs to the Get Azure Best Practices category.",
-      "command": "azmcp get_bestpractices"
+      "command": "get_bestpractices"
     },
     {
+      "id": "",
       "name": "grafana",
       "description": "Grafana workspace operations - Commands for managing and accessing Azure Managed Grafana resources and monitoring dashboards. Includes operations for listing Grafana workspaces and managing data visualization and monitoring capabilities.",
-      "command": "azmcp grafana"
+      "command": "grafana"
     },
     {
+      "id": "",
       "name": "group",
       "description": "Resource group operations - Commands for listing and managing Azure resource groups in your subscriptions.",
-      "command": "azmcp group"
+      "command": "group"
     },
     {
+      "id": "",
       "name": "keyvault",
       "description": "Key Vault operations - Commands for managing and accessing Azure Key Vault resources.",
-      "command": "azmcp keyvault"
+      "command": "keyvault"
     },
     {
+      "id": "",
       "name": "kusto",
       "description": "Kusto operations - Commands for managing and querying Azure Data Explorer (Kusto) resources. Includes operations for listing clusters and databases, executing KQL queries, retrieving table schemas, and working with Kusto data analytics workloads.",
-      "command": "azmcp kusto"
+      "command": "kusto"
     },
     {
+      "id": "",
       "name": "loadtesting",
       "description": "Load Testing operations - Commands for managing Azure Load Testing resources, test configurations, and test runs. Includes operations for creating and managing load test resources, configuring test scripts, executing performance tests, and monitoring test results.",
-      "command": "azmcp loadtesting"
+      "command": "loadtesting"
     },
     {
+      "id": "",
       "name": "managedlustre",
       "description": "Azure Managed Lustre operations - Commands for creating, updating, listing and inspecting Azure Managed Lustre file systems (AMLFS) used for high-performance computing workloads. The tool focuses on managing all the aspects related to Azure Managed Lustre file system instances.",
-      "command": "azmcp managedlustre"
+      "command": "managedlustre"
     },
     {
+      "id": "",
       "name": "marketplace",
       "description": "Marketplace operations - Commands for managing and accessing Azure Marketplace products and offers.",
-      "command": "azmcp marketplace"
+      "command": "marketplace"
     },
     {
+      "id": "",
       "name": "monitor",
       "description": "Azure Monitor operations - Commands for querying and analyzing Azure Monitor logs and metrics.",
-      "command": "azmcp monitor"
+      "command": "monitor"
     },
     {
+      "id": "",
       "name": "mysql",
       "description": "MySQL operations - Commands for managing Azure Database for MySQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.",
-      "command": "azmcp mysql"
+      "command": "mysql"
     },
     {
+      "id": "",
       "name": "postgres",
       "description": "PostgreSQL operations - Commands for managing Azure Database for PostgreSQL Flexible Server resources. Includes operations for listing servers and databases, executing SQL queries, managing table schemas, and configuring server parameters.",
-      "command": "azmcp postgres"
+      "command": "postgres"
     },
     {
+      "id": "",
       "name": "quota",
       "description": "Quota commands for getting the available regions of specific Azure resource types or checking Azure resource quota and usage",
-      "command": "azmcp quota"
+      "command": "quota"
     },
     {
+      "id": "",
       "name": "redis",
       "description": "Redis operations - Commands for managing Azure Redis resources. Includes operations for listing Redis resources, databases, and data access policies, in both the Azure Managed Redis and legacy Azure Cache for Redis services.",
-      "command": "azmcp redis"
+      "command": "redis"
     },
     {
+      "id": "",
       "name": "resourcehealth",
       "description": "Resource Health operations - Commands for monitoring and diagnosing Azure resource health status.\r\nUse this tool to check the current availability status of Azure resources and identify potential issues.\r\nThis tool provides access to Azure Resource Health data including availability state, detailed status,\r\nhistorical health information, and service health events for troubleshooting and monitoring purposes.",
-      "command": "azmcp resourcehealth"
+      "command": "resourcehealth"
     },
     {
+      "id": "",
       "name": "role",
       "description": "Authorization operations - Commands for managing Azure Role-Based Access Control (RBAC) resources. Includes operations for listing role assignments, managing permissions, and working with Azure security and access management at various scopes.",
-      "command": "azmcp role"
+      "command": "role"
     },
     {
+      "id": "",
       "name": "search",
       "description": "Search operations - Commands for Azure AI Search (formerly known as \\\"Azure Cognitive Search\\\") services,\r\nsearch indexes, knowledge sources and knowledge bases. Use this tool when you need to retrieve knowledge,\r\nsearch indexes, or introspect search services and their components. This tool supports enterprise search,\r\ndocument search, and knowledge mining. Do not use this tool for database queries or Azure Monitor\r\nlogs, this tool is specifically designed for Azure AI Search. This tool is a hierarchical MCP command\r\nrouter where sub-commands are routed to MCP servers that require specific fields inside the \\\"parameters\\\"\r\nobject. To invoke a command, set \\\"command\\\" and wrap its arguments in \\\"parameters\\\". Set \\\"learn=true\\\"\r\nto discover available sub-commands for different search service and index operations. Note that this tool\r\nrequires appropriate Azure AI Search permissions and will only access search resources accessible to the\r\nauthenticated user.",
-      "command": "azmcp search"
+      "command": "search"
     },
     {
+      "id": "",
       "name": "servicebus",
-      "description": "Service Bus operations - Commands for managing Azure Service Bus resources including queues, topics, and subscriptions. Includes operations for managing message queues, topic subscriptions, and retrieving details about Service Bus entities.",
-      "command": "azmcp servicebus"
+      "description": "Service Bus operations - Commands for managing Azure Service Bus messaging infrastructure including queues, topics, and subscriptions for reliable asynchronous communication and enterprise integration. Use this tool to manage message queues for point-to-point communication, configure topics and subscriptions for publish-subscribe patterns, monitor message processing, or set up messaging for decoupled architectures. Supports reliable messaging, dead letter handling, and enterprise integration patterns. Do not use for real-time communication, direct API calls, or database operations - Service Bus is for asynchronous messaging between distributed applications. This is a hierarchical MCP command router where sub-commands are routed to servers requiring specific \"parameters\" fields. To invoke: set \"command\" and wrap arguments in \"parameters\". Set \"learn=true\" to discover sub-commands. Requires appropriate Service Bus permissions.",
+      "command": "servicebus"
     },
     {
+      "id": "",
       "name": "signalr",
       "description": "Azure SignalR operations - Commands for managing Azure SignalR Service resources. Includes operations for listing SignalR services.",
-      "command": "azmcp signalr"
+      "command": "signalr"
     },
     {
+      "id": "",
       "name": "speech",
       "description": "Speech operations - Commands for Azure AI Services Speech functionality including speech-to-text (STT) \r\nrecognition, audio processing, and language detection. Use this tool when you need to convert spoken \r\naudio to text, process audio files, or work with speech recognition services. This tool supports \r\nmultiple audio formats, configurable recognition languages, profanity filtering options, and both \r\nsimple and detailed output formats. This tool is a hierarchical MCP command router where sub-commands \r\nare routed to MCP servers that require specific fields inside the \"parameters\" object. To invoke a \r\ncommand, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available \r\nsub-commands for different Azure AI Services Speech operations. Note that this tool requires Azure AI \r\nServices Speech endpoints and will only access speech resources accessible to the authenticated user.",
-      "command": "azmcp speech"
+      "command": "speech"
     },
     {
+      "id": "",
       "name": "sql",
       "description": "Azure SQL operations - Commands for managing Azure SQL databases, servers, and elastic pools. Includes operations for listing databases, configuring server settings, managing firewall rules, Entra ID administrators, and elastic pool resources.",
-      "command": "azmcp sql"
+      "command": "sql"
     },
     {
+      "id": "",
       "name": "storage",
       "description": "Storage operations - Commands for managing and accessing Azure Storage accounts and the Blobs service for\r\nscalable cloud storage solutions. Use this tool when you need to list storage accounts and work with blob\r\ncontainers and blobs. This tool focuses on object storage scenarios. This tool is a hierarchical MCP command\r\nrouter where sub-commands are routed to MCP servers that require specific fields inside the \"parameters\" object.\r\nTo invoke a command, set \"command\" and wrap its arguments in \"parameters\". Set \"learn=true\" to discover available\r\nsub-commands for different Azure Storage service operations including blobs. Note that this tool requires\r\nappropriate Storage account permissions and will only access storage resources accessible to the authenticated user.",
-      "command": "azmcp storage"
+      "command": "storage"
     },
     {
+      "id": "",
       "name": "subscription",
       "description": "Azure subscription operations - Commands for listing and managing Azure subscriptions accessible to your account.",
-      "command": "azmcp subscription"
+      "command": "subscription"
     },
     {
+      "id": "",
       "name": "virtualdesktop",
       "description": "Azure Virtual Desktop operations - Commands for managing and accessing Azure Virtual Desktop resources. Includes operations for hostpools, session hosts, and user sessions.",
-      "command": "azmcp virtualdesktop"
+      "command": "virtualdesktop"
     },
     {
+      "id": "",
       "name": "workbooks",
       "description": "Workbooks operations - Commands for managing Azure Workbooks resources and interactive data visualization dashboards. Includes operations for listing, creating, updating, and deleting workbooks, as well as managing workbook configurations and content.",
-      "command": "azmcp workbooks"
+      "command": "workbooks"
     },
     {
-      "name": "azqr",
+      "id": "",
+      "name": "extension_azqr",
       "description": "Runs Azure Quick Review CLI (azqr) commands to generate compliance/security reports for Azure resources.\r\nThis tool should be used when the user wants to identify any non-compliant configurations or areas for improvement in their Azure resources.\r\nRequires a subscription id and optionally a resource group name. Returns the generated report file's path.\r\nNote that Azure Quick Review CLI (azqr) is different from Azure CLI (az).",
-      "command": "azmcp extension azqr"
+      "command": "extension azqr"
+    },
+    {
+      "id": "",
+      "name": "extension_cli_generate",
+      "description": "This tool can generate Azure CLI commands to be used with the corresponding CLI tool to accomplish a goal described by the user. This tool incorporates knowledge of the CLI tool beyond what the LLM knows. Always use this tool to generate the CLI command when the user asks for such CLI commands or wants to use the CLI tool to accomplish something.",
+      "command": "extension cli generate"
+    },
+    {
+      "id": "",
+      "name": "extension_cli_install",
+      "description": "This tool can provide installation instructions for the specified CLI tool among Azure CLI (az), Azure Developer CLI (azd) and Azure Functions Core Tools CLI (func). It incorporates knowledge of the CLI tool beyond what the LLM knows. Use this tool to get installation instructions if you attempt to use the CLI tool but it isn't installed.",
+      "command": "extension cli install"
     }
   ],
-  "duration": 12
+  "duration": 32
 }

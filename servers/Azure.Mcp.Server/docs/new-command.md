@@ -205,7 +205,8 @@ Choose the appropriate base class for your service based on the operations neede
        public async Task<List<MyResource>> ListResourcesAsync(
            string resourceGroup,
            string subscription,
-           RetryPolicyOptions? retryPolicy)
+           RetryPolicyOptions? retryPolicy,
+           CancellationToken cancellationToken)
        {
            return await ExecuteResourceQueryAsync(
                "Microsoft.MyService/resources",
@@ -220,7 +221,8 @@ Choose the appropriate base class for your service based on the operations neede
            string resourceName,
            string resourceGroup,
            string subscription,
-           RetryPolicyOptions? retryPolicy)
+           RetryPolicyOptions? retryPolicy,
+           CancellationToken cancellationToken)
        {
            return await ExecuteSingleResourceQueryAsync(
                "Microsoft.MyService/resources",
@@ -254,7 +256,10 @@ Choose the appropriate base class for your service based on the operations neede
    {
        private readonly ISubscriptionService _subscriptionService = subscriptionService;
 
-       public async Task<MyResource> CreateResourceAsync(string subscription, ...)
+       public async Task<MyResource> CreateResourceAsync(
+           string subscription,
+           RetryPolicyOptions? retryPolicy,
+           CancellationToken cancellationToken)
        {
            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
            // Use subscriptionResource for Azure Resource write operations
@@ -746,23 +751,83 @@ public class <Toolset>Service(ISubscriptionService subscriptionService, ITenantS
 
 ### Method Signature Consistency
 
-All interface methods should follow consistent formatting with proper line breaks and parameter alignment:
+All interface methods should follow consistent formatting with proper line breaks and parameter alignment. All async methods must include a `CancellationToken` parameter as the final method argument:
 
 ```csharp
 // Correct formatting - parameters aligned with line breaks
 Task<List<string>> GetStorageAccounts(
     string subscription,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    RetryPolicyOptions? retryPolicy = null,
+    CancellationToken cancellationToken = default);
 
 // Incorrect formatting - all parameters on single line
 Task<List<string>> GetStorageAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+
+// Incorrect - missing CancellationToken parameter
+Task<List<string>> GetStorageAccounts(
+    string subscription,
+    string? tenant = null,
+    RetryPolicyOptions? retryPolicy = null);
 ```
 
 **Formatting Rules:**
 - Parameters indented and aligned
 - Add blank lines between method declarations for visual separation
 - Maintain consistent indentation across all methods in the interface
+
+#### CancellationToken Requirements
+
+**All async methods must include a `CancellationToken` parameter as the final method argument.** This ensures that operations can be cancelled properly and is enforced by the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
+
+**Service Interface Requirements:**
+```csharp
+public interface IMyService
+{
+    Task<List<MyResource>> ListResourcesAsync(
+        string subscription,
+        CancellationToken cancellationToken);
+
+    Task<MyResource?> GetResourceAsync(
+        string resourceName,
+        string subscription,
+        string? resourceGroup = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken);
+}
+```
+
+**Service Implementation Requirements:**
+- Pass the `CancellationToken` parameter to all async method calls
+- Use `cancellationToken: cancellationToken` when calling Azure SDK methods
+- Always include `CancellationToken cancellationToken` as the final parameter (only use a default value if and only if other parameters have default values)
+- Force callers to explicitly provide a CancellationToken
+- Never pass `CancellationToken.None` or `default` as a value to a `CancellationToken` method parameter
+
+**Unit Testing Requirements:**
+- **Mock setup**: Use `Arg.Any<CancellationToken>()` for CancellationToken parameters in mock setups
+- **Product code invocation**: Use `TestContext.Current.CancellationToken` when invoking product code from unit tests
+
+Example:
+```csharp
+// Mock setup in unit tests
+_mockervice
+    .GetResourceAsync(
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<string>(),
+        Arg.Any<RetryPolicyOptions>(),
+        Arg.Any<CancellationToken>())
+    .Returns(mockResource);
+
+// Invoking product code in unit tests
+var result = await _service.GetResourceAsync(
+    "test-resource",
+    "test-subscription",
+    "test-rg",
+    null,
+    TestContext.Current.CancellationToken);
+```
 
 ### 5. Base Service Command Classes
 
@@ -836,7 +901,12 @@ public class {Toolset}Service(ISubscriptionService subscriptionService, ITenantS
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
 
-    public async Task<{Resource}> GetResourceAsync(string subscription, string resourceGroup, string resourceName, RetryPolicyOptions? retryPolicy)
+    public async Task<{Resource}> GetResourceAsync(
+        string subscription,
+        string resourceGroup,
+        string resourceName,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken)
     {
         // Always use subscription service for resolution
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
@@ -892,7 +962,12 @@ public class {Resource}{Operation}CommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _service
+                .{Operation}(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .Returns([]);
         }
 
@@ -919,7 +994,12 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service
+            .{Operation}(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse({argsArray});
@@ -942,7 +1022,12 @@ public class {Resource}{Operation}CommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.{Operation}(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _service
+            .{Operation}(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<ResultType>>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--required", "value"]);
@@ -980,6 +1065,8 @@ Guidelines:
    - ✅ Good: `_service.{Operation}(Arg.Is(value)).Returns(return)`
    - ✅ Good: `_service.{Operation}(value).Returns(return)`
    - ❌ Bad: `_service.{Operation}(Arg.Is<T>(t => t == value)).Returns(return)`
+- CancellationToken in mocks: Always use `Arg.Any<CancellationToken>()` for CancellationToken parameters when setting up mocks
+- CancellationToken in product code invocation: When invoking real product code objects in unit tests, use `TestContext.Current.CancellationToken` for the CancellationToken parameter
 ### 7. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
@@ -1694,7 +1781,8 @@ Task<List<ResourceModel>> GetResources(
     string subscription,
     string? resourceGroup = null,
     string? tenant = null,
-    RetryPolicyOptions? retryPolicy = null);
+    RetryPolicyOptions? retryPolicy = null,
+    CancellationToken cancellationToken = default);
 ```
 
 **Issue: Wrong subscription resolution pattern**
@@ -1765,6 +1853,7 @@ catch (Exception ex)
    - Follow exact namespace hierarchy
    - Register all options in RegisterOptions
    - Handle all exceptions
+   - Include CancellationToken parameter as final argument in all async methods
 
 2. Error Handling:
    - Return HttpStatusCode.BadRequest for validation errors
@@ -2125,6 +2214,7 @@ Before submitting:
 - [ ] Command class implements all required members
 - [ ] Command uses proper OptionDefinitions
 - [ ] Service interface and implementation complete
+- [ ] All async methods include CancellationToken parameter as final argument, and rules for using CancellationToken are followed in unit tests when setting up mocks or calling product code.
 - [ ] Unit tests cover all paths
 - [ ] Integration tests added
 - [ ] Command registered in toolset setup RegisterCommands method

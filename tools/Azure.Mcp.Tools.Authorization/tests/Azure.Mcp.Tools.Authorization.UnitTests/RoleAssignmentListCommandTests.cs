@@ -81,7 +81,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -100,7 +100,7 @@ public class RoleAssignmentListCommandTests
         // Arrange
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
-        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, CancellationToken.None)
+        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
             .Returns([]);
 
         var command = new RoleAssignmentListCommand(_logger);
@@ -111,7 +111,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -132,7 +132,7 @@ public class RoleAssignmentListCommandTests
         var subscriptionId = "00000000-0000-0000-0000-000000000001";
         var scope = $"/subscriptions/{subscriptionId}/resourceGroups/rg1";
 
-        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, CancellationToken.None)
+        _authorizationService.ListRoleAssignmentsAsync(subscriptionId, scope, null, null, TestContext.Current.CancellationToken)
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new RoleAssignmentListCommand(_logger);
@@ -143,7 +143,7 @@ public class RoleAssignmentListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
