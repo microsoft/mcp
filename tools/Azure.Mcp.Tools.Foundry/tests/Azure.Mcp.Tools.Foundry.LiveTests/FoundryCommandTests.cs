@@ -1054,11 +1054,10 @@ public class FoundryCommandTests(ITestOutputHelper output)
                 { "endpoint", endpoint },
                 { "user-message", userMessage }
             });
-        var response = result.AssertProperty("response");
-        Assert.Equal(JsonValueKind.Object, response.ValueKind);
-        Assert.NotEmpty(response.EnumerateObject());
-        response.AssertProperty("threadId");
-        response.AssertProperty("projectEndpoint");
+        var threadIdResult = result.AssertProperty("threadId");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
     }
 
     [Fact]
