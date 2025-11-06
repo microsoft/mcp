@@ -1,0 +1,23 @@
+{
+    "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
+    "name": "com.microsoft/fabric-mcp",
+    "description": "<<INSERT_SERVER_DESCRIPTION>>",
+    "version": "0.0.1",
+    "title": "Microsoft Fabric MCP Server",
+    "packages": [
+        {
+            "registryType": "nuget",
+            "identifier": "<<INSERT_PACKAGE_NAME>>",
+            "version": "0.0.1",
+            "transport": {
+                "type": "stdio"
+            }
+        }
+    ],
+    "repository": {
+        "url": "https://github.com/microsoft/mcp",
+        "source": "github",
+        "subfolder": "servers/Fabric.Mcp.Server"
+    },
+    "websiteUrl": "https://github.com/microsoft/mcp/tree/main/servers/Fabric.Mcp.Server"
+}
