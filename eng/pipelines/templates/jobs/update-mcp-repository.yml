@@ -1,0 +1,38 @@
+parameters:
+- name: ServerName
+  type: string
+- name: DependsOn
+  type: object
+- name: ReleaseType
+  type: string
+  default: 'staging'
+
+jobs:
+- job: BuildAndUpdateMcpRepository
+  displayName: Build MCP Publisher and Update Repository
+  dependsOn: ${{ parameters.DependsOn }}
+  pool:
+    name: $(LINUXPOOL)
+    image: $(LINUXVMIMAGE)
+    os: linux
+
+  steps:
+  - checkout: self
+
+  - download: current
+    displayName: Download build_info
+    artifact: build_info
+
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'Azure SDK PME Managed Identity'
+      scriptType: 'pscore'
+      scriptLocation: 'scriptPath'
+      scriptPath: $(Build.SourcesDirectory)/eng/scripts/Deploy-ServerJson.ps1
+      arguments: >
+        -ServerName '${{ parameters.ServerName }}'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -TemporaryDirectory '$(Pipeline.TemporaryDirectory)'
+        -ReleaseType '${{ parameters.ReleaseType }}'
+        -KeyVaultName 'kv-azuresdk-codesign'
+        -KeyVaultKeyName ''
