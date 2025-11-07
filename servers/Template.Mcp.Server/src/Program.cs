@@ -13,6 +13,7 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
@@ -28,17 +29,17 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
-            ConfigureServices(services);
+            var builder = Host.CreateApplicationBuilder();
+            ConfigureServices(builder.Services, builder.Environment);
 
-            services.AddLogging(builder =>
+            builder.Services.AddLogging(builder =>
             {
                 builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
-            var serviceProvider = services.BuildServiceProvider();
+            var serviceProvider = builder.Services.BuildServiceProvider();
             await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
@@ -126,9 +127,9 @@ internal class Program
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services)
+    internal static void ConfigureServices(IServiceCollection services, IHostEnvironment hostEnvironment)
     {
-        services.ConfigureOpenTelemetry();
+        services.ConfigureOpenTelemetry(hostEnvironment);
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
