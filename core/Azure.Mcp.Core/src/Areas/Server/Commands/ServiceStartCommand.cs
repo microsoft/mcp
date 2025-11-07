@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Console;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Logs;
@@ -55,7 +56,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
-    public static Action<IServiceCollection> ConfigureServices { get; set; } = _ => { };
+    public static Action<IServiceCollection, IHostEnvironment> ConfigureServices { get; set; } = (_,__) => { };
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
@@ -332,41 +333,42 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// <returns>An IHost instance configured for STDIO transport.</returns>
     private IHost CreateStdioHost(ServiceStartOptions serverOptions)
     {
-        return Host.CreateDefaultBuilder()
-            .ConfigureLogging(logging =>
-            {
-                logging.ClearProviders();
-                logging.ConfigureOpenTelemetryLogger();
-                logging.AddEventSourceLogger();
+        var builder = Host.CreateApplicationBuilder();
 
-                if (serverOptions.Debug)
-                {
-                    // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
-                    logging.AddConsole(options =>
-                    {
-                        options.LogToStandardErrorThreshold = LogLevel.Debug;
-                        options.FormatterName = Microsoft.Extensions.Logging.Console.ConsoleFormatterNames.Simple;
-                    });
-                    logging.AddSimpleConsole(simple =>
-                    {
-                        simple.ColorBehavior = Microsoft.Extensions.Logging.Console.LoggerColorBehavior.Disabled;
-                        simple.IncludeScopes = false;
-                        simple.SingleLine = true;
-                        simple.TimestampFormat = "[HH:mm:ss] ";
-                    });
-                    logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
-                    logging.SetMinimumLevel(LogLevel.Debug);
-                }
-            })
-            .ConfigureServices(services =>
-            {
-                // Configure the outgoing authentication strategy.
-                services.AddSingleIdentityTokenCredentialProvider();
+        var logging = builder.Logging;
 
-                ConfigureServices(services);
-                ConfigureMcpServer(services, serverOptions);
-            })
-            .Build();
+        logging.ClearProviders();
+        logging.ConfigureOpenTelemetryLogger();
+        logging.AddEventSourceLogger();
+
+        if (builder.Environment.IsDevelopment() && serverOptions.Debug)
+        {
+            // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
+            logging.AddConsole(options =>
+            {
+                options.LogToStandardErrorThreshold = LogLevel.Debug;
+                options.FormatterName = ConsoleFormatterNames.Simple;
+            });
+            logging.AddSimpleConsole(simple =>
+            {
+                simple.ColorBehavior = LoggerColorBehavior.Disabled;
+                simple.IncludeScopes = false;
+                simple.SingleLine = true;
+                simple.TimestampFormat = "[HH:mm:ss] ";
+            });
+            logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
+            logging.SetMinimumLevel(LogLevel.Debug);
+        }
+
+        var services = builder.Services;
+
+        // Configure the outgoing authentication strategy.
+        services.AddSingleIdentityTokenCredentialProvider();
+
+        ConfigureServices(services, builder.Environment);
+        ConfigureMcpServer(services, serverOptions);
+
+        return builder.Build();
     }
 
     /// <summary>
@@ -465,7 +467,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        ConfigureServices(services); // Our static callback hook
+        ConfigureServices(services, builder.Environment); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
         WebApplication app = builder.Build();
@@ -579,7 +581,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        ConfigureServices(services); // Our static callback hook
+        ConfigureServices(services, builder.Environment); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
         // We still use the multi-user, HTTP context-aware caching strategy here
