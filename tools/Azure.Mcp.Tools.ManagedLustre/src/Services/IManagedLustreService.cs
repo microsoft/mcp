@@ -77,5 +77,13 @@ public interface IManagedLustreService
         long? squashGid = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null);
+
+    Task<string> CreateAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
 

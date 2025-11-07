@@ -1627,6 +1627,12 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
                                             --location <location>
+
+# Create an autoexport job for an Azure Managed Lustre filesystem
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoexport-job create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name>
 ```
 
 ### Azure Native ISV Operations
