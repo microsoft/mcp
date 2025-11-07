@@ -2249,17 +2249,17 @@ public class StorageService : BaseAzureService, IStorageService
     public async Task<List<StorageAccount>> GetStorageAccountsAsync(
         string subscription,
         string? resourceGroup,
-        RetryPolicyOptions? retryPolicy)
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
     {
-        // ✅ Use base class methods that handle authentication
-        var credential = await GetCredentialAsync(null, CancellationToken.None);
+        // ✅ Use base class methods that handle authentication and ARM client creation
+        var armClient = await CreateArmClientAsync(tenant: null, retryPolicy);
         
-        // ✅ Credential automatically uses appropriate auth strategy
+        // ✅ CreateArmClientAsync automatically uses appropriate auth strategy:
         // - OBO flow in remote HTTP mode with --outgoing-auth-strategy UseOnBehalfOf
         // - Server identity in remote HTTP mode with --outgoing-auth-strategy UseHostingEnvironmentIdentity  
         // - Local identity in stdio mode (Azure CLI, VS Code, etc.)
         
-        var armClient = new ArmClient(credential);
         // ... Azure SDK calls
     }
 }
@@ -2341,7 +2341,7 @@ public async Task<List<Resource>> GetResourcesAsync(
     RetryPolicyOptions? retryPolicy)
 {
     // ✅ ITenantService handles tenant resolution for all modes
-    // - In OBO mode: Validates tenant matches user's token
+    // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
     
@@ -2368,7 +2368,7 @@ protected override string GetErrorMessage(Exception ex) => ex switch
     
     RequestFailedException reqEx when reqEx.Status == 403 =>
         "Authorization failed. Your user account lacks the required RBAC permissions. " +
-        "In remote mode with OBO flow, permissions come from the authenticated user's identity.",
+        "In remote mode with On Behalf Of flow, permissions come from the authenticated user's identity. Learn more at https://learn.microsoft.com/entra/identity-platform/v2-oauth2-on-behalf-of-flow",
     
     InvalidOperationException invEx when invEx.Message.Contains("tenant") =>
         "Tenant mismatch. In remote OBO mode, the requested tenant must match your " +

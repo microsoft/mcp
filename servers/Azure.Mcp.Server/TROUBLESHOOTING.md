@@ -827,40 +827,7 @@ The Azure MCP Server supports remote hosting over HTTP using the **Streamable HT
 
 ### Streamable HTTP Transport
 
-#### Local Testing (Development)
-
-**Test with the built executable:**
-
-```bash
-# Set environment variables
-export ASPNETCORE_ENVIRONMENT="Development"
-export ASPNETCORE_URLS="http://localhost:1031"
-export AzureAd__TenantId="<your-tenant-id>"
-export AzureAd__ClientId="<your-client-id>"
-export AzureAd__Instance="https://login.microsoftonline.com/"
-
-# Run server
-azmcp server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity
-```
-
-**Test with VS Code MCP Client:**
-
-1. Configure `.vscode/mcp.json` in your workspace:
-   ```json
-   {
-     "servers": {
-       "Azure MCP Server": {
-         "url": "http://localhost:1031/",
-         "type": "http"
-       }
-     }
-   }
-   ```
-
-2. Open GitHub Copilot Chat in VS Code
-3. Switch to Agent mode
-4. Try a prompt: "List my Azure storage accounts"
-5. Verify the Azure MCP Server is being used
+- See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
 
 ### Common Issues
 
