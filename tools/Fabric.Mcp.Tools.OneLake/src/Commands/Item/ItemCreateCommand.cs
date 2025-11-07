@@ -38,7 +38,8 @@ public sealed class ItemCreateCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.DisplayName.AsRequired());
         command.Options.Add(FabricOptionDefinitions.ItemType.AsRequired());
         command.Options.Add(FabricOptionDefinitions.Description.AsOptional());
@@ -47,7 +48,11 @@ public sealed class ItemCreateCommand(
     protected override ItemCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
+            ? workspaceId!
+            : workspaceName ?? string.Empty;
         options.ItemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DisplayName.Name) ?? string.Empty;
         options.ItemType = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemType.Name) ?? string.Empty;
         options.ItemDescription = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Description.Name);
@@ -59,6 +64,11 @@ public sealed class ItemCreateCommand(
         var options = BindOptions(parseResult);
         try
         {
+            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
+            {
+                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
+            }
+
             var request = new CreateItemRequest
             {
                 DisplayName = options.ItemName,

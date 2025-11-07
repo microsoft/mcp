@@ -42,14 +42,19 @@ public sealed class OneLakeItemListCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId);
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
     }
 
     protected override OneLakeItemListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
+            ? workspaceId!
+            : workspaceName ?? string.Empty;
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
         return options;
     }
@@ -59,6 +64,11 @@ public sealed class OneLakeItemListCommand(
         var options = BindOptions(parseResult);
         try
         {
+            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
+            {
+                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
+            }
+
             var xmlResponse = await _oneLakeService.ListOneLakeItemsXmlAsync(
                 options.WorkspaceId,
                 continuationToken: options.ContinuationToken,

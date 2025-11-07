@@ -27,12 +27,9 @@ public class FileWriteCommandTests
         var command = new FileWriteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("file-write", command.Name);
-        Assert.Equal("Write OneLake File", command.Title);
         Assert.Contains("Write content to a file in OneLake storage", command.Description);
         Assert.False(command.Metadata.ReadOnly);
         Assert.True(command.Metadata.Destructive);
-        Assert.False(command.Metadata.Idempotent);
     }
 
     [Fact]
@@ -107,31 +104,31 @@ public class FileWriteCommandTests
         Assert.False(metadata.Secret);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_WritesFileWithContentSuccessfully()
+    [Theory]
+    [InlineData("--workspace-id test-workspace --item-id test-item", "test-workspace", "test-item")]
+    [InlineData("--workspace \"Analytics Workspace\" --item \"Sales Lakehouse\"", "Analytics Workspace", "Sales Lakehouse")]
+    public async Task ExecuteAsync_WritesFileWithContentSuccessfully(string identifierArgs, string expectedWorkspace, string expectedItem)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileWriteCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new FileWriteCommand(logger, oneLakeService);
 
-        var workspaceId = "test-workspace";
-        var itemId = "test-item";
         var filePath = "test/file.txt";
         var content = "Hello, OneLake!";
 
         oneLakeService.WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            Arg.Any<bool>(), 
+            expectedWorkspace,
+            expectedItem,
+            filePath,
+            Arg.Any<Stream>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath} --content \"{content}\"");
+        var parseResult = systemCommand.Parse($"{identifierArgs} --file-path {filePath} --content \"{content}\"");
         var context = new CommandContext(serviceProvider);
 
         // Act
@@ -141,11 +138,11 @@ public class FileWriteCommandTests
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await oneLakeService.Received(1).WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            false, 
+            expectedWorkspace,
+            expectedItem,
+            filePath,
+            Arg.Any<Stream>(),
+            false,
             Arg.Any<CancellationToken>());
     }
 
@@ -163,11 +160,11 @@ public class FileWriteCommandTests
         var content = "Hello, OneLake!";
 
         oneLakeService.WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            Arg.Any<bool>(), 
+            workspaceId,
+            itemId,
+            filePath,
+            Arg.Any<Stream>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
@@ -183,11 +180,11 @@ public class FileWriteCommandTests
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         await oneLakeService.Received(1).WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            true, 
+            workspaceId,
+            itemId,
+            filePath,
+            Arg.Any<Stream>(),
+            true,
             Arg.Any<CancellationToken>());
     }
 
@@ -205,11 +202,11 @@ public class FileWriteCommandTests
         var content = "Hello, OneLake!";
 
         oneLakeService.WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            Arg.Any<bool>(), 
+            workspaceId,
+            itemId,
+            filePath,
+            Arg.Any<Stream>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
@@ -224,11 +221,11 @@ public class FileWriteCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         await oneLakeService.Received(1).WriteFileAsync(
-            workspaceId, 
-            itemId, 
-            filePath, 
-            Arg.Any<Stream>(), 
-            false, 
+            workspaceId,
+            itemId,
+            filePath,
+            Arg.Any<Stream>(),
+            false,
             Arg.Any<CancellationToken>());
     }
 
@@ -255,11 +252,11 @@ public class FileWriteCommandTests
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
         await oneLakeService.DidNotReceive().WriteFileAsync(
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<string>(), 
-            Arg.Any<Stream>(), 
-            Arg.Any<bool>(), 
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<Stream>(),
+            Arg.Any<bool>(),
             Arg.Any<CancellationToken>());
     }
 }

@@ -5,3 +5,4 @@ using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Fabric.Mcp.Tools.OneLake.UnitTests")]
 [assembly: InternalsVisibleTo("Fabric.Mcp.Tools.OneLake.LiveTests")]
+[assembly: InternalsVisibleTo("Fabric.Mcp.Tools.OneLake.Tests")]

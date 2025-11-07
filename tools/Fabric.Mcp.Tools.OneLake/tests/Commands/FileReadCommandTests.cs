@@ -108,26 +108,26 @@ public class FileReadCommandTests
         Assert.False(metadata.Secret);
     }
 
-    [Fact]
-    public async Task ExecuteAsync_ReadsFileSuccessfully()
+    [Theory]
+    [InlineData("--workspace-id test-workspace --item-id test-item", "test-workspace", "test-item")]
+    [InlineData("--workspace \"Analytics Workspace\" --item \"Sales Lakehouse\"", "Analytics Workspace", "Sales Lakehouse")]
+    public async Task ExecuteAsync_ReadsFileSuccessfully(string identifierArgs, string expectedWorkspace, string expectedItem)
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new FileReadCommand(logger, oneLakeService);
 
-        var workspaceId = "test-workspace";
-        var itemId = "test-item";
         var filePath = "test/file.txt";
         var fileContent = "Hello, OneLake!";
 
         var contentStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
-        oneLakeService.ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<CancellationToken>())
+        oneLakeService.ReadFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>())
             .Returns(contentStream);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath}");
+        var parseResult = systemCommand.Parse($"{identifierArgs} --file-path {filePath}");
         var context = new CommandContext(serviceProvider);
 
         // Act
@@ -136,7 +136,7 @@ public class FileReadCommandTests
         // Assert
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await oneLakeService.Received(1).ReadFileAsync(workspaceId, itemId, filePath, Arg.Any<CancellationToken>());
+        await oneLakeService.Received(1).ReadFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -168,16 +168,12 @@ public class FileReadCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyParameters_UsesDefaultValues()
+    public async Task ExecuteAsync_WithMissingIdentifiers_ReturnsValidationError()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileReadCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new FileReadCommand(logger, oneLakeService);
-
-        var contentStream = new MemoryStream(Encoding.UTF8.GetBytes("test content"));
-        oneLakeService.ReadFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(contentStream);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var systemCommand = command.GetCommand();
@@ -188,6 +184,7 @@ public class FileReadCommandTests
         var response = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        await oneLakeService.Received(1).ReadFileAsync(string.Empty, string.Empty, string.Empty, Arg.Any<CancellationToken>());
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await oneLakeService.DidNotReceive().ReadFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

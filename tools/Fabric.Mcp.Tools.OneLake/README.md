@@ -13,9 +13,10 @@ OneLake is Microsoft Fabric's built-in data lake that provides unified storage f
 
 **Features:**
 - 11 comprehensive OneLake commands with full MCP integration
+- Friendly-name support for workspaces and items across data-plane commands ( `item-create` currently requires GUID IDs )
 - Support for multiple Microsoft Fabric environments (PROD, DAILY, DXT, MSIT)
 - Robust error handling and authentication
-- Production-ready with 100% test coverage (74 tests)
+- Production-ready with 100% test coverage (76 tests)
 - Clean, focused API design optimized for AI agent interactions
 
 ## Prerequisites
@@ -204,6 +205,14 @@ You can verify which environment you're targeting by checking the endpoints in t
 - Daily and DXT environments are primarily for testing and development
 - Production environment should be used for production workloads
 
+### Workspace and Item Identifiers
+
+All commands except `item-create` accept either GUID identifiers or friendly names via the `--workspace` and `--item` options. The existing `--workspace-id` and `--item-id` switches remain available for scripts that already depend on them. Friendly-name inputs are sent directly to the OneLake APIs without local GUID resolution; when using names, specify the item as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). `item-create` currently requires the GUID-based `--workspace-id` option.
+
+```bash
+dotnet run -- onelake path-list --workspace "Analytics Workspace" --item "SalesLakehouse.lakehouse" --path "Files"
+```
+
 ## Available Commands
 
 **Note:** All commands support additional global options for authentication, retry policies, and tenant configuration. Use `--help` with any command to see the full list of options.
@@ -285,6 +294,8 @@ Creates a new item (Lakehouse, Notebook, etc.) in a Microsoft Fabric workspace u
 ```bash
 dotnet run -- onelake item-create --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --display-name "NewLakehouse" --type "Lakehouse"
 ```
+
+> **Note:** `item-create` currently requires the GUID-based `--workspace-id` switch; friendly workspace names are not supported for this command yet.
 
 **Parameters:**
 - `--workspace-id`: The ID of the Microsoft Fabric workspace
@@ -569,6 +580,51 @@ dotnet run -- onelake directory-delete --workspace-id "47242da5-ff3b-46fb-a94f-9
 }
 ```
 
+## Quick Reference - fabmcp.exe Commands
+
+For users with the compiled `fabmcp.exe` executable, here are ready-to-use commands:
+
+### Authentication
+```cmd
+# Authenticate with Microsoft tenant (required first step)
+az login --tenant "72f988bf-86f1-41af-91ab-2d7cd011db47" --scope "https://management.core.windows.net//.default"
+```
+
+### Workspace Operations
+```cmd
+# List all OneLake workspaces
+fabmcp.exe onelake onelake-workspace-list
+
+# List items in a specific workspace
+fabmcp.exe onelake onelake-item-list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5"
+```
+
+### Path & Directory Operations
+```cmd
+# List files and directories with filesystem view
+fabmcp.exe onelake path-list --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --path "Files" --recursive
+
+# Create a new directory
+fabmcp.exe onelake directory-create --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir"
+
+# Delete a directory (with recursive option for non-empty directories)
+fabmcp.exe onelake directory-delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --directory-path "mcpdir" --recursive
+```
+
+### File Operations
+```cmd
+# Write content to a file
+fabmcp.exe onelake file-write --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt" --content "Hello, OneLake!"
+
+# Read file contents
+fabmcp.exe onelake file-read --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
+
+# Delete a file
+fabmcp.exe onelake file-delete --workspace "47242da5-ff3b-46fb-a94f-977909b773d5" --item "0e67ed13-2bb6-49be-9c87-a1105a4ea342" --file-path "mcpdir/hello.txt"
+```
+
+**Note:** Replace the workspace identifier (`47242da5-ff3b-46fb-a94f-977909b773d5`) and item identifier (`0e67ed13-2bb6-49be-9c87-a1105a4ea342`) with your actual Fabric workspace and item values (names or IDs).
+
 ## Common Usage Patterns
 
 ### Bulk File Upload
@@ -702,8 +758,8 @@ This tool is part of the Microsoft MCP (Model Context Protocol) project. Please 
 The OneLake MCP Tools include a comprehensive test suite with 100% command coverage:
 
 #### Test Structure
-- **Total Tests**: 74 tests (all passing)
-- **Command Tests**: 68 tests covering all 11 OneLake MCP commands
+- **Total Tests**: 76 tests (all passing)
+- **Command Tests**: 70 tests covering all 11 OneLake MCP commands
 - **Service Architecture Tests**: 6 tests demonstrating testable patterns with dependency injection
 
 #### Running Tests

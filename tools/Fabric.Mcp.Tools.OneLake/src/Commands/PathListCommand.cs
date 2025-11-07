@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Commands;
@@ -49,8 +50,10 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsRequired());
-        command.Options.Add(FabricOptionDefinitions.ItemId.AsRequired());
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Path.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive.AsOptional());
         command.Options.Add(OneLakeOptionDefinitions.Format.AsOptional());
@@ -59,8 +62,18 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
     protected override PathListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
+            ? workspaceId!
+            : workspaceName ?? string.Empty;
+
+        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
+            ? itemId!
+            : itemName ?? string.Empty;
+
         options.Path = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Path.Name);
         options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
         options.Format = parseResult.GetValueOrDefault<string>(OneLakeOptionDefinitions.Format.Name);
@@ -79,13 +92,23 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
         try
         {
             var oneLakeService = context.GetService<IOneLakeService>();
+
+            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
+            {
+                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
+            }
+
+            if (string.IsNullOrWhiteSpace(options.ItemId))
+            {
+                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
+            }
             
             // Check if raw format is requested
             if (options.Format?.ToLowerInvariant() == "raw")
             {
                 var rawResponse = await oneLakeService.ListPathRawAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    options.WorkspaceId,
+                    options.ItemId,
                     options.Path,
                     options.Recursive,
                     cancellationToken: default);
@@ -102,16 +125,16 @@ public sealed class PathListCommand(ILogger<PathListCommand> logger)
             if (string.IsNullOrWhiteSpace(options.Path))
             {
                 fileSystemItems = await oneLakeService.ListPathIntelligentAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    options.WorkspaceId,
+                    options.ItemId,
                     options.Recursive,
                     cancellationToken: default);
             }
             else
             {
                 fileSystemItems = await oneLakeService.ListPathAsync(
-                    options.WorkspaceId!,
-                    options.ItemId!,
+                    options.WorkspaceId,
+                    options.ItemId,
                     options.Path,
                     options.Recursive,
                     cancellationToken: default);

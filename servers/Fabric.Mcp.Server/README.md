@@ -111,11 +111,21 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | `publicapis itemdefinition get --workload-type <workload>` | Get JSON schema definitions for a workload | tools/Fabric.Mcp.Tools.PublicApi/src/Commands/BestPractices/GetWorkloadDefinitionCommand.cs |
 
 ## OneLake (`onelake`)
-| Command | Purpose | Implementation |
-|---|---|---|
-| *Commands coming soon* | OneLake data lake operations | tools/Fabric.Mcp.Tools.OneLake/src/Commands/ |
+| Command | Purpose |
+|---|---|
+| `onelake path-list` | Explore folders and files using the DFS hierarchical view. |
+| `onelake list-blobs` | Enumerate OneLake content in a flat blob-style listing. |
+| `onelake file-read` | Download file contents from OneLake storage. |
+| `onelake file-write` | Upload text or local files, with optional overwrite. |
+| `onelake file-delete` | Remove individual files. |
+| `onelake directory-create` | Create nested directories. |
+| `onelake directory-delete` | Delete directories (with optional recursion). |
+| `onelake onelake-workspace-list` | List available OneLake workspaces. |
+| `onelake onelake-item-list` | List Fabric items within a workspace (data plane). |
+| `onelake onelake-item-list-dfs` | List Fabric items via the DFS endpoint. |
+| `onelake item-create` | Provision new Fabric items (lakehouse, notebook, etc.). |
 
-> Always verify the available commands in your build via `--help` before scripting against them; command names and availability are code-driven and may change between releases.
+All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item-create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.
 
 ---
 

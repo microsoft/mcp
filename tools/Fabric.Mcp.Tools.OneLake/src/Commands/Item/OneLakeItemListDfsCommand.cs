@@ -42,7 +42,8 @@ public sealed class OneLakeItemListDfsCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId);
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
         command.Options.Add(FabricOptionDefinitions.Recursive);
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
     }
@@ -50,7 +51,11 @@ public sealed class OneLakeItemListDfsCommand(
     protected override OneLakeItemListDfsOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
+            ? workspaceId!
+            : workspaceName ?? string.Empty;
         options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
         options.ContinuationToken = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ContinuationToken.Name);
         return options;
@@ -61,6 +66,11 @@ public sealed class OneLakeItemListDfsCommand(
         var options = BindOptions(parseResult);
         try
         {
+            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
+            {
+                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
+            }
+
             var jsonResponse = await _oneLakeService.ListOneLakeItemsDfsJsonAsync(
                 options.WorkspaceId,
                 recursive: options.Recursive,

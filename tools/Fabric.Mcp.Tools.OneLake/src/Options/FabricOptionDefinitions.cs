@@ -7,6 +7,7 @@ namespace Fabric.Mcp.Tools.OneLake.Options;
 
 public static class FabricOptionDefinitions
 {
+
     // Workspace options
     public const string WorkspaceName = "workspace";
     public static readonly Option<string> Workspace = new($"--{WorkspaceName}")

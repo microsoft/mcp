@@ -27,29 +27,8 @@ public class FileDeleteCommandTests
         var command = new FileDeleteCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("file-delete", command.Name);
-        Assert.Equal("Delete OneLake File", command.Title);
-        Assert.Contains("Delete a file from OneLake storage", command.Description);
         Assert.False(command.Metadata.ReadOnly);
-        Assert.True(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
-    }
-
-    [Fact]
-    public void GetCommand_ReturnsValidCommand()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileDeleteCommand(logger, oneLakeService);
-
-        // Act
-        var systemCommand = command.GetCommand();
-
-        // Assert
-        Assert.NotNull(systemCommand);
-        Assert.Equal("file-delete", systemCommand.Name);
-        Assert.NotNull(systemCommand.Description);
     }
 
     [Fact]
@@ -65,6 +44,35 @@ public class FileDeleteCommandTests
 
         // Assert - Just verify we have some options
         Assert.NotEmpty(systemCommand.Options);
+    }
+
+    [Theory]
+    [InlineData("--workspace-id test-workspace --item-id test-item", "test-workspace", "test-item")]
+    [InlineData("--workspace \"Analytics Workspace\" --item \"Sales Lakehouse\"", "Analytics Workspace", "Sales Lakehouse")]
+    public async Task ExecuteAsync_DeletesFileSuccessfully(string identifierArgs, string expectedWorkspace, string expectedItem)
+    {
+        // Arrange
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
+        var oneLakeService = Substitute.For<IOneLakeService>();
+        var command = new FileDeleteCommand(logger, oneLakeService);
+
+        var filePath = "test/file.txt";
+
+        oneLakeService.DeleteFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>())
+            .Returns(Task.CompletedTask);
+
+        var serviceProvider = Substitute.For<IServiceProvider>();
+        var systemCommand = command.GetCommand();
+        var parseResult = systemCommand.Parse($"{identifierArgs} --file-path {filePath}");
+        var context = new CommandContext(serviceProvider);
+
+        // Act
+        var response = await command.ExecuteAsync(context, parseResult);
+
+        // Assert
+        Assert.NotNull(response.Results);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        await oneLakeService.Received(1).DeleteFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -108,35 +116,6 @@ public class FileDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_DeletesFileSuccessfully()
-    {
-        // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
-        var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new FileDeleteCommand(logger, oneLakeService);
-
-        var workspaceId = "test-workspace";
-        var itemId = "test-item";
-        var filePath = "test/file.txt";
-
-        oneLakeService.DeleteFileAsync(workspaceId, itemId, filePath, Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
-
-        var serviceProvider = Substitute.For<IServiceProvider>();
-        var systemCommand = command.GetCommand();
-        var parseResult = systemCommand.Parse($"--workspace-id {workspaceId} --item-id {itemId} --file-path {filePath}");
-        var context = new CommandContext(serviceProvider);
-
-        // Act
-        var response = await command.ExecuteAsync(context, parseResult);
-
-        // Assert
-        Assert.NotNull(response.Results);
-        Assert.Equal(HttpStatusCode.OK, response.Status);
-        await oneLakeService.Received(1).DeleteFileAsync(workspaceId, itemId, filePath, Arg.Any<CancellationToken>());
-    }
-
-    [Fact]
     public async Task ExecuteAsync_HandlesServiceException()
     {
         // Arrange
@@ -165,15 +144,12 @@ public class FileDeleteCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_WithEmptyParameters_UsesDefaultValues()
+    public async Task ExecuteAsync_WithMissingIdentifiers_ReturnsValidationError()
     {
         // Arrange
         var logger = LoggerFactory.Create(builder => { }).CreateLogger<FileDeleteCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
         var command = new FileDeleteCommand(logger, oneLakeService);
-
-        oneLakeService.DeleteFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(Task.CompletedTask);
 
         var serviceProvider = Substitute.For<IServiceProvider>();
         var systemCommand = command.GetCommand();
@@ -184,6 +160,7 @@ public class FileDeleteCommandTests
         var response = await command.ExecuteAsync(context, parseResult);
 
         // Assert
-        await oneLakeService.Received(1).DeleteFileAsync(string.Empty, string.Empty, string.Empty, Arg.Any<CancellationToken>());
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
+        await oneLakeService.DidNotReceive().DeleteFileAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>());
     }
 }

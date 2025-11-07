@@ -9,6 +9,7 @@ using Fabric.Mcp.Tools.OneLake.Models;
 using Fabric.Mcp.Tools.OneLake.Options;
 using Fabric.Mcp.Tools.OneLake.Services;
 using Microsoft.Extensions.Logging;
+using System;
 using System.CommandLine;
 using System.CommandLine.Parsing;
 
@@ -38,8 +39,10 @@ public sealed class DirectoryDeleteCommand(
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(FabricOptionDefinitions.WorkspaceId);
-        command.Options.Add(FabricOptionDefinitions.ItemId);
+        command.Options.Add(FabricOptionDefinitions.WorkspaceId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Workspace.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.ItemId.AsOptional());
+        command.Options.Add(FabricOptionDefinitions.Item.AsOptional());
         command.Options.Add(FabricOptionDefinitions.DirectoryPath);
         command.Options.Add(FabricOptionDefinitions.Recursive);
     }
@@ -47,8 +50,18 @@ public sealed class DirectoryDeleteCommand(
     protected override DirectoryDeleteOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name) ?? string.Empty;
-        options.ItemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name) ?? string.Empty;
+        var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
+        var workspaceName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Workspace.Name);
+        options.WorkspaceId = !string.IsNullOrWhiteSpace(workspaceId)
+            ? workspaceId!
+            : workspaceName ?? string.Empty;
+
+        var itemId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.ItemId.Name);
+        var itemName = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.Item.Name);
+        options.ItemId = !string.IsNullOrWhiteSpace(itemId)
+            ? itemId!
+            : itemName ?? string.Empty;
+
         options.DirectoryPath = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.DirectoryPath.Name) ?? string.Empty;
         options.Recursive = parseResult.GetValueOrDefault<bool>(FabricOptionDefinitions.Recursive.Name);
         return options;
@@ -59,6 +72,16 @@ public sealed class DirectoryDeleteCommand(
         var options = BindOptions(parseResult);
         try
         {
+            if (string.IsNullOrWhiteSpace(options.WorkspaceId))
+            {
+                throw new ArgumentException("Workspace identifier is required. Provide --workspace or --workspace-id.", nameof(options.WorkspaceId));
+            }
+
+            if (string.IsNullOrWhiteSpace(options.ItemId))
+            {
+                throw new ArgumentException("Item identifier is required. Provide --item or --item-id.", nameof(options.ItemId));
+            }
+
             await _oneLakeService.DeleteDirectoryAsync(
                 options.WorkspaceId,
                 options.ItemId,
