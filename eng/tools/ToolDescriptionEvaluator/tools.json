@@ -898,6 +898,12 @@
     },
     {
       "name": "get",
+      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. \r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
+      "command": "azureaibestpractices get",
+      "option": []
+    },
+    {
+      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -3125,6 +3131,79 @@
       ]
     },
     {
+      "name": "create",
+      "description": "    Creates an AI Foundry Agent that processes messages according to a given system instruction using an existing AI Foundry model deployment.",
+      "command": "foundry agents create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--model-deployment",
+          "description": "Name of the model deployment",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--agent-name",
+          "description": "A human-readable name of the Agent",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--system-instruction",
+          "description": "System instruction for the agent to follow when process messages",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "evaluate",
       "description": "Run agent evaluation on agent data. Requires JSON strings for query, response, and tool definitions.",
       "command": "foundry agents evaluate",
@@ -3204,6 +3283,19 @@
         {
           "name": "--azure-openai-deployment",
           "description": "The deployment name for the Azure OpenAI model to be used in evaluation.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get-sdk-sample",
+      "description": "Get code samples to interact with a Foundry Agent using AI Foundry SDK and programming language of your choice.",
+      "command": "foundry agents get-sdk-sample",
+      "option": [
+        {
+          "name": "--programming-language",
+          "description": "The programming language of the sdk for interacting with a Foundry Agent. Supported values are csharp, python and typescript.",
           "type": "string",
           "required": true
         }
@@ -4166,6 +4258,183 @@
           "description": "The name of the Azure OpenAI resource.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "    Creates an AI Foundry Agent Thread that holds the messages between the Agent and the user.",
+      "command": "foundry threads create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user-message",
+          "description": "The user message to add to the thread",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get-messages",
+      "description": "    Get messages in an AI Foundry Agent Thread.",
+      "command": "foundry threads get-messages",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--thread-id",
+          "description": "The Foundry Agent Thread Id",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "    List AI Foundry Agent Threads.",
+      "command": "foundry threads list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -10704,7 +10973,7 @@
         },
         {
           "name": "--format",
-          "description": "Output format: simple or detailed. Default is simple.",
+          "description": "Output format: simple or detailed.",
           "type": "string",
           "required": null
         },
@@ -12902,5 +13171,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 47
+  "duration": 53
 }
