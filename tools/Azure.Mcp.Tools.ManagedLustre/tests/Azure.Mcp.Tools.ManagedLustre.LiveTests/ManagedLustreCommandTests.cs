@@ -438,4 +438,21 @@ public partial class ManagedLustreCommandTests(ITestOutputHelper output, TestPro
 
     [GeneratedRegex("/subscriptions/(.*?)/resourceGroups")]
     private static partial Regex SubscriptionSanitizationRegex();
+    [Fact]
+    public async Task Should_create_autoexport_job()
+    {
+        var result = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = result.AssertProperty("jobName");
+        Assert.Equal(JsonValueKind.String, jobName.ValueKind);
+        Assert.False(string.IsNullOrWhiteSpace(jobName.GetString()));
+    }
 }

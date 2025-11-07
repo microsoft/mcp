@@ -1564,7 +1564,13 @@ azmcp managedlustre fs subnetsize validate --subscription <subscription> \
 # Lists the available Azure Managed Lustre SKUs in a specific location
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs sku get --subscription <subscription> \
-                               --location <location>
+                                            --location <location>
+
+# Create an autoexport job for an Azure Managed Lustre filesystem
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoexport-job create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name>
 ```
 
 ### Azure Native ISV Operations
