@@ -11,7 +11,17 @@
             "version": "2.0.0-beta.2",
             "transport": {
                 "type": "stdio"
-            }
+            },
+            "packageArguments": [
+                {
+                    "type": "positional",
+                    "value": "server"
+                },
+                {
+                    "type": "positional",
+                    "value": "start"
+                }
+            ]
         },
         {
             "registryType": "npm",
