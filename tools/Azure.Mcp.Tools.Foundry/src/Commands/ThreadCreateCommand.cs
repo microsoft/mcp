@@ -40,8 +40,8 @@ public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
     protected override ThreadCreateOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.Endpoint = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.EndpointOption);
-        options.UserMessage = parseResult.GetValueOrDefault<string>(FoundryOptionDefinitions.UserMessage);
+        options.Endpoint = parseResult.GetValueOrDefault(FoundryOptionDefinitions.EndpointOption);
+        options.UserMessage = parseResult.GetValueOrDefault(FoundryOptionDefinitions.UserMessageOption);
         return options;
     }
 
