@@ -3,6 +3,7 @@
 
 using System.Net;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Areas.Server.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -12,6 +13,7 @@ using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
@@ -27,20 +29,24 @@ internal class Program
             ServiceStartCommand.ConfigureServices = ConfigureServices;
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
-            ServiceCollection services = new();
-            ConfigureServices(services);
+            var builder = Host.CreateApplicationBuilder(args);
+            ConfigureServices(builder.Services, builder.Environment);
 
-            services.AddLogging(builder =>
+            builder.Services.AddLogging(builder =>
             {
                 builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
-            var serviceProvider = services.BuildServiceProvider();
-            await InitializeServicesAsync(serviceProvider);
+            using var host = builder.Build();
 
-            var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
+            await InitializeServicesAsync(host.Services);
+
+            // Starts any IHostedServices
+            await host.StartAsync();
+
+            var commandFactory = host.Services.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
@@ -58,9 +64,9 @@ internal class Program
             return 1;
         }
     }
+
     private static IAreaSetup[] RegisterAreas()
     {
-
         return [
             // Register core areas
             new Azure.Mcp.Tools.AzureAIBestPractices.AzureAIBestPracticesSetup(),
@@ -177,9 +183,10 @@ internal class Program
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services)
+    internal static void ConfigureServices(IServiceCollection services, IHostEnvironment hostEnvironment)
     {
-        services.ConfigureOpenTelemetry();
+        services.ConfigureOpenTelemetry(hostEnvironment);
+        services.ConfigureMcpServerOptions();
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();
