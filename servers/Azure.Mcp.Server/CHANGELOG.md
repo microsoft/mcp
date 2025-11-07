@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Azure AI Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
+
 ### Breaking Changes
 
 ### Bugs Fixed

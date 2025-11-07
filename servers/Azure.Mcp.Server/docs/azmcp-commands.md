@@ -1325,6 +1325,21 @@ azmcp marketplace product get --subscription <subscription> \
                               [--pricing-audience <pricing-audience>]
 ```
 
+### Azure AI Best Practices
+
+```bash
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Azure AI Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureaibestpractices get
+
+# Includes guidance on:
+#   - Microsoft Agent Framework usage and patterns
+#   - Azure AI Foundry model selection
+#   - Best practices for ai app / agent development in Azure
+```
+
 ### Azure MCP Best Practices
 
 ```bash

@@ -1,0 +1,428 @@
+# Best Practices for Building AI Apps with Azure AI Services
+
+This guide covers best practices for:
+- Generating code for AI agent applications using Azure AI Foundry and any other Azure AI models
+- Building agents with Azure AI Foundry
+- Implementing chatbots, workflows, assistants, and multi-agent systems with Microsoft Agent Framework
+
+> Note: Understanding User Intent of Azure AI Foundry
+> 
+> **Two Types of Operations:**
+> 
+> **1. Resource Management** - Use `foundry` tool
+> - Keywords: "create/deploy/provision agent/embedding IN Foundry", "set up agent/embedding resource"
+> - Creates Azure AI Foundry agent resource via commands under `foundry`
+> 
+> **2. Application Development** - Use this best practices tool
+> - Keywords: "build/write/implement agent", "develop chatbot/assistant", "agent code"
+> - Generates code using Microsoft Agent Framework SDK
+> - Returns code samples and implementation patterns
+> 
+> **When unsure, ask:** "Do you want to create an agent resource in Azure AI Foundry, or generate agent application code?"
+
+## Key Principles
+**Defaults and Recommendations:**
+- **Default language**: If the user does not specify a programming language, use **.NET** as the default programming language
+- **Recommended SDK**: Use **Microsoft Agent Framework** for building AI agents, chatbots, assistants, and multi-agent systems - it provides flexible orchestration, multi-agent patterns, and cross-platform support (.NET and Python)
+- **Select model first**: Model selection is REQUIRED for ANY AI implementation - always select the appropriate AI model before coding if the user does not specify a model
+
+**Process:**
+- **Gather information first**: Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, feature guides, code samples) BEFORE thinking or writing any code - this ensures high-quality code generation on the first attempt and reduces errors
+- **Think first, then code**: Always output your thoughts on model and SDK selection before implementation
+- **Search as you go**: Continue using Microsoft Document Search throughout implementation - coding, debugging, troubleshooting (one topic at a time). Call this tool **as often as needed** - multiple searches are encouraged to ensure accurate and up-to-date information.
+- **Build and verify**: Must build the project and verify it compiles successfully before finishing code generation
+
+## Background Knowledge
+### Understanding AI Models Hierarchy
+#### Knowledge
+1. Model Provider: The company/organization providing the model (e.g., OpenAI, Microsoft, Deepseek, Meta)
+2. Model Series: A family of related models (e.g., gpt-5, gpt-4o, deepseek-v3, llama-3)
+3. Model: Specific variants within a series (e.g., gpt-5, gpt-5-mini, gpt-5-chat within the gpt-5 series)
+
+#### Where to use
+Use this hierarchy to analyze and select AI models
+
+### Microsoft Agent Framework Key Features
+#### Knowledge
+**Microsoft Agent Framework** is the recommended SDK for building AI agents with Azure. It provides:
+
+**Core Capabilities:**
+  - **Flexible Agent Framework**: Build, orchestrate, and deploy AI agents and multi-agent systems
+  - **Cross-Platform Support**: Available for both .NET and Python
+  - **Multi-LLM Support**: Works with OpenAI, Azure OpenAI, Azure AI Foundry, and other providers
+
+**Agent Types:**
+  - **[RECOMMENDED] Azure AI Foundry Agent (`PersistentAgentsClient`)**: Service-managed persistent agents with conversation threads - best for production applications requiring conversation continuity
+  - **OpenAI ChatCompletion / Responses / Assistants Agent (`OpenAIClient`)**: Stateless or service-managed agents using OpenAI service
+  - **Azure AI Foundry Models ChatCompletion / Responses Agent (`OpenAIClient` / `AzureOpenAIClient`)**: For testing Foundry-deployed models (stateless)
+  - **Azure OpenAI ChatCompletion / Responses (`AzureOpenAIClient`)**: Stateless agents using Azure OpenAI ChatCompletion / Responses service  
+  - **Advanced & Custom Agents**: Custom agents, A2A proxy agents, Any IChatClient
+  
+**Agent Features:**
+  - **Multi-turn Conversations**: Maintain context across messages with conversation threading using `AgentThread`
+  - **Function Tools**: Call external functions and APIs to extend agent capabilities
+  - **Multimodal Support**: Handle text, vision, and other input types
+  - **Structured Output**: Generate JSON or strongly-typed object responses
+  - **Human-in-the-loop**: Require user approval for sensitive operations
+
+**Workflow Features:** (For Multi-Agent Systems):
+  - **Sequential**: Process tasks one after another
+  - **Concurrent**: Run multiple agents in parallel
+  - **Handoff**: Pass control between agents dynamically
+  - **Magentic**: Advanced group chat orchestration
+  - **Agents in workflows**: Embed agents as workflow steps
+  - **Workflow branching logic**: Conditional routing based on results
+  - **Checkpointing and resuming**: Save and restore workflow state
+
+**Advanced Agent Features**:
+  - **Middleware**: Intercept/modify requests/responses
+  - **Memory**: Retain information across conversations
+  - **Observability**: OpenTelemetry tracing
+  - **Agent as tool**: Use agents as functions
+  - **Persisting conversations**: Store chat history
+  - **Third-party storage**: Custom storage backends
+  - **Structured output**: Generate JSON/object responses
+  - **Agent types**: Azure OpenAI, Foundry, custom
+
+**Integration Features:**:
+  - **MCP tools**: Model Context Protocol integration
+  - **MCP with Foundry Agents**: MCP + Azure AI Foundry
+  - **Request and response handling**: External API integration
+  - **Shared states**: Pass data between executors
+  - **Visualization**: Visual workflow representations
+
+#### Where to use
+Search Microsoft Document using these feature keywords (or any other related keywords - this is just a common subset of topics)
+
+## Tool Use Guidelines
+### Microsoft Document Search Tool
+
+#### How to Search Effectively
+**Query strategy**:
+- Focus on **one specific topic** per query to improve accuracy and relevance
+- Use specific feature names or keywords (e.g., "Microsoft Agent Framework sequential workflow", "Agent Framework function tools", "Agent Framework memory")
+- Call this tool **as often as needed** - multiple searches are encouraged to ensure accurate and up-to-date information
+- **Use this tool whenever you encounter unknowns** during any phase: planning (before coding), implementation (while coding), debugging (fixing errors), or troubleshooting (resolving issues)
+
+**Search Operation vs Fetch Operation in Microsoft Document Search Tool**:
+- **Search**: Use when you need to discover information or find relevant documents across Microsoft Document
+- **Fetch**: Use when you have a specific Microsoft Document URL and need the complete, unabridged content
+
+**Choosing the Right Fetch Tool**:
+- **For `https://learn.microsoft.com/` URLs**: ALWAYS use Microsoft Document Fetch Tool - provides better formatting and complete content
+- **For other URLs**: Use generic webpage/fetch tools
+
+
+## Gather Information
+Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, feature guides, code samples) BEFORE thinking or writing any code. This ensures high-quality code generation on the first attempt and reduces errors.
+
+**Remember**: Refer to the "Understanding Microsoft Document Tools" section above for guidance on effective searching.
+
+### 1. REQUIRED: Search for Model Selection
+Model selection is required for any AI code generation in Azure - all AI apps (Microsoft Agent Framework apps) require an AI model.
+
+**REQUIRED: Call ALL operations below EVERY TIME before generating ANY model name in code** (including samples/placeholders).
+
+**IMPORTANT**: Ignore ALL model names from code samples, documentation examples, and guidelines. Always use the operations below to select the latest, current model - do not rely on existing knowledge.
+
+#### Step 1: Fetch models catalog documentation
+  - Use the Microsoft Document **fetch** operation to retrieve `https://learn.microsoft.com/azure/ai-foundry/foundry-models/concepts/models-sold-directly-by-azure`
+  - This provides comprehensive model release dates, capabilities, features, and use cases
+  - **Note**: Must use **fetch** operation (NOT search) to get the complete page without summarization
+
+#### Step 2: Fetch model selection guide
+  - Use the Microsoft Document **fetch** operation to retrieve `https://learn.microsoft.com/azure/ai-foundry/foundry-models/how-to/model-choice-guide`
+  - This provides model selection guidance, comparison criteria, and when to use each model
+  - **Note**: Must use **fetch** operation (NOT search) to get the complete page without summarization
+
+#### Step 3: Get available models from Foundry catalog
+  - Use the Azure AI Foundry **models_list** operation to retrieve models available in the Azure AI Foundry catalog
+  - This shows which models the user can actually access (documentation may list models not available to them)
+
+### 2. Search for Implementation Knowledge
+After completing the required model selection process above, gather SDK and implementation information.
+#### Step 1: Fetch common quickstart pages
+  Use the Microsoft Document **fetch** operation to retrieve these pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
+  - [Default] Azure AI Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
+
+#### Step 2 (Optional): Search for specific agent type documentation
+  **Only if user specifies a different model inference service provider** (not Azure AI Foundry):
+  - **Default**: If user doesn't specify, skip this step and use Azure AI Foundry Agent (`PersistentAgentsClient`)
+  - **If user specifies other providers** (OpenAI, Azure OpenAI, etc.): Search for the corresponding agent type documentation
+    - Example: "Agent Framework Azure OpenAI ChatCompletion Agents"
+    - Example: "Agent Framework OpenAI Assistants Agents"
+
+#### Step 3: Search for feature guidelines
+  Search for Microsoft Agent Framework features needed for implementation:
+  
+  **How to identify features:**
+  - Analyze user's requirements to determine which features are needed
+  - Refer to "Microsoft Agent Framework Key Features" section above for available features
+  
+  **How to search:**
+  - Use Microsoft Document **search** operation with "Microsoft Agent Framework" + feature keyword + language (e.g., "csharp" or "Python")
+  - Search **one feature at a time** for focused, comprehensive results
+  - Continue searching until you have complete knowledge for all required features
+  
+  **Common searches:** "Microsoft Agent Framework function tools csharp", "Microsoft Agent Framework Multi-turn Conversations csharp", "Microsoft Agent Framework Workflows csharp"
+
+
+## Think and Output Your Thoughts
+Always output your thoughts on model and SDK selection before implementation.
+
+### 1. Select and explain model choice
+
+**Selection criteria:**
+- List 3-5 candidate models matching requirements and availability
+- Select based on: (a) Latest release date, (b) Capability match from Step 1, (c) Use case guidance from Step 2, (d) Availability from Step 3
+- Ignore model names in code samples/documents - they use older models for backward compatibility. Always select the LATEST model.
+
+**Output format:**
+```
+User Requirements Analysis:
+- Primary task: [User's goal]
+- Required capabilities: [Features needed]
+- Performance needs: [Context window, speed, etc.]
+
+Model Candidates:
+1. [Model Provider] - [Model Series] - [Model] - [Release Date]
+   - Capability: [Key capabilities]
+   - Match: [How it addresses needs]
+   - Available: [Yes/No in user's account]
+[Repeat for 2-4 more candidates]
+
+Model Selection: [Selected Model]
+Reasoning: [Requirement match, latest in category, trade-offs, availability]
+```
+
+**Example:**
+
+*User Request: "Build a chatbot that can answer questions and call functions"*
+
+*Code Sample Found (IGNORE the model in this sample):*
+```csharp
+AIAgent agent = client.GetChatClient("gpt-4o-mini").CreateAIAgent();
+```
+**Note**: The code sample uses "gpt-4o-mini" and stateless Chat Completion for illustrative purposes. Do NOT use this model or approach just because it's in the sample - proceed with the model selection process (Section "Gather Information" > Steps 1, 2 & 3) to find the latest model.
+
+*Input from Step 1 (Fetched models catalog):*
+- OpenAI GPT-5 (2025-08-07): Advanced reasoning model, function calling, structured output, 400K context
+- OpenAI GPT-4.1 (2025-04-14): Fast responses, function calling, structured outputs, 1M context
+- OpenAI GPT-4o (2024-11-20): Multimodal with vision, function calling, structured output
+- DeepSeek DeepSeek-V3 (2024-12-26): Advanced reasoning model, function calling, 128K context
+
+*Input from Step 2 (Fetched model selection guide):*
+- GPT-5: Best for complex reasoning, multi-hop logic, agentic workflows, Copilot-style tools
+- GPT-4.1: Best for real-time chat, low latency, high throughput, short factual queries
+
+*Input from Step 3 (Available Models):*
+```json
+[{"name": "gpt-5"}, {"name": "gpt-5-mini"}, {"name": "gpt-4o"}, {"name": "gpt-4o-mini"}, {"name": "deepseek-v3"}]
+```
+
+*Output:*
+```
+User Requirements Analysis:
+- Primary task: Build a chatbot for Q&A and function calling
+- Required capabilities: Text generation, function calling
+- Performance needs: Moderate context window, good accuracy
+
+Model Candidates:
+1. OpenAI - gpt-5 - gpt-5-mini - 2025-08-07
+   - Capability: Advanced reasoning, function calling, 400K context
+   - Match: ✅ Latest model, excellent for agentic chatbot workflows
+   - Available: Yes
+2. OpenAI - gpt-4.1 - gpt-4.1-mini - 2025-04-14
+   - Capability: Fast responses, function calling, 1M context
+   - Match: ✅ Better for real-time chat if latency is critical
+   - Available: No (only gpt-4o variants available)
+3. DeepSeek - DeepSeek-V3 - deepseek-v3 - 2024-12-26
+   - Capability: Advanced reasoning, function calling, 128K context
+   - Match: ✅ Good alternative but older and smaller context
+   - Available: Yes
+
+Model Selection: gpt-5-mini
+Reasoning: Latest model (Aug 2025), best for agentic workflows with function calling, superior to GPT-4.1 which isn't available
+Note: Code samples show "gpt-4o-mini" is old. For backward compatibility, always select the LATEST model for new implementations.
+```
+
+### 2. Explain SDK selection
+**Recommended SDK:** Microsoft Agent Framework
+**Recommended Agent Type:** Azure AI Foundry Agents with PersistentAgentsClient when using Azure AI Foundry
+
+** Select Agent Type**
+- **Default choice**: Azure AI Foundry Agent with `PersistentAgentsClient` when integrating with Azure AI Foundry
+- **Alternative**: Azure OpenAI ChatCompletion (simple stateless scenarios or custom history management)
+- **Other types**: Use only when specific requirements demand them
+
+**Output format:**
+```
+SDK Selection: Microsoft Agent Framework
+Agent Type: [Azure AI Foundry Agents (PersistentAgentsClient) OR other agent type]
+Reason: [Detail why this SDK and agent type are suitable for the user's requirements. Explain if conversation persistence is needed, whether the user needs service-managed state, etc.]
+```
+
+### 3. Create implementation plan
+
+**Output format:**
+```
+User Requirements Analysis:
+- Primary functionality: [What the user wants to build]
+- Key features needed: [List of specific Microsoft Agent Framework features required]
+
+Searched Related Knowledge:
+(Only output the related knowledge you searched and will use for implementation)
+- [Key feature name 1]:
+  - Documentation: [List documentation URLs/titles matching the target language]
+  - Programming Language: [Target language: "CSharp" or "Python"]
+  - Code Samples: [Output the entire code sample that may be useful for implementation]
+  - How it will be used: [Brief description]
+- [Key feature name 2]: Fetched / Searched "[search query used]"
+  - Documentation: [List documentation URLs/titles matching the target language]
+  - Programming Language: [Target language: "CSharp" or "Python"]
+  - Code Samples: [Output the entire code sample that may be useful for implementation]
+  - How it will be used: [Brief description]
+- [Additional features as needed...]
+
+Implementation Plan:
+[Step 1]: [Description of what will be implemented]
+[Step 2]: [Description of what will be implemented]
+[Additional steps as needed to cover the complete implementation...]
+```
+
+## Implementation Guidelines
+**Note**: Continue using Microsoft Document Search throughout implementation for any unknowns.
+
+### Language-Specific Implementation:
+**IMPORTANT**: Search results may contain documentation and code samples for multiple programming languages (csharp, Python, etc.)
+
+- Only use documentation and code samples that match your target programming language
+- API signatures, syntax, and patterns differ between languages - do not mix language-specific code
+- Ignore code samples and documentation from other programming languages
+
+
+### Installation
+**IMPORTANT**: Always run installation commands (`dotnet add package` or `pip install`) instead of manually editing project files (.csproj, requirements.txt). This ensures proper dependency resolution and project configuration.
+
+#### Python
+The `--pre` flag is required while Agent Framework is in preview. The Core + Azure AI integration includes Azure AI / Foundry / OpenAI supports, as well as workflows and orchestrations.
+```bash
+pip install agent-framework-azure-ai --pre
+```
+DO REMIND USER THE `--pre` OR `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
+
+#### .NET
+Agent type-specific installation packages:
+- **Azure AI Foundry Agent (RECOMMENDED)** - `PersistentAgentsClient`:
+  ```bash
+  dotnet add package Azure.Identity
+  dotnet add package Microsoft.Agents.AI.AzureAI --prerelease
+  ```
+- **Workflows and Orchestration** - For multi-agent systems and workflow features:
+  ```bash
+  dotnet add package Microsoft.Agents.AI.Workflows --prerelease
+  ```
+- For other agent types (OpenAI ChatCompletion, OpenAI Responses, OpenAI Assistants, Azure AI Foundry Models, etc.), use Microsoft Document Search tool to search for how to install dependencies.
+
+DO REMIND USER THE `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
+
+### Workflows
+**IMPORTANT**: When implementing workflows, use the correct namespace and event handling patterns.
+
+#### Correct Using Statement
+```csharp
+using Microsoft.Agents.AI.Workflows;  // ✅ CORRECT
+```
+**NOT**:
+```csharp
+using Microsoft.Agents.Workflows;  // ❌ WRONG - Do not use this namespace
+```
+
+#### Correct Workflow Output Event Handling
+Use `WorkflowOutputEvent` to handle workflow completion:
+
+✅ **CORRECT Pattern**:
+```csharp
+await foreach (WorkflowEvent evt in run.WatchStreamAsync())
+{
+    if (evt is WorkflowOutputEvent output)
+    {
+        Console.WriteLine($"Workflow completed with results:\n{output.Data}");
+    }
+}
+```
+
+❌ **INCORRECT Pattern** (outdated):
+```csharp
+await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
+{
+    if (evt is AgentRunUpdateEvent e)
+    {
+        Console.WriteLine($"{e.ExecutorId}: {e.Data}");
+    }
+    else if (evt is WorkflowCompletedEvent completed)
+    {
+        result = (List<ChatMessage>)completed.Data!;
+        break;
+    }
+}
+```
+
+## Agent Type 
+### Agent Type Selection
+**IMPORTANT**: When using Azure AI Foundry, always use `PersistentAgentsClient` to create agents - NOT `AzureOpenAIClient`.
+- ❌ Do NOT use `AzureOpenAIClient` for Azure AI Foundry models - that's only for testing and lacks conversation persistence
+- ✅ DO use `PersistentAgentsClient` - it provides full agent capabilities with service-managed state
+
+Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `PersistentAgentsClient` for Azure AI Foundry.
+
+## Important Differences Between PersistentAgentsClient and AzureOpenAIClient
+**IMPORTANT**: `PersistentAgentsClient` and `AzureOpenAIClient` have different APIs for configuring function tools and chat options.
+### Difference 1: How to Configure Tools and Options
+
+#### ✅ CORRECT - PersistentAgentsClient pattern:
+```csharp
+// For PersistentAgentsClient, pass tools/options to GetAIAgentAsync or CreateAIAgentAsync
+using Azure.AI.Agents.Persistent;
+using Azure.Identity;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using System.ComponentModel;
+
+[Description("Get the weather for a given location.")]
+static string GetWeather([Description("The location to get the weather for.")] string location)
+    => $"The weather in {location} is sunny with a high of 25°C.";
+
+var persistentAgentsClient = new PersistentAgentsClient(
+    "https://<myresource>.services.ai.azure.com/api/projects/<myproject>",
+    new AzureCliCredential());
+
+var agentMetadata = await persistentAgentsClient.Administration.CreateAgentAsync(
+    model: "gpt-4o-mini",
+    name: "WeatherAgent",
+    instructions: "You are a helpful weather assistant.");
+
+AIAgent agent = await persistentAgentsClient.GetAIAgentAsync(
+    agentId: agentMetadata.Value.Id,
+    new ChatOptions
+    {
+        Tools = [AIFunctionFactory.Create(GetWeather)]  // ✅ Tools in ChatOptions
+    }
+);
+
+// Use the agent
+var response = await agent.RunAsync("What's the weather like in Seattle?");
+```
+
+
+## Build and Verification
+**IMPORTANT: Build must succeed before completing the task. This step is REQUIRED and NON-NEGOTIABLE.**
+### Build Requirements
+- Run build after ALL code generation is complete
+- Fix all fails and rebuild after fixes
+- Use Microsoft Document Search to search for more feature guidelines, code samples and API reference help to fix
+- Repeat to fix until build successful
+- **After build SUCCEEDS**: 
+   - **STOP making code changes** - build success is the final state
+   - **Do NOT edit code after successful build** - this can introduce new errors
+- Never complete the task with a failing build
