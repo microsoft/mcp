@@ -15,14 +15,6 @@ jobs:
   - checkout: self
     fetchDepth: 0
 
-  #- task: PowerShell@2
-  #  displayName: "Set PR skip job variables"
-  #  name: SetPRSkipJobVariables
-  #  condition: eq(variables['Build.Reason'], 'PullRequest')
-  #  inputs:
-  #    pwsh: true
-  #    filePath: $(Build.SourcesDirectory)/eng/scripts/Set-SkipJobVariables.ps1
-        
   - task: UseDotNet@2
     displayName: "Use .NET SDK from global.json"
     retryCountOnTaskFailure: 3

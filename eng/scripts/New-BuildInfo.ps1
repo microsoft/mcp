@@ -611,7 +611,7 @@ try {
     $matrices = Get-BuildMatrices $serverDetails
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
-    
+
     # spellchecker: ignore SOURCEVERSION
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
