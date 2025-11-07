@@ -1,12 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
-using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Commands.Discovery;
@@ -21,8 +23,15 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
         var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, logger);
+
+        var strategy = new ConsolidatedToolDiscoveryStrategy(factory,
+            serviceProvider,
+            serviceProvider.GetRequiredService<ITelemetryService>(),
+            startOptions,
+            serviceProvider.GetRequiredService<IOptions<AzureMcpServerConfiguration>>(),
+            serviceProvider.GetRequiredService<ILogger<CommandFactory>>(),
+            serviceProvider.GetRequiredService<ILogger<ConsolidatedToolDiscoveryStrategy>>());
+
         if (entryPoint != null)
         {
             strategy.EntryPoint = entryPoint;
