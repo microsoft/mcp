@@ -89,7 +89,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
         ];
 
-
         if (proxy != null && proxy.Proxy != null)
         {
             envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
