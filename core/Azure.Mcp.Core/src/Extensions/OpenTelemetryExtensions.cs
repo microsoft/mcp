@@ -3,12 +3,12 @@
 
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using OpenTelemetry.Logs;
@@ -20,9 +20,7 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
-
-    public static void ConfigureOpenTelemetry(this IServiceCollection services)
+    public static void ConfigureOpenTelemetry(this IServiceCollection services, IHostEnvironment hostEnvironment)
     {
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
@@ -67,7 +65,7 @@ public static class OpenTelemetryExtensions
             services.AddSingleton<IMachineInformationProvider, DefaultMachineInformationProvider>();
         }
 
-        EnableAzureMonitor(services);
+        EnableAzureMonitor(services, hostEnvironment);
     }
 
     public static void ConfigureOpenTelemetryLogger(this ILoggingBuilder builder)
@@ -78,27 +76,21 @@ public static class OpenTelemetryExtensions
         });
     }
 
-    private static void EnableAzureMonitor(this IServiceCollection services)
+    private static void EnableAzureMonitor(this IServiceCollection services, IHostEnvironment hostEnvironment)
     {
-#if DEBUG
-        services.AddSingleton(sp =>
+        if (hostEnvironment.IsDevelopment())
         {
-            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
-            forwarder.Start();
-            return forwarder;
-        });
-#endif
-
-        var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        if (string.IsNullOrEmpty(appInsightsConnectionString))
-        {
-            appInsightsConnectionString = DefaultAppInsights;
+            services.AddSingleton(sp =>
+            {
+                var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
+                forwarder.Start();
+                return forwarder;
+            });
         }
 
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
-            var serverConfig = sp.GetRequiredService<IOptions<McpServerConfiguration>>();
+            var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
             if (!serverConfig.Value.IsTelemetryEnabled)
             {
                 return;
@@ -116,14 +108,19 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-#if RELEASE
-        otelBuilder.UseAzureMonitorExporter(options =>
+        if (hostEnvironment.IsProduction())
         {
-            options.ConnectionString = appInsightsConnectionString;
-        });
+
+        }
+        else if(hostEnvironment.IsDevelopment())
+        {
+
+        }
+#if RELEASE
+        
 #endif
 
-        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
+            var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
             otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
