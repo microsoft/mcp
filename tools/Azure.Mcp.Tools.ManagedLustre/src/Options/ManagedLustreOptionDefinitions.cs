@@ -26,6 +26,7 @@ public static class ManagedLustreOptionDefinitions
     public const string keyUrl = "key-url";
     public const string sourceVault = "source-vault";
     public const string userAssignedIdentityId = "user-assigned-identity-id";
+    public const string filesystemName = "filesystem-name";
 
     public static readonly Option<string> SkuOption = new(
         $"--{sku}"
@@ -194,6 +195,14 @@ public static class ManagedLustreOptionDefinitions
         Description = "User-assigned managed identity resource ID (full resource ID) to use for Key Vault access when custom encryption is enabled. The identity must have RBAC role to access the encryption key\n" +
                       "Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ManagedIdentity/userAssignedIdentities/{name}.\n" +
                       "Example: --user-assigned-identity-id /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/identity1\n"
+    };
+
+    public static readonly Option<string> FileSystemNameOption = new(
+        $"--{filesystemName}"
+    )
+    {
+        Required = true,
+        Description = "The name of the Azure Managed Lustre filesystem. Example: --filesystem-name amlfs-001"
     };
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();

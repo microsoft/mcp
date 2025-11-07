@@ -495,4 +495,53 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         }
     }
+
+    public async Task<string> CreateAutoexportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Generate job name from timestamp
+            var jobName = $"autoexport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Create auto export job data with filesystem location
+            var autoExportJobData = new AutoExportJobData(fs.Value.Data.Location);
+
+            // Create the auto export job
+            var createOperation = await fs.Value.GetAutoExportJobs().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                jobName,
+                autoExportJobData,
+                cancellationToken);
+
+            return createOperation.Value.Data.Name;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create auto export job for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
 }
