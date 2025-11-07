@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -31,6 +32,8 @@ internal class Program
 
             var builder = Host.CreateApplicationBuilder(args);
             ConfigureServices(builder.Services, builder.Environment);
+
+            builder.Configuration.AddJsonFile("appsettings.Release.json", optional: true);
 
             builder.Services.AddLogging(builder =>
             {
