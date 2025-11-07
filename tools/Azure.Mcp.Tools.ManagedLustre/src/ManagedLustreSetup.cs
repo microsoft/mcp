@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -25,6 +26,7 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<SubnetSizeAskCommand>();
         services.AddSingleton<SubnetSizeValidateCommand>();
         services.AddSingleton<SkuGetCommand>();
+        services.AddSingleton<AutoexportJobCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -58,6 +60,12 @@ public class ManagedLustreSetup : IAreaSetup
 
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
+
+        var autoexportJob = new CommandGroup("autoexport-job", "Autoexport archive job operations for Azure Managed Lustre - Commands for creating archive jobs to export data from the filesystem to blob storage.");
+        fileSystem.AddSubGroup(autoexportJob);
+
+        var autoexportJobCreate = serviceProvider.GetRequiredService<AutoexportJobCreateCommand>();
+        autoexportJob.AddCommand(autoexportJobCreate.Name, autoexportJobCreate);
 
         return managedLustre;
     }

@@ -546,6 +546,9 @@
   "managedlustre_fs_update": [
     "Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time>"
   ],
+  "managedlustre_fs_autoexport-job_create": [
+    "Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+  ],
   "marketplace_product_get": [
     "Get details about marketplace product <product_name>"
   ],
