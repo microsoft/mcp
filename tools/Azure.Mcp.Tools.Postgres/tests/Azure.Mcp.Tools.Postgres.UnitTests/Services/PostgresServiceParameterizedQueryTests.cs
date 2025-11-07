@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 
 using System.Data.Common;
+using Azure.Core;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Providers;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Services;
 using Npgsql;
 using NSubstitute;
@@ -26,10 +28,11 @@ public class PostgresServiceParameterizedQueryTests
     public PostgresServiceParameterizedQueryTests()
     {
         _resourceGroupService = Substitute.For<IResourceGroupService>();
+        var tenantService = Substitute.For<ITenantService>();
 
         _entraTokenAuth = Substitute.For<IEntraTokenProvider>();
-        _entraTokenAuth.GetEntraToken(Arg.Any<Azure.Core.TokenCredential>())
-            .Returns(new Azure.Core.AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
+        _entraTokenAuth.GetEntraToken(Arg.Any<TokenCredential>(), Arg.Any<CancellationToken>())
+            .Returns(new AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
 
         _dbProvider = Substitute.For<IDbProvider>();
         _dbProvider.GetPostgresResource(Arg.Any<string>())
@@ -39,7 +42,7 @@ public class PostgresServiceParameterizedQueryTests
         _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>())
             .Returns(Substitute.For<DbDataReader>());
 
-        _postgresService = new PostgresService(_resourceGroupService, _entraTokenAuth, _dbProvider);
+        _postgresService = new PostgresService(_resourceGroupService, tenantService, _entraTokenAuth, _dbProvider);
     }
 
     [Theory]

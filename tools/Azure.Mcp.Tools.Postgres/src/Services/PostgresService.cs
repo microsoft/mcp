@@ -4,9 +4,11 @@
 using System.Data;
 using System.Data.Common;
 using System.Net;
+using Azure.Core;
 using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
@@ -19,29 +21,25 @@ public class PostgresService : BaseAzureService, IPostgresService
     private readonly IResourceGroupService _resourceGroupService;
     private readonly IEntraTokenProvider _entraTokenAuth;
     private readonly IDbProvider _dbProvider;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
 
-    public PostgresService(IResourceGroupService resourceGroupService, IEntraTokenProvider entraTokenAuth, IDbProvider dbProvider)
+    public PostgresService(
+        IResourceGroupService resourceGroupService,
+        ITenantService tenantService,
+        IEntraTokenProvider entraTokenAuth,
+        IDbProvider dbProvider)
+        : base(tenantService)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
         _entraTokenAuth = entraTokenAuth;
         _dbProvider = dbProvider;
     }
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken = default)
     {
-        if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedEntraIdAccessToken;
-        }
+        TokenCredential tokenCredential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential, cancellationToken);
 
-        var tokenCredential = await GetCredential();
-        var accessToken = await _entraTokenAuth.GetEntraToken(tokenCredential);
-        _cachedEntraIdAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
-
-        return _cachedEntraIdAccessToken;
+        return accessToken.Token;
     }
 
     private static string NormalizeServerName(string server)

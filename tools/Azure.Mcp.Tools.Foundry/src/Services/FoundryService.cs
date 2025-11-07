@@ -2,15 +2,15 @@
 // Licensed under the MIT License.
 
 using System.ClientModel;
+using System.Reflection;
 using System.Text;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization.Metadata;
-using System.Threading.Tasks.Dataflow;
-using Azure;
 using Azure.AI.Agents.Persistent;
 using Azure.AI.OpenAI;
 using Azure.AI.Projects;
 using Azure.Core;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
@@ -19,16 +19,13 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Models;
-using Azure.Mcp.Tools.Foundry.Services.Models;
+using Azure.Mcp.Tools.Foundry.Options.Thread;
 using Azure.ResourceManager;
 using Azure.ResourceManager.CognitiveServices;
-using Azure.ResourceManager.CognitiveServices.Models;
-using Azure.ResourceManager.Resources;
 using Microsoft.Extensions.AI;
 using Microsoft.Extensions.AI.Evaluation;
 using Microsoft.Extensions.AI.Evaluation.Quality;
 using OpenAI.Chat;
-using OpenAI.Embeddings;
 
 #pragma warning disable AIEVAL001 // Type is for evaluation purposes only and is subject to change or removal in future updates. Suppress this diagnostic to proceed.
 
@@ -37,7 +34,8 @@ namespace Azure.Mcp.Tools.Foundry.Services;
 public class FoundryService(
     IHttpClientService httpClientService,
     ISubscriptionService subscriptionService,
-    ITenantService tenantService) : BaseAzureResourceService(subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService)), tenantService ?? throw new ArgumentNullException(nameof(tenantService))), IFoundryService
+    ITenantService tenantService)
+    : BaseAzureResourceService(subscriptionService, tenantService), IFoundryService
 {
     private static readonly Dictionary<string, Func<IEvaluator>> AgentEvaluatorDictionary = new()
     {
@@ -62,7 +60,8 @@ public class FoundryService(
         string licenseName = "",
         string modelName = "",
         int maxPages = 3,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         string url = "https://api.catalog.azureml.ms/asset-gallery/v1.0/models";
         var request = new ModelCatalogRequest { Filters = [new ModelCatalogFilter("labels", ["latest"], "eq")] };
@@ -102,10 +101,10 @@ public class FoundryService(
                         Encoding.UTF8,
                         "application/json");
 
-                    var httpResponse = await _httpClientService.DefaultClient.PostAsync(url, content);
+                    var httpResponse = await _httpClientService.DefaultClient.PostAsync(url, content, cancellationToken);
                     httpResponse.EnsureSuccessStatusCode();
 
-                    var responseText = await httpResponse.Content.ReadAsStringAsync();
+                    var responseText = await httpResponse.Content.ReadAsStringAsync(cancellationToken);
                     var response = JsonSerializer.Deserialize(responseText,
                         FoundryJsonContext.Default.ModelCatalogResponse);
                     if (response == null || response.Summaries.Count == 0)
@@ -169,17 +168,21 @@ public class FoundryService(
         return modelsList;
     }
 
-    public async Task<List<Deployment>> ListDeployments(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<Deployment>> ListDeployments(
+        string endpoint,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var deploymentsClient = new AIProjectClient(new Uri(endpoint), credential).GetDeploymentsClient();
 
             var deployments = new List<Deployment>();
-            await foreach (var deployment in deploymentsClient.GetDeploymentsAsync())
+            await foreach (var deployment in deploymentsClient.GetDeploymentsAsync(cancellationToken: cancellationToken))
             {
                 deployments.Add(deployment);
             }
@@ -192,9 +195,21 @@ public class FoundryService(
         }
     }
 
-    public async Task<ModelDeploymentResult> DeployModel(string deploymentName, string modelName, string modelFormat,
-        string azureAiServicesName, string resourceGroup, string subscriptionId, string? modelVersion = null, string? modelSource = null,
-        string? skuName = null, int? skuCapacity = null, string? scaleType = null, int? scaleCapacity = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<ModelDeploymentResult> DeployModel(
+        string deploymentName,
+        string modelName,
+        string modelFormat,
+        string azureAiServicesName,
+        string resourceGroup,
+        string subscriptionId,
+        string? modelVersion = null,
+        string? modelSource = null,
+        string? skuName = null,
+        int? skuCapacity = null,
+        string? scaleType = null,
+        int? scaleCapacity = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(deploymentName), deploymentName),
@@ -212,7 +227,8 @@ public class FoundryService(
             // Retrieve the Cognitive Services account
             var cognitiveServicesAccount = await GetGenericResourceAsync(
                 armClient,
-                new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}"));
+                new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}"),
+                cancellationToken);
 
             // Prepare data for the deployment
             ResourceIdentifier deploymentId = new ResourceIdentifier($"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.CognitiveServices/accounts/{azureAiServicesName}/deployments/{deploymentName}");
@@ -272,17 +288,21 @@ public class FoundryService(
         }
     }
 
-    public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<KnowledgeIndexInformation>> ListKnowledgeIndexes(
+        string endpoint,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
             var indexes = new List<KnowledgeIndexInformation>();
-            await foreach (var index in indexesClient.GetIndicesAsync())
+            await foreach (var index in indexesClient.GetIndicesAsync(cancellationToken))
             {
                 // Determine the type based on the actual type of the index
                 string indexType = index switch
@@ -314,7 +334,12 @@ public class FoundryService(
         }
     }
 
-    public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(string endpoint, string indexName, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<KnowledgeIndexSchema> GetKnowledgeIndexSchema(
+        string endpoint,
+        string indexName,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(endpoint), endpoint),
@@ -322,13 +347,13 @@ public class FoundryService(
 
         try
         {
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
             var indexesClient = new AIProjectClient(new Uri(endpoint), credential).GetIndexesClient();
 
             // Find the index by name using async enumerable
-            var index = await indexesClient.GetIndicesAsync()
+            var index = await indexesClient.GetIndicesAsync(cancellationToken: cancellationToken)
                 .Where(i => string.Equals(i.Name, indexName, StringComparison.OrdinalIgnoreCase))
-                .FirstOrDefaultAsync();
+                .FirstOrDefaultAsync(cancellationToken: cancellationToken);
 
             if (index == null)
             {
@@ -370,7 +395,8 @@ public class FoundryService(
         double? temperature = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(resourceName), resourceName),
@@ -380,11 +406,11 @@ public class FoundryService(
             (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName, cancellationToken: cancellationToken);
 
         // Get the endpoint
         var accountData = cognitiveServicesAccount.Value.Data;
@@ -422,7 +448,7 @@ public class FoundryService(
             new UserChatMessage(promptText)
         };
 
-        var completion = await chatClient.CompleteChatAsync(messages, chatOptions);
+        var completion = await chatClient.CompleteChatAsync(messages, chatOptions, cancellationToken: cancellationToken);
 
         var result = completion.Value;
         var completionText = result.Content[0].Text;
@@ -446,7 +472,8 @@ public class FoundryService(
         int? dimensions = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(resourceName), resourceName),
@@ -457,11 +484,11 @@ public class FoundryService(
             );
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName, cancellationToken: cancellationToken);
 
         // Get the endpoint
         var accountData = cognitiveServicesAccount.Value.Data;
@@ -478,7 +505,7 @@ public class FoundryService(
         var embeddingClient = client.GetEmbeddingClient(deploymentName);
 
         // Create the embedding request
-        var embedding = await embeddingClient.GenerateEmbeddingAsync(inputText);
+        var embedding = await embeddingClient.GenerateEmbeddingAsync(inputText, cancellationToken: cancellationToken);
 
         var result = embedding.Value;
 
@@ -510,22 +537,23 @@ public class FoundryService(
         string resourceGroup,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(resourceName), resourceName), (nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup));
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName, cancellationToken: cancellationToken);
 
         // Get all deployments for this account
         var deployments = cognitiveServicesAccount.Value.GetCognitiveServicesAccountDeployments();
         var allDeployments = new List<OpenAiModelDeployment>();
 
-        await foreach (var deployment in deployments.GetAllAsync())
+        await foreach (var deployment in deployments.GetAllAsync(cancellationToken: cancellationToken))
         {
             var deploymentData = deployment.Data;
             var properties = deploymentData.Properties;
@@ -591,7 +619,8 @@ public class FoundryService(
         string? user = null,
         string? tenant = null,
         AuthMethod authMethod = AuthMethod.Credential,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(resourceName), resourceName),
@@ -606,11 +635,11 @@ public class FoundryService(
         }
 
         var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
         // Get the Cognitive Services account
         var cognitiveServicesAccounts = resourceGroupResource.Value.GetCognitiveServicesAccounts();
-        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName);
+        var cognitiveServicesAccount = await cognitiveServicesAccounts.GetAsync(resourceName, cancellationToken: cancellationToken);
 
         // Get the endpoint
         var accountData = cognitiveServicesAccount.Value.Data;
@@ -688,7 +717,7 @@ public class FoundryService(
         }
 
         // Create the chat completion
-        var response = await chatClient.CompleteChatAsync(chatMessages, options);
+        var response = await chatClient.CompleteChatAsync(chatMessages, options, cancellationToken: cancellationToken);
         var result = response.Value;
 
         // Convert response to our model
@@ -765,17 +794,21 @@ public class FoundryService(
         return client;
     }
 
-    public async Task<List<PersistentAgent>> ListAgents(string endpoint, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<PersistentAgent>> ListAgents(
+        string endpoint,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint));
 
         try
         {
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
 
             var agents = new List<PersistentAgent>();
-            await foreach (var agent in agentsClient.Administration.GetAgentsAsync())
+            await foreach (var agent in agentsClient.Administration.GetAgentsAsync(cancellationToken: cancellationToken))
             {
                 if (agent != null)
                 {
@@ -791,12 +824,59 @@ public class FoundryService(
         }
     }
 
+    public async Task<AgentsCreateResult> CreateAgent(
+        string projectEndpoint,
+        string modelDeploymentName,
+        string agentName,
+        string systemInstruction,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(modelDeploymentName), modelDeploymentName),
+            (nameof(agentName), agentName),
+            (nameof(systemInstruction), systemInstruction));
+        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+
+        // Validate if the model deployment exists
+        var deploymentsClient = projectClient.GetDeploymentsClient();
+        try
+        {
+            await deploymentsClient.GetDeploymentAsync(modelDeploymentName, cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to create agent. Get model deployment failed with: {ex.Message}", ex);
+        }
+
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+        try
+        {
+            PersistentAgent agent = await agentsClient.Administration.CreateAgentAsync(modelDeploymentName, agentName, null, systemInstruction, cancellationToken: cancellationToken);
+            return new AgentsCreateResult()
+            {
+                AgentId = agent.Id,
+                AgentName = agent.Name,
+                ProjectEndpoint = projectEndpoint,
+                ModelDeploymentName = modelDeploymentName
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to create agent. Create agent request failed with: {ex.Message}", ex);
+        }
+    }
+
     public async Task<AgentsConnectResult> ConnectAgent(
         string agentId,
         string query,
         string endpoint,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -805,21 +885,19 @@ public class FoundryService(
                 (nameof(query), query),
                 (nameof(endpoint), endpoint));
 
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
             var agentsClient = new AIProjectClient(new Uri(endpoint), credential).GetPersistentAgentsClient();
 
-            var thread = await agentsClient.Threads.CreateThreadAsync();
-            var threadId = thread.Value.Id;
+            var thread = await CreateThreadCore(endpoint, query, credential, cancellationToken: cancellationToken);
+            var threadId = thread.Id;
 
-            await agentsClient.Messages.CreateMessageAsync(threadId, MessageRole.User, query);
-
-            var run = await agentsClient.Runs.CreateRunAsync(threadId, agentId);
+            var run = await agentsClient.Runs.CreateRunAsync(threadId, agentId, cancellationToken: cancellationToken);
             var runId = run.Value.Id;
 
             while (run.Value.Status == RunStatus.Queued || run.Value.Status == RunStatus.InProgress || run.Value.Status == RunStatus.RequiresAction)
             {
-                await Task.Delay(1);
-                run = await agentsClient.Runs.GetRunAsync(threadId, runId);
+                await Task.Delay(1, cancellationToken: cancellationToken);
+                run = await agentsClient.Runs.GetRunAsync(threadId, runId, cancellationToken: cancellationToken);
             }
 
             if (run.Value.Status == RunStatus.Failed)
@@ -827,9 +905,9 @@ public class FoundryService(
                 throw new Exception($"Agent run failed: {run.Value.LastError}");
             }
 
-            var (textResponse, citations) = buildResponseAndCitations(agentsClient, threadId);
-            var messages = await agentsClient.Messages.GetMessagesAsync(threadId, order: ListSortOrder.Ascending).ToListAsync();
-            var runSteps = await agentsClient.Runs.GetRunStepsAsync(threadId, runId, order: ListSortOrder.Ascending).ToListAsync();
+            var (textResponse, citations) = buildResponseAndCitations(agentsClient, threadId, cancellationToken: cancellationToken);
+            var messages = await agentsClient.Messages.GetMessagesAsync(threadId, order: ListSortOrder.Ascending, cancellationToken: cancellationToken).ToListAsync(cancellationToken: cancellationToken);
+            var runSteps = await agentsClient.Runs.GetRunStepsAsync(threadId, runId, order: ListSortOrder.Ascending, cancellationToken: cancellationToken).ToListAsync(cancellationToken: cancellationToken);
 
             List<PersistentThreadMessage> requestMessages = [];
             List<PersistentThreadMessage> responseMessages = [];
@@ -882,7 +960,16 @@ public class FoundryService(
         }
     }
 
-    public async Task<AgentsQueryAndEvaluateResult> QueryAndEvaluateAgent(string agentId, string query, string endpoint, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? tenant = null, List<string>? evaluatorNames = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<AgentsQueryAndEvaluateResult> QueryAndEvaluateAgent(
+        string agentId,
+        string query,
+        string endpoint,
+        string azureOpenAIEndpoint,
+        string azureOpenAIDeployment,
+        string? tenant = null,
+        List<string>? evaluatorNames = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         try
         {
@@ -891,9 +978,9 @@ public class FoundryService(
                 (nameof(query), query),
                 (nameof(endpoint), endpoint));
 
-            var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy);
+            var connectAgentResult = await ConnectAgent(agentId, query, endpoint, tenant, retryPolicy, cancellationToken: cancellationToken);
 
-            var credential = await GetCredential(tenant);
+            var credential = await GetCredential(tenant, cancellationToken: cancellationToken);
 
             List<IEvaluator> evaluators = [];
             List<EvaluationContext> evaluationContexts = [];
@@ -923,7 +1010,8 @@ public class FoundryService(
                 connectAgentResult.Query ?? [],
                 new ChatResponse(connectAgentResult.Response ?? []),
                 new ChatConfiguration(azureOpenAIChatClient),
-                evaluationContexts);
+                evaluationContexts,
+                cancellationToken: cancellationToken);
 
             return new AgentsQueryAndEvaluateResult
             {
@@ -946,7 +1034,16 @@ public class FoundryService(
         }
     }
 
-    public async Task<AgentsEvaluateResult> EvaluateAgent(string evaluatorName, string query, string agentResponse, string azureOpenAIEndpoint, string azureOpenAIDeployment, string? toolDefinitions, string? tenantId = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<AgentsEvaluateResult> EvaluateAgent(
+        string evaluatorName,
+        string query,
+        string agentResponse,
+        string azureOpenAIEndpoint,
+        string azureOpenAIDeployment,
+        string? toolDefinitions,
+        string? tenantId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(evaluatorName), evaluatorName),
@@ -967,7 +1064,7 @@ public class FoundryService(
             List<EvaluationContext> evaluationContext = [];
             evaluationContext.Add(AgentEvaluatorContextDictionary[evaluatorName.ToLowerInvariant()](loadedToolDefinitions!));
 
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
 
             var azureOpenAIChatClient = GetAzureOpenAIChatClient(azureOpenAIEndpoint, azureOpenAIDeployment, credential);
 
@@ -975,7 +1072,8 @@ public class FoundryService(
                 loadedQuery ?? [],
                 new ChatResponse(loadedAgentResponse),
                 new ChatConfiguration(azureOpenAIChatClient),
-                evaluationContext);
+                evaluationContext,
+                cancellationToken: cancellationToken);
 
             return new AgentsEvaluateResult
             {
@@ -987,6 +1085,123 @@ public class FoundryService(
         {
             throw new Exception($"Failed to evaluate agent response: {ex.Message}", ex);
         }
+    }
+
+    public async Task<ThreadListResult> ListThreads(
+        string projectEndpoint,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint));
+
+        var credential = await GetCredential(tenantId, cancellationToken);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        var threadsIterator = agentsClient.Threads.GetThreadsAsync(cancellationToken: cancellationToken);
+        List<ThreadItem> threads = [];
+        try
+        {
+            await foreach (var thread in threadsIterator)
+            {
+                threads.Add(new()
+                {
+                    ThreadId = thread.Id
+                });
+            }
+
+            return new ThreadListResult()
+            {
+                Threads = [.. threads]
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to list threads. Get threads request failed with: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<ThreadCreateResult> CreateThread(
+        string projectEndpoint,
+        string userMessage,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(userMessage), userMessage));
+
+        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
+
+        try
+        {
+            var thread = await CreateThreadCore(projectEndpoint, userMessage, credential, cancellationToken: cancellationToken);
+            return new ThreadCreateResult()
+            {
+                ThreadId = thread.Id
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to create thread. Create thread request failed with: {ex.Message}", ex);
+        }
+    }
+
+    public async Task<ThreadGetMessagesResult> GetMessages(
+        string projectEndpoint,
+        string threadId,
+        string? tenantId,
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default
+    )
+    {
+        ValidateRequiredParameters(
+            (nameof(projectEndpoint), projectEndpoint),
+            (nameof(threadId), threadId));
+
+        var credential = await GetCredential(tenantId, cancellationToken: cancellationToken);
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        try
+        {
+            List<PersistentThreadMessage> messages = [];
+            var messagesIterator = agentsClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken);
+            await foreach (var message in messagesIterator)
+            {
+                messages.Add(message);
+            }
+            List<Microsoft.Extensions.AI.ChatMessage> convertedMessages = ConvertMessages(messages).ToList();
+            return new ThreadGetMessagesResult()
+            {
+                ThreadId = threadId,
+                Messages = convertedMessages
+            };
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Unable to get messages. Get messages request failed with: {ex.Message}", ex);
+        }
+    }
+
+    private async Task<PersistentAgentThread> CreateThreadCore(
+        string projectEndpoint,
+        string userMessage,
+        TokenCredential credential,
+        CancellationToken cancellationToken = default)
+    {
+        var projectClient = new AIProjectClient(new Uri(projectEndpoint), credential);
+        var agentsClient = projectClient.GetPersistentAgentsClient();
+
+        PersistentAgentThread thread = await agentsClient.Threads.CreateThreadAsync(
+            [new ThreadMessageOptions(MessageRole.User, userMessage)],
+            cancellationToken: cancellationToken);
+
+        return thread;
+
     }
 
     private List<ToolDefinitionAIFunction> ConvertToolDefinitionsFromString(string? toolDefinitions)
@@ -1215,9 +1430,12 @@ public class FoundryService(
         }
     }
 
-    private static (string messageContents, List<string> citations) buildResponseAndCitations(PersistentAgentsClient agentClient, string threadId)
+    private static (string messageContents, List<string> citations) buildResponseAndCitations(
+        PersistentAgentsClient agentClient,
+        string threadId,
+        CancellationToken cancellationToken = default)
     {
-        var responseMessage = agentClient.Messages.GetMessagesAsync(threadId).FirstOrDefaultAsync(msg => msg.Role == MessageRole.Agent).Result;
+        var responseMessage = agentClient.Messages.GetMessagesAsync(threadId, cancellationToken: cancellationToken).FirstOrDefaultAsync(msg => msg.Role == MessageRole.Agent, cancellationToken: cancellationToken).Result;
 
         var result = new StringBuilder();
         var citations = new List<string>();
@@ -1276,13 +1494,14 @@ public class FoundryService(
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
 
             var resources = new List<AiResourceInformation>();
@@ -1291,7 +1510,7 @@ public class FoundryService(
             if (string.IsNullOrEmpty(resourceGroup))
             {
                 // List all AI resources in the subscription
-                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
                 {
                     var resourceInfo = await BuildResourceInformation(account, subscriptionResource.Data.DisplayName);
                     resources.Add(resourceInfo);
@@ -1300,7 +1519,7 @@ public class FoundryService(
             else
             {
                 // List AI resources in specific resource group - filter by resource group
-                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync())
+                await foreach (var account in subscriptionResource.GetCognitiveServicesAccountsAsync(cancellationToken: cancellationToken))
                 {
                     if (account.Data.Id.ResourceGroupName?.Equals(resourceGroup, StringComparison.OrdinalIgnoreCase) == true)
                     {
@@ -1323,7 +1542,8 @@ public class FoundryService(
         string resourceGroup,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -1332,16 +1552,16 @@ public class FoundryService(
 
         try
         {
-            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            ArmClient armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
             var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
-            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+            var rgResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken: cancellationToken);
 
             if (rgResource?.Value == null)
             {
                 throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
             }
 
-            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName);
+            var account = await rgResource.Value.GetCognitiveServicesAccountAsync(resourceName, cancellationToken: cancellationToken);
             if (account?.Value == null)
             {
                 throw new Exception($"AI resource '{resourceName}' not found in resource group '{resourceGroup}'");
@@ -1353,6 +1573,38 @@ public class FoundryService(
         {
             throw new Exception($"Failed to get AI resource: {ex.Message}", ex);
         }
+    }
+
+    public AgentsGetSdkCodeSampleResult GetSdkCodeSample(string programmingLanguage)
+    {
+        string programmingLanguageLowerCase = programmingLanguage.ToLowerInvariant();
+        string resourceFileName;
+        if (programmingLanguageLowerCase == "csharp")
+        {
+            resourceFileName = "csharp.md";
+        }
+        else if (programmingLanguageLowerCase == "typescript")
+        {
+            resourceFileName = "typescript.md";
+        }
+        else if (programmingLanguageLowerCase == "python")
+        {
+            resourceFileName = "python.md";
+        }
+        else
+        {
+            throw new Exception($"Unsupported programming language for Foundry Agent Sdk {programmingLanguage}");
+        }
+
+        Assembly assembly = typeof(FoundryService).Assembly;
+
+        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, resourceFileName);
+        string codeSampleText = EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
+
+        return new AgentsGetSdkCodeSampleResult()
+        {
+            CodeSampleText = codeSampleText
+        };
     }
 
     private async Task<AiResourceInformation> BuildResourceInformation(

@@ -59,7 +59,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -80,7 +80,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     options.ResourceGroup!,
                     options.ResourceName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new ResourceGetCommandResult([resource]),
@@ -93,7 +94,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new ResourceGetCommandResult(resources ?? []),

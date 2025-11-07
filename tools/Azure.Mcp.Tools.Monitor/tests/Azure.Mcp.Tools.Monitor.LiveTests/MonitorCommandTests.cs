@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -11,6 +12,7 @@ using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.LiveTests;
@@ -37,10 +39,11 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
     private static IMonitorService GetMonitorService()
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
-        var cacheService = new CacheService(memoryCache);
-        var tenantService = new TenantService(cacheService);
+        var cacheService = new SingleUserCliCacheService(memoryCache);
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+        var tenantService = new TenantService(tokenProvider, cacheService);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService);
+        var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
         var httpClientOptions = new HttpClientOptions();
         var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));

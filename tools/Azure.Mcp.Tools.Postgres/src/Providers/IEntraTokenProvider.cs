@@ -4,6 +4,6 @@ namespace Azure.Mcp.Tools.Postgres.Auth
 {
     public interface IEntraTokenProvider
     {
-        Task<AccessToken> GetEntraToken(TokenCredential tokenCredential);
+        Task<AccessToken> GetEntraToken(TokenCredential tokenCredential, CancellationToken cancellationToken);
     }
 }

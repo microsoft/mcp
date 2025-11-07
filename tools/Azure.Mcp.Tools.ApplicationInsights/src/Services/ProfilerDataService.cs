@@ -25,8 +25,8 @@ namespace Azure.Mcp.Tools.ApplicationInsights.Services;
 public class ProfilerDataService(
     IHttpClientService httpClientService,
     ILogger<ProfilerDataService> logger,
-    ITenantService? tenantService = null, ILoggerFactory? loggerFactory = null)
-    : BaseAzureService(tenantService, loggerFactory), IProfilerDataService
+    ITenantService tenantService)
+    : BaseAzureService(tenantService), IProfilerDataService
 {
     private const string Endpoint = "https://dataplane.diagnosticservices.azure.com/";
     private const string DefaultScope = "api://dataplane.diagnosticservices.azure.com/.default";
@@ -124,7 +124,7 @@ public class ProfilerDataService(
         };
         string clientRequestIdLocal = clientRequestId ?? Guid.NewGuid().ToString();
         TokenRequestContext tokenRequestContext = new(scopes, clientRequestIdLocal);
-        TokenCredential tokenCredential = await GetCredential().ConfigureAwait(false);
+        TokenCredential tokenCredential = await GetCredential(cancellationToken).ConfigureAwait(false);
         AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, cancellationToken).ConfigureAwait(false);
 
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);

@@ -391,11 +391,13 @@ When `prod` is used, the credential chain becomes:
 ```
 Environment → Workload Identity → Managed Identity
 ```
+**Note:** `InteractiveBrowserCredential` is NOT added as fallback. Authentication will fail fast if none of these credentials are available.
 
 When `dev` is used, the credential chain becomes:
 ```
-Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI
+Visual Studio → Visual Studio Code → Azure CLI → Azure PowerShell → Azure Developer CLI → InteractiveBrowserCredential
 ```
+**Note:** `InteractiveBrowserCredential` IS added as fallback for development scenarios.
 
 #### Use Specific Credentials Only
 
@@ -413,7 +415,12 @@ AZURE_TOKEN_CREDENTIALS=EnvironmentCredential
 
 # Use only Interactive Browser credential
 AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
+
+# Use only Managed Identity credential (for Azure-hosted apps)
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 ```
+
+**Important:** When using a specific credential name, `InteractiveBrowserCredential` is NOT added as fallback (except when explicitly requesting `InteractiveBrowserCredential`). Authentication will fail fast if the specified credential is unavailable. This ensures production scenarios (like Azure Web Apps with Managed Identity) fail immediately rather than attempting interactive browser authentication.
 
 **Available credential names:**
 - `AzureCliCredential`
@@ -425,6 +432,22 @@ AZURE_TOKEN_CREDENTIALS=InteractiveBrowserCredential
 - `VisualStudioCodeCredential`
 - `VisualStudioCredential`
 - `WorkloadIdentityCredential`
+
+#### Using Managed Identity in Azure
+
+For Azure-hosted applications (Web Apps, Function Apps, Container Apps, AKS, etc.), use Managed Identity:
+
+```bash
+# For System-Assigned Managed Identity
+AZURE_TOKEN_CREDENTIALS=prod
+# or
+AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
+
+# For User-Assigned Managed Identity, also set:
+AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
+The `AZURE_CLIENT_ID` environment variable specifies which User-Assigned Managed Identity to use. If not set, System-Assigned Managed Identity will be used.
 
 ### Primary Access Token from Wrong Issuer
 
@@ -802,7 +825,7 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ### Streamable HTTP Transport
 
-The Azure MCP Server supports local/STDIO transport mode.  Remote/StreamableHTTP transport mode support is currently being designed and implemented.  For more details, follow along here: [https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp](https://github.com/microsoft/mcp/issues?q=is%3Aissue%20label%3Aremote-mcp).
+See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
 
 ## Logging and Diagnostics
 
@@ -861,7 +884,7 @@ By default, VS Code logs informational, warning, and error level messages. To ge
 
 The server supports observability with [OpenTelemetry](https://opentelemetry.io/).
 
-To export telemetry to an OTLP endpoint, set the `OTEL_DISABLE_SDK` environment variable to `false`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
+To export telemetry to an OTLP endpoint, set the `AZURE_MCP_ENABLE_OTLP_EXPORTER` environment variable to `true`. By default, when OpenTelemetry is enabled, the server exports telemetry using the default gRPC endpoint at `localhost:4317`. See the [OTLP exporter documentation](https://github.com/open-telemetry/opentelemetry-dotnet/blob/main/src/OpenTelemetry.Exporter.OpenTelemetryProtocol/README.md) for configuration details.
 
 You can try it locally with the [standalone Aspire dashboard](https://learn.microsoft.com/dotnet/aspire/fundamentals/dashboard/standalone):
 
@@ -881,10 +904,98 @@ To export telemetry to Azure Monitor, set the `APPLICATIONINSIGHTS_CONNECTION_ST
 
 ### Development in VS Code
 
+#### Running Azure MCP Server Locally for Development
+
+When developing or debugging the Azure MCP Server locally, you have two options depending on your needs:
+
+**Option 1: HTTP Mode (Remote)**
+
+**Prerequisites: Create launchSettings.json**
+
+> [!NOTE]
+> Internal contributors may skip this step as the `launchSettings.json` file is already provided in the repository.
+
+Before running the server in HTTP mode, you need to create the `launchSettings.json` file with the `debug-remotemcp` profile:
+
+1. Create the directory (if it doesn't exist):
+   ```bash
+   mkdir -p servers/Azure.Mcp.Server/src/Properties
+   ```
+
+2. Create `servers/Azure.Mcp.Server/src/Properties/launchSettings.json` with the following content:
+   ```json
+   {
+     "profiles": {
+       "debug-remotemcp": {
+         "commandName": "Project",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "environmentVariables": {
+           "ASPNETCORE_ENVIRONMENT": "Development",
+           "ASPNETCORE_URLS": "http://localhost:<port>",
+           "AzureAd__TenantId": "<your-tenant-id>",
+           "AzureAd__ClientId": "<your-client-id>",
+           "AzureAd__Instance": "https://login.microsoftonline.com/"
+         }
+       }
+     }
+   }
+   ```
+
+3. Replace `<your-tenant-id>` and `<your-client-id>` with your actual tenant ID and client ID.
+
+```bash
+dotnet build
+dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remotemcp
+```
+
+This starts the MCP server in **remote HTTP mode** with the following configuration:
+- **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+- **Environment variables** for Entra ID authentication and ASP.NET Core settings
+- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "Azure MCP Server": {
+      "url": "http://localhost:1031/",
+      "type": "http"
+    }
+  }
+}
+```
+
+**Option 2: Stdio Mode (Local)**
+
+If you need to test the server in stdio mode (standard input/output), first build the project and then run the executable directly:
+
+```bash
+dotnet build
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start  # Windows
+./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start      # macOS/Linux
+```
+
+This runs the MCP server in **stdio mode**, which communicates via standard input/output rather than HTTP. This mode is useful for testing MCP client configurations that expect stdio transport.
+
+**To connect to the MCP server, configure your mcp.json:**
+
+```json
+{
+  "servers": {
+    "azure-mcp-server": {
+      "type": "stdio",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "args": ["server", "start"]
+    }
+  }
+}
+```
+
 #### Bring your own language model key
 
 [Bring your own language model key](https://code.visualstudio.com/docs/copilot/language-models#_bring-your-own-language-model-key)
-An existing API key from a language model provider can be used to access that provider’s models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
+An existing API key from a language model provider can be used to access that provider's models in VS Code chat, in addition to the built-in models available through Copilot. Supported providers include Anthropic, Azure, Google Gemini, Groq, Ollama, OpenAI, and OpenRouter.
 
 
 ### Locating MCP Server Binaries in VS Code

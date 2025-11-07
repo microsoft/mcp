@@ -64,7 +64,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         return
     }
 
-    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native -and -not $_.specialPurpose }
     if ($filteredPlatforms.Count -eq 0) {
         Write-Host "No platforms to build for server $($server.name) with native=$native"
         return

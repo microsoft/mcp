@@ -104,7 +104,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -156,7 +156,7 @@ public class CreateWorkbooksCommandTests
             "--source-id", "custom-source");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -188,7 +188,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -215,7 +215,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[{"type":"text","content":"Test content"}]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -257,7 +257,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"version": "Notebook/1.0","items": [{"type": "1","content": "Hello World"}]}""");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -290,7 +290,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[]}""");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -326,7 +326,7 @@ public class CreateWorkbooksCommandTests
             "--tenant", "test-tenant");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -357,7 +357,7 @@ public class CreateWorkbooksCommandTests
         var parseResult = CreateParseResult([.. args]);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -382,7 +382,7 @@ public class CreateWorkbooksCommandTests
         var parseResult = CreateParseResult([.. args]);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -446,7 +446,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", complexSerializedData);
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);
@@ -479,7 +479,7 @@ public class CreateWorkbooksCommandTests
             "--retry-mode", "1");
 
         // Act
-        await _command.ExecuteAsync(context, parseResult);
+        await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).CreateWorkbook(
@@ -515,7 +515,7 @@ public class CreateWorkbooksCommandTests
             "--serialized-content", """{"items":[]}""");
 
         // Act
-        var result = await _command.ExecuteAsync(context, parseResult);
+        var result = await _command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(context.Response, result);

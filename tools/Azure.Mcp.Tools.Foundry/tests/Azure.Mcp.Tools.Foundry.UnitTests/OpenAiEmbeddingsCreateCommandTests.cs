@@ -60,7 +60,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -73,7 +74,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--input-text", inputText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -128,7 +129,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Is<int?>(i => i == dimensions),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -143,7 +145,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--dimensions", dimensions.ToString()
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -161,7 +163,8 @@ public class OpenAiEmbeddingsCreateCommandTests
             Arg.Any<int?>(),
             Arg.Any<string?>(),
             Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -186,7 +189,8 @@ public class OpenAiEmbeddingsCreateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
@@ -199,7 +203,7 @@ public class OpenAiEmbeddingsCreateCommandTests
             "--input-text", inputText
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -258,7 +262,7 @@ public class OpenAiEmbeddingsCreateCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
