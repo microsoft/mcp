@@ -14,6 +14,7 @@
 
 - [ ] Azure MCP Server installed and configured
 - [ ] Azure CLI installed (`az --version`)
+- [ ] Azure Developer CLI installed (`azd version`)
 - [ ] Authenticated to Azure (`az login`)
 - [ ] Active Azure subscription
 - [ ] GitHub Copilot with Agent mode enabled
@@ -68,7 +69,7 @@ I have a Node.js Express application in folder 'bugbash-deploy-app'. Create a de
 - [ ] Tool invoked: `azmcp_deploy_plan_get`
 - [ ] Deployment plan includes App Service target
 - [ ] Runtime configuration identified (Node.js)
-- [ ] Provisioning tool recommendation provided (Bicep, Terraform)
+- [ ] Provisioning tool recommendation provided (Bicep, Terraform, or azd)
 - [ ] Project structure analysis included
 
 **2.2 Alternative phrasing**:
@@ -100,9 +101,9 @@ Generate GitHub Actions workflow guidance for deploying my Node.js app to Azure 
 - [ ] Approval workflows mentioned
 - [ ] Environment-specific configuration guidance provided
 
-### Step 4: Deploy Application (Azure CLI - Not MCP)
+### Step 4: Deploy Application (Azure CLI/azd - Not MCP)
 
-> **External Deployment Required**: Use Azure CLI to deploy
+> **External Deployment Required**: Use Azure CLI or azd to deploy
 
 ```bash
 # Create resource group
@@ -356,7 +357,7 @@ az group delete --name bugbash-fullstack-rg --yes --no-wait
 | **Project Not Recognized** | MCP can't identify project type | Ensure package.json or project files exist in the folder |
 | **Missing Dependencies** | Required project files missing | Check project structure has all necessary configuration files |
 | **IaC Tool Mismatch** | Wrong provisioning tool recommended | Specify preferred tool (Bicep/Terraform) in the prompt |
-| **Log Retrieval Fails** | Can't access application logs | Verify resource group is provided |
+| **Log Retrieval Fails** | Can't access application logs | Verify azd environment exists and is properly configured |
 | **Architecture Diagram Errors** | Diagram generation fails | Ensure application topology is properly defined |
 | **Pipeline Guidance Generic** | Recommendations too generic | Provide more context about your project structure and requirements |
 
@@ -374,6 +375,7 @@ When logging issues, include:
 ## 📚 Related Resources
 
 - [Azure Deployment Center](https://learn.microsoft.com/azure/app-service/deploy-continuous-deployment)
+- [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/)
 - [GitHub Actions for Azure](https://learn.microsoft.com/azure/developer/github/github-actions)
 - [Azure DevOps Pipelines](https://learn.microsoft.com/azure/devops/pipelines/)
 - [MCP Command Reference](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)
@@ -391,7 +393,7 @@ When logging issues, include:
 - `azmcp_deploy_pipeline_guidance_get` - Get CI/CD pipeline setup guidance
 
 ### Application Logs
-- `azmcp_deploy_app_logs_get` - Get application service logs for resource group
+- `azmcp_deploy_app_logs_get` - Get application service logs for azd environment
 
 ---
 
