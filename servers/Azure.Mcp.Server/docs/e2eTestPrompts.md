@@ -7,15 +7,12 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | foundry_agents_connect | Query an agent in my Azure AI foundry resource |
+| foundry_agents_create | Create a new Azure AI Foundry agent using instructions in the active editor |
 | foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| foundry_agents_get-sdk-sample | Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK |
 | foundry_agents_list | List all agents in my Azure AI Foundry resource |
 | foundry_agents_list | Show me the available agents in my Azure AI Foundry resource |
-| foundry_agents_create | Create a new Azure AI Foundry agent using instructions in the active editor |
 | foundry_agents_query-and-evaluate | Query and evaluate an agent in my Azure AI Foundry resource for task_adherence |
-| foundry_agents_get-sdk-sample | Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK |
-| foundry_threads_create | Create an Azure AI Foundry thread to hold the conversation |
-| foundry_threads_list | List my AI Foundry threads |
-| foundry_threads_get-messages | Show me the messages in the AI Foundry thread with id <thread_id> |
 | foundry_knowledge_index_list | List all knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_list | Show me the knowledge indexes in my AI Foundry project |
 | foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Azure AI Foundry resource |
@@ -34,6 +31,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundry_resource_get | List all AI Foundry resources in my subscription |
 | foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
 | foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
+| foundry_threads_create | Create an Azure AI Foundry thread to hold the conversation |
+| foundry_threads_get-messages | Show me the messages in the AI Foundry thread with id <thread_id> |
+| foundry_threads_list | List my AI Foundry threads |
 
 ## Azure AI Search
 
@@ -434,6 +434,17 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | marketplace_product_get | Get details about marketplace product <product_name> |
 | marketplace_product_list | Search for Microsoft products in the marketplace |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
+
+## Azure AI Best Practices
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azureaibestpractices_get | Get best practices for building AI applications in Azure |
+| azureaibestpractices_get | Show me the best practices for Azure AI Foundry agents code generation |
+| azureaibestpractices_get | Get guidance for building agents with Azure AI Foundry |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Azure AI Foundry |
+
 
 ## Azure MCP Best Practices
 

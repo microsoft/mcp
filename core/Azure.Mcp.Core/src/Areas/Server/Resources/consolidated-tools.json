@@ -982,7 +982,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, Terraform configurations, Bicep template schemas, deployment best practices and AI Foundry sdk code samples.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and AI Foundry sdk code samples.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1010,6 +1010,7 @@
         }
       },
       "mappedToolList": [
+        "azureaibestpractices_get",
         "azureterraformbestpractices_get",
         "bicepschema_get",
         "get_bestpractices_get",

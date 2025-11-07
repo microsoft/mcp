@@ -254,7 +254,7 @@ function Get-PathsToTest {
             'tools/Azure.Mcp.Tools.Storage',
             'tools/Azure.Mcp.Tools.Monitoring',
             'core/Microsoft.Mcp.Core',
-            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's canary list
+            'tools/Azure.Mcp.Tools.KeyVault'  <-- from Microsoft.Mcp.Core's server canary list
         ) #>
     }
 
@@ -561,13 +561,42 @@ function Get-BuildMatrices {
     return $matrices
 }
 
+function Get-ServerMatrix {
+    param($servers)
+
+    Write-Host "Forming server matrix"
+
+    $serverMatrix = [ordered]@{}
+    $platformName = "linux-x64-untrimmed"
+    
+    foreach ($server in $servers) {
+        $platform = $server.platforms | Where-Object { $_.name -eq $platformName -and -not $_.native }
+        $executableExtension = $platform.extension
+        $imageName = $server.dockerImageName
+        if (-not $platform.extension) { $executableExtension = '' }
+        if (-not $server.dockerImageName) { $imageName = "microsoft/" + $server.cliName + "-mcp" }
+        $serverMatrix[$server.name] = [ordered]@{
+            ServerName = $server.name
+            CliName = $server.cliName
+            ArtifactPath = $server.artifactPath
+            Platform = $platformName
+            Version = $server.version
+            ImageName = $imageName
+            ExecutableName = $server.cliName + $executableExtension
+            DockerLocalTag = $imageName + ":" + $BuildId
+        }
+    }
+
+    return $serverMatrix
+}
+
 Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $matrices = Get-BuildMatrices $serverDetails
-
     $pathsToTest = @(Get-PathsToTest)
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
+    $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
 
     # spellchecker: ignore SOURCEVERSION
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)

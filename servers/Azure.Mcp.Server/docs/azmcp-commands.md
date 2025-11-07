@@ -223,6 +223,14 @@ azmcp foundry agents evaluate --agent-id <agent-id> \
                               --azure-openai-deployment <azure-openai-deployment> \
                               [--tool-definitions <tool-definitions>]
 
+# Get SDK samples for interacting with an AI Foundry agent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
+
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
 # Query and evaluate an agent in one command
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
@@ -231,26 +239,6 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         --azure-openai-endpoint <azure-openai-endpoint> \
                                         --azure-openai-deployment <azure-openai-deployment> \
                                         [--evaluators <evaluators>]
-
-# List all Azure AI Agents available in the configured project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents list --endpoint <endpoint>
-
-# Get SDK samples for interacting with an AI Foundry agent
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
-
-# Create an AI Foundry agent thread
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
-
-# List AI Foundry agent threads in a Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads list --endpoint <endpoint>
-
-# Get messages of an AI Foundry agent thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
 
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -339,6 +327,18 @@ azmcp foundry openai models-list --subscription <subscription> \
 azmcp foundry resource get --subscription <subscription> \
                            [--resource-group <resource-group>] \
                            [--resource-name <resource-name>]
+
+# Create an AI Foundry agent thread
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
+
+# Get messages of an AI Foundry agent thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
+
+# List AI Foundry agent threads in a Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads list --endpoint <endpoint>
 ```
 
 ### Azure AI Search Operations
@@ -1323,6 +1323,21 @@ azmcp marketplace product get --subscription <subscription> \
                               [--sku-id <sku-id>] \
                               [--include-service-instruction-templates <true/false>] \
                               [--pricing-audience <pricing-audience>]
+```
+
+### Azure AI Best Practices
+
+```bash
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Azure AI Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureaibestpractices get
+
+# Includes guidance on:
+#   - Microsoft Agent Framework usage and patterns
+#   - Azure AI Foundry model selection
+#   - Best practices for ai app / agent development in Azure
 ```
 
 ### Azure MCP Best Practices
