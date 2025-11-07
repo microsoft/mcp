@@ -8,7 +8,9 @@ using Azure.Mcp.Core.Areas.Server.Commands.Runtime;
 using Azure.Mcp.Core.Areas.Server.Commands.ToolLoading;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -25,8 +27,6 @@ using Options = Microsoft.Extensions.Options.Options;
 /// </summary>
 public static class AzureMcpServiceCollectionExtensions
 {
-    private const string DefaultServerName = "Azure MCP Server";
-
     /// <summary>
     /// Adds the Azure MCP server services to the specified <see cref="IServiceCollection"/>.
     /// </summary>
@@ -41,6 +41,67 @@ public static class AzureMcpServiceCollectionExtensions
         // Register options for service start
         services.AddSingleton(serviceStartOptions);
         services.AddSingleton(Options.Create(serviceStartOptions));
+
+        // Register MCP runtimes
+        services.AddSingleton<IMcpRuntime, McpRuntime>();
+
+        ConfigureToolLoadersAndDiscoveryStrategies(services, serviceStartOptions);
+
+        var mcpServerOptions = services.AddOptions<McpServerOptions>()
+            .Configure<IMcpRuntime, IOptions<AzureMcpServerConfiguration>>(
+                (mcpServerOptions, mcpRuntime, serverConfig) =>
+                {
+                    var mcpServerOptionsBuilder = services.AddOptions<McpServerOptions>();
+                    var entryAssembly = Assembly.GetEntryAssembly();
+                    var assemblyName = entryAssembly?.GetName();
+
+                    mcpServerOptions.ProtocolVersion = "2024-11-05";
+                    mcpServerOptions.ServerInfo = new Implementation
+                    {
+                        Name = serverConfig.Value.Name,
+                        Version = serverConfig.Value.Version
+                    };
+
+                    mcpServerOptions.Handlers = new()
+                    {
+                        CallToolHandler = mcpRuntime.CallToolHandler,
+                        ListToolsHandler = mcpRuntime.ListToolsHandler,
+                    };
+
+                    // Add instructions for the server
+                    mcpServerOptions.ServerInstructions = GetServerInstructions();
+                });
+
+        var mcpServerBuilder = services.AddMcpServer();
+
+        if (serviceStartOptions.Transport == TransportTypes.Http)
+        {
+            mcpServerBuilder.WithHttpTransport();
+        }
+        else
+        {
+            mcpServerBuilder.WithStdioServerTransport();
+        }
+
+        return services;
+    }
+
+    internal static void ConfigureToolLoadersAndDiscoveryStrategies(IServiceCollection services, ServiceStartOptions serviceStartOptions)
+    {
+        // Register tool loader strategies
+        services.AddSingleton<CommandFactoryToolLoader>();
+        services.AddSingleton<RegistryToolLoader>();
+
+        services.AddSingleton<SingleProxyToolLoader>();
+        services.AddSingleton<CompositeToolLoader>();
+        services.AddSingleton<ServerToolLoader>();
+        services.AddSingleton<NamespaceToolLoader>();
+
+        // Register server discovery strategies
+        services.AddSingleton<CommandGroupDiscoveryStrategy>();
+        services.AddSingleton<CompositeDiscoveryStrategy>();
+        services.AddSingleton<RegistryDiscoveryStrategy>();
+        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
 
         // Register default tool loader options from service start options
         var defaultToolLoaderOptions = new ToolLoaderOptions
@@ -61,24 +122,6 @@ public static class AzureMcpServiceCollectionExtensions
 
         services.AddSingleton(defaultToolLoaderOptions);
         services.AddSingleton(Options.Create(defaultToolLoaderOptions));
-
-        // Register tool loader strategies
-        services.AddSingleton<CommandFactoryToolLoader>();
-        services.AddSingleton<RegistryToolLoader>();
-
-        services.AddSingleton<SingleProxyToolLoader>();
-        services.AddSingleton<CompositeToolLoader>();
-        services.AddSingleton<ServerToolLoader>();
-        services.AddSingleton<NamespaceToolLoader>();
-
-        // Register server discovery strategies
-        services.AddSingleton<CommandGroupDiscoveryStrategy>();
-        services.AddSingleton<CompositeDiscoveryStrategy>();
-        services.AddSingleton<RegistryDiscoveryStrategy>();
-        services.AddSingleton<ConsolidatedToolDiscoveryStrategy>();
-
-        // Register MCP runtimes
-        services.AddSingleton<IMcpRuntime, McpRuntime>();
 
         // Register MCP discovery strategies based on proxy mode
         if (serviceStartOptions.Mode == ModeTypes.SingleToolProxy)
@@ -207,45 +250,63 @@ public static class AzureMcpServiceCollectionExtensions
                 return new CompositeToolLoader(toolLoaders, loggerFactory.CreateLogger<CompositeToolLoader>());
             });
         }
+    }
 
-        var mcpServerOptions = services
-            .AddOptions<McpServerOptions>()
-            .Configure<IMcpRuntime>((mcpServerOptions, mcpRuntime) =>
+    public static void ConfigureMcpServerOptions(this IServiceCollection services)
+    {
+        services.AddOptions<AzureMcpServerConfiguration>()
+            .BindConfiguration(string.Empty)
+            .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
-                var mcpServerOptionsBuilder = services.AddOptions<McpServerOptions>();
-                var entryAssembly = Assembly.GetEntryAssembly();
-                var assemblyName = entryAssembly?.GetName();
-                var serverName = entryAssembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? DefaultServerName;
+                var collectTelemetry = rootConfiguration.GetValue<string?>("AZURE_MCP_COLLECT_TELEMETRY");
+                var applicationInsightsString = rootConfiguration.GetValue<string?>("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-                mcpServerOptions.ProtocolVersion = "2024-11-05";
-                mcpServerOptions.ServerInfo = new Implementation
-                {
-                    Name = serverName,
-                    Version = assemblyName?.Version?.ToString() ?? "1.0.0-beta"
-                };
+                options.Version = GetServerVersion(Assembly.GetEntryAssembly());
 
-                mcpServerOptions.Handlers = new()
-                {
-                    CallToolHandler = mcpRuntime.CallToolHandler,
-                    ListToolsHandler = mcpRuntime.ListToolsHandler,
-                };
+                var transport = serviceStartOptions.Value.Transport;
 
-                // Add instructions for the server
-                mcpServerOptions.ServerInstructions = GetServerInstructions();
+                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+
+                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
+
+                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
+                // telemetry is disabled for HTTP transport
+                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
             });
 
-        var mcpServerBuilder = services.AddMcpServer();
+        services.AddSingleton<IValidateOptions<AzureMcpServerConfiguration>, AzureMcpServerConfigurationValidator>();
+    }
 
-        if (serviceStartOptions.Transport == TransportTypes.Http)
+    /// <summary>
+    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
+    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
+    /// </summary>
+    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <returns>A version string.</returns>
+    internal static string GetServerVersion(Assembly? callerAssembly)
+    {
+        if (callerAssembly == null)
         {
-            mcpServerBuilder.WithHttpTransport();
-        }
-        else
-        {
-            mcpServerBuilder.WithStdioServerTransport();
+            throw new InvalidOperationException("Should be a managed assembly as entry assembly.");
         }
 
-        return services;
+        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (versionAttribute == null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+        }
+
+        string version = versionAttribute.InformationalVersion;
+
+        int hashSeparator = version.IndexOf('+');
+        if (hashSeparator != -1)
+        {
+            version = version.Substring(0, hashSeparator);
+        }
+
+        return version;
     }
 
     /// <summary>
