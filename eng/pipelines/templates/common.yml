@@ -68,35 +68,33 @@ extends:
 
 
       - ${{ each os in split('linux|windows|macOS', '|') }}:
-        - ${{ if ne(stageDependencies.Initialize.Initialize.outputs[format('CreateBuildInfo.{0}BuildMatrix', os)], '') }}:
-          - template: /eng/pipelines/templates/jobs/build.yml
-            parameters:
-              TestTimeoutInMinutes: 30
-              ServerName: ${{ parameters.ServerName }}
-              PublishTarget: ${{ parameters.PublishTarget }}
-              OSName: ${{ os }}
-              Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
-              MaxParallel: 4
+        - template: /eng/pipelines/templates/jobs/build.yml
+          parameters:
+            TestTimeoutInMinutes: 30
+            ServerName: ${{ parameters.ServerName }}
+            PublishTarget: ${{ parameters.PublishTarget }}
+            OSName: ${{ os }}
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
+            MaxParallel: 4
 
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
-      - ${{ if ne(stageDependencies.Initialize.Initialize.outputs[CreateBuildInfo.liveTestMatrix], '') }}:
-        - stage: Test
-          displayName: 'Live test'
-          dependsOn:
-          - Initialize
-          pool:
-            name: $(LINUXPOOL)
-            image: $(LINUXVMIMAGE)
-            os: linux
-          variables:
-          - template: /eng/pipelines/templates/variables/image.yml
-          - template: /eng/pipelines/templates/variables/globals.yml
-          jobs:
-          - template: /eng/pipelines/templates/jobs/live-test.yml
-            parameters:
-              Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
-              MaxParallel: 10
-              TimeoutInMinutes: 75
+      - stage: Test
+        displayName: 'Live test'
+        dependsOn:
+        - Initialize
+        pool:
+          name: $(LINUXPOOL)
+          image: $(LINUXVMIMAGE)
+          os: linux
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/live-test.yml
+          parameters:
+            Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.liveTestMatrix']
+            MaxParallel: 10
+            TimeoutInMinutes: 75
 
     - ${{ if ne(parameters.PublishTarget, 'none') }}:
       # We only sign if we're going to publish

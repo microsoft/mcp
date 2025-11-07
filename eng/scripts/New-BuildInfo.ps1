@@ -608,14 +608,10 @@ Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
     $pathsToTest = @(Get-PathsToTest)
-    $matrices = [ordered]@{}
-
-    if ($pathsToTest.Count -gt 0) {
-        $matrices = Get-BuildMatrices $serverDetails
-        $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
-        $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
-    }
-
+    $matrices = Get-BuildMatrices $serverDetails
+    $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
+    $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
+    
     # spellchecker: ignore SOURCEVERSION
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
@@ -637,6 +633,13 @@ try {
     New-Item -Path $parentDirectory -ItemType Directory -Force | Out-Null
 
     $buildInfo | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputPath -Encoding utf8 -Force
+
+    # if path to test is empty, set all matrices to empty
+    if ($pathsToTest.Count -eq 0) {
+        foreach ($key in $matrices.Keys) {
+            $matrices[$key] = @{}
+        }
+    }
 
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
