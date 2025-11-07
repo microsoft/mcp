@@ -42,7 +42,7 @@ public class LogsGetCommandTests
     {
         // arrange
         var expectedLogs = "App logs retrieved:\n[2024-01-01 10:00:00] Application started\n[2024-01-01 10:01:00] Processing request";
-        _deployService.GetAzdResourceLogsAsync(
+        _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -52,7 +52,6 @@ public class LogsGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/Users/",
-            "--azd-env-name", "dotnet-demo",
             "--limit", "10"
         ]);
 
@@ -73,7 +72,7 @@ public class LogsGetCommandTests
     {
         // arrange
         var expectedLogs = "App logs retrieved:\nSample log entry";
-        _deployService.GetAzdResourceLogsAsync(
+        _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -82,8 +81,7 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project",
-            "--azd-env-name", "my-env"
+            "--workspace-folder", "C:/project"
             // No limit specified - should use default
         ]);
 
@@ -101,7 +99,7 @@ public class LogsGetCommandTests
     public async Task Should_handle_no_logs_found()
     {
         // arrange
-        _deployService.GetAzdResourceLogsAsync(
+        _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -111,7 +109,6 @@ public class LogsGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/empty-project",
-            "--azd-env-name", "empty-env",
             "--limit", "50"
         ]);
 
@@ -129,7 +126,7 @@ public class LogsGetCommandTests
     {
         // arrange
         var errorMessage = "Error during retrieval of app logs of azd project:\nNo resource group with tag {\"azd-env-name\": test-env} found.";
-        _deployService.GetAzdResourceLogsAsync(
+        _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -138,8 +135,7 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/invalid-project",
-            "--azd-env-name", "test-env"
+            "--workspace-folder", "C:/invalid-project"
         ]);
 
         // act
@@ -157,7 +153,7 @@ public class LogsGetCommandTests
     public async Task Should_handle_service_exception()
     {
         // arrange
-        _deployService.GetAzdResourceLogsAsync(
+        _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -166,8 +162,7 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project",
-            "--azd-env-name", "test-env"
+            "--workspace-folder", "C:/project"
         ]);
 
         // act
@@ -185,8 +180,7 @@ public class LogsGetCommandTests
     {
         // arrange - missing required workspace-folder parameter
         var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--azd-env-name", "test-env"
+            "--subscription", "test-subscription-id"
             // Missing workspace-folder
         ]);
 

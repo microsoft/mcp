@@ -22,6 +22,38 @@ public static class DeployOptionDefinitions
         };
     }
 
+    public class AppLogOptions : SubscriptionOptions
+    {
+        public const string WorkspaceFolderName = "workspace-folder";
+        public const string ResourceGroupsName = "resource-group";
+        public const string LimitName = "limit";
+
+        public static readonly Option<string> WorkspaceFolder = new(
+            $"--{WorkspaceFolderName}"
+        )
+        {
+            Description = "The full path of the workspace folder.",
+            Required = false
+        };
+
+        public static readonly Option<string> ResourceGroupName = new(
+            $"--{ResourceGroupsName}"
+        )
+        {
+            Description = "The name of the resource group containing the application resources.",
+            Required = true
+        };
+
+        public static readonly Option<int> Limit = new(
+            $"--{LimitName}"
+        )
+        {
+            Description = "The maximum row number of logs to retrieve. Use this to get a specific number of logs or to avoid the retrieved logs from reaching token limit. Default is 200.",
+            DefaultValueFactory = _ => 200,
+            Required = false
+        };
+    }
+
     public class PipelineGenerateOptions : SubscriptionOptions
     {
         public const string OrganizationNameName = "organization-name";

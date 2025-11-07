@@ -1707,7 +1707,7 @@
     },
     {
       "name": "get",
-      "description": "Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.",
+      "description": "Shows application logs for deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Discovers the correct workspace and resources based on the resource group name. Use this tool to check deployment status or troubleshoot post-deployment issues.",
       "command": "deploy app logs get",
       "option": [
         {
@@ -1759,14 +1759,14 @@
           "required": null
         },
         {
-          "name": "--workspace-folder",
-          "description": "The full path of the workspace folder.",
+          "name": "--resource-group",
+          "description": "Specifies the Azure resource group to use. Accepts either a resource group name or ID.",
           "type": "string",
           "required": true
         },
         {
-          "name": "--azd-env-name",
-          "description": "The name of the environment created by azd (AZURE_ENV_NAME) during `azd init` or `azd up`. If not provided in context, try to find it in the .azure directory in the workspace or use 'azd env list'.",
+          "name": "--workspace-folder",
+          "description": "The full path of the workspace folder.",
           "type": "string",
           "required": true
         },
@@ -1793,15 +1793,9 @@
     },
     {
       "name": "get",
-      "description": "This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with the azd tool and adhere to best practices.",
+      "description": "This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure. The guidelines outline rules to improve the quality of Infrastructure as Code files and adhere to best practices.",
       "command": "deploy iac rules get",
       "option": [
-        {
-          "name": "--deployment-tool",
-          "description": "The deployment tool to use. Valid values: AZD, AzCli",
-          "type": "string",
-          "required": true
-        },
         {
           "name": "--iac-type",
           "description": "The Infrastructure as Code type. Valid values: bicep, terraform. Leave empty if deployment-tool is AzCli.",
@@ -1891,7 +1885,7 @@
     },
     {
       "name": "get",
-      "description": "Generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in '.azure/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services.",
+      "description": "Generates a deployment plan to construct the infrastructure and deploy the application on Azure. Agent should read its output and generate a deploy plan in 'docs/plan.copilotmd' for execution steps, recommended azure services based on the information agent detected from project. Before calling this tool, please scan this workspace to detect the services to deploy and their dependent services.",
       "command": "deploy plan get",
       "option": [
         {
@@ -1911,18 +1905,6 @@
           "description": "The Azure service to deploy the application. Valid values: ContainerApp, WebApp, FunctionApp, AKS. Recommend one based on user application.",
           "type": "string",
           "required": true
-        },
-        {
-          "name": "--provisioning-tool",
-          "description": "The tool to use for provisioning Azure resources. Valid values: AZD, AzCli. Use AzCli if TargetAppService is AKS.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--azd-iac-options",
-          "description": "The Infrastructure as Code option for azd. Valid values: bicep, terraform. Leave empty if Deployment tool is AzCli.",
-          "type": "string",
-          "required": null
         }
       ]
     },

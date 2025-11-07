@@ -9,19 +9,18 @@ namespace Azure.Mcp.Tools.Deploy.Services;
 
 public class DeployService() : BaseAzureService, IDeployService
 {
-
-    public async Task<string> GetAzdResourceLogsAsync(
+    public async Task<string> GetResourceLogsAsync(
          string workspaceFolder,
-         string azdEnvName,
          string subscriptionId,
+         string resourceGroupName,
          int? limit = null)
     {
         TokenCredential credential = await GetCredential();
-        string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
+        string result = await ResourceLogService.GetResourceLogsAsync(
             credential,
             workspaceFolder,
-            azdEnvName,
             subscriptionId,
+            resourceGroupName,
             limit);
         return result;
     }

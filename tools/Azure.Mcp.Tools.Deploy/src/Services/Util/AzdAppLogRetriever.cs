@@ -8,14 +8,13 @@ using Azure.ResourceManager.Resources;
 
 namespace Azure.Mcp.Tools.Deploy.Services.Util;
 
-public class AzdAppLogRetriever(TokenCredential credential, string subscriptionId, string azdEnvName)
+public class AppLogRetriever(TokenCredential credential, string subscriptionId, string resourceGroupName)
 {
     private readonly string _subscriptionId = subscriptionId;
-    private readonly string _azdEnvName = azdEnvName;
+    private readonly string _resourceGroupName = resourceGroupName;
     private readonly Dictionary<string, string> _apps = new();
     private readonly Dictionary<string, string> _logs = new();
     private readonly List<string> _logAnalyticsWorkspaceIds = new();
-    private string _resourceGroupName = string.Empty;
 
     private ArmClient? _armClient;
     private LogsQueryClient? _queryClient;
@@ -25,10 +24,12 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
         _armClient = new ArmClient(credential, _subscriptionId);
         _queryClient = new LogsQueryClient(credential);
 
-        _resourceGroupName = await GetResourceGroupNameAsync();
-        if (string.IsNullOrEmpty(_resourceGroupName))
+        // Verify resource group exists
+        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+        var resourceGroupResponse = await subscription.GetResourceGroupAsync(_resourceGroupName);
+        if (resourceGroupResponse?.Value == null)
         {
-            throw new InvalidOperationException($"No resource group with tag {{\"azd-env-name\": {_azdEnvName}}} found.");
+            throw new InvalidOperationException($"Resource group '{_resourceGroupName}' not found in subscription '{_subscriptionId}'.");
         }
     }
 
@@ -50,33 +51,62 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
         }
     }
 
-    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string serviceName)
+    private static bool IsResourceTypeMatch(GenericResource resource, ResourceType resourceType)
+    {
+        var resourceTypeString = resourceType.GetResourceTypeString();
+        var parts = resourceTypeString.Split('|');
+        var expectedType = parts[0];
+        var expectedKind = parts.Length > 1 ? parts[1] : null;
+
+        return resource.Data.ResourceType.ToString() == expectedType &&
+               (expectedKind == null || resource.Data.Kind?.StartsWith(expectedKind) == true);
+    }
+
+    public async Task<List<(string name, ResourceType type)>> GetAllSupportedResourcesAsync()
     {
         var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
         var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
 
-        var filter = $"tagName eq 'azd-service-name' and tagValue eq '{serviceName}'";
+        var resources = new List<(string name, ResourceType type)>();
+
+        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync())
+        {
+            foreach (ResourceType resourceType in Enum.GetValues<ResourceType>())
+            {
+                if (IsResourceTypeMatch(resource, resourceType))
+                {
+                    resources.Add((resource.Data.Name, resourceType));
+                    break;
+                }
+            }
+        }
+
+        return resources;
+    }
+
+    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string resourceName)
+    {
+        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
+        var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
+
         var apps = new List<GenericResource>();
 
-        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync(filter: filter))
+        await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync())
         {
-            var resourceTypeString = resourceType.GetResourceTypeString();
-            var parts = resourceTypeString.Split('|');
-            var type = parts[0];
-            var kind = parts.Length > 1 ? parts[1] : null;
-
-            if (resource.Data.ResourceType.ToString() == type &&
-                (kind == null || resource.Data.Kind?.StartsWith(kind) == true))
+            if (resource.Data.Name.Equals(resourceName, StringComparison.OrdinalIgnoreCase))
             {
-                _logs[resource.Id.ToString()] = string.Empty;
-                apps.Add(resource);
+                if (IsResourceTypeMatch(resource, resourceType))
+                {
+                    _logs[resource.Id.ToString()] = string.Empty;
+                    apps.Add(resource);
+                }
             }
         }
 
         return apps.Count switch
         {
-            0 => throw new InvalidOperationException($"No resources found for resource type {resourceType} with tag azd-service-name={serviceName}"),
-            > 1 => throw new InvalidOperationException($"Multiple resources found for resource type {resourceType} with tag azd-service-name={serviceName}"),
+            0 => throw new InvalidOperationException($"No resources found for resource type {resourceType} in resource {resourceName}"),
+            > 1 => throw new InvalidOperationException($"Multiple resources found for resource type {resourceType} in resource {resourceName}"),
             _ => apps[0]
         };
     }
@@ -90,9 +120,9 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
     private static string GetFunctionAppLogsQuery(string functionAppName, int limit) =>
         $"AppTraces | where AppRoleName == '{functionAppName}' | order by TimeGenerated desc | project TimeGenerated, Message | take {limit}";
 
-    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string serviceName, int? limit = null)
+    public async Task<string> QueryAppLogsAsync(ResourceType resourceType, string resourceName, int? limit = null)
     {
-        var app = await RegisterAppAsync(resourceType, serviceName);
+        var app = await RegisterAppAsync(resourceType, resourceName);
         var getLogErrors = new List<string>();
         var getLogSuccess = false;
         var logSearchQuery = string.Empty;
@@ -182,24 +212,8 @@ public class AzdAppLogRetriever(TokenCredential credential, string subscriptionI
             throw new InvalidOperationException($"Errors: {string.Join(", ", getLogErrors)}");
         }
 
-        return $"Console Logs for {serviceName} with resource ID {app.Id} between {startTime} and {endTime}:\n{_logs[app.Id.ToString()]}";
+        return $"Console Logs for {resourceName} with resource ID {app.Id} between {startTime} and {endTime}:\n{_logs[app.Id.ToString()]}";
     }
-
-    private async Task<string> GetResourceGroupNameAsync()
-    {
-        var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
-
-        await foreach (var resourceGroup in subscription.GetResourceGroups())
-        {
-            if (resourceGroup.Data.Tags.TryGetValue("azd-env-name", out var envName) && envName == _azdEnvName)
-            {
-                return resourceGroup.Data.Name;
-            }
-        }
-
-        return string.Empty;
-    }
-
 }
 
 public enum ResourceType

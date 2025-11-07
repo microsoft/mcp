@@ -13,7 +13,7 @@ namespace Azure.Mcp.Tools.Deploy.Commands.App;
 
 public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : SubscriptionCommand<LogsGetOptions>()
 {
-    private const string CommandTitle = "Get AZD deployed App Logs";
+    private const string CommandTitle = "Get Application Logs";
     private readonly ILogger<LogsGetCommand> _logger = logger;
     public override string Id => "ce9d648d-7c76-48a0-8cba-b9b57c6fd00b";
 
@@ -31,23 +31,23 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
     public override string Description =>
         """
-        Shows application logs specifically for Azure Developer CLI (azd) deployed applications from their associated Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed exclusively for applications deployed via 'azd up' command and automatically discovers the correct workspace and resources based on the azd environment configuration. Use this tool to check deployment status or troubleshoot post-deployment issues.
+        Shows application logs from Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed for deployed applications workspace and discovers the correct workspace and resources based on the provided resource group name. Use this tool to check deployment status or troubleshoot post-deployment issues.
         """;
 
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName);
-        command.Options.Add(DeployOptionDefinitions.AzdAppLogOptions.Limit);
+        command.Options.Add(DeployOptionDefinitions.AppLogOptions.WorkspaceFolder);
+        command.Options.Add(DeployOptionDefinitions.AppLogOptions.ResourceGroupName);
+        command.Options.Add(DeployOptionDefinitions.AppLogOptions.Limit);
     }
 
     protected override LogsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.WorkspaceFolder.Name)!;
-        options.AzdEnvName = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AzdAppLogOptions.AzdEnvName.Name)!;
-        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AzdAppLogOptions.Limit.Name);
+        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AppLogOptions.WorkspaceFolder.Name)!;
+        options.ResourceGroup = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AppLogOptions.ResourceGroupName.Name);
+        options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AppLogOptions.Limit.Name);
         return options;
     }
 
@@ -65,17 +65,17 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
 
             var deployService = context.GetService<IDeployService>();
-            string result = await deployService.GetAzdResourceLogsAsync(
+            string result = await deployService.GetResourceLogsAsync(
                 options.WorkspaceFolder!,
-                options.AzdEnvName!,
                 options.Subscription!,
+                options.ResourceGroup!,
                 options.Limit);
 
             context.Response.Message = result;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "An exception occurred getting azd app logs.");
+            _logger.LogError(ex, "An exception occurred getting app logs.");
             HandleException(context, ex);
         }
 

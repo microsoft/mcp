@@ -930,10 +930,10 @@ azmcp postgres server param set --subscription <subscription> \
 ### Azure Deploy Operations
 
 ```bash
-# Get the application service log for a specific azd environment
+# Get the application service log for a specific resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy app logs get --workspace-folder <workspace-folder> \
-                          --azd-env-name <azd-env-name> \
+                                --resource-group <resource-group> \
                           [--limit <limit>]
 
 # Generate a mermaid architecture diagram for the application topology follow the schema defined in [deploy-app-topology-schema.json](../areas/deploy/src/AzureMcp.Deploy/Schemas/deploy-app-topology-schema.json)
@@ -956,9 +956,7 @@ azmcp deploy pipeline guidance get [--organization-name <organization-name>] \
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp deploy plan get --workspace-folder <workspace-folder> \
                       --project-name <project-name> \
-                      --target-app-service <target-app-service> \
-                      --provisioning-tool <provisioning-tool> \
-                      [--azd-iac-options <azd-iac-options>]
+                      --target-app-service <target-app-service>
 ```
 
 ### Azure Event Grid Operations

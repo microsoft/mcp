@@ -11,8 +11,7 @@ public class LogsGetOptions : SubscriptionOptions
     [JsonPropertyName("workspaceFolder")]
     public string WorkspaceFolder { get; set; } = string.Empty;
 
-    [JsonPropertyName("azdEnvName")]
-    public string AzdEnvName { get; set; } = string.Empty;
+    public string? ResourceGroupName => ResourceGroup;
 
     [JsonPropertyName("limit")]
     public int? Limit { get; set; }
