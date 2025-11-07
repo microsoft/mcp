@@ -32,9 +32,10 @@ public class CommandMetadataSyncTests
 
         // Act - Run the update script using ExternalProcessService
         var processService = new ExternalProcessService();
+        var pwshPath = FindPowerShellExecutable();
         var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
 
-        var updateResult = await processService.ExecuteAsync("pwsh", arguments);
+        var updateResult = await processService.ExecuteAsync(pwshPath, arguments);
 
         Assert.True(updateResult.ExitCode == 0,
             $"Update script failed with exit code {updateResult.ExitCode}. Output: {updateResult.Output}. Error: {updateResult.Error}");
@@ -50,6 +51,26 @@ public class CommandMetadataSyncTests
             "  2. Review the changes to servers\\Azure.Mcp.Server\\docs\\azmcp-commands.md\n" +
             "  3. Commit the updated file with your changes\n\n" +
             "This ensures that tool metadata in the documentation stays synchronized with the actual command implementations.");
+    }
+
+    private static string FindPowerShellExecutable()
+    {
+        // Search in PATH environment variable
+        var pathEnv = Environment.GetEnvironmentVariable("PATH");
+        if (pathEnv != null)
+        {
+            var exeName = OperatingSystem.IsWindows() ? "pwsh.exe" : "pwsh";
+            foreach (var directory in pathEnv.Split(Path.PathSeparator))
+            {
+                var fullPath = Path.Combine(directory, exeName);
+                if (File.Exists(fullPath))
+                {
+                    return fullPath;
+                }
+            }
+        }
+
+        throw new FileNotFoundException("PowerShell executable (pwsh) not found in PATH. Please ensure PowerShell 7+ is installed and available in PATH.");
     }
 
     private static string GetRepoRoot()
