@@ -32,7 +32,7 @@ module appInsights 'modules/application-insights.bicep' = {
 }
 
 // Deploy Entra App
-var entraAppUniqueName = '${replace(toLower(entraAppDisplayName), ' ', '-')}-${uniqueString(deployment().name, resourceGroup().id)}'
+var entraAppUniqueName = '${replace(toLower(entraAppDisplayName), ' ', '-')}-${uniqueString(resourceGroup().id)}'
 //
 module entraApp 'modules/entra-app.bicep' = {
   name: 'entra-app-deployment'
@@ -89,8 +89,6 @@ output ENTRA_APP_ROLE_ID string = entraApp.outputs.entraAppRoleId
 output ENTRA_APP_IDENTIFIER_URI string = entraApp.outputs.entraAppIdentifierUri
 
 // ACA Infrastructure outputs
-output CONTAINER_REGISTRY_LOGIN_SERVER string = acaInfrastructure.outputs.containerRegistryLoginServer
-output CONTAINER_REGISTRY_NAME string = acaInfrastructure.outputs.containerRegistryName
 output CONTAINER_APP_URL string = acaInfrastructure.outputs.containerAppUrl
 output CONTAINER_APP_NAME string = acaInfrastructure.outputs.containerAppName
 output CONTAINER_APP_PRINCIPAL_ID string = acaInfrastructure.outputs.containerAppPrincipalId

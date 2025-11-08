@@ -10,9 +10,6 @@ param containerAppName string = name
 @description('Environment name for the Container Apps Environment')
 param environmentName string = '${name}-env'
 
-@description('Container Registry name')
-param containerRegistryName string = '${replace(name, '-', '')}acr${uniqueString(resourceGroup().id)}'
-
 @description('Number of CPU cores allocated to the container')
 param cpuCores string = '0.25'
 
@@ -36,17 +33,6 @@ param azureAdTenantId string
 
 @description('Azure AD Client ID')
 param azureAdClientId string
-
-resource containerRegistry 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: containerRegistryName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-  }
-}
 
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
@@ -77,25 +63,19 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           }
         ]
       }
-      registries: [
-        {
-          server: containerRegistry.properties.loginServer
-          username: containerRegistry.properties.adminUserEnabled ? containerRegistry.name : null
-          passwordSecretRef: containerRegistry.properties.adminUserEnabled ? 'registry-password' : null
-        }
-      ]
-      secrets: containerRegistry.properties.adminUserEnabled ? [
-        {
-          name: 'registry-password'
-          value: containerRegistry.listCredentials().passwords[0].value
-        }
-      ] : []
     }
     template: {
       containers: [
         {
-          image: 'mcr.microsoft.com/azuredocs/containerapps-helloworld:latest'
+          image: 'mcr.microsoft.com/azure-sdk/azure-mcp:latest'
           name: containerAppName
+          command: []
+          args: [
+            '--transport'
+            'http'
+            '--namespace'
+            'postgres'
+          ]
           resources: {
             cpu: json(cpuCores)
             memory: memorySize
@@ -120,6 +100,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'AZURE_MCP_COLLECT_TELEMETRY'
               value: azureMcpCollectTelemetry
+            }
+            {
+              name: 'AzureAd__Instance'
+              value: environment().authentication.loginEndpoint
             }
             {
               name: 'AzureAd__TenantId'
@@ -154,9 +138,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     }
   }
 }
-
-output containerRegistryLoginServer string = containerRegistry.properties.loginServer
-output containerRegistryName string = containerRegistry.name
 
 output containerAppResourceId string = containerApp.id
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'

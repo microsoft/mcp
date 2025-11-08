@@ -9,22 +9,7 @@ infra:
   path: ./infra
   outputs:
     AZURE_RESOURCE_GROUP: AZURE_RESOURCE_GROUP
-    CONTAINER_REGISTRY_LOGIN_SERVER: CONTAINER_REGISTRY_LOGIN_SERVER
     CONTAINER_APP_NAME: CONTAINER_APP_NAME
-
-services:
-  api:
-    resourceName: ${CONTAINER_APP_NAME}
-    project: .
-    host: containerapp
-    language: docker
-    docker:
-      path: ./docker/Dockerfile
-      context: .
-      remoteBuild: false
-      registry: ${CONTAINER_REGISTRY_LOGIN_SERVER}
-    dependsOn:
-      - infra
 
 hooks:
   preprovision:
@@ -47,6 +32,4 @@ hooks:
     shell: sh
     run: |
       echo "Success: 'Azure MCP Postgres Server' deployed"
-      echo "Saving deployment info to azd-deployment-info.json..."
-      azd env get-values -o json > azd-deployment-info.json
     continueOnError: false

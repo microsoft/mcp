@@ -27,10 +27,10 @@ param entraAppUniqueName string
 
 var orgServiceManagementReferenceId = '00000000-0000-0000-0000-000000000000'
 
-var entraAppRoleValue = 'Mcp.Tool.Executor'
+var entraAppRoleValue = 'Mcp.Tools.ReadWrite.All'
 var entraAppRoleId = guid(subscription().id, entraAppRoleValue)
-var entraAppRoleDisplayName = 'MCP Tool Executor'
-var entraAppRoleDescription = 'Executor role for MCP Tool operations'
+var entraAppRoleDisplayName = 'Azure MCP Tools ReadWrite All'
+var entraAppRoleDescription = 'Application permission for Azure MCP tool calls'
 
 resource entraApp 'Microsoft.Graph/applications@v1.0' = {
   uniqueName: entraAppUniqueName 
