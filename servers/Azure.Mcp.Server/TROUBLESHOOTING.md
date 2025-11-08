@@ -823,9 +823,90 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 >
 > SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
 
+The Azure MCP Server supports remote hosting over HTTP using the **Streamable HTTP transport protocol**. For detailed configuration and deployment guidance, see the [Remote MCP Server section in CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#remote-mcp-server-streamable-http-transport).
+
 ### Streamable HTTP Transport
 
-See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+- See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+
+### Common Issues
+
+#### 401 Unauthorized - Invalid Token
+
+**Causes:** Token expired, wrong audience, or missing bearer token.
+
+**Resolution:**
+1. Verify token acquisition:
+   ```bash
+   az account get-access-token --resource api://<your-client-id>
+   ```
+
+2. Validate token claims at [jwt.ms](https://jwt.ms):
+   - `aud`: Must match server's ClientId
+   - `tid`: Must match server's TenantId
+   - `scp`: Must include `Mcp.Tools.ReadWrite`
+
+#### 403 Forbidden - Insufficient Permissions
+
+**Causes:** Missing scope/app role or user not assigned to application.
+
+**Resolution:**
+1. For delegated permissions, check scope in token:
+   ```bash
+   az ad app permission admin-consent --id <client-id>
+   ```
+
+2. Verify user assignment in Azure Portal:
+   - Entra ID → Enterprise Applications → [Your App] → Users and groups
+
+#### OBO Token Exchange Failures
+
+**Causes:** Server app missing API permissions or client token lacks scopes.
+
+**Resolution:**
+1. Grant Azure Management API permissions:
+   ```bash
+   az ad app permission add \
+     --id <server-client-id> \
+     --api https://management.azure.com/ \
+     --api-permissions user_impersonation=Scope
+   
+   az ad app permission admin-consent --id <server-client-id>
+   ```
+
+2. Add `knownClientApplications` to server's app manifest:
+   ```json
+   {
+     "knownClientApplications": ["<client-app-id>"]
+   }
+   ```
+
+#### Azure Service Access Denied
+
+**Causes:** Missing RBAC permissions on Azure resources.
+
+**Resolution:**
+
+**For OBO (per-user):**
+```bash
+az role assignment create \
+  --assignee user@domain.com \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg>
+```
+
+**For Hosting Environment (managed identity):**
+```bash
+IDENTITY_ID=$(az webapp identity show \
+  --name <app-name> \
+  --resource-group <rg> \
+  --query principalId -o tsv)
+
+az role assignment create \
+  --assignee $IDENTITY_ID \
+  --role Reader \
+  --scope /subscriptions/<sub-id>
+```
 
 ## Logging and Diagnostics
 
