@@ -12,6 +12,7 @@ using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -30,11 +31,10 @@ internal class Program
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             var builder = Host.CreateApplicationBuilder();
-            ConfigureServices(builder.Services, builder.Environment);
+            ConfigureServices(builder);
 
             builder.Services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
@@ -127,9 +127,10 @@ internal class Program
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services, IHostEnvironment hostEnvironment)
+    internal static void ConfigureServices(IHostApplicationBuilder builder)
     {
-        services.ConfigureOpenTelemetry(hostEnvironment);
+        var services = builder.Services;
+        services.ConfigureTelemetryServices(builder.Environment, builder.Configuration);
 
         services.AddMemoryCache();
         services.AddSingleton<IExternalProcessService, ExternalProcessService>();

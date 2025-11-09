@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -56,7 +57,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </summary>
     public override ToolMetadata Metadata => new() { Destructive = false, ReadOnly = true };
 
-    public static Action<IServiceCollection, IHostEnvironment> ConfigureServices { get; set; } = (_,__) => { };
+    public static Action<IHostApplicationBuilder> ConfigureServices { get; set; } = (_) => { };
 
     public static Func<IServiceProvider, Task> InitializeServicesAsync { get; set; } = _ => Task.CompletedTask;
 
@@ -340,7 +341,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         logging.ClearProviders();
         logging.AddEventSourceLogger();
 
-        if (builder.Environment.IsDevelopment() && serverOptions.Debug)
+        if (serverOptions.Debug)
         {
             // Configure console logger to emit Debug+ to stderr so tests can capture logs from StandardError
             logging.AddConsole(options =>
@@ -359,13 +360,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             logging.SetMinimumLevel(LogLevel.Debug);
         }
 
-        var services = builder.Services;
-
         // Configure the outgoing authentication strategy.
-        services.AddSingleIdentityTokenCredentialProvider();
+        builder.Services.AddSingleIdentityTokenCredentialProvider();
 
-        ConfigureServices(services, builder.Environment);
-        ConfigureMcpServer(services, serverOptions);
+        ConfigureServices(builder);
+        ConfigureMcpServer(builder.Services, serverOptions);
 
         return builder.Build();
     }
@@ -465,7 +464,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        ConfigureServices(services, builder.Environment); // Our static callback hook
+        ConfigureServices(builder); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
         WebApplication app = builder.Build();
@@ -578,7 +577,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         });
 
         // Configure services
-        ConfigureServices(services, builder.Environment); // Our static callback hook
+        ConfigureServices(builder); // Our static callback hook
         ConfigureMcpServer(services, serverOptions);
 
         // We still use the multi-user, HTTP context-aware caching strategy here

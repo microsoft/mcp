@@ -31,16 +31,16 @@ internal class Program
             ServiceStartCommand.InitializeServicesAsync = InitializeServicesAsync;
 
             var builder = Host.CreateApplicationBuilder(args);
-            ConfigureServices(builder.Services, builder.Environment);
 
             builder.Configuration.AddJsonFile("appsettings.Release.json", optional: true);
 
             builder.Services.AddLogging(builder =>
             {
-                builder.ConfigureOpenTelemetryLogger();
                 builder.AddConsole();
                 builder.SetMinimumLevel(LogLevel.Information);
             });
+
+            ConfigureServices(builder);
 
             using var host = builder.Build();
 
@@ -186,9 +186,10 @@ internal class Program
     /// </list>
     /// </summary>
     /// <param name="services">A service collection.</param>
-    internal static void ConfigureServices(IServiceCollection services, IHostEnvironment hostEnvironment)
+    internal static void ConfigureServices(IHostApplicationBuilder builder)
     {
-        services.ConfigureOpenTelemetry(hostEnvironment);
+        var services = builder.Services;
+        services.ConfigureTelemetryServices(builder.Environment, builder.Configuration);
         services.ConfigureMcpServerOptions();
 
         services.AddMemoryCache();
