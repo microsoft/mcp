@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
@@ -20,7 +21,8 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    public static void ConfigureOpenTelemetry(this IServiceCollection services, IHostEnvironment hostEnvironment)
+    public static void ConfigureTelemetryServices(this IServiceCollection services,
+        IHostEnvironment hostEnvironment, IConfiguration configuration)
     {
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
@@ -65,68 +67,105 @@ public static class OpenTelemetryExtensions
             services.AddSingleton<IMachineInformationProvider, DefaultMachineInformationProvider>();
         }
 
-        EnableAzureMonitor(services, hostEnvironment);
+        ConfigureOpenTelemetry(services, hostEnvironment, configuration);
     }
 
-    public static void ConfigureOpenTelemetryLogger(this ILoggingBuilder builder)
-    {
-        builder.AddOpenTelemetry(logger =>
-        {
-            logger.AddProcessor(new TelemetryLogRecordEraser());
-        });
-    }
-
-    private static void EnableAzureMonitor(this IServiceCollection services, IHostEnvironment hostEnvironment)
+    private static void ConfigureOpenTelemetry(this IServiceCollection services,
+        IHostEnvironment hostEnvironment,
+        IConfiguration configuration)
     {
         if (hostEnvironment.IsDevelopment())
         {
             services.AddSingleton(sp =>
             {
-                var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
+                var logger = sp.GetRequiredService<ILoggerFactory>();
+                var forwarder = new AzureEventSourceLogForwarder(logger);
                 forwarder.Start();
                 return forwarder;
             });
         }
 
-        services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
+        services.AddSingleton<IResourceDetector, AzureMcpServerResourceDetector>();
+
+        // Note: Turn on all the signals for metrics, tracing, and logging.
+        // The configuration for each of these components is done further down
+        // because we need to resolve classes using IServiceProvider.
+        //
+        // There is a single resource we gather information from.
+        var otelBuilder = services.AddOpenTelemetry()
+            .ConfigureResource(builder =>
+            {
+                builder.AddDetector(sp => sp.GetRequiredService<IResourceDetector>());
+            })
+            .WithMetrics()
+            .WithTracing()
+            .WithLogging(builder =>
+            {
+                builder.AddProcessor(new TelemetryLogRecordEraser());
+            });
+
+        // Metrics configuration
+        services.ConfigureOpenTelemetryMeterProvider((sp, builder) =>
         {
-            var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
-            if (!serverConfig.Value.IsTelemetryEnabled)
+            var config = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>().Value;
+            if (!config.IsTelemetryEnabled)
             {
                 return;
             }
 
-            builder.AddSource(serverConfig.Value.Name);
-        });
-
-        var otelBuilder = services.AddOpenTelemetry()
-            .ConfigureResource(r =>
+            builder.AddAzureMonitorMetricExporter(options =>
             {
-                var version = Assembly.GetExecutingAssembly()?.GetName()?.Version?.ToString();
-
-                r.AddService("azmcp", version)
-                    .AddTelemetrySdk();
+                options.ConnectionString = config.ApplicationInsightsConnectionString;
             });
 
-        if (hostEnvironment.IsProduction())
-        {
+            if (config.IsOtelExporterEnabled)
+            {
+                builder.AddOtlpExporter();
+            }
+        });
 
-        }
-        else if(hostEnvironment.IsDevelopment())
+        // Tracer configuration
+        services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
+            var config = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>().Value;
+            if (!config.IsTelemetryEnabled)
+            {
+                return;
+            }
 
-        }
-#if RELEASE
-        
-#endif
+            // Matches the ActivitySource created in ITelemetryService.
+            builder.AddSource(config.Name);
 
-            var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
-        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
+            builder.AddAzureMonitorTraceExporter(options =>
+            {
+                options.ConnectionString = config.ApplicationInsightsConnectionString;
+            });
+
+            if (config.IsOtelExporterEnabled)
+            {
+                builder.AddOtlpExporter();
+            }
+        });
+
+        // Tracer configuration
+        services.ConfigureOpenTelemetryLoggerProvider((sp, builder) =>
         {
-            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
-                .WithMetrics(metrics => metrics.AddOtlpExporter())
-                .WithLogging(logging => logging.AddOtlpExporter());
-        }
+            var config = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>().Value;
+            if (!config.IsTelemetryEnabled)
+            {
+                return;
+            }
+
+            builder.AddAzureMonitorLogExporter(options =>
+            {
+                options.ConnectionString = config.ApplicationInsightsConnectionString;
+            });
+
+            if (config.IsOtelExporterEnabled)
+            {
+                builder.AddOtlpExporter();
+            }
+        });
     }
 
     /// <summary>
