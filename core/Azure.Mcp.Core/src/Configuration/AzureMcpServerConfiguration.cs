@@ -41,6 +41,12 @@ public class AzureMcpServerConfiguration
     public bool IsTelemetryEnabled { get; set; } = true;
 
     /// <summary>
+    /// Indicates whether to enable Open Telemetry Exporter when <see cref="IsTelemetryEnabled"/> is true.
+    /// </summary
+    [Required]
+    public bool IsOtelExporterEnabled { get; set; } = false;
+
+    /// <summary>
     /// The application insights connection string to use if <see cref="IsTelemetryEnabled"/> is true.
     /// </summary>
     public string? ApplicationInsightsConnectionString { get; set; }

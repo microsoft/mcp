@@ -252,26 +252,37 @@ public static class AzureMcpServiceCollectionExtensions
         }
     }
 
+    /// <summary>
+    /// Using <see cref="IConfiguration"/> configures <see cref="AzureMcpServerConfiguration"/>.
+    /// </summary>
+    /// <param name="services">Service Collection to add configuration logic to.</param>
     public static void ConfigureMcpServerOptions(this IServiceCollection services)
     {
         services.AddOptions<AzureMcpServerConfiguration>()
             .BindConfiguration(string.Empty)
             .Configure<IConfiguration, IOptions<ServiceStartOptions>>((options, rootConfiguration, serviceStartOptions) =>
             {
-                var collectTelemetry = rootConfiguration.GetValue<string?>("AZURE_MCP_COLLECT_TELEMETRY");
+                var collectTelemetry = rootConfiguration.GetValue<bool?>("AZURE_MCP_COLLECT_TELEMETRY");
+                var isOtelExporterEnabled = rootConfiguration.GetValue<bool?>("AZURE_MCP_ENABLE_OTLP_EXPORTER");
                 var applicationInsightsString = rootConfiguration.GetValue<string?>("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-                options.Version = GetServerVersion(Assembly.GetEntryAssembly());
-
                 var transport = serviceStartOptions.Value.Transport;
+                var isTelemetryEnabledEnvironment = collectTelemetry.HasValue
+                    ? collectTelemetry.Value
+                    : true;
 
-                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+                var isStdioTransport = string.IsNullOrEmpty(transport)
+                    || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
-                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
+                options.Version = GetServerVersion(Assembly.GetEntryAssembly());
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
                 options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
+
+                options.IsOtelExporterEnabled = isOtelExporterEnabled.HasValue
+                    ? isOtelExporterEnabled.Value
+                    : false;
             });
 
         services.AddSingleton<IValidateOptions<AzureMcpServerConfiguration>, AzureMcpServerConfigurationValidator>();
