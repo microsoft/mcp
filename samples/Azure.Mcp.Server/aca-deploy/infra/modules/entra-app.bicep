@@ -25,7 +25,7 @@ param entraAppDisplayName string
 @description('Unique name for the Entra Application')
 param entraAppUniqueName string
 
-var orgServiceManagementReferenceId = '00000000-0000-0000-0000-000000000000'
+var orgServiceManagementReferenceId = '4405e061-966a-4249-afdd-f7435f54a510'
 
 var entraAppRoleValue = 'Mcp.Tools.ReadWrite.All'
 var entraAppRoleId = guid(subscription().id, entraAppRoleValue)

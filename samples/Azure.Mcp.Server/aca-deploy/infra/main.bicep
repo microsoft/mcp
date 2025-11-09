@@ -7,11 +7,8 @@ param acaName string
 @description('Display name for the Entra App')
 param entraAppDisplayName string
 
-@description('Azure RBAC role definition ID for Container App (Reader role)')
-param acaRoleId string = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
-
-@description('Full resource ID of the Postgres resource to assign the role on')
-param postgresResourceId string
+@description('Full resource ID of the Storage Account to assign the role on')
+param storageResourceId string
 
 @description('AI Foundry project resource ID (optional - only needed if assigning Entra App role to AIF project MI)')
 param aifProjectResourceId string
@@ -55,13 +52,27 @@ module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
   }
 }
 
-// Deploy role assignment for ACA to access Postgres resource
-module acaRoleAssignment './modules/aca-role-assignment-resource.bicep' = {
-  name: 'aca-role-assignment'
+// Storage role definitions
+var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
+var storageAccountContributorRoleId = '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+
+// Deploy Storage Blob Data Contributor role assignment for ACA
+module acaStorageBlobRoleAssignment './modules/aca-role-assignment-resource.bicep' = {
+  name: 'aca-storage-blob-role-assignment'
   params: {
-    postgresResourceId: postgresResourceId
+    storageResourceId: storageResourceId
     acaPrincipalId: acaInfrastructure.outputs.containerAppPrincipalId
-    roleDefinitionId: acaRoleId
+    roleDefinitionId: storageBlobDataContributorRoleId
+  }
+}
+
+// Deploy Storage Account Contributor role assignment for ACA
+module acaStorageAccountRoleAssignment './modules/aca-role-assignment-resource.bicep' = {
+  name: 'aca-storage-account-role-assignment'
+  params: {
+    storageResourceId: storageResourceId
+    acaPrincipalId: acaInfrastructure.outputs.containerAppPrincipalId
+    roleDefinitionId: storageAccountContributorRoleId
   }
 }
 

@@ -73,8 +73,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           args: [
             '--transport'
             'http'
+            '--outgoing-auth-strategy'
+            'UseHostingEnvironmentIdentity'
             '--namespace'
-            'postgres'
+            'storage'
+            '--mode'
+            'all'
+            '--debug'
           ]
           resources: {
             cpu: json(cpuCores)
@@ -88,6 +93,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'ASPNETCORE_URLS'
               value: 'http://+:8080'
+            }
+            {
+              name: 'AZURE_TOKEN_CREDENTIALS'
+              value: 'managedidentitycredential'
             }
             {
               name: 'AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS'
@@ -112,6 +121,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'AzureAd__ClientId'
               value: azureAdClientId
+            }
+            {
+              name: 'AZURE_LOG_LEVEL'
+              value: 'Verbose'
             }
           ], !empty(appInsightsConnectionString) ? [
             {

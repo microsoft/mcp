@@ -6,16 +6,13 @@
       "value": "${AZURE_LOCATION}"
     },
     "entraAppDisplayName": {
-      "value": "Azure MCP Postgres Server API"
+      "value": "Azure MCP Storage Server API"
     },
     "acaName": {
-      "value": "azure-mcp-postgres-server"
+      "value": "azure-mcp-storage-server"
     },
-    "acaRoleId": {
-      "value": "acdd72a7-3385-48ef-bd42-f606fba81ae7"
-    },
-    "postgresResourceId": {
-      "value": "${POSTGRES_RESOURCE_ID}"
+    "storageResourceId": {
+      "value": "${STORAGE_RESOURCE_ID}"
     },
     "aifProjectResourceId": {
       "value": "${AIF_PROJECT_RESOURCE_ID}"
