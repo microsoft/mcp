@@ -1,6 +1,6 @@
 {
     "name": "vscode-fabric-mcp-server",
-    "displayName": "Fabric MCP Server",
+    "displayName": "Microsoft Fabric MCP Server",
     "description": "Provides Model Context Protocol (MCP) integration and tooling for Fabric in Visual Studio Code.",
     "version": "0.0.0",
     "license": "MIT",
