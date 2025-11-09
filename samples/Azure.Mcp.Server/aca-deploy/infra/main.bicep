@@ -7,10 +7,10 @@ param acaName string
 @description('Display name for the Entra App')
 param entraAppDisplayName string
 
-@description('Full resource ID of the Storage Account to assign the role on')
+@description('Full resource ID of the Storage Account that the MCP server will have access to through storage tools')
 param storageResourceId string
 
-@description('AI Foundry project resource ID (optional - only needed if assigning Entra App role to AIF project MI)')
+@description('AI Foundry project resource ID for assigning Entra App role to AIF project managed identity')
 param aifProjectResourceId string
 
 @description('Application Insights connection string. Use "DISABLED" to disable telemetry, or provide existing connection string. If omitted, new App Insights will be created.')
