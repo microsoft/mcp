@@ -8,22 +8,22 @@ using NSubstitute;
 
 namespace Fabric.Mcp.Tools.OneLake.Tests.Commands;
 
-public class OneLakeItemListDfsCommandTests
+public class OneLakeItemDataListCommandTests
 {
     [Fact]
     public void Constructor_InitializesCommandCorrectly()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListDfsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
 
         // Act
-        var command = new OneLakeItemListDfsCommand(logger, oneLakeService);
+        var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Assert
-        Assert.Equal("onelake-item-list-dfs", command.Name);
-        Assert.Equal("List OneLake Items (DFS)", command.Title);
-        Assert.Contains("List OneLake items in a workspace using the OneLake DFS", command.Description);
+        Assert.Equal("onelake-item-data-list", command.Name);
+        Assert.Equal("List OneLake Items (Data API)", command.Title);
+        Assert.Contains("OneLake DFS", command.Description);
         Assert.True(command.Metadata.ReadOnly);
         Assert.False(command.Metadata.Destructive);
         Assert.True(command.Metadata.Idempotent);
@@ -33,16 +33,16 @@ public class OneLakeItemListDfsCommandTests
     public void GetCommand_ReturnsValidCommand()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListDfsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemListDfsCommand(logger, oneLakeService);
+        var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Act
         var systemCommand = command.GetCommand();
 
         // Assert
         Assert.NotNull(systemCommand);
-        Assert.Equal("onelake-item-list-dfs", systemCommand.Name);
+        Assert.Equal("onelake-item-data-list", systemCommand.Name);
         Assert.NotNull(systemCommand.Description);
     }
 
@@ -50,9 +50,9 @@ public class OneLakeItemListDfsCommandTests
     public void CommandOptions_ContainsRequiredOptions()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListDfsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemListDfsCommand(logger, oneLakeService);
+        var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Act
         var systemCommand = command.GetCommand();
@@ -68,26 +68,26 @@ public class OneLakeItemListDfsCommandTests
         var oneLakeService = Substitute.For<IOneLakeService>();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListDfsCommand(null!, oneLakeService));
+        Assert.Throws<ArgumentNullException>(() => new OneLakeItemDataListCommand(null!, oneLakeService));
     }
 
     [Fact]
     public void Constructor_ThrowsArgumentNullException_WhenOneLakeServiceIsNull()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListDfsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
 
         // Act & Assert
-        Assert.Throws<ArgumentNullException>(() => new OneLakeItemListDfsCommand(logger, null!));
+        Assert.Throws<ArgumentNullException>(() => new OneLakeItemDataListCommand(logger, null!));
     }
 
     [Fact]
     public void Metadata_HasCorrectProperties()
     {
         // Arrange
-        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemListDfsCommand>();
+        var logger = LoggerFactory.Create(builder => { }).CreateLogger<OneLakeItemDataListCommand>();
         var oneLakeService = Substitute.For<IOneLakeService>();
-        var command = new OneLakeItemListDfsCommand(logger, oneLakeService);
+        var command = new OneLakeItemDataListCommand(logger, oneLakeService);
 
         // Act
         var metadata = command.Metadata;

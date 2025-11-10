@@ -10,7 +10,7 @@ The test suite includes comprehensive coverage for OneLake MCP commands:
 - **PathListCommandTests** - File system path navigation  
 - **BlobListCommandTests** - Blob storage operations
 - **OneLakeItemListCommandTests** - OneLake item enumeration
-- **OneLakeItemListDfsCommandTests** - OneLake DFS API item enumeration
+- **OneLakeItemDataListCommandTests** - OneLake DFS API item enumeration
 - **ItemCreateCommandTests** - Item creation functionality
 - **FileReadCommandTests** - File reading operations
 - **FileWriteCommandTests** - File writing operations
@@ -75,7 +75,7 @@ ONELAKE_INTEGRATION_TESTS=true dotnet test tools/Fabric.Mcp.Tools.OneLake/tests/
 - `PathListCommandTests` - Tests path listing with raw response functionality
 - `BlobListCommandTests` - Tests blob listing with raw response functionality
 - `OneLakeItemListCommandTests` - Tests OneLake item enumeration
-- `OneLakeItemListDfsCommandTests` - Tests OneLake DFS API item enumeration
+- `OneLakeItemDataListCommandTests` - Tests OneLake DFS API item enumeration
 - `ItemCreateCommandTests` - Tests item creation functionality
 - `FileReadCommandTests` - Tests file reading operations
 - `FileWriteCommandTests` - Tests file writing operations

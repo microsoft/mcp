@@ -103,7 +103,7 @@ tests/
 - ✅ **Path Listing** (`path-list`) - File system browsing
 - ✅ **Blob Listing** (`list-blobs`) - Blob storage access
 - ✅ **OneLake Item Listing** (`onelake-item-list`) - Item enumeration
-- ✅ **OneLake DFS Item Listing** (`onelake-item-list-dfs`) - DFS API item enumeration
+- ✅ **OneLake Data Item Listing** (`onelake-item-data-list`) - DFS API item enumeration
 - ✅ **Item Creation** (`onelake-item-create`) - Create OneLake items
 - ✅ **File Operations** (`onelake-file-read`, `onelake-file-write`, `onelake-file-delete`) - File management
 - ✅ **Directory Operations** (`onelake-directory-create`, `onelake-directory-delete`) - Directory management
@@ -209,7 +209,7 @@ For this implementation, we chose to:
 | Directory Delete | `onelake-directory-delete` | Full ✅ |
 | Blob List | `onelake-blob-list` | Full ✅ |
 | Path List | `onelake-path-list` | Full ✅ |
-| Item List DFS | `onelake-item-list-dfs` | Full ✅ |
+| Item Data List | `onelake-item-data-list` | Full ✅ |
 
 ## Key Achievements 🚀
 

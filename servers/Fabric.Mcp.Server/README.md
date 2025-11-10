@@ -122,7 +122,7 @@ Use the server's CLI to query embedded data and examples. Commands are organized
 | `onelake directory-delete` | Delete directories (with optional recursion). |
 | `onelake onelake-workspace-list` | List available OneLake workspaces. |
 | `onelake onelake-item-list` | List Fabric items within a workspace (data plane). |
-| `onelake onelake-item-list-dfs` | List Fabric items via the DFS endpoint. |
+| `onelake onelake-item-data-list` | List Fabric items via the DFS endpoint. |
 | `onelake item-create` | Provision new Fabric items (lakehouse, notebook, etc.). |
 
 All commands accept either GUID identifiers (`--workspace-id`, `--item-id`) or friendly names (`--workspace`, `--item`), with the exception of `onelake item-create`, which currently requires GUID identifiers. Friendly-name items must be provided as `<itemName>.<itemType>` (for example, `SalesLakehouse.lakehouse`). Use `dotnet run -- onelake --help` (or `fabmcp onelake --help` for published builds) to inspect the complete option set before scripting.

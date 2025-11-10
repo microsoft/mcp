@@ -121,7 +121,7 @@ public class FileReadCommandTests
         var filePath = "test/file.txt";
         var fileContent = "Hello, OneLake!";
 
-        var contentStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
+    using var contentStream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         oneLakeService.ReadFileAsync(expectedWorkspace, expectedItem, filePath, Arg.Any<CancellationToken>())
             .Returns(contentStream);
 

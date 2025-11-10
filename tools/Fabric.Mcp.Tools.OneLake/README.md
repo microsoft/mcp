@@ -280,7 +280,7 @@ dotnet run -- onelake onelake-item-list --workspace-id "47242da5-ff3b-46fb-a94f-
 Lists OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 
 ```bash
-dotnet run -- onelake onelake-item-list-dfs --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --recursive
+dotnet run -- onelake onelake-item-data-list --workspace-id "47242da5-ff3b-46fb-a94f-977909b773d5" --recursive
 ```
 
 **Parameters:**

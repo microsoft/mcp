@@ -18,16 +18,16 @@ namespace Fabric.Mcp.Tools.OneLake.Commands.Item;
 /// <summary>
 /// Command to list OneLake items in a workspace using the OneLake DFS (Data Lake File System) API.
 /// </summary>
-public sealed class OneLakeItemListDfsCommand(
-    ILogger<OneLakeItemListDfsCommand> logger,
-    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemListDfsOptions>()
+public sealed class OneLakeItemDataListCommand(
+    ILogger<OneLakeItemDataListCommand> logger,
+    IOneLakeService oneLakeService) : GlobalCommand<OneLakeItemDataListOptions>()
 {
-    private readonly ILogger<OneLakeItemListDfsCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly ILogger<OneLakeItemDataListCommand> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly IOneLakeService _oneLakeService = oneLakeService ?? throw new ArgumentNullException(nameof(oneLakeService));
 
-    public override string Name => "onelake-item-list-dfs";
-    public override string Title => "List OneLake Items (DFS)";
-    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) API";
+    public override string Name => "onelake-item-data-list";
+    public override string Title => "List OneLake Items (Data API)";
+    public override string Description => "List OneLake items in a workspace using the OneLake DFS (Data Lake File System) data API.";
 
     public override ToolMetadata Metadata => new()
     {
@@ -48,7 +48,7 @@ public sealed class OneLakeItemListDfsCommand(
         command.Options.Add(FabricOptionDefinitions.ContinuationToken);
     }
 
-    protected override OneLakeItemListDfsOptions BindOptions(ParseResult parseResult)
+    protected override OneLakeItemDataListOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         var workspaceId = parseResult.GetValueOrDefault<string>(FabricOptionDefinitions.WorkspaceId.Name);
@@ -77,12 +77,12 @@ public sealed class OneLakeItemListDfsCommand(
                 continuationToken: options.ContinuationToken,
                 CancellationToken.None);
 
-            var result = new OneLakeItemListDfsCommandResult { JsonResponse = jsonResponse };
-            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemListDfsCommandResult);
+            var result = new OneLakeItemDataListCommandResult { JsonResponse = jsonResponse };
+            context.Response.Results = ResponseResult.Create(result, OneLakeJsonContext.Default.OneLakeItemDataListCommandResult);
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing OneLake items (DFS) in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
+            _logger.LogError(ex, "Error listing OneLake items (data API) in workspace {WorkspaceId}. Options: {@Options}", options.WorkspaceId, options);
             HandleException(context, ex);
         }
         
@@ -107,13 +107,13 @@ public sealed class OneLakeItemListDfsCommand(
         _ => base.GetStatusCode(ex)
     };
 
-    public sealed record OneLakeItemListDfsCommandResult
+    public sealed record OneLakeItemDataListCommandResult
     {
         public string? JsonResponse { get; init; }
     }
 }
 
-public sealed class OneLakeItemListDfsOptions : GlobalOptions
+public sealed class OneLakeItemDataListOptions : GlobalOptions
 {
     public string WorkspaceId { get; set; } = string.Empty;
     public bool Recursive { get; set; } = true;

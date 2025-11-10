@@ -72,7 +72,7 @@ public class OneLakeServiceTests
     public async Task ListOneLakeWorkspacesAsync_WithoutContinuationToken_CallsCorrectUrlAndReturnsWorkspaces()
     {
         // Arrange
-        var mockResponse = new MemoryStream();
+    using var mockResponse = new MemoryStream();
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,
@@ -107,7 +107,7 @@ public class OneLakeServiceTests
         // Arrange
         var continuationToken = "token123";
         var expectedUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/?comp=list&continuationToken={Uri.EscapeDataString(continuationToken)}";
-        var mockResponse = new MemoryStream();
+    using var mockResponse = new MemoryStream();
         
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
@@ -139,7 +139,7 @@ public class OneLakeServiceTests
     public async Task ListOneLakeWorkspacesAsync_WithEmptyString_TreatsAsNull()
     {
         // Arrange
-        var mockResponse = new MemoryStream();
+    using var mockResponse = new MemoryStream();
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(
             HttpMethod.Get,
@@ -191,7 +191,7 @@ public class OneLakeServiceTests
         // Arrange
         var specialToken = "token with spaces & symbols!";
         var expectedUrl = $"{OneLakeEndpoints.OneLakeDataPlaneBaseUrl}/?comp=list&continuationToken={Uri.EscapeDataString(specialToken)}";
-        var mockResponse = new MemoryStream();
+    using var mockResponse = new MemoryStream();
         
         var mockApiClient = Substitute.For<IOneLakeApiClient>();
         mockApiClient.SendOneLakeApiRequestAsync(

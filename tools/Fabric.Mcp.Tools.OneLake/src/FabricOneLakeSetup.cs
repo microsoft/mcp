@@ -26,8 +26,8 @@ public class FabricOneLakeSetup : IAreaSetup
         services.AddSingleton<OneLakeWorkspaceListCommand>();
         
         // Register item commands
-        services.AddSingleton<OneLakeItemListCommand>();
-        services.AddSingleton<OneLakeItemListDfsCommand>();
+    services.AddSingleton<OneLakeItemListCommand>();
+    services.AddSingleton<OneLakeItemDataListCommand>();
         services.AddSingleton<ItemCreateCommand>();
         
         // Register file commands
@@ -59,11 +59,11 @@ public class FabricOneLakeSetup : IAreaSetup
         fabricOneLake.AddCommand(oneLakeWorkspaceListCommand.Name, oneLakeWorkspaceListCommand);
         
         // Register item commands
-        var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
-        fabricOneLake.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
-        
-        var oneLakeItemListDfsCommand = serviceProvider.GetRequiredService<OneLakeItemListDfsCommand>();
-        fabricOneLake.AddCommand(oneLakeItemListDfsCommand.Name, oneLakeItemListDfsCommand);
+    var oneLakeItemListCommand = serviceProvider.GetRequiredService<OneLakeItemListCommand>();
+    fabricOneLake.AddCommand(oneLakeItemListCommand.Name, oneLakeItemListCommand);
+
+    var oneLakeItemDataListCommand = serviceProvider.GetRequiredService<OneLakeItemDataListCommand>();
+    fabricOneLake.AddCommand(oneLakeItemDataListCommand.Name, oneLakeItemDataListCommand);
         
         var itemCreateCommand = serviceProvider.GetRequiredService<ItemCreateCommand>();
         fabricOneLake.AddCommand(itemCreateCommand.Name, itemCreateCommand);

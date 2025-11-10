@@ -1,8 +1,17 @@
-# Upload all files from source folder to OneLake
-$sourceFolder = "C:\Users\srthatip\Downloads\all_matches"
+# Upload all files from source folder to OneLake (defaults to $HOME/Downloads/all_matches)
+
+param(
+    [string]$SourceFolder = (Join-Path (Join-Path $HOME "Downloads") "all_matches")
+)
+
+$sourceFolder = $SourceFolder
 $workspaceId = "47242da5-ff3b-46fb-a94f-977909b773d5"
 $itemId = "0e67ed13-2bb6-49be-9c87-a1105a4ea342"
 $targetFolder = "raw_data/all_matches"
+
+if (-not (Test-Path -Path $sourceFolder)) {
+    throw "Source folder '$sourceFolder' does not exist. Provide a valid path using -SourceFolder."
+}
 
 # Get all files
 $files = Get-ChildItem -Path $sourceFolder -File

@@ -33,7 +33,7 @@ namespace Fabric.Mcp.Tools.OneLake.Models;
 [JsonSerializable(typeof(OneLakeEnvironmentEndpoints))]
 [JsonSerializable(typeof(OneLakeWorkspaceListCommand.OneLakeWorkspaceListCommandResult))]
 [JsonSerializable(typeof(OneLakeItemListCommand.OneLakeItemListCommandResult))]
-[JsonSerializable(typeof(OneLakeItemListDfsCommand.OneLakeItemListDfsCommandResult))]
+[JsonSerializable(typeof(OneLakeItemDataListCommand.OneLakeItemDataListCommandResult))]
 [JsonSerializable(typeof(ItemCreateCommand.ItemCreateCommandResult))]
 [JsonSerializable(typeof(FileReadCommand.FileReadCommandResult))]
 [JsonSerializable(typeof(FileWriteCommand.FileWriteCommandResult))]
