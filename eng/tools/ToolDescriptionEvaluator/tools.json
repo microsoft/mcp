@@ -898,12 +898,6 @@
     },
     {
       "name": "get",
-      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. \r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
-      "command": "azureaibestpractices get",
-      "option": []
-    },
-    {
-      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -13268,17 +13262,5 @@
     }
   ],
   "consolidated_tools": null,
-<<<<<<< HEAD
-<<<<<<< HEAD
-  "duration": 53
-=======
-<<<<<<< HEAD
-  "duration": 47
-=======
-  "duration": 49
->>>>>>> 84ad4f44 (update prompts and tool description evaluator)
->>>>>>> 58ab8585 (update prompts and tool description evaluator)
-=======
-  "duration": 55
->>>>>>> e2fd2eac (refactor tts mcp tool)
+  "duration": 56
 }
