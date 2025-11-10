@@ -26,7 +26,7 @@ public sealed class RecordedCommandTestsBaseTests
             EnableDefaultSanitizerAdditions = true,
         };
 
-        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? nameof(ProxyRecordProducesRecording);
+        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
         var recordingPath = harness.GetRecordingAbsolutePath(displayName);
         if (File.Exists(recordingPath))
         {
@@ -65,7 +65,7 @@ public sealed class RecordedCommandTestsBaseTests
         {
             var output = Substitute.For<ITestOutputHelper>();
 
-            var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? nameof(PerTestMatcherAttributeAppliesWhenPresent);
+            var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
 
             var recordHarness = new RecordedCommandTestHarness(output, fixture)
             {
@@ -147,7 +147,7 @@ public sealed class RecordedCommandTestsBaseTests
     {
         var fixture = new TestProxyFixture();
         var output = Substitute.For<ITestOutputHelper>();
-        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? nameof(VariableSurvivesRecordPlaybackRoundtrip);
+        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
 
         var recordHarness = new RecordedCommandTestHarness(output, fixture)
         {
@@ -188,6 +188,8 @@ public sealed class RecordedCommandTestsBaseTests
             File.Delete(recordingPath);
         }
     }
+
+
 
     private string GetRecordingId(RecordedCommandTestsBase harness)
     {
