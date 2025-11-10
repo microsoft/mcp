@@ -139,13 +139,13 @@ public static class OpenTelemetryExtensions
     /// </summary>
     /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
     /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly callerAssembly)
+    internal static string GetServerVersion(Assembly entryAssembly)
     {
-        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
         {
             throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
         }
 
         string version = versionAttribute.InformationalVersion;
