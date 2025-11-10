@@ -37,8 +37,6 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "bicep",
             "--resource-types", "appservice, azurestorage"
         ]);
 
@@ -49,16 +47,13 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Deployment Tool AzCli rules", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_terraform()
+    public async Task Should_get_infrastructure_rules_for_azurecosmosdb()
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "terraform",
             "--resource-types", "containerapp, azurecosmosdb"
         ]);
 
@@ -69,7 +64,22 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Expected parameters in terraform parameters", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("If creating AzCli script, the script should stop if any command fails", result.Message, StringComparison.OrdinalIgnoreCase);
+    }
+    
+    [Fact]
+    public async Task Should_get_infrastructure_rules_without_resource_types()
+    {
+        // arrange
+        var args = _commandDefinition.Parse([]);
+
+        // act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // assert
+        Assert.NotNull(result);
+        Assert.Equal(HttpStatusCode.OK, result.Status);
+        Assert.NotNull(result.Message);
     }
 
     [Fact]
@@ -77,8 +87,6 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "bicep",
             "--resource-types", "function"
         ]);
 
@@ -98,8 +106,6 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "bicep",
             "--resource-types", "containerapp"
         ]);
 
@@ -115,12 +121,10 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_infrastructure_rules_for_azcli_deployment_tool()
+    public async Task Should_get_infrastructure_rules_for_azcli()
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "",
             "--resource-types", "aks"
         ]);
 
@@ -139,8 +143,6 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "terraform",
             "--resource-types", "containerapp"
         ]);
 
@@ -161,8 +163,6 @@ public class RulesGetCommandTests
     {
         // arrange
         var args = _commandDefinition.Parse([
-            "--deployment-tool", "AzCli",
-            "--iac-type", "bicep",
             "--resource-types", "appservice,containerapp,function"
         ]);
 

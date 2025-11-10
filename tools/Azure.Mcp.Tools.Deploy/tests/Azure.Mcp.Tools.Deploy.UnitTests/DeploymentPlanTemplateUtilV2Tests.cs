@@ -9,8 +9,8 @@ namespace Azure.Mcp.Tools.Deploy.UnitTests;
 public sealed class DeploymentPlanTemplateUtilV2Tests
 {
     [Theory]
-    [InlineData("", "WebApp", "AzCli")]
-    [InlineData("TestProject", "ContainerApp", "AzCli")]
+    [InlineData("", "WebApp")]
+    [InlineData("TestProject", "ContainerApp")]
     public void GetPlanTemplate_ValidInputs_ReturnsFormattedTemplate(
         string projectName,
         string targetAppService)
@@ -45,9 +45,7 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "",
-            "ContainerApp",
-            "AzCli",
-            "");
+            "ContainerApp");
 
         // Assert
         Assert.Contains("Azure Deployment Plan", result);
@@ -63,9 +61,7 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             projectName,
-            "ContainerApp",
-            "AzCli",
-            "");
+            "ContainerApp");
 
         // Assert
         Assert.Contains($"Azure Deployment Plan for {projectName} Project", result);
@@ -84,9 +80,7 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "TestProject",
-            targetAppService,
-            "AzCli",
-            "");
+            targetAppService);
 
         // Assert
         Assert.Contains(expectedAzureHost, result);
@@ -98,9 +92,7 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "TestProject",
-            "AKS",
-            "AzCli",
-            "");
+            "AKS");
 
         // Assert
         Assert.Contains("kubectl apply", result);
@@ -109,14 +101,12 @@ public sealed class DeploymentPlanTemplateUtilV2Tests
     }
 
     [Fact]
-    public void GetPlanTemplate_ContainerAppWithAzCli_IncludesDockerSteps()
+    public void GetPlanTemplate_ContainerApp_IncludesDockerSteps()
     {
         // Act
         var result = DeploymentPlanTemplateUtil.GetPlanTemplate(
             "TestProject",
-            "ContainerApp",
-            "AzCli",
-            "");
+            "ContainerApp");
 
         // Assert
         Assert.Contains("Build and Push Docker Image", result);

@@ -38,7 +38,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_azd_app_logs()
+    public async Task Should_get_app_logs()
     {
         // arrange
         var expectedLogs = "App logs retrieved:\n[2024-01-01 10:00:00] Application started\n[2024-01-01 10:01:00] Processing request";
@@ -52,6 +52,7 @@ public class LogsGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/Users/",
+            "--resource-group", "rg-test",
             "--limit", "10"
         ]);
 
@@ -68,7 +69,7 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_azd_app_logs_with_default_limit()
+    public async Task Should_get_app_logs_with_default_limit()
     {
         // arrange
         var expectedLogs = "App logs retrieved:\nSample log entry";
@@ -81,7 +82,8 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project"
+            "--workspace-folder", "C:/project",
+            "--resource-group", "rg-project"
             // No limit specified - should use default
         ]);
 
@@ -109,6 +111,7 @@ public class LogsGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
             "--workspace-folder", "C:/empty-project",
+            "--resource-group", "rg-empty",
             "--limit", "50"
         ]);
 
@@ -125,7 +128,7 @@ public class LogsGetCommandTests
     public async Task Should_handle_error_during_log_retrieval()
     {
         // arrange
-        var errorMessage = "Error during retrieval of app logs of azd project:\nNo resource group with tag {\"azd-env-name\": test-env} found.";
+        var errorMessage = "Error during retrieval of app logs:\nNo resources found in resource group rg-test.";
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -135,7 +138,8 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/invalid-project"
+            "--workspace-folder", "C:/invalid-project",
+            "--resource-group", "rg-test"
         ]);
 
         // act
@@ -146,7 +150,7 @@ public class LogsGetCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
         Assert.StartsWith("Error during retrieval of app logs", result.Message);
-        Assert.Contains("test-env", result.Message);
+        Assert.Contains("rg-test", result.Message);
     }
 
     [Fact]
@@ -162,7 +166,8 @@ public class LogsGetCommandTests
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project"
+            "--workspace-folder", "C:/project",
+            "--resource-group", "rg-project"
         ]);
 
         // act
@@ -192,5 +197,22 @@ public class LogsGetCommandTests
         Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
     }
 
+    [Fact]
+    public async Task Should_validate_required_resource_group_parameter()
+    {
+        // arrange - missing required resource-group parameter
+        var args = _commandDefinition.Parse([
+            "--subscription", "test-subscription-id",
+            "--workspace-folder", "C:/project"
+            // Missing resource-group (required)
+        ]);
 
+        // act
+        var result = await _command.ExecuteAsync(_context, args);
+
+        // assert
+        Assert.NotNull(result);
+        Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
+    }
+    
 }

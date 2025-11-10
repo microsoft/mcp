@@ -39,8 +39,7 @@ public class GetCommandTests
         var args = _commandDefinition.Parse([
             "--workspace-folder", "C:/",
             "--project-name", "django",
-            "--target-app-service", "ContainerApp",
-            "--provisioning-tool", "AzCli"
+            "--target-app-service", "ContainerApp"
         ]);
 
         // act
@@ -55,14 +54,13 @@ public class GetCommandTests
     }
 
     [Fact]
-    public async Task Should_get_plan_with_default_provisioning_tool()
+    public async Task Should_get_plan_for_webapp()
     {
         // arrange
         var args = _commandDefinition.Parse([
             "--workspace-folder", "C:/test",
             "--project-name", "myapp",
             "--target-app-service", "WebApp"
-            // No provisioning-tool provided - should default to "AzCli"
         ]);
 
         // act
@@ -83,8 +81,7 @@ public class GetCommandTests
         var args = _commandDefinition.Parse([
             "--workspace-folder", "C:/k8s-project",
             "--project-name", "k8s-app",
-            "--target-app-service", "AKS",
-            "--provisioning-tool", "azcli"
+            "--target-app-service", "AKS"
         ]);
 
         // act
@@ -105,8 +102,7 @@ public class GetCommandTests
         var args = _commandDefinition.Parse([
             "--workspace-folder", "C:/",
             "--project-name", "default-app",
-            "--target-app-service", "unknown-service", // This should default to Container Apps
-            "--provisioning-tool", "AzCli"
+            "--target-app-service", "unknown-service" // This should default to Container Apps
         ]);
         // act
         var result = await _command.ExecuteAsync(_context, args);
