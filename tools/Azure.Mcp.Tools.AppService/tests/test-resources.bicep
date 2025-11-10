@@ -139,7 +139,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: cosmosAccountName
-  location: 'westus2'
+  location: 'westcentralus'
   tags: {
     defaultExperience: 'Core (SQL)'
     CosmosAccountType: 'Non-Production'
