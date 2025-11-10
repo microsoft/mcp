@@ -26,8 +26,8 @@ You'll be prompted for:
 
 - **Container App** - Runs Azure MCP Server with storage namespace
 - **Role Assignments** - Container App managed identity granted roles for outbound authentication to storage:
-  - Storage Account Contributor
-  - Storage Blob Data Contributor
+  - Reader (read-only access to storage account properties)
+  - Storage Blob Data Reader (read-only access to blob data)
 - **Entra App Registration** - For incoming OAuth 2.0 authentication from clients (e.g., agents) with `Mcp.Tools.ReadWrite.All` role
 - **Application Insights** - Telemetry and monitoring
 

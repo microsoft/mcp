@@ -52,27 +52,27 @@ module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
   }
 }
 
-// Storage role definitions
-var storageBlobDataContributorRoleId = 'ba92f5b4-2d11-453d-a403-e96b0029c9fe'
-var storageAccountContributorRoleId = '17d1049b-9a84-46fb-8f53-869881c3d3ab'
+// Storage role definitions (read-only roles for the --read-only Azure MCP Server flag)
+var storageBlobDataReaderRoleId = '2a2b9908-6ea1-4ae2-8e65-a410df84e7d1'
+var readerRoleId = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 
-// Deploy Storage Blob Data Contributor role assignment for ACA
+// Deploy Storage Blob Data Reader role assignment for ACA
 module acaStorageBlobRoleAssignment './modules/aca-role-assignment-resource.bicep' = {
   name: 'aca-storage-blob-role-assignment'
   params: {
     storageResourceId: storageResourceId
     acaPrincipalId: acaInfrastructure.outputs.containerAppPrincipalId
-    roleDefinitionId: storageBlobDataContributorRoleId
+    roleDefinitionId: storageBlobDataReaderRoleId
   }
 }
 
-// Deploy Storage Account Contributor role assignment for ACA
+// Deploy Reader role assignment for ACA (read storage account properties)
 module acaStorageAccountRoleAssignment './modules/aca-role-assignment-resource.bicep' = {
   name: 'aca-storage-account-role-assignment'
   params: {
     storageResourceId: storageResourceId
     acaPrincipalId: acaInfrastructure.outputs.containerAppPrincipalId
-    roleDefinitionId: storageAccountContributorRoleId
+    roleDefinitionId: readerRoleId
   }
 }
 
