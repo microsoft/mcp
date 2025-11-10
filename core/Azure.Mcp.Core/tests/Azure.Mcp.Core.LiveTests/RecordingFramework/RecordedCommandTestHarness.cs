@@ -13,6 +13,11 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
+/// <summary>
+/// Harness for testing RecordedCommandTestsBase functionality. Intended for proper abstraction of livetest settings etc to allow both record and playback modes in the same test for full roundtrip testing.
+/// </summary>
+/// <param name="output"></param>
+/// <param name="fixture"></param>
 internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
     public TestMode DesiredMode { get; set; } = TestMode.Record;

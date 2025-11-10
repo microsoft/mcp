@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
 using System.Text.Json;
+using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
@@ -11,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
-public sealed class RecordedCommandTestsBaseLifecycleTests
+public sealed class RecordedCommandTestsBaseTests
 {
     [Fact]
     public async Task ProxyRecordProducesRecording()
@@ -59,48 +61,49 @@ public sealed class RecordedCommandTestsBaseLifecycleTests
     public async Task PerTestMatcherAttributeAppliesWhenPresent()
     {
         var fixture = new TestProxyFixture();
-        var output = Substitute.For<ITestOutputHelper>();
-
-        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? nameof(PerTestMatcherAttributeAppliesWhenPresent);
-
-        var recordHarness = new RecordedCommandTestHarness(output, fixture)
+        try
         {
-            DesiredMode = TestMode.Record,
-            EnableDefaultSanitizerAdditions = false,
-        };
+            var output = Substitute.For<ITestOutputHelper>();
 
-        RecordedCommandTestHarness? playbackHarness = null;
+            var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? nameof(PerTestMatcherAttributeAppliesWhenPresent);
 
-        var recordingPath = recordHarness.GetRecordingAbsolutePath(displayName);
-        if (File.Exists(recordingPath))
-        {
-            File.Delete(recordingPath);
+            var recordHarness = new RecordedCommandTestHarness(output, fixture)
+            {
+                DesiredMode = TestMode.Record,
+                EnableDefaultSanitizerAdditions = false,
+            };
+
+            var recordingPath = recordHarness.GetRecordingAbsolutePath(displayName);
+            if (File.Exists(recordingPath))
+            {
+                File.Delete(recordingPath);
+            }
+            var recordingId = string.Empty;
+
+            await recordHarness.InitializeAsync();
+            recordHarness.RegisterVariable("attrKey", "attrValue");
+            await recordHarness.DisposeAsync();
+
+            var playbackHarness = new RecordedCommandTestHarness(output, fixture)
+            {
+                DesiredMode = TestMode.Playback,
+                EnableDefaultSanitizerAdditions = false,
+            };
+
+            await playbackHarness.InitializeAsync();
+            recordingId = GetRecordingId(playbackHarness);
+            await playbackHarness.DisposeAsync();
+
+            output.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
+
+            if (File.Exists(recordingPath))
+            {
+                File.Delete(recordingPath);
+            }
         }
-        var recordingId = string.Empty;
-
-        await recordHarness.InitializeAsync();
-        recordHarness.RegisterVariable("attrKey", "attrValue");
-
-        // todo: recordingId = recordHarness.RecordingId;
-
-        await recordHarness.DisposeAsync();
-
-
-        playbackHarness = new RecordedCommandTestHarness(output, fixture)
+        finally
         {
-            DesiredMode = TestMode.Playback,
-            EnableDefaultSanitizerAdditions = false,
-        };
-
-        await playbackHarness.InitializeAsync();
-        await playbackHarness.DisposeAsync();
-        
-
-        output.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId"))); // \"{recordingId}\"
-
-        if (File.Exists(recordingPath))
-        {
-            File.Delete(recordingPath);
+            await fixture.DisposeAsync();
         }
     }
 
@@ -184,5 +187,14 @@ public sealed class RecordedCommandTestsBaseLifecycleTests
         {
             File.Delete(recordingPath);
         }
+    }
+
+    private string GetRecordingId(RecordedCommandTestsBase harness)
+    {
+        var property = typeof(RecordedCommandTestsBase).GetProperty(
+            "RecordingId",
+            BindingFlags.Instance | BindingFlags.NonPublic);
+
+        return property?.GetValue(harness) as string ?? string.Empty;
     }
 }
