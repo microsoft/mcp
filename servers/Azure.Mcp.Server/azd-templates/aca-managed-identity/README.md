@@ -1,17 +1,18 @@
 # Azure MCP Server - ACA with Managed Identity
 
-Reference Azure Developer CLI (azd) template for deploying Azure MCP Server to Azure Container Apps with storage tools enabled.
+Deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Azure AI Foundry](https://azure.microsoft.com/en-us/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/en-us/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tool calls that perform Azure operations on your behalf.
 
-The MCP server storage tools uses the Container App's managed identity for outgoing authentication to Azure Storage.
-
-AI Foundry agents access the MCP server storage tools using the AI Foundry project's managed identity for incoming authentication.
+This reference Azure Developer CLI (azd) template shows how to host the server on Azure Container Apps with storage tools enabled, using managed identity authentication for secure access to Azure Storage.
 
 ## Prerequisites
 
 - Azure subscription with **Owner** or **User Access Administrator** permissions
 - [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
+- The list of Azure MCP Server tool areas (namespaces) you wish to enable (see [azmcp-commands.md](../../docs/azmcp-commands.md)). This reference template uses the `storage` namespace
 
 ## Quick Start
+
+This reference template deploys the Azure MCP Server with **read-only** Azure Storage tools enabled, accessible over HTTPS transport. For details on customizing server startup flags and configuration, see [Azure MCP Server documentation](../../docs/azmcp-commands.md).
 
 ```bash
 azd up
