@@ -34,6 +34,23 @@ param azureAdTenantId string
 @description('Azure AD Client ID')
 param azureAdClientId string
 
+@description('Azure MCP Server namespaces to enable. Must specify at least one namespace and no more than three.')
+@minLength(1)
+@maxLength(3)
+param namespaces array
+
+var baseArgs = [
+  '--transport'
+  'http'
+  '--outgoing-auth-strategy'
+  'UseHostingEnvironmentIdentity'
+  '--mode'
+  'all'
+  '--read-only'
+]
+var namespaceArgs = [for ns in namespaces: ['--namespace', ns]]
+var serverArgs = flatten(concat([baseArgs], namespaceArgs))
+
 resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01' = {
   name: environmentName
   location: location
@@ -44,6 +61,9 @@ resource containerAppsEnvironment 'Microsoft.App/managedEnvironments@2024-03-01'
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
+  tags: {
+    product: 'azmcp'
+  }
   identity: {
     type: 'SystemAssigned'
   }
@@ -70,17 +90,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           image: 'mcr.microsoft.com/azure-sdk/azure-mcp:latest'
           name: containerAppName
           command: []
-          args: [
-            '--transport'
-            'http'
-            '--outgoing-auth-strategy'
-            'UseHostingEnvironmentIdentity'
-            '--namespace'
-            'storage'
-            '--mode'
-            'all'
-            '--read-only'
-          ]
+          args: serverArgs
           resources: {
             cpu: json(cpuCores)
             memory: memorySize

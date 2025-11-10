@@ -25,10 +25,10 @@ You'll be prompted for:
 ## What Gets Deployed
 
 - **Container App** - Runs Azure MCP Server with storage namespace
-- **Role Assignments** - Container App managed identity granted roles for outbound authentication to storage:
+- **Role Assignments** - Container App managed identity granted roles for outbound authentication to the storage account specified by the input storage resource ID:
   - Reader (read-only access to storage account properties)
   - Storage Blob Data Reader (read-only access to blob data)
-- **Entra App Registration** - For incoming OAuth 2.0 authentication from clients (e.g., agents) with `Mcp.Tools.ReadWrite.All` role
+- **Entra App Registration** - For incoming OAuth 2.0 authentication from clients (e.g., agents) with `Mcp.Tools.ReadWrite.All` role. This role is assigned to the managed identity of the AI Foundry project specified by the input AI Foundry resource ID
 - **Application Insights** - Telemetry and monitoring
 
 ### Deployment Outputs
@@ -60,3 +60,15 @@ ENTRA_APP_SERVICE_PRINCIPAL_ID="31b42369-583b-40b7-a535-ad343f75e463"
 ```bash
 azd down
 ```
+
+## Template Structure
+
+The `azd` template consists of the following Bicep modules:
+
+- **`main.bicep`** - Orchestrates the deployment of all resources
+- **`aca-infrastructure.bicep`** - Deploys Container App hosting the Azure MCP Server
+- **`aca-role-assignment-resource-storage.bicep`** - Assigns Azure storage RBAC roles to the Container App managed identity on the storage account specified by the input storage resource ID
+- **`entra-app.bicep`** - Creates Entra App registration with custom app role for OAuth 2.0 authentication
+- **`aif-role-assignment-entraapp.bicep`** - Assigns Entra App role to the managed identity of the AI Foundry project specified by the input AI Foundry resource ID for the Azure MCP Server access
+- **`application-insights.bicep`** - Deploys Application Insights for telemetry and monitoring (conditional deployment)
+

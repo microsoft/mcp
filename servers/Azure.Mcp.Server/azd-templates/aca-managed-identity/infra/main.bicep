@@ -39,7 +39,7 @@ module entraApp 'modules/entra-app.bicep' = {
   }
 }
 
-// Deploy ACA Infrastructure
+// Deploy ACA Infrastructure to host Azure MCP Server
 module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
   name: 'aca-infrastructure-deployment'
   params: {
@@ -49,6 +49,7 @@ module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
     azureMcpCollectTelemetry: string(!empty(appInsights.outputs.connectionString))
     azureAdTenantId: tenant().tenantId
     azureAdClientId: entraApp.outputs.entraAppClientId
+    namespaces: ['storage']
   }
 }
 
