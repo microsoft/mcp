@@ -27,7 +27,7 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
             {
-                options.Version = GetServerVersion(Assembly.GetCallingAssembly());
+                SetServerVersion(Assembly.GetEntryAssembly(), options);
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
@@ -127,14 +127,20 @@ public static class OpenTelemetryExtensions
     }
 
     /// <summary>
-    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// Sets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
     /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
     /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
-    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
+    /// <param name="options">The server configuration options to set the version on.</param>
     /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly callerAssembly)
+    internal static void SetServerVersion(Assembly? callerAssembly, AzureMcpServerConfiguration options)
     {
+        if (callerAssembly == null)
+        {
+            return;
+        }
+
         AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
         {
@@ -150,6 +156,6 @@ public static class OpenTelemetryExtensions
             version = version.Substring(0, hashSeparator);
         }
 
-        return version;
+        options.Version = version;
     }
 }
