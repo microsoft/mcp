@@ -414,12 +414,12 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             var resultObject = jsonResult.RootElement;
 
             // Validate Error message for corrupted file
-            Assert.True(resultObject.TryGetProperty("message", out var messageProperty));
+            var messageProperty = resultObject.AssertProperty("message");
             var message = messageProperty.GetString() ?? "";
             Assert.True(message.Contains("The audio file appears to be empty or corrupted. Please provide a valid audio file.", StringComparison.OrdinalIgnoreCase));
 
             // Validate exception type
-            Assert.True(resultObject.TryGetProperty("type", out var exceptionTypeProperty));
+            var exceptionTypeProperty = resultObject.AssertProperty("type");
             var exceptionType = exceptionTypeProperty.GetString() ?? "";
             Assert.True(exceptionType.Contains("InvalidOperationException", StringComparison.OrdinalIgnoreCase));
         }
@@ -507,13 +507,13 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
         var resultObject = jsonResult.RootElement;
 
         // Validate Error message for corrupted file
-        Assert.True(resultObject.TryGetProperty("message", out var messageProperty));
+        var messageProperty = resultObject.AssertProperty("message");
         var message = messageProperty.GetString() ?? "";
         Assert.True(message.Contains("Cannot process compressed audio file", StringComparison.OrdinalIgnoreCase));
         Assert.True(message.Contains("because GStreamer is not properly installed or configured.", StringComparison.OrdinalIgnoreCase));
 
         // Validate exception type
-        Assert.True(resultObject.TryGetProperty("type", out var exceptionTypeProperty));
+        var exceptionTypeProperty = resultObject.AssertProperty("type");
         var exceptionType = exceptionTypeProperty.GetString() ?? "";
         Assert.True(exceptionType.Contains("InvalidOperationException", StringComparison.OrdinalIgnoreCase));
     }
@@ -604,14 +604,14 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
-            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+            var resultProperty = resultObject.AssertProperty("result");
 
             // Verify voice was used
-            Assert.True(resultProperty.TryGetProperty("voice", out var voiceProperty));
+            var voiceProperty = resultProperty.AssertProperty("voice");
             Assert.Equal(voice, voiceProperty.GetString());
 
             // Verify language
-            Assert.True(resultProperty.TryGetProperty("language", out var languageProperty));
+            var languageProperty = resultProperty.AssertProperty("language");
             Assert.Equal(language, languageProperty.GetString());
 
             // Verify file exists
@@ -657,10 +657,10 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
-            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+            var resultProperty = resultObject.AssertProperty("result");
 
             // Verify format
-            Assert.True(resultProperty.TryGetProperty("format", out var formatProperty));
+            var formatProperty = resultProperty.AssertProperty("format");
             Assert.Equal(format, formatProperty.GetString());
 
             // Verify file exists and has content
@@ -772,7 +772,7 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
 
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
-            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+            var resultProperty = resultObject.AssertProperty("result");
 
             // Verify file exists and is significantly larger than a short phrase
             Assert.True(File.Exists(outputFile));
