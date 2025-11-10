@@ -1,6 +1,6 @@
 {
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
-    "name": "com.microsoft/azure-mcp",
+    "name": "com.microsoft/azure",
     "description": "All Azure MCP tools to create a seamless connection between AI agents and Azure services.",
     "version": "2.0.0-beta.2",
     "title": "Azure MCP Server",
