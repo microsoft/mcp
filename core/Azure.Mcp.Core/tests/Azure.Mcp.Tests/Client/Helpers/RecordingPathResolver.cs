@@ -8,7 +8,7 @@ namespace Azure.Mcp.Tests.Client.Helpers;
 /// <summary>
 /// Provides path resolution for session records and related assets.
 /// </summary>
-internal sealed class RecordingPathResolver
+public sealed class RecordingPathResolver
 {
     private static readonly char[] _invalidChars = ['\\', '/', ':', '*', '?', '"', '<', '>', '|'];
 

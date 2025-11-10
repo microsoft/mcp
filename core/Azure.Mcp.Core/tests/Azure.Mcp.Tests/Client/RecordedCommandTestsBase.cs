@@ -98,7 +98,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     }
 
     // used to resolve a recording "path" given an invoking test
-    private static readonly RecordingPathResolver _pathResolver = new();
+    protected static readonly RecordingPathResolver _pathResolver = new();
 
     protected virtual bool IsAsync => false;
 
@@ -176,7 +176,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         {
             matcherSb.Append($", ExcludedHeaders={matcher.ExcludedHeaders}.");
         }
-        
+
         // per-test matcher setting
         if (recordingId != null)
         {
