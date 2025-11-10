@@ -27,7 +27,13 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
             {
-                SetServerVersion(Assembly.GetEntryAssembly(), options);
+                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
+                // the assembly that will run the tool calls.
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
+                {
+                    options.Version = GetServerVersion(entryAssembly);
+                }
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
@@ -132,15 +138,9 @@ public static class OpenTelemetryExtensions
     /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
     /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
-    /// <param name="options">The server configuration options to set the version on.</param>
     /// <returns>A version string.</returns>
-    internal static void SetServerVersion(Assembly? callerAssembly, AzureMcpServerConfiguration options)
+    internal static string GetServerVersion(Assembly callerAssembly)
     {
-        if (callerAssembly == null)
-        {
-            return;
-        }
-
         AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
         {
