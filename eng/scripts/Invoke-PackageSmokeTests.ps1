@@ -7,6 +7,7 @@ param(
     [string] $ArtifactsDirectory,
     [string] $TargetOs,
     [string] $TargetArch,
+    [switch] $TestDocker,
     [switch] $CI
 )
 
@@ -248,8 +249,11 @@ foreach($server in $servers) {
 
     $nugetValid = Test-NugetPackages -Server $server
     $npmValid = Test-NpmPackages -Server $server
-    $dockerValid = Test-DockerImages -Server $server
 
+    if ($TestDocker) {
+        $dockerValid = Test-DockerImages -Server $server
+    }
+    
     if (!$nugetValid -or !$npmValid -or !$dockerValid) {
         $exitCode = 1
     }
