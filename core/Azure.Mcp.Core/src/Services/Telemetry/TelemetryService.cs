@@ -72,12 +72,17 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityId) => StartActivity(activityId, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityId, Implementation? clientInfo)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo) => StartActivity(activityName, clientInfo, null);
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
     {
         if (!_isEnabled)
         {
@@ -86,7 +91,7 @@ internal class TelemetryService : ITelemetryService
 
         CheckInitialization();
 
-        var activity = Parent.StartActivity(activityId);
+        var activity = Parent.StartActivity(activityName);
 
         if (activity == null)
         {
@@ -102,6 +107,15 @@ internal class TelemetryService : ITelemetryService
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
+
+        if (requestParams != null)
+        {
+            activity.AddTag("_meta", requestParams.Meta?.ToString() ?? "none");
+        }
+        else
+        {
+            activity.AddTag("_meta", "noequestparams");
+        }
 
         return activity;
     }
