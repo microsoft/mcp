@@ -26,6 +26,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `man-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
 
 ### Bugs Fixed
+- - Fixed exit code when invoking `--help` flag. Commands like `azmcp tools list --help` now correctly return exit code 0 instead of 1 when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]
 
 - Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in agent learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 - Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
