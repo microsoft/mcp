@@ -183,7 +183,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
       periodicModeProperties: {
         backupIntervalInMinutes: 240
         backupRetentionIntervalInHours: 8
-        backupStorageRedundancy: 'Geo'
+        backupStorageRedundancy: 'Local'
       }
     }
     networkAclBypassResourceIds: []
