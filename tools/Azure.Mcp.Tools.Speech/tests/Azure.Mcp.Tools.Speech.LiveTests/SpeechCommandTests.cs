@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tools.Speech.Models;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
@@ -549,13 +550,13 @@ public class SpeechCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             // Parse and validate the JSON result
             var jsonResult = JsonDocument.Parse(resultText);
             var resultObject = jsonResult.RootElement;
-            Assert.True(resultObject.TryGetProperty("result", out var resultProperty));
+            var resultProperty = resultObject.AssertProperty("result");
 
             // Verify file path
-            Assert.True(resultProperty.TryGetProperty("filePath", out var filePathProperty));
+            var filePathProperty = resultProperty.AssertProperty("filePath");
             Assert.Equal(outputFile, filePathProperty.GetString());
 
-            Assert.True(resultProperty.TryGetProperty("audioSize", out var audioLengthProperty));
+            var audioLengthProperty = resultProperty.AssertProperty("audioSize");
             Assert.True(audioLengthProperty.GetInt64() > 0);
 
             // Verify the output file was created and has content

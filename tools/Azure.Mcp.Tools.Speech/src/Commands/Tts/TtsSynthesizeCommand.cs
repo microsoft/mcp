@@ -17,6 +17,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
     internal record TtsSynthesizeCommandResult(SynthesisResult Result);
 
     private const string CommandTitle = "Synthesize Speech from Text";
+    private static readonly HashSet<string> SupportedExtensions = [".wav", ".mp3", ".ogg", ".raw"];
     private readonly ILogger<TtsSynthesizeCommand> _logger = logger;
 
     public override string Name => "synthesize";
@@ -74,16 +75,18 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             }
             else
             {
+                // Check if file already exists (don't allow overwriting)
+                if (File.Exists(fileValue))
+                {
+                    commandResult.AddError($"Output file already exists: {fileValue}. Please specify a different file path or delete the existing file.");
+                }
+
                 // Validate file extension
                 var extension = Path.GetExtension(fileValue).ToLowerInvariant();
-                var supportedExtensions = new HashSet<string>
-                {
-                    ".wav", ".mp3", ".ogg", ".raw"
-                };
 
-                if (!supportedExtensions.Contains(extension))
+                if (!SupportedExtensions.Contains(extension))
                 {
-                    commandResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", supportedExtensions)} are supported.");
+                    commandResult.AddError($"Unsupported output file format: {extension}. Only {string.Join(", ", SupportedExtensions)} are supported.");
                 }
             }
 
@@ -144,7 +147,7 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
             context.Response.Status = HttpStatusCode.OK;
             context.Response.Message = "Speech synthesis completed successfully.";
             context.Response.Results = ResponseResult.Create(
-                new TtsSynthesizeCommandResult(result),
+                new(result),
                 SpeechJsonContext.Default.TtsSynthesizeCommandResult);
         }
         catch (Exception ex)

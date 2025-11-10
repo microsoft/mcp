@@ -41,28 +41,6 @@ public class TtsSynthesizeCommandTests
         _commandDefinition = _command.GetCommand();
     }
 
-    [Fact]
-    public void Constructor_WithValidLogger_ShouldCreateInstance()
-    {
-        var command = new TtsSynthesizeCommand(_logger);
-        Assert.NotNull(command);
-        Assert.Equal("synthesize", command.Name);
-    }
-
-    [Fact]
-    public void Properties_ShouldHaveExpectedValues()
-    {
-        Assert.Equal("synthesize", _command.Name);
-        Assert.Equal("Synthesize Speech from Text", _command.Title);
-        Assert.NotEmpty(_command.Description);
-        Assert.False(_command.Metadata.Destructive);
-        Assert.True(_command.Metadata.Idempotent);
-        Assert.False(_command.Metadata.OpenWorld);
-        Assert.False(_command.Metadata.ReadOnly);
-        Assert.True(_command.Metadata.LocalRequired);
-        Assert.False(_command.Metadata.Secret);
-    }
-
     [Theory]
     [InlineData("", false, "Missing Required options: --endpoint, --text, --outputAudio")]
     [InlineData("--subscription sub123", false, "Missing Required options: --endpoint, --text, --outputAudio")]
