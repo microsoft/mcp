@@ -180,6 +180,8 @@ The `azmcp server start` command supports the following options:
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
+| `--log-level` | No | `Information` (or `Debug` if `--debug` is set) | Minimum logging level. Valid values: `Trace`, `Debug`, `Information`, `Warning`, `Error`, `Critical`, `None`. **⚠️ Security Note:** `Debug` and `Trace` levels may log sensitive data including secrets and tokens. |
+| `--log-file-path` | No | None | Path to write log file output. When specified, logs are written to the file in addition to console output |
 | `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 

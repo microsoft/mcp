@@ -106,6 +106,30 @@ public class ServiceStartCommandTests
         Assert.True(hasToolOption, "Tool option should be registered");
     }
 
+    [Fact]
+    public void AllOptionsRegistered_IncludesLogLevel()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasLogLevelOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.LogLevel.Name);
+        Assert.True(hasLogLevelOption, "LogLevel option should be registered");
+    }
+
+    [Fact]
+    public void AllOptionsRegistered_IncludesLogFilePath()
+    {
+        // Arrange & Act
+        var command = _command.GetCommand();
+
+        // Assert
+        var hasLogFilePathOption = command.Options.Any(o =>
+            o.Name == ServiceOptionDefinitions.LogFilePath.Name);
+        Assert.True(hasLogFilePathOption, "LogFilePath option should be registered");
+    }
+
     [Theory]
     [InlineData("azmcp_storage_account_get")]
     [InlineData("azmcp_keyvault_secret_get")]
@@ -129,6 +153,40 @@ public class ServiceStartCommandTests
             Assert.Single(actualTools);
             Assert.Equal(expectedTool, actualTools[0]);
         }
+    }
+
+    [Theory]
+    [InlineData("Debug")]
+    [InlineData("Information")]
+    [InlineData("Warning")]
+    [InlineData("Error")]
+    [InlineData(null)]
+    public void LogLevelOption_ParsesCorrectly(string? expectedLogLevel)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithLogLevel(expectedLogLevel);
+
+        // Act
+        var actualLogLevel = parseResult.GetValue(ServiceOptionDefinitions.LogLevel);
+
+        // Assert
+        Assert.Equal(expectedLogLevel, actualLogLevel);
+    }
+
+    [Theory]
+    [InlineData("c:\\logs\\azmcp.log")]
+    [InlineData("/var/log/azmcp.log")]
+    [InlineData(null)]
+    public void LogFilePathOption_ParsesCorrectly(string? expectedPath)
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithLogFilePath(expectedPath);
+
+        // Act
+        var actualPath = parseResult.GetValue(ServiceOptionDefinitions.LogFilePath);
+
+        // Assert
+        Assert.Equal(expectedPath, actualPath);
     }
 
     [Fact]
@@ -280,6 +338,52 @@ public class ServiceStartCommandTests
         Assert.False(options.Debug);
         Assert.False(options.DangerouslyDisableHttpIncomingAuth);
         Assert.False(options.InsecureDisableElicitation);
+        Assert.Null(options.LogLevel);
+        Assert.Null(options.LogFilePath);
+    }
+
+    [Fact]
+    public void BindOptions_WithLogLevel_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedLogLevel = "Debug";
+        var parseResult = CreateParseResultWithLogLevel(expectedLogLevel);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.Equal(expectedLogLevel, options.LogLevel);
+    }
+
+    [Fact]
+    public void BindOptions_WithLogFilePath_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedPath = "c:\\logs\\azmcp.log";
+        var parseResult = CreateParseResultWithLogFilePath(expectedPath);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.Equal(expectedPath, options.LogFilePath);
+    }
+
+    [Fact]
+    public void BindOptions_WithLogLevelAndFilePath_ReturnsCorrectlyConfiguredOptions()
+    {
+        // Arrange
+        var expectedLogLevel = "Warning";
+        var expectedPath = "/var/log/azmcp.log";
+        var parseResult = CreateParseResultWithLogLevelAndFilePath(expectedLogLevel, expectedPath);
+
+        // Act
+        var options = GetBoundOptions(parseResult);
+
+        // Assert
+        Assert.Equal(expectedLogLevel, options.LogLevel);
+        Assert.Equal(expectedPath, options.LogFilePath);
     }
 
     [Fact]
@@ -745,6 +849,50 @@ public class ServiceStartCommandTests
             "--transport", "stdio",
             "--namespace", "storage",
             "--tool", "azmcp_storage_account_get"
+        };
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithLogLevel(string? logLevel)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (logLevel is not null)
+        {
+            args.Add("--log-level");
+            args.Add(logLevel);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithLogFilePath(string? logFilePath)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio"
+        };
+
+        if (logFilePath is not null)
+        {
+            args.Add("--log-file-path");
+            args.Add(logFilePath);
+        }
+
+        return _command.GetCommand().Parse([.. args]);
+    }
+
+    private ParseResult CreateParseResultWithLogLevelAndFilePath(string logLevel, string logFilePath)
+    {
+        var args = new List<string>
+        {
+            "--transport", "stdio",
+            "--log-level", logLevel,
+            "--log-file-path", logFilePath
         };
 
         return _command.GetCommand().Parse([.. args]);

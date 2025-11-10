@@ -72,4 +72,19 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("outgoingAuthStrategy")]
     public OutgoingAuthStrategy OutgoingAuthStrategy { get; set; } = OutgoingAuthStrategy.NotSet;
+
+    /// <summary>
+    /// Gets or sets the minimum logging level.
+    /// Valid values: Trace, Debug, Information, Warning, Error, Critical, None.
+    /// When null, defaults to Information (or Debug if Debug mode is enabled).
+    /// </summary>
+    [JsonPropertyName("logLevel")]
+    public string? LogLevel { get; set; } = null;
+
+    /// <summary>
+    /// Gets or sets the path to write log file output.
+    /// When specified, logs will be written to this file in addition to console output.
+    /// </summary>
+    [JsonPropertyName("logFilePath")]
+    public string? LogFilePath { get; set; } = null;
 }
