@@ -51,9 +51,9 @@ public static class AzureMcpServiceCollectionExtensions
             .Configure<IMcpRuntime, IOptions<AzureMcpServerConfiguration>>(
                 (mcpServerOptions, mcpRuntime, serverConfig) =>
                 {
-                    var mcpServerOptionsBuilder = services.AddOptions<McpServerOptions>();
+
                     var entryAssembly = Assembly.GetEntryAssembly();
-                    var assemblyName = entryAssembly?.GetName();
+
 
                     mcpServerOptions.ProtocolVersion = "2024-11-05";
                     mcpServerOptions.ServerInfo = new Implementation
