@@ -14,7 +14,7 @@ infra:
 hooks:
   preprovision:
     shell: sh
-    run: echo "Starting 'Azure MCP Postgres Server' infrastructure provisioning..."
+    run: echo "Starting 'Azure MCP Storage Server' infrastructure provisioning..."
     continueOnError: false
   
   postprovision:
@@ -25,11 +25,11 @@ hooks:
 
   predeploy:
     shell: sh
-    run: echo "Building and deploying 'Azure MCP Postgres Server' application..."
+    run: echo "Building and deploying 'Azure MCP Storage Server' application..."
     continueOnError: false
 
   postdeploy:
     shell: sh
     run: |
-      echo "Success: 'Azure MCP Postgres Server' deployed"
+      echo "Success: 'Azure MCP Storage Server' deployed"
     continueOnError: false

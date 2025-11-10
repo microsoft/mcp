@@ -7,7 +7,7 @@
   Entra Application Registration
      This is like a "blueprint" that defines what the Entra App can do. It includes
      app roles (think of these as custom permissions), identifier URIs for OAuth validation,
-    and basic app configuration.
+     and basic app configuration.
 
   Service Principal
      This is the actual "identity" that represents the Entra App within the Azure

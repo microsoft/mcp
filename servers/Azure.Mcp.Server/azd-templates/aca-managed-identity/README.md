@@ -1,6 +1,6 @@
 # Azure MCP Server - ACA with Managed Identity
 
-Deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Azure AI Foundry](https://azure.microsoft.com/en-us/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/en-us/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tool calls that perform Azure operations on your behalf.
+Deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tool calls that perform Azure operations on your behalf.
 
 This reference Azure Developer CLI (azd) template shows how to host the server on Azure Container Apps with storage tools enabled, using managed identity authentication for secure access to Azure Storage.
 
@@ -8,11 +8,11 @@ This reference Azure Developer CLI (azd) template shows how to host the server o
 
 - Azure subscription with **Owner** or **User Access Administrator** permissions
 - [Azure Developer CLI (azd)](https://learn.microsoft.com/azure/developer/azure-developer-cli/install-azd)
-- The list of Azure MCP Server tool areas (namespaces) you wish to enable (see [azmcp-commands.md](../../docs/azmcp-commands.md)). This reference template uses the `storage` namespace
+- The list of Azure MCP Server tool areas (namespaces) you wish to enable (see [azmcp-commands.md](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md)). This reference template uses the `storage` namespace
 
 ## Quick Start
 
-This reference template deploys the Azure MCP Server with **read-only** Azure Storage tools enabled, accessible over HTTPS transport. For details on customizing server startup flags and configuration, see [Azure MCP Server documentation](../../docs/azmcp-commands.md).
+This reference template deploys the Azure MCP Server with **read-only** Azure Storage tools enabled, accessible over HTTPS transport. For details on customizing server startup flags and configuration, see [Azure MCP Server documentation](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/docs/azmcp-commands.md).
 
 ```bash
 azd up
@@ -53,7 +53,7 @@ ENTRA_APP_SERVICE_PRINCIPAL_ID="31b42369-583b-40b7-a535-ad343f75e463"
 
 1. Get your Container App URL from `azd` output: `CONTAINER_APP_URL`
 2. Get Entra App Client ID from `azd` output: `ENTRA_APP_CLIENT_ID`
-3. &lt;TODO: Add one liner AI Foundry integration step later (reference to AIF documentation)&gt;
+3. <TODO: Add one liner AI Foundry integration step later (reference to AIF documentation)>
 
 ## Clean Up
 
