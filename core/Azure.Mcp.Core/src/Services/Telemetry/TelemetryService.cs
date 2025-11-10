@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
@@ -72,17 +73,12 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivity(activityName, null, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo) => StartActivity(activityName, clientInfo, null);
-
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo, RequestParams? requestParams)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo)
     {
         if (!_isEnabled)
         {
@@ -108,6 +104,53 @@ internal class TelemetryService : ITelemetryService
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
+        return activity;
+    }
+
+    /// <summary>
+    /// <inheritdoc/>
+    /// </summary>
+    public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams
+    {
+        if (!_isEnabled)
+        {
+            return null;
+        }
+
+        CheckInitialization();
+
+        var activity = Parent.StartActivity(activityName);
+
+        if (activity == null)
+        {
+            return activity;
+        }
+
+        var clientInfo = request.Server.ClientInfo;
+        if (clientInfo != null)
+        {
+            activity.AddTag(TagName.ClientName, clientInfo.Name)
+                .AddTag(TagName.ClientVersion, clientInfo.Version);
+        }
+
+        var userIdentity = request.User?.Identity;
+        if (userIdentity != null)
+        {
+            activity.AddTag("UserName", userIdentity.Name);
+        }
+
+        var serverInfo = request.Server.ServerOptions.ServerInfo;
+        if (serverInfo != null)
+        {
+            activity.AddTag("ServerName", serverInfo.Name)
+                .AddTag("ServerVersion", serverInfo.Version);
+        }
+
+        activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
+
+        _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
+
+        var requestParams = request.Params;
         if (requestParams != null)
         {
             activity.AddTag("_meta", requestParams.Meta?.ToString() ?? "none");
@@ -116,6 +159,9 @@ internal class TelemetryService : ITelemetryService
         {
             activity.AddTag("_meta", "noequestparams");
         }
+
+        activity.AddTag("Items", JsonSerializer.Serialize(request.Items, ServerJsonContext.Default.DictionaryStringObject));
+        activity.AddTag("Method", request.JsonRpcRequest.Method);
 
         return activity;
     }
