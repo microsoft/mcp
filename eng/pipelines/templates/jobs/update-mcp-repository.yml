@@ -34,5 +34,5 @@ jobs:
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -TemporaryDirectory '$(Pipeline.TemporaryDirectory)'
         -ReleaseType '${{ parameters.ReleaseType }}'
-        -KeyVaultName 'kv-azuresdk-codesign'
-        -KeyVaultKeyName ''
+        -KeyVaultName 'azuresdkengkeyvault'
+        -KeyVaultKeyName 'mcp-registry'
