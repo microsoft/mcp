@@ -79,7 +79,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             'storage'
             '--mode'
             'all'
-            '--debug'
+            '--read-only'
           ]
           resources: {
             cpu: json(cpuCores)
@@ -100,10 +100,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'AZURE_MCP_INCLUDE_PRODUCTION_CREDENTIALS'
-              value: 'true'
-            }
-            {
-              name: 'ALLOW_INSECURE_EXTERNAL_BINDING'
               value: 'true'
             }
             {
