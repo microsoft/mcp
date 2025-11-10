@@ -139,7 +139,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: cosmosAccountName
-  location: 'westcentralus'
+  location: 'canadacentral'
   tags: {
     defaultExperience: 'Core (SQL)'
     CosmosAccountType: 'Non-Production'
@@ -170,7 +170,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
     }
     locations: [
       {
-        locationName: 'westus2'
+        locationName: 'canadacentral'
         failoverPriority: 0
         isZoneRedundant: false
       }
@@ -252,4 +252,3 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
 output baseName string = baseName
-output location string = 'westus2'
