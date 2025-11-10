@@ -133,7 +133,7 @@ public static class OpenTelemetryExtensions
     }
 
     /// <summary>
-    /// Sets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
     /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
     /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
@@ -156,6 +156,6 @@ public static class OpenTelemetryExtensions
             version = version.Substring(0, hashSeparator);
         }
 
-        options.Version = version;
+        return version;
     }
 }
