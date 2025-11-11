@@ -35,19 +35,12 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
         return Path.Combine(absoluteDirectory, fileName);
     }
 
-    protected override async ValueTask LoadSettingsAsync()
+    protected override ValueTask LoadSettingsAsync()
     {
-        await base.LoadSettingsAsync().ConfigureAwait(false);
-
         Settings.TestMode = DesiredMode;
-        Settings.ResourceBaseName = string.IsNullOrWhiteSpace(Settings.ResourceBaseName)
-            ? "RecordedHarness"
-            : Settings.ResourceBaseName;
-        Settings.SettingsDirectory = string.IsNullOrWhiteSpace(Settings.SettingsDirectory)
-            ? _pathResolver.RepositoryRoot
-            : Settings.SettingsDirectory;
-
         TestMode = DesiredMode;
+
+        return ValueTask.CompletedTask;
     }
 
     public void ResetVariables()

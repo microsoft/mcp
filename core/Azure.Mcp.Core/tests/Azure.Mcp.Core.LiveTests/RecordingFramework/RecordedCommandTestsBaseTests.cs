@@ -69,7 +69,6 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-
         DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
             DesiredMode = TestMode.Record,
