@@ -28,8 +28,8 @@ public abstract class BaseAzureService
     static BaseAzureService()
     {
         var assembly = typeof(BaseAzureService).Assembly;
-        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
-        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? string.Empty;
+        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? string.Empty;
         s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
         // Initialize the default user agent policy without transport type
