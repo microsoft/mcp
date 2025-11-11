@@ -37,6 +37,16 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
 
     protected override ValueTask LoadSettingsAsync()
     {
+        Settings = new LiveTestSettings
+        {
+            SubscriptionId = "00000000-0000-0000-0000-000000000000",
+            TenantId = "00000000-0000-0000-0000-000000000000",
+            ResourceBaseName = "Sanitized",
+            SubscriptionName = "Sanitized",
+            TenantName = "Sanitized",
+            TestMode = TestMode.Playback
+        };
+
         Settings.TestMode = DesiredMode;
         TestMode = DesiredMode;
 
