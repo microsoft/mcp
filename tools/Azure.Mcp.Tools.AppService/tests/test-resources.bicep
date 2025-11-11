@@ -139,7 +139,7 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: cosmosAccountName
-  location: 'canadacentral'
+  location: 'centraluseuap'
   tags: {
     defaultExperience: 'Core (SQL)'
     CosmosAccountType: 'Non-Production'
@@ -170,7 +170,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
     }
     locations: [
       {
-        locationName: 'canadacentral'
+        locationName: 'centraluseuap'
         failoverPriority: 0
         isZoneRedundant: false
       }
@@ -183,7 +183,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
       periodicModeProperties: {
         backupIntervalInMinutes: 240
         backupRetentionIntervalInHours: 8
-        backupStorageRedundancy: 'Local'
+        backupStorageRedundancy: 'Geo'
       }
     }
     networkAclBypassResourceIds: []

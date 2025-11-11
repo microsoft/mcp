@@ -6,7 +6,7 @@ targetScope = 'resourceGroup'
 param baseName string = resourceGroup().name
 
 @description('The location of the resource. By default, this is the same as the resource group.')
-param location string = indexOf(['westus', 'westus2', 'westus3'], resourceGroup().location) >= 0 ? 'canadacentral' : resourceGroup().location
+param location string = indexOf(['westus', 'westus2', 'westus3'], resourceGroup().location) >= 0 ? 'centraluseuap' : resourceGroup().location
 
 @description('The tenant ID to which the application and resources belong.')
 param tenantId string = '72f988bf-86f1-41af-91ab-2d7cd011db47'
@@ -67,7 +67,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
       periodicModeProperties: {
         backupIntervalInMinutes: 240
         backupRetentionIntervalInHours: 8
-        backupStorageRedundancy: 'Local'
+        backupStorageRedundancy: 'Geo'
       }
     }
     networkAclBypassResourceIds: []
