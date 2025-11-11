@@ -58,15 +58,19 @@ if (!(Test-Path $BuildInfoPath)) {
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
 
-
 Set-Location $TemporaryDirectory
 
 # Install Microsoft Go
 Write-Host "Installing Microsoft Go and building MCP publishing tool..."
 
 # This go-install.ps1 script could be checked into your source repository
-Invoke-WebRequest https://raw.githubusercontent.com/microsoft/go-infra/refs/heads/main/goinstallscript/powershell/go-install.ps1 -OutFile go-install.ps1
-./go-install.ps1
+$goInstallScriptPath = "$PSScriptRoot/../common/scripts/go-install.ps1"
+if (!(Test-Path $goInstallScriptPath)) {
+    LogError "Go install script not found at $goInstallScriptPath"
+    exit 1
+}
+
+. $goInstallScriptPath
 
 # Enable compliant crypto
 $env:GOEXPERIMENT = "systemcrypto"
