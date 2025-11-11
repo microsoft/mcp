@@ -29,7 +29,7 @@ resources:
   - repository: azure-sdk-build-tools
     type: git
     name: internal/azure-sdk-build-tools
-    ref: refs/tags/azure-sdk-build-tools_20250808.1
+    ref: users/pahallis/esrp-task-updates
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
