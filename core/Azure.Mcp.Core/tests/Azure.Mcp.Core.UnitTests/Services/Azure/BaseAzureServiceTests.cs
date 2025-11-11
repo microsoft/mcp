@@ -137,7 +137,7 @@ public class BaseAzureServiceTests
         BaseAzureService.InitializeUserAgentPolicy(TransportTypes.StdIo);
         TestAzureService testAzureService = new TestAzureService(_tenantService);
         Assert.NotNull(testAzureService.GetUserAgent());
-        Assert.Contains("azmcp-http", testAzureService.GetUserAgent());
+        Assert.Contains("azmcp-stdio", testAzureService.GetUserAgent());
     }
 
     [Fact]
