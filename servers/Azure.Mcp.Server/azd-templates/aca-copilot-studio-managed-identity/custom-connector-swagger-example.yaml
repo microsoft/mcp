@@ -1,3 +1,4 @@
+# Learn more at https://learn.microsoft.com/microsoft-copilot-studio/mcp-add-existing-server-to-agent#option-2-create-a-custom-mcp-connector-in-power-apps
 swagger: '2.0'
 info:
   title: AzureMcpStorageSandbox

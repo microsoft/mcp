@@ -63,7 +63,7 @@ Copilot Studio Agent connect to MCP servers via a custom connector.
 
 ### Configure a custom connector
 
-Login to [Power Apps](https://make.powerapps.com) and select the environment to host the custom connector. Create a custom connector following the steps in the UI.
+Login to [Power Apps](https://make.powerapps.com) and select the environment to host the custom connector. Create a custom connector following the steps in the UI. Here we need to select the `Create from blank` option. To learn more about custom connector configuration, refer to [create custom connector from scratch](https://learn.microsoft.com/connectors/custom-connectors/define-blank).
 
 #### General
 

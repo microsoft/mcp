@@ -32,13 +32,11 @@ param entraAppScopeDescription string = ''
 @description('Known client app id')
 param knownClientAppId string = ''
 
-var orgServiceManagementReferenceId = '4405e061-966a-4249-afdd-f7435f54a510'
 var scopeId = guid(entraAppUniqueName, entraAppScopeValue)
 
 resource entraApp 'Microsoft.Graph/applications@v1.0' = {
   uniqueName: entraAppUniqueName 
   displayName: entraAppDisplayName
-  serviceManagementReference: orgServiceManagementReferenceId
   api: isServer ? {
     oauth2PermissionScopes: [
       {
