@@ -12,6 +12,9 @@ parameters:
 - name: IncludeNative
   type: boolean
   default: true
+- name: UpdateServerJson
+  type: boolean
+  default: false
 
 trigger: none
 pr: none
@@ -25,3 +28,4 @@ extends:
     PackageDocker: ${{ parameters.PackageDocker }}
     PackageVSIX: ${{ parameters.PackageVSIX }}
     IncludeNative: ${{ parameters.IncludeNative }}
+    UpdateServerJson: ${{ parameters.UpdateServerJson }}

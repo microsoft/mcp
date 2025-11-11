@@ -18,6 +18,9 @@ parameters:
 - name: PackageVSIX
   type: boolean
   default: false
+- name: UpdateServerJson
+  type: boolean
+  default: false
 - name: IsTestPipeline
   type: boolean
   default: false
@@ -136,6 +139,7 @@ extends:
               PackageDocker: ${{ parameters.PackageDocker }}
               PackageVSIX: ${{ parameters.PackageVSIX }}
               IsTestPipeline: ${{ parameters.IsTestPipeline }}
+              UpdateServerJson: ${{ parameters.UpdateServerJson }}
 
       - ${{ elseif eq(parameters.PublishTarget, 'internal') }}:
         - stage: Integration

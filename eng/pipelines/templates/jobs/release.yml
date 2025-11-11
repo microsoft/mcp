@@ -9,6 +9,8 @@ parameters:
   type: boolean
 - name: IsTestPipeline
   type: boolean
+- name: UpdateServerJson
+  type: boolean
 
 jobs:
 - job: TagRepository
@@ -61,7 +63,7 @@ jobs:
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
-    DependsOn: PublishNugetPackage
+    DependsOn: or(PublishNugetPackage, ${{ parameters.UpdateServerJson }})
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
