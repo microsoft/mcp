@@ -58,7 +58,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a `CancellationToken` parameter to `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
-- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces [[#1056](https://github.com/microsoft/mcp/pull/1056)] and [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces [[#1056](https://github.com/microsoft/mcp/pull/1056)]
 - Telemetry:
   - Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
   - Added support for exporting telemetry to OTLP exporters by configuring the environment variable `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
