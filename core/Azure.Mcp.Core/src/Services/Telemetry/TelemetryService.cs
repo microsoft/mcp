@@ -111,30 +111,11 @@ internal class TelemetryService : ITelemetryService
     /// </summary>
     public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams
     {
-        if (!_isEnabled)
+        var activity = StartActivity(activityName, request.Server.ClientInfo);
+        if (activity == null)
         {
             return null;
         }
-
-        CheckInitialization();
-
-        var activity = Parent.StartActivity(activityName);
-
-        if (activity == null)
-        {
-            return activity;
-        }
-
-        var clientInfo = request.Server.ClientInfo;
-        if (clientInfo != null)
-        {
-            activity.AddTag(TagName.ClientName, clientInfo.Name)
-                .AddTag(TagName.ClientVersion, clientInfo.Version);
-        }
-
-        activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
-
-        _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
         var meta = request.Params?.Meta;
         if (meta != null)
