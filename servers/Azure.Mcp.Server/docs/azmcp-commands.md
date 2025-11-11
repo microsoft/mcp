@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode.
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -566,6 +566,34 @@ azmcp applicationinsights recommendation list --subscription <subscription>
 azmcp applicationinsights recommendation list --subscription <subscription> \
                                               --resource-group <resource-group>
 ```
+
+#### Distributed Trace
+
+List distributed trace metadata (request/exception/dependency/availability) for a specific Application Insights component. This returns a summarized set of rows containing timestamps, operation/span identifiers, and table source information that you can use to further drill into telemetry.
+
+```bash
+# List request trace metadata for an Application Insights component by resource name
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --resource-name <app-insights-name> \
+                                        --table requests \
+                                        --start-time 2025-01-01T00:00:00Z \
+                                        --end-time 2025-01-01T01:00:00Z
+
+# Same query using a full resource ID and the exceptions table
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-id /subscriptions/<sub>/resourceGroups/<rg>/providers/microsoft.insights/components/<name> \
+                                        --table exceptions
+
+# List availability result traces with an optional filter (multiple --filters allowed)
+azmcp applicationinsights apptrace list --subscription <subscription> \
+                                        --resource-group <resource-group> \
+                                        --resource-name <app-insights-name> \
+                                        --table availabilityResults \
+                                        --filters "durationMs > 1000"
+```
+
+Supported tables: `requests`, `exceptions`, `dependencies`, `availabilityResults`.
 
 ### Azure App Service Operations
 
@@ -1654,7 +1682,7 @@ azmcp monitor webtests update --subscription <subscription> \
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs list --subscription <subscription> \
-                                         --resource-group <resource-group> 
+                                         --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
