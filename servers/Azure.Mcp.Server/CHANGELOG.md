@@ -2,22 +2,25 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.3 (Unreleased)
+## 2.0.0-beta.3 (2025-11-11)
 
 ### Features Added
 
 - Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Azure AI Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
+- Added support for text-to-speech synthesis via the command `speech_tts_synthesize`. [[#902](https://github.com/microsoft/mcp/pull/902)]
 
 ### Breaking Changes
-- PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections.  This SSL mode provides both `eavesdropping protection` and `main-in-the-middle protection`.  See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
+
+- PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `main-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
 
 ### Bugs Fixed
 
+- Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in agent learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
+- Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
+
 ### Other Changes
 
-- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
-- Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
-- Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
+- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into a shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 
 ## 2.0.0-beta.2 (2025-11-06)
 
