@@ -1141,7 +1141,8 @@ public class FoundryService(
             var thread = await CreateThreadCore(projectEndpoint, userMessage, credential, cancellationToken: cancellationToken);
             return new ThreadCreateResult()
             {
-                ThreadId = thread.Id
+                ThreadId = thread.Id,
+                ProjectEndpoint = projectEndpoint
             };
         }
         catch (Exception ex)

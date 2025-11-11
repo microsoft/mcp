@@ -80,16 +80,23 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             : ["server", "start", "--mode", "all"];
         var arguments = CustomArguments ?? defaultArgs;
 
-        var envVarDictionary = new Dictionary<string, string?> {
+        Dictionary<string, string?> envVarDictionary = [
             // Propagate playback signaling & sanitized identifiers to server process.
-            { "AZURE_TOKEN_CREDENTIALS", TestMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
-            { "AZURE_TENANT_ID", Settings.TenantId },
-            { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
-        };
+
+            // TODO: Temporarily commenting these out until we can solve for subscription id tests
+            // see https://github.com/microsoft/mcp/issues/1103
+            // { "AZURE_TENANT_ID", Settings.TenantId },
+            // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
+        ];
 
         if (proxy != null && proxy.Proxy != null)
         {
             envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
+
+            if (TestMode is TestMode.Playback)
+            {
+                envVarDictionary.Add("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
+            }
         }
 
         StdioClientTransportOptions transportOptions = new()
