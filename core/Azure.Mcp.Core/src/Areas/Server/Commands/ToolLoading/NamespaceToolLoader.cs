@@ -185,7 +185,7 @@ public sealed class NamespaceToolLoader(
         {
             var activity = Activity.Current;
 
-            if (learn && string.IsNullOrEmpty(command))
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
@@ -370,7 +370,7 @@ public sealed class NamespaceToolLoader(
             // this case, which will be executed.
             currentActivity?.SetTag(TagName.ToolName, command).SetTag(TagName.ToolId, cmd.Id);
 
-            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, CancellationToken.None);
+            var commandResponse = await cmd.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

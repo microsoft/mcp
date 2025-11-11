@@ -43,7 +43,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
+            List<string> databases = await mysqlService.ListDatabasesAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(databases ?? []), MySqlJsonContext.Default.DatabaseListCommandResult);
         }
         catch (Exception ex)

@@ -23,23 +23,15 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
     private readonly HttpClient _httpClient = new();
 
-    /// <summary>
-    /// Transcribes audio using the Fast Transcription API.
-    /// </summary>
-    /// <param name="endpoint">Azure AI Services endpoint</param>
-    /// <param name="filePath">Path to the audio file to process</param>
-    /// <param name="language">Speech recognition language</param>
-    /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
-    /// <param name="profanity">Profanity filtering option</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
-    /// <returns>Continuous recognition result converted from Fast Transcription response</returns>
+    /// <inheritdoc/>
     public async Task<FastTranscriptionResult> RecognizeAsync(
         string endpoint,
         string filePath,
         string? language = null,
         string[]? phrases = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
@@ -68,11 +60,11 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential();
+                var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-                var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+                var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Build the Fast Transcription API URL
                 var apiVersion = "2024-11-15";
@@ -110,7 +102,7 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
                 using var formContent = new MultipartFormDataContent();
 
                 // Add audio file
-                var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(filePath));
+                var fileContent = new ByteArrayContent(await File.ReadAllBytesAsync(filePath, cancellationToken));
                 fileContent.Headers.ContentType = MediaTypeHeaderValue.Parse(GetMimeType(filePath));
                 formContent.Add(fileContent, "audio", Path.GetFileName(filePath));
 
@@ -126,8 +118,8 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
                 _logger.LogDebug("Fast Transcription Request: {RequestJson}", requestJson);
 
                 // Make the request
-                var response = await _httpClient.PostAsync(apiUrl, formContent);
-                var responseContent = await response.Content.ReadAsStringAsync();
+                var response = await _httpClient.PostAsync(apiUrl, formContent, cancellationToken);
+                var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
                 if (!response.IsSuccessStatusCode)
                 {
@@ -172,7 +164,7 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
                         : delaySeconds;
 
                     _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
-                    await Task.Delay(TimeSpan.FromSeconds(delay));
+                    await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
                 }
             }
             catch (Exception ex)

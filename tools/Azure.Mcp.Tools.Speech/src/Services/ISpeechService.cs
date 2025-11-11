@@ -15,5 +15,17 @@ public interface ISpeechService
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
+    Task<SynthesisResult> SynthesizeSpeechToFile(
+        string endpoint,
+        string text,
+        string outputFilePath,
+        string? language = null,
+        string? voice = null,
+        string? format = null,
+        string? endpointId = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

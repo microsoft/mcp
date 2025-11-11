@@ -13,6 +13,7 @@ using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Azure.Mcp.Tools.Speech.Services;
 using Azure.Mcp.Tools.Speech.Services.Recognizers;
+using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
@@ -27,6 +28,7 @@ public class SttRecognizeCommandTests : IDisposable
     private readonly ISpeechService _speechService;
     private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
     private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
+    private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
     private readonly ITenantService _tenantService;
     private readonly ILogger<SttRecognizeCommand> _logger;
     private readonly ILogger<SpeechService> _speechServiceLogger;
@@ -42,12 +44,13 @@ public class SttRecognizeCommandTests : IDisposable
         // Mock the recognizers and their dependencies
         _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
         _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
+        _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
         _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SttRecognizeCommand>>();
         _speechServiceLogger = Substitute.For<ILogger<SpeechService>>();
 
         // Create real SpeechService with mocked dependencies
-        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer);
+        _speechService = new SpeechService(_tenantService, _speechServiceLogger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
         var collection = new ServiceCollection().AddSingleton(_speechService);
 
@@ -92,7 +95,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(fastResult);
     }
 
@@ -114,7 +118,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
 
@@ -144,7 +149,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             "detailed",
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
     }
 
@@ -259,7 +265,8 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
             await _realtimeTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
                 Arg.Any<string>(),
@@ -268,7 +275,8 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.FastTranscriptionResult);
             Assert.Null(result.Result.RealtimeContinuousResult);
@@ -282,7 +290,8 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
                 Arg.Any<string>(),
@@ -290,7 +299,8 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
             Assert.NotNull(result.Result.RealtimeContinuousResult);
             Assert.Null(result.Result.FastTranscriptionResult);
@@ -334,7 +344,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Mock realtime transcription to return valid result. When fast fails, it should fallback to realtime.
@@ -354,7 +365,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called as a fallback
         await _realtimeTranscriptionRecognizer
@@ -366,7 +378,8 @@ public class SttRecognizeCommandTests : IDisposable
            Arg.Any<string[]>(),
            Arg.Any<string>(),
            Arg.Any<string>(),
-           Arg.Any<RetryPolicyOptions>());
+           Arg.Any<RetryPolicyOptions>(),
+           Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.OK, response.Status);
     }
@@ -386,7 +399,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         // Act
@@ -403,19 +417,21 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Any<string[]>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         // 2. Realtime recognizer was called and failed
         await _realtimeTranscriptionRecognizer
        .Received(1)
        .RecognizeAsync(
-           Arg.Any<string>(),
-           Arg.Any<string>(),
-           Arg.Any<string>(),
-           Arg.Any<string[]>(),
-           Arg.Any<string>(),
-           Arg.Any<string>(),
-           Arg.Any<RetryPolicyOptions>());
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         Assert.Equal(HttpStatusCode.Unauthorized, response.Status);
         Assert.Contains("Access denied", response.Message);
@@ -497,12 +513,13 @@ public class SttRecognizeCommandTests : IDisposable
 
         // Verify the service was called with correct profanity option
         await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string[]>(),
-        profanityOption,
-        Arg.Any<RetryPolicyOptions>());
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            profanityOption,
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -527,7 +544,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
         // Act - Use a different approach to handle quoted arguments
@@ -552,16 +570,17 @@ public class SttRecognizeCommandTests : IDisposable
 
         // Verify the service was called with the expected phrases
         await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Is<string[]>(phrases =>
-            phrases != null &&
-            phrases.Length == 2 &&
-            phrases.Contains("Azure") &&
-            phrases.Contains("cognitive services")),
-        Arg.Any<string>(),
-        Arg.Any<RetryPolicyOptions>());
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Is<string[]>(phrases =>
+                phrases != null &&
+                phrases.Length == 2 &&
+                phrases.Contains("Azure") &&
+                phrases.Contains("cognitive services")),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -584,12 +603,13 @@ public class SttRecognizeCommandTests : IDisposable
 
         // Verify the service was called with correct language
         await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        language,
-        Arg.Any<string[]>(),
-        Arg.Any<string>(),
-        Arg.Any<RetryPolicyOptions>());
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            language,
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -608,12 +628,13 @@ public class SttRecognizeCommandTests : IDisposable
 
         // Verify the service was called with retry policy
         await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string>(),
-        Arg.Any<string[]>(),
-        Arg.Any<string>(),
-        Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5));
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string[]>(),
+            Arg.Any<string>(),
+            Arg.Is<RetryPolicyOptions>(policy => policy.MaxRetries == 5),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -643,7 +664,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(exceptionToThrow);
 
         try
@@ -692,7 +714,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
         try
@@ -779,7 +802,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
         try
@@ -843,7 +867,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
         try
@@ -904,7 +929,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string>(),
             Arg.Do<string[]>(phrases => capturedPhrases = phrases),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(fastResult);
 
         try
@@ -935,17 +961,18 @@ public class SttRecognizeCommandTests : IDisposable
 
             // Verify the service was called with all expected phrases
             await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Is<string[]>(phrases =>
-                phrases != null &&
-                phrases.Length == 3 &&
-                phrases.Contains("Azure") &&
-                phrases.Contains("cognitive services") &&
-                phrases.Contains("machine learning")),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Is<string[]>(phrases =>
+                    phrases != null &&
+                    phrases.Length == 3 &&
+                    phrases.Contains("Azure") &&
+                    phrases.Contains("cognitive services") &&
+                    phrases.Contains("machine learning")),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -990,12 +1017,13 @@ public class SttRecognizeCommandTests : IDisposable
 
             // Verify the service was called with the correct file path
             await _fastTranscriptionRecognizer.Received(1).RecognizeAsync(
-            Arg.Any<string>(),
-            fileName,
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+                Arg.Any<string>(),
+                fileName,
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -1036,7 +1064,8 @@ public class SttRecognizeCommandTests : IDisposable
             Arg.Any<string[]>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(realtimeResult);
 
         try
@@ -1064,7 +1093,8 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -1104,15 +1134,17 @@ public class SttRecognizeCommandTests : IDisposable
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>());
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
 
             await _fastTranscriptionRecognizer.DidNotReceive().RecognizeAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string[]>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string[]>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
