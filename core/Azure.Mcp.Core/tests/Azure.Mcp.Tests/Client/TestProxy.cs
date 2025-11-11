@@ -68,11 +68,13 @@ public sealed class TestProxy(bool debug = false) : IDisposable
         // if we've gotten to here then we need to decompress
         if (assetName.EndsWith(".tar.gz"))
         {
-            TarFile.ExtractToDirectory(downloadPath, proxyDir, true);
+            await using var compressedStream = File.OpenRead(downloadPath);
+            using var gzipStream = new GZipStream(compressedStream, CompressionMode.Decompress, leaveOpen: false);
+            TarFile.ExtractToDirectory(gzipStream, proxyDir, overwriteFiles: true);
         }
         else
         {
-            ZipFile.ExtractToDirectory(downloadPath, proxyDir);
+            ZipFile.ExtractToDirectory(downloadPath, proxyDir, overwriteFiles: true);
         }
 
         _cachedExecutable = FindExecutableInDirectory(proxyDir);
@@ -263,11 +265,7 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             while (!ct.IsCancellationRequested && !reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
-                if (line == null)
-                    break;
-                lock (sink)
-                {
-                    sink.AppendLine(line);
+              sink.AppendLine(line);
                 }
             }
         }
