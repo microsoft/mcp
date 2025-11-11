@@ -21,9 +21,6 @@ public class BaseAzureServiceTests
 
     public BaseAzureServiceTests()
     {
-        // Initialize the user agent policy before creating any service instances
-        BaseAzureService.InitializeUserAgentPolicy("stdio");
-
         _azureService = new TestAzureService(_tenantService);
         _tenantService.GetTenantId(TenantName).Returns(TenantId);
         _tenantService.GetTokenCredentialAsync(
@@ -133,15 +130,27 @@ public class BaseAzureServiceTests
     }
 
     [Fact]
-    public void InitializeUserAgentPolicy_UserAgentIsNotNull()
+    public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
     {
-        Assert.NotNull(_azureService.GetUserAgent());
+        // Initialize the user agent policy before creating any service instances
+        BaseAzureService.InitializeUserAgentPolicy("http");
+        TestAzureService testAzureService = new TestAzureService(_tenantService);
+        Assert.NotNull(testAzureService.GetUserAgent());
+        Assert.Contains("azmcp-http", testAzureService.GetUserAgent());
     }
 
     [Fact]
-    public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
+    public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsNull()
     {
-        Assert.Contains("azmcp-stdio", _azureService.GetUserAgent());
+        var exception = Assert.Throws<ArgumentException>(() => BaseAzureService.InitializeUserAgentPolicy(null!));
+        Assert.Equal("Transport type cannot be null or empty (Parameter 'transportType')", exception.Message);
+    }
+
+    [Fact]
+    public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsEmpty()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => BaseAzureService.InitializeUserAgentPolicy(string.Empty));
+        Assert.Equal("Transport type cannot be null or empty (Parameter 'transportType')", exception.Message);
     }
 
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)

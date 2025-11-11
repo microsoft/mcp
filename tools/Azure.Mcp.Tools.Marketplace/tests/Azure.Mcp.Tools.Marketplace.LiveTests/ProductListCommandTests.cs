@@ -24,7 +24,6 @@ public class ProductListCommandTests : CommandTestsBase
 
     public ProductListCommandTests(ITestOutputHelper output) : base(output)
     {
-        BaseAzureService.InitializeUserAgentPolicy("stdio");
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);

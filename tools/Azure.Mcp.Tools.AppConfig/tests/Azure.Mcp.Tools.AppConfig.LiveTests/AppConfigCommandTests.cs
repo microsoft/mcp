@@ -26,7 +26,6 @@ public class AppConfigCommandTests : CommandTestsBase
 
     public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
-        BaseAzureService.InitializeUserAgentPolicy("stdio");
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);

@@ -13,6 +13,7 @@ namespace Azure.Mcp.Core.Services.Azure;
 public abstract class BaseAzureService
 {
     private static UserAgentPolicy? s_sharedUserAgentPolicy;
+    private static readonly UserAgentPolicy s_defaultUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
     private static readonly object s_initializeLock = new();
@@ -22,6 +23,7 @@ public abstract class BaseAzureService
     private static readonly string s_version;
     private static readonly string s_framework;
     private static readonly string s_platform;
+    private static readonly string s_defaultUserAgent;
 
     static BaseAzureService()
     {
@@ -29,6 +31,10 @@ public abstract class BaseAzureService
         s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
         s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
         s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+
+        // Initialize the default user agent policy without transport type
+        s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
+        s_defaultUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
     }
 
     /// <summary>
@@ -73,7 +79,7 @@ public abstract class BaseAzureService
     {
         ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
         TenantService = tenantService;
-        UserAgent = s_userAgent ?? throw new InvalidOperationException($"{nameof(InitializeUserAgentPolicy)} must be called before creating any {nameof(BaseAzureService)} instances.");
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
     /// <summary>
@@ -83,7 +89,7 @@ public abstract class BaseAzureService
     /// This is only to be used by <see cref="Tenant.TenantService"/> to overcome a circular dependency on itself.</remarks>
     internal BaseAzureService()
     {
-        UserAgent = s_userAgent ?? throw new InvalidOperationException($"{nameof(InitializeUserAgentPolicy)} must be called before creating any {nameof(BaseAzureService)} instances.");
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
     protected string UserAgent { get; }
@@ -157,15 +163,14 @@ public abstract class BaseAzureService
 
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
-        if (s_sharedUserAgentPolicy == null)
+        if (s_sharedUserAgentPolicy != null)
         {
-            throw new InvalidOperationException(
-                $"{nameof(InitializeUserAgentPolicy)} must be called before using any Azure services. " +
-                $"Ensure it is called during application startup.");
+            clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
         }
-
-        clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-
+        else
+        {
+            clientOptions.AddPolicy(s_defaultUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
+        }
         return clientOptions;
     }
 

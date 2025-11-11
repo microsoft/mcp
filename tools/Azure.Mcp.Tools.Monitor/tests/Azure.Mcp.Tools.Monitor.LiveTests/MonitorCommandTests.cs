@@ -39,7 +39,6 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
 
     private static IMonitorService GetMonitorService()
     {
-        BaseAzureService.InitializeUserAgentPolicy("stdio");
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
