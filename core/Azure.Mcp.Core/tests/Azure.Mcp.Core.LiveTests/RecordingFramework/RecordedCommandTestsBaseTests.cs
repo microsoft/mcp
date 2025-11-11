@@ -13,106 +13,64 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
-public sealed class RecordedCommandTestsBaseTests
+public sealed class RecordedCommandTestsBaseTest: IAsyncLifetime
 {
+    private string RecordingFileLocation = string.Empty;
+    private string TestDisplayName = string.Empty;
+    private TestProxyFixture Fixture = new TestProxyFixture();
+    private ITestOutputHelper CollectedOutput = Substitute.For<ITestOutputHelper>();
+    private RecordedCommandTestHarness? DefaultHarness;
+
     [Fact]
     public async Task ProxyRecordProducesRecording()
     {
-        var fixture = new TestProxyFixture();
-        var output = Substitute.For<ITestOutputHelper>();
-        var harness = new RecordedCommandTestHarness(output, fixture)
-        {
-            DesiredMode = TestMode.Record,
-            EnableDefaultSanitizerAdditions = true,
-        };
+        await DefaultHarness!.InitializeAsync();
 
-        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
-        var recordingPath = harness.GetRecordingAbsolutePath(displayName);
-        if (File.Exists(recordingPath))
-        {
-            File.Delete(recordingPath);
-        }
+        Assert.NotNull(Fixture.Proxy);
+        Assert.False(string.IsNullOrWhiteSpace(Fixture.Proxy!.BaseUri));
 
-        try
-        {
-            await harness.InitializeAsync();
+        DefaultHarness!.RegisterVariable("sampleKey", "sampleValue");
+        await DefaultHarness!.DisposeAsync();
 
-            Assert.NotNull(fixture.Proxy);
-            Assert.False(string.IsNullOrWhiteSpace(fixture.Proxy!.BaseUri));
+        Assert.True(File.Exists(RecordingFileLocation));
 
-            harness.RegisterVariable("sampleKey", "sampleValue");
-        }
-        finally
-        {
-            await harness.DisposeAsync();
-            await fixture.DisposeAsync();
-        }
-
-        Assert.True(File.Exists(recordingPath));
-
-        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(recordingPath, CancellationToken.None));
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(RecordingFileLocation, CancellationToken.None));
         Assert.True(document.RootElement.TryGetProperty("Variables", out var variablesElement));
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
-
-        File.Delete(recordingPath);
     }
 
     [Fact]
     public async Task PerTestMatcherAttributeAppliesWhenPresent()
     {
-        var fixture = new TestProxyFixture();
-        try
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
-            var output = Substitute.For<ITestOutputHelper>();
+            DesiredMode = TestMode.Record,
+            EnableDefaultSanitizerAdditions = false,
+        };
+        var recordingId = string.Empty;
 
-            var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
+        await DefaultHarness.InitializeAsync();
+        DefaultHarness.RegisterVariable("attrKey", "attrValue");
+        await DefaultHarness.DisposeAsync();
 
-            var recordHarness = new RecordedCommandTestHarness(output, fixture)
-            {
-                DesiredMode = TestMode.Record,
-                EnableDefaultSanitizerAdditions = false,
-            };
-
-            var recordingPath = recordHarness.GetRecordingAbsolutePath(displayName);
-            if (File.Exists(recordingPath))
-            {
-                File.Delete(recordingPath);
-            }
-            var recordingId = string.Empty;
-
-            await recordHarness.InitializeAsync();
-            recordHarness.RegisterVariable("attrKey", "attrValue");
-            await recordHarness.DisposeAsync();
-
-            var playbackHarness = new RecordedCommandTestHarness(output, fixture)
-            {
-                DesiredMode = TestMode.Playback,
-                EnableDefaultSanitizerAdditions = false,
-            };
-
-            await playbackHarness.InitializeAsync();
-            recordingId = GetRecordingId(playbackHarness);
-            await playbackHarness.DisposeAsync();
-
-            output.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
-
-            if (File.Exists(recordingPath))
-            {
-                File.Delete(recordingPath);
-            }
-        }
-        finally
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
-            await fixture.DisposeAsync();
-        }
+            DesiredMode = TestMode.Playback,
+            EnableDefaultSanitizerAdditions = false,
+        };
+
+        await playbackHarness.InitializeAsync();
+        recordingId = GetRecordingId(playbackHarness);
+        await playbackHarness.DisposeAsync();
+
+        CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
     }
 
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-        var fixture = new TestProxyFixture();
-        var output = Substitute.For<ITestOutputHelper>();
-        var harness = new RecordedCommandTestHarness(output, fixture)
+        
+        DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
             DesiredMode = TestMode.Record,
             TestMatcher = new CustomDefaultMatcher
@@ -122,74 +80,35 @@ public sealed class RecordedCommandTestsBaseTests
             }
         };
 
-        harness.GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        DefaultHarness.GeneralRegexSanitizers.Add(new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
         {
             Regex = "sample",
             Value = "sanitized",
         }));
-        harness.DisabledDefaultSanitizers.Add("UriSubscriptionIdSanitizer");
+        DefaultHarness.DisabledDefaultSanitizers.Add("UriSubscriptionIdSanitizer");
 
-        try
-        {
-            await harness.InitializeAsync();
-            await harness.DisposeAsync();
-        }
-        finally
-        {
-            await fixture.DisposeAsync();
-        }
+        await DefaultHarness.InitializeAsync();
+        await DefaultHarness.DisposeAsync();
 
-        output.Received().WriteLine(Arg.Is<string>(s => s.Contains("Applying custom matcher to global settings")));
+        CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains("Applying custom matcher to global settings")));
     }
 
     [Fact]
     public async Task VariableSurvivesRecordPlaybackRoundtrip()
     {
-        var fixture = new TestProxyFixture();
-        var output = Substitute.For<ITestOutputHelper>();
-        var displayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
+        await DefaultHarness!.InitializeAsync();
+        DefaultHarness.RegisterVariable("roundtrip", "value");
+        await DefaultHarness.DisposeAsync();
 
-        var recordHarness = new RecordedCommandTestHarness(output, fixture)
+        var playbackHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
-            DesiredMode = TestMode.Record,
+            DesiredMode = TestMode.Playback,
         };
-
-        var recordingPath = recordHarness.GetRecordingAbsolutePath(displayName);
-        if (File.Exists(recordingPath))
-        {
-            File.Delete(recordingPath);
-        }
-
-        try
-        {
-            await recordHarness.InitializeAsync();
-            recordHarness.RegisterVariable("roundtrip", "value");
-            await recordHarness.DisposeAsync();
-
-            var playbackHarness = new RecordedCommandTestHarness(output, fixture)
-            {
-                DesiredMode = TestMode.Playback,
-            };
-
-            await playbackHarness.InitializeAsync();
-
-            Assert.True(playbackHarness.Variables.TryGetValue("roundtrip", out var variableValue));
-            Assert.Equal("value", variableValue);
-
-            await playbackHarness.DisposeAsync();
-        }
-        finally
-        {
-            await fixture.DisposeAsync();
-        }
-
-        if (File.Exists(recordingPath))
-        {
-            File.Delete(recordingPath);
-        }
+        await playbackHarness.InitializeAsync();
+        Assert.True(playbackHarness.Variables.TryGetValue("roundtrip", out var variableValue));
+        Assert.Equal("value", variableValue);
+        await playbackHarness.DisposeAsync();
     }
-
-
 
     private string GetRecordingId(RecordedCommandTestsBase harness)
     {
@@ -198,5 +117,37 @@ public sealed class RecordedCommandTestsBaseTests
             BindingFlags.Instance | BindingFlags.NonPublic);
 
         return property?.GetValue(harness) as string ?? string.Empty;
+    }
+
+    public ValueTask InitializeAsync()
+    {
+        TestDisplayName = TestContext.Current?.Test?.TestCase?.TestCaseDisplayName ?? throw new InvalidDataException("Test case display name is not available.");
+
+        var harness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
+        {
+            DesiredMode = TestMode.Record
+        };
+
+        RecordingFileLocation = harness.GetRecordingAbsolutePath(TestDisplayName);
+
+        if (File.Exists(RecordingFileLocation))
+        {
+            File.Delete(RecordingFileLocation);
+        }
+
+        DefaultHarness = harness;
+        return ValueTask.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        // always clean up this recording file on our way out of the test if it exists
+        if (File.Exists(RecordingFileLocation))
+        {
+            File.Delete(RecordingFileLocation);
+        }
+
+        // automatically collect the proxy fixture so that writers of tests don't need to remember to do so and the proxy process doesn't run forever
+        await Fixture.DisposeAsync();
     }
 }
