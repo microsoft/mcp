@@ -140,7 +140,7 @@ public class AzureMcpKustoDatastore : IAzureMcpDatastore
             throw new FileNotFoundException($"KQL file not found: {kqlFilePath}");
         }
 
-        var kql = await File.ReadAllTextAsync(kqlFilePath);
+        var kql = await File.ReadAllTextAsync(kqlFilePath, cancellationToken);
 
         var clientRequestProperties = new ClientRequestProperties();
         var reader = await _kustoClient.ExecuteQueryAsync(_databaseName, kql, clientRequestProperties, cancellationToken);
