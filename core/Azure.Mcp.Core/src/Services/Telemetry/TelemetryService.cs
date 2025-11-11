@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
@@ -133,35 +132,24 @@ internal class TelemetryService : ITelemetryService
                 .AddTag(TagName.ClientVersion, clientInfo.Version);
         }
 
-        var userIdentity = request.User?.Identity;
-        if (userIdentity != null)
-        {
-            activity.AddTag("UserName", userIdentity.Name);
-        }
-
-        var serverInfo = request.Server.ServerOptions.ServerInfo;
-        if (serverInfo != null)
-        {
-            activity.AddTag("ServerName", serverInfo.Name)
-                .AddTag("ServerVersion", serverInfo.Version);
-        }
-
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
-        var requestParams = request.Params;
-        if (requestParams != null)
+        var meta = request.Params?.Meta;
+        if (meta != null)
         {
-            activity.AddTag("_meta", requestParams.Meta?.ToString() ?? "none");
+            var vsCodeConversationIdNode = meta["vscode.conversationId"];
+            if (vsCodeConversationIdNode != null && vsCodeConversationIdNode.GetValueKind() == JsonValueKind.String)
+            {
+                activity.AddTag(TagName.VSCodeConversationId, vsCodeConversationIdNode.ToString());
+            }
+            var vsCodeRequestIdNode = meta["vscode.requestId"];
+            if (vsCodeRequestIdNode != null && vsCodeRequestIdNode.GetValueKind() == JsonValueKind.String)
+            {
+                activity.AddTag(TagName.VSCodeRequestId, vsCodeRequestIdNode.ToString());
+            }
         }
-        else
-        {
-            activity.AddTag("_meta", "noequestparams");
-        }
-
-        activity.AddTag("Items", JsonSerializer.Serialize(request.Items, ServerJsonContext.Default.DictionaryStringObject));
-        activity.AddTag("Method", request.JsonRpcRequest.Method);
 
         return activity;
     }
