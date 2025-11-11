@@ -23,7 +23,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
-    private string RecordingId { get; set; } = String.Empty;
+    private string RecordingId { get; set; } = string.Empty;
 
     /// <summary>
     /// When true, a set of default "additional" sanitizers will be registered. Currently includes:
@@ -323,7 +323,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 // Extract recording ID from response header
                 if (playbackResult.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId))
                 {
-                    RecordingId = recordingId ?? String.Empty;
+                    RecordingId = recordingId ?? string.Empty;
                     Output.WriteLine($"[Playback] Recording ID: {RecordingId}");
                 }
 

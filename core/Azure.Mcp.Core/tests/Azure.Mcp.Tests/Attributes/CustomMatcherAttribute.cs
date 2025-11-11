@@ -13,12 +13,12 @@ namespace Azure.Mcp.Tests.Client.Attributes;
 public class CustomMatcherAttribute : Attribute
 {
     /// <summary>
-    /// When true, the request/response body will be compared during playback matching. Will not be otherwise.
+    /// When true, the request/response body will be compared during playback matching. Otherwise, body comparison is skipped. Defaults to true.
     /// </summary>
     public bool CompareBodies { get; set; }
 
     /// <summary>
-    /// When true, query parameter ordering will be ignored during playback matching.
+    /// When true, query parameter ordering will be ignored during playback matching. Defaults to false.
     /// </summary>
     public bool IgnoreQueryOrdering { get; set; }
 
