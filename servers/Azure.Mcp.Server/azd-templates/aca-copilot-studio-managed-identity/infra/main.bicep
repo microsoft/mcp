@@ -15,7 +15,7 @@ param appInsightsConnectionString string = ''
 
 // Deploy Application Insights if appInsightsConnectionString is empty and not DISABLED
 var appInsightsName = '${acaName}-insights'
-//
+
 module appInsights 'modules/application-insights.bicep' = {
   name: 'application-insights-deployment'
   params: {

@@ -3,7 +3,7 @@ targetScope = 'subscription'
 @description('The principal ID of the managed identity to assign the role to')
 param managedIdentityPrincipalId string
 
-@description('The role definition ID to assign (defaults to Subscription Reader)')
+@description('The role definition ID to assign. Defaults to the built-in Reader role (acdd72a7-3385-48ef-bd42-f606fba81ae7)')
 param roleDefinitionId string = 'acdd72a7-3385-48ef-bd42-f606fba81ae7'
 
 // Create role assignment at subscription level

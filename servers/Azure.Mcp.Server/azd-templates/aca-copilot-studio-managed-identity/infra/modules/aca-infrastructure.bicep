@@ -55,6 +55,7 @@ var baseArgs = [
   'UseHostingEnvironmentIdentity'
   '--mode'
   'all'
+  // Warning: AI Agents may make mistakes. We recommend running the server in read-only mode when used with AI Agents to reduce risk.
   '--read-only'
 ]
 var namespaceArgs = [for ns in namespaces: ['--namespace', ns]]
