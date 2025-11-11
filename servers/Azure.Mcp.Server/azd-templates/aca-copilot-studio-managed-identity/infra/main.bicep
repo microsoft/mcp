@@ -33,7 +33,6 @@ module entraAppClient 'modules/entra-app.bicep' = {
     entraAppDisplayName: entraAppClientDisplayName
     entraAppUniqueName: entraAppClientUniqueName
     isServer: false
-
   }
 }
 
@@ -51,6 +50,14 @@ module entraAppServer 'modules/entra-app.bicep' = {
   }
 }
 
+module acaStorageManagedIdentity 'modules/aca-storage-managed-identity.bicep' = {
+  name: 'aca-storage-managed-identity-deployment'
+  params: {
+    location: location
+    managedIdentityName: '${acaName}-storage-managed-identity'
+  }
+}
+
 // Deploy ACA Infrastructure to host Azure MCP Server
 module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
   name: 'aca-infrastructure-deployment'
@@ -63,6 +70,16 @@ module acaInfrastructure 'modules/aca-infrastructure.bicep' = {
     azureAdClientId: entraAppServer.outputs.entraAppClientId
     azureAdInstance: environment().authentication.loginEndpoint
     namespaces: ['storage']
+    userAssignedManagedIdentityId: acaStorageManagedIdentity.outputs.managedIdentityId
+    userAssignedManagedIdentityClientId: acaStorageManagedIdentity.outputs.managedIdentityClientId
+  }
+}
+
+module acaStorageRoleAssignment 'modules/aca-storage-subscription-role.bicep' = {
+  name: 'aca-storage-subscription-role-deployment'
+  scope: subscription()
+  params: {
+    managedIdentityPrincipalId: acaStorageManagedIdentity.outputs.managedIdentityPrincipalId
   }
 }
 
@@ -81,8 +98,10 @@ output ENTRA_APP_CLIENT_CLIENT_ID string = entraAppClient.outputs.entraAppClient
 // ACA Infrastructure outputs
 output CONTAINER_APP_URL string = acaInfrastructure.outputs.containerAppUrl
 output CONTAINER_APP_NAME string = acaInfrastructure.outputs.containerAppName
-output CONTAINER_APP_PRINCIPAL_ID string = acaInfrastructure.outputs.containerAppPrincipalId
 output AZURE_CONTAINER_APP_ENVIRONMENT_ID string = acaInfrastructure.outputs.containerAppEnvironmentId
+
+// ACA user assigned managed identity
+output CONTAINER_APP_MANAGED_IDENTITY_CLIENT_ID string = acaStorageManagedIdentity.outputs.managedIdentityClientId
 
 // Application Insights outputs
 output APPLICATION_INSIGHTS_NAME string = appInsightsName

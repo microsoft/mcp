@@ -28,11 +28,12 @@ For the first time running this command, you will be prompted to sign in to your
 ## What gets deployed
 
 - **Container App** - Runs Azure MCP Server with storage namespace.
+- **User-assigned managed identity** - A user-assigned managed identity with the Subscription Reader role for the subscription the resources are deployed to. This managed identity will be assigned to the container app and used by the Azure MCP server to make tool calls. 
 - **Entra App Registration (Azure MCP Server)** - For incoming OAuth 2.0 authentication from clients (e.g. custom connector) with `Mcp.Tools.ReadWrite` scope. This scope will be requested by the client app accessing the server.
 - **Entra App Registration (Client)** - For Power Apps custom connector to connect to the remote Azure MCP Server.
 - **Application Insights** - Telemetry and monitoring.
 
-> Note: this template creates the server app registration and the client app registration in the same tenant. It also sets the client app as a pre-authorized app of the server app. This allows you to bypass the explicit consent flow when using the client app to access the server app. If you prefer explicitly giving consent for the client app, please refer to [known issues](#known-issues) for available options.
+> Note: this template creates the server app registration and the client app registration in the same tenant. It also sets the client app as a pre-authorized app of the server app. This allows it to bypass the explicit consent flow when using the client app to access the server app. If you prefer explicitly giving consent for the client app, please refer to [known issues](#known-issues) for available options.
 
 ### Deployment outputs
 
@@ -43,6 +44,7 @@ azd env get-values
 ```
 
 Among the output there are useful values for the subsequent steps. Here is an example of these values.
+
 ```
 AZURE_RESOURCE_GROUP="<your_resource_group_name>"
 AZURE_SUBSCRIPTION_ID="<your_subscription_id>"
@@ -86,7 +88,7 @@ Todo: add screenshots to visualize the process
     - Keep Authorization URL as `https://login.microsoftonline.com`.
     - Set `Tenant ID` to the tenant ID of the client app registration.
     - Set `Resource URL` to the client ID of the server app registration.
-    - Set `Enable on-behalf-of-login` to true.
+    - Set `Enable on-behalf-of login` to true.
     - Set `Scope` to `<server app registration client ID>/.default`.
   - Click Create connector and wait for it to complete. After the custom connector is created, it will give you a Redirect URL, and optionally a Managed Identity if you chose to use managed identity as the secret options.
     - Go to Azure Portal and add a redirect URI under the Web platform in the client app registration.
@@ -106,7 +108,7 @@ If everything works fine, after signing into the user account, the UI should ind
 - Search for your custom connector name and select to add it.
 - After adding the custom connector, the Copilot Studio Agent will attempt to list the tools from the MCP server. If everything works fine, you should see the correct list of tools show up in the details under the added custom connector.
 - Click the `Test` button to start a test playground session.
-- You can prompt the agent to call the MCP tools.
+- You can prompt the agent to call the MCP tools, such as asking it to list storage accounts in the subscription.
 
 ## Clean Up
 

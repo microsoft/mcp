@@ -42,11 +42,17 @@ param azureAdInstance string
 @maxLength(3)
 param namespaces array
 
+@description('Resource ID of the user-assigned managed identity')
+param userAssignedManagedIdentityId string = ''
+
+@description('Client ID of the user-assigned managed identity')
+param userAssignedManagedIdentityClientId string = ''
+
 var baseArgs = [
   '--transport'
   'http'
   '--outgoing-auth-strategy'
-  'UseOnBehalfOf'
+  'UseHostingEnvironmentIdentity'
   '--mode'
   'all'
   '--read-only'
@@ -67,9 +73,12 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   tags: {
     product: 'azmcp'
   }
-  identity: {
-    type: 'SystemAssigned'
-  }
+  identity: !empty(userAssignedManagedIdentityId) ? {
+    type: 'UserAssigned'
+    userAssignedIdentities: {
+      '${userAssignedManagedIdentityId}': {}
+    }
+  } : null
   properties: {
     managedEnvironmentId: containerAppsEnvironment.id
     configuration: {
@@ -132,6 +141,10 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: azureAdClientId
             }
             {
+              name: 'AZURE_CLIENT_ID'
+              value: userAssignedManagedIdentityClientId
+            }
+            {
               name: 'AZURE_LOG_LEVEL'
               value: 'Verbose'
             }
@@ -164,6 +177,4 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 output containerAppResourceId string = containerApp.id
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 output containerAppName string = containerApp.name
-output containerAppPrincipalId string = containerApp.identity.principalId
 output containerAppEnvironmentId string = containerAppsEnvironment.id
-
