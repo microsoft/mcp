@@ -7,10 +7,8 @@ using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Tools.Postgres.Options;
-using Azure.Mcp.Tools.Postgres.Validation;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
-using Microsoft.Extensions.Options;
 using Npgsql;
 
 
