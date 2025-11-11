@@ -55,7 +55,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
             var workspaces = await grafanaService.ListWorkspacesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workspaces ?? []), GrafanaJsonContext.Default.WorkspaceListCommandResult);
         }
