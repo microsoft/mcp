@@ -6,7 +6,7 @@
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
-    <ServerJsonPath>$(RepoRoot)/servers/Azure.Mcp.Server/server.json</ServerJsonPath>
+    <ServerJsonPath>servers/Azure.Mcp.Server/server.json</ServerJsonPath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
     <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
 

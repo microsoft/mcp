@@ -453,7 +453,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     Copy-Item -Path $server.packageIcon -Destination $tempFolder -Force
 
     # Export ServerJson
-    Copy-Item -Path $server.serverJsonPath -Destination "$tempFolder/.mcp/server.json" -Force
+    Copy-Item -Path "$RepoRoot/$($server.serverJsonPath)" -Destination "$tempFolder/.mcp/server.json" -Force
 
     # Export WrapperPackageNuspec
     ExportWrapperPackageNuspec `

@@ -58,13 +58,6 @@ jobs:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: TagRepository
 
-- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
-  parameters:
-    ServerName: ${{ parameters.ServerName }}
-    DependsOn: PublishNugetPackage
-    parameters:
-      ReleaseType: 'production'
-
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
     parameters:
@@ -78,6 +71,14 @@ jobs:
       DeploymentEnvironment: 'public'
       ServerName: ${{ parameters.ServerName }}
       DependsOn: TagRepository
+
+- template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
+  condition: or(succeeded('PublishNuget'), succeeded('PublishNpm'))
+  parameters:
+    ServerName: ${{ parameters.ServerName }}
+    DependsOn:
+    - PublishNuget
+    - PublishNpm
 
 - job: UpdatePackageVersion
   displayName: "Update Package Versions"
