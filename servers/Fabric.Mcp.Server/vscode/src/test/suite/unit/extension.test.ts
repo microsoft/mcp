@@ -40,7 +40,6 @@ suite('Fabric MCP Extension - activate', () => {
         registerStub = (vscode as unknown as { lm: { registerMcpServerDefinitionProvider: sinon.SinonStub } }).lm.registerMcpServerDefinitionProvider;
 
         // Stub EventEmitter
-        // Stub EventEmitter
         sinon.stub(vscode, 'EventEmitter').callsFake(() => {
             return {
                 event: ((listener: (e: unknown) => unknown, thisArgs?: unknown, disposables?: vscode.Disposable[]) => {

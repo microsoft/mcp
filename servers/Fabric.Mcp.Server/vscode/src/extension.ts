@@ -48,11 +48,11 @@ export function activate(context: vscode.ExtensionContext) {
     // Use the binary from the extension's server/os folder
     const binPath = path.join(context.extensionPath, 'server', binary);
     if (!fs.existsSync(binPath)) {
-        throw new Error(`fabmcp binary not found at ${binPath}. Please ensure the server binary is present.`);
+        throw new Error(`Fabric MCP binary not found at ${binPath}. Please ensure the server binary is present.`);
     }
 
     // Ensure executable permission on macOS and Linux (once at activation)
-    if ((process.platform === 'linux' || process.platform === 'darwin') && fs.existsSync(binPath)) {
+    if ((process.platform === 'linux' || process.platform === 'darwin')) {
         try {
             fs.chmodSync(binPath, 0o755);
         } catch (e) {
