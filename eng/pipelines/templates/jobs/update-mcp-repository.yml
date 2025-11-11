@@ -3,9 +3,6 @@ parameters:
   type: string
 - name: DependsOn
   type: object
-- name: ReleaseType
-  type: string
-  default: 'staging'
 
 jobs:
 - job: BuildAndUpdateMcpRepository
@@ -34,6 +31,5 @@ jobs:
         -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -TemporaryDirectory '$(Pipeline.TemporaryDirectory)'
-        -ReleaseType '${{ parameters.ReleaseType }}'
         -KeyVaultName 'azuresdkengkeyvault'
         -KeyVaultKeyName 'mcp-registry'

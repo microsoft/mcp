@@ -62,8 +62,6 @@ jobs:
   parameters:
     ServerName: ${{ parameters.ServerName }}
     DependsOn: PublishNugetPackage
-    parameters:
-      ReleaseType: 'production'
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml

@@ -13,8 +13,6 @@
     Path to the build_info.json file containing build metadata. If not provided, defaults to ".work/build_info.json" in the repo root.
 .PARAMETER TemporaryDirectory
     Path to a temporary directory for building and deploying the server.json.
-.PARAMETER ReleaseType
-    Type of release to deploy: 'staging' or 'production'. If 'staging' is specified, the server.json will be deployed to the staging MCP registry.
 .PARAMETER KeyVaultName
     Name of the Azure Key Vault containing the credentials for MCP registry login.
 .PARAMETER KeyVaultKeyName
@@ -33,10 +31,6 @@ param(
     [string] $BuildInfoPath,
     [Parameter(Mandatory=$true)]
     [string] $TemporaryDirectory,
-
-    [Parameter()]
-    [ValidateSet('staging','production')]
-    [string] $ReleaseType,
 
     [string] $KeyVaultName,
     [string] $KeyVaultKeyName,
@@ -57,6 +51,9 @@ if (!(Test-Path $BuildInfoPath)) {
 }
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+$publishTarget = $buildInfo.PublishTarget
+
+Write-Host "Preparing to deploy server.json for server '$ServerName' with type '$publishTarget'."
 
 Set-Location $TemporaryDirectory
 
@@ -102,14 +99,17 @@ try {
             LogError "server.json file $($server.serverJsonPath) does not exist."
             continue
         }
-        
-        if ($ReleaseType -eq 'staging') {
+
+        if ($publishTarget -eq 'staging') {
             Write-Host "Deploying server.json to staging instance: $StagingRegistry"
 
             $loginArguments += " $StagingRegistry"
             $publishArguments += " $StagingRegistry"
-        } else {
+        } elseif ($publishTarget -eq 'public') {
             Write-Host "Deploying server.json to production instance."
+        } else {
+            LogError "Unknown publish target: $publishTarget"
+            continue
         }
 
         & $TemporaryDirectory/mcp-publisher.exe $loginArguments
