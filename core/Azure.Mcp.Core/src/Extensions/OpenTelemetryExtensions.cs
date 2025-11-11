@@ -112,11 +112,11 @@ public static class OpenTelemetryExtensions
             appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
         }
 
-        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_FOR_MICROSOFT");
+        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
 
-        bool shouldCollectTelemetryForMicrosoft = string.IsNullOrEmpty(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
+        bool shouldCollectMicrosoftTelemetry = string.IsNullOrEmpty(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
 
-        if (shouldCollectTelemetryForMicrosoft)
+        if (shouldCollectMicrosoftTelemetry)
         {
             appInsightsConnectionStrings.Add(("Microsoft", DefaultAppInsightsConnectionString));
         }
