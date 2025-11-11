@@ -11,6 +11,7 @@ jobs:
 - job: BuildAndUpdateMcpRepository
   displayName: Build MCP Publisher and Update Repository
   dependsOn: ${{ parameters.DependsOn }}
+  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
