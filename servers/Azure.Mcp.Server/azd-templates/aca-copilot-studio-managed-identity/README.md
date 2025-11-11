@@ -50,12 +50,9 @@ AZURE_RESOURCE_GROUP="<your_resource_group_name>"
 AZURE_SUBSCRIPTION_ID="<your_subscription_id>"
 AZURE_TENANT_ID="<your_tenant_id>"
 CONTAINER_APP_NAME="azure-mcp-storage-server"
-CONTAINER_APP_PRINCIPAL_ID="85163f1d-707d-46b5-8a91-f969c88a5ab1"
 CONTAINER_APP_URL="https://azure-mcp-storage-server.whitewave-ff25acf5.westus3.azurecontainerapps.io"
-ENTRA_APP_CLIENT_CLIENT_ID="3263b004-659d-47a6-9d87-6b706e742b90"
-ENTRA_APP_SERVER_CLIENT_ID="b04040d9-fd1f-4932-b5e6-54f5d403bcbb"
-ENTRA_APP_SERVER_SCOPE_ID="2f5164dd-615d-533d-a1ca-498199de7ba8"
-ENTRA_APP_SERVER_SCOPE_VALUE="Mcp.Tools.ReadWrite"
+ENTRA_APP_CLIENT_CLIENT_ID="<your_client_app_registration_client_id>"
+ENTRA_APP_SERVER_CLIENT_ID="<your_server_app_registration_client_id>"
 ```
 
 You also need to add the created API scope as one of the permissions of the client app registration. Go to Azure Portal and search for the client app registration using the ENTRA_APP_CLIENT_CLIENT_ID output value. In the `API permissions` blade, click `Add a permission`, select server app registration in the `My APIs` tab and add the 'Mcp.Tools.ReadWrite' scope.
@@ -66,39 +63,60 @@ Copilot Studio Agent connect to MCP servers via a custom connector.
 
 ### Configure a custom connector
 
-Todo: add screenshots to visualize the process
+Login to [Power Apps](https://make.powerapps.com) and select the environment to host the custom connector. Create a custom connector following the steps in the UI.
 
-- Login to [Power Apps](https://make.powerapps.com) and select the environment to host the custom connector.
-- Create a custom connector following the steps in the UI.
-  - General
-    - Give a descriptive name and description for the custom connector.
-    - Set `Scheme` to be `HTTPS`.
-    - Set the `Host` to be the Container App URL from `azd` output: `CONTAINER_APP_URL`.
-  - Swagger editor view
-    - Skip the Security step for now and click the `Swagger editor` to enter the swagger editor view.
-    - In the swagger editor, set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example](./custom-connector-swagger-example.yaml) as an example.
-    - Go back to the Security step.
-  - Security
-    - Select `OAuth 2.0` as the Authentication type.
-    - Select `Azure Active Directory` as the Identity Provider.
-    - Set `Client ID` as the client ID of the client app registration provisioned before.
-    - Choose `Use client secret` or `Use managed identity` as the `Secret options`.
-      - If you choose to use client secret, go to Azure Portal and create a client secret under the client app registration. Then copy the client secret value and paste it into the client secret field in the Security step.
-      - If you choose to use managed identity. Proceed with the rest of the steps until the custom connector is created.
-    - Keep Authorization URL as `https://login.microsoftonline.com`.
-    - Set `Tenant ID` to the tenant ID of the client app registration.
-    - Set `Resource URL` to the client ID of the server app registration.
-    - Set `Enable on-behalf-of login` to true.
-    - Set `Scope` to `<server app registration client ID>/.default`.
-  - Click Create connector and wait for it to complete. After the custom connector is created, it will give you a Redirect URL, and optionally a Managed Identity if you chose to use managed identity as the secret options.
-    - Go to Azure Portal and add a redirect URI under the Web platform in the client app registration.
-    - If you chose to use managed identity as the secret options, create a Federated Credentials in the client app registration. In the creation UI, select `Other issuer` as the `Federated credential scenario`. Then copy paste the `issuer` and the `subject` of the Federated Credentials value from the custom connectors to corresponding fields in the credential creation UI. Give it a descriptive name and description, and then click `Add`.
-- Test connection
-  - Open the created custom connector, click `Edit` and go to the `Test` step.
-  - Select any operation and click the `New connection` button in the UI.
-  - A new window should pop up to have you sign in to your user account. Sign in to the user account you plan to use to access the MCP tools. You might see the dialog asking you give consent to grant the client app registration access or telling you that you need an admin to give consent. If you don't know what you should do, please refer to the [known issues](#known-issues) for more details.
+#### General
+
+- Give a descriptive name and description for the custom connector.
+- Set `Scheme` to be `HTTPS`.
+- Set the `Host` to be the Container App URL from the CONTAINER_APP_URL output value.
+
+![custom-connector-general](./images/custom-connector-general.svg)
+
+#### Swagger editor
+
+Skip the Security step for now and click the `Swagger editor` to enter the swagger editor view. In the swagger editor view
+
+- Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example](./custom-connector-swagger-example.yaml) as an example.
+
+![custom-connector-swagger-editor](./images/custom-connector-swagger-editor.svg)
+
+#### Security
+
+Go to the Security step.
+
+- Select `OAuth 2.0` as the Authentication type.
+- Select `Azure Active Directory` as the Identity Provider.
+- Set `Client ID` as the client ID of the client app registration provisioned before. You can get this from the ENTRA_APP_CLIENT_CLIENT_ID output value.
+- Choose `Use client secret` or `Use managed identity` as the `Secret options`.
+  - If you choose to use client secret, go to Azure Portal and create a client secret under the client app registration. Then copy the client secret value and paste it into the client secret field in the Security step.
+  - If you choose to use managed identity. Proceed with the rest of the steps until the custom connector is created.
+- Keep Authorization URL as `https://login.microsoftonline.com`.
+- Set `Tenant ID` to the tenant ID of the client app registration. You can get this from the AZURE_TENANT_ID output value.
+- Set `Resource URL` to the client ID of the server app registration. You can get this from the ENTRA_APP_SERVER_CLIENT_ID output value.
+- Set `Enable on-behalf-of login` to true.
+- Set `Scope` to `<server app registration client ID>/.default`.
+
+![custom-connector-security](./images/custom-connector-security.svg)
+
+#### Create the connector
+
+- Click `Create connector` and wait for it to complete. After the custom connector is created, it will give you a Redirect URL, and optionally a Managed Identity if you chose to use managed identity as the secret options.
+- Go to Azure Portal and add a redirect URI under the Web platform in the client app registration.
+- If you chose to use managed identity as the secret options, create a Federated Credentials in the client app registration. In the creation UI, select `Other issuer` as the `Federated credential scenario`. Then copy paste the `issuer` and the `subject` of the Federated Credentials value from the custom connectors to corresponding fields in the credential creation UI. Give it a descriptive name and description, and then click `Add`.
+
+![client-app-redirect-uri](./images/client-app-redirect-uri.png)
+![client-app-client-credential](./images/client-app-client-credential.png)
+
+#### Test connection
+
+- Open the created custom connector, click `Edit` and go to the `Test` step.
+- Select any operation and click the `New connection` button in the UI.
+- A new window should pop up to have you sign in to your user account. Sign in to the user account you plan to use to access the MCP tools. You might see the dialog asking you give consent to grant the client app registration access or telling you that you need an admin to give consent. If you don't know what you should do, please refer to the [known issues](#known-issues) for more details.
 
 If everything works fine, after signing into the user account, the UI should indicate a connection is created successfully. If you encounter any error message during the sign-in, please refer to the [known issues](#known-issues) section, troubleshoot with your tenant admin or let us know.
+
+![custom-connector-created-connection](./images/custom-connector-created-connection.png)
 
 ### Call Azure MCP tool in Copilot Studio test playground
 
@@ -109,6 +127,8 @@ If everything works fine, after signing into the user account, the UI should ind
 - After adding the custom connector, the Copilot Studio Agent will attempt to list the tools from the MCP server. If everything works fine, you should see the correct list of tools show up in the details under the added custom connector.
 - Click the `Test` button to start a test playground session.
 - You can prompt the agent to call the MCP tools, such as asking it to list storage accounts in the subscription.
+
+![copilot-studio-call-tools](./images/copilot-studio-call-tools.png)
 
 ## Clean Up
 
@@ -125,6 +145,8 @@ If you need to clean up the Power Platform resources, please use the Power Platf
 The `azd` template consists of the following Bicep modules:
 
 - **`main.bicep`** - Orchestrates the deployment of all resources.
+- **`aca-storage-managed-identity.bicep`** - Create a user-assigned managed identity
+- **`aca-storage-subscription-role.bicep`** - Assigns an Azure RBAC role to the user-assigned managed identity, which defaults to Subscription Reader.
 - **`aca-infrastructure.bicep`** - Deploys Container App hosting the Azure MCP Server.
 - **`entra-app.bicep`** - Creates Entra App registrations.
 - **`application-insights.bicep`** - Deploys Application Insights for telemetry and monitoring (conditional deployment).
