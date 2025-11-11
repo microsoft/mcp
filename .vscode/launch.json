@@ -2,17 +2,434 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "type": "java",
-            "name": "Java Surefire remote debugger",
-            "request": "attach",
-            "hostName": "localhost",
-            "port": "5005"
-        },
-        {
             "name": "PowerShell Interactive Session",
             "type": "PowerShell",
             "request": "launch",
             "cwd": "${cwd}"
+        },
+        {
+            "name": "Debug Cosmos Databases List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "cosmos",
+                "database",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--account-name",
+                "${input:cosmosAccountName}",
+                "--retry-max-retries",
+                "0"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Cluster List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "cluster",
+                "list",
+                "--subscription",
+                "${input:subscription}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Cluster Get",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "cluster",
+                "get",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Database List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "database",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Activity logs",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "monitor",
+                "activitylog",
+                "list",
+                "--hours",
+                "${input:hours}",
+                "--resource-name",
+                "${input:resourceName}",
+                "--resource-type",
+                "${input:resourceType}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--subscription",
+                "${input:subscription}",
+                "--top",
+                "${input:top}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Databases List with Cluster URI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "database",
+                "list",
+                "--cluster-uri",
+                "${input:kustoClusterUri}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Table List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "table",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}",
+                "--database-name",
+                "${input:kustoDatabaseName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Table List with Cluster URI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "table",
+                "list",
+                "--cluster-uri",
+                "${input:kustoClusterUri}",
+                "--database-name",
+                "${input:kustoDatabaseName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Table Schema",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "table",
+                "schema",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}",
+                "--database-name",
+                "${input:kustoDatabaseName}",
+                "--table-name",
+                "${input:kustoTableName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Sample",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "sample",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}",
+                "--database-name",
+                "${input:kustoDatabaseName}",
+                "--table-name",
+                "${input:kustoTableName}",
+                "--limit",
+                "1"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Query",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "query",
+                "--subscription",
+                "${input:subscription}",
+                "--cluster-name",
+                "${input:kustoClusterName}",
+                "--database-name",
+                "${input:kustoDatabaseName}",
+                "--query",
+                "${input:kustoQuery}",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure Data Explorer Query with Cluster URI",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "kusto",
+                "query",
+                "--cluster-uri",
+                "${input:kustoClusterUri}",
+                "--database-name",
+                "${input:kustoDatabaseName}",
+                "--query",
+                "${input:kustoQuery}",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Tools List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "tools",
+                "list",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Monitor Table List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "monitor",
+                "table",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--workspace",
+                "${input:workspace}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Storage Table List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "storage",
+                "table",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--account-name",
+                "${input:storageAccountName}",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Applens Resource Diagnose",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "applens",
+                "resource",
+                "diagnose",
+                "--resource-name",
+                "${input:resourceName}",
+                "--question",
+                "${input:question}",
+                "--subscription",
+                "${input:subscription}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--resource-type",
+                "${input:resourceType}",
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug ACR Registry List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "acr",
+                "registry",
+                "list",
+                "--subscription",
+                "${input:subscription}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Monitor Log Query",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "monitor",
+                "log",
+                "query",
+                "--subscription",
+                "${input:subscription}",
+                "--workspace",
+                "${input:workspace}",
+                "--query",
+                "recent",
+                "--table-name",
+                "${input:monitorTableName}",
+                "--resource-group",
+                "${input:resourceGroup}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
         },
         {
             "name": "Launch MCP Server",
@@ -56,6 +473,108 @@
                 "DOTNET_ENVIRONMENT": "Development"
             }
         },
+        {
+            "name": "Debug Cosmos Container Items Query",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "cosmos",
+                "database",
+                "container",
+                "item",
+                "query",
+                "--subscription",
+                "${input:subscription}",
+                "--account-name",
+                "${input:cosmosAccountName}",
+                "--database-name",
+                "${input:cosmosDatabaseName}",
+                "--container-name",
+                "${input:cosmosContainerName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Monitor TableType List",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "monitor",
+                "table-type",
+                "list",
+                "--subscription",
+                "${input:subscription}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--workspace",
+                "${input:workspace}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug SQL Database Show",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/core/src/AzureMcp.Cli/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "sql",
+                "db",
+                "show",
+                "--subscription",
+                "${input:subscription}",
+                "--resource-group",
+                "${input:resourceGroup}",
+                "--server",
+                "${input:sqlServerName}",
+                "--database",
+                "${input:sqlDatabaseName}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
+            "name": "Debug Azure AI Search knowledge base retrieve",
+            "type": "coreclr",
+            "request": "launch",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe",
+            "args": [
+                "search",
+                "knowledge",
+                "base",
+                "retrieve",
+                "--service",
+                "${input:searchService}",
+                "--knowledge-base",
+                "${input:knowledgeBase}",
+                "--query",
+                "${input:searchRetrieveQuery}"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": false,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        }
     ],
     "compounds": [
         {
