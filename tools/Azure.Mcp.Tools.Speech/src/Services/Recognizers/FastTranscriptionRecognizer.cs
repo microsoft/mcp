@@ -9,6 +9,7 @@ using Azure.Core;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tools.Speech.Models.FastTranscription;
 using Microsoft.Extensions.Logging;
 
@@ -17,11 +18,14 @@ namespace Azure.Mcp.Tools.Speech.Services.Recognizers;
 /// <summary>
 /// Recognizer for Fast Transcription using Azure AI Services Speech REST API.
 /// </summary>
-public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<FastTranscriptionRecognizer> logger)
+public class FastTranscriptionRecognizer(
+    ITenantService tenantService,
+    IHttpClientService httpClientService,
+    ILogger<FastTranscriptionRecognizer> logger)
     : BaseAzureService(tenantService), IFastTranscriptionRecognizer
 {
     private readonly ILogger<FastTranscriptionRecognizer> _logger = logger;
-    private readonly HttpClient _httpClient = new();
+    private readonly IHttpClientService _httpClientService = httpClientService;
 
     /// <summary>
     /// Transcribes audio using the Fast Transcription API.
@@ -118,15 +122,19 @@ public class FastTranscriptionRecognizer(ITenantService tenantService, ILogger<F
                 var definitionContent = new StringContent(requestJson, Encoding.UTF8, "application/json");
                 formContent.Add(definitionContent, "definition");
 
-                // Set authorization header
-                _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
-
                 _logger.LogInformation("Starting Fast Transcription for file: {FilePath}, Language: {Language} (Attempt {Attempt}/{MaxAttempts})",
                     filePath, language ?? "auto-detect", attempt + 1, maxRetries + 1);
                 _logger.LogDebug("Fast Transcription Request: {RequestJson}", requestJson);
 
-                // Make the request
-                var response = await _httpClient.PostAsync(apiUrl, formContent);
+                // Create request message with authorization header for this specific request only
+                using var requestMessage = new HttpRequestMessage(HttpMethod.Post, apiUrl)
+                {
+                    Content = formContent,
+                    Headers = { Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token) }
+                };
+
+                // Make the request using HttpClient from service
+                var response = await _httpClientService.DefaultClient.SendAsync(requestMessage);
                 var responseContent = await response.Content.ReadAsStringAsync();
 
                 if (!response.IsSuccessStatusCode)
