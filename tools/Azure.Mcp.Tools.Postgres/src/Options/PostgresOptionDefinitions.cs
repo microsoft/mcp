@@ -20,9 +20,9 @@ public static class PostgresOptionDefinitions
 )
     {
         Description = $"The authentication type to access PostgreSQL server. " +
-            $"Supported values are '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'",
+            $"Supported values are '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'. By default '{AuthTypes.MicrosoftEntra}' is used.",
         Arity = ArgumentArity.ExactlyOne,
-        Required = true,
+        Required = false,
     };
 
     public static readonly Option<string> User = new(
@@ -37,7 +37,7 @@ public static class PostgresOptionDefinitions
     $"--{PasswordText}"
 )
     {
-        Description = $"The user password to access PostgreSQL server, Only required for '{AuthTypes.PostgreSQL}' authentication, not needed for '{AuthTypes.MicrosoftEntra}' authentication.",
+        Description = $"The user password to access PostgreSQL server, Only required if '{AuthTypeText}' is set to '{AuthTypes.PostgreSQL}' authentication, not needed for '{AuthTypes.MicrosoftEntra}' authentication.",
         Arity = ArgumentArity.ZeroOrOne,
         Required = false
     };

@@ -89,7 +89,6 @@ public class DatabaseQueryCommandTests
     [InlineData("--server")]
     [InlineData("--database")]
     [InlineData("--query")]
-    [InlineData($"--{PostgresOptionDefinitions.AuthTypeText}")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new DatabaseQueryCommand(_logger);

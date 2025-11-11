@@ -77,7 +77,6 @@ public class TableSchemaGetCommandTests
     [Theory]
     [InlineData("--subscription")]
     [InlineData("--resource-group")]
-    [InlineData($"--{PostgresOptionDefinitions.AuthTypeText}")]
     [InlineData("--user")]
     [InlineData("--server")]
     [InlineData("--database")]

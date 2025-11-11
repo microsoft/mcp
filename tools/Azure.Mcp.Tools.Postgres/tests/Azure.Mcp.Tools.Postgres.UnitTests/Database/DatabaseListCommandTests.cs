@@ -99,7 +99,6 @@ public class DatabaseListCommandTests
     [InlineData("--resource-group")]
     [InlineData("--user")]
     [InlineData("--server")]
-    [InlineData($"--{PostgresOptionDefinitions.AuthTypeText}")]
     public async Task ExecuteAsync_ReturnsError_WhenParameterIsMissing(string missingParameter)
     {
         var command = new DatabaseListCommand(_logger);

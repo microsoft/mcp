@@ -51,7 +51,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
 
-        await using var resource = await PostgresResource.CreateAsync(connectionString);
+        await using var resource = await PostgresResource.CreateAsync(connectionString, authType);
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
         await using var command = new NpgsqlCommand(query, resource.Connection);
         await using var reader = await command.ExecuteReaderAsync();
@@ -69,7 +69,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
-        await using var resource = await PostgresResource.CreateAsync(connectionString);
+        await using var resource = await PostgresResource.CreateAsync(connectionString, authType);
         await using var command = new NpgsqlCommand(query, resource.Connection);
         await using var reader = await command.ExecuteReaderAsync();
 
@@ -97,7 +97,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
-        await using var resource = await PostgresResource.CreateAsync(connectionString);
+        await using var resource = await PostgresResource.CreateAsync(connectionString, authType);
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
         await using var command = new NpgsqlCommand(query, resource.Connection);
         await using var reader = await command.ExecuteReaderAsync();
@@ -115,7 +115,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         var host = NormalizeServerName(server);
         var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
-        await using var resource = await PostgresResource.CreateAsync(connectionString);
+        await using var resource = await PostgresResource.CreateAsync(connectionString, authType);
         var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
         await using var command = new NpgsqlCommand(query, resource.Connection);
         command.Parameters.AddWithValue("tableName", table);
@@ -213,12 +213,6 @@ public class PostgresService : BaseAzureService, IPostgresService
 
     private async Task<string> GetPassword(string authType, string? password)
     {
-        if (!string.IsNullOrEmpty(password))
-        {
-            // If password is provided, use that one.
-            return password;
-        }
-
         if (string.IsNullOrEmpty(authType) || AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
         {
             return await GetEntraIdAccessTokenAsync();
@@ -241,7 +235,7 @@ public class PostgresService : BaseAzureService, IPostgresService
         public NpgsqlConnection Connection { get; }
         private readonly NpgsqlDataSource _dataSource;
 
-        public static async Task<PostgresResource> CreateAsync(string connectionString)
+        public static async Task<PostgresResource> CreateAsync(string connectionString, string authType)
         {
             // Configure SSL settings for secure connection
             var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString)
@@ -252,7 +246,34 @@ public class PostgresService : BaseAzureService, IPostgresService
             var dataSource = new NpgsqlSlimDataSourceBuilder(connectionBuilder.ConnectionString)
                 .EnableTransportSecurity()
                 .Build();
-            var connection = await dataSource.OpenConnectionAsync();
+
+            NpgsqlConnection connection;
+            try
+            {
+                connection = await dataSource.OpenConnectionAsync();
+            }
+            catch (PostgresException e) when (e.Message.Contains("28P01"))
+            {
+                if (string.IsNullOrEmpty(authType))
+                {
+                    throw new CommandValidationException($"Authentication failed. No authentication type was provided so '{AuthTypes.MicrosoftEntra}' was used." +
+                        $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized);
+                }
+
+                if (AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new CommandValidationException($"Authentication failed using the request authentication type '{AuthTypes.MicrosoftEntra}'. " +
+                        $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.PostgreSQL}' providing the user password.", HttpStatusCode.Unauthorized);
+                }
+
+                if (AuthTypes.PostgreSQL.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new CommandValidationException($"Authentication failed using the request authentication type '{AuthTypes.PostgreSQL}'. " +
+                        $"Please ensure that the user has the necessary permissions or explicitly use another authentication mechanism like '{AuthTypes.MicrosoftEntra}'.", HttpStatusCode.Unauthorized);
+                }
+
+                throw;
+            }
             return new PostgresResource(dataSource, connection);
         }
 

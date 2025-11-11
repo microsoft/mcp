@@ -3,7 +3,7 @@
 
 namespace Azure.Mcp.Tools.Postgres.Options
 {
-    internal class AuthTypes
+    public class AuthTypes
     {
         public const string MicrosoftEntra = "MicrosoftEntra";
 
