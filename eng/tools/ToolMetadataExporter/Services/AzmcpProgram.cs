@@ -9,7 +9,7 @@ public class AzmcpProgram
 
     public Task<string> GetServerNameAsync()
     {
-        return Task.FromResult("");
+        return Utility.GetServerName();
     }
 
     public AzmcpProgram(IOptions<AppConfiguration> options)

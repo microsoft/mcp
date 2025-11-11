@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
@@ -51,8 +52,19 @@ internal class Utility
 
     internal static async Task<string> GetServerName()
     {
-        var output = await ExecuteAzmcpAsync("", checkErrorCode: false);
-        return output.Trim();
+        var output = await ExecuteAzmcpAsync("--help", checkErrorCode: false);
+
+        string[] array = Regex.Split(output, "\n\r");
+        for (int i = 0; i < array.Length; i++)
+        {
+            string? line = array[i];
+            if (line.StartsWith("Description:"))
+            {
+                return array[i + 1].Trim();
+            }
+        }
+
+        throw new InvalidOperationException("Could not find server name");
     }
 
     internal static async Task<string> GetVersionAsync()
