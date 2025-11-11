@@ -2130,6 +2130,39 @@
       "mappedToolList": [
         "speech_stt_recognize"
       ]
+    },
+    {
+      "name": "synthesize_text_to_speech",
+      "description": "Convert text to speech using Azure AI Services Speech. Generate audio files with neural voices and customizable output formats including WAV, MP3, OGG, and RAW. Supports multiple languages, voice selection, and custom voice models.",
+      "toolMetadata": {
+        "destructive": {
+          "value": false,
+          "description": "This tool performs only additive updates without deleting or modifying existing resources."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Running this operation multiple times with the same arguments produces the same result without additional effects."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool's domain of interaction is closed and well-defined, limited to a specific set of entities."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool may modify its environment by creating, updating, or deleting data."
+        },
+        "secret": {
+          "value": false,
+          "description": "This tool does not handle sensitive or secret information."
+        },
+        "localRequired": {
+          "value": true,
+          "description": "This tool is only available when the Azure MCP server is configured to run as a Local MCP Server (STDIO)."
+        }
+      },
+      "mappedToolList": [
+        "speech_tts_synthesize"
+      ]
     }
   ]
 }
