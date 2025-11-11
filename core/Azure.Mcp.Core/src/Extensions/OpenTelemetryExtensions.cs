@@ -20,7 +20,9 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+    // private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+
+    private const string DefaultAppInsights = "InstrumentationKey=a0fa69bf-6f60-4778-b767-043583e5f02c;IngestionEndpoint=https://eastus2-3.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus2.livediagnostics.monitor.azure.com/;ApplicationId=b8ec4bb1-32af-4701-8914-54b1e2286a09";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
@@ -37,15 +39,9 @@ public static class OpenTelemetryExtensions
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
-                var transport = serviceStartOptions.Value.Transport;
-
-                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-
-                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
-
-                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
-                // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
+                options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+                
+                Console.WriteLine($"ConfigureOpenTelemetry method - Telemetry Enabled: {options.IsTelemetryEnabled}");
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
@@ -89,13 +85,6 @@ public static class OpenTelemetryExtensions
         });
 #endif
 
-        var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        if (string.IsNullOrEmpty(appInsightsConnectionString))
-        {
-            appInsightsConnectionString = DefaultAppInsights;
-        }
-
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
             var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
@@ -115,6 +104,19 @@ public static class OpenTelemetryExtensions
                 r.AddService("azmcp", version)
                     .AddTelemetrySdk();
             });
+
+        var appInsightsConnectionStrings = new List<(string Name, string ConnectionString)>();
+
+        var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+
+        if (!string.IsNullOrEmpty(userProvidedAppInsightsConnectionString))
+        {
+            appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
+        }
+
+        appInsightsConnectionStrings.Add(("Microsoft", DefaultAppInsights));
+
+        ConfigureMultipleAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
 
 #if RELEASE
         otelBuilder.UseAzureMonitorExporter(options =>
@@ -157,5 +159,39 @@ public static class OpenTelemetryExtensions
         }
 
         return version;
+    }
+
+
+    private static void ConfigureMultipleAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
+    {
+        foreach (var exporter in appInsightsConnectionStrings)
+        {
+            otelBuilder.WithLogging(logging =>
+            {
+                logging.AddAzureMonitorLogExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+
+            otelBuilder.WithMetrics(metrics =>
+            {
+                metrics.AddAzureMonitorMetricExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+
+            otelBuilder.WithTracing(tracing =>
+            {
+                tracing.AddAzureMonitorTraceExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+        }
     }
 }
