@@ -25,5 +25,7 @@
     - [ ] Updated test prompts in `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
     - [ ] 👉 For Community (non-Microsoft team member) PRs:
         - [ ] **Security review**: Reviewed code for security vulnerabilities, malicious code, or suspicious activities before running tests (`crypto mining, spam, data exfiltration, etc.`)
-        - [ ] **Manual tests run**: added comment `/azp run mcp - pullrequest - live` to run *Live Test Pipeline*
+        - [ ] **Manual tests run**: Added the comment `/azp run mcp - pullrequest - live` to run the *Quick Live Test Pipeline* (runs a subset of tests for validation)
+    - [ ] 👉 For Microsoft internal contributors:
+        - [ ] **Full live tests run**: Follow the steps in the [Build Guide](https://aka.ms/AAymd12) to run the **Full Live Test Pipeline** for complete validation before merge
     
