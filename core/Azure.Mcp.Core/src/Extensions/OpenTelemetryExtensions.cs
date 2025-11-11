@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
@@ -74,14 +75,23 @@ public static class OpenTelemetryExtensions
 
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
-#if DEBUG
-        services.AddSingleton(sp =>
+        // Enable Azure SDK event source logging based on configuration
+        // This captures Azure SDK diagnostic events (requests, responses, retries, authentication)
+        // and forwards them to the configured logging providers
+        services.AddSingleton<AzureSdkEventSourceLogForwarder>(sp =>
         {
-            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
-            forwarder.Start();
-            return forwarder;
+            var options = sp.GetService<IOptions<ServiceStartOptions>>();
+            var logLevel = GetAzureEventSourceLevel(options?.Value);
+
+            // Create the forwarder - OnEventSourceCreated will be called automatically
+            // for all existing and future EventSources
+            return new AzureSdkEventSourceLogForwarder(
+                sp.GetRequiredService<ILoggerFactory>(),
+                logLevel);
         });
-#endif
+
+        // Register a hosted service to keep the forwarder alive and ensure proper disposal
+        services.AddHostedService<AzureSdkLogForwarderHostedService>();
 
         var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
@@ -125,6 +135,55 @@ public static class OpenTelemetryExtensions
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
     }
+
+    /// <summary>
+    /// Maps the configured log level to an appropriate EventSource EventLevel for Azure SDK logging.
+    /// </summary>
+    /// <param name="options">Service start options containing log level configuration.</param>
+    /// <returns>The EventLevel to use for Azure SDK event sources.</returns>
+    private static System.Diagnostics.Tracing.EventLevel GetAzureEventSourceLevel(ServiceStartOptions? options)
+    {
+        // Default to Warning to avoid excessive logging from Azure SDK
+        // Azure SDK can be very verbose at Information/Debug levels
+        var defaultLevel = System.Diagnostics.Tracing.EventLevel.Warning;
+
+        if (options == null)
+        {
+            return defaultLevel;
+        }
+
+        // If LogLevel is explicitly set, use it
+        if (!string.IsNullOrWhiteSpace(options.LogLevel))
+        {
+            if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
+            {
+                return MapLogLevelToEventLevel(logLevel);
+            }
+        }
+
+        // If Debug mode is enabled, use Verbose for maximum Azure SDK diagnostics
+        if (options.Debug)
+        {
+            return System.Diagnostics.Tracing.EventLevel.Verbose;
+        }
+
+        return defaultLevel;
+    }
+
+    /// <summary>
+    /// Maps Microsoft.Extensions.Logging.LogLevel to System.Diagnostics.Tracing.EventLevel.
+    /// </summary>
+    private static System.Diagnostics.Tracing.EventLevel MapLogLevelToEventLevel(LogLevel logLevel) => logLevel switch
+    {
+        LogLevel.Trace => System.Diagnostics.Tracing.EventLevel.Verbose,
+        LogLevel.Debug => System.Diagnostics.Tracing.EventLevel.Verbose,
+        LogLevel.Information => System.Diagnostics.Tracing.EventLevel.Informational,
+        LogLevel.Warning => System.Diagnostics.Tracing.EventLevel.Warning,
+        LogLevel.Error => System.Diagnostics.Tracing.EventLevel.Error,
+        LogLevel.Critical => System.Diagnostics.Tracing.EventLevel.Critical,
+        LogLevel.None => System.Diagnostics.Tracing.EventLevel.LogAlways,
+        _ => System.Diagnostics.Tracing.EventLevel.Warning
+    };
 
     /// <summary>
     /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
