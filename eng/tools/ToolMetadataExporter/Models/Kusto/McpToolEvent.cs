@@ -10,6 +10,7 @@ public class McpToolEvent
 {
     private const string EventTimeColumn = "EventTime";
     private const string EventTypeColumn = "EventType";
+    private const string ServerNameColumn = "ServerName";
     private const string ServerVersionColumn = "ServerVersion";
     private const string ToolIdColumn = "ToolId";
     private const string ToolNameColumn = "ToolName";
@@ -22,6 +23,9 @@ public class McpToolEvent
 
     [JsonPropertyName(EventTypeColumn)]
     public McpToolEventType? EventType { get; set; }
+
+    [JsonPropertyName(ServerNameColumn)]
+    public string? ServerName { get; set; }
 
     [JsonPropertyName(ServerVersionColumn)]
     public string? ServerVersion { get; set; }
