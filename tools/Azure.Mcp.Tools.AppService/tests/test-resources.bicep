@@ -252,4 +252,3 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
 output baseName string = baseName
-output location string = 'westus2'
