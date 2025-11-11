@@ -22,6 +22,7 @@ public interface IRealtimeTtsSynthesizer
     /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
     /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Synthesis result with file information</returns>
     Task<SynthesisResult> SynthesizeToFileAsync(
         string endpoint,
@@ -31,5 +32,6 @@ public interface IRealtimeTtsSynthesizer
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

@@ -53,7 +53,8 @@ public sealed class WorkspaceListCommand(ILogger<WorkspaceListCommand> logger) :
             var workspaces = await monitorService.ListWorkspaces(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workspaces ?? []), MonitorJsonContext.Default.WorkspaceListCommandResult);
         }

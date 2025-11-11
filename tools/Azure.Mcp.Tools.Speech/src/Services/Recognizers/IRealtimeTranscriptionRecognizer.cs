@@ -22,6 +22,7 @@ public interface IRealtimeTranscriptionRecognizer
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>Continuous recognition result containing full text and individual segments</returns>
     Task<RealtimeRecognitionContinuousResult> RecognizeAsync(
         string endpoint,
@@ -30,5 +31,6 @@ public interface IRealtimeTranscriptionRecognizer
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

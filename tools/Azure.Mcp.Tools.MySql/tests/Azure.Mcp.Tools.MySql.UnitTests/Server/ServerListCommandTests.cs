@@ -36,7 +36,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_ReturnsServers_WhenSuccessful()
     {
         var expectedServers = new List<string> { "mysql-server-1", "mysql-server-2", "mysql-server-3" };
-        _mysqlService.ListServersAsync("sub123", "rg1", "user1").Returns(expectedServers);
+        _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
 
         var command = new ServerListCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -62,7 +62,7 @@ public class ServerListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.ListServersAsync("sub123", "rg1", "user1")
+        _mysqlService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var command = new ServerListCommand(_logger);

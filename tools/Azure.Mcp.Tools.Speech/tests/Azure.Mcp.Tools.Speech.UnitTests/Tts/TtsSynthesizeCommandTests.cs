@@ -88,7 +88,8 @@ public class TtsSynthesizeCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         try
@@ -146,7 +147,8 @@ public class TtsSynthesizeCommandTests
             Arg.Is(voice),
             Arg.Is(format),
             Arg.Is(endpointId),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         try
@@ -167,7 +169,8 @@ public class TtsSynthesizeCommandTests
                 voice,
                 format,
                 endpointId,
-                Arg.Any<RetryPolicyOptions?>());
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -194,7 +197,8 @@ public class TtsSynthesizeCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Synthesis failed"));
 
         try
@@ -233,7 +237,8 @@ public class TtsSynthesizeCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         try

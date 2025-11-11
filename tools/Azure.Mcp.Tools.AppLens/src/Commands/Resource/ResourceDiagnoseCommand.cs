@@ -82,7 +82,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.Tenant);
+                options.Tenant,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }

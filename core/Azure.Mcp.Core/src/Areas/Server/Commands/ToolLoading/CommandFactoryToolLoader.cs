@@ -190,7 +190,7 @@ public sealed class CommandFactoryToolLoader(
 
         try
         {
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, CancellationToken.None);
+            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 

@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Models.Realtime;
 using Microsoft.CognitiveServices.Speech;
 using Microsoft.CognitiveServices.Speech.Audio;
+using Microsoft.Extensions.AI;
 using Microsoft.Extensions.Logging;
 using SdkSpeechRecognitionResult = Microsoft.CognitiveServices.Speech.SpeechRecognitionResult;
 
@@ -21,18 +22,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
 {
     private readonly ILogger<RealtimeTranscriptionRecognizer> _logger = logger;
 
-    /// <summary>
-    /// Recognizes speech from an audio file using Azure AI Services Speech with continuous recognition,
-    /// capturing individual segments for detailed analysis.
-    /// </summary>
-    /// <param name="endpoint">Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/)</param>
-    /// <param name="filePath">Path to the audio file to process</param>
-    /// <param name="language">Speech recognition language (default: en-US)</param>
-    /// <param name="phrases">Optional phrases to improve recognition accuracy</param>
-    /// <param name="format">Output format (simple or detailed)</param>
-    /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
-    /// <param name="retryPolicy">Optional retry policy for resilience</param>
-    /// <returns>Continuous recognition result containing full text and individual segments</returns>
+    /// <inheritdoc/>
     public async Task<RealtimeRecognitionContinuousResult> RecognizeAsync(
         string endpoint,
         string filePath,
@@ -40,7 +30,8 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
@@ -68,11 +59,11 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
             try
             {
                 // Get Azure AD credential and token
-                var credential = await GetCredential();
+                var credential = await GetCredential(cancellationToken);
 
                 // Get access token for Cognitive Services with proper scope
                 var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-                var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+                var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
                 // Configure Speech SDK with endpoint
                 var config = SpeechConfig.FromEndpoint(new Uri(endpoint));
@@ -237,7 +228,7 @@ public class RealtimeTranscriptionRecognizer(ITenantService tenantService, ILogg
                         : delaySeconds;
 
                     _logger.LogDebug("Waiting {DelaySeconds} seconds before retry attempt {NextAttempt}", delay, attempt + 2);
-                    await Task.Delay(TimeSpan.FromSeconds(delay));
+                    await Task.Delay(TimeSpan.FromSeconds(delay), cancellationToken);
                 }
             }
             catch (Exception ex)

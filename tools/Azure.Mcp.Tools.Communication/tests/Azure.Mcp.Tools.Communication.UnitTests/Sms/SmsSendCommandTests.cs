@@ -67,7 +67,7 @@ public class SmsSendCommandTests
             new Models.SmsResult { MessageId = "msg1", To = to.First(), Successful = true, HttpStatusCode = 202 }
         };
         service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(results));
 
         var command = new SmsSendCommand(logger);
@@ -103,7 +103,7 @@ public class SmsSendCommandTests
         var logger = Substitute.For<ILogger<SmsSendCommand>>();
         var service = Substitute.For<ICommunicationService>();
         service.SendSmsAsync(
-            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>())
+            Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string[]>(), Arg.Any<string>(), Arg.Any<bool>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<Azure.Mcp.Core.Options.RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<Models.SmsResult>>(new InvalidOperationException("fail")));
 
         var command = new SmsSendCommand(logger);

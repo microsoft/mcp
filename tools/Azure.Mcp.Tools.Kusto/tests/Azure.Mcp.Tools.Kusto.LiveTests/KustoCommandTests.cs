@@ -45,7 +45,7 @@ public class KustoCommandTests(ITestOutputHelper output)
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
-                CancellationToken.None).ConfigureAwait(false);
+                TestContext.Current.CancellationToken).ConfigureAwait(false);
         }
         catch
         {

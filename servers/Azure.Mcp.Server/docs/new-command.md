@@ -807,6 +807,7 @@ public interface IMyService
 **Unit Testing Requirements:**
 - **Mock setup**: Use `Arg.Any<CancellationToken>()` for CancellationToken parameters in mock setups
 - **Product code invocation**: Use `TestContext.Current.CancellationToken` when invoking product code from unit tests
+- Never pass `CancellationToken.None` or `default` as a value to a `CancellationToken` method parameter
 
 Example:
 ```csharp
@@ -2427,14 +2428,15 @@ Some commands need tenant ID for Azure calls. Handle this correctly for both mod
 public async Task<List<Resource>> GetResourcesAsync(
     string subscription,
     string? tenant,
-    RetryPolicyOptions? retryPolicy)
+    RetryPolicyOptions? retryPolicy,
+    CancellationToken cancellationToken)
 {
     // ✅ ITenantService handles tenant resolution for all modes
     // - In On Behalf Of mode: Validates tenant matches user's token
     // - In hosting environment mode: Uses provided tenant or default
     // - In stdio mode: Uses Azure CLI/VS Code default tenant
     
-    var credential = await GetCredentialAsync(tenant, CancellationToken.None);
+    var credential = await GetCredential(tenant, cancellationToken);
     
     // ✅ If tenant is null, service will use default tenant
     // ✅ If tenant is provided, service validates it's accessible

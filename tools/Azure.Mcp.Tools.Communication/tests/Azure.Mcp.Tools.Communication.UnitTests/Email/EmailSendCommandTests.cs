@@ -101,7 +101,8 @@ public class EmailSendCommandTests
                     Arg.Any<string[]>(),
                     Arg.Any<string[]>(),
                     Arg.Any<string>(),
-                    Arg.Any<RetryPolicyOptions>())
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
 
             // Act
@@ -179,7 +180,8 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -203,7 +205,8 @@ public class EmailSendCommandTests
             null,
             null,
             null,
-            null
+            null,
+            Arg.Any<CancellationToken>()
         );
 
         // Verify the response contains the expected result
@@ -245,7 +248,8 @@ public class EmailSendCommandTests
                 Arg.Any<string[]>(),
                 Arg.Any<string[]>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>()))
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>()))
             .Do(x => throw expectedException);
 
         // Act

@@ -86,7 +86,8 @@ public sealed class SmsSendCommand(ILogger<SmsSendCommand> logger) : BaseCommuni
                 options.EnableDeliveryReport,
                 options.Tag,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results
             context.Response.Results = results?.Count > 0 ?

@@ -62,7 +62,8 @@ public sealed class EntityGetHealthCommand(ILogger<EntityGetHealthCommand> logge
                 options.Subscription!,
                 options.AuthMethod,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, MonitorJsonContext.Default.JsonNode);
         }

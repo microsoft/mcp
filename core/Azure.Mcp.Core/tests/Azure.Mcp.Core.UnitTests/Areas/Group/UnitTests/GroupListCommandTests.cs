@@ -55,7 +55,7 @@ public class GroupListCommandTests
         };
 
         _resourceGroupService
-            .GetResourceGroups(Arg.Is<string>(x => x == subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetResourceGroups(Arg.Is<string>(x => x == subscriptionId), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
@@ -87,7 +87,8 @@ public class GroupListCommandTests
         await _resourceGroupService.Received(1).GetResourceGroups(
             Arg.Is<string>(x => x == subscriptionId),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -105,7 +106,8 @@ public class GroupListCommandTests
             .GetResourceGroups(
                 Arg.Is<string>(x => x == subscriptionId),
                 Arg.Is<string>(x => x == tenantId),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedGroups);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId} --tenant {tenantId}");
@@ -119,7 +121,8 @@ public class GroupListCommandTests
         await _resourceGroupService.Received(1).GetResourceGroups(
             Arg.Is<string>(x => x == subscriptionId),
             Arg.Is<string>(x => x == tenantId),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -128,7 +131,7 @@ public class GroupListCommandTests
         // Arrange
         var subscriptionId = "test-subs-id";
         _resourceGroupService
-            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");
@@ -149,7 +152,7 @@ public class GroupListCommandTests
         var subscriptionId = "test-subs-id";
         var expectedError = "Test error message";
         _resourceGroupService
-            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetResourceGroups(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<ResourceGroupInfo>>(new Exception(expectedError)));
 
         var args = _commandDefinition.Parse($"--subscription {subscriptionId}");

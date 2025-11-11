@@ -54,7 +54,7 @@ public class SubscriptionListCommandTests
         };
 
         _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedSubscriptions);
 
         var args = _commandDefinition.Parse("");
@@ -80,7 +80,7 @@ public class SubscriptionListCommandTests
         Assert.Equal("sub2", second.GetProperty("subscriptionId").GetString());
         Assert.Equal("Subscription 2", second.GetProperty("displayName").GetString());
 
-        await _subscriptionService.Received(1).GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _subscriptionService.Received(1).GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -91,7 +91,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse($"--tenant {tenantId}");
 
         _subscriptionService
-            .GetSubscriptions(Arg.Is<string>(x => x == tenantId), Arg.Any<RetryPolicyOptions>())
+            .GetSubscriptions(Arg.Is<string>(x => x == tenantId), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
@@ -102,7 +102,8 @@ public class SubscriptionListCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         await _subscriptionService.Received(1).GetSubscriptions(
             Arg.Is<string>(x => x == tenantId),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -110,7 +111,7 @@ public class SubscriptionListCommandTests
     {
         // Arrange
         _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse("");
@@ -130,7 +131,7 @@ public class SubscriptionListCommandTests
         // Arrange
         var expectedError = "Test error message";
         _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<SubscriptionData>>(new Exception(expectedError)));
 
         var args = _commandDefinition.Parse("");
@@ -152,7 +153,7 @@ public class SubscriptionListCommandTests
         var args = _commandDefinition.Parse($"--auth-method {authMethod}");
 
         _subscriptionService
-            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            .GetSubscriptions(Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([SubscriptionTestHelpers.CreateSubscriptionData("sub1", "Sub1")]);
 
         // Act
@@ -163,7 +164,8 @@ public class SubscriptionListCommandTests
         Assert.Equal(HttpStatusCode.OK, result.Status);
         await _subscriptionService.Received(1).GetSubscriptions(
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
 }

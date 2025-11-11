@@ -115,7 +115,8 @@ public sealed class EmailSendCommand(ILogger<EmailSendCommand> logger) : BaseCom
                 options.Bcc,
                 options.ReplyTo,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), CommunicationJsonContext.Default.EmailSendCommandResult);
         }

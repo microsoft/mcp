@@ -27,5 +27,6 @@ public interface IFastTranscriptionRecognizer
         string? language = null,
         string[]? phrases = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
