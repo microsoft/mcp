@@ -93,18 +93,31 @@ if ($BuildOnly) {
 # log in using Key Vault
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
 
-$loginArguments = "login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com";
-$publishArguments = "publish $($buildInfo.serverJsonPath)"
+try {
+    foreach($server in $buildInfo.servers) {
+        $loginArguments = "login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com";
+        $publishArguments = "publish $($server.serverJsonPath)"
 
-if ($ReleaseType -eq 'staging') {
-    Write-Host "Deploying server.json to staging instance: $StagingRegistry"
+        if (!(TEst-Path $server.serverJsonPath)) {
+            LogError "server.json file $($server.serverJsonPath) does not exist."
+            continue
+        }
+        
+        if ($ReleaseType -eq 'staging') {
+            Write-Host "Deploying server.json to staging instance: $StagingRegistry"
 
-    $loginArguments += " $StagingRegistry"
-    $publishArguments += " $StagingRegistry"
-} else {
-    Write-Host "Deploying server.json to production instance."
+            $loginArguments += " $StagingRegistry"
+            $publishArguments += " $StagingRegistry"
+        } else {
+            Write-Host "Deploying server.json to production instance."
+        }
 
-& $TemporaryDirectory/mcp-publisher.exe $loginArguments
+        & $TemporaryDirectory/mcp-publisher.exe $loginArguments
 
-# publish the server.json
-& $TemporaryDirectory/mcp-publisher.exe $publishArguments
+        # publish the server.json
+        & $TemporaryDirectory/mcp-publisher.exe $publishArguments
+    }
+}
+finally {
+    Pop-Location
+}
