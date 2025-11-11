@@ -105,10 +105,15 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     // todo: use this when we have versioned tests to run this against.
     protected virtual string? VersionQualifier => null;
 
+    protected override async ValueTask LoadSettingsAsync()
+    {
+        await base.LoadSettingsAsync();
+    }
+
     public override async ValueTask InitializeAsync()
     {
         // load settings first to determine test mode
-        await base.LoadSettingsAsync();
+        await LoadSettingsAsync();
 
         if (fixture.Proxy == null)
         {
