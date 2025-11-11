@@ -20,25 +20,23 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
     private readonly ILogger<WorkbooksService> _logger = logger;
     private readonly ITenantService _tenantService = tenantService;
 
-    public async Task<List<WorkbookInfo>> ListWorkbooks(string subscription, string resourceGroupName, WorkbookFilters? filters = null, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
+    public async Task<List<WorkbookInfo>> ListWorkbooks(string subscription, string resourceGroupName, WorkbookFilters? filters = null, RetryPolicyOptions? retryPolicy = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         try
         {
             // Resolve subscription to get the actual subscription ID for the query
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
-
-            var tenants = await _tenantService.GetTenants();
+            var tenants = await _tenantService.GetTenants(cancellationToken);
             var currentTenant = tenants.FirstOrDefault() ?? throw new InvalidOperationException("No accessible tenants found");
 
             var queryText = BuildWorkbooksQuery(subscriptionId, resourceGroupName, filters);
             var query = new ResourceQueryContent(queryText);
 
-            var resources = await currentTenant.GetResourcesAsync(query);
+            var resources = await currentTenant.GetResourcesAsync(query, cancellationToken);
 
             var workbooksInRg = new List<WorkbookInfo>();
 
@@ -82,7 +80,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
         }
     }
 
-    public async Task<WorkbookInfo?> GetWorkbook(string workbookId, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
+    public async Task<WorkbookInfo?> GetWorkbook(string workbookId, RetryPolicyOptions? retryPolicy = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(workbookId))
         {
@@ -92,14 +90,15 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
             // Parse the workbook resource ID to get the workbook directly
             var workbookResourceId = new ResourceIdentifier(workbookId);
             var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId) ?? throw new Exception($"Workbook with ID '{workbookId}' not found");
 
             // Get the workbook
-            var workbookResponse = await workbookResource.GetAsync(true);
+            var workbookResponse = await workbookResource.GetAsync(true, cancellationToken);
+
             var workbook = workbookResponse.Value;
 
             if (workbook?.Data == null)
@@ -133,7 +132,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
         }
     }
 
-    public async Task<WorkbookInfo?> UpdateWorkbook(string workbookId, string? displayName = null, string? serializedContent = null, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
+    public async Task<WorkbookInfo?> UpdateWorkbook(string workbookId, string? displayName = null, string? serializedContent = null, RetryPolicyOptions? retryPolicy = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrEmpty(workbookId))
         {
@@ -143,14 +142,14 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
             // Parse the workbook resource ID to get the workbook directly
             var workbookResourceId = new ResourceIdentifier(workbookId);
             var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId) ?? throw new Exception($"Workbook with ID '{workbookId}' not found");
 
             // Get the current workbook data
-            var workbookResponse = await workbookResource.GetAsync(true);
+            var workbookResponse = await workbookResource.GetAsync(true, cancellationToken);
             var workbook = workbookResponse.Value;
 
             if (workbook?.Data == null)
@@ -176,7 +175,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
             patchData.Kind = "shared";
 
             // Update the workbook
-            var updateResponse = await workbookResource.UpdateAsync(patchData);
+            var updateResponse = await workbookResource.UpdateAsync(patchData, cancellationToken: cancellationToken);
             var updatedWorkbook = updateResponse.Value;
 
             _logger.LogInformation("Successfully updated workbook with ID: {WorkbookId}", workbookId);
@@ -203,7 +202,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
         }
     }
 
-    public async Task<WorkbookInfo?> CreateWorkbook(string subscription, string resourceGroupName, string displayName, string serializedData, string sourceId, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
+    public async Task<WorkbookInfo?> CreateWorkbook(string subscription, string resourceGroupName, string displayName, string serializedData, string sourceId, RetryPolicyOptions? retryPolicy = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -215,9 +214,9 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
         try
         {
             // Get the subscription resource
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
             // Get the resource group
-            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName);
+            var resourceGroupResource = await subscriptionResource.GetResourceGroups().GetAsync(resourceGroupName, cancellationToken);
             if (resourceGroupResource?.Value == null)
             {
                 throw new Exception($"Resource group '{resourceGroupName}' not found in subscription '{subscription}'");
@@ -239,7 +238,7 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
 
             // Create the workbook
             var workbookCollection = resourceGroupResource.Value.GetApplicationInsightsWorkbooks();
-            var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData);
+            var createOperation = await workbookCollection.CreateOrUpdateAsync(WaitUntil.Completed, workbookName, workbookData, cancellationToken: cancellationToken);
             var createdWorkbook = createOperation.Value;
 
             _logger.LogInformation("Successfully created workbook with name: {WorkbookName} in resource group: {ResourceGroup}", workbookName, resourceGroupName);
@@ -266,20 +265,20 @@ public class WorkbooksService(ISubscriptionService _subscriptionService, ITenant
         }
     }
 
-    public async Task<bool> DeleteWorkbook(string workbookId, RetryPolicyOptions? retryPolicy = null, string? tenant = null)
+    public async Task<bool> DeleteWorkbook(string workbookId, RetryPolicyOptions? retryPolicy = null, string? tenant = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(workbookId), workbookId));
 
         try
         {
-            var armClient = await CreateArmClientAsync(tenant, retryPolicy);
+            var armClient = await CreateArmClientAsync(tenant, retryPolicy, cancellationToken: cancellationToken);
 
             // Parse the workbook resource ID to get the workbook directly
             var workbookResourceId = new ResourceIdentifier(workbookId);
             var workbookResource = armClient.GetApplicationInsightsWorkbookResource(workbookResourceId) ?? throw new Exception($"Workbook with ID '{workbookId}' not found");
 
             // Delete the workbook
-            var response = await workbookResource.DeleteAsync(WaitUntil.Completed);
+            var response = await workbookResource.DeleteAsync(WaitUntil.Completed, cancellationToken);
 
             _logger.LogInformation("Successfully deleted workbook with ID: {WorkbookId}", workbookId);
             return true;

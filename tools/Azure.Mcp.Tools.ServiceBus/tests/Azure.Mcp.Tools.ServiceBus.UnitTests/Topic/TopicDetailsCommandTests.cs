@@ -67,7 +67,8 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).Returns(expectedDetails);
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
@@ -98,7 +99,8 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(serviceBusException);
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
@@ -121,7 +123,8 @@ public class TopicDetailsCommandTests
             Arg.Is(NamespaceName),
             Arg.Is(TopicName),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()
         ).ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", SubscriptionId, "--namespace", NamespaceName, "--topic", TopicName]);
@@ -157,7 +160,8 @@ public class TopicDetailsCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
                 .Returns(expectedDetails);
         }
 

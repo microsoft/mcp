@@ -10,12 +10,14 @@ public interface IQuotaService
     Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
         string subscriptionId,
-        string location);
+        string location,
+        CancellationToken cancellationToken);
 
     Task<List<string>> GetAvailableRegionsForResourceTypesAsync(
         string[] resourceTypes,
         string subscriptionId,
         string? cognitiveServiceModelName = null,
         string? cognitiveServiceModelVersion = null,
-        string? cognitiveServiceDeploymentSkuName = null);
+        string? cognitiveServiceDeploymentSkuName = null,
+        CancellationToken cancellationToken = default);
 }

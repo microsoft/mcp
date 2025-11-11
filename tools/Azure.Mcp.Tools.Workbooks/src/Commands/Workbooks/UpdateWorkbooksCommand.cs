@@ -70,7 +70,8 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.DisplayName,
                 options.SerializedContent,
                 options.RetryPolicy,
-                options.Tenant) ?? throw new InvalidOperationException("Failed to update workbook");
+                options.Tenant,
+                cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 
             context.Response.Results = ResponseResult.Create(new(updatedWorkbook), WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
         }

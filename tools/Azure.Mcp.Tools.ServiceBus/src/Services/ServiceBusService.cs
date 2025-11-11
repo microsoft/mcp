@@ -16,12 +16,13 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         string namespaceName,
         string queueName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(cancellationToken);
         var client = new ServiceBusAdministrationClient(namespaceName, credential);
-        var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName)).Value;
-        var properties = (await client.GetQueueAsync(queueName)).Value;
+        var runtimeProperties = (await client.GetQueueRuntimePropertiesAsync(queueName, cancellationToken)).Value;
+        var properties = (await client.GetQueueAsync(queueName, cancellationToken)).Value;
 
         return new QueueDetails
         {
@@ -53,12 +54,13 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         string topicName,
         string subscriptionName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(cancellationToken);
         var client = new ServiceBusAdministrationClient(namespaceName, credential);
-        var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName)).Value;
-        var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName)).Value;
+        var runtimeProperties = (await client.GetSubscriptionRuntimePropertiesAsync(topicName, subscriptionName, cancellationToken)).Value;
+        var properties = (await client.GetSubscriptionAsync(topicName, subscriptionName, cancellationToken)).Value;
 
         return new SubscriptionDetails
         {
@@ -83,12 +85,13 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         string namespaceName,
         string topicName,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(cancellationToken);
         var client = new ServiceBusAdministrationClient(namespaceName, credential);
-        var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName)).Value;
-        var properties = (await client.GetTopicAsync(topicName)).Value;
+        var runtimeProperties = (await client.GetTopicRuntimePropertiesAsync(topicName, cancellationToken)).Value;
+        var properties = (await client.GetTopicAsync(topicName, cancellationToken)).Value;
 
         return new TopicDetails
         {
@@ -110,14 +113,15 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         string queueName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(queueName))
         {
-            var messages = await receiver.PeekMessagesAsync(maxMessages);
+            var messages = await receiver.PeekMessagesAsync(maxMessages, cancellationToken: cancellationToken);
 
             return [.. messages];
         }
@@ -129,14 +133,15 @@ public class ServiceBusService(ITenantService tenantService) : BaseAzureService(
         string subscriptionName,
         int maxMessages,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var credential = await GetCredential(tenantId);
+        var credential = await GetCredential(cancellationToken);
 
         await using (var client = new ServiceBusClient(namespaceName, credential))
         await using (var receiver = client.CreateReceiver(topicName, subscriptionName))
         {
-            var messages = await receiver.PeekMessagesAsync(maxMessages);
+            var messages = await receiver.PeekMessagesAsync(maxMessages, cancellationToken: cancellationToken);
 
             return [.. messages];
         }

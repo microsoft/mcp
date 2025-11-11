@@ -32,7 +32,7 @@ public class EmbeddedResourceProviderServiceTests
         var resourceName = "pagination.md";
 
         // Act
-        var result = await _service.GetResource(resourceName);
+        var result = await _service.GetResource(resourceName, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -50,7 +50,7 @@ public class EmbeddedResourceProviderServiceTests
         var fullResourceName = resourceNames.First();
 
         // Act
-        var result = await _service.GetResource(fullResourceName);
+        var result = await _service.GetResource(fullResourceName, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -61,7 +61,7 @@ public class EmbeddedResourceProviderServiceTests
     public async Task ListResourcesInPath_WithEmptyPath_ReturnsAllResources()
     {
         // Act
-        var allResources = await _service.ListResourcesInPath(string.Empty, null);
+        var allResources = await _service.ListResourcesInPath(string.Empty, null, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(allResources);
@@ -78,9 +78,9 @@ public class EmbeddedResourceProviderServiceTests
     public async Task ListResourcesInPath_FiltersByFileType(string path)
     {
         // Act
-        var allInPath = await _service.ListResourcesInPath(path, null);
-        var filesInPath = await _service.ListResourcesInPath(path, ResourceType.File);
-        var dirsInPath = await _service.ListResourcesInPath(path, ResourceType.Directory);
+        var allInPath = await _service.ListResourcesInPath(path, null, TestContext.Current.CancellationToken);
+        var filesInPath = await _service.ListResourcesInPath(path, ResourceType.File, TestContext.Current.CancellationToken);
+        var dirsInPath = await _service.ListResourcesInPath(path, ResourceType.Directory, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(allInPath);
@@ -100,7 +100,7 @@ public class EmbeddedResourceProviderServiceTests
     public async Task ListResourcesInPath_WithNonexistentPath_ReturnsEmptyArray(string path, ResourceType resourceType)
     {
         // Act
-        var result = await _service.ListResourcesInPath(path, resourceType);
+        var result = await _service.ListResourcesInPath(path, resourceType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -111,7 +111,7 @@ public class EmbeddedResourceProviderServiceTests
     public async Task ListResourcesInPath_WithRootLevelFiles_ReturnsCorrectly()
     {
         // Act - Get root level files (files directly in Resources folder)
-        var rootFiles = await _service.ListResourcesInPath(string.Empty, ResourceType.File);
+        var rootFiles = await _service.ListResourcesInPath(string.Empty, ResourceType.File, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(rootFiles);
@@ -135,7 +135,7 @@ public class EmbeddedResourceProviderServiceTests
         var resourceName = "non-existent-resource.md";
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () => await _service.GetResource(resourceName));
+        await Assert.ThrowsAsync<ArgumentException>(async () => await _service.GetResource(resourceName, TestContext.Current.CancellationToken));
     }
 
     [Fact]

@@ -32,16 +32,10 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         };
     }
 
-    /// <summary>
-    /// Creates an MCP client for this registry-based server.
-    /// </summary>
-    /// <param name="clientOptions">Options to configure the client behavior.</param>
-    /// <returns>A configured MCP client ready for use.</returns>
-    /// <exception cref="ArgumentException">Thrown when the server configuration doesn't specify a valid transport type (missing URL or stdio configuration).</exception>
-    /// <exception cref="InvalidOperationException">Thrown when the server configuration is valid but client creation fails (e.g., missing command for stdio transport, dependency issues, or external process failures).</exception>
-    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions)
+    /// <inheritdoc/>
+    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
-        Func<McpClientOptions, Task<McpClient>>? clientFactory = null;
+        Func<McpClientOptions, CancellationToken, Task<McpClient>>? clientFactory = null;
 
         // Determine which factory function to use based on configuration
         if (!string.IsNullOrWhiteSpace(_serverInfo.Url))
@@ -60,7 +54,7 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
 
         try
         {
-            return await clientFactory(clientOptions);
+            return await clientFactory(clientOptions, cancellationToken);
         }
         catch (Exception ex)
         {
@@ -85,8 +79,9 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
     /// Creates an MCP client that communicates with the server using Server-Sent Events (SSE).
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client using SSE transport.</returns>
-    private async Task<McpClient> CreateHttpClientAsync(McpClientOptions clientOptions)
+    private async Task<McpClient> CreateHttpClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
         var transportOptions = new HttpClientTransportOptions
         {
@@ -95,16 +90,17 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
             TransportMode = HttpTransportMode.AutoDetect,
         };
         var clientTransport = new HttpClientTransport(transportOptions);
-        return await McpClient.CreateAsync(clientTransport, clientOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions, cancellationToken: cancellationToken);
     }
 
     /// <summary>
     /// Creates an MCP client that communicates with the server using stdio (standard input/output).
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client using stdio transport.</returns>
     /// <exception cref="InvalidOperationException">Thrown when the server configuration doesn't specify a valid command for stdio transport.</exception>
-    private async Task<McpClient> CreateStdioClientAsync(McpClientOptions clientOptions)
+    private async Task<McpClient> CreateStdioClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(_serverInfo.Command))
         {
@@ -133,6 +129,6 @@ public sealed class RegistryServerProvider(string id, RegistryServerInfo serverI
         };
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClient.CreateAsync(clientTransport, clientOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions, cancellationToken: cancellationToken);
     }
 }

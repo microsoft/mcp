@@ -37,7 +37,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 
         Assert.True(File.Exists(RecordingFileLocation));
 
-        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(RecordingFileLocation, CancellationToken.None));
+        using var document = JsonDocument.Parse(await File.ReadAllTextAsync(RecordingFileLocation, TestContext.Current.CancellationToken));
         Assert.True(document.RootElement.TryGetProperty("Variables", out var variablesElement));
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
     }

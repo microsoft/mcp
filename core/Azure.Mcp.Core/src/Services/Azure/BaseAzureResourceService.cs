@@ -39,7 +39,7 @@ public abstract class BaseAzureResourceService(
         }
 
         // Get all tenants and find the matching one (GetTenants already has caching)
-        var allTenants = await TenantService.GetTenants();
+        var allTenants = await TenantService.GetTenants(cancellationToken);
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value);
 
         if (tenantResource == null)

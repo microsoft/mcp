@@ -55,6 +55,9 @@ public interface IMcpServerProvider
     /// Creates an MCP client that can communicate with this server.
     /// </summary>
     /// <param name="clientOptions">Options to configure the client behavior.</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>A configured MCP client ready for use.</returns>
-    Task<McpClient> CreateClientAsync(McpClientOptions clientOptions);
+    /// <exception cref="ArgumentException">Thrown when the server configuration doesn't specify a valid transport type (missing URL or stdio configuration).</exception>
+    /// <exception cref="InvalidOperationException">Thrown when the server configuration is valid but client creation fails (e.g., missing command for stdio transport, dependency issues, or external process failures).</exception>
+    Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken);
 }

@@ -18,12 +18,14 @@ public interface IExternalProcessService
     /// <param name="arguments">Arguments to pass to the executable</param>
     /// <param name="timeoutSeconds">Timeout in seconds</param>
     /// <param name="customPaths">Optional additional paths to search for the executable</param>
+    /// <param name="cancellationToken">A token to cancel the operation.</param>
     /// <returns>Process execution result containing exit code, output and error streams</returns>
     Task<ProcessResult> ExecuteAsync(
         string executableName,
         string arguments,
         int timeoutSeconds = 300,
-        IEnumerable<string>? customPaths = null);
+        IEnumerable<string>? customPaths = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Tries to parse the process output as JSON and return it as JsonElement

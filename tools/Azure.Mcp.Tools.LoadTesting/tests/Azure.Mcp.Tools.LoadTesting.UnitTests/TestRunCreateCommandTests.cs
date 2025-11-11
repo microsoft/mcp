@@ -49,7 +49,18 @@ public class TestRunCreateCommandTests
     {
         var expected = new TestRun { TestId = "testId1", TestRunId = "testRunId1", DisplayName = "displayName" };
         _service.CreateOrUpdateLoadTestRunAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("run1"), Arg.Is((string?)null), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Is("displayName"), Arg.Is((string?)null), Arg.Is(false), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("run1"),
+            Arg.Is((string?)null),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Is("displayName"),
+            Arg.Is((string?)null),
+            Arg.Is(false),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
@@ -74,7 +85,18 @@ public class TestRunCreateCommandTests
     {
         var expected = new TestRun { TestId = "testId1", TestRunId = "testRunId1" };
         _service.CreateOrUpdateLoadTestRunAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("run1"), Arg.Is("oldId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Is((string?)null), Arg.Is((string?)null), Arg.Is(false), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("run1"),
+            Arg.Is("oldId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Is((string?)null),
+            Arg.Is((string?)null),
+            Arg.Is(false),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
@@ -99,7 +121,18 @@ public class TestRunCreateCommandTests
     {
         var expected = new TestRun();
         _service.CreateOrUpdateLoadTestRunAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("run1"), Arg.Is((string?)null), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Is((string?)null), Arg.Is((string?)null), Arg.Is(false), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("run1"),
+            Arg.Is((string?)null),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Is((string?)null),
+            Arg.Is((string?)null),
+            Arg.Is(false),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestRunCreateCommand(_logger);
@@ -113,7 +146,18 @@ public class TestRunCreateCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         _service.CreateOrUpdateLoadTestRunAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("run1"), Arg.Is((string?)null), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Is((string?)null), Arg.Is((string?)null), Arg.Is(false), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("run1"),
+            Arg.Is((string?)null),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Is((string?)null),
+            Arg.Is((string?)null),
+            Arg.Is(false),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<TestRun>(new Exception("Test error")));
 
         var command = new TestRunCreateCommand(_logger);

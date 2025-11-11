@@ -50,7 +50,8 @@ public sealed class AccountListCommand(ILogger<AccountListCommand> logger) : Sub
             var accounts = await cosmosService.GetCosmosAccounts(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(accounts ?? []), CosmosJsonContext.Default.AccountListCommandResult);
         }
