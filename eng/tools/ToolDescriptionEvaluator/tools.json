@@ -898,12 +898,6 @@
     },
     {
       "name": "get",
-      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. \r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
-      "command": "azureaibestpractices get",
-      "option": []
-    },
-    {
-      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -10986,6 +10980,103 @@
       ]
     },
     {
+      "name": "synthesize",
+      "description": "Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.\r\nOptional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.\r\nThe command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.",
+      "command": "speech tts synthesize",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--text",
+          "description": "The text to convert to speech.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--outputAudio",
+          "description": "Path where the synthesized audio file will be saved.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--language",
+          "description": "The language for speech recognition (e.g., en-US, es-ES). Default is en-US.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--voice",
+          "description": "The voice to use for speech synthesis (e.g., en-US-JennyNeural). If not specified, the default voice for the language will be used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--format",
+          "description": "Output format: simple or detailed.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpointId",
+          "description": "The endpoint ID of a custom voice model for speech synthesis.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "create",
       "description": "Create a new Azure SQL Database on an existing SQL Server. This command creates a database with configurable\r\nperformance tiers, size limits, and other settings. Equivalent to 'az sql db create'.\r\nReturns the newly created database information including configuration details.",
       "command": "sql db create",
@@ -13171,5 +13262,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 53
+  "duration": 56
 }

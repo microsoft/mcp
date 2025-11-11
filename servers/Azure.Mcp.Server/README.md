@@ -368,6 +368,9 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Recognize speech from my audio file with language detection"
 * "Transcribe speech from audio with profanity filtering"
 * "Transcribe audio with phrase hints for better accuracy"
+* "Convert text to speech and save to output.wav"
+* "Synthesize speech from 'Hello, welcome to Azure' with Spanish voice"
+* "Generate MP3 audio from text with high quality format"
 
 ### ⚙️ Azure App Configuration
 
@@ -509,7 +512,7 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
-- 🎤 **Azure AI Services Speech** - Speech-to-text recognition
+- 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
 - 🤖 **Azure AI Best Practices** - AI app development guidance for Azure AI Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
