@@ -24,13 +24,8 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
 
     public IReadOnlyDictionary<string, string> Variables => TestVariables;
 
-    public string GetRecordingAbsolutePath(string? displayName)
+    public string GetRecordingAbsolutePath(string displayName)
     {
-        if (string.IsNullOrWhiteSpace(displayName))
-        {
-            throw new ArgumentException("Display name must be provided to resolve recording path.", nameof(displayName));
-        }
-
         var sanitized = RecordingPathResolver.Sanitize(displayName);
         var relativeDirectory = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null)
             .Replace('/', Path.DirectorySeparatorChar);
