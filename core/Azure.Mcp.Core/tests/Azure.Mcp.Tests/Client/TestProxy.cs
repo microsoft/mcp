@@ -265,9 +265,13 @@ public sealed class TestProxy(bool debug = false) : IDisposable
             while (!ct.IsCancellationRequested && !reader.EndOfStream)
             {
                 var line = await reader.ReadLineAsync(ct).ConfigureAwait(false);
-                sink.AppendLine(line);
+                if (line == null)
+                    break;
+                lock (sink)
+                {
+                    sink.AppendLine(line);
+                }
             }
-        }
         }
         catch { /* swallow */ }
     }
