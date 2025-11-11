@@ -34,6 +34,7 @@ public class ToolAnalyzer
     {
         _logger.LogInformation("Starting analysis. IsDryRun: {IsDryRun}", isDryRun);
 
+        var serverName = await _azmcpExe.GetServerNameAsync();
         var serverVersion = await _azmcpExe.GetVersionAsync();
         var currentTools = await _azmcpExe.LoadToolsDynamicallyAsync();
 
@@ -80,6 +81,7 @@ public class ToolAnalyzer
             {
                 EventTime = analysisTime,
                 ToolId = tool.Id,
+                ServerName = serverName,
                 ServerVersion = serverVersion,
             };
 
@@ -118,6 +120,7 @@ public class ToolAnalyzer
         // Any remaining entries in `existingTool` are ones that got deleted.
         var removals = existingTools.Select(x => new McpToolEvent
         {
+            ServerName = serverName,
             ServerVersion = serverVersion,
             EventTime = analysisTime,
             EventType = McpToolEventType.Deleted,
