@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -138,6 +139,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         var options = BindOptions(parseResult);
+
+        // Update the UserAgentPolicy for all Azure service calls to include the transport type.
+        var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
+        BaseAzureService.InitializeUserAgentPolicy(transport);
 
         try
         {
