@@ -79,6 +79,23 @@ extends:
             Matrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.${{ os }}BuildMatrix']
             MaxParallel: 4
 
+    - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.UpdateServerJson, 'true')) }}:
+      - stage: TestUpdateMcpRepository
+        displayName: 'Update MCP Repository'
+        dependsOn:
+        - Initialize
+        pool:
+          name: $(LINUXPOOL)
+          image: $(LINUXVMIMAGE)
+          os: linux
+        variables:
+        - template: /eng/pipelines/templates/variables/image.yml
+        - template: /eng/pipelines/templates/variables/globals.yml
+        jobs:
+        - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
+          parameters:
+            ServerName: ${{ parameters.ServerName }}
+
     - ${{ if and(eq(variables['System.TeamProject'], 'internal'), eq(parameters.RunLiveTests, 'true')) }}:
       - stage: Test
         displayName: 'Live test'
