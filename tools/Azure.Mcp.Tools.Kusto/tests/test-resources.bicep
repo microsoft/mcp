@@ -19,9 +19,17 @@ resource kustoCluster 'Microsoft.Kusto/clusters@2024-04-13' = {
   name: baseName
   location: location
   sku: {
-    name: 'Standard_E2ads_v5'
-    tier: 'Standard'
-    capacity: 2
+    name: 'Dev(No SLA)_Standard_E2a_v4'
+    tier: 'Basic'
+    capacity: 1
+  }
+  properties: {
+    enableStreamingIngest: false
+    enablePurge: false
+    enableDoubleEncryption: false
+    enableDiskEncryption: false
+    enableAutoStop: true
+    publicNetworkAccess: 'Enabled'
   }
   identity: {
     type: 'SystemAssigned'
