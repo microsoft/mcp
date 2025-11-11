@@ -4,9 +4,7 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Group;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Subscription;
-using Azure.Mcp.Core.Areas.Tools;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
@@ -46,6 +44,7 @@ using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -169,6 +168,8 @@ internal class CommandFactoryHelpers
         public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
 
         public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
+
+        public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams => null;
 
         public void Dispose()
         {
