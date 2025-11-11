@@ -11,10 +11,6 @@
     Name of the MCP server under "./servers/" folder whose server.json will be deployed.
 .PARAMETER BuildInfoPath
     Path to the build_info.json file containing build metadata. If not provided, defaults to ".work/build_info.json" in the repo root.
-.PARAMETER TemporaryDirectory
-    Path to a temporary directory for building and deploying the server.json.
-.PARAMETER ReleaseType
-    Type of release to deploy: 'staging' or 'production'. If 'staging' is specified, the server.json will be deployed to the staging MCP registry.
 .PARAMETER KeyVaultName
     Name of the Azure Key Vault containing the credentials for MCP registry login.
 .PARAMETER KeyVaultKeyName
@@ -22,21 +18,14 @@
 .PARAMETER BuildOnly
     If specified, the script will only build the publisher tool and not deploy the server.json.
 .EXAMPLE
-    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -BuildInfoPath ".work/build_info.json" -TemporaryDirectory "C:\Temp\" -ReleaseType "production" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
+    Deploy-ServerJson.ps1 -ServerName "Azure.Mcp.Server" -BuildInfoPath ".work/build_info.json" -ReleaseType "production" -KeyVaultName "my-key-vault" -KeyVaultKeyName "mcp-registry-key"
     Updates the server.json for the Azure.Mcp.Server to the production MCP registry using credentials from the specified Key Vault.
 #>
 [CmdletBinding(DefaultParameterSetName='default')]
 param(
     [Parameter(Mandatory=$true)]
     [string] $ServerName,
-    [Parameter(Mandatory=$true)]
     [string] $BuildInfoPath,
-    [Parameter(Mandatory=$true)]
-    [string] $TemporaryDirectory,
-
-    [Parameter()]
-    [ValidateSet('staging','production')]
-    [string] $ReleaseType,
 
     [string] $KeyVaultName,
     [string] $KeyVaultKeyName,
@@ -46,6 +35,7 @@ param(
 $ErrorActionPreference = "Stop" 
 . "$PSScriptRoot/../common/scripts/common.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
+$TemporaryDirectory = "$RepoRoot/.work/temp_deploy_server_json"
 
 if(!$BuildInfoPath) {
     $BuildInfoPath = "$RepoRoot/.work/build_info.json"
@@ -57,6 +47,13 @@ if (!(Test-Path $BuildInfoPath)) {
 }
 
 $buildInfo = Get-Content $BuildInfoPath -Raw | ConvertFrom-Json -AsHashtable
+$publishTarget = $buildInfo.publishTarget
+
+Write-Host "Preparing to deploy server.json for server '$ServerName' with type '$publishTarget'."
+
+if (!(Test-Path $TemporaryDirectory)) {
+    New-Item -ItemType Directory -Path $TemporaryDirectory | Out-Null
+}
 
 Set-Location $TemporaryDirectory
 
@@ -92,19 +89,40 @@ if ($BuildOnly) {
 
 # log in using Key Vault
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
+$hasError = $false
 
-$loginArguments = "login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com";
-$publishArguments = "publish $($buildInfo.serverJsonPath)"
+try {
+    foreach($server in $buildInfo.servers) {
+        $serverJsonPath = "$RepoRoot/$($server.serverJsonPath)"
 
-if ($ReleaseType -eq 'staging') {
-    Write-Host "Deploying server.json to staging instance: $StagingRegistry"
+        if (!(Test-Path $serverJsonPath))
+        {
+            LogError "server.json file $serverJsonPath does not exist."
+            $hasError = $true
+            continue
+        }
 
-    $loginArguments += " $StagingRegistry"
-    $publishArguments += " $StagingRegistry"
-} else {
-    Write-Host "Deploying server.json to production instance."
+        if ($publishTarget -eq 'internal') {
+            Write-Host "Deploying server.json to staging instance: $StagingRegistry"
 
-& $TemporaryDirectory/mcp-publisher.exe $loginArguments
+            & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com -registry https://staging.registry.modelcontextprotocol.io
+            & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath -registry https://staging.registry.modelcontextprotocol.io
+        } elseif ($publishTarget -eq 'public') {
+            Write-Host "Deploying server.json to production instance."
 
-# publish the server.json
-& $TemporaryDirectory/mcp-publisher.exe $publishArguments
+            & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
+            & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
+        } else {
+            LogError "Unknown publish target: $publishTarget"
+            continue
+        }
+    }
+
+    if ($hasError) {
+        LogError "One or more errors occurred during deployment."
+        exit 1
+    }
+}
+finally {
+    Pop-Location
+}

@@ -3,14 +3,12 @@ parameters:
   type: string
 - name: DependsOn
   type: object
-- name: ReleaseType
-  type: string
-  default: 'staging'
 
 jobs:
 - job: BuildAndUpdateMcpRepository
   displayName: Build MCP Publisher and Update Repository
-  dependsOn: ${{ parameters.DependsOn }}
+  ${{ if parameters.DependsOn }}:
+    dependsOn: ${{ parameters.DependsOn }}
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   pool:
     name: $(LINUXPOOL)
@@ -26,14 +24,12 @@ jobs:
 
   - task: AzureCLI@2
     inputs:
-      azureSubscription: 'Azure SDK PME Managed Identity'
+      azureSubscription: 'Azure SDK Engineering System'
       scriptType: 'pscore'
       scriptLocation: 'scriptPath'
       scriptPath: $(Build.SourcesDirectory)/eng/scripts/Deploy-ServerJson.ps1
       arguments: >
         -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
-        -TemporaryDirectory '$(Pipeline.TemporaryDirectory)'
-        -ReleaseType '${{ parameters.ReleaseType }}'
         -KeyVaultName 'azuresdkengkeyvault'
         -KeyVaultKeyName 'mcp-registry'
