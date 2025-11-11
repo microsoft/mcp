@@ -61,7 +61,9 @@ jobs:
 - template: /eng/pipelines/templates/jobs/update-mcp-repository.yml
   parameters:
     ServerName: ${{ parameters.ServerName }}
-    DependsOn: TagRepository
+    DependsOn: PublishNugetPackage
+    parameters:
+      ReleaseType: 'production'
 
 - ${{ if parameters.PackageVSIX }}:
   - template: /eng/pipelines/templates/jobs/vsix/release-vsix.yml
