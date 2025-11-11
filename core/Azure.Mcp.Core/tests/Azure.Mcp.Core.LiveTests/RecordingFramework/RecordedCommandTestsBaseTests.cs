@@ -13,7 +13,7 @@ using Xunit;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
-public sealed class RecordedCommandTestsBaseTest: IAsyncLifetime
+public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
 {
     private string RecordingFileLocation = string.Empty;
     private string TestDisplayName = string.Empty;
@@ -69,7 +69,7 @@ public sealed class RecordedCommandTestsBaseTest: IAsyncLifetime
     [Fact]
     public async Task GlobalMatcherAndSanitizerAppliesWhenPresent()
     {
-        
+
         DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
             DesiredMode = TestMode.Record,

@@ -60,14 +60,4 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
     {
         // Marker method used so that RecordedCommandTestsBase can locate the CustomMatcherAttribute via reflection.
     }
-
-    public void GetActiveMatcher(string? recordingId = null)
-    {
-        throw new NotImplementedException();
-    }
-
-    public IEnumerable<string> GetActiveSanitizer(string? recordingId = null)
-    {
-        throw new NotImplementedException();
-    }
 }
