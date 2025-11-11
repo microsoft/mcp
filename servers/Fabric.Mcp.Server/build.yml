@@ -14,5 +14,5 @@ extends:
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
     PackageDocker: false
-    PackageVSIX: false
-    IncludeNative: false
+    PackageVSIX: true
+    IncludeNative: true
