@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -61,7 +61,7 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -89,10 +89,10 @@ This tool can generate Azure CLI commands to be used with the corresponding CLI 
 
             if (cliType == Constants.AzureCliType)
             {
-                using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent);
+                using HttpResponseMessage responseMessage = await cliGenerateService.GenerateAzureCLICommandAsync(intent, cancellationToken);
                 responseMessage.EnsureSuccessStatusCode();
 
-                var responseBody = await responseMessage.Content.ReadAsStringAsync();
+                var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
                 CliGenerateResult result = new(responseBody, cliType);
                 context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliGenerateResult);
             }

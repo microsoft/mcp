@@ -1,5 +1,5 @@
 parameters:
-- name: ServerName
+- name: ServerMatrix
   type: string
 - name: PackageDocker
   type: boolean
@@ -123,6 +123,7 @@ jobs:
   - template: /eng/pipelines/templates/jobs/docker/stage-docker.yml
     parameters:
       DependsOn: Sign
+      ServerMatrix: ${{ parameters.ServerMatrix }}
 
 - ${{ each os in split('linux|windows|macOS', '|') }}:
   - template: /eng/pipelines/templates/jobs/verify-packages.yml
@@ -133,5 +134,6 @@ jobs:
       DependsOn:
         - PackNpm
         - PackNuget
+        - ${{ if parameters.PackageDocker }}:
+          - BuildDockerImages
       TestTimeoutInMinutes: 10
-      ServerName: ${{ parameters.ServerName }}

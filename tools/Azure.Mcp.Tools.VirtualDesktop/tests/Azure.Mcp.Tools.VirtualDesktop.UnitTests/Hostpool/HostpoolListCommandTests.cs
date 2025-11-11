@@ -76,7 +76,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -103,7 +103,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -120,7 +120,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -143,7 +143,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -167,7 +167,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -192,7 +192,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -212,7 +212,7 @@ public class HostpoolListCommandTests
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

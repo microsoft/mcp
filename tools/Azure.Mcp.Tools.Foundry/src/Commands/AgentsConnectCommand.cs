@@ -50,7 +50,7 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
 
     public override string Title => CommandTitle;
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +67,8 @@ public sealed class AgentsConnectCommand : GlobalCommand<AgentsConnectOptions>
                 options.Query!,
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsConnectCommandResult(response),

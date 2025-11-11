@@ -48,7 +48,7 @@ public class DatabaseQueryCommandTests
         var command = new DatabaseQueryCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -70,7 +70,7 @@ public class DatabaseQueryCommandTests
 
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", $"--{PostgresOptionDefinitions.AuthTypeText}", AuthTypes.MicrosoftEntra, "--user", "user1", "--server", "server1", "--database", "db123", "--query", "SELECT * FROM test;"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -104,7 +104,7 @@ public class DatabaseQueryCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -132,7 +132,7 @@ public class DatabaseQueryCommandTests
         ]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status); // CommandValidationException => 400
@@ -156,7 +156,7 @@ public class DatabaseQueryCommandTests
         ]);
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

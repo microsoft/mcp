@@ -64,7 +64,7 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -86,7 +86,8 @@ public sealed class OpenAiCompletionsCreateCommand : SubscriptionCommand<OpenAiC
                 options.Temperature,
                 options.Tenant,
                 options.AuthMethod ?? AuthMethod.Credential,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create<OpenAiCompletionsCreateCommandResult>(
                 new OpenAiCompletionsCreateCommandResult(result.CompletionText, result.UsageInfo),

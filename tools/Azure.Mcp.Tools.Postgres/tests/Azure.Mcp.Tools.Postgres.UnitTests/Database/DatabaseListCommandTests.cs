@@ -44,7 +44,7 @@ public class DatabaseListCommandTests
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -66,7 +66,7 @@ public class DatabaseListCommandTests
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -87,7 +87,7 @@ public class DatabaseListCommandTests
         var command = new DatabaseListCommand(_logger);
         var args = command.GetCommand().Parse($"--subscription sub123 --resource-group rg1 --{PostgresOptionDefinitions.AuthTypeText} {AuthTypes.MicrosoftEntra} --user user1 --server server1");
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -112,7 +112,7 @@ public class DatabaseListCommandTests
         ));
 
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

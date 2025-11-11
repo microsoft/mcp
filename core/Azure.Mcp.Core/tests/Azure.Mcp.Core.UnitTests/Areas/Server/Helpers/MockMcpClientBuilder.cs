@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Areas.Server;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using NSubstitute;
+using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 
@@ -124,13 +125,13 @@ public sealed class MockMcpClientBuilder
         // Setup tools/list response
         mockClient.SendRequestAsync(
             Arg.Is<JsonRpcRequest>(req => req.Method == "tools/list"),
-            Arg.Any<CancellationToken>())
+            TestContext.Current.CancellationToken)
             .Returns(callInfo => HandleListToolsRequest(callInfo.Arg<JsonRpcRequest>()));
 
         // Setup tools/call response
         mockClient.SendRequestAsync(
             Arg.Is<JsonRpcRequest>(req => req.Method == "tools/call"),
-            Arg.Any<CancellationToken>())
+            TestContext.Current.CancellationToken)
             .Returns(callInfo => HandleCallToolRequest(callInfo.Arg<JsonRpcRequest>()));
 
         return mockClient;

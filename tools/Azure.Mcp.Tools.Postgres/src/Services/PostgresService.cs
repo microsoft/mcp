@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Validation;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Microsoft.Extensions.Options;
 using Npgsql;
@@ -18,30 +19,23 @@ namespace Azure.Mcp.Tools.Postgres.Services;
 public class PostgresService : BaseAzureService, IPostgresService
 {
     private readonly IResourceGroupService _resourceGroupService;
-    private string? _cachedEntraIdAccessToken;
-    private DateTime _tokenExpiryTime;
 
-    public PostgresService(IResourceGroupService resourceGroupService)
+    public PostgresService(
+        IResourceGroupService resourceGroupService,
+        ITenantService tenantService)
+        : base(tenantService)
     {
         _resourceGroupService = resourceGroupService ?? throw new ArgumentNullException(nameof(resourceGroupService));
     }
 
-    private async Task<string> GetEntraIdAccessTokenAsync()
+    private async Task<string> GetEntraIdAccessTokenAsync(CancellationToken cancellationToken = default)
     {
-        if (_cachedEntraIdAccessToken != null && DateTime.UtcNow < _tokenExpiryTime)
-        {
-            return _cachedEntraIdAccessToken;
-        }
-
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"]);
-        var tokenCredential = await GetCredential();
-        var accessToken = await tokenCredential
-            .GetTokenAsync(tokenRequestContext, CancellationToken.None)
-            .ConfigureAwait(false);
-        _cachedEntraIdAccessToken = accessToken.Token;
-        _tokenExpiryTime = accessToken.ExpiresOn.UtcDateTime.AddSeconds(-60); // Subtract 60 seconds as a buffer.
+        TokenCredential tokenCredential = await GetCredential(cancellationToken);
+        AccessToken accessToken = await tokenCredential
+            .GetTokenAsync(tokenRequestContext, cancellationToken);
 
-        return _cachedEntraIdAccessToken;
+        return accessToken.Token;
     }
 
     private static string NormalizeServerName(string server)
@@ -251,7 +245,13 @@ public class PostgresService : BaseAzureService, IPostgresService
 
         public static async Task<PostgresResource> CreateAsync(string connectionString)
         {
-            var dataSource = new NpgsqlSlimDataSourceBuilder(connectionString)
+            // Configure SSL settings for secure connection
+            var connectionBuilder = new NpgsqlConnectionStringBuilder(connectionString)
+            {
+                SslMode = SslMode.VerifyFull // See: https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls
+            };
+
+            var dataSource = new NpgsqlSlimDataSourceBuilder(connectionBuilder.ConnectionString)
                 .EnableTransportSecurity()
                 .Build();
             var connection = await dataSource.OpenConnectionAsync();

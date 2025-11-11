@@ -47,14 +47,16 @@ public class CertificateImportCommandTests
     public async Task ExecuteAsync_CallsService_WithExpectedParameters()
     {
         // Arrange
-        _keyVaultService.ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            _fakePfxBase64,
-            null,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                _fakePfxBase64,
+                null,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error")); // force exception to avoid building return object
 
         var args = _commandDefinition.Parse([
@@ -65,86 +67,62 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        await _keyVaultService.Received(1).ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            _fakePfxBase64,
-            null,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>());
+        await _keyVaultService
+            .Received(1)
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                _fakePfxBase64,
+                null,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // due to forced exception
     }
 
-    public static IEnumerable<object[]> RequiredArgumentCases()
+    public static IEnumerable<object[]> InvalidArgumentCases()
     {
-        // Build scenarios without embedding an arbitrary-looking base64 literal in source.
-        yield return new object[] { "", false };
-        yield return new object[] { "--vault knownVault", false };
-        yield return new object[] { "--vault knownVault --certificate knownCertificate", false };
-        yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription", false };
-        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64}", false };
-        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64} --subscription knownSubscription", true };
+        // Build scenarios with missing required parameters
+        yield return new object[] { "" };
+        yield return new object[] { "--vault knownVault" };
+        yield return new object[] { "--vault knownVault --certificate knownCertificate" };
+        yield return new object[] { "--vault knownVault --certificate knownCertificate --subscription knownSubscription" };
+        yield return new object[] { $"--vault knownVault --certificate knownCertificate --certificate-data {_fakePfxBase64}" };
     }
 
     [Theory]
-    [MemberData(nameof(RequiredArgumentCases))]
-    public async Task ExecuteAsync_ValidatesRequiredArguments(string argLine, bool shouldPassValidation)
+    [MemberData(nameof(InvalidArgumentCases))]
+    public async Task ExecuteAsync_RejectsInvalidArguments(string argLine)
     {
         // Arrange
         var args = _commandDefinition.Parse(argLine.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
-        if (shouldPassValidation)
-        {
-            // Service will throw to avoid constructing a KeyVaultCertificateWithPolicy instance; this still proves validation passed
-            _keyVaultService.ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                _fakePfxBase64,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>())
-                .ThrowsAsync(new Exception("Test error"));
-        }
-
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
-        if (shouldPassValidation)
-        {
-            Assert.NotEqual(HttpStatusCode.BadRequest, response.Status); // could be 500 due to forced exception, but not a validation failure
-            await _keyVaultService.Received(1).ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                _fakePfxBase64,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>());
-        }
-        else
-        {
-            Assert.Equal(HttpStatusCode.BadRequest, response.Status);
-        }
+        Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
     [Fact]
     public async Task ExecuteAsync_HandlesServiceException()
     {
         var expected = "boom";
-        _keyVaultService.ImportCertificate(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<string>(),
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>()).ThrowsAsync(new Exception(expected));
+        _keyVaultService
+            .ImportCertificate(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expected));
 
         var args = _commandDefinition.Parse([
             "--vault", _knownVault,
@@ -153,7 +131,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(expected, response.Message);
@@ -165,14 +143,16 @@ public class CertificateImportCommandTests
         // Arrange - minimal mock PEM (not a valid cert, but exercises the code path)
         var pem = "-----BEGIN CERTIFICATE-----\nABCDEF123456\n-----END CERTIFICATE-----";
 
-        _keyVaultService.ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            pem,
-            null,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                pem,
+                null,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
@@ -183,17 +163,20 @@ public class CertificateImportCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - ensure the PEM (with header) was passed through untouched
-        await _keyVaultService.Received(1).ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            pem,
-            null,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>());
+        await _keyVaultService
+            .Received(1)
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                pem,
+                null,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
@@ -202,14 +185,16 @@ public class CertificateImportCommandTests
     {
         var password = "P@ssw0rd!";
 
-        _keyVaultService.ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            _fakePfxBase64,
-            password,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                _fakePfxBase64,
+                password,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var args = _commandDefinition.Parse([
@@ -220,16 +205,19 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-        await _keyVaultService.Received(1).ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            _fakePfxBase64,
-            password,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>());
+        await _keyVaultService
+            .Received(1)
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                _fakePfxBase64,
+                password,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>());
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
     }
 
@@ -241,14 +229,16 @@ public class CertificateImportCommandTests
         try
         {
             await File.WriteAllBytesAsync(tempPath, [1, 2, 3, 4], TestContext.Current.CancellationToken);
-            _keyVaultService.ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                tempPath,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>())
+            _keyVaultService
+                .ImportCertificate(
+                    _knownVault,
+                    _knownCertName,
+                    tempPath,
+                    null,
+                    _knownSubscription,
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>())
                 .ThrowsAsync(new Exception("Test error"));
             var args = _commandDefinition.Parse([
                 "--vault", _knownVault,
@@ -257,16 +247,19 @@ public class CertificateImportCommandTests
                 "--subscription", _knownSubscription
             ]);
             // Act
-            var response = await _command.ExecuteAsync(_context, args);
+            var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
             // Assert - ensure the raw path was passed through
-            await _keyVaultService.Received(1).ImportCertificate(
-                _knownVault,
-                _knownCertName,
-                tempPath,
-                null,
-                _knownSubscription,
-                Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions>());
+            await _keyVaultService
+                .Received(1)
+                .ImportCertificate(
+                    _knownVault,
+                    _knownCertName,
+                    tempPath,
+                    null,
+                    _knownSubscription,
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions>(),
+                    Arg.Any<CancellationToken>());
             Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         }
         finally
@@ -285,14 +278,16 @@ public class CertificateImportCommandTests
         var invalidData = "not-valid-base64-or-path";
         var errorMessage = $"Error importing certificate '{_knownCertName}' into vault {_knownVault}: The provided certificate-data is neither a file path, raw PEM, nor base64 encoded content.";
 
-        _keyVaultService.ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            invalidData,
-            null,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                invalidData,
+                null,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(errorMessage));
 
         var args = _commandDefinition.Parse([
@@ -302,7 +297,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(errorMessage, response.Message);
@@ -315,14 +310,16 @@ public class CertificateImportCommandTests
         var password = "WrongPassword";
         var mismatchMessage = $"Error importing certificate '{_knownCertName}' into vault {_knownVault}: Invalid password or certificate data.";
 
-        _keyVaultService.ImportCertificate(
-            _knownVault,
-            _knownCertName,
-            _fakePfxBase64,
-            password,
-            _knownSubscription,
-            Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .ImportCertificate(
+                _knownVault,
+                _knownCertName,
+                _fakePfxBase64,
+                password,
+                _knownSubscription,
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(mismatchMessage));
 
         var args = _commandDefinition.Parse([
@@ -333,7 +330,7 @@ public class CertificateImportCommandTests
             "--subscription", _knownSubscription
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.StartsWith(mismatchMessage, response.Message);

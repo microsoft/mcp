@@ -47,7 +47,22 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    protected override void RegisterOptions(Command command)
+    {
+        base.RegisterOptions(command);
+        command.Options.Add(PostgresOptionDefinitions.AuthType);
+        command.Options.Add(PostgresOptionDefinitions.Password);
+    }
+
+    protected override DatabaseListOptions BindOptions(ParseResult parseResult)
+    {
+        var options = base.BindOptions(parseResult);
+        options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
+        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
+        return options;
+    }
+
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
