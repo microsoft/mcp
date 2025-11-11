@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -132,8 +133,8 @@ public class BaseAzureServiceTests
     [Fact]
     public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
     {
-        // Initialize the user agent policy before creating any service instances
-        BaseAzureService.InitializeUserAgentPolicy("http");
+        // Initialize the user agent policy before creating test service
+        BaseAzureService.InitializeUserAgentPolicy(TransportTypes.StdIo);
         TestAzureService testAzureService = new TestAzureService(_tenantService);
         Assert.NotNull(testAzureService.GetUserAgent());
         Assert.Contains("azmcp-http", testAzureService.GetUserAgent());
