@@ -64,7 +64,7 @@ Set-Location $TemporaryDirectory
 Write-Host "Installing Microsoft Go and building MCP publishing tool..."
 
 # This go-install.ps1 script could be checked into your source repository
-$goInstallScriptPath = "$PSScriptRoot/../common/scripts/go-install.ps1"
+$goInstallScriptPath = "$PSScriptRoot/Install-Go.ps1"
 if (!(Test-Path $goInstallScriptPath)) {
     LogError "Go install script not found at $goInstallScriptPath"
     exit 1
