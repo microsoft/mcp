@@ -60,7 +60,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         // Step 2: Now test the subscription service which will use our CustomChainedCredential internally
         _output.WriteLine("Testing subscription listing with authenticated credential...");
 
-        var subscriptions = await _subscriptionService.GetSubscriptions();
+        var subscriptions = await _subscriptionService.GetSubscriptions(cancellationToken: TestContext.Current.CancellationToken);
         ValidateAndLogSubscriptions(subscriptions);
     }
 
@@ -73,7 +73,7 @@ public class AuthenticationIntegrationTests : IAsyncLifetime
         // Verify the credential works by requesting a token
         var armScope = "https://management.azure.com/.default";
         var context = new TokenRequestContext([armScope]);
-        var token = await browserCredential.GetTokenAsync(context);
+        var token = await browserCredential.GetTokenAsync(context, TestContext.Current.CancellationToken);
 
         Assert.NotNull(token.Token);
         Assert.NotEqual(default, token.ExpiresOn);

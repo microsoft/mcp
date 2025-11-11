@@ -42,7 +42,7 @@ public sealed class ServerConfigGetCommand(ILogger<ServerConfigGetCommand> logge
         try
         {
             IMySqlService mysqlService = context.GetService<IMySqlService>() ?? throw new InvalidOperationException("MySQL service is not available.");
-            string config = await mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!);
+            string config = await mysqlService.GetServerConfigAsync(options.Subscription!, options.ResourceGroup!, options.User!, options.Server!, cancellationToken);
             context.Response.Results = !string.IsNullOrEmpty(config) ?
                 ResponseResult.Create(new(config), MySqlJsonContext.Default.ServerConfigGetCommandResult) :
                 null;

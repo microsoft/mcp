@@ -197,6 +197,21 @@ The `azmcp server start` command supports the following options:
 > azmcp server start --insecure-disable-elicitation
 > ```
 
+### Azure AI Best Practices
+
+```bash
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Azure AI Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureaibestpractices get
+
+# Includes guidance on:
+#   - Microsoft Agent Framework usage and patterns
+#   - Azure AI Foundry model selection
+#   - Best practices for ai app / agent development in Azure
+```
+
 ### Azure AI Foundry Operations
 
 ```bash
@@ -417,6 +432,71 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
+
+```bash
+# Synthesize speech from text and save to an audio file using Azure AI Services Speech
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint <endpoint> \
+                            --text <text-to-synthesize> \
+                            --outputAudio <output-file-path> \
+                            [--language <language>] \
+                            [--voice <voice-name>] \
+                            [--format <audio-format>] \
+                            [--endpointId <custom-voice-endpoint-id>]
+```
+
+#### Text-to-Speech Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--text` | Yes | The text to convert to speech |
+| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
+| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
+| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
+| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
+| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
+
+#### Supported Audio Formats
+
+The `--format` parameter accepts the following values:
+
+- **WAV formats**: `Riff24Khz16BitMonoPcm` (default), `Riff16Khz16BitMonoPcm`, `Raw16Khz16BitMonoPcm`
+- **MP3 formats**: `Audio16Khz32KBitRateMonoMp3`, `Audio24Khz96KBitRateMonoMp3`, `Audio48Khz192KBitRateMonoMp3`
+- **OGG/Opus formats**: `Ogg16Khz16BitMonoOpus`, `Ogg24Khz16BitMonoOpus`
+
+**Examples:**
+
+```bash
+# Basic text-to-speech synthesis
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hello, welcome to Azure AI Services Speech" \
+    --outputAudio welcome.wav
+
+# Synthesize with specific language and voice
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hola, bienvenido a los servicios de voz de Azure" \
+    --outputAudio spanish-greeting.wav \
+    --language es-ES \
+    --voice es-ES-ElviraNeural
+
+# Generate MP3 output with high quality
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This is a high quality audio output" \
+    --outputAudio output.mp3 \
+    --format Audio48Khz192KBitRateMonoMp3
+
+# Use custom voice model
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This uses my custom trained voice" \
+    --outputAudio custom-voice.wav \
+    --voice my-custom-voice-model
+    --endpointId my-custom-voice-endpoint-id
+```
 
 ### Azure App Configuration Operations
 
@@ -1323,21 +1403,6 @@ azmcp marketplace product get --subscription <subscription> \
                               [--sku-id <sku-id>] \
                               [--include-service-instruction-templates <true/false>] \
                               [--pricing-audience <pricing-audience>]
-```
-
-### Azure AI Best Practices
-
-```bash
-# Get best practices for building AI applications, workflows and agents in Azure
-# Call this before generating code for any AI application, building with Azure AI Foundry models,
-# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp azureaibestpractices get
-
-# Includes guidance on:
-#   - Microsoft Agent Framework usage and patterns
-#   - Azure AI Foundry model selection
-#   - Best practices for ai app / agent development in Azure
 ```
 
 ### Azure MCP Best Practices
