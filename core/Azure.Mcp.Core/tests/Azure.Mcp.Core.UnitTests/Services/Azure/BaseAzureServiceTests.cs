@@ -21,6 +21,9 @@ public class BaseAzureServiceTests
 
     public BaseAzureServiceTests()
     {
+        // Initialize the user agent policy before creating any service instances
+        BaseAzureService.InitializeUserAgentPolicy("stdio");
+
         _azureService = new TestAzureService(_tenantService);
         _tenantService.GetTenantId(TenantName).Returns(TenantId);
         _tenantService.GetTokenCredentialAsync(
@@ -129,6 +132,18 @@ public class BaseAzureServiceTests
         Assert.Equal(input, result);
     }
 
+    [Fact]
+    public void InitializeUserAgentPolicy_UserAgentIsNotNull()
+    {
+        Assert.NotNull(_azureService.GetUserAgent());
+    }
+
+    [Fact]
+    public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
+    {
+        Assert.Contains("azmcp-stdio", _azureService.GetUserAgent());
+    }
+
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
@@ -137,5 +152,7 @@ public class BaseAzureServiceTests
         public Task<string?> ResolveTenantId(string? tenant) => ResolveTenantIdAsync(tenant);
 
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
+
+        public string GetUserAgent() => UserAgent;
     }
 }
