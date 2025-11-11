@@ -16,6 +16,7 @@ param(
 . "$PSScriptRoot/helpers/PathHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
+$isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
 # We currently only want to build linux-x64 native
@@ -204,8 +205,6 @@ function Get-PathsToTest {
         | Where-Object { $_ -match $projectDirectoryPattern }
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
-
-    $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 
     if($isPullRequestBuild) {
         # Set of files that don't require build or test when changed
@@ -634,15 +633,12 @@ try {
 
     $buildInfo | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputPath -Encoding utf8 -Force
 
-    # if path to test is empty, set all matrices to empty
-    if ($pathsToTest.Count -eq 0) {
-        foreach ($key in $matrices.Keys) {
-            $matrices[$key] = @{}
-        }
-    }
-
     if ($isPipelineRun) {
         foreach($key in $matrices.Keys) {
+            if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
+                $matrices[$key] = @{}
+            }
+            
             $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
             Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
         }
