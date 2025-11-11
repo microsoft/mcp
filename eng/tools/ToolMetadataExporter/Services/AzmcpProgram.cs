@@ -7,6 +7,11 @@ public class AzmcpProgram
 {
     private readonly string _toolDirectory;
 
+    public Task<string> GetServerNameAsync()
+    {
+        return Task.FromResult("");
+    }
+
     public AzmcpProgram(IOptions<AppConfiguration> options)
     {
         _toolDirectory = options.Value.WorkDirectory ?? throw new ArgumentNullException(nameof(AppConfiguration.WorkDirectory));

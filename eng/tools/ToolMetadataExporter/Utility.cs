@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
-using System.Text.Json;
 using ToolSelection.Models;
 
 namespace ToolMetadataExporter;
@@ -48,6 +47,12 @@ internal class Utility
 
             throw;
         }
+    }
+
+    internal static async Task<string> GetServerName()
+    {
+        var output = await ExecuteAzmcpAsync("", checkErrorCode: false);
+        return output.Trim();
     }
 
     internal static async Task<string> GetVersionAsync()
