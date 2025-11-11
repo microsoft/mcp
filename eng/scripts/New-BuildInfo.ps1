@@ -615,6 +615,17 @@ try {
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
 
+    if ($isPipelineRun) {
+        foreach($key in $matrices.Keys) {
+            if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
+                $matrices[$key] = @{}
+            }
+            
+            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
+            Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
+        }
+    }
+    
     $buildInfo = [ordered]@{
         buildId = $BuildId
         publishTarget = $PublishTarget
@@ -632,17 +643,6 @@ try {
     New-Item -Path $parentDirectory -ItemType Directory -Force | Out-Null
 
     $buildInfo | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputPath -Encoding utf8 -Force
-
-    if ($isPipelineRun) {
-        foreach($key in $matrices.Keys) {
-            if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
-                $matrices[$key] = @{}
-            }
-            
-            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
-            Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
-        }
-    }
 }
 finally {
     Pop-Location
