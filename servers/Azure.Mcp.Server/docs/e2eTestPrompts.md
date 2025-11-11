@@ -2,6 +2,16 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
+## Azure AI Best Practices
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azureaibestpractices_get | Get best practices for building AI applications in Azure |
+| azureaibestpractices_get | Show me the best practices for Azure AI Foundry agents code generation |
+| azureaibestpractices_get | Get guidance for building agents with Azure AI Foundry |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Azure AI Foundry |
+
 ## Azure AI Foundry
 
 | Tool Name | Test Prompt |
@@ -81,6 +91,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
 | speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
 | speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+| speech_tts_synthesize | Convert text to speech and save to output.wav |
+| speech_tts_synthesize | Synthesize speech from "Hello, welcome to Azure" and save to welcome.wav |
+| speech_tts_synthesize | Generate speech audio from text "Hello world" using Azure Speech Services |
+| speech_tts_synthesize | Convert text to speech with Spanish language and save to spanish-audio.wav |
+| speech_tts_synthesize | Synthesize speech with voice en-US-JennyNeural from text "Azure AI Services" |
+| speech_tts_synthesize | Create MP3 audio file from text "Welcome to Azure" with high quality format |
+| speech_tts_synthesize | Generate speech with custom voice model using endpoint ID <endpoint-id> |
+| speech_tts_synthesize | Convert text to OGG/Opus format audio file |
+| speech_tts_synthesize | Synthesize long text content to audio file with streaming |
+| speech_tts_synthesize | Create audio file from text in French language with appropriate voice |
 
 ## Azure App Configuration
 
@@ -434,17 +454,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | marketplace_product_get | Get details about marketplace product <product_name> |
 | marketplace_product_list | Search for Microsoft products in the marketplace |
 | marketplace_product_list | Show me marketplace products from publisher <publisher_name> |
-
-## Azure AI Best Practices
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| azureaibestpractices_get | Get best practices for building AI applications in Azure |
-| azureaibestpractices_get | Show me the best practices for Azure AI Foundry agents code generation |
-| azureaibestpractices_get | Get guidance for building agents with Azure AI Foundry |
-| azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
-| azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Azure AI Foundry |
-
 
 ## Azure MCP Best Practices
 

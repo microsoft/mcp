@@ -27,7 +27,13 @@ public static class OpenTelemetryExtensions
         services.AddOptions<AzureMcpServerConfiguration>()
             .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
             {
-                options.Version = GetServerVersion(Assembly.GetCallingAssembly());
+                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
+                // the assembly that will run the tool calls.
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly != null)
+                {
+                    options.Version = GetServerVersion(entryAssembly);
+                }
 
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
@@ -131,15 +137,15 @@ public static class OpenTelemetryExtensions
     /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
     /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
-    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
     /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly callerAssembly)
+    internal static string GetServerVersion(Assembly entryAssembly)
     {
-        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
         {
             throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
         }
 
         string version = versionAttribute.InformationalVersion;

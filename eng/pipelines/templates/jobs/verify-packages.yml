@@ -47,7 +47,7 @@ jobs:
     displayName: "Verify packages/images and run smoke tests"
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PackageSmokeTests.ps1
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsDirectory $(Pipeline.Workspace)

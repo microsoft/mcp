@@ -185,7 +185,7 @@ public sealed class NamespaceToolLoader(
         {
             var activity = Activity.Current;
 
-            if (learn && string.IsNullOrEmpty(command))
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }
