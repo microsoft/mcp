@@ -247,14 +247,16 @@ $servers = $buildInfo.servers
 foreach($server in $servers) {
     Write-Host "Validating packages for server $($server.name) version $($server.version) for OS $TargetOs and Arch $TargetArch"
 
-    $nugetValid = Test-NugetPackages -Server $server
-    $npmValid = Test-NpmPackages -Server $server
-
-    if ($TestDocker) {
-        $dockerValid = Test-DockerImages -Server $server
+    if(!(Test-NugetPackages -Server $server))
+    {
+        $exitCode = 1
     }
-    
-    if (!$nugetValid -or !$npmValid -or !$dockerValid) {
+
+    if (!(Test-NpmPackages -Server $server)) {
+        $exitCode = 1
+    }
+
+    if ($TestDocker -and !(Test-DockerImages -Server $server)) {
         $exitCode = 1
     }
 }
