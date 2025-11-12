@@ -69,7 +69,7 @@ jobs:
           displayName: 'Packages to be published'
 
         - ${{ if eq(parameters.Registry, 'https://registry.npmjs.org/') }}:
-          - task: EsrpRelease@9
+          - task: ESRPRelease@10
             displayName: 'Publish ${{ parameters.ArtifactName }} via ESRP'
             condition: and(succeeded(), ne(variables['SkipPublishing'], 'true'))
             inputs:
