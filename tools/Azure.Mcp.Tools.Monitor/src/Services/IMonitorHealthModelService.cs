@@ -18,6 +18,7 @@ public interface IMonitorHealthModelService
     /// <param name="authMethod">Optional authentication method</param>
     /// <param name="tenantId">Optional tenant ID for cross-tenant operations</param>
     /// <param name="retryPolicy">Optional retry policy for the operation</param>
+    /// <param name="cancellationToken">A cancellation token</param>
     /// <returns>Entity health information</returns>
     /// <exception cref="AuthenticationFailedException">When authentication fails</exception>
     /// <exception cref="RequestFailedException">When the service request fails</exception>
@@ -28,5 +29,6 @@ public interface IMonitorHealthModelService
         string subscription,
         AuthMethod? authMethod = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

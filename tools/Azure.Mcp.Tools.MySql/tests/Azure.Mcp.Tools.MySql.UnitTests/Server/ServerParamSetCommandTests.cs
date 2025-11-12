@@ -36,7 +36,7 @@ public class ServerParamSetCommandTests
     public async Task ExecuteAsync_SetsParameter_WhenSuccessful()
     {
         var newValue = "100";
-        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue).Returns(newValue);
+        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "max_connections", newValue, Arg.Any<CancellationToken>()).Returns(newValue);
 
         var command = new ServerParamSetCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -66,7 +66,7 @@ public class ServerParamSetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100")
+        _mysqlService.SetServerParameterAsync("sub123", "rg1", "user1", "test-server", "invalid_param", "100", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Parameter 'invalid_param' not found."));
 
         var command = new ServerParamSetCommand(_logger);

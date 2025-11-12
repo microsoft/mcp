@@ -18,7 +18,8 @@ public interface IMonitorService
         int? hours = 24,
         int? limit = 20,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<JsonNode>> QueryWorkspace(
         string subscription,
@@ -26,19 +27,22 @@ public interface IMonitorService
         string query,
         int timeSpanDays = 1,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTables(
         string subscription,
         string resourceGroup,
         string workspace, string? tableType = "CustomLog",
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<WorkspaceInfo>> ListWorkspaces(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<JsonNode>> QueryWorkspaceLogs(
         string subscription,
@@ -47,14 +51,16 @@ public interface IMonitorService
         string table,
         int? hours = 24, int? limit = 20,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<string>> ListTableTypes(
         string subscription,
         string resourceGroup,
         string workspace,
         string? tenant,
-        RetryPolicyOptions? retryPolicy);
+        RetryPolicyOptions? retryPolicy,
+        CancellationToken cancellationToken = default);
 
     Task<List<ActivityLogEventData>> ListActivityLogs(
         string subscription,
@@ -65,5 +71,6 @@ public interface IMonitorService
         ActivityLogEventLevel? eventLevel = null,
         int top = 10,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

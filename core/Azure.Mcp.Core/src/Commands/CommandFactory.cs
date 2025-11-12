@@ -193,7 +193,7 @@ public class CommandFactory
                     return (int)cmdContext.Response.Status;
                 }
 
-                var response = await implementation.ExecuteAsync(cmdContext, parseResult, CancellationToken.None);
+                var response = await implementation.ExecuteAsync(cmdContext, parseResult, ct);
 
                 // Calculate execution time
                 var endTime = DateTime.UtcNow;

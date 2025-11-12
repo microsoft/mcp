@@ -45,7 +45,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
         try
         {
             var subscriptionService = context.GetService<ISubscriptionService>();
-            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy);
+            var subscriptions = await subscriptionService.GetSubscriptions(options.Tenant, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                     new SubscriptionListCommandResult(subscriptions),
