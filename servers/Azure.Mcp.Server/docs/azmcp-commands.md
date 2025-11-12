@@ -197,6 +197,15 @@ The `azmcp server start` command supports the following options:
 > azmcp server start --insecure-disable-elicitation
 > ```
 
+#### Server Info
+
+```bash
+# Get information about the MCP server, which includes the server's name and version.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp server info
+```
+
+
 ### Azure AI Best Practices
 
 ```bash
