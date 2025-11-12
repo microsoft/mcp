@@ -21,7 +21,7 @@ public static class PostgresOptionDefinitions
     {
         Description = $"The authentication type to access PostgreSQL server. " +
             $"Supported values are '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'. By default '{AuthTypes.MicrosoftEntra}' is used.",
-        Arity = ArgumentArity.ExactlyOne,
+        Arity = ArgumentArity.ZeroOrOne,
         Required = false,
     };
 
