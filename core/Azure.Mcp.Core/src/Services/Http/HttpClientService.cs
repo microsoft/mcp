@@ -30,7 +30,7 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
         var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? string.Empty;
         var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
-        var transport = serviceStartOptions?.Value.Transport ?? TransportTypes.StdIo; 
+        var transport = serviceStartOptions?.Value.Transport ?? TransportTypes.StdIo;
         UserAgent = $"azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})";
     }
 
