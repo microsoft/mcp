@@ -165,9 +165,7 @@ internal class CommandFactoryHelpers
 
     public class NoOpTelemetryService : ITelemetryService
     {
-        public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
-
-        public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
+        public Activity? StartActivity(string activityName) => null;
 
         public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams => null;
 

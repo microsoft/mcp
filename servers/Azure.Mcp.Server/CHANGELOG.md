@@ -4,7 +4,17 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ## 2.0.0-beta.4 (unreleased)
 
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+
+### Other Changes
+
+- Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
 
 ## 2.0.0-beta.3 (2025-11-11)
 

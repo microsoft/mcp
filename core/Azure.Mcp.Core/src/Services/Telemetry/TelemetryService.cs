@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
@@ -72,12 +73,15 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
+    public Activity? StartActivity(string activityName) => StartActivityInternal(activityName, null, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName, Implementation? clientInfo)
+    public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams
+        => StartActivityInternal(activityName, request.Server.ClientInfo, request.Params?.Meta);
+
+    private Activity? StartActivityInternal(string activityName, Implementation? clientInfo, JsonObject? meta)
     {
         if (!_isEnabled)
         {
@@ -103,32 +107,17 @@ internal class TelemetryService : ITelemetryService
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
 
-        return activity;
-    }
-
-    /// <summary>
-    /// <inheritdoc/>
-    /// </summary>
-    public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams
-    {
-        var activity = StartActivity(activityName, request.Server.ClientInfo);
-        if (activity == null)
-        {
-            return null;
-        }
-
-        var meta = request.Params?.Meta;
         if (meta != null)
         {
             var vsCodeConversationIdNode = meta["vscode.conversationId"];
             if (vsCodeConversationIdNode != null && vsCodeConversationIdNode.GetValueKind() == JsonValueKind.String)
             {
-                activity.AddTag(TagName.VSCodeConversationId, vsCodeConversationIdNode.ToString());
+                activity.AddTag(TagName.VSCodeConversationId, vsCodeConversationIdNode.GetValue<string>());
             }
             var vsCodeRequestIdNode = meta["vscode.requestId"];
             if (vsCodeRequestIdNode != null && vsCodeRequestIdNode.GetValueKind() == JsonValueKind.String)
             {
-                activity.AddTag(TagName.VSCodeRequestId, vsCodeRequestIdNode.ToString());
+                activity.AddTag(TagName.VSCodeRequestId, vsCodeRequestIdNode.GetValue<string>());
             }
         }
 
