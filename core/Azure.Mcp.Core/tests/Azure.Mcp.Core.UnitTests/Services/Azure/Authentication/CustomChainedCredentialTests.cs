@@ -13,33 +13,8 @@ namespace Azure.Mcp.Core.UnitTests.Services.Azure.Authentication;
 /// These tests verify that credentials are created correctly based on environment variable settings.
 /// Note: These tests verify creation behavior only. Actual authentication behavior requires live credentials.
 /// </summary>
-public class CustomChainedCredentialTests : IDisposable
+public class CustomChainedCredentialTests
 {
-    private readonly Dictionary<string, string?> _originalEnvVars = new();
-
-    public CustomChainedCredentialTests()
-    {
-        // Save original environment variables
-        SaveEnvironmentVariable("AZURE_TOKEN_CREDENTIALS");
-        SaveEnvironmentVariable("VSCODE_PID");
-        SaveEnvironmentVariable("AZURE_CLIENT_ID");
-        SaveEnvironmentVariable("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL");
-    }
-
-    public void Dispose()
-    {
-        // Restore original environment variables
-        foreach (var (key, value) in _originalEnvVars)
-        {
-            Environment.SetEnvironmentVariable(key, value);
-        }
-    }
-
-    private void SaveEnvironmentVariable(string name)
-    {
-        _originalEnvVars[name] = Environment.GetEnvironmentVariable(name);
-    }
-
     /// <summary>
     /// Tests that default behavior (no AZURE_TOKEN_CREDENTIALS set) creates a credential successfully.
     /// Expected: Uses default credential chain with InteractiveBrowserCredential fallback.
@@ -47,10 +22,6 @@ public class CustomChainedCredentialTests : IDisposable
     [Fact]
     public void DefaultBehavior_CreatesCredentialSuccessfully()
     {
-        // Arrange: No AZURE_TOKEN_CREDENTIALS set
-        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", null);
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
-
         // Act
         var credential = CreateCustomChainedCredential();
 
@@ -68,7 +39,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "dev");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -80,7 +50,7 @@ public class CustomChainedCredentialTests : IDisposable
 
     /// <summary>
     /// Tests that prod mode (AZURE_TOKEN_CREDENTIALS="prod") creates a credential successfully.
-    /// Expected: Uses production credentials (EnvironmentCredential, WorkloadIdentityCredential, ManagedIdentityCredential) 
+    /// Expected: Uses production credentials (EnvironmentCredential, WorkloadIdentityCredential, ManagedIdentityCredential)
     /// WITHOUT InteractiveBrowserCredential fallback.
     /// </summary>
     [Fact]
@@ -88,7 +58,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "prod");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -107,7 +76,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -126,7 +94,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "AzureCliCredential");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -145,7 +112,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "InteractiveBrowserCredential");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -170,7 +136,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", credentialType);
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -190,7 +155,6 @@ public class CustomChainedCredentialTests : IDisposable
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
         Environment.SetEnvironmentVariable("AZURE_CLIENT_ID", "12345678-1234-1234-1234-123456789012");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -209,8 +173,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", "ManagedIdentityCredential");
-        Environment.SetEnvironmentVariable("AZURE_CLIENT_ID", null);
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -229,7 +191,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL", "true");
-        Environment.SetEnvironmentVariable("VSCODE_PID", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -241,7 +202,7 @@ public class CustomChainedCredentialTests : IDisposable
 
     /// <summary>
     /// Tests that VS Code context without explicit setting creates credential successfully.
-    /// Expected: When VSCODE_PID is set and AZURE_TOKEN_CREDENTIALS is not set, 
+    /// Expected: When VSCODE_PID is set and AZURE_TOKEN_CREDENTIALS is not set,
     /// prioritizes VS Code credential in the chain.
     /// </summary>
     [Fact]
@@ -249,7 +210,6 @@ public class CustomChainedCredentialTests : IDisposable
     {
         // Arrange
         Environment.SetEnvironmentVariable("VSCODE_PID", "12345");
-        Environment.SetEnvironmentVariable("AZURE_TOKEN_CREDENTIALS", null);
 
         // Act
         var credential = CreateCustomChainedCredential();
@@ -261,7 +221,7 @@ public class CustomChainedCredentialTests : IDisposable
 
     /// <summary>
     /// Tests that VS Code context with explicit prod setting respects the explicit setting.
-    /// Expected: When both VSCODE_PID and AZURE_TOKEN_CREDENTIALS are set, 
+    /// Expected: When both VSCODE_PID and AZURE_TOKEN_CREDENTIALS are set,
     /// AZURE_TOKEN_CREDENTIALS takes precedence.
     /// </summary>
     [Fact]

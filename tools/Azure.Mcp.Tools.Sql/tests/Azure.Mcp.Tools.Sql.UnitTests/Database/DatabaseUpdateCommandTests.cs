@@ -3,6 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -431,7 +432,7 @@ public class DatabaseUpdateCommandTests
     public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
     {
         // Arrange - Test minimum scope when subscription comes from environment variable
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-id");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-sub-id");
 
         var mockDatabase = new SqlDatabase(
             Name: "testdb",
@@ -469,28 +470,20 @@ public class DatabaseUpdateCommandTests
                 Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
-        try
-        {
-            var args = _commandDefinition.Parse([
-                "--resource-group", "rg",
-                "--server", "server1",
-                "--database", "testdb"
-            ]);
+        var args = _commandDefinition.Parse([
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "testdb"
+        ]);
 
-            // Act
-            var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-            // Assert
-            Assert.NotNull(response);
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-            Assert.NotNull(response.Results);
-            Assert.Equal("Success", response.Message);
-        }
-        finally
-        {
-            // Clean up environment variable
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
-        }
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
     }
 
     [Fact]

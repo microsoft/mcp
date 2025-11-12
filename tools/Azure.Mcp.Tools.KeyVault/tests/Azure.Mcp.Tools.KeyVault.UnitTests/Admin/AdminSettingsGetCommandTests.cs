@@ -107,46 +107,38 @@ public class AdminSettingsGetCommandTests
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
     {
-        var originalSub = EnvironmentHelpers.GetAzureSubscriptionId();
-        try
+        if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
         {
-            if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
-            {
-                // Provide subscription via environment variable
-                EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
-            }
-            else if (!args.Contains("--subscription"))
-            {
-                // Ensure failure when subscription missing and not expected to succeed
-                EnvironmentHelpers.SetAzureSubscriptionId(null);
-            }
-
-            if (shouldSucceed)
-            {
-                // Service returns null result -> treated as empty settings
-                _keyVaultService
-                    .GetVaultSettings(
-                        Arg.Any<string>(),
-                        Arg.Any<string>(),
-                        Arg.Any<string?>(),
-                        Arg.Any<RetryPolicyOptions?>(),
-                        Arg.Any<CancellationToken>())
-            .Returns((GetSettingsResult)null!);
-            }
-
-            var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
-
-            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-            if (!shouldSucceed)
-            {
-                Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
-                Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
-            }
+            // Provide subscription via environment variable
+            EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
         }
-        finally
+        else if (!args.Contains("--subscription"))
         {
-            EnvironmentHelpers.SetAzureSubscriptionId(originalSub);
+            // Ensure failure when subscription missing and not expected to succeed
+            Assert.Null(EnvironmentHelpers.GetAzureSubscriptionId());
+        }
+
+        if (shouldSucceed)
+        {
+            // Service returns null result -> treated as empty settings
+            _keyVaultService
+                .GetVaultSettings(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string?>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
+                .Returns((GetSettingsResult)null!);
+        }
+
+        var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (!shouldSucceed)
+        {
+            Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
         }
     }
 }
