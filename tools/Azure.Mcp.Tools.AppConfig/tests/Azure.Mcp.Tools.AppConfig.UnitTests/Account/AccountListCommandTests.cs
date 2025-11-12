@@ -18,7 +18,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.Account;
 
-[Trait("Area", "AppConfig")]
 public class AccountListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

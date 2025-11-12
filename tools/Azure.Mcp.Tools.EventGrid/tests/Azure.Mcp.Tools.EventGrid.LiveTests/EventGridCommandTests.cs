@@ -8,8 +8,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.EventGrid.LiveTests;
 
-[Trait("Area", "EventGrid")]
-[Trait("Category", "Live")]
 public class EventGridCommandTests(ITestOutputHelper output)
     : CommandTestsBase(output)
 {

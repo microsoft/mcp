@@ -16,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Quota.UnitTests.Commands.Region;
 
-[Trait("Area", "Quota")]
 public sealed class AvailabilityListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

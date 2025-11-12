@@ -8,11 +8,9 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.LiveTests;
 
-[Trait("Area", "VirtualDesktop")]
 public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTestsBase(output)
 {
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListHostpools_WithSubscriptionId()
     {
         var result = await CallToolAsync(
@@ -38,7 +36,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListHostpools_WithSubscriptionName()
     {
         var result = await CallToolAsync(
@@ -64,7 +61,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListHostpools_WithResourceGroup_WithSubscriptionId()
     {
         // First get all hostpools to find one with a resource group
@@ -108,7 +104,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListHostpools_WithResourceGroup_WithSubscriptionName()
     {
         // First get all hostpools to find one with a resource group
@@ -152,7 +147,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListHostpools_WithNonExistentResourceGroup()
     {
         // Test with a non-existent resource group name
@@ -170,7 +164,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListSessionHosts_WithSubscriptionId()
     {
         // First get available hostpools
@@ -209,7 +202,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListSessionHosts_WithSubscriptionName()
     {
         // First get available hostpools
@@ -248,7 +240,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListUserSessions_WithSubscriptionId()
     {
         // First get available hostpools
@@ -307,7 +298,6 @@ public class VirtualDesktopCommandTests(ITestOutputHelper output) : CommandTests
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_ListUserSessions_WithSubscriptionName()
     {
         // First get available hostpools

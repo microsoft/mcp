@@ -18,7 +18,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppService.UnitTests.Commands.Database;
 
-[Trait("Area", "AppService")]
 [Trait("Command", "DatabaseAdd")]
 public class DatabaseAddCommandTests
 {

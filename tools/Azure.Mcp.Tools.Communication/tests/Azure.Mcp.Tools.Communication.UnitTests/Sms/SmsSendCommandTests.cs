@@ -13,8 +13,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Communication.UnitTests.Sms;
 
-[Trait("Area", "Communication")]
-[Trait("Category", "Unit")]
 public class SmsSendCommandTests
 {
     [Fact]

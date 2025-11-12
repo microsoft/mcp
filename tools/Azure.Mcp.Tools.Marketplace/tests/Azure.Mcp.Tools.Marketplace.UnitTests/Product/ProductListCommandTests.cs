@@ -16,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.UnitTests.Product;
 
-[Trait("Area", "Marketplace")]
 public class ProductListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

@@ -15,7 +15,6 @@ using SessionHostModel = Azure.Mcp.Tools.VirtualDesktop.Models.SessionHost;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.SessionHost;
 
-[Trait("Area", "VirtualDesktop")]
 public class SessionHostListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

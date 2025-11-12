@@ -19,7 +19,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.ServiceBus.UnitTests.Topic;
 
-[Trait("Area", "ServiceBus")]
 public class SubscriptionDetailsCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

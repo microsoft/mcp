@@ -1068,6 +1068,14 @@ Guidelines:
    - ❌ Bad: `_service.{Operation}(Arg.Is<T>(t => t == value)).Returns(return)`
 - CancellationToken in mocks: Always use `Arg.Any<CancellationToken>()` for CancellationToken parameters when setting up mocks
 - CancellationToken in product code invocation: When invoking real product code objects in unit tests, use `TestContext.Current.CancellationToken` for the CancellationToken parameter
+- If any test mutates environment variables, to prevent conflicts between tests, the test project must:
+  - Reference project `$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj`
+  - Include an `AssemblyAttributes.cs` file with the following contents :
+    ```csharp
+    [assembly: Azure.Mcp.Tests.Helpers.ClearEnvironmentVariablesBeforeTest]
+    [assembly: Xunit.CollectionBehavior(Xunit.CollectionBehavior.CollectionPerAssembly)]
+    ```
+
 ### 7. Integration Tests
 
 Integration tests inherit from `CommandTestsBase` and use test fixtures:
@@ -1506,8 +1514,6 @@ catch {
 Integration tests should use the deployed infrastructure:
 
 ```csharp
-[Trait("Toolset", "{Toolset}")]
-[Trait("Category", "Live")]
 public class {Toolset}CommandTests( ITestOutputHelper output)
     : CommandTestsBase(output)
 {

@@ -16,7 +16,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.VirtualDesktop.UnitTests.SessionHost;
 
-[Trait("Area", "VirtualDesktop")]
 public class SessionHostUserSessionListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
