@@ -46,6 +46,9 @@ var baseArgs = [
   'UseHostingEnvironmentIdentity'
   '--mode'
   'all'
+  // SECURITY NOTE: The MCP server is deployed with only readonly tools ('--read-only') enabled.
+  // Deleting '--read-only' will remove this restriction and enable tools that can create, modify, or delete Azure resources,
+  // do so with caution, and ensure that access is granted only to trusted agents.
   '--read-only'
 ]
 var namespaceArgs = [for ns in namespaces: ['--namespace', ns]]
