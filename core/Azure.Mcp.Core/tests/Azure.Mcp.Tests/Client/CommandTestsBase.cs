@@ -18,13 +18,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
-    protected LiveTestSettings Settings { get; private set; } = default!;
+    protected LiveTestSettings Settings { get; set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
 
     public string[]? CustomArguments;
     public TestMode TestMode = TestMode.Live;
-
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().
@@ -80,16 +79,23 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
             : ["server", "start", "--mode", "all"];
         var arguments = CustomArguments ?? defaultArgs;
 
-        var envVarDictionary = new Dictionary<string, string?> {
+        Dictionary<string, string?> envVarDictionary = [
             // Propagate playback signaling & sanitized identifiers to server process.
-            { "AZURE_TOKEN_CREDENTIALS", TestMode is TestMode.Playback ? "PlaybackTokenCredential" : null },
-            { "AZURE_TENANT_ID", Settings.TenantId },
-            { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
-        };
+
+            // TODO: Temporarily commenting these out until we can solve for subscription id tests
+            // see https://github.com/microsoft/mcp/issues/1103
+            // { "AZURE_TENANT_ID", Settings.TenantId },
+            // { "AZURE_SUBSCRIPTION_ID", Settings.SubscriptionId }
+        ];
 
         if (proxy != null && proxy.Proxy != null)
         {
             envVarDictionary.Add("TEST_PROXY_URL", proxy.Proxy.BaseUri);
+
+            if (TestMode is TestMode.Playback)
+            {
+                envVarDictionary.Add("AZURE_TOKEN_CREDENTIALS", "PlaybackTokenCredential");
+            }
         }
 
         StdioClientTransportOptions transportOptions = new()
@@ -142,15 +148,6 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         {
             // MCP client throws exceptions for error responses, but we want to handle them gracefully
             writeOutput($"MCP exception: {ex.Message}");
-
-            // For validation errors, we'll return a synthetic error response
-            if (ex.Message.Contains("An error occurred"))
-            {
-                // Return null to indicate error response (no results)
-                writeOutput("synthetic error response: null (error response)");
-                return null;
-            }
-
             throw; // Re-throw if we can't handle it
         }
 

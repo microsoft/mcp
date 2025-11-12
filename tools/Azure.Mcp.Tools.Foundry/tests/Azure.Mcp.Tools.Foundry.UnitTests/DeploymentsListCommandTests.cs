@@ -42,7 +42,8 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedDeployments);
 
         var command = new DeploymentsListCommand();
@@ -62,7 +63,8 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new DeploymentsListCommand();
@@ -83,7 +85,8 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();
@@ -105,7 +108,8 @@ public class DeploymentsListCommandTests
         _foundryService.ListDeployments(
             Arg.Is(endpoint),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new DeploymentsListCommand();

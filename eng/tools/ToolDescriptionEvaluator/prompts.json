@@ -2,8 +2,14 @@
   "foundry_agents_connect": [
     "Query an agent in my Azure AI foundry resource"
   ],
+  "foundry_agents_create": [
+    "Create a new Azure AI Foundry agent using instructions in the active editor"
+  ],
   "foundry_agents_evaluate": [
     "Evaluate the full query and response I got from my agent for task_adherence"
+  ],
+  "foundry_agents_get-sdk-sample": [
+    "Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK"
   ],
   "foundry_agents_list": [
     "List all agents in my Azure AI Foundry resource",
@@ -49,6 +55,15 @@
     "List all AI Foundry resources in my subscription",
     "Show me the AI Foundry resources in resource group <resource_group_name>",
     "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>"
+  ],
+  "foundry_threads_create": [
+    "Create an Azure AI Foundry thread to hold the conversation"
+  ],
+  "foundry_threads_get-messages": [
+    "Show me the messages in the AI Foundry thread with id <thread_id>"
+  ],
+  "foundry_threads_list": [
+    "List my AI Foundry threads"
   ],
   "search_knowledge_base_get": [
     "List all knowledge bases in the Azure AI Search service <service-name>",
@@ -100,6 +115,18 @@
     "Transcribe audio using multiple phrase hints: \"Azure\", \"cognitive services\", \"machine learning\"",
     "Convert speech to text with comma-separated phrase hints: \"Azure, cognitive services, API\"",
     "Transcribe audio with raw profanity output from file <file_path>"
+  ],
+  "speech_tts_synthesize": [
+    "Convert text to speech and save to output.wav",
+    "Synthesize speech from \"Hello, welcome to Azure\" and save to welcome.wav",
+    "Generate speech audio from text \"Hello world\" using Azure Speech Services",
+    "Convert text to speech with Spanish language and save to spanish-audio.wav",
+    "Synthesize speech with voice en-US-JennyNeural from text \"Azure AI Services\"",
+    "Create MP3 audio file from text \"Welcome to Azure\" with high quality format",
+    "Generate speech with custom voice model using endpoint ID <endpoint-id>",
+    "Convert text to OGG/Opus format audio file",
+    "Synthesize long text content to audio file with streaming",
+    "Create audio file from text in French language with appropriate voice"
   ],
   "appconfig_account_list": [
     "List all App Configuration stores in my subscription",
@@ -525,6 +552,13 @@
   "marketplace_product_list": [
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
+  ],
+  "azureaibestpractices_get": [
+    "Get best practices for building AI applications in Azure",
+    "Show me the best practices for Azure AI Foundry agents code generation",
+    "Get guidance for building agents with Azure AI Foundry",
+    "Create an AI app that helps me to manage travel queries.",
+    "Create an AI app that helps me to manage travel queries in Azure AI Foundry"
   ],
   "get_bestpractices_get": [
     "Get the latest Azure code generation best practices",

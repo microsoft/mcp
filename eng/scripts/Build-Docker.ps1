@@ -106,7 +106,7 @@ try {
             $dockerArgs = @(
                 "--platform $(quote $dockerPlatformString)"
                 "--build-arg PUBLISH_DIR=$(quote $relativePublishDirectory)"
-                "--build-arg CLI_NAME=$(quote $server.cliName + $platform.extension)"
+                "--build-arg EXECUTABLE_NAME=$(quote $server.cliName + $platform.extension)"
                 "--file $(quote $dockerFile)"
                 "--tag $(quote $tag)"
                 "--no-cache"
