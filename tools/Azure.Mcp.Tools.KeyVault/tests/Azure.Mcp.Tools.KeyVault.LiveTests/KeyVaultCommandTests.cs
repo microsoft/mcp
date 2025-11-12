@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.IO;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.Json;
@@ -16,6 +18,8 @@ namespace Azure.Mcp.Tools.KeyVault.LiveTests;
 
 public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture)
 {
+    private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
+
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
         // should clear out `kid` hostnames of actual vault names
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
@@ -24,16 +28,27 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         })
     };
 
-    // register a sanitizer so that we can redact private key material from certificate responses
-    // we shouldn't be verifying this specific value anyway, so it should be safe to redact.
-    public override List<BodyKeySanitizer> BodyKeySanitizers => new List<BodyKeySanitizer>() {
-        // should clear out `id` fields containing actual vault names
-        new BodyKeySanitizer(new BodyKeySanitizerBody("value")
+    public override List<BodyKeySanitizer> BodyKeySanitizers
+    {
+        get
         {
-            Regex = "-----BEGIN PRIVATE KEY-----\\n(.+\\n)*-----END PRIVATE KEY-----\\n",
-            Value = "\"-----BEGIN PRIVATE KEY-----\\\\nREDACTED\\\\n-----END PRIVATE KEY-----\\\\n\""
-        })
-    };
+            return new List<BodyKeySanitizer>()
+            {
+                new BodyKeySanitizer(new BodyKeySanitizerBody("value")
+                {
+                    Value = _importCertificateAssets.PfxBase64
+                }),
+                new BodyKeySanitizer(new BodyKeySanitizerBody("cer")
+                {
+                    Value = _importCertificateAssets.CerBase64
+                }),
+                new BodyKeySanitizer(new BodyKeySanitizerBody("csr")
+                {
+                    Value = _importCertificateAssets.CsrBase64
+                })
+            };
+        }
+    }
 
     // Disable `$..id` sanitizer as it interferes with Key Vault tests
     // This will LIKELY become a global disable exclusion in the future.
@@ -210,21 +225,11 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     [CustomMatcher(compareBody: false)]
     public async Task Should_import_certificate()
     {
-        // Generate a self-signed certificate and export to a temporary PFX file with a password
-        var fakePassword = "fakePassword";
-        using var rsa = RSA.Create(2048);
-        var subject = $"CN=Imported-{Guid.NewGuid()}";
-        var request = new CertificateRequest(subject, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        request.CertificateExtensions.Add(new X509BasicConstraintsExtension(false, false, 0, false));
-        request.CertificateExtensions.Add(new X509SubjectKeyIdentifierExtension(request.PublicKey, false));
-        using var generated = request.CreateSelfSigned(DateTimeOffset.UtcNow.AddDays(-1), DateTimeOffset.UtcNow.AddYears(1));
-
-        var pfxBytes = generated.Export(X509ContentType.Pkcs12, fakePassword);
-        var tempPath = Path.Combine(Path.GetTempPath(), $"import-{Guid.NewGuid()}.pfx");
+        var fakePassword = _importCertificateAssets.Password;
+        var tempPath = _importCertificateAssets.CreateTempCopy();
 
         try
         {
-            await File.WriteAllBytesAsync(tempPath, pfxBytes, TestContext.Current.CancellationToken);
             var certificateName = "certificateimport" + Random.Shared.NextInt64();
 
             RegisterVariable("certificateName", certificateName);
@@ -285,6 +290,68 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             var property = result.AssertProperty(propertyName);
             Assert.Equal(JsonValueKind.String, property.ValueKind);
             Assert.NotNull(property.GetString());
+        }
+    }
+
+    private static class KeyVaultTestCertificates
+    {
+        public const string ImportCertificatePassword = "fakePassword";
+        private const string ImportCertificateFileName = "fake-pfx.pfx";
+
+        public static KeyVaultTestCertificateAssets Load()
+        {
+            var pfxPath = Path.Join(AppContext.BaseDirectory, "TestResources", ImportCertificateFileName);
+            if (!File.Exists(pfxPath))
+            {
+                throw new FileNotFoundException($"Test certificate PFX file not found at: {pfxPath}", pfxPath);
+            }
+
+            var pfxBytes = File.ReadAllBytes(pfxPath);
+            var pfxBase64 = Convert.ToBase64String(pfxBytes);
+
+            using var certificate = new X509Certificate2(
+                pfxBytes,
+                ImportCertificatePassword,
+                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.EphemeralKeySet);
+
+            var cerBytes = certificate.Export(X509ContentType.Cert);
+            var cerBase64 = Convert.ToBase64String(cerBytes);
+            var csrBase64 = CreateCertificateSigningRequest(certificate);
+
+            return new KeyVaultTestCertificateAssets(
+                ImportCertificatePassword,
+                pfxPath,
+                pfxBase64,
+                cerBase64,
+                csrBase64);
+        }
+
+        private static string CreateCertificateSigningRequest(X509Certificate2 certificate)
+        {
+            using RSA? rsa = certificate.GetRSAPrivateKey();
+            if (rsa is null)
+            {
+                throw new InvalidOperationException("The test certificate must contain an RSA private key.");
+            }
+
+            var request = new CertificateRequest(certificate.SubjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
+            var csrBytes = request.CreateSigningRequest();
+            return Convert.ToBase64String(csrBytes);
+        }
+    }
+
+    private sealed record KeyVaultTestCertificateAssets(
+        string Password,
+        string PfxPath,
+        string PfxBase64,
+        string CerBase64,
+        string CsrBase64)
+    {
+        public string CreateTempCopy()
+        {
+            var tempPath = Path.Combine(Path.GetTempPath(), $"import-{Guid.NewGuid()}.pfx");
+            File.Copy(PfxPath, tempPath, overwrite: true);
+            return tempPath;
         }
     }
 }
