@@ -16,6 +16,7 @@ using Microsoft.Extensions.Options;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -23,7 +24,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
-    private string RecordingId { get; set; } = string.Empty;
+    protected string RecordingId { get; private set; } = string.Empty;
 
     /// <summary>
     /// When true, a set of default "additional" sanitizers will be registered. Currently includes:
@@ -98,7 +99,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     }
 
     // used to resolve a recording "path" given an invoking test
-    protected static readonly RecordingPathResolver _pathResolver = new();
+    protected static readonly RecordingPathResolver PathResolver = new();
 
     protected virtual bool IsAsync => false;
 
@@ -143,7 +144,6 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
         {
             return;
         }
-
         // Use reflection to find the test method on the derived class
         var testMethod = GetType().GetMethod(methodName);
         if (testMethod == null)
@@ -153,7 +153,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         var attr = testMethod.GetCustomAttribute<CustomMatcherAttribute>();
         if (attr != null)
-        {
+        { 
             var matcher = new CustomDefaultMatcher
             {
                 IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
@@ -305,7 +305,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         var testName = TryGetCurrentTestName();
         var pathToRecording = GetSessionFilePath(testName);
-        var assetsPath = _pathResolver.GetAssetsJson(GetType());
+        var assetsPath = PathResolver.GetAssetsJson(GetType());
 
         var recordOptions = new Dictionary<string, string>
         {
@@ -404,7 +404,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     private string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
+        var dir = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
         var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;

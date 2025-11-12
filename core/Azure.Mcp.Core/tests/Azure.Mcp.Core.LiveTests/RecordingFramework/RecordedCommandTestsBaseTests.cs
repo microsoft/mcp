@@ -60,7 +60,7 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         };
 
         await playbackHarness.InitializeAsync();
-        recordingId = GetRecordingId(playbackHarness);
+        recordingId = playbackHarness.GetRecordingId();
         await playbackHarness.DisposeAsync();
 
         CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
@@ -107,15 +107,6 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.True(playbackHarness.Variables.TryGetValue("roundtrip", out var variableValue));
         Assert.Equal("value", variableValue);
         await playbackHarness.DisposeAsync();
-    }
-
-    private string GetRecordingId(RecordedCommandTestsBase harness)
-    {
-        var property = typeof(RecordedCommandTestsBase).GetProperty(
-            "RecordingId",
-            BindingFlags.Instance | BindingFlags.NonPublic);
-
-        return property?.GetValue(harness) as string ?? string.Empty;
     }
 
     public ValueTask InitializeAsync()
