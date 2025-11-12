@@ -21,7 +21,8 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
     public async Task<IEnumerable<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -33,7 +34,7 @@ public class GrafanaService(ISubscriptionService subscriptionService, ITenantSer
                 subscription,
                 retryPolicy,
                 ConvertToWorkspaceModel,
-                cancellationToken: CancellationToken.None);
+                cancellationToken: cancellationToken);
 
             return workspaces;
         }

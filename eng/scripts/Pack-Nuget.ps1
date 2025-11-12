@@ -412,7 +412,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
     $description = $server.dnxDescription ? $server.dnxDescription : $server.description
     $iconFileName = Split-Path $server.packageIcon -Leaf
 
-    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native }
+    $filteredPlatforms = $server.platforms | Where-Object { $_.native -eq $native -and -not $_.specialPurpose }
     if ($filteredPlatforms.Count -eq 0) {
         LogInfo "No platforms to build for server $($server.name) with native=$native"
         return

@@ -70,7 +70,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -90,7 +90,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -114,7 +114,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -137,7 +137,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -159,7 +159,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -183,7 +183,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -207,7 +207,7 @@ public class ServerDeleteCommandTests
         var parseResult = _commandDefinition.Parse("--subscription sub --resource-group rg --server testserver --force");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

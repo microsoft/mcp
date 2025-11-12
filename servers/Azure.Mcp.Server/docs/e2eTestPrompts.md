@@ -2,12 +2,24 @@
 
 This file contains prompts used for end-to-end testing to ensure each tool is invoked properly by MCP clients. The tables are organized by Azure MCP Server areas in alphabetical order, with Tool Names sorted alphabetically within each table.
 
+## Azure AI Best Practices
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| azureaibestpractices_get | Get best practices for building AI applications in Azure |
+| azureaibestpractices_get | Show me the best practices for Azure AI Foundry agents code generation |
+| azureaibestpractices_get | Get guidance for building agents with Azure AI Foundry |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
+| azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Azure AI Foundry |
+
 ## Azure AI Foundry
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
 | foundry_agents_connect | Query an agent in my Azure AI foundry resource |
+| foundry_agents_create | Create a new Azure AI Foundry agent using instructions in the active editor |
 | foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| foundry_agents_get-sdk-sample | Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK |
 | foundry_agents_list | List all agents in my Azure AI Foundry resource |
 | foundry_agents_list | Show me the available agents in my Azure AI Foundry resource |
 | foundry_agents_query-and-evaluate | Query and evaluate an agent in my Azure AI Foundry resource for task_adherence |
@@ -29,6 +41,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | foundry_resource_get | List all AI Foundry resources in my subscription |
 | foundry_resource_get | Show me the AI Foundry resources in resource group <resource_group_name> |
 | foundry_resource_get | Get details for AI Foundry resource <resource_name> in resource group <resource_group_name> |
+| foundry_threads_create | Create an Azure AI Foundry thread to hold the conversation |
+| foundry_threads_get-messages | Show me the messages in the AI Foundry thread with id <thread_id> |
+| foundry_threads_list | List my AI Foundry threads |
 
 ## Azure AI Search
 
@@ -76,6 +91,16 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | speech_stt_recognize | Transcribe audio using multiple phrase hints: "Azure", "cognitive services", "machine learning" |
 | speech_stt_recognize | Convert speech to text with comma-separated phrase hints: "Azure, cognitive services, API" |
 | speech_stt_recognize | Transcribe audio with raw profanity output from file <file_path> |
+| speech_tts_synthesize | Convert text to speech and save to output.wav |
+| speech_tts_synthesize | Synthesize speech from "Hello, welcome to Azure" and save to welcome.wav |
+| speech_tts_synthesize | Generate speech audio from text "Hello world" using Azure Speech Services |
+| speech_tts_synthesize | Convert text to speech with Spanish language and save to spanish-audio.wav |
+| speech_tts_synthesize | Synthesize speech with voice en-US-JennyNeural from text "Azure AI Services" |
+| speech_tts_synthesize | Create MP3 audio file from text "Welcome to Azure" with high quality format |
+| speech_tts_synthesize | Generate speech with custom voice model using endpoint ID <endpoint-id> |
+| speech_tts_synthesize | Convert text to OGG/Opus format audio file |
+| speech_tts_synthesize | Synthesize long text content to audio file with streaming |
+| speech_tts_synthesize | Create audio file from text in French language with appropriate voice |
 
 ## Azure App Configuration
 
@@ -132,7 +157,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | extension_cli_generate | Create a Storage account with name <storage_account_name> using Azure CLI |
 | extension_cli_generate | List all virtual machines in my subscription using Azure CLI |
 | extension_cli_generate | Show me the details of the storage account <account_name> with Azure CLI commands |
-| extension_cli_install | <uninstall az cli on your machine and run test prompts for extension_cli_generate> |
+| extension_cli_install | <Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate> |
 | extension_cli_install | How to install azd |
 | extension_cli_install | What is Azure Functions Core tools and how to install it |
 

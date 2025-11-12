@@ -22,11 +22,11 @@ public class ResourceGroupService(
     private const string CacheKey = "resourcegroups";
     private static readonly TimeSpan s_cacheDuration = TimeSpan.FromHours(1);
 
-    public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<ResourceGroupInfo>> GetResourceGroups(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
@@ -41,12 +41,12 @@ public class ResourceGroupService(
         try
         {
             var resourceGroups = await subscriptionResource.GetResourceGroups()
-                .GetAllAsync()
+                .GetAllAsync(cancellationToken: cancellationToken)
                 .Select(rg => new ResourceGroupInfo(
                     rg.Data.Name,
                     rg.Data.Id.ToString(),
                     rg.Data.Location.ToString()))
-                .ToListAsync();
+                .ToListAsync(cancellationToken: cancellationToken);
 
             // Cache the results
             await _cacheService.SetAsync(CacheGroup, cacheKey, resourceGroups, s_cacheDuration);
@@ -59,11 +59,11 @@ public class ResourceGroupService(
         }
     }
 
-    public async Task<ResourceGroupInfo?> GetResourceGroup(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<ResourceGroupInfo?> GetResourceGroup(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var subscriptionId = subscriptionResource.Data.SubscriptionId;
 
         // Try to get from cache first
@@ -76,7 +76,7 @@ public class ResourceGroupService(
 
         try
         {
-            var rg = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy);
+            var rg = await GetResourceGroupResource(subscription, resourceGroupName, tenant, retryPolicy, cancellationToken);
             if (rg == null)
             {
                 return null;
@@ -93,15 +93,15 @@ public class ResourceGroupService(
         }
     }
 
-    public async Task<ResourceGroupResource?> GetResourceGroupResource(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<ResourceGroupResource?> GetResourceGroupResource(string subscription, string resourceGroupName, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroupName), resourceGroupName));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var resourceGroupResponse = await subscriptionResource.GetResourceGroups()
-                .GetAsync(resourceGroupName)
+                .GetAsync(resourceGroupName, cancellationToken)
                 .ConfigureAwait(false);
 
             return resourceGroupResponse?.Value;

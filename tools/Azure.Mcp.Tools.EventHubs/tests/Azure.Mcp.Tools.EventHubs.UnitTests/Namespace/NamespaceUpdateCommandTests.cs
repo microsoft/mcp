@@ -93,7 +93,7 @@ public class NamespaceUpdateCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -144,7 +144,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -197,7 +197,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -245,7 +245,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -264,7 +264,7 @@ public class NamespaceUpdateCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -308,7 +308,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -359,7 +359,7 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -395,7 +395,7 @@ public class NamespaceUpdateCommandTests
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -433,7 +433,7 @@ public class NamespaceUpdateCommandTests
             .Returns(updatedNamespace);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

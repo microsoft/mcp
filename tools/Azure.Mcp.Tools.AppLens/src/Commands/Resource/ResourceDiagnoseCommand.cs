@@ -60,7 +60,7 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -82,7 +82,8 @@ public sealed class ResourceDiagnoseCommand(ILogger<ResourceDiagnoseCommand> log
                 options.Subscription!,
                 options.ResourceGroup,
                 options.ResourceType,
-                options.Tenant);
+                options.Tenant,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(result), AppLensJsonContext.Default.ResourceDiagnoseCommandResult);
         }

@@ -35,7 +35,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199"]);
 
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -82,7 +82,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199", "--collection-id", "my-collection"]);
 
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

@@ -58,7 +58,7 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -73,7 +73,8 @@ public sealed class KnowledgeIndexListCommand : GlobalCommand<KnowledgeIndexList
             var indexes = await service.ListKnowledgeIndexes(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), FoundryJsonContext.Default.KnowledgeIndexListCommandResult);
         }

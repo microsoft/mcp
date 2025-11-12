@@ -9,7 +9,7 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
-[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
@@ -22,6 +22,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
+        - [Visual Studio 2026](#visual-studio-2026)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
@@ -116,6 +117,14 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
 1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
+
+### Visual Studio 2026
+1. Download [Visual Studio 2026](https://visualstudio.microsoft.com/) or [Visual Studio 2026 Insiders](https://visualstudio.microsoft.com/insiders/) and install using the **Visual Studio Installer**.
+    - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
+1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
+1. Click **install while downloading** to complete the installation.
+   
+For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
 
@@ -343,11 +352,19 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ### 🧮 Azure AI Foundry
 
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
+* List AI Foundry models
+* Deploy AI Foundry models
+* List AI Foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
+* Create AI Foundry agents
+* List AI Foundry agents
+* Connect and query AI Foundry agents
+* Evaluate AI Foundry agents
+* Get SDK samples for interacting with AI Foundry agent
+* Create AI Foundry agent threads
+* List AI Foundry agent threads
+* Get messages of an AI Foundry thread
   
 ### 🔎 Azure AI Search
 
@@ -360,6 +377,9 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Recognize speech from my audio file with language detection"
 * "Transcribe speech from audio with profanity filtering"
 * "Transcribe audio with phrase hints for better accuracy"
+* "Convert text to speech and save to output.wav"
+* "Synthesize speech from 'Hello, welcome to Azure' with Spanish voice"
+* "Generate MP3 audio from text with high quality format"
 
 ### ⚙️ Azure App Configuration
 
@@ -501,7 +521,8 @@ The Azure MCP Server provides tools for interacting with **40+ Azure service are
 
 - 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
-- 🎤 **Azure AI Services Speech** - Speech-to-text recognition
+- 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
+- 🤖 **Azure AI Best Practices** - AI app development guidance for Azure AI Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance

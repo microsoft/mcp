@@ -67,7 +67,7 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -93,7 +93,8 @@ public sealed class ModelDeploymentCommand : SubscriptionCommand<ModelDeployment
                 options.SkuCapacity,
                 options.ScaleType,
                 options.ScaleCapacity,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deploymentResource), FoundryJsonContext.Default.ModelDeploymentCommandResult);
         }

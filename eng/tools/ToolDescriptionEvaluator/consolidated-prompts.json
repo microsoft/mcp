@@ -23,15 +23,16 @@
     "What is the status of function app <function_app_name>?"
   ],
   "add_azure_app_service_database": [
-    "Add a CosmosDB database to app service <app_name>",
-    "Add a database connection to my app service <app_name> in resource group <resource_group>",
-    "Add a MySQL database to app service <app_name>",
-    "Add a PostgreSQL database to app service <app_name>",
-    "Add database <database_name> on server <database_server> to app service <app_name>",
-    "Add database <database_name> with retry policy to app service <app_name>",
-    "Configure a SQL Server database for app service <app_name>",
-    "Configure tenant <tenant> for database <database_name> in app service <app_name>",
-    "Set connection string for database <database_name> in app service <app_name>"
+    "Add database connection <connection_string> for database <database_name> on server <database_server> to app service <app_name> in resource group <resource_group>",
+    "Add database connection <connection_string> to my app service <app_name> for database <database_name> in resource group <resource_group>",
+    "Add database connection string for <database_name> to app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Add MySQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Add PostgreSQL database <database_name> to app service <app_name> using connection <connection_string> in resource group <resource_group>",
+    "Configure database <database_name> for app service <app_name> with the connection string <connection_string> in resource group <resource_group>",
+    "Configure SQL Server database <database_name> for app service <app_name> with connection string <connection_string> in resource group <resource_group>",
+    "Connect CosmosDB database <database_name> using connection string <connection_string> to app service <app_name> in resource group <resource_group>",
+    "Connect database <database_name> to my app service <app_name> using connection string <connection_string> in resource group <resource_group>",
+    "Set up database <database_name> for app service <app_name> with connection string <connection_string> under resource group <resource_group>"
   ],
   "get_azure_databases_details": [
     "Display the properties of SQL server <server_name>",
@@ -197,12 +198,12 @@
     "Scan my Azure subscription for compliance recommendations"
   ],
   "generate_azure_cli_commands": [
-    "Get Azure CLI command to create a Storage account with name <storage_account_name>",
-    "Show me how to use Azure CLI to list all virtual machines in my subscription",
+    "Create a Storage account with name <storage_account_name> using Azure CLI",
+    "List all virtual machines in my subscription using Azure CLI",
     "Show me the details of the storage account <account_name> with Azure CLI commands"
   ],
   "install_azure_cli_extensions": [
-    "Get Azure CLI installation instructions",
+    "<Ask the MCP host to uninstall az cli on your machine and run test prompts for extension_cli_generate>",
     "How to install azd",
     "What is Azure Functions Core tools and how to install it"
   ],
@@ -277,6 +278,7 @@
     "Upload certificate file <file_path> to key vault <key_vault_account_name>"
   ],
   "get_azure_best_practices": [
+    "configure azure mcp in coding agent for my repo",
     "Fetch the Azure Terraform best practices",
     "Get the latest Azure best practices",
     "Get the latest Azure code generation best practices",
@@ -291,7 +293,7 @@
   ],
   "design_azure_architecture": [
     "Generate the azure architecture diagram for this application",
-    "Help me create a cloud service that will serve as ATM for users",
+    "Help me design an Azure cloud service that will serve as an ATM for users",
     "How can I design a cloud service in Azure that will store and present videos for users?",
     "I want to design a cloud app for ordering groceries",
     "Please help me design an architecture for a large-scale file upload, storage, and retrieval service"
@@ -315,11 +317,11 @@
     "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
     "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
     "Get the schema configuration for knowledge index <index-name>",
-    "List all agents in my AI Foundry project",
+    "List all agents in my Azure AI Foundry resource",
     "List all AI Foundry model deployments",
     "List all AI Foundry models",
     "List all AI Foundry resources in my subscription",
-    "List all available OpenAI models in my Azure resource",
+    "List all available OpenAI models in my Azure AI Foundry resource",
     "List all Cognitive Search services in my subscription",
     "List all indexes in the Cognitive Search service <service-name>",
     "List all knowledge bases in the Azure AI Search service <service-name>",
@@ -331,7 +333,7 @@
     "Show me all AI Foundry model deployments",
     "Show me my Cognitive Search services",
     "Show me the AI Foundry resources in resource group <resource_group_name>",
-    "Show me the available agents in my AI Foundry project",
+    "Show me the available agents in my Azure AI Foundry resource",
     "Show me the available AI Foundry models",
     "Show me the Cognitive Search services in my subscription",
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
@@ -343,8 +345,8 @@
     "Show me the knowledge source <source-name> in search service <service-name>",
     "Show me the knowledge sources in the Azure AI Search service <service-name>",
     "Show me the knowledge sources in the search service <service-name>",
-    "Show me the OpenAI model deployments",
-    "Show me the schema for knowledge index <index-name> in my AI Foundry project"
+    "Show me the OpenAI model deployments in my Azure AI Foundry resource",
+    "Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource"
   ],
   "retrieve_azure_ai_knowledge_base_content": [
     "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
@@ -356,16 +358,16 @@
     "What does knowledge base <agent-name> in search service <service-name> know about <query>"
   ],
   "use_azure_openai_models": [
-    "Create a chat completion with the message \"Hello, how are you today?\"",
-    "Create a completion with the prompt \"What is Azure?\"",
-    "Create vector embeddings for my text using Azure OpenAI",
-    "Generate embeddings for the text \"Azure OpenAI Service\""
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Azure AI Foundry resource",
+    "Create a completion with the prompt \"What is Azure?\" using my Azure AI Foundry resource",
+    "Create vector embeddings for my text using my Azure AI Foundry resource",
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Azure AI Foundry resource"
   ],
   "connect_azure_ai_foundry_agents": [
-    "Query an agent in my AI foundry project"
+    "Query an agent in my Azure AI foundry resource"
   ],
   "query_and_evaluate_azure_ai_foundry_agents": [
-    "Query and evaluate an agent in my AI Foundry project for task_adherence"
+    "Query and evaluate an agent in my Azure AI Foundry resource for task_adherence"
   ],
   "evaluate_azure_ai_foundry_agents": [
     "Evaluate the full query and response I got from my agent for task_adherence"
@@ -421,8 +423,10 @@
     "Show me the available regions for these resource types <resource_types>"
   ],
   "get_azure_messaging_service_details": [
+    "Get the details of my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Get the details of my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Get the details of my namespace <namespace_name> in my resource group <resource_group_name>",
+    "List all consumer groups in my event hub <event_hub_name> in namespace <namespace_name>",
     "List all Event Grid subscriptions in subscription <subscription>",
     "List all Event Grid topics in my subscription",
     "List all Event Grid topics in resource group <resource_group_name> in subscription <subscription>",
@@ -441,10 +445,13 @@
     "Show me the Event Grid topics in my subscription"
   ],
   "edit_azure_data_analytics_resources": [
+    "Create a new consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Create a new event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Create an new namespace <namespace_name> in my resource group <resource_group_name>",
+    "Delete my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Delete my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Delete my namespace <namespace_name> in my resource group <resource_group_name>",
+    "Update my consumer group <consumer_group_name> in my event hub <event_hub_name>, namespace <namespace_name>, and resource group <resource_group_name>",
     "Update my event hub <event_hub_name> in my namespace <namespace_name> and resource group <resource_group_name>",
     "Update my namespace <namespace_name> in my resource group <resource_group_name>"
   ],

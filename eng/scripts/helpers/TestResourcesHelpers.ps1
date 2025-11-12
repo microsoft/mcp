@@ -56,6 +56,7 @@ function New-TestSettings {
             # Force CustomChainedCredential to use AzurePowerShellCredential to avoid cross-tenant auth issues
             "AZURE_TOKEN_CREDENTIALS" = "AzurePowerShellCredential"
         }
+        TestMode = "Live"
     }
 
     # Add DeploymentOutputs if provided

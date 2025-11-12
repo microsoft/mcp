@@ -2,22 +2,76 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.2 (Unreleased)
+## 2.0.0-beta.4 (Unreleased)
 
 ### Features Added
-
-- Add support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable [[#1030](https://github.com/microsoft/mcp/issues/1030)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
 
-- Avoid spawning child processes per namespace for consolidated mode [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+### Other Changes
+
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+- Upgraded dependency version of coverlet.collector from 6.0.2 to 6.0.4. [[#1153](https://github.com/microsoft/mcp/pull/1153)]
+
+## 2.0.0-beta.3 (2025-11-11)
+
+### Features Added
+
+- Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Azure AI Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
+- Added support for text-to-speech synthesis via the command `speech_tts_synthesize`. [[#902](https://github.com/microsoft/mcp/pull/902)]
+
+### Breaking Changes
+
+- PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `man-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
+
+### Bugs Fixed
+
+- Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in agent learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
+- Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 
 ### Other Changes
 
-- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
-- Support for exporting telemetry to OTLP exporters by configuring environment with `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into a shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+
+## 2.0.0-beta.2 (2025-11-06)
+
+### Features Added
+
+- Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
+- Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
+- Added the following features for deploying as a `Remote MCP Server`:
+    - Added support for HTTP transport, including both incoming and outgoing authentication. Incoming authentication uses Entra ID, while outgoing authentication can either use Entra On-Behalf-Of (OBO) or the authentication configured in the host environment. [[#1020](https://github.com/microsoft/mcp/pull/1020)]
+    - Added support for the `--dangerously-disable-http-incoming-auth` command-line option to disable the built-in incoming authentication. Use this option only if you plan to provide your own incoming authentication mechanism, and with caution, as it exposes the server to unauthenticated access. [[#1037](https://github.com/microsoft/mcp/pull/1037)]
+- Enhanced the `tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
+  - Added the `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault').
+  - Added the `--name-only` option to return only tool names without descriptions or metadata.
+- Added the following AI Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
+  - `foundry_agents_create`: Create a new AI Foundry agent.
+  - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the AI Foundry SDK.
+  - `foundry_threads_create`: Create a new AI Foundry Agent Thread.
+  - `foundry_threads_list`: List all AI Foundry Agent Threads.
+  - `foundry_threads_get-messages`: Get messages in an AI Foundry Agent Thread.
+
+### Breaking Changes
+
+- Renamed the `--namespaces` option to `--namespace-mode` in the `tools list` command for better clarity when listing top-level service namespaces. [[#741](https://github.com/microsoft/mcp/pull/741)]
+
+### Bugs Fixed
+
+- Fixed an issue that spawned child processes per namespace for consolidated mode. [[#1002](https://github.com/microsoft/mcp/pull/1002)]
+- Improved the agent learning experience by ignoring the `command` parameter, which resulted in neither learning nor a tool call to happen. Learning is now always invoked when `learn=true` is passed. [[#1057](https://github.com/microsoft/mcp/pull/1057)]
+- Added descriptions to tool metadata to ensure enough information is present in the CLI to generate docs for metadata. [[#1043](https://github.com/microsoft/mcp/pull/1043)]
+
+### Other Changes
+
+- Added a `CancellationToken` parameter to `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Telemetry:
+  - Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+  - Added support for exporting telemetry to OTLP exporters by configuring the environment variable `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
+  - Disabled telemetry for the HTTP transport. [[#1072](https://github.com/microsoft/mcp/pull/1072)]
 
 ## 2.0.0-beta.1 (2025-10-29)
 
@@ -35,7 +89,7 @@ The Azure MCP Server now offers:
 
 - **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
-- **Flexible Server Modes**: 
+- **Flexible Server Modes**:
   - Namespace mode (default): Organizes tools by service for easy discovery
   - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
   - Single mode: All tools behind one unified "azure" tool

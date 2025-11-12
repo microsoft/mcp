@@ -807,7 +807,7 @@
     },
     {
       "name": "add",
-      "description": "Add a database connection to an App Service. This command configures database connection\r\nsettings for the specified App Service, allowing it to connect to a database server.",
+      "description": "Add a database connection for an App Service using connection string for an existing database. This command configures database connection\r\nsettings for the specified App Service, allowing it to connect to a database server name. You must specify the App Service name, database name,\r\ndatabase type, database server name, connection string, resource group name and subscription.",
       "command": "appservice database add",
       "option": [
         {
@@ -3118,7 +3118,80 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "    Creates an AI Foundry Agent that processes messages according to a given system instruction using an existing AI Foundry model deployment.",
+      "command": "foundry agents create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--model-deployment",
+          "description": "Name of the model deployment",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--agent-name",
+          "description": "A human-readable name of the Agent",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--system-instruction",
+          "description": "System instruction for the agent to follow when process messages",
           "type": "string",
           "required": true
         }
@@ -3210,8 +3283,21 @@
       ]
     },
     {
+      "name": "get-sdk-sample",
+      "description": "Get code samples to interact with a Foundry Agent using AI Foundry SDK and programming language of your choice.",
+      "command": "foundry agents get-sdk-sample",
+      "option": [
+        {
+          "name": "--programming-language",
+          "description": "The programming language of the sdk for interacting with a Foundry Agent. Supported values are csharp, python and typescript.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "list",
-      "description": "List all Azure AI Agents available in the configured project.",
+      "description": "List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, \r\nevaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).",
       "command": "foundry agents list",
       "option": [
         {
@@ -3258,7 +3344,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3325,7 +3411,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
           "type": "string",
           "required": true
         },
@@ -3351,7 +3437,7 @@
     },
     {
       "name": "list",
-      "description": "Retrieves a list of knowledge indexes from Azure AI Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\n\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
+      "description": "Retrieves a list of knowledge indexes from Azure AI Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\nRequires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
       "command": "foundry knowledge index list",
       "option": [
         {
@@ -3398,7 +3484,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3453,7 +3539,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
           "type": "string",
           "required": true
         },
@@ -3588,7 +3674,7 @@
     },
     {
       "name": "list",
-      "description": "Lists Azure AI Foundry (Cognitive Services) model deployments at a given account endpoint and shows currently provisioned model deployments. Use to audit what is deployed before invoking or creating new deployments. Do not use this tool to discover undeployed catalog/base models - instead, use models_list tool.",
+      "description": "List model deployments in an Azure AI Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. \r\nUse this to audit what models are deployed before invoking or creating new deployments. Requires the project \r\nendpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists \r\ndeployed models only - use models_list to discover available catalog/base models.",
       "command": "foundry models deployments list",
       "option": [
         {
@@ -3635,7 +3721,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI service.",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3716,7 +3802,7 @@
     },
     {
       "name": "chat-completions-create",
-      "description": "Create interactive chat completions using Azure OpenAI chat models. This tool processes conversational \r\ninputs with message history and system instructions to generate contextual responses. Returns chat \r\nresponse as JSON. Requires resource-name, deployment-name, and message-array.",
+      "description": "Create chat completions using Azure OpenAI in AI Foundry. Send messages to Azure OpenAI chat models deployed \r\nin your AI Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations \r\nwith message history, system instructions, and response customization. Use this when you need to create chat \r\ncompletions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI. \r\nRequires resource-name, deployment-name, and message-array.",
       "command": "foundry openai chat-completions-create",
       "option": [
         {
@@ -3849,7 +3935,7 @@
     },
     {
       "name": "create-completion",
-      "description": "Generate text completions using deployed Azure OpenAI models in AI Foundry. This tool sends prompts to Azure OpenAI \r\ncompletion models and returns generated text with configurable parameters like temperature and max tokens. \r\nReturns completion text as JSON. Requires resource-name, deployment-name, and prompt-text.",
+      "description": "Create text completions using Azure OpenAI in AI Foundry. Send a prompt or question to Azure OpenAI models \r\ndeployed in your AI Foundry resource and receive generated text answers. Use this when you need to create \r\ncompletions, get AI-generated content, generate answers to questions, or produce text completions from Azure \r\nOpenAI based on any input prompt. Supports customization with temperature and max tokens. \r\nRequires resource-name, deployment-name, and prompt-text.",
       "command": "foundry openai create-completion",
       "option": [
         {
@@ -3940,7 +4026,7 @@
     },
     {
       "name": "embeddings-create",
-      "description": "Generate vector embeddings for text using Azure OpenAI embedding models. This tool converts text into \r\nhigh-dimensional vector representations for similarity search and machine learning applications. \r\nReturns embedding vectors as JSON array. Requires resource-name, deployment-name, and input-text.",
+      "description": "Create embeddings using Azure OpenAI in AI Foundry. Generate vector embeddings from text using Azure OpenAI \r\ndeployments in your AI Foundry resource for semantic search, similarity comparisons, clustering, or machine \r\nlearning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to \r\nnumerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.",
       "command": "foundry openai embeddings-create",
       "option": [
         {
@@ -4037,7 +4123,7 @@
     },
     {
       "name": "models-list",
-      "description": "List all available OpenAI models and deployments in an Azure resource. This tool retrieves information about \r\ndeployed models including model names, versions, capabilities, and deployment status. \r\nReturns model information as JSON array. Requires resource-name.",
+      "description": "List all available Azure OpenAI models and deployments in an AI Foundry resource. This tool retrieves information \r\nabout Azure OpenAI models deployed in your AI Foundry resource including model names, versions, capabilities, \r\nand deployment status. Use this when you need to see what OpenAI models are available, check model deployments, \r\nor list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.",
       "command": "foundry openai models-list",
       "option": [
         {
@@ -4170,6 +4256,183 @@
       ]
     },
     {
+      "name": "create",
+      "description": "    Creates an AI Foundry Agent Thread that holds the messages between the Agent and the user.",
+      "command": "foundry threads create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user-message",
+          "description": "The user message to add to the thread",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get-messages",
+      "description": "    Get messages in an AI Foundry Agent Thread.",
+      "command": "foundry threads get-messages",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--thread-id",
+          "description": "The Foundry Agent Thread Id",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "    List AI Foundry Agent Threads.",
+      "command": "foundry threads list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "get",
       "description": "Gets Azure Function App details. Lists all Function Apps in the subscription or resource group.  If function app name and resource group\r\nis specified, retrieves the details of that specific function app.  Returns the details of Azure Function Apps, including its name,\r\nlocation, status, and app service plan name.",
       "command": "functionapp get",
@@ -4243,13 +4506,13 @@
       "option": [
         {
           "name": "--resource",
-          "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps).",
+          "description": "The Azure resource type for which to get best practices. Options: 'general' (general Azure), 'azurefunctions' (Azure Functions), 'static-web-app' (Azure Static Web Apps), 'coding-agent' (Coding Agent).",
           "type": "string",
           "required": true
         },
         {
           "name": "--action",
-          "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' resource only supports 'all'.",
+          "description": "The action type for the best practices. Options: 'all', 'code-generation', 'deployment'. Note: 'static-web-app' and 'coding-agent' resources only supports 'all'.",
           "type": "string",
           "required": true
         }
@@ -6260,7 +6523,7 @@
     {
       "name": "create",
       "description": "Create an Azure Managed Lustre (AMLFS) file system using the specified network, capacity, maintenance window and availability zone.\r\nOptionally provides possibility to define Blob Integration, customer managed key encryption and root squash configuration.",
-      "command": "managedlustre filesystem create",
+      "command": "managedlustre fs create",
       "option": [
         {
           "name": "--tenant",
@@ -6435,7 +6698,7 @@
     {
       "name": "list",
       "description": "Lists Azure Managed Lustre (AMLFS) file systems in a subscription or optional resource group including provisioning state, MGS address, tier, capacity (TiB), blob integration container, and maintenance window details. Use to inventory Azure Managed Lustre filesystems and to check their properties.",
-      "command": "managedlustre filesystem list",
+      "command": "managedlustre fs list",
       "option": [
         {
           "name": "--tenant",
@@ -6496,7 +6759,7 @@
     {
       "name": "get",
       "description": "Retrieves the available Azure Managed Lustre SKU, including increments, bandwidth, scale targets and zonal support. If a location is specified, the results will be filtered to that location.",
-      "command": "managedlustre filesystem sku get",
+      "command": "managedlustre fs sku get",
       "option": [
         {
           "name": "--tenant",
@@ -6557,7 +6820,7 @@
     {
       "name": "ask",
       "description": "Calculates the required subnet size for an Azure Managed Lustre file system given a SKU and size. Use to plan network deployment for AMLFS. Returns the number of required IPs.",
-      "command": "managedlustre filesystem subnetsize ask",
+      "command": "managedlustre fs subnetsize ask",
       "option": [
         {
           "name": "--tenant",
@@ -6624,7 +6887,7 @@
     {
       "name": "validate",
       "description": "Validates that the provided subnet can host an Azure Managed Lustre filesystem for the given SKU and size.",
-      "command": "managedlustre filesystem subnetsize validate",
+      "command": "managedlustre fs subnetsize validate",
       "option": [
         {
           "name": "--tenant",
@@ -6703,7 +6966,7 @@
     {
       "name": "update",
       "description": "Update maintenance window and/or root squash settings of an existing Azure Managed Lustre (AMLFS) file system. Provide either maintenance day and time or root squash fields (no-squash-nid-list, squash-uid, squash-gid). Root squash fields must be provided if root squash is not None. In case of maintenance window update, both maintenance day and maintenance time should be provided.",
-      "command": "managedlustre filesystem update",
+      "command": "managedlustre fs update",
       "option": [
         {
           "name": "--tenant",
@@ -7101,9 +7364,9 @@
       ]
     },
     {
-      "name": "gethealth",
+      "name": "get",
       "description": "Retrieve the health status of an entity for a given Azure Monitor Health Model. Use this tool ONLY when the user mentions a specific health model name and asks for health status, health events. This provides application-level health monitoring with custom health models, not basic Azure resource availability.\r\nFor basic Azure resource availability status, use Resource Health tool instead `azmcp_resourcehealth_availability-status_get`.  \r\nFor querying logs from a Log Analystics workspace, use `azmcp_monitor_workspace_log_query`.  \r\nFor querying logs of a specific Azure resource, use `azmcp_monitor_resource_log_query`. \r\nRequired arguments:\r\n    - --entity: The entity to get health for\r\n    - --health-model: The health model name",
-      "command": "monitor healthmodels entity gethealth",
+      "command": "monitor healthmodels entity get",
       "option": [
         {
           "name": "--tenant",
@@ -9701,7 +9964,7 @@
     },
     {
       "name": "get",
-      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.\r\nIf health model is provided, don't use this command, instead use monitor_healthmodels_entity_gethealth tool.",
+      "description": "Get the current availability status or health status of a specific Azure resource to diagnose health issues. Works with storage_account_name, virtual machine, resource group, subscription, and other Azure types. It provides detailed information about resource availability state, potential issues, and timestamps.\r\nIf health model is provided, don't use this command, instead use monitor_healthmodels_entity_get tool.",
       "command": "resourcehealth availability-status get",
       "option": [
         {
@@ -9824,7 +10087,7 @@
     {
       "name": "list",
       "description": "List Azure service health events to track service issues that occurred in recent timeframes (last 30 days, weeks, months). Query subscription for planned maintenance, past or ongoing service incidents, advisories, and security events. Provides detailed information about resource availability state, potential issues, and timestamps. Returns: trackingId, title, summary, eventType, status, startTime, endTime, impactedServices. Access Azure Service Health portal data programmatically.",
-      "command": "resourcehealth service-health-events list",
+      "command": "resourcehealth health-events list",
       "option": [
         {
           "name": "--tenant",
@@ -10704,13 +10967,110 @@
         },
         {
           "name": "--format",
-          "description": "Output format: simple or detailed. Default is simple.",
+          "description": "Output format: simple or detailed.",
           "type": "string",
           "required": null
         },
         {
           "name": "--profanity",
           "description": "Profanity filter: masked, removed, or raw. Default is masked.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "synthesize",
+      "description": "Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.\r\nOptional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.\r\nThe command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.",
+      "command": "speech tts synthesize",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--text",
+          "description": "The text to convert to speech.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--outputAudio",
+          "description": "Path where the synthesized audio file will be saved.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--language",
+          "description": "The language for speech recognition (e.g., en-US, es-ES). Default is en-US.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--voice",
+          "description": "The voice to use for speech synthesis (e.g., en-US-JennyNeural). If not specified, the default voice for the language will be used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--format",
+          "description": "Output format: simple or detailed.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpointId",
+          "description": "The endpoint ID of a custom voice model for speech synthesis.",
           "type": "string",
           "required": null
         }
@@ -12354,69 +12714,8 @@
     },
     {
       "name": "list",
-      "description": "List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available\r\nin the specified Option`1: --subscription. If a resource group is specified, only hostpools in that resource group are returned.\r\nResults include hostpool names and are returned as a JSON array.",
-      "command": "virtualdesktop hostpool list",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
-        }
-      ]
-    },
-    {
-      "name": "list",
       "description": "List all SessionHosts in a hostpool. This command retrieves all Azure Virtual Desktop SessionHost objects available\r\nin the specified Option`1: --subscription and hostpool. Results include SessionHost details and are\r\nreturned as a JSON array.",
-      "command": "virtualdesktop hostpool sessionhost list",
+      "command": "virtualdesktop hostpool host list",
       "option": [
         {
           "name": "--tenant",
@@ -12487,9 +12786,9 @@
       ]
     },
     {
-      "name": "usersession-list",
+      "name": "user-list",
       "description": "List all user sessions on a specific session host in a host pool. This command retrieves all Azure Virtual Desktop\r\nuser session objects available on the specified session host. Results include user session details such as\r\nuser principal name, session state, application type, and creation time.",
-      "command": "virtualdesktop hostpool sessionhost usersession-list",
+      "command": "virtualdesktop hostpool host user-list",
       "option": [
         {
           "name": "--tenant",
@@ -12562,6 +12861,67 @@
           "description": "The name of the session host. This is the computer name of the virtual machine in the host pool.",
           "type": "string",
           "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "List all hostpools in a subscription or resource group. This command retrieves all Azure Virtual Desktop hostpool objects available\r\nin the specified Option`1: --subscription. If a resource group is specified, only hostpools in that resource group are returned.\r\nResults include hostpool names and are returned as a JSON array.",
+      "command": "virtualdesktop hostpool list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -12902,5 +13262,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 67
+  "duration": 56
 }

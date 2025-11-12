@@ -61,7 +61,8 @@ public class ServiceHealthEventsListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(mockEvents));
         }
 
@@ -77,7 +78,7 @@ public class ServiceHealthEventsListCommandTests
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -111,13 +112,14 @@ public class ServiceHealthEventsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(mockEvents));
 
         var parsedArgs = _commandDefinition.Parse(["--subscription", "sub123"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -139,13 +141,14 @@ public class ServiceHealthEventsListCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>()))
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>()))
             .Do(x => throw new InvalidOperationException(expectedError));
 
         var parsedArgs = _commandDefinition.Parse(["--subscription", "nonexistent-sub"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -162,7 +165,7 @@ public class ServiceHealthEventsListCommandTests
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert - Should have proper structure even if empty results
         Assert.NotNull(response);

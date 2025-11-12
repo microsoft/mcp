@@ -16,6 +16,7 @@ namespace Azure.Mcp.Tests.Client.Helpers
         {
             var testSettingsFileName = ".testsettings.json";
             var directory = Path.GetDirectoryName(typeof(LiveTestSettingsFixture).Assembly.Location);
+
             while (!string.IsNullOrEmpty(directory))
             {
                 var testSettingsFilePath = Path.Combine(directory, testSettingsFileName);
@@ -23,7 +24,13 @@ namespace Azure.Mcp.Tests.Client.Helpers
                 {
                     var content = await File.ReadAllTextAsync(testSettingsFilePath);
 
-                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content)
+                    var options = new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true,
+                        Converters = { new System.Text.Json.Serialization.JsonStringEnumConverter() }
+                    };
+
+                    Settings = JsonSerializer.Deserialize<LiveTestSettings>(content, options)
                         ?? throw new Exception("Unable to deserialize live test settings");
 
                     foreach (var (key, value) in Settings.EnvironmentVariables)
@@ -47,7 +54,7 @@ namespace Azure.Mcp.Tests.Client.Helpers
         {
             const string GraphScopeUri = "https://graph.microsoft.com/.default";
             var credential = new CustomChainedCredential(Settings.TenantId);
-            AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([GraphScopeUri]), CancellationToken.None);
+            AccessToken token = await credential.GetTokenAsync(new TokenRequestContext([GraphScopeUri]), TestContext.Current.CancellationToken);
             var jsonToken = new JwtSecurityToken(token.Token);
 
             var claims = JsonSerializer.Serialize(jsonToken.Claims.Select(x => x.Type));

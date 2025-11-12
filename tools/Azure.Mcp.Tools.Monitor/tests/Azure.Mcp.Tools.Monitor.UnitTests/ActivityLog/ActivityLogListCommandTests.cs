@@ -77,12 +77,13 @@ public sealed class ActivityLogListCommandTests
                 Arg.Any<ActivityLogEventLevel?>(),
                 Arg.Any<int>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(testActivityLogs);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);
@@ -132,11 +133,12 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedActivityLogs);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)200, response.Status);
@@ -152,7 +154,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.ActivityLogListCommandResult);
@@ -178,11 +181,12 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(new List<ActivityLogEventData>());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)200, response.Status);
@@ -208,11 +212,12 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<ActivityLogEventData>>(new Exception("Test error")));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-name {_knownResourceName}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal((HttpStatusCode)500, response.Status);
@@ -239,7 +244,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(new List<ActivityLogEventData>
             {
                 new()
@@ -254,7 +260,7 @@ public sealed class ActivityLogListCommandTests
             });
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? (HttpStatusCode)200 : (HttpStatusCode)400, response.Status);

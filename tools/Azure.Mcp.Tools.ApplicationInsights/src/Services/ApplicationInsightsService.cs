@@ -64,14 +64,14 @@ public class ApplicationInsightsService(
         }
 
         // Otherwise, query by resource group
-        ResourceGroupResource rgResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        ResourceGroupResource rgResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
-        return await rgResource.GetApplicationInsightsComponents().GetAllAsync().ToListAsync().ConfigureAwait(false);
+        return await rgResource.GetApplicationInsightsComponents().GetAllAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 
     private async Task<List<ApplicationInsightsComponentResource>> GetApplicationInsightsComponentsAsync(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
-        SubscriptionResource targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy).ConfigureAwait(false);
-        return await targetSubscription.GetApplicationInsightsComponentsAsync(cancellationToken).ToListAsync().ConfigureAwait(false);
+        SubscriptionResource targetSubscription = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken).ConfigureAwait(false);
+        return await targetSubscription.GetApplicationInsightsComponentsAsync(cancellationToken).ToListAsync(cancellationToken).ConfigureAwait(false);
     }
 }

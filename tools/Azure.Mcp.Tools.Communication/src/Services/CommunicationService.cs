@@ -25,7 +25,8 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         bool enableDeliveryReport = false,
         string? tag = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
         ValidateRequiredParameters(
@@ -43,7 +44,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         try
         {
             // Create SMS client using Azure credential from base class and endpoint
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var smsClient = new SmsClient(new Uri(endpoint), credential);
 
             var sendOptions = new SmsSendOptions(enableDeliveryReport)
@@ -57,7 +58,8 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
                 from: from,
                 to: to,
                 message: message,
-                options: sendOptions);
+                options: sendOptions,
+                cancellationToken: cancellationToken);
 
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
@@ -97,7 +99,8 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
         ValidateRequiredParameters(
@@ -121,7 +124,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
         try
         {
             // Create email client with credential from base class
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var emailClient = new EmailClient(new Uri(endpoint), credential);
 
             // Create the email content
@@ -162,7 +165,7 @@ public class CommunicationService(ITenantService tenantService, ILogger<Communic
             var response = await emailClient.SendAsync(
                 WaitUntil.Completed,
                 emailMessage,
-                CancellationToken.None);
+                cancellationToken);
 
             // Get the operation result
             var operationResult = response.Value;
