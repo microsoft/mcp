@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
 using System.Reflection;
 using System.Text.Json;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Attributes;
 using Azure.Mcp.Tests.Client.Helpers;
 using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Microsoft.Extensions.FileSystemGlobbing;
 using NSubstitute;
 using Xunit;
+using Xunit.v3;
 
 namespace Azure.Mcp.Core.LiveTests.RecordingFramework;
 
@@ -39,9 +42,15 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         Assert.Equal("sampleValue", variablesElement.GetProperty("sampleKey").GetString());
     }
 
+    [CustomMatcher(IgnoreQueryOrdering = true, CompareBodies = true)]
     [Fact]
     public async Task PerTestMatcherAttributeAppliesWhenPresent()
     {
+        var activeMatcher = GetActiveMatcher();
+        Assert.NotNull(activeMatcher);
+        Assert.True(activeMatcher!.CompareBodies);
+        Assert.True(activeMatcher.IgnoreQueryOrdering);
+
         DefaultHarness = new RecordedCommandTestHarness(CollectedOutput, Fixture)
         {
             DesiredMode = TestMode.Record,
@@ -64,6 +73,36 @@ public sealed class RecordedCommandTestsBaseTest : IAsyncLifetime
         await playbackHarness.DisposeAsync();
 
         CollectedOutput.Received().WriteLine(Arg.Is<string>(s => s.Contains($"Applying custom matcher to recordingId \"{recordingId}\"")));
+    }
+
+    [Fact]
+    public void CustomMatcherAttributeClearsAfterExecution()
+    {
+        var attribute = new CustomMatcherAttribute(compareBody: true, ignoreQueryordering: true);
+        var xunitTest = Substitute.For<IXunitTest>();
+        var methodInfo = typeof(RecordedCommandTestsBaseTest).GetMethod(nameof(CustomMatcherAttributeClearsAfterExecution))
+            ?? throw new InvalidOperationException("Unable to locate test method for CustomMatcherAttribute verification.");
+
+        attribute.Before(methodInfo, xunitTest);
+        try
+        {
+            var active = GetActiveMatcher();
+            Assert.Same(attribute, active);
+            Assert.True(active!.CompareBodies);
+            Assert.True(active.IgnoreQueryOrdering);
+        }
+        finally
+        {
+            attribute.After(methodInfo, xunitTest);
+        }
+
+        Assert.Null(GetActiveMatcher());
+    }
+
+    private static CustomMatcherAttribute? GetActiveMatcher()
+    {
+        var method = typeof(CustomMatcherAttribute).GetMethod("GetActive", BindingFlags.NonPublic | BindingFlags.Static);
+        return (CustomMatcherAttribute?)method?.Invoke(null, null);
     }
 
     [Fact]

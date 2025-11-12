@@ -3,7 +3,6 @@
 
 using System.ClientModel;
 using System.ClientModel.Primitives;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -139,29 +138,19 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        var methodName = TestContext.Current?.TestMethod?.MethodName;
-        if (string.IsNullOrEmpty(methodName))
-        {
-            return;
-        }
-        // Use reflection to find the test method on the derived class
-        var testMethod = GetType().GetMethod(methodName);
-        if (testMethod == null)
+        var attr = CustomMatcherAttribute.GetActive();
+        if (attr == null)
         {
             return;
         }
 
-        var attr = testMethod.GetCustomAttribute<CustomMatcherAttribute>();
-        if (attr != null)
-        { 
-            var matcher = new CustomDefaultMatcher
-            {
-                IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
-                CompareBodies = attr.CompareBodies,
-            };
+        var matcher = new CustomDefaultMatcher
+        {
+            IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
+            CompareBodies = attr.CompareBodies,
+        };
 
-            await SetMatcher(matcher, RecordingId);
-        }
+        await SetMatcher(matcher, RecordingId);
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)

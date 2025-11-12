@@ -58,12 +58,6 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
         TestVariables.Clear();
     }
 
-    [CustomMatcher(IgnoreQueryOrdering = true, CompareBodies = true)]
-    public void PerTestMatcherAttributeAppliesWhenPresent()
-    {
-        // Marker method used so that RecordedCommandTestsBase can locate the CustomMatcherAttribute via reflection.
-    }
-
     public string GetRecordingId()
     {
         return RecordingId;
