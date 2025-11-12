@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Enabled telemetry collection for HTTP transport mode. Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams. Added `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default). [[#1150](https://github.com/microsoft/mcp/pull/1150)]
+- Added [Hidden] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
 
 ### Breaking Changes
 
