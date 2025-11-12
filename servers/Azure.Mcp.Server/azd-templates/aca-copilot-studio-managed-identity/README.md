@@ -77,7 +77,7 @@ Login to [Power Apps](https://make.powerapps.com) and select the environment to 
 
 Skip the Security step for now and click the `Swagger editor` to enter the swagger editor view. In the swagger editor view
 
-- Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example]<!--(https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/custom-connector-swagger-example.yaml)--> as an example.
+- Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example](https://github.com/JasonYeMSFT/mcp/blob/0db606283e45c29008e9b7a3777008526caea96e/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/custom-connector-swagger-example.yaml) as an example.
 
 ![custom-connector-swagger-editor](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/custom-connector-swagger-editor.png)
 
