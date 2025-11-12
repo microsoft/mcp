@@ -26,8 +26,8 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
         _defaultClient = new Lazy<HttpClient>(() => CreateClientInternal());
 
         var assembly = typeof(HttpClientService).Assembly;
-        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? string.Empty;
-        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? string.Empty;
+        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
         var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
         var transport = serviceStartOptions?.Value.Transport ?? TransportTypes.StdIo;
