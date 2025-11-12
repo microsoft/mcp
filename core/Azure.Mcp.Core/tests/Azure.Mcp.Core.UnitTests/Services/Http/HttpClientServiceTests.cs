@@ -133,4 +133,26 @@ public class HttpClientServiceTests
         Assert.Contains("azmcp-http/", userAgent.ToString());
     }
 
+    [Fact]
+    public void UserAgent_UserAgentFromHttpClientOptionsIsIgnored()
+    {
+        // Arrange
+        var options = new HttpClientOptions();
+        options.DefaultUserAgent = "CustomAgent/1.0";
+        var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
+        var serviceStartOptions = new ServiceStartOptions
+        {
+            Transport = "http"
+        };
+        var serviceStartOptionsWrapper = Microsoft.Extensions.Options.Options.Create(serviceStartOptions);
+        var service = new HttpClientService(optionsWrapper, serviceStartOptionsWrapper);
+        var client = service.DefaultClient;
+
+        // Act
+        var userAgent = client.DefaultRequestHeaders.UserAgent;
+
+        // Assert
+        Assert.Contains("azmcp-http/", userAgent.ToString());
+    }
+
 }

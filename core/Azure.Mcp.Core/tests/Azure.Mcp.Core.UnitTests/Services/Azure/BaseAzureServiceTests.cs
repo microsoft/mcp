@@ -143,15 +143,15 @@ public class BaseAzureServiceTests
     [Fact]
     public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsNull()
     {
-        var exception = Assert.Throws<ArgumentException>(() => BaseAzureService.InitializeUserAgentPolicy(null!));
-        Assert.Equal("Transport type cannot be null or empty (Parameter 'transportType')", exception.Message);
+        var exception = Assert.Throws<ArgumentNullException>(() => BaseAzureService.InitializeUserAgentPolicy(null!));
+        Assert.Equal("Value cannot be null. (Parameter 'transportType')", exception.Message);
     }
 
     [Fact]
     public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsEmpty()
     {
         var exception = Assert.Throws<ArgumentException>(() => BaseAzureService.InitializeUserAgentPolicy(string.Empty));
-        Assert.Equal("Transport type cannot be null or empty (Parameter 'transportType')", exception.Message);
+        Assert.Equal("The value cannot be an empty string or composed entirely of whitespace. (Parameter 'transportType')", exception.Message);
     }
 
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)

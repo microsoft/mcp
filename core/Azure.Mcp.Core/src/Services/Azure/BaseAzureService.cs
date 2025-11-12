@@ -12,8 +12,7 @@ namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
-    private static UserAgentPolicy? s_sharedUserAgentPolicy;
-    private static readonly UserAgentPolicy s_defaultUserAgentPolicy;
+    private static UserAgentPolicy s_sharedUserAgentPolicy;
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
     private static readonly object s_initializeLock = new();
@@ -28,13 +27,13 @@ public abstract class BaseAzureService
     static BaseAzureService()
     {
         var assembly = typeof(BaseAzureService).Assembly;
-        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? string.Empty;
-        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? string.Empty;
+        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
         s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
         // Initialize the default user agent policy without transport type
         s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
-        s_defaultUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+        s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
     }
 
     /// <summary>
@@ -49,10 +48,7 @@ public abstract class BaseAzureService
     /// </remarks>
     public static void InitializeUserAgentPolicy(string transportType)
     {
-        if (string.IsNullOrWhiteSpace(transportType))
-        {
-            throw new ArgumentException("Transport type cannot be null or empty", nameof(transportType));
-        }
+        ArgumentException.ThrowIfNullOrWhiteSpace(transportType, nameof(transportType));
 
         // Ensure this method is called only once
         lock (s_initializeLock)
@@ -163,14 +159,7 @@ public abstract class BaseAzureService
 
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
-        if (s_sharedUserAgentPolicy != null)
-        {
-            clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-        }
-        else
-        {
-            clientOptions.AddPolicy(s_defaultUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-        }
+        clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
         return clientOptions;
     }
 

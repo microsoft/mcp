@@ -89,16 +89,7 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
         // Apply default configuration
         client.Timeout = _options.DefaultTimeout;
 
-        // We will still use the DefaultUserAgent if specified in options but this will overwrite the last set value but it's not recommended.
-        // Currently, only ApplicationInsightsSetup is setting DefaultUserAgent and that will be removed once this is in place.
-        if (!string.IsNullOrEmpty(_options.DefaultUserAgent))
-        {
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(_options.DefaultUserAgent);
-        }
-        else
-        {
-            client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
-        }
+        client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
 
         return client;
     }
