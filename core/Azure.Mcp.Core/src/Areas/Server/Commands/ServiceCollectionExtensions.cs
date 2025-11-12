@@ -54,7 +54,6 @@ public static class AzureMcpServiceCollectionExtensions
 
                     var entryAssembly = Assembly.GetEntryAssembly();
 
-
                     mcpServerOptions.ProtocolVersion = "2024-11-05";
                     mcpServerOptions.ServerInfo = new Implementation
                     {
@@ -270,16 +269,15 @@ public static class AzureMcpServiceCollectionExtensions
                 var isTelemetryEnabledEnvironment = collectTelemetry.HasValue
                     ? collectTelemetry.Value
                     : true;
-
                 var isStdioTransport = string.IsNullOrEmpty(transport)
                     || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
                 options.Version = GetServerVersion(Assembly.GetEntryAssembly());
+                options.ApplicationInsightsConnectionString = applicationInsightsString;
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
                 // telemetry is disabled for HTTP transport
                 options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
-
                 options.IsOtelExporterEnabled = isOtelExporterEnabled.HasValue
                     ? isOtelExporterEnabled.Value
                     : false;
