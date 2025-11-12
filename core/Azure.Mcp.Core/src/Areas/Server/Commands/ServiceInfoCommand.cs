@@ -45,7 +45,7 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error listing subscriptions.");
+            _logger.LogError(ex, "Error obtaining server information.");
             HandleException(context, ex);
         }
 
