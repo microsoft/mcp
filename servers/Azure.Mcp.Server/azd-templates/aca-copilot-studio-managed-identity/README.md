@@ -71,15 +71,15 @@ Login to [Power Apps](https://make.powerapps.com) and select the environment to 
 - Set `Scheme` to be `HTTPS`.
 - Set the `Host` to be the Container App URL from the CONTAINER_APP_URL output value.
 
-![custom-connector-general](./images/custom-connector-general.png)
+![custom-connector-general](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/custom-connector-general.png)
 
 #### Swagger editor
 
 Skip the Security step for now and click the `Swagger editor` to enter the swagger editor view. In the swagger editor view
 
-- Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example](./custom-connector-swagger-example.yaml) as an example.
+- Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example]<!--(https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/custom-connector-swagger-example.yaml)--> as an example.
 
-![custom-connector-swagger-editor](./images/custom-connector-swagger-editor.png)
+![custom-connector-swagger-editor](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/custom-connector-swagger-editor.png)
 
 #### Security
 
@@ -97,7 +97,7 @@ Go to the Security step.
 - Set `Enable on-behalf-of login` to true.
 - Set `Scope` to `<server app registration client ID>/.default`.
 
-![custom-connector-security](./images/custom-connector-security.png)
+![custom-connector-security](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/custom-connector-security.png)
 
 #### Create the connector
 
@@ -105,8 +105,8 @@ Go to the Security step.
 - Go to Azure Portal and add a redirect URI under the Web platform in the client app registration.
 - If you chose to use managed identity as the secret options, create a Federated Credentials in the client app registration. In the creation UI, select `Other issuer` as the `Federated credential scenario`. Then copy paste the `issuer` and the `subject` of the Federated Credentials value from the custom connectors to corresponding fields in the credential creation UI. Give it a descriptive name and description, and then click `Add`.
 
-![client-app-redirect-uri](./images/client-app-redirect-uri.png)
-![client-app-client-credential](./images/client-app-client-credential.png)
+![client-app-redirect-uri](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/client-app-redirect-uri.png)
+![client-app-client-credential](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/client-app-client-credential.png)
 
 #### Test connection
 
@@ -116,7 +116,7 @@ Go to the Security step.
 
 If everything works fine, after signing into the user account, the UI should indicate a connection is created successfully. If you encounter any error message during the sign-in, please refer to the [known issues](#known-issues) section, troubleshoot with your tenant admin or let us know.
 
-![custom-connector-created-connection](./images/custom-connector-created-connection.png)
+![custom-connector-created-connection](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/custom-connector-created-connection.png)
 
 ### Call Azure MCP tool in Copilot Studio test playground
 
@@ -128,8 +128,8 @@ If everything works fine, after signing into the user account, the UI should ind
 - Click the `Test` button to start a test playground session.
 - You can prompt the agent to call the MCP tools, such as asking it to list storage accounts in the subscription.
 
-![copilot-studio-tools-tab](./images/copilot-studio-tools-tab.png)
-![copilot-studio-call-tools](./images/copilot-studio-call-tools.png)
+![copilot-studio-tools-tab](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/copilot-studio-tools-tab.png)
+![copilot-studio-call-tools](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/images/copilot-studio-call-tools.png)
 
 ## Clean Up
 
