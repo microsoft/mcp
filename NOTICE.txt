@@ -7088,7 +7088,7 @@ SOFTWARE.
 
 ---------------------------------------------------------
 
-coverlet.collector 6.0.2 - MIT
+coverlet.collector 6.0.4 - MIT
 
 
 Copyright 2008 - 2018 Jb Evain
