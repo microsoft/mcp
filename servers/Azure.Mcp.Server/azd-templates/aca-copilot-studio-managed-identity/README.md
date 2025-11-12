@@ -71,7 +71,7 @@ Login to [Power Apps](https://make.powerapps.com) and select the environment to 
 - Set `Scheme` to be `HTTPS`.
 - Set the `Host` to be the Container App URL from the CONTAINER_APP_URL output value.
 
-![custom-connector-general](./images/custom-connector-general.svg)
+![custom-connector-general](./images/custom-connector-general.png)
 
 #### Swagger editor
 
@@ -79,7 +79,7 @@ Skip the Security step for now and click the `Swagger editor` to enter the swagg
 
 - Set the path such that a POST method is exposed at the root with a custom `x-ms-agentic-protocol: mcp-streamable-1.0` property. This custom property is necessary for the custom connector to interact with this API using the MCP protocol. Refer to [custom connector swagger example](./custom-connector-swagger-example.yaml) as an example.
 
-![custom-connector-swagger-editor](./images/custom-connector-swagger-editor.svg)
+![custom-connector-swagger-editor](./images/custom-connector-swagger-editor.png)
 
 #### Security
 
@@ -97,7 +97,7 @@ Go to the Security step.
 - Set `Enable on-behalf-of login` to true.
 - Set `Scope` to `<server app registration client ID>/.default`.
 
-![custom-connector-security](./images/custom-connector-security.svg)
+![custom-connector-security](./images/custom-connector-security.png)
 
 #### Create the connector
 
@@ -128,6 +128,7 @@ If everything works fine, after signing into the user account, the UI should ind
 - Click the `Test` button to start a test playground session.
 - You can prompt the agent to call the MCP tools, such as asking it to list storage accounts in the subscription.
 
+![copilot-studio-tools-tab](./images/copilot-studio-tools-tab.png)
 ![copilot-studio-call-tools](./images/copilot-studio-call-tools.png)
 
 ## Clean Up
