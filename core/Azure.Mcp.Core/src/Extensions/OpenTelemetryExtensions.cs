@@ -146,7 +146,7 @@ public static class OpenTelemetryExtensions
     /// </summary>
     /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
     /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly entryAssembly)
+    public static string GetServerVersion(Assembly entryAssembly)
     {
         AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
