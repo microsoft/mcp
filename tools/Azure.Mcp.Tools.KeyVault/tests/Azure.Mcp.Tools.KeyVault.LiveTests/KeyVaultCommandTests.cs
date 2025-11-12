@@ -309,7 +309,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             var pfxBytes = File.ReadAllBytes(pfxPath);
             var pfxBase64 = Convert.ToBase64String(pfxBytes);
 
-            using var certificate = new X509Certificate2(
+            using var certificate = X509CertificateLoader.LoadPkcs12(
                 pfxBytes,
                 ImportCertificatePassword,
                 X509KeyStorageFlags.Exportable | X509KeyStorageFlags.EphemeralKeySet);
@@ -328,11 +328,8 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
 
         private static string CreateCertificateSigningRequest(X509Certificate2 certificate)
         {
-            using RSA? rsa = certificate.GetRSAPrivateKey();
-            if (rsa is null)
-            {
-                throw new InvalidOperationException("The test certificate must contain an RSA private key.");
-            }
+            using RSA rsa = certificate.GetRSAPrivateKey()
+                ?? throw new InvalidOperationException("The test certificate must contain an RSA private key.");
 
             var request = new CertificateRequest(certificate.SubjectName, rsa, HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
             var csrBytes = request.CreateSigningRequest();
