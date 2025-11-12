@@ -75,7 +75,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
             var credential = await GetCredential(cancellationToken);
@@ -129,7 +129,7 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
             var credential = await GetCredential(cancellationToken);

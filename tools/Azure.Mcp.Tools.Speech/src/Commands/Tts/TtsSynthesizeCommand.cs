@@ -136,7 +136,8 @@ public sealed class TtsSynthesizeCommand(ILogger<TtsSynthesizeCommand> logger) :
                 options.Voice,
                 options.Format,
                 options.EndpointId,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             _logger.LogInformation(
                 "Successfully synthesized speech to file: {File}. Audio size: {Size} bytes, Voice: {Voice}",

@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.MySql.Services;
@@ -44,10 +45,10 @@ public class MySqlServiceTests
     public async Task ListServersAsync_WhenResourceGroupServiceThrows_RethrowsException()
     {
         var exception = new InvalidOperationException("Resource group not found");
-        _resourceGroupService.GetResourceGroupResource("sub123", "rg1").ThrowsAsync(exception);
+        _resourceGroupService.GetResourceGroupResource("sub123", "rg1", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>()).ThrowsAsync(exception);
 
         var thrownException = await Assert.ThrowsAsync<InvalidOperationException>(() =>
-            _mysqlService.ListServersAsync("sub123", "rg1", "user1"));
+            _mysqlService.ListServersAsync("sub123", "rg1", "user1", TestContext.Current.CancellationToken));
 
         Assert.Equal(exception, thrownException);
     }

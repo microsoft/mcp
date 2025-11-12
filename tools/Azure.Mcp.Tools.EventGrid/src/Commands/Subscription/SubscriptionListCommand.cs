@@ -96,7 +96,7 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
             {
                 // Iterate all subscriptions and aggregate
                 var subscriptionService = context.GetService<ISubscriptionService>();
-                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy);
+                var allSubs = await subscriptionService.GetSubscriptions(null, options.RetryPolicy, cancellationToken);
                 var aggregate = new List<EventGridSubscriptionInfo>();
                 foreach (var sub in allSubs)
                 {
@@ -108,7 +108,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                             options.TopicName, // bare name
                             options.Location,
                             options.Tenant,
-                            options.RetryPolicy);
+                            options.RetryPolicy,
+                            cancellationToken);
                         if (found?.Count > 0)
                         {
                             aggregate.AddRange(found);
@@ -130,7 +131,8 @@ public sealed class SubscriptionListCommand(ILogger<SubscriptionListCommand> log
                     options.TopicName,
                     options.Location,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(subscriptions ?? []), EventGridJsonContext.Default.SubscriptionListCommandResult);
             }
