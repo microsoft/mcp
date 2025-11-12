@@ -10,26 +10,3 @@ infra:
   outputs:
     AZURE_RESOURCE_GROUP: AZURE_RESOURCE_GROUP
     CONTAINER_APP_NAME: CONTAINER_APP_NAME
-
-hooks:
-  preprovision:
-    shell: sh
-    run: echo "Starting 'Azure MCP Storage Server' infrastructure provisioning..."
-    continueOnError: false
-  
-  postprovision:
-    shell: sh  
-    run: |
-      echo "Success: Infrastructure provisioned"
-    continueOnError: false
-
-  predeploy:
-    shell: sh
-    run: echo "Building and deploying 'Azure MCP Storage Server' application..."
-    continueOnError: false
-
-  postdeploy:
-    shell: sh
-    run: |
-      echo "Success: 'Azure MCP Storage Server' deployed"
-    continueOnError: false
