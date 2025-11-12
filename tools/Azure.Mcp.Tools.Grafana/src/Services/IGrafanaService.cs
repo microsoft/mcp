@@ -19,5 +19,6 @@ public interface IGrafanaService
     Task<IEnumerable<GrafanaWorkspace>> ListWorkspacesAsync(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
