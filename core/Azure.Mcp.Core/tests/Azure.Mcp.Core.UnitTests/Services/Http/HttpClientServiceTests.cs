@@ -23,7 +23,6 @@ public class HttpClientServiceTests
         var options = new HttpClientOptions
         {
             DefaultTimeout = TimeSpan.FromSeconds(30),
-            DefaultUserAgent = "TestAgent"
         };
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(options);
         using var service = new HttpClientService(optionsWrapper, null!);
@@ -34,7 +33,6 @@ public class HttpClientServiceTests
         // Assert
         Assert.NotNull(client);
         Assert.Equal(TimeSpan.FromSeconds(30), client.Timeout);
-        Assert.Contains("TestAgent", client.DefaultRequestHeaders.UserAgent.ToString());
     }
 
     [Fact]
