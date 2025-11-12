@@ -9,6 +9,8 @@ parameters:
   type: object
 - name: TestTimeoutInMinutes
   type: number
+- name: PackageDocker
+  type: boolean
 
 jobs:
 - job: Verify_Packages_${{ parameters.OSName }}
@@ -53,3 +55,4 @@ jobs:
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
+        -TestDocker:$${{ parameters.PackageDocker }}
