@@ -1,7 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.ClientModel.Primitives;
 using System.Net;
+using System.Reflection;
+using System.Runtime.Versioning;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Services.Http;
@@ -14,11 +18,20 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
     private readonly HttpClientOptions _options;
     private readonly Lazy<HttpClient> _defaultClient;
     private bool _disposed;
+    private string UserAgent { get; }
 
-    public HttpClientService(IOptions<HttpClientOptions> options)
+    public HttpClientService(IOptions<HttpClientOptions> options, IOptions<ServiceStartOptions> serviceStartOptions)
     {
         _options = options?.Value ?? throw new ArgumentNullException(nameof(options));
         _defaultClient = new Lazy<HttpClient>(() => CreateClientInternal());
+
+        var assembly = typeof(HttpClientService).Assembly;
+        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? string.Empty;
+        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? string.Empty;
+        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+
+        var transport = serviceStartOptions?.Value.Transport ?? TransportTypes.StdIo; 
+        UserAgent = $"azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})";
     }
 
     /// <inheritdoc />
@@ -76,9 +89,15 @@ public sealed class HttpClientService : IHttpClientService, IDisposable
         // Apply default configuration
         client.Timeout = _options.DefaultTimeout;
 
+        // We will still use the DefaultUserAgent if specified in options but this will overwrite the last set value but it's not recommended.
+        // Currently, only ApplicationInsightsSetup is setting DefaultUserAgent and that will be removed once this is in place.
         if (!string.IsNullOrEmpty(_options.DefaultUserAgent))
         {
             client.DefaultRequestHeaders.UserAgent.ParseAdd(_options.DefaultUserAgent);
+        }
+        else
+        {
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
         }
 
         return client;
