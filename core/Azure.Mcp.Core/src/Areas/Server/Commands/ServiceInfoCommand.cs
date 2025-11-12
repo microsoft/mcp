@@ -12,7 +12,7 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 /// Command that provides basic server information.
 /// </summary>
 [HiddenCommand]
-public class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
+public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
 {
     private readonly IOptions<AzureMcpServerConfiguration> _serverOptions = serverOptions;
     private readonly ILogger<ServiceInfoCommand> _logger = logger;
