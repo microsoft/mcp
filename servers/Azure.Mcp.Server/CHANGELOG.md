@@ -13,6 +13,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+- Upgraded dependency version of coverlet.collector from 6.0.2 to 6.0.4. [[#1153](https://github.com/microsoft/mcp/pull/1153)]
 
 ## 2.0.0-beta.3 (2025-11-11)
 
