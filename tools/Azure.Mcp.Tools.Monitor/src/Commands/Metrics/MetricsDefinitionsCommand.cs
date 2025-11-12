@@ -80,7 +80,8 @@ public sealed class MetricsDefinitionsCommand(ILogger<MetricsDefinitionsCommand>
                 options.MetricNamespace,
                 options.SearchString,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (allResults?.Count > 0)
             {
