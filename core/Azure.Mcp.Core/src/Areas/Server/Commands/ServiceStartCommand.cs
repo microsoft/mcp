@@ -31,7 +31,6 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 /// Command to start the MCP server with specified configuration options.
 /// This command is hidden from the main command list.
 /// </summary>
-[HiddenCommand]
 public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 {
     private const string CommandTitle = "Start MCP Server";
