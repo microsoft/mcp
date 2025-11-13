@@ -18,6 +18,8 @@ public class TelemetryServiceTests
     private const string TestMacAddressHash = "test-hash";
     private readonly AzureMcpServerConfiguration _testConfiguration = new()
     {
+        Prefix = "temp-prefix",
+        DisplayName = "Telemetry service display name",
         Name = "TestService",
         Version = "1.0.0",
         IsTelemetryEnabled = true
@@ -147,6 +149,8 @@ public class TelemetryServiceTests
         // Arrange
         var configuration = new AzureMcpServerConfiguration
         {
+            Prefix = "temp-prefix-a",
+            DisplayName = "Telemetry service display name A",
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
@@ -177,6 +181,8 @@ public class TelemetryServiceTests
         // Arrange
         var configuration = new AzureMcpServerConfiguration
         {
+            Prefix = "temp-prefix-a",
+            DisplayName = "Telemetry service display name A",
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
@@ -208,11 +214,12 @@ public class TelemetryServiceTests
 
         var configuration = new AzureMcpServerConfiguration
         {
+            Prefix = "temp-prefix-a",
+            DisplayName = "Telemetry service display name A",
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
         };
-
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
@@ -245,6 +252,8 @@ public class TelemetryServiceTests
 
         var configuration = new AzureMcpServerConfiguration
         {
+            Prefix = "temp-prefix-a",
+            DisplayName = "Telemetry service display name A",
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true
@@ -277,6 +286,8 @@ public class TelemetryServiceTests
         // Arrange
         var configuration = new AzureMcpServerConfiguration
         {
+            Prefix = "temp-prefix-a",
+            DisplayName = "Telemetry service display name A",
             Name = "TestService",
             Version = "1.0.0",
             IsTelemetryEnabled = true

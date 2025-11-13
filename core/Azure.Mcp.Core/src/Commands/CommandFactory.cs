@@ -8,8 +8,10 @@ using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
@@ -22,6 +24,7 @@ public class CommandFactory
     private readonly RootCommand _rootCommand;
     private readonly CommandGroup _rootGroup;
     private readonly ModelsJsonContext _srcGenWithOptions;
+    private readonly string _serverName;
 
     public const char Separator = '_';
 
@@ -47,14 +50,17 @@ public class CommandFactory
         }
     }
 
-    internal const string RootCommandGroupName = "azmcp";
-
-    public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
+    public CommandFactory(IServiceProvider serviceProvider,
+        IEnumerable<IAreaSetup> serviceAreas,
+        ITelemetryService telemetryService,
+        IOptions<AzureMcpServerConfiguration> serverConfig,
+        ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
-        _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
+        _serverName = serverConfig.Value.Name;
+        _rootGroup = new CommandGroup(_serverName, serverConfig.Value.DisplayName);
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
         _telemetryService = telemetryService;
@@ -136,7 +142,7 @@ public class CommandFactory
 
             // Create a temporary root node to register all the area's subgroups and commands to.
             // Use this to create the mapping of all commands to that area.
-            var tempRoot = new CommandGroup(RootCommandGroupName, string.Empty);
+            var tempRoot = new CommandGroup(_serverName, string.Empty);
             tempRoot.AddSubGroup(commandTree);
 
             var commandDictionary = CreateCommandDictionary(tempRoot);

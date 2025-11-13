@@ -7,6 +7,7 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -21,11 +22,21 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
 /// <param name="options">Options for configuring the service behavior.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(
+    CommandFactory commandFactory,
+    IServiceProvider serviceProvider,
+    ITelemetryService telemetryService,
+    IOptions<ServiceStartOptions> options,
+    IOptions<AzureMcpServerConfiguration> serverConfigurationOptions,
+    ILogger<CommandFactory> commandFactoryLogger,
+    ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
+    private readonly ITelemetryService _telemetryService = telemetryService;
     private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<AzureMcpServerConfiguration> _serverConfigurationOptions = serverConfigurationOptions;
+    private readonly ILogger<CommandFactory> _commandFactoryLogger = commandFactoryLogger;
     private CommandFactory? _consolidatedCommandFactory;
 
     /// <summary>
@@ -146,14 +157,12 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
 #endif
 
         // Create a new CommandFactory with all consolidated areas
-        var telemetryService = _serviceProvider.GetRequiredService<ITelemetryService>();
-        var factoryLogger = _serviceProvider.GetRequiredService<ILogger<CommandFactory>>();
-
         _consolidatedCommandFactory = new CommandFactory(
             _serviceProvider,
             consolidatedAreas,
-            telemetryService,
-            factoryLogger
+            _telemetryService,
+            _serverConfigurationOptions,
+            _commandFactoryLogger
         );
 
         return _consolidatedCommandFactory;

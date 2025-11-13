@@ -7,7 +7,10 @@ Push-Location $RepoRoot
 try {
     Write-Host "Running dotnet format to check for formatting issues..."
     $solutionFile = Get-ChildItem -Path . -Filter *.sln | Select-Object -First 1
-    dotnet format $solutionFile --verify-no-changes
+
+    # Excluding diagnostics IL2026 and IL3050 due to known issues with source generator
+    # Can be removed when https://github.com/dotnet/sdk/issues/45054 is resolved
+    dotnet format $solutionFile --verify-no-changes --exclude-diagnostics IL2026 IL3050
 
     # Run dotnet format
     if ($LASTEXITCODE) {

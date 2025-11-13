@@ -4,9 +4,11 @@
 using System.CommandLine;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using Xunit;
 
@@ -22,6 +24,8 @@ public class CommandFactoryTests
     private readonly IServiceProvider _serviceProvider;
     private readonly ILogger<CommandFactory> _logger;
     private readonly ITelemetryService _telemetryService;
+    private readonly IOptions<AzureMcpServerConfiguration> _defaultServerConfigurationOptions;
+    private readonly AzureMcpServerConfiguration _defaultServerConfiguration;
 
     public CommandFactoryTests()
     {
@@ -30,6 +34,18 @@ public class CommandFactoryTests
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
+
+        _defaultServerConfiguration = new AzureMcpServerConfiguration
+        {
+            DisplayName = "Command Factory Test Display Name",
+            Name = "Test.Mcp.Server.CommandFactory",
+            Prefix = "test-azmcp-command-factory",
+            Version = "0.0.1-beta.1",
+            IsTelemetryEnabled = false
+        };
+
+        _defaultServerConfigurationOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
+        _defaultServerConfigurationOptions.Value.Returns(_defaultServerConfiguration);
     }
 
     [Fact]
@@ -123,7 +139,7 @@ public class CommandFactoryTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger));
+            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _defaultServerConfigurationOptions, _logger));
     }
 
     [Fact]
@@ -138,7 +154,7 @@ public class CommandFactoryTests
 
         // Act & Assert
         Assert.Throws<ArgumentException>(() =>
-            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger));
+            new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _defaultServerConfigurationOptions, _logger));
     }
 
     [Theory]
@@ -153,7 +169,7 @@ public class CommandFactoryTests
         var area3 = CreateIAreaSetup("name3");
 
         var serviceAreas = new List<IAreaSetup> { area1, area3, area2 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _defaultServerConfigurationOptions, _logger);
 
         // Act
         // Try in the case that the root prefix is not used.  This is in the case that the tool
@@ -173,7 +189,8 @@ public class CommandFactoryTests
         var area3 = CreateIAreaSetup("name3");
 
         var serviceAreas = new List<IAreaSetup> { area1, area2, area3 };
-        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService, _logger);
+        var factory = new CommandFactory(_serviceProvider, serviceAreas, _telemetryService,
+            _defaultServerConfigurationOptions, _logger);
 
         // All commands created in command factory are prefixed with the root command group, "azmcp".
         var commandNameToTry = "azmcp" + CommandFactory.Separator + "name0_subgroup2_directCommand4";

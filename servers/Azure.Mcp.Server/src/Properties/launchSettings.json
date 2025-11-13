@@ -1,17 +1,25 @@
 {
-    "$schema": "https://json.schemastore.org/launchsettings.json",
-    "profiles": {
-        "debug-remotemcp": {
-            "commandName": "Project",
-            "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
-            "dotnetRunMessages": true,
-            "environmentVariables": {
-                "ASPNETCORE_ENVIRONMENT": "Development",
-                "ASPNETCORE_URLS": "http://localhost:1031",
-                "AzureAd__TenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
-                "AzureAd__ClientId": "ca1e0302-d50a-47d7-b5e6-7aff49884bce",
-                "AzureAd__Instance": "https://login.microsoftonline.com/"
-            }
-        }
+  "profiles": {
+    "debug-remotemcp": {
+      "commandName": "Project",
+      "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Development",
+        "ASPNETCORE_URLS": "http://localhost:1031",
+        "AzureAd__TenantId": "70a036f6-8e4d-4615-bad6-149c02e7720d",
+        "AzureAd__ClientId": "ca1e0302-d50a-47d7-b5e6-7aff49884bce",
+        "AzureAd__Instance": "https://login.microsoftonline.com/"
+      },
+      "dotnetRunMessages": true
+    },
+    "local-stdio": {
+      "commandName": "Project",
+      "commandLineArgs": "server start",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      },
+      "dotnetRunMessages": true
     }
+  },
+  "$schema": "https://json.schemastore.org/launchsettings.json"
 }
