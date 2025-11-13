@@ -32,7 +32,9 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
         Destructive = false,
         Idempotent = true,
         OpenWorld = false,
-        ReadOnly = true
+        ReadOnly = true,
+        LocalRequired = false,
+        Secret = false
     };
 
     public override Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
@@ -40,7 +42,7 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
         try
         {
             context.Response.Results = ResponseResult.Create(
-                new ServiceInfoCommandResult(
+                new(
                     _serverOptions.Value.Name,
                     _serverOptions.Value.Version),
                 ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
