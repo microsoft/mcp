@@ -6,7 +6,6 @@ public static class ResourceLogService
 {
     public static async Task<string> GetResourceLogsAsync(
         TokenCredential credential,
-        string workspaceFolder,
         string subscriptionId,
         string resourceGroupName,
         int? limit = null)

@@ -8,9 +8,6 @@ namespace Azure.Mcp.Tools.Deploy.Options.App;
 
 public class LogsGetOptions : SubscriptionOptions
 {
-    [JsonPropertyName("workspaceFolder")]
-    public string WorkspaceFolder { get; set; } = string.Empty;
-
     [JsonPropertyName("limit")]
     public int? Limit { get; set; }
 }

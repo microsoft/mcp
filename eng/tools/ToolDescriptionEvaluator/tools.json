@@ -1759,12 +1759,6 @@
           "required": null
         },
         {
-          "name": "--workspace-folder",
-          "description": "The full path of the workspace folder.",
-          "type": "string",
-          "required": null
-        },
-        {
           "name": "--resource-group",
           "description": "The name of the resource group containing the application resources.",
           "type": "string",

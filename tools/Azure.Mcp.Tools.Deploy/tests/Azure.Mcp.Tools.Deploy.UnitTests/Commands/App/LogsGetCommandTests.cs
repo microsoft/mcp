@@ -45,13 +45,11 @@ public class LogsGetCommandTests
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<int?>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/Users/",
             "--resource-group", "rg-test",
             "--limit", "10"
         ]);
@@ -76,13 +74,11 @@ public class LogsGetCommandTests
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<int?>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project",
             "--resource-group", "rg-project"
             // No limit specified - should use default
         ]);
@@ -104,13 +100,11 @@ public class LogsGetCommandTests
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<int?>())
             .Returns("No logs found.");
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/empty-project",
             "--resource-group", "rg-empty",
             "--limit", "50"
         ]);
@@ -132,13 +126,11 @@ public class LogsGetCommandTests
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<int?>())
             .Returns(errorMessage);
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/invalid-project",
             "--resource-group", "rg-test"
         ]);
 
@@ -160,13 +152,11 @@ public class LogsGetCommandTests
         _deployService.GetResourceLogsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>(),
             Arg.Any<int?>())
             .ThrowsAsync(new InvalidOperationException("Failed to connect to Azure"));
 
         var args = _commandDefinition.Parse([
             "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project",
             "--resource-group", "rg-project"
         ]);
 
@@ -181,29 +171,11 @@ public class LogsGetCommandTests
     }
 
     [Fact]
-    public async Task Should_validate_required_parameters()
-    {
-        // arrange - missing required workspace-folder parameter
-        var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id"
-            // Missing workspace-folder
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.NotEqual(HttpStatusCode.OK, result.Status); // Should fail validation
-    }
-
-    [Fact]
     public async Task Should_validate_required_resource_group_parameter()
     {
         // arrange - missing required resource-group parameter
         var args = _commandDefinition.Parse([
-            "--subscription", "test-subscription-id",
-            "--workspace-folder", "C:/project"
+            "--subscription", "test-subscription-id"
             // Missing resource-group (required)
         ]);
 

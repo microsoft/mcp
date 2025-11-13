@@ -63,11 +63,6 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
             context.Activity?
                 .AddTag(DeployTelemetryTags.ComputeHostResources, options.ResourceTypes);
 
-            var resourceTypes = options.ResourceTypes.Split(',')
-                .Select(rt => rt.Trim())
-                .Where(rt => !string.IsNullOrWhiteSpace(rt))
-                .ToArray();
-
             string iacRules = TemplateService.LoadTemplate("IaCRules/azcli-rules");
 
             context.Response.Message = iacRules;

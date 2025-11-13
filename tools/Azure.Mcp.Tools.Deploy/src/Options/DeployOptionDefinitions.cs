@@ -24,17 +24,8 @@ public static class DeployOptionDefinitions
 
     public class AppLogOptions : SubscriptionOptions
     {
-        public const string WorkspaceFolderName = "workspace-folder";
         public const string ResourceGroupsName = "resource-group";
         public const string LimitName = "limit";
-
-        public static readonly Option<string> WorkspaceFolder = new(
-            $"--{WorkspaceFolderName}"
-        )
-        {
-            Description = "The full path of the workspace folder.",
-            Required = false
-        };
 
         public static readonly Option<string> ResourceGroupName = new(
             $"--{ResourceGroupsName}"

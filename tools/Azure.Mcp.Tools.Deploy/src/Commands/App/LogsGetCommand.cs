@@ -37,7 +37,6 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
     protected override void RegisterOptions(Command command)
     {
         base.RegisterOptions(command);
-        command.Options.Add(DeployOptionDefinitions.AppLogOptions.WorkspaceFolder);
         command.Options.Add(DeployOptionDefinitions.AppLogOptions.ResourceGroupName);
         command.Options.Add(DeployOptionDefinitions.AppLogOptions.Limit);
     }
@@ -45,7 +44,6 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
     protected override LogsGetOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
-        options.WorkspaceFolder = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AppLogOptions.WorkspaceFolder.Name)!;
         options.ResourceGroup = parseResult.GetValueOrDefault<string>(DeployOptionDefinitions.AppLogOptions.ResourceGroupName.Name);
         options.Limit = parseResult.GetValueOrDefault<int>(DeployOptionDefinitions.AppLogOptions.Limit.Name);
         return options;
@@ -66,7 +64,6 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
             var deployService = context.GetService<IDeployService>();
             string result = await deployService.GetResourceLogsAsync(
-                options.WorkspaceFolder!,
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.Limit);

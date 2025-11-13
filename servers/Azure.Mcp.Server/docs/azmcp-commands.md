@@ -932,8 +932,7 @@ azmcp postgres server param set --subscription <subscription> \
 ```bash
 # Get the application service log for a specific resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp deploy app logs get --workspace-folder <workspace-folder> \
-                                --resource-group <resource-group> \
+azmcp deploy app logs get --resource-group <resource-group> \
                           [--limit <limit>]
 
 # Generate a mermaid architecture diagram for the application topology follow the schema defined in [deploy-app-topology-schema.json](../areas/deploy/src/AzureMcp.Deploy/Schemas/deploy-app-topology-schema.json)
