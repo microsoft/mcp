@@ -343,7 +343,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 // Extract recording ID from response header
                 if (result.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId))
                 {
-                    RecordingId = recordingId ?? String.Empty;
+                    RecordingId = recordingId ?? string.Empty;
                     Output.WriteLine($"[Record] Recording ID: {RecordingId}");
                 }
             }
