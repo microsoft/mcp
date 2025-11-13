@@ -14,6 +14,8 @@ namespace Azure.Mcp.Core.Areas.Server.Commands;
 [HiddenCommand]
 public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> serverOptions, ILogger<ServiceInfoCommand> logger) : BaseCommand<EmptyOptions>
 {
+    private static readonly EmptyOptions EmptyOptions = new EmptyOptions();
+
     private readonly IOptions<AzureMcpServerConfiguration> _serverOptions = serverOptions;
     private readonly ILogger<ServiceInfoCommand> _logger = logger;
 
@@ -54,13 +56,8 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
 
     protected override EmptyOptions BindOptions(ParseResult parseResult)
     {
-        return EmptyOptions.Instance;
+        return EmptyOptions;
     }
 
     internal record ServiceInfoCommandResult(string Name, string Version);
-}
-
-public class EmptyOptions
-{
-    public static readonly EmptyOptions Instance = new EmptyOptions();
 }
