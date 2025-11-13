@@ -190,7 +190,7 @@
 # ServiceOwners:                       @shankarsama @EldertGrootenboer
 
 # Speech
-/tools/Azure.Mcp.Tools.Speech/          @dilin-MS2
+/tools/Azure.Mcp.Tools.Speech/          @dilin-MS2 @microsoft/azure-mcp
 
 # PRLabel: %tools-Redis
 /tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
