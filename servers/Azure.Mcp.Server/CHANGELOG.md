@@ -18,6 +18,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 - Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 - Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
+- Enabled telemetry collection for HTTP transport mode. Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams. Added `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default). [[#1150](https://github.com/microsoft/mcp/pull/1150)]
 
 ## 2.0.0-beta.2 (2025-11-06)
 
