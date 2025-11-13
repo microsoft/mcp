@@ -50,10 +50,6 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
         }
     }
 
-    // Disable `$..id` sanitizer as it interferes with Key Vault tests
-    // This will LIKELY become a global disable exclusion in the future.
-    public override List<string> DisabledDefaultSanitizers => new List<string>() { "AZSDK3430", };
-
     [Fact]
     public async Task Should_list_keys()
     {
