@@ -28,7 +28,7 @@ internal class VersionDisplayHelpAction : SynchronousCommandLineAction
         var assembly = Assembly.GetEntryAssembly();
         string version = assembly != null ? AssemblyHelper.GetServerVersion(assembly) : "unknown";
         var title = assembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "Azure MCP";
-        
+
         Console.WriteLine($"{title} {version}\n");
     }
 }
