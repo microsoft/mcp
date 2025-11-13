@@ -1,14 +1,14 @@
 # Tool Selection Analysis Setup
 
-**Setup completed:** 2025-11-13 09:51:25  
+**Setup completed:** 2025-11-13 11:45:54  
 **Tool count:** 173  
-**Database setup time:** 1.9816174s  
+**Database setup time:** 1.5667025s  
 
 ---
 
 # Tool Selection Analysis Results
 
-**Analysis Date:** 2025-11-13 09:51:25  
+**Analysis Date:** 2025-11-13 11:45:54  
 **Tool count:** 173  
 
 ## Table of Contents
@@ -481,7 +481,7 @@
 |------|-------|------|--------|
 | 1 | 0.881793 | `foundry_agents_connect` | ✅ **EXPECTED** |
 | 2 | 0.870328 | `foundry_agents_list` | ❌ |
-| 3 | 0.834069 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.834079 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.831737 | `search_index_query` | ❌ |
 | 5 | 0.830610 | `foundry_openai_models-list` | ❌ |
 
@@ -516,7 +516,7 @@
 | 1 | 0.904196 | `foundry_agents_list` | ✅ **EXPECTED** |
 | 2 | 0.857844 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.827685 | `foundry_agents_connect` | ❌ |
-| 4 | 0.827196 | `foundry_models_deployments_list` | ❌ |
+| 4 | 0.827130 | `foundry_models_deployments_list` | ❌ |
 | 5 | 0.826253 | `search_service_list` | ❌ |
 
 ---
@@ -534,7 +534,7 @@
 | 2 | 0.857190 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.831875 | `foundry_agents_connect` | ❌ |
 | 4 | 0.830352 | `foundry_resource_get` | ❌ |
-| 5 | 0.827807 | `foundry_models_deployments_list` | ❌ |
+| 5 | 0.827717 | `foundry_models_deployments_list` | ❌ |
 
 ---
 
@@ -549,7 +549,7 @@
 |------|-------|------|--------|
 | 1 | 0.846345 | `foundry_agents_connect` | ❌ |
 | 2 | 0.815235 | `foundry_agents_list` | ❌ |
-| 3 | 0.792655 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.792669 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.784386 | `foundry_models_deploy` | ❌ |
 | 5 | 0.783527 | `foundry_openai_chat-completions-create` | ❌ |
 
@@ -566,7 +566,7 @@
 |------|-------|------|--------|
 | 1 | 0.868507 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
 | 2 | 0.841394 | `foundry_agents_list` | ❌ |
-| 3 | 0.827830 | `foundry_models_deployments_list` | ❌ |
+| 3 | 0.827797 | `foundry_models_deployments_list` | ❌ |
 | 4 | 0.821285 | `foundry_openai_models-list` | ❌ |
 | 5 | 0.804421 | `foundry_resource_get` | ❌ |
 
@@ -583,7 +583,7 @@
 |------|-------|------|--------|
 | 1 | 0.831844 | `foundry_knowledge_index_list` | ✅ **EXPECTED** |
 | 2 | 0.818907 | `foundry_agents_list` | ❌ |
-| 3 | 0.816956 | `foundry_models_deployments_list` | ❌ |
+| 3 | 0.816912 | `foundry_models_deployments_list` | ❌ |
 | 4 | 0.801182 | `foundry_openai_models-list` | ❌ |
 | 5 | 0.800041 | `foundry_knowledge_index_schema` | ❌ |
 
@@ -633,7 +633,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.837512 | `foundry_models_deploy` | ✅ **EXPECTED** |
-| 2 | 0.745079 | `foundry_openai_embeddings-create` | ❌ |
+| 2 | 0.745008 | `foundry_openai_embeddings-create` | ❌ |
 | 3 | 0.744135 | `loadtesting_testrun_create` | ❌ |
 | 4 | 0.744065 | `loadtesting_testresource_create` | ❌ |
 | 5 | 0.739731 | `deploy_plan_get` | ❌ |
@@ -650,7 +650,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.888006 | `foundry_openai_models-list` | ❌ |
-| 2 | 0.883021 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
+| 2 | 0.882978 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
 | 3 | 0.838549 | `foundry_models_deploy` | ❌ |
 | 4 | 0.826723 | `foundry_resource_get` | ❌ |
 | 5 | 0.826350 | `foundry_agents_list` | ❌ |
@@ -666,10 +666,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.877974 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
+| 1 | 0.877914 | `foundry_models_deployments_list` | ✅ **EXPECTED** |
 | 2 | 0.877493 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.847226 | `foundry_models_deploy` | ❌ |
-| 4 | 0.829691 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.829671 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.827027 | `foundry_resource_get` | ❌ |
 
 ---
@@ -684,7 +684,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.859783 | `foundry_openai_models-list` | ❌ |
-| 2 | 0.843346 | `foundry_models_deployments_list` | ❌ |
+| 2 | 0.843304 | `foundry_models_deployments_list` | ❌ |
 | 3 | 0.836513 | `foundry_models_list` | ✅ **EXPECTED** |
 | 4 | 0.822032 | `foundry_agents_list` | ❌ |
 | 5 | 0.820567 | `foundry_resource_get` | ❌ |
@@ -702,9 +702,9 @@
 |------|-------|------|--------|
 | 1 | 0.846452 | `foundry_openai_models-list` | ❌ |
 | 2 | 0.832450 | `foundry_models_list` | ✅ **EXPECTED** |
-| 3 | 0.831551 | `foundry_models_deployments_list` | ❌ |
+| 3 | 0.831487 | `foundry_models_deployments_list` | ❌ |
 | 4 | 0.821665 | `foundry_models_deploy` | ❌ |
-| 5 | 0.813178 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.813151 | `foundry_openai_create-completion` | ❌ |
 
 ---
 
@@ -718,10 +718,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.899423 | `foundry_openai_chat-completions-create` | ✅ **EXPECTED** |
-| 2 | 0.869771 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.801101 | `foundry_openai_embeddings-create` | ❌ |
+| 2 | 0.869815 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.801109 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.796614 | `foundry_agents_connect` | ❌ |
-| 5 | 0.795629 | `speech_stt_recognize` | ❌ |
+| 5 | 0.795654 | `speech_stt_recognize` | ❌ |
 
 ---
 
@@ -734,9 +734,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.902958 | `foundry_openai_create-completion` | ✅ **EXPECTED** |
+| 1 | 0.903027 | `foundry_openai_create-completion` | ✅ **EXPECTED** |
 | 2 | 0.865244 | `foundry_openai_chat-completions-create` | ❌ |
-| 3 | 0.811196 | `foundry_openai_embeddings-create` | ❌ |
+| 3 | 0.811240 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.797768 | `foundry_agents_connect` | ❌ |
 | 5 | 0.795332 | `foundry_models_deploy` | ❌ |
 
@@ -751,8 +751,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.922888 | `foundry_openai_embeddings-create` | ✅ **EXPECTED** |
-| 2 | 0.855480 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.922917 | `foundry_openai_embeddings-create` | ✅ **EXPECTED** |
+| 2 | 0.855539 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.838077 | `foundry_models_deploy` | ❌ |
 | 4 | 0.832414 | `foundry_openai_chat-completions-create` | ❌ |
 | 5 | 0.826502 | `foundry_openai_models-list` | ❌ |
@@ -768,8 +768,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.929143 | `foundry_openai_embeddings-create` | ✅ **EXPECTED** |
-| 2 | 0.838842 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.929168 | `foundry_openai_embeddings-create` | ✅ **EXPECTED** |
+| 2 | 0.838857 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.816919 | `foundry_openai_chat-completions-create` | ❌ |
 | 4 | 0.814434 | `foundry_models_deploy` | ❌ |
 | 5 | 0.810057 | `foundry_openai_models-list` | ❌ |
@@ -786,7 +786,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.918503 | `foundry_openai_models-list` | ✅ **EXPECTED** |
-| 2 | 0.867696 | `foundry_models_deployments_list` | ❌ |
+| 2 | 0.867639 | `foundry_models_deployments_list` | ❌ |
 | 3 | 0.856405 | `foundry_models_deploy` | ❌ |
 | 4 | 0.854275 | `foundry_resource_get` | ❌ |
 | 5 | 0.851571 | `foundry_models_list` | ❌ |
@@ -803,10 +803,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.906966 | `foundry_openai_models-list` | ✅ **EXPECTED** |
-| 2 | 0.887493 | `foundry_models_deployments_list` | ❌ |
+| 2 | 0.887439 | `foundry_models_deployments_list` | ❌ |
 | 3 | 0.885840 | `foundry_models_deploy` | ❌ |
-| 4 | 0.863420 | `foundry_openai_embeddings-create` | ❌ |
-| 5 | 0.854245 | `foundry_openai_create-completion` | ❌ |
+| 4 | 0.863410 | `foundry_openai_embeddings-create` | ❌ |
+| 5 | 0.854333 | `foundry_openai_create-completion` | ❌ |
 
 ---
 
@@ -823,7 +823,7 @@
 | 2 | 0.852660 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.851024 | `foundry_resource_get` | ✅ **EXPECTED** |
 | 4 | 0.830298 | `foundry_agents_list` | ❌ |
-| 5 | 0.825627 | `foundry_models_deployments_list` | ❌ |
+| 5 | 0.825625 | `foundry_models_deployments_list` | ❌ |
 
 ---
 
@@ -840,7 +840,7 @@
 | 2 | 0.833935 | `foundry_resource_get` | ✅ **EXPECTED** |
 | 3 | 0.829025 | `foundry_agents_list` | ❌ |
 | 4 | 0.827415 | `foundry_models_deploy` | ❌ |
-| 5 | 0.827211 | `foundry_openai_embeddings-create` | ❌ |
+| 5 | 0.827201 | `foundry_openai_embeddings-create` | ❌ |
 
 ---
 
@@ -856,8 +856,8 @@
 | 1 | 0.856134 | `foundry_resource_get` | ✅ **EXPECTED** |
 | 2 | 0.852295 | `foundry_openai_models-list` | ❌ |
 | 3 | 0.816948 | `foundry_agents_list` | ❌ |
-| 4 | 0.816194 | `foundry_openai_embeddings-create` | ❌ |
-| 5 | 0.811930 | `foundry_openai_create-completion` | ❌ |
+| 4 | 0.816174 | `foundry_openai_embeddings-create` | ❌ |
+| 5 | 0.812053 | `foundry_openai_create-completion` | ❌ |
 
 ---
 
@@ -1043,7 +1043,7 @@
 | 1 | 0.826851 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
 | 2 | 0.806853 | `foundry_agents_connect` | ❌ |
 | 3 | 0.795991 | `search_index_query` | ❌ |
-| 4 | 0.791363 | `kusto_query` | ❌ |
+| 4 | 0.791353 | `kusto_query` | ❌ |
 | 5 | 0.790295 | `postgres_database_query` | ❌ |
 
 ---
@@ -1094,7 +1094,7 @@
 | 1 | 0.828871 | `search_knowledge_base_retrieve` | ✅ **EXPECTED** |
 | 2 | 0.794857 | `foundry_agents_connect` | ❌ |
 | 3 | 0.789486 | `search_knowledge_base_get` | ❌ |
-| 4 | 0.782309 | `kusto_query` | ❌ |
+| 4 | 0.782336 | `kusto_query` | ❌ |
 | 5 | 0.781076 | `search_index_query` | ❌ |
 
 ---
@@ -1108,11 +1108,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.888833 | `search_service_list` | ❌ |
-| 2 | 0.870413 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 3 | 0.842855 | `search_knowledge_base_get` | ❌ |
-| 4 | 0.842165 | `search_index_query` | ❌ |
-| 5 | 0.829867 | `search_index_get` | ❌ |
+| 1 | 0.888899 | `search_service_list` | ❌ |
+| 2 | 0.870477 | `search_knowledge_source_get` | ✅ **EXPECTED** |
+| 3 | 0.842865 | `search_knowledge_base_get` | ❌ |
+| 4 | 0.842233 | `search_index_query` | ❌ |
+| 5 | 0.829951 | `search_index_get` | ❌ |
 
 ---
 
@@ -1159,11 +1159,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.810764 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.803303 | `search_service_list` | ❌ |
-| 3 | 0.795723 | `search_knowledge_base_retrieve` | ❌ |
-| 4 | 0.792056 | `search_knowledge_base_get` | ❌ |
-| 5 | 0.774091 | `applens_resource_diagnose` | ❌ |
+| 1 | 0.810672 | `search_knowledge_source_get` | ✅ **EXPECTED** |
+| 2 | 0.803339 | `search_service_list` | ❌ |
+| 3 | 0.795615 | `search_knowledge_base_retrieve` | ❌ |
+| 4 | 0.791983 | `search_knowledge_base_get` | ❌ |
+| 5 | 0.774095 | `applens_resource_diagnose` | ❌ |
 
 ---
 
@@ -1176,11 +1176,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.880132 | `search_knowledge_source_get` | ✅ **EXPECTED** |
-| 2 | 0.849958 | `search_service_list` | ❌ |
-| 3 | 0.842667 | `search_index_get` | ❌ |
-| 4 | 0.841243 | `search_knowledge_base_get` | ❌ |
-| 5 | 0.835063 | `search_index_query` | ❌ |
+| 1 | 0.880060 | `search_knowledge_source_get` | ✅ **EXPECTED** |
+| 2 | 0.849916 | `search_service_list` | ❌ |
+| 3 | 0.842498 | `search_index_get` | ❌ |
+| 4 | 0.841087 | `search_knowledge_base_get` | ❌ |
+| 5 | 0.834905 | `search_index_query` | ❌ |
 
 ---
 
@@ -1247,7 +1247,7 @@
 | 1 | 0.822042 | `search_service_list` | ❌ |
 | 2 | 0.816723 | `search_index_get` | ✅ **EXPECTED** |
 | 3 | 0.800532 | `search_index_query` | ❌ |
-| 4 | 0.775644 | `foundry_models_deployments_list` | ❌ |
+| 4 | 0.775597 | `foundry_models_deployments_list` | ❌ |
 | 5 | 0.775571 | `foundry_resource_get` | ❌ |
 
 ---
@@ -1265,7 +1265,7 @@
 | 2 | 0.803180 | `search_service_list` | ❌ |
 | 3 | 0.782806 | `postgres_database_query` | ❌ |
 | 4 | 0.779808 | `search_knowledge_base_retrieve` | ❌ |
-| 5 | 0.779115 | `kusto_query` | ❌ |
+| 5 | 0.779104 | `kusto_query` | ❌ |
 
 ---
 
@@ -1297,7 +1297,7 @@
 |------|-------|------|--------|
 | 1 | 0.863446 | `search_service_list` | ✅ **EXPECTED** |
 | 2 | 0.806040 | `redis_list` | ❌ |
-| 3 | 0.804274 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.804366 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.795736 | `marketplace_product_list` | ❌ |
 | 5 | 0.794684 | `foundry_resource_get` | ❌ |
 
@@ -1314,8 +1314,8 @@
 |------|-------|------|--------|
 | 1 | 0.813442 | `search_service_list` | ✅ **EXPECTED** |
 | 2 | 0.789965 | `search_index_query` | ❌ |
-| 3 | 0.784980 | `foundry_resource_get` | ❌ |
-| 4 | 0.780164 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.786346 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.784980 | `foundry_resource_get` | ❌ |
 | 5 | 0.779511 | `applens_resource_diagnose` | ❌ |
 
 ---
@@ -1329,9 +1329,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.907718 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.788713 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.784881 | `foundry_openai_embeddings-create` | ❌ |
+| 1 | 0.907668 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.788705 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.784952 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.780943 | `foundry_openai_chat-completions-create` | ❌ |
 | 5 | 0.771726 | `search_index_query` | ❌ |
 
@@ -1346,11 +1346,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.871430 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.735317 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.727502 | `cloudarchitect_design` | ❌ |
-| 4 | 0.727033 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.726304 | `foundry_models_deploy` | ❌ |
+| 1 | 0.871325 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.735204 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.727424 | `cloudarchitect_design` | ❌ |
+| 4 | 0.727034 | `foundry_openai_chat-completions-create` | ❌ |
+| 5 | 0.726246 | `foundry_models_deploy` | ❌ |
 
 ---
 
@@ -1363,8 +1363,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.800249 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.676003 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.800182 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.675817 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.672941 | `mysql_database_query` | ❌ |
 | 4 | 0.666363 | `extension_cli_generate` | ❌ |
 | 5 | 0.664659 | `foundry_openai_chat-completions-create` | ❌ |
@@ -1380,11 +1380,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.833719 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.718513 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.708175 | `foundry_openai_embeddings-create` | ❌ |
-| 4 | 0.705468 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.696812 | `search_knowledge_base_retrieve` | ❌ |
+| 1 | 0.833671 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.718753 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.708327 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.705547 | `foundry_openai_chat-completions-create` | ❌ |
+| 5 | 0.696876 | `search_knowledge_base_retrieve` | ❌ |
 
 ---
 
@@ -1397,9 +1397,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.801396 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 1 | 0.801259 | `speech_stt_recognize` | ✅ **EXPECTED** |
 | 2 | 0.704874 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.702610 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.700876 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.700693 | `extension_cli_generate` | ❌ |
 | 5 | 0.697690 | `deploy_architecture_diagram_generate` | ❌ |
 
@@ -1414,9 +1414,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.812918 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.697350 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.683128 | `foundry_openai_embeddings-create` | ❌ |
+| 1 | 0.812794 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.697274 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.683145 | `foundry_openai_embeddings-create` | ❌ |
 | 4 | 0.681825 | `extension_cli_generate` | ❌ |
 | 5 | 0.680636 | `foundry_openai_chat-completions-create` | ❌ |
 
@@ -1431,11 +1431,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.820376 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.720565 | `foundry_openai_create-completion` | ❌ |
-| 3 | 0.713171 | `extension_cli_generate` | ❌ |
-| 4 | 0.711085 | `cloudarchitect_design` | ❌ |
-| 5 | 0.708174 | `deploy_iac_rules_get` | ❌ |
+| 1 | 0.820215 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.720186 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.713088 | `extension_cli_generate` | ❌ |
+| 4 | 0.710940 | `cloudarchitect_design` | ❌ |
+| 5 | 0.705522 | `applens_resource_diagnose` | ❌ |
 
 ---
 
@@ -1448,9 +1448,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.851789 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 1 | 0.851767 | `speech_stt_recognize` | ✅ **EXPECTED** |
 | 2 | 0.795157 | `cloudarchitect_design` | ❌ |
-| 3 | 0.786191 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.786099 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.784342 | `applens_resource_diagnose` | ❌ |
 | 5 | 0.782834 | `search_index_query` | ❌ |
 
@@ -1465,10 +1465,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.849995 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.807433 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.849970 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.807416 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.796005 | `foundry_openai_chat-completions-create` | ❌ |
-| 4 | 0.785389 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.785409 | `foundry_openai_embeddings-create` | ❌ |
 | 5 | 0.783826 | `search_index_query` | ❌ |
 
 ---
@@ -1482,11 +1482,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.781943 | `speech_stt_recognize` | ✅ **EXPECTED** |
-| 2 | 0.672397 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.781873 | `speech_stt_recognize` | ✅ **EXPECTED** |
+| 2 | 0.672264 | `foundry_openai_create-completion` | ❌ |
 | 3 | 0.670010 | `extension_cli_generate` | ❌ |
 | 4 | 0.667431 | `foundry_agents_connect` | ❌ |
-| 5 | 0.665641 | `deploy_iac_rules_get` | ❌ |
+| 5 | 0.664628 | `extension_azqr` | ❌ |
 
 ---
 
@@ -1499,7 +1499,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.921080 | `appconfig_account_list` | ✅ **EXPECTED** |
+| 1 | 0.920979 | `appconfig_account_list` | ✅ **EXPECTED** |
 | 2 | 0.811400 | `appconfig_kv_get` | ❌ |
 | 3 | 0.809799 | `kusto_cluster_list` | ❌ |
 | 4 | 0.804719 | `redis_list` | ❌ |
@@ -1516,9 +1516,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.881688 | `appconfig_account_list` | ✅ **EXPECTED** |
+| 1 | 0.881839 | `appconfig_account_list` | ✅ **EXPECTED** |
 | 2 | 0.805855 | `redis_list` | ❌ |
-| 3 | 0.804700 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.804747 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.803939 | `appconfig_kv_get` | ❌ |
 | 5 | 0.799546 | `eventgrid_topic_list` | ❌ |
 
@@ -1533,9 +1533,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.838359 | `appconfig_account_list` | ✅ **EXPECTED** |
+| 1 | 0.838397 | `appconfig_account_list` | ✅ **EXPECTED** |
 | 2 | 0.806416 | `appconfig_kv_get` | ❌ |
-| 3 | 0.767736 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.771104 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.762381 | `appconfig_kv_set` | ❌ |
 | 5 | 0.754373 | `postgres_server_config_get` | ❌ |
 
@@ -1550,11 +1550,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.829217 | `appconfig_kv_delete` | ✅ **EXPECTED** |
+| 1 | 0.828986 | `appconfig_kv_delete` | ✅ **EXPECTED** |
 | 2 | 0.786760 | `appconfig_kv_set` | ❌ |
 | 3 | 0.786360 | `appconfig_kv_lock_set` | ❌ |
 | 4 | 0.782200 | `appconfig_kv_get` | ❌ |
-| 5 | 0.738866 | `appconfig_account_list` | ❌ |
+| 5 | 0.738763 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -1568,10 +1568,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.871372 | `appconfig_kv_get` | ✅ **EXPECTED** |
-| 2 | 0.838383 | `appconfig_account_list` | ❌ |
+| 2 | 0.838477 | `appconfig_account_list` | ❌ |
 | 3 | 0.822332 | `appconfig_kv_set` | ❌ |
 | 4 | 0.792724 | `appconfig_kv_lock_set` | ❌ |
-| 5 | 0.789145 | `appconfig_kv_delete` | ❌ |
+| 5 | 0.788942 | `appconfig_kv_delete` | ❌ |
 
 ---
 
@@ -1586,9 +1586,9 @@
 |------|-------|------|--------|
 | 1 | 0.860199 | `appconfig_kv_get` | ✅ **EXPECTED** |
 | 2 | 0.828954 | `appconfig_kv_set` | ❌ |
-| 3 | 0.811624 | `appconfig_account_list` | ❌ |
+| 3 | 0.811717 | `appconfig_account_list` | ❌ |
 | 4 | 0.802938 | `appconfig_kv_lock_set` | ❌ |
-| 5 | 0.795339 | `appconfig_kv_delete` | ❌ |
+| 5 | 0.795144 | `appconfig_kv_delete` | ❌ |
 
 ---
 
@@ -1602,9 +1602,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.822577 | `appconfig_kv_get` | ✅ **EXPECTED** |
-| 2 | 0.799015 | `appconfig_account_list` | ❌ |
+| 2 | 0.799005 | `appconfig_account_list` | ❌ |
 | 3 | 0.773696 | `appconfig_kv_set` | ❌ |
-| 4 | 0.751605 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.751419 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.747242 | `appconfig_kv_lock_set` | ❌ |
 
 ---
@@ -1621,8 +1621,8 @@
 | 1 | 0.821011 | `appconfig_kv_get` | ✅ **EXPECTED** |
 | 2 | 0.815229 | `appconfig_kv_set` | ❌ |
 | 3 | 0.776697 | `appconfig_kv_lock_set` | ❌ |
-| 4 | 0.776001 | `appconfig_account_list` | ❌ |
-| 5 | 0.762487 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.775980 | `appconfig_account_list` | ❌ |
+| 5 | 0.762513 | `appconfig_kv_delete` | ❌ |
 
 ---
 
@@ -1635,11 +1635,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.838178 | `appconfig_kv_lock_set` | ✅ **EXPECTED** |
-| 2 | 0.798798 | `appconfig_kv_set` | ❌ |
-| 3 | 0.784101 | `appconfig_kv_get` | ❌ |
-| 4 | 0.782650 | `appconfig_kv_delete` | ❌ |
-| 5 | 0.738722 | `appconfig_account_list` | ❌ |
+| 1 | 0.838045 | `appconfig_kv_lock_set` | ✅ **EXPECTED** |
+| 2 | 0.798714 | `appconfig_kv_set` | ❌ |
+| 3 | 0.784104 | `appconfig_kv_get` | ❌ |
+| 4 | 0.783169 | `appconfig_kv_delete` | ❌ |
+| 5 | 0.738696 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -1655,8 +1655,8 @@
 | 1 | 0.834308 | `appconfig_kv_lock_set` | ✅ **EXPECTED** |
 | 2 | 0.801828 | `appconfig_kv_set` | ❌ |
 | 3 | 0.798289 | `appconfig_kv_get` | ❌ |
-| 4 | 0.783813 | `appconfig_kv_delete` | ❌ |
-| 5 | 0.751400 | `appconfig_account_list` | ❌ |
+| 4 | 0.783738 | `appconfig_kv_delete` | ❌ |
+| 5 | 0.751251 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -1672,7 +1672,7 @@
 | 1 | 0.843491 | `appconfig_kv_set` | ✅ **EXPECTED** |
 | 2 | 0.814172 | `appconfig_kv_lock_set` | ❌ |
 | 3 | 0.790744 | `appconfig_kv_get` | ❌ |
-| 4 | 0.788779 | `appconfig_kv_delete` | ❌ |
+| 4 | 0.788584 | `appconfig_kv_delete` | ❌ |
 | 5 | 0.751340 | `mysql_server_param_set` | ❌ |
 
 ---
@@ -1687,7 +1687,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.860204 | `applens_resource_diagnose` | ✅ **EXPECTED** |
-| 2 | 0.803462 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.808555 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.763654 | `deploy_architecture_diagram_generate` | ❌ |
 | 4 | 0.755670 | `cloudarchitect_design` | ❌ |
 | 5 | 0.741910 | `extension_cli_generate` | ❌ |
@@ -1704,7 +1704,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.834916 | `applens_resource_diagnose` | ✅ **EXPECTED** |
-| 2 | 0.791265 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.794117 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.743505 | `cloudarchitect_design` | ❌ |
 | 4 | 0.737515 | `deploy_architecture_diagram_generate` | ❌ |
 | 5 | 0.723613 | `quota_usage_check` | ❌ |
@@ -1721,7 +1721,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.827699 | `applens_resource_diagnose` | ✅ **EXPECTED** |
-| 2 | 0.768372 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.773674 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.728346 | `deploy_architecture_diagram_generate` | ❌ |
 | 4 | 0.727222 | `cloudarchitect_design` | ❌ |
 | 5 | 0.721066 | `extension_cli_install` | ❌ |
@@ -1738,7 +1738,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.897919 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.754226 | `mysql_server_list` | ❌ |
+| 2 | 0.754033 | `mysql_server_list` | ❌ |
 | 3 | 0.746018 | `kusto_table_list` | ❌ |
 | 4 | 0.744550 | `sql_db_create` | ❌ |
 | 5 | 0.743978 | `mysql_database_list` | ❌ |
@@ -1772,7 +1772,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.881476 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.769838 | `mysql_server_list` | ❌ |
+| 2 | 0.769664 | `mysql_server_list` | ❌ |
 | 3 | 0.757291 | `mysql_database_list` | ❌ |
 | 4 | 0.756193 | `mysql_table_list` | ❌ |
 | 5 | 0.749496 | `kusto_table_list` | ❌ |
@@ -1807,9 +1807,9 @@
 |------|-------|------|--------|
 | 1 | 0.869715 | `appservice_database_add` | ✅ **EXPECTED** |
 | 2 | 0.793050 | `cosmos_database_container_list` | ❌ |
-| 3 | 0.792432 | `kusto_query` | ❌ |
+| 3 | 0.792467 | `kusto_query` | ❌ |
 | 4 | 0.791978 | `cosmos_database_list` | ❌ |
-| 5 | 0.788813 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.788846 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -1822,11 +1822,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.904707 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.762340 | `mysql_server_list` | ❌ |
-| 3 | 0.752813 | `sql_server_delete` | ❌ |
-| 4 | 0.750735 | `mysql_database_list` | ❌ |
-| 5 | 0.750367 | `sql_db_create` | ❌ |
+| 1 | 0.904503 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.762192 | `mysql_server_list` | ❌ |
+| 3 | 0.752833 | `sql_server_delete` | ❌ |
+| 4 | 0.751123 | `sql_db_create` | ❌ |
+| 5 | 0.750808 | `mysql_database_list` | ❌ |
 
 ---
 
@@ -1857,10 +1857,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.887945 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.764599 | `mysql_server_list` | ❌ |
-| 3 | 0.763303 | `kusto_query` | ❌ |
-| 4 | 0.763053 | `kusto_table_list` | ❌ |
-| 5 | 0.761735 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.765721 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.764405 | `mysql_server_list` | ❌ |
+| 4 | 0.763296 | `kusto_query` | ❌ |
+| 5 | 0.763053 | `kusto_table_list` | ❌ |
 
 ---
 
@@ -1873,11 +1873,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.889817 | `appservice_database_add` | ✅ **EXPECTED** |
-| 2 | 0.778514 | `sql_db_create` | ❌ |
-| 3 | 0.771247 | `deploy_architecture_diagram_generate` | ❌ |
-| 4 | 0.771169 | `kusto_table_list` | ❌ |
-| 5 | 0.766341 | `mysql_server_list` | ❌ |
+| 1 | 0.889858 | `appservice_database_add` | ✅ **EXPECTED** |
+| 2 | 0.778716 | `sql_db_create` | ❌ |
+| 3 | 0.771303 | `kusto_table_list` | ❌ |
+| 4 | 0.771296 | `deploy_architecture_diagram_generate` | ❌ |
+| 5 | 0.766299 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -1909,9 +1909,9 @@
 |------|-------|------|--------|
 | 1 | 0.841405 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
 | 2 | 0.791605 | `applens_resource_diagnose` | ❌ |
-| 3 | 0.781903 | `get_bestpractices_get` | ❌ |
-| 4 | 0.781079 | `cloudarchitect_design` | ❌ |
-| 5 | 0.778555 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.782883 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.781903 | `get_bestpractices_get` | ❌ |
+| 5 | 0.781779 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -1928,7 +1928,7 @@
 | 2 | 0.821414 | `applens_resource_diagnose` | ❌ |
 | 3 | 0.807270 | `redis_list` | ❌ |
 | 4 | 0.804153 | `search_service_list` | ❌ |
-| 5 | 0.799177 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.802166 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -1943,7 +1943,7 @@
 |------|-------|------|--------|
 | 1 | 0.878587 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
 | 2 | 0.808693 | `applens_resource_diagnose` | ❌ |
-| 3 | 0.783359 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.786629 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.780562 | `get_bestpractices_get` | ❌ |
 | 5 | 0.772448 | `datadog_monitoredresources_list` | ❌ |
 
@@ -1960,9 +1960,9 @@
 |------|-------|------|--------|
 | 1 | 0.815200 | `applens_resource_diagnose` | ❌ |
 | 2 | 0.814016 | `applicationinsights_recommendation_list` | ✅ **EXPECTED** |
-| 3 | 0.795209 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.798283 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.788448 | `cloudarchitect_design` | ❌ |
-| 5 | 0.772174 | `deploy_architecture_diagram_generate` | ❌ |
+| 5 | 0.773014 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -1992,11 +1992,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.853361 | `search_service_list` | ❌ |
-| 2 | 0.842535 | `kusto_cluster_list` | ❌ |
-| 3 | 0.829272 | `subscription_list` | ❌ |
-| 4 | 0.824854 | `virtualdesktop_hostpool_list` | ❌ |
-| 5 | 0.821018 | `redis_list` | ❌ |
+| 1 | 0.853328 | `search_service_list` | ❌ |
+| 2 | 0.842498 | `kusto_cluster_list` | ❌ |
+| 3 | 0.829298 | `subscription_list` | ❌ |
+| 4 | 0.824931 | `virtualdesktop_hostpool_list` | ❌ |
+| 5 | 0.821057 | `redis_list` | ❌ |
 
 ---
 
@@ -2028,8 +2028,8 @@
 |------|-------|------|--------|
 | 1 | 0.805865 | `extension_cli_install` | ✅ **EXPECTED** |
 | 2 | 0.805116 | `extension_cli_generate` | ❌ |
-| 3 | 0.760418 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.760405 | `extension_azqr` | ❌ |
+| 3 | 0.760405 | `extension_azqr` | ❌ |
+| 4 | 0.757640 | `deploy_iac_rules_get` | ❌ |
 | 5 | 0.754401 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
@@ -2044,7 +2044,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.790601 | `extension_cli_install` | ✅ **EXPECTED** |
-| 2 | 0.725124 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.728892 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.721054 | `deploy_pipeline_guidance_get` | ❌ |
 | 4 | 0.717446 | `extension_cli_generate` | ❌ |
 | 5 | 0.714683 | `extension_azqr` | ❌ |
@@ -2061,7 +2061,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.892433 | `extension_cli_install` | ✅ **EXPECTED** |
-| 2 | 0.814488 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.812380 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.811207 | `extension_cli_generate` | ❌ |
 | 4 | 0.803642 | `deploy_pipeline_guidance_get` | ❌ |
 | 5 | 0.800275 | `get_bestpractices_get` | ❌ |
@@ -2078,7 +2078,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.893506 | `acr_registry_repository_list` | ❌ |
-| 2 | 0.872884 | `acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.872986 | `acr_registry_list` | ✅ **EXPECTED** |
 | 3 | 0.862416 | `kusto_cluster_list` | ❌ |
 | 4 | 0.856360 | `search_service_list` | ❌ |
 | 5 | 0.837896 | `redis_list` | ❌ |
@@ -2095,7 +2095,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.863667 | `acr_registry_repository_list` | ❌ |
-| 2 | 0.828674 | `acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.828738 | `acr_registry_list` | ✅ **EXPECTED** |
 | 3 | 0.819051 | `storage_blob_container_get` | ❌ |
 | 4 | 0.813630 | `quota_usage_check` | ❌ |
 | 5 | 0.803314 | `redis_list` | ❌ |
@@ -2112,10 +2112,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.845409 | `acr_registry_repository_list` | ❌ |
-| 2 | 0.823433 | `acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.823566 | `acr_registry_list` | ✅ **EXPECTED** |
 | 3 | 0.814685 | `redis_list` | ❌ |
 | 4 | 0.805737 | `storage_blob_container_get` | ❌ |
-| 5 | 0.804288 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.804317 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -2129,7 +2129,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.866058 | `acr_registry_repository_list` | ❌ |
-| 2 | 0.832799 | `acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.833004 | `acr_registry_list` | ✅ **EXPECTED** |
 | 3 | 0.788833 | `kusto_cluster_list` | ❌ |
 | 4 | 0.781741 | `group_list` | ❌ |
 | 5 | 0.778240 | `storage_blob_container_get` | ❌ |
@@ -2146,7 +2146,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.867445 | `acr_registry_repository_list` | ❌ |
-| 2 | 0.824020 | `acr_registry_list` | ✅ **EXPECTED** |
+| 2 | 0.824300 | `acr_registry_list` | ✅ **EXPECTED** |
 | 3 | 0.793830 | `storage_blob_container_get` | ❌ |
 | 4 | 0.786488 | `redis_list` | ❌ |
 | 5 | 0.776447 | `eventgrid_topic_list` | ❌ |
@@ -2163,7 +2163,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.886429 | `acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.837864 | `acr_registry_list` | ❌ |
+| 2 | 0.837955 | `acr_registry_list` | ❌ |
 | 3 | 0.826558 | `kusto_cluster_list` | ❌ |
 | 4 | 0.813168 | `search_service_list` | ❌ |
 | 5 | 0.808497 | `redis_list` | ❌ |
@@ -2181,8 +2181,8 @@
 |------|-------|------|--------|
 | 1 | 0.846471 | `acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.787159 | `storage_blob_container_get` | ❌ |
-| 3 | 0.771675 | `acr_registry_list` | ❌ |
-| 4 | 0.764050 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.771812 | `acr_registry_list` | ❌ |
+| 4 | 0.768761 | `deploy_app_logs_get` | ❌ |
 | 5 | 0.762557 | `redis_list` | ❌ |
 
 ---
@@ -2197,7 +2197,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.868239 | `acr_registry_repository_list` | ✅ **EXPECTED** |
-| 2 | 0.793322 | `acr_registry_list` | ❌ |
+| 2 | 0.793332 | `acr_registry_list` | ❌ |
 | 3 | 0.773097 | `storage_blob_container_get` | ❌ |
 | 4 | 0.759270 | `cosmos_database_container_list` | ❌ |
 | 5 | 0.755409 | `kusto_database_list` | ❌ |
@@ -2215,7 +2215,7 @@
 |------|-------|------|--------|
 | 1 | 0.854075 | `acr_registry_repository_list` | ✅ **EXPECTED** |
 | 2 | 0.783735 | `storage_blob_container_get` | ❌ |
-| 3 | 0.779563 | `acr_registry_list` | ❌ |
+| 3 | 0.779666 | `acr_registry_list` | ❌ |
 | 4 | 0.753688 | `redis_list` | ❌ |
 | 5 | 0.750924 | `storage_blob_get` | ❌ |
 
@@ -2233,7 +2233,7 @@
 | 1 | 0.868273 | `communication_email_send` | ✅ **EXPECTED** |
 | 2 | 0.742303 | `communication_sms_send` | ❌ |
 | 3 | 0.718726 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.711620 | `kusto_query` | ❌ |
+| 4 | 0.711544 | `kusto_query` | ❌ |
 | 5 | 0.711354 | `extension_cli_generate` | ❌ |
 
 ---
@@ -2249,7 +2249,7 @@
 |------|-------|------|--------|
 | 1 | 0.852579 | `communication_email_send` | ✅ **EXPECTED** |
 | 2 | 0.744727 | `communication_sms_send` | ❌ |
-| 3 | 0.723001 | `speech_stt_recognize` | ❌ |
+| 3 | 0.722979 | `speech_stt_recognize` | ❌ |
 | 4 | 0.721142 | `extension_cli_generate` | ❌ |
 | 5 | 0.715609 | `cloudarchitect_design` | ❌ |
 
@@ -2268,7 +2268,7 @@
 | 2 | 0.741165 | `communication_sms_send` | ❌ |
 | 3 | 0.709321 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.704821 | `extension_cli_generate` | ❌ |
-| 5 | 0.699148 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.699245 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -2302,7 +2302,7 @@
 | 2 | 0.782326 | `communication_sms_send` | ❌ |
 | 3 | 0.710614 | `cloudarchitect_design` | ❌ |
 | 4 | 0.705415 | `eventgrid_topic_list` | ❌ |
-| 5 | 0.701401 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.701498 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -2334,9 +2334,9 @@
 |------|-------|------|--------|
 | 1 | 0.837896 | `communication_email_send` | ✅ **EXPECTED** |
 | 2 | 0.721563 | `communication_sms_send` | ❌ |
-| 3 | 0.693903 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.693923 | `foundry_openai_create-completion` | ❌ |
 | 4 | 0.688301 | `extension_cli_generate` | ❌ |
-| 5 | 0.681642 | `foundry_models_deploy` | ❌ |
+| 5 | 0.684073 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -2351,9 +2351,9 @@
 |------|-------|------|--------|
 | 1 | 0.879273 | `communication_email_send` | ✅ **EXPECTED** |
 | 2 | 0.755289 | `communication_sms_send` | ❌ |
-| 3 | 0.710239 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.704119 | `extension_cli_generate` | ❌ |
-| 5 | 0.702136 | `cloudarchitect_design` | ❌ |
+| 3 | 0.704119 | `extension_cli_generate` | ❌ |
+| 4 | 0.702136 | `cloudarchitect_design` | ❌ |
+| 5 | 0.699241 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -2368,9 +2368,9 @@
 |------|-------|------|--------|
 | 1 | 0.820770 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.769285 | `communication_email_send` | ❌ |
-| 3 | 0.708279 | `speech_stt_recognize` | ❌ |
+| 3 | 0.708233 | `speech_stt_recognize` | ❌ |
 | 4 | 0.695624 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.689916 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.689943 | `foundry_openai_create-completion` | ❌ |
 
 ---
 
@@ -2383,11 +2383,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.821922 | `communication_sms_send` | ✅ **EXPECTED** |
-| 2 | 0.775846 | `communication_email_send` | ❌ |
-| 3 | 0.690601 | `foundry_openai_chat-completions-create` | ❌ |
-| 4 | 0.682934 | `foundry_openai_create-completion` | ❌ |
-| 5 | 0.682052 | `loadtesting_testrun_create` | ❌ |
+| 1 | 0.821947 | `communication_sms_send` | ✅ **EXPECTED** |
+| 2 | 0.775770 | `communication_email_send` | ❌ |
+| 3 | 0.690468 | `foundry_openai_chat-completions-create` | ❌ |
+| 4 | 0.682866 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.681911 | `loadtesting_testrun_create` | ❌ |
 
 ---
 
@@ -2403,8 +2403,8 @@
 | 1 | 0.870041 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.844795 | `communication_email_send` | ❌ |
 | 3 | 0.704269 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.701594 | `eventgrid_subscription_list` | ❌ |
-| 5 | 0.696781 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.701702 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.699785 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -2419,8 +2419,8 @@
 |------|-------|------|--------|
 | 1 | 0.851135 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.775737 | `communication_email_send` | ❌ |
-| 3 | 0.731525 | `deploy_app_logs_get` | ❌ |
-| 4 | 0.726200 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.733053 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.726320 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.715318 | `eventgrid_topic_list` | ❌ |
 
 ---
@@ -2436,8 +2436,8 @@
 |------|-------|------|--------|
 | 1 | 0.797352 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.766617 | `communication_email_send` | ❌ |
-| 3 | 0.702733 | `deploy_app_logs_get` | ❌ |
-| 4 | 0.699615 | `foundry_openai_create-completion` | ❌ |
+| 3 | 0.704560 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.699693 | `foundry_openai_create-completion` | ❌ |
 | 5 | 0.694501 | `foundry_agents_connect` | ❌ |
 
 ---
@@ -2454,8 +2454,8 @@
 | 1 | 0.828175 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.767957 | `communication_email_send` | ❌ |
 | 3 | 0.696027 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.691350 | `eventgrid_subscription_list` | ❌ |
-| 5 | 0.687158 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.691438 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.690576 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -2470,9 +2470,9 @@
 |------|-------|------|--------|
 | 1 | 0.824706 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.788074 | `communication_email_send` | ❌ |
-| 3 | 0.707065 | `speech_stt_recognize` | ❌ |
+| 3 | 0.706997 | `speech_stt_recognize` | ❌ |
 | 4 | 0.700512 | `foundry_openai_chat-completions-create` | ❌ |
-| 5 | 0.695483 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.698445 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -2487,9 +2487,9 @@
 |------|-------|------|--------|
 | 1 | 0.852343 | `communication_sms_send` | ✅ **EXPECTED** |
 | 2 | 0.784622 | `communication_email_send` | ❌ |
-| 3 | 0.733293 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.736237 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.724217 | `resourcehealth_health-events_list` | ❌ |
-| 5 | 0.718669 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.718774 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -2506,7 +2506,7 @@
 | 2 | 0.737943 | `appconfig_kv_set` | ❌ |
 | 3 | 0.717614 | `keyvault_secret_create` | ❌ |
 | 4 | 0.714412 | `appconfig_kv_lock_set` | ❌ |
-| 5 | 0.710581 | `keyvault_key_create` | ❌ |
+| 5 | 0.710804 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -2521,7 +2521,7 @@
 |------|-------|------|--------|
 | 1 | 0.827993 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
 | 2 | 0.743736 | `confidentialledger_entries_get` | ❌ |
-| 3 | 0.697179 | `eventgrid_events_publish` | ❌ |
+| 3 | 0.697268 | `eventgrid_events_publish` | ❌ |
 | 4 | 0.693981 | `keyvault_secret_create` | ❌ |
 | 5 | 0.691925 | `keyvault_certificate_import` | ❌ |
 
@@ -2539,7 +2539,7 @@
 | 1 | 0.782923 | `confidentialledger_entries_append` | ✅ **EXPECTED** |
 | 2 | 0.750702 | `confidentialledger_entries_get` | ❌ |
 | 3 | 0.693034 | `appconfig_kv_set` | ❌ |
-| 4 | 0.686396 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.686606 | `cosmos_database_container_item_query` | ❌ |
 | 5 | 0.683013 | `keyvault_secret_create` | ❌ |
 
 ---
@@ -2591,7 +2591,7 @@
 | 2 | 0.817697 | `confidentialledger_entries_append` | ❌ |
 | 3 | 0.717577 | `keyvault_certificate_get` | ❌ |
 | 4 | 0.704764 | `keyvault_key_get` | ❌ |
-| 5 | 0.704695 | `keyvault_secret_get` | ❌ |
+| 5 | 0.704575 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -2608,7 +2608,7 @@
 | 2 | 0.734616 | `confidentialledger_entries_append` | ❌ |
 | 3 | 0.732828 | `keyvault_key_get` | ❌ |
 | 4 | 0.728510 | `keyvault_certificate_get` | ❌ |
-| 5 | 0.717324 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.717596 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -2621,11 +2621,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.911785 | `cosmos_account_list` | ✅ **EXPECTED** |
-| 2 | 0.853544 | `cosmos_database_list` | ❌ |
-| 3 | 0.840331 | `kusto_cluster_list` | ❌ |
-| 4 | 0.823045 | `subscription_list` | ❌ |
-| 5 | 0.817464 | `cosmos_database_container_list` | ❌ |
+| 1 | 0.911865 | `cosmos_account_list` | ✅ **EXPECTED** |
+| 2 | 0.853519 | `cosmos_database_list` | ❌ |
+| 3 | 0.840446 | `kusto_cluster_list` | ❌ |
+| 4 | 0.823181 | `subscription_list` | ❌ |
+| 5 | 0.817476 | `cosmos_database_container_list` | ❌ |
 
 ---
 
@@ -2641,7 +2641,7 @@
 | 1 | 0.839227 | `cosmos_account_list` | ✅ **EXPECTED** |
 | 2 | 0.837729 | `cosmos_database_list` | ❌ |
 | 3 | 0.809637 | `cosmos_database_container_list` | ❌ |
-| 4 | 0.793034 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.793189 | `cosmos_database_container_item_query` | ❌ |
 | 5 | 0.780946 | `storage_account_get` | ❌ |
 
 ---
@@ -2672,10 +2672,10 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.874837 | `cosmos_database_container_item_query` | ✅ **EXPECTED** |
+| 1 | 0.874731 | `cosmos_database_container_item_query` | ✅ **EXPECTED** |
 | 2 | 0.849399 | `cosmos_database_container_list` | ❌ |
 | 3 | 0.795628 | `cosmos_database_list` | ❌ |
-| 4 | 0.785297 | `kusto_query` | ❌ |
+| 4 | 0.785400 | `kusto_query` | ❌ |
 | 5 | 0.785097 | `storage_blob_container_get` | ❌ |
 
 ---
@@ -2690,7 +2690,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.921300 | `cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.880872 | `cosmos_database_container_item_query` | ❌ |
+| 2 | 0.880697 | `cosmos_database_container_item_query` | ❌ |
 | 3 | 0.867517 | `cosmos_database_list` | ❌ |
 | 4 | 0.824383 | `cosmos_account_list` | ❌ |
 | 5 | 0.809411 | `storage_blob_container_get` | ❌ |
@@ -2707,7 +2707,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.900700 | `cosmos_database_container_list` | ✅ **EXPECTED** |
-| 2 | 0.863561 | `cosmos_database_container_item_query` | ❌ |
+| 2 | 0.863402 | `cosmos_database_container_item_query` | ❌ |
 | 3 | 0.853449 | `cosmos_database_list` | ❌ |
 | 4 | 0.818800 | `storage_blob_container_get` | ❌ |
 | 5 | 0.815366 | `cosmos_account_list` | ❌ |
@@ -2740,11 +2740,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.908829 | `cosmos_database_list` | ✅ **EXPECTED** |
-| 2 | 0.855188 | `cosmos_database_container_list` | ❌ |
-| 3 | 0.841841 | `cosmos_account_list` | ❌ |
-| 4 | 0.837447 | `postgres_database_list` | ❌ |
-| 5 | 0.824852 | `kusto_database_list` | ❌ |
+| 1 | 0.908753 | `cosmos_database_list` | ✅ **EXPECTED** |
+| 2 | 0.855142 | `cosmos_database_container_list` | ❌ |
+| 3 | 0.841693 | `cosmos_account_list` | ❌ |
+| 4 | 0.837438 | `postgres_database_list` | ❌ |
+| 5 | 0.824817 | `kusto_database_list` | ❌ |
 
 ---
 
@@ -2812,7 +2812,7 @@
 | 2 | 0.846745 | `kusto_cluster_get` | ❌ |
 | 3 | 0.835073 | `aks_cluster_get` | ❌ |
 | 4 | 0.828444 | `kusto_database_list` | ❌ |
-| 5 | 0.823721 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.823784 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -2859,7 +2859,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.793703 | `kusto_query` | ✅ **EXPECTED** |
+| 1 | 0.793577 | `kusto_query` | ✅ **EXPECTED** |
 | 2 | 0.790473 | `postgres_database_query` | ❌ |
 | 3 | 0.783002 | `kusto_table_list` | ❌ |
 | 4 | 0.777589 | `kusto_cluster_list` | ❌ |
@@ -2948,7 +2948,7 @@
 | 2 | 0.850027 | `mysql_database_list` | ✅ **EXPECTED** |
 | 3 | 0.835616 | `mysql_table_list` | ❌ |
 | 4 | 0.818887 | `postgres_table_list` | ❌ |
-| 5 | 0.808244 | `mysql_server_list` | ❌ |
+| 5 | 0.808188 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -2964,7 +2964,7 @@
 | 1 | 0.856156 | `postgres_database_list` | ❌ |
 | 2 | 0.843299 | `mysql_database_list` | ✅ **EXPECTED** |
 | 3 | 0.831006 | `mysql_table_list` | ❌ |
-| 4 | 0.807517 | `mysql_server_list` | ❌ |
+| 4 | 0.807422 | `mysql_server_list` | ❌ |
 | 5 | 0.806940 | `postgres_table_list` | ❌ |
 
 ---
@@ -2981,7 +2981,7 @@
 | 1 | 0.783082 | `postgres_database_query` | ❌ |
 | 2 | 0.781748 | `mysql_table_list` | ❌ |
 | 3 | 0.755838 | `mysql_database_list` | ❌ |
-| 4 | 0.753728 | `mysql_server_list` | ❌ |
+| 4 | 0.753655 | `mysql_server_list` | ❌ |
 | 5 | 0.751427 | `postgres_database_list` | ❌ |
 
 ---
@@ -3014,7 +3014,7 @@
 |------|-------|------|--------|
 | 1 | 0.864807 | `postgres_server_list` | ❌ |
 | 2 | 0.824894 | `kusto_cluster_list` | ❌ |
-| 3 | 0.816205 | `mysql_server_list` | ✅ **EXPECTED** |
+| 3 | 0.816137 | `mysql_server_list` | ✅ **EXPECTED** |
 | 4 | 0.811819 | `mysql_database_list` | ❌ |
 | 5 | 0.809186 | `mysql_table_list` | ❌ |
 
@@ -3030,7 +3030,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.807672 | `mysql_database_list` | ❌ |
-| 2 | 0.805028 | `mysql_server_list` | ✅ **EXPECTED** |
+| 2 | 0.804885 | `mysql_server_list` | ✅ **EXPECTED** |
 | 3 | 0.803458 | `mysql_table_list` | ❌ |
 | 4 | 0.793162 | `postgres_database_list` | ❌ |
 | 5 | 0.785478 | `mysql_server_config_get` | ❌ |
@@ -3048,9 +3048,9 @@
 |------|-------|------|--------|
 | 1 | 0.839670 | `postgres_server_list` | ❌ |
 | 2 | 0.804401 | `redis_list` | ❌ |
-| 3 | 0.804262 | `mysql_server_list` | ✅ **EXPECTED** |
+| 3 | 0.804145 | `mysql_server_list` | ✅ **EXPECTED** |
 | 4 | 0.794522 | `kusto_cluster_list` | ❌ |
-| 5 | 0.794384 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.794462 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -3346,17 +3346,17 @@
 ## Test 170
 
 **Expected Tool:** `deploy_app_logs_get`  
-**Prompt:** Show me the log of the application  
+**Prompt:** Show me the log of the application in resource group <resource-group-name>  
 
 ### Results
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.834433 | `deploy_app_logs_get` | ✅ **EXPECTED** |
-| 2 | 0.757387 | `monitor_activitylog_list` | ❌ |
-| 3 | 0.754666 | `monitor_workspace_log_query` | ❌ |
-| 4 | 0.754028 | `applens_resource_diagnose` | ❌ |
-| 5 | 0.744194 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.854430 | `deploy_app_logs_get` | ✅ **EXPECTED** |
+| 2 | 0.804046 | `monitor_activitylog_list` | ❌ |
+| 3 | 0.801034 | `monitor_workspace_log_query` | ❌ |
+| 4 | 0.799285 | `monitor_resource_log_query` | ❌ |
+| 5 | 0.796333 | `applens_resource_diagnose` | ❌ |
 
 ---
 
@@ -3371,7 +3371,7 @@
 |------|-------|------|--------|
 | 1 | 0.913195 | `deploy_architecture_diagram_generate` | ✅ **EXPECTED** |
 | 2 | 0.837844 | `deploy_plan_get` | ❌ |
-| 3 | 0.828189 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.829720 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.823312 | `cloudarchitect_design` | ❌ |
 | 5 | 0.819095 | `deploy_pipeline_guidance_get` | ❌ |
 
@@ -3387,7 +3387,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.766716 | `extension_cli_generate` | ❌ |
-| 2 | 0.757611 | `deploy_iac_rules_get` | ✅ **EXPECTED** |
+| 2 | 0.752556 | `deploy_iac_rules_get` | ✅ **EXPECTED** |
 | 3 | 0.741796 | `deploy_pipeline_guidance_get` | ❌ |
 | 4 | 0.736052 | `kusto_table_schema` | ❌ |
 | 5 | 0.736016 | `extension_cli_install` | ❌ |
@@ -3404,7 +3404,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.904455 | `deploy_pipeline_guidance_get` | ✅ **EXPECTED** |
-| 2 | 0.842610 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.847580 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.836244 | `deploy_plan_get` | ❌ |
 | 4 | 0.804504 | `cloudarchitect_design` | ❌ |
 | 5 | 0.802719 | `deploy_architecture_diagram_generate` | ❌ |
@@ -3422,7 +3422,7 @@
 |------|-------|------|--------|
 | 1 | 0.888872 | `deploy_plan_get` | ✅ **EXPECTED** |
 | 2 | 0.866662 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.857670 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.850645 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.844504 | `deploy_architecture_diagram_generate` | ❌ |
 | 5 | 0.824667 | `foundry_models_deploy` | ❌ |
 
@@ -3437,9 +3437,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.889654 | `eventgrid_events_publish` | ✅ **EXPECTED** |
+| 1 | 0.889755 | `eventgrid_events_publish` | ✅ **EXPECTED** |
 | 2 | 0.798699 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.782893 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.782964 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.749106 | `eventhubs_eventhub_update` | ❌ |
 | 5 | 0.736760 | `kusto_table_schema` | ❌ |
 
@@ -3454,9 +3454,9 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.859413 | `eventgrid_events_publish` | ✅ **EXPECTED** |
+| 1 | 0.859524 | `eventgrid_events_publish` | ✅ **EXPECTED** |
 | 2 | 0.820907 | `eventgrid_topic_list` | ❌ |
-| 3 | 0.804106 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.804173 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.756970 | `eventhubs_eventhub_update` | ❌ |
 | 5 | 0.736031 | `eventhubs_eventhub_get` | ❌ |
 
@@ -3471,11 +3471,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.829645 | `eventgrid_topic_list` | ❌ |
-| 2 | 0.823490 | `eventgrid_events_publish` | ✅ **EXPECTED** |
-| 3 | 0.800179 | `eventgrid_subscription_list` | ❌ |
-| 4 | 0.761489 | `eventhubs_eventhub_update` | ❌ |
-| 5 | 0.761001 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 1 | 0.829500 | `eventgrid_topic_list` | ❌ |
+| 2 | 0.822960 | `eventgrid_events_publish` | ✅ **EXPECTED** |
+| 3 | 0.800050 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.761128 | `eventhubs_eventhub_update` | ❌ |
+| 5 | 0.760653 | `eventhubs_eventhub_consumergroup_update` | ❌ |
 
 ---
 
@@ -3489,7 +3489,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.905660 | `eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.892916 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.892934 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.804302 | `kusto_cluster_list` | ❌ |
 | 4 | 0.791512 | `redis_list` | ❌ |
 | 5 | 0.790915 | `search_service_list` | ❌ |
@@ -3506,7 +3506,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.898506 | `eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.892006 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.892039 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.793690 | `redis_list` | ❌ |
 | 4 | 0.788307 | `kusto_cluster_list` | ❌ |
 | 5 | 0.785561 | `marketplace_product_list` | ❌ |
@@ -3523,7 +3523,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.913184 | `eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.894709 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.894729 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.814853 | `postgres_server_list` | ❌ |
 | 4 | 0.810667 | `kusto_cluster_list` | ❌ |
 | 5 | 0.802949 | `redis_list` | ❌ |
@@ -3540,7 +3540,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.920089 | `eventgrid_topic_list` | ✅ **EXPECTED** |
-| 2 | 0.882339 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.882345 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.837201 | `group_list` | ❌ |
 | 4 | 0.820569 | `kusto_cluster_list` | ❌ |
 | 5 | 0.816757 | `loadtesting_testresource_list` | ❌ |
@@ -3556,7 +3556,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.888829 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.888860 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.883944 | `eventgrid_topic_list` | ❌ |
 | 3 | 0.800907 | `kusto_cluster_list` | ❌ |
 | 4 | 0.792277 | `postgres_server_list` | ❌ |
@@ -3574,7 +3574,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.864350 | `eventgrid_topic_list` | ❌ |
-| 2 | 0.860571 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.860605 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 3 | 0.786464 | `postgres_server_list` | ❌ |
 | 4 | 0.776853 | `kusto_cluster_list` | ❌ |
 | 5 | 0.767170 | `grafana_list` | ❌ |
@@ -3591,7 +3591,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.886777 | `eventgrid_topic_list` | ❌ |
-| 2 | 0.870652 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.870641 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 3 | 0.804751 | `group_list` | ❌ |
 | 4 | 0.800346 | `kusto_cluster_list` | ❌ |
 | 5 | 0.792745 | `monitor_webtests_list` | ❌ |
@@ -3607,7 +3607,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.895381 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.895357 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.877596 | `eventgrid_topic_list` | ❌ |
 | 3 | 0.811393 | `kusto_cluster_list` | ❌ |
 | 4 | 0.806815 | `redis_list` | ❌ |
@@ -3624,7 +3624,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.888654 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.888645 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.884649 | `eventgrid_topic_list` | ❌ |
 | 3 | 0.824591 | `postgres_server_list` | ❌ |
 | 4 | 0.822312 | `kusto_cluster_list` | ❌ |
@@ -3642,7 +3642,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.891397 | `eventgrid_topic_list` | ❌ |
-| 2 | 0.884803 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 2 | 0.884763 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 3 | 0.841621 | `group_list` | ❌ |
 | 4 | 0.820360 | `redis_list` | ❌ |
 | 5 | 0.815762 | `kusto_cluster_list` | ❌ |
@@ -3658,11 +3658,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.856701 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
+| 1 | 0.856692 | `eventgrid_subscription_list` | ✅ **EXPECTED** |
 | 2 | 0.849284 | `eventgrid_topic_list` | ❌ |
 | 3 | 0.789738 | `postgres_server_list` | ❌ |
 | 4 | 0.776123 | `kusto_cluster_list` | ❌ |
-| 5 | 0.772996 | `appconfig_account_list` | ❌ |
+| 5 | 0.773417 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -3760,11 +3760,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.873609 | `eventhubs_namespace_delete` | ❌ |
-| 2 | 0.854035 | `eventhubs_eventhub_delete` | ✅ **EXPECTED** |
-| 3 | 0.840721 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
-| 4 | 0.825001 | `eventhubs_namespace_get` | ❌ |
-| 5 | 0.821468 | `eventhubs_eventhub_get` | ❌ |
+| 1 | 0.873563 | `eventhubs_namespace_delete` | ❌ |
+| 2 | 0.854152 | `eventhubs_eventhub_delete` | ✅ **EXPECTED** |
+| 3 | 0.840655 | `eventhubs_eventhub_consumergroup_delete` | ❌ |
+| 4 | 0.824830 | `eventhubs_namespace_get` | ❌ |
+| 5 | 0.821433 | `eventhubs_eventhub_get` | ❌ |
 
 ---
 
@@ -3828,11 +3828,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.861450 | `eventhubs_eventhub_update` | ✅ **EXPECTED** |
-| 2 | 0.837962 | `eventhubs_namespace_get` | ❌ |
-| 3 | 0.830998 | `eventhubs_namespace_delete` | ❌ |
-| 4 | 0.828789 | `eventhubs_eventhub_get` | ❌ |
-| 5 | 0.821347 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 1 | 0.861448 | `eventhubs_eventhub_update` | ✅ **EXPECTED** |
+| 2 | 0.837861 | `eventhubs_namespace_get` | ❌ |
+| 3 | 0.830895 | `eventhubs_namespace_delete` | ❌ |
+| 4 | 0.828681 | `eventhubs_eventhub_get` | ❌ |
+| 5 | 0.821437 | `eventhubs_eventhub_consumergroup_update` | ❌ |
 
 ---
 
@@ -3866,7 +3866,7 @@
 | 2 | 0.864321 | `eventhubs_eventhub_get` | ❌ |
 | 3 | 0.848809 | `kusto_cluster_list` | ❌ |
 | 4 | 0.826985 | `eventgrid_topic_list` | ❌ |
-| 5 | 0.818780 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.818847 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -3896,11 +3896,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.842065 | `eventhubs_namespace_update` | ✅ **EXPECTED** |
-| 2 | 0.811478 | `eventhubs_namespace_delete` | ❌ |
-| 3 | 0.802138 | `eventhubs_namespace_get` | ❌ |
-| 4 | 0.762533 | `storage_account_create` | ❌ |
-| 5 | 0.761387 | `eventhubs_eventhub_consumergroup_update` | ❌ |
+| 1 | 0.842150 | `eventhubs_namespace_update` | ✅ **EXPECTED** |
+| 2 | 0.811546 | `eventhubs_namespace_delete` | ❌ |
+| 3 | 0.802209 | `eventhubs_namespace_get` | ❌ |
+| 4 | 0.762521 | `storage_account_create` | ❌ |
+| 5 | 0.761522 | `eventhubs_eventhub_consumergroup_update` | ❌ |
 
 ---
 
@@ -3931,7 +3931,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.864639 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.799597 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.802003 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.779803 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.761400 | `deploy_architecture_diagram_generate` | ❌ |
 | 5 | 0.759013 | `appservice_database_add` | ❌ |
@@ -3948,10 +3948,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.823429 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.770219 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.772407 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.763699 | `postgres_server_config_get` | ❌ |
 | 4 | 0.761617 | `appconfig_kv_get` | ❌ |
-| 5 | 0.747106 | `appconfig_account_list` | ❌ |
+| 5 | 0.747371 | `appconfig_account_list` | ❌ |
 
 ---
 
@@ -3965,7 +3965,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.812102 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.758620 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.760593 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.726109 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.712137 | `appconfig_kv_get` | ❌ |
 | 5 | 0.711637 | `resourcehealth_availability-status_get` | ❌ |
@@ -3982,7 +3982,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.888340 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.797761 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.801509 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.796455 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.773059 | `foundry_resource_get` | ❌ |
 | 5 | 0.766532 | `monitor_webtests_get` | ❌ |
@@ -3999,7 +3999,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.800410 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.778997 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.782737 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.746350 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.735675 | `sql_server_show` | ❌ |
 | 5 | 0.728265 | `virtualdesktop_hostpool_host_user-list` | ❌ |
@@ -4016,7 +4016,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.884793 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.789144 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.791441 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.767977 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.765038 | `monitor_webtests_get` | ❌ |
 | 5 | 0.753194 | `foundry_resource_get` | ❌ |
@@ -4033,7 +4033,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.854621 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.802465 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.806043 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.763992 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.751034 | `sql_server_show` | ❌ |
 | 5 | 0.750748 | `mysql_table_schema_get` | ❌ |
@@ -4050,7 +4050,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.809572 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.790817 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.793238 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.767555 | `quota_usage_check` | ❌ |
 | 4 | 0.763218 | `deploy_plan_get` | ❌ |
 | 5 | 0.762313 | `deploy_architecture_diagram_generate` | ❌ |
@@ -4066,11 +4066,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.822908 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.791789 | `deploy_app_logs_get` | ❌ |
-| 3 | 0.758340 | `applens_resource_diagnose` | ❌ |
-| 4 | 0.736890 | `extension_cli_install` | ❌ |
-| 5 | 0.730025 | `cloudarchitect_design` | ❌ |
+| 1 | 0.822980 | `functionapp_get` | ✅ **EXPECTED** |
+| 2 | 0.794856 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.758422 | `applens_resource_diagnose` | ❌ |
+| 4 | 0.736948 | `extension_cli_install` | ❌ |
+| 5 | 0.730103 | `cloudarchitect_design` | ❌ |
 
 ---
 
@@ -4085,9 +4085,9 @@
 |------|-------|------|--------|
 | 1 | 0.855510 | `functionapp_get` | ✅ **EXPECTED** |
 | 2 | 0.801000 | `search_service_list` | ❌ |
-| 3 | 0.797458 | `appconfig_account_list` | ❌ |
-| 4 | 0.795314 | `deploy_app_logs_get` | ❌ |
-| 5 | 0.784778 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.798885 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.797418 | `appconfig_account_list` | ❌ |
+| 5 | 0.784852 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -4101,7 +4101,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.846634 | `functionapp_get` | ✅ **EXPECTED** |
-| 2 | 0.829634 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.834459 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.813025 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.802079 | `extension_cli_install` | ❌ |
 | 5 | 0.801066 | `search_service_list` | ❌ |
@@ -4117,7 +4117,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.789416 | `deploy_app_logs_get` | ❌ |
+| 1 | 0.794721 | `deploy_app_logs_get` | ❌ |
 | 2 | 0.786712 | `functionapp_get` | ✅ **EXPECTED** |
 | 3 | 0.763268 | `applens_resource_diagnose` | ❌ |
 | 4 | 0.758227 | `extension_cli_install` | ❌ |
@@ -4137,7 +4137,7 @@
 | 1 | 0.845654 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
 | 2 | 0.812440 | `storage_account_get` | ❌ |
 | 3 | 0.803953 | `keyvault_key_get` | ❌ |
-| 4 | 0.788698 | `keyvault_secret_get` | ❌ |
+| 4 | 0.788578 | `keyvault_secret_get` | ❌ |
 | 5 | 0.781050 | `keyvault_certificate_get` | ❌ |
 
 ---
@@ -4151,11 +4151,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.879923 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
-| 2 | 0.817978 | `storage_account_get` | ❌ |
-| 3 | 0.793422 | `keyvault_key_get` | ❌ |
-| 4 | 0.792185 | `keyvault_key_create` | ❌ |
-| 5 | 0.789460 | `storage_blob_container_get` | ❌ |
+| 1 | 0.879992 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
+| 2 | 0.817886 | `storage_account_get` | ❌ |
+| 3 | 0.793266 | `keyvault_key_get` | ❌ |
+| 4 | 0.792142 | `keyvault_key_create` | ❌ |
+| 5 | 0.789252 | `storage_blob_container_get` | ❌ |
 
 ---
 
@@ -4171,7 +4171,7 @@
 | 1 | 0.793890 | `keyvault_admin_settings_get` | ✅ **EXPECTED** |
 | 2 | 0.778209 | `appconfig_kv_set` | ❌ |
 | 3 | 0.777060 | `keyvault_secret_create` | ❌ |
-| 4 | 0.773734 | `keyvault_secret_get` | ❌ |
+| 4 | 0.773529 | `keyvault_secret_get` | ❌ |
 | 5 | 0.771355 | `storage_account_get` | ❌ |
 
 ---
@@ -4187,7 +4187,7 @@
 |------|-------|------|--------|
 | 1 | 0.858241 | `keyvault_certificate_create` | ✅ **EXPECTED** |
 | 2 | 0.840150 | `keyvault_certificate_import` | ❌ |
-| 3 | 0.837945 | `keyvault_key_create` | ❌ |
+| 3 | 0.838058 | `keyvault_key_create` | ❌ |
 | 4 | 0.829966 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.817735 | `keyvault_secret_create` | ❌ |
 
@@ -4205,8 +4205,8 @@
 | 1 | 0.847433 | `keyvault_certificate_create` | ✅ **EXPECTED** |
 | 2 | 0.826699 | `keyvault_certificate_import` | ❌ |
 | 3 | 0.823322 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.817386 | `keyvault_key_create` | ❌ |
-| 5 | 0.806619 | `keyvault_certificate_list` | ❌ |
+| 4 | 0.817519 | `keyvault_key_create` | ❌ |
+| 5 | 0.806741 | `keyvault_certificate_list` | ❌ |
 
 ---
 
@@ -4222,7 +4222,7 @@
 | 1 | 0.845848 | `keyvault_certificate_create` | ✅ **EXPECTED** |
 | 2 | 0.828698 | `keyvault_certificate_import` | ❌ |
 | 3 | 0.826442 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.821203 | `keyvault_key_create` | ❌ |
+| 4 | 0.821290 | `keyvault_key_create` | ❌ |
 | 5 | 0.811771 | `keyvault_secret_create` | ❌ |
 
 ---
@@ -4239,7 +4239,7 @@
 | 1 | 0.840745 | `keyvault_certificate_create` | ✅ **EXPECTED** |
 | 2 | 0.827065 | `keyvault_certificate_import` | ❌ |
 | 3 | 0.825962 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.814861 | `keyvault_key_create` | ❌ |
+| 4 | 0.814983 | `keyvault_key_create` | ❌ |
 | 5 | 0.805347 | `keyvault_secret_create` | ❌ |
 
 ---
@@ -4256,8 +4256,8 @@
 | 1 | 0.851949 | `keyvault_certificate_create` | ✅ **EXPECTED** |
 | 2 | 0.834756 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.831743 | `keyvault_certificate_import` | ❌ |
-| 4 | 0.817720 | `keyvault_key_create` | ❌ |
-| 5 | 0.817496 | `keyvault_certificate_list` | ❌ |
+| 4 | 0.817855 | `keyvault_key_create` | ❌ |
+| 5 | 0.817641 | `keyvault_certificate_list` | ❌ |
 
 ---
 
@@ -4271,10 +4271,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.849686 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.828976 | `keyvault_certificate_list` | ❌ |
+| 2 | 0.829160 | `keyvault_certificate_list` | ❌ |
 | 3 | 0.822051 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.816073 | `keyvault_certificate_import` | ❌ |
-| 5 | 0.799424 | `keyvault_key_create` | ❌ |
+| 5 | 0.799569 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4288,10 +4288,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.875089 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.833905 | `keyvault_certificate_list` | ❌ |
+| 2 | 0.834060 | `keyvault_certificate_list` | ❌ |
 | 3 | 0.832918 | `keyvault_key_get` | ❌ |
 | 4 | 0.824555 | `keyvault_certificate_create` | ❌ |
-| 5 | 0.821356 | `keyvault_secret_get` | ❌ |
+| 5 | 0.821314 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -4304,11 +4304,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.835994 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.814526 | `keyvault_certificate_create` | ❌ |
-| 3 | 0.807712 | `keyvault_certificate_import` | ❌ |
-| 4 | 0.802809 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.785749 | `keyvault_key_create` | ❌ |
+| 1 | 0.836168 | `keyvault_certificate_get` | ✅ **EXPECTED** |
+| 2 | 0.814736 | `keyvault_certificate_create` | ❌ |
+| 3 | 0.807860 | `keyvault_certificate_import` | ❌ |
+| 4 | 0.803158 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.786042 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4321,11 +4321,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.859029 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.813669 | `keyvault_certificate_create` | ❌ |
-| 3 | 0.813552 | `keyvault_key_get` | ❌ |
-| 4 | 0.807489 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.806599 | `keyvault_secret_get` | ❌ |
+| 1 | 0.859124 | `keyvault_certificate_get` | ✅ **EXPECTED** |
+| 2 | 0.813747 | `keyvault_certificate_create` | ❌ |
+| 3 | 0.813577 | `keyvault_key_get` | ❌ |
+| 4 | 0.807729 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.806563 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -4339,7 +4339,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.822429 | `keyvault_certificate_get` | ✅ **EXPECTED** |
-| 2 | 0.793997 | `keyvault_certificate_list` | ❌ |
+| 2 | 0.794140 | `keyvault_certificate_list` | ❌ |
 | 3 | 0.790227 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.787678 | `keyvault_certificate_import` | ❌ |
 | 5 | 0.778190 | `keyvault_key_get` | ❌ |
@@ -4358,8 +4358,8 @@
 | 1 | 0.820998 | `keyvault_certificate_import` | ✅ **EXPECTED** |
 | 2 | 0.775551 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.773043 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.764215 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.762004 | `keyvault_key_create` | ❌ |
+| 4 | 0.764307 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.762211 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4372,11 +4372,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.848293 | `keyvault_certificate_import` | ✅ **EXPECTED** |
-| 2 | 0.829231 | `keyvault_certificate_get` | ❌ |
-| 3 | 0.817263 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.803410 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.798918 | `keyvault_key_create` | ❌ |
+| 1 | 0.848227 | `keyvault_certificate_import` | ✅ **EXPECTED** |
+| 2 | 0.829118 | `keyvault_certificate_get` | ❌ |
+| 3 | 0.817167 | `keyvault_certificate_create` | ❌ |
+| 4 | 0.803441 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.799048 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4392,7 +4392,7 @@
 | 1 | 0.828397 | `keyvault_certificate_import` | ✅ **EXPECTED** |
 | 2 | 0.793637 | `keyvault_certificate_create` | ❌ |
 | 3 | 0.783872 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.781185 | `keyvault_key_create` | ❌ |
+| 4 | 0.781328 | `keyvault_key_create` | ❌ |
 | 5 | 0.777882 | `keyvault_secret_create` | ❌ |
 
 ---
@@ -4409,7 +4409,7 @@
 | 1 | 0.817359 | `keyvault_certificate_import` | ✅ **EXPECTED** |
 | 2 | 0.779378 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.775460 | `keyvault_certificate_create` | ❌ |
-| 4 | 0.760649 | `keyvault_certificate_list` | ❌ |
+| 4 | 0.760767 | `keyvault_certificate_list` | ❌ |
 | 5 | 0.753999 | `keyvault_secret_create` | ❌ |
 
 ---
@@ -4427,7 +4427,7 @@
 | 2 | 0.785854 | `keyvault_certificate_create` | ❌ |
 | 3 | 0.777793 | `keyvault_certificate_get` | ❌ |
 | 4 | 0.764990 | `keyvault_secret_create` | ❌ |
-| 5 | 0.762756 | `keyvault_key_create` | ❌ |
+| 5 | 0.762896 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4440,7 +4440,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.886148 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.886390 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.841516 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.822561 | `keyvault_secret_list` | ❌ |
 | 4 | 0.821789 | `keyvault_key_list` | ❌ |
@@ -4457,7 +4457,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.851424 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.851648 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.840536 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.810598 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.802496 | `keyvault_certificate_import` | ❌ |
@@ -4474,11 +4474,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.837869 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.838086 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.827396 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.809956 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.799348 | `keyvault_certificate_import` | ❌ |
-| 5 | 0.795435 | `keyvault_key_create` | ❌ |
+| 5 | 0.795610 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4491,7 +4491,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.850414 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.850566 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.823931 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.801728 | `keyvault_key_list` | ❌ |
 | 4 | 0.797232 | `keyvault_certificate_create` | ❌ |
@@ -4508,7 +4508,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.905433 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.905580 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.850051 | `keyvault_key_list` | ❌ |
 | 3 | 0.844701 | `keyvault_secret_list` | ❌ |
 | 4 | 0.826271 | `keyvault_certificate_get` | ❌ |
@@ -4525,7 +4525,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.848238 | `keyvault_certificate_list` | ✅ **EXPECTED** |
+| 1 | 0.848376 | `keyvault_certificate_list` | ✅ **EXPECTED** |
 | 2 | 0.836977 | `keyvault_certificate_get` | ❌ |
 | 3 | 0.806944 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.805745 | `keyvault_key_list` | ❌ |
@@ -4542,7 +4542,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.865551 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.865691 | `keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.779557 | `keyvault_secret_create` | ❌ |
 | 3 | 0.773761 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.770666 | `keyvault_key_get` | ❌ |
@@ -4559,7 +4559,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.821451 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.821569 | `keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.769618 | `keyvault_secret_create` | ❌ |
 | 3 | 0.765658 | `keyvault_key_get` | ❌ |
 | 4 | 0.753743 | `keyvault_certificate_create` | ❌ |
@@ -4576,11 +4576,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.836427 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.836425 | `keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.795505 | `keyvault_secret_create` | ❌ |
 | 3 | 0.786292 | `keyvault_key_get` | ❌ |
 | 4 | 0.781614 | `keyvault_certificate_create` | ❌ |
-| 5 | 0.773006 | `keyvault_secret_get` | ❌ |
+| 5 | 0.772805 | `keyvault_secret_get` | ❌ |
 
 ---
 
@@ -4593,7 +4593,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.854585 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.854742 | `keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.793508 | `keyvault_secret_create` | ❌ |
 | 3 | 0.786903 | `keyvault_certificate_create` | ❌ |
 | 4 | 0.784100 | `keyvault_key_get` | ❌ |
@@ -4610,7 +4610,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.827530 | `keyvault_key_create` | ✅ **EXPECTED** |
+| 1 | 0.827686 | `keyvault_key_create` | ✅ **EXPECTED** |
 | 2 | 0.775423 | `keyvault_secret_create` | ❌ |
 | 3 | 0.769017 | `keyvault_key_get` | ❌ |
 | 4 | 0.766467 | `keyvault_certificate_create` | ❌ |
@@ -4628,8 +4628,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.831379 | `keyvault_key_get` | ✅ **EXPECTED** |
-| 2 | 0.816985 | `keyvault_key_create` | ❌ |
-| 3 | 0.815232 | `keyvault_secret_get` | ❌ |
+| 2 | 0.817128 | `keyvault_key_create` | ❌ |
+| 3 | 0.815133 | `keyvault_secret_get` | ❌ |
 | 4 | 0.813706 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.808534 | `keyvault_key_list` | ❌ |
 
@@ -4645,10 +4645,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.858223 | `keyvault_key_get` | ✅ **EXPECTED** |
-| 2 | 0.834853 | `keyvault_secret_get` | ❌ |
+| 2 | 0.834786 | `keyvault_secret_get` | ❌ |
 | 3 | 0.832105 | `keyvault_certificate_get` | ❌ |
 | 4 | 0.814015 | `storage_account_get` | ❌ |
-| 5 | 0.813257 | `keyvault_key_create` | ❌ |
+| 5 | 0.813369 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4662,8 +4662,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.791389 | `keyvault_key_get` | ✅ **EXPECTED** |
-| 2 | 0.778643 | `keyvault_key_create` | ❌ |
-| 3 | 0.778388 | `keyvault_secret_get` | ❌ |
+| 2 | 0.778753 | `keyvault_key_create` | ❌ |
+| 3 | 0.778135 | `keyvault_secret_get` | ❌ |
 | 4 | 0.769580 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.763332 | `keyvault_key_list` | ❌ |
 
@@ -4678,11 +4678,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.848010 | `keyvault_key_get` | ✅ **EXPECTED** |
-| 2 | 0.821704 | `keyvault_secret_get` | ❌ |
-| 3 | 0.815986 | `keyvault_certificate_get` | ❌ |
-| 4 | 0.795359 | `storage_account_get` | ❌ |
-| 5 | 0.789387 | `keyvault_key_create` | ❌ |
+| 1 | 0.847889 | `keyvault_key_get` | ✅ **EXPECTED** |
+| 2 | 0.821518 | `keyvault_secret_get` | ❌ |
+| 3 | 0.815933 | `keyvault_certificate_get` | ❌ |
+| 4 | 0.795505 | `storage_account_get` | ❌ |
+| 5 | 0.789318 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4697,7 +4697,7 @@
 |------|-------|------|--------|
 | 1 | 0.794616 | `keyvault_key_get` | ✅ **EXPECTED** |
 | 2 | 0.780498 | `storage_account_get` | ❌ |
-| 3 | 0.779020 | `keyvault_secret_get` | ❌ |
+| 3 | 0.778820 | `keyvault_secret_get` | ❌ |
 | 4 | 0.769088 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.768384 | `keyvault_admin_settings_get` | ❌ |
 
@@ -4714,9 +4714,9 @@
 |------|-------|------|--------|
 | 1 | 0.872277 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.848718 | `keyvault_secret_list` | ❌ |
-| 3 | 0.834849 | `keyvault_certificate_list` | ❌ |
+| 3 | 0.834942 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.828677 | `keyvault_key_get` | ❌ |
-| 5 | 0.814354 | `keyvault_key_create` | ❌ |
+| 5 | 0.814524 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4732,7 +4732,7 @@
 | 1 | 0.834771 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.827778 | `keyvault_key_get` | ❌ |
 | 3 | 0.817688 | `keyvault_secret_list` | ❌ |
-| 4 | 0.813255 | `keyvault_key_create` | ❌ |
+| 4 | 0.813443 | `keyvault_key_create` | ❌ |
 | 5 | 0.809918 | `keyvault_certificate_get` | ❌ |
 
 ---
@@ -4747,8 +4747,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.822309 | `keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.812200 | `keyvault_key_get` | ❌ |
-| 3 | 0.812056 | `keyvault_key_create` | ❌ |
+| 2 | 0.812245 | `keyvault_key_create` | ❌ |
+| 3 | 0.812200 | `keyvault_key_get` | ❌ |
 | 4 | 0.802969 | `keyvault_secret_list` | ❌ |
 | 5 | 0.797343 | `keyvault_admin_settings_get` | ❌ |
 
@@ -4766,8 +4766,8 @@
 | 1 | 0.842759 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.818982 | `keyvault_secret_list` | ❌ |
 | 3 | 0.816682 | `keyvault_key_get` | ❌ |
-| 4 | 0.808458 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.797846 | `keyvault_key_create` | ❌ |
+| 4 | 0.808507 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.797995 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4782,9 +4782,9 @@
 |------|-------|------|--------|
 | 1 | 0.895928 | `keyvault_key_list` | ✅ **EXPECTED** |
 | 2 | 0.864689 | `keyvault_secret_list` | ❌ |
-| 3 | 0.854816 | `keyvault_certificate_list` | ❌ |
+| 3 | 0.854825 | `keyvault_certificate_list` | ❌ |
 | 4 | 0.812529 | `keyvault_key_get` | ❌ |
-| 5 | 0.810213 | `keyvault_key_create` | ❌ |
+| 5 | 0.810374 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4797,11 +4797,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.842460 | `keyvault_key_list` | ✅ **EXPECTED** |
-| 2 | 0.826003 | `keyvault_key_get` | ❌ |
-| 3 | 0.823494 | `keyvault_secret_list` | ❌ |
-| 4 | 0.810341 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.809422 | `keyvault_key_create` | ❌ |
+| 1 | 0.842355 | `keyvault_key_list` | ✅ **EXPECTED** |
+| 2 | 0.825985 | `keyvault_key_get` | ❌ |
+| 3 | 0.823445 | `keyvault_secret_list` | ❌ |
+| 4 | 0.810344 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.809585 | `keyvault_key_create` | ❌ |
 
 ---
 
@@ -4815,8 +4815,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.862855 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.815898 | `keyvault_secret_get` | ❌ |
-| 3 | 0.805354 | `keyvault_key_create` | ❌ |
+| 2 | 0.815682 | `keyvault_secret_get` | ❌ |
+| 3 | 0.805459 | `keyvault_key_create` | ❌ |
 | 4 | 0.785645 | `keyvault_certificate_create` | ❌ |
 | 5 | 0.778660 | `keyvault_certificate_import` | ❌ |
 
@@ -4832,8 +4832,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.860701 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.816561 | `keyvault_secret_get` | ❌ |
-| 3 | 0.784741 | `keyvault_key_create` | ❌ |
+| 2 | 0.816343 | `keyvault_secret_get` | ❌ |
+| 3 | 0.784856 | `keyvault_key_create` | ❌ |
 | 4 | 0.783952 | `keyvault_secret_list` | ❌ |
 | 5 | 0.777067 | `appconfig_kv_set` | ❌ |
 
@@ -4848,11 +4848,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.849130 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.816376 | `keyvault_secret_get` | ❌ |
-| 3 | 0.787252 | `keyvault_key_create` | ❌ |
-| 4 | 0.784385 | `keyvault_secret_list` | ❌ |
-| 5 | 0.778695 | `appconfig_kv_set` | ❌ |
+| 1 | 0.849189 | `keyvault_secret_create` | ✅ **EXPECTED** |
+| 2 | 0.816193 | `keyvault_secret_get` | ❌ |
+| 3 | 0.787393 | `keyvault_key_create` | ❌ |
+| 4 | 0.784295 | `keyvault_secret_list` | ❌ |
+| 5 | 0.778729 | `appconfig_kv_set` | ❌ |
 
 ---
 
@@ -4866,8 +4866,8 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.847957 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.801356 | `keyvault_secret_get` | ❌ |
-| 3 | 0.777061 | `keyvault_key_create` | ❌ |
+| 2 | 0.801169 | `keyvault_secret_get` | ❌ |
+| 3 | 0.777110 | `keyvault_key_create` | ❌ |
 | 4 | 0.774292 | `keyvault_certificate_import` | ❌ |
 | 5 | 0.767067 | `keyvault_certificate_create` | ❌ |
 
@@ -4883,9 +4883,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.839098 | `keyvault_secret_create` | ✅ **EXPECTED** |
-| 2 | 0.814880 | `keyvault_secret_get` | ❌ |
+| 2 | 0.814716 | `keyvault_secret_get` | ❌ |
 | 3 | 0.773281 | `keyvault_secret_list` | ❌ |
-| 4 | 0.766807 | `keyvault_key_create` | ❌ |
+| 4 | 0.766877 | `keyvault_key_create` | ❌ |
 | 5 | 0.766012 | `keyvault_certificate_get` | ❌ |
 
 ---
@@ -4899,7 +4899,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.847930 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 1 | 0.847856 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.832925 | `keyvault_secret_create` | ❌ |
 | 3 | 0.822559 | `keyvault_secret_list` | ❌ |
 | 4 | 0.812702 | `keyvault_key_get` | ❌ |
@@ -4916,7 +4916,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.868780 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 1 | 0.868759 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.844743 | `keyvault_key_get` | ❌ |
 | 3 | 0.834545 | `keyvault_certificate_get` | ❌ |
 | 4 | 0.825237 | `keyvault_secret_list` | ❌ |
@@ -4933,7 +4933,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.821378 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 1 | 0.821182 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.814429 | `keyvault_secret_create` | ❌ |
 | 3 | 0.782409 | `keyvault_secret_list` | ❌ |
 | 4 | 0.781840 | `keyvault_key_get` | ❌ |
@@ -4950,7 +4950,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.850069 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 1 | 0.849990 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.822671 | `keyvault_key_get` | ❌ |
 | 3 | 0.812987 | `keyvault_secret_create` | ❌ |
 | 4 | 0.810970 | `keyvault_certificate_get` | ❌ |
@@ -4967,7 +4967,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.819855 | `keyvault_secret_get` | ✅ **EXPECTED** |
+| 1 | 0.819671 | `keyvault_secret_get` | ✅ **EXPECTED** |
 | 2 | 0.794790 | `keyvault_secret_create` | ❌ |
 | 3 | 0.784690 | `keyvault_secret_list` | ❌ |
 | 4 | 0.778922 | `keyvault_key_get` | ❌ |
@@ -4984,11 +4984,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.878939 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.843420 | `keyvault_secret_get` | ❌ |
-| 3 | 0.828204 | `keyvault_key_list` | ❌ |
-| 4 | 0.823231 | `keyvault_certificate_list` | ❌ |
-| 5 | 0.813526 | `keyvault_key_get` | ❌ |
+| 1 | 0.878767 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.843309 | `keyvault_secret_get` | ❌ |
+| 3 | 0.828118 | `keyvault_key_list` | ❌ |
+| 4 | 0.823252 | `keyvault_certificate_list` | ❌ |
+| 5 | 0.813454 | `keyvault_key_get` | ❌ |
 
 ---
 
@@ -5002,7 +5002,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.830772 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.830721 | `keyvault_secret_get` | ❌ |
+| 2 | 0.830679 | `keyvault_secret_get` | ❌ |
 | 3 | 0.821267 | `keyvault_key_get` | ❌ |
 | 4 | 0.810178 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.810099 | `keyvault_secret_create` | ❌ |
@@ -5019,7 +5019,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.826301 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.814189 | `keyvault_secret_get` | ❌ |
+| 2 | 0.814112 | `keyvault_secret_get` | ❌ |
 | 3 | 0.800208 | `keyvault_secret_create` | ❌ |
 | 4 | 0.798763 | `keyvault_key_get` | ❌ |
 | 5 | 0.795196 | `keyvault_admin_settings_get` | ❌ |
@@ -5036,7 +5036,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.840566 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.821470 | `keyvault_secret_get` | ❌ |
+| 2 | 0.821317 | `keyvault_secret_get` | ❌ |
 | 3 | 0.800144 | `keyvault_secret_create` | ❌ |
 | 4 | 0.797779 | `keyvault_key_list` | ❌ |
 | 5 | 0.792826 | `keyvault_key_get` | ❌ |
@@ -5052,11 +5052,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.895883 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.852023 | `keyvault_key_list` | ❌ |
-| 3 | 0.837005 | `keyvault_certificate_list` | ❌ |
-| 4 | 0.827097 | `keyvault_secret_get` | ❌ |
-| 5 | 0.815828 | `keyvault_secret_create` | ❌ |
+| 1 | 0.895927 | `keyvault_secret_list` | ✅ **EXPECTED** |
+| 2 | 0.852096 | `keyvault_key_list` | ❌ |
+| 3 | 0.837096 | `keyvault_certificate_list` | ❌ |
+| 4 | 0.827009 | `keyvault_secret_get` | ❌ |
+| 5 | 0.815837 | `keyvault_secret_create` | ❌ |
 
 ---
 
@@ -5070,7 +5070,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.844935 | `keyvault_secret_list` | ✅ **EXPECTED** |
-| 2 | 0.839515 | `keyvault_secret_get` | ❌ |
+| 2 | 0.839355 | `keyvault_secret_get` | ❌ |
 | 3 | 0.824265 | `keyvault_key_get` | ❌ |
 | 4 | 0.816774 | `keyvault_certificate_get` | ❌ |
 | 5 | 0.815124 | `keyvault_secret_create` | ❌ |
@@ -5086,11 +5086,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.854567 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.831267 | `aks_nodepool_get` | ❌ |
-| 3 | 0.804847 | `kusto_cluster_get` | ❌ |
-| 4 | 0.800764 | `kusto_cluster_list` | ❌ |
-| 5 | 0.789156 | `mysql_server_config_get` | ❌ |
+| 1 | 0.854372 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.831054 | `aks_nodepool_get` | ❌ |
+| 3 | 0.804671 | `kusto_cluster_get` | ❌ |
+| 4 | 0.800596 | `kusto_cluster_list` | ❌ |
+| 5 | 0.788881 | `mysql_server_config_get` | ❌ |
 
 ---
 
@@ -5154,11 +5154,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.919011 | `aks_cluster_get` | ✅ **EXPECTED** |
-| 2 | 0.898604 | `kusto_cluster_list` | ❌ |
-| 3 | 0.850028 | `aks_nodepool_get` | ❌ |
-| 4 | 0.841096 | `search_service_list` | ❌ |
-| 5 | 0.833424 | `kusto_cluster_get` | ❌ |
+| 1 | 0.919009 | `aks_cluster_get` | ✅ **EXPECTED** |
+| 2 | 0.898537 | `kusto_cluster_list` | ❌ |
+| 3 | 0.850071 | `aks_nodepool_get` | ❌ |
+| 4 | 0.841112 | `search_service_list` | ❌ |
+| 5 | 0.833407 | `kusto_cluster_get` | ❌ |
 
 ---
 
@@ -5290,11 +5290,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.872738 | `aks_nodepool_get` | ✅ **EXPECTED** |
-| 2 | 0.815806 | `aks_cluster_get` | ❌ |
-| 3 | 0.779339 | `kusto_cluster_list` | ❌ |
-| 4 | 0.777183 | `virtualdesktop_hostpool_list` | ❌ |
-| 5 | 0.762947 | `eventhubs_namespace_get` | ❌ |
+| 1 | 0.872720 | `aks_nodepool_get` | ✅ **EXPECTED** |
+| 2 | 0.815378 | `aks_cluster_get` | ❌ |
+| 3 | 0.778696 | `kusto_cluster_list` | ❌ |
+| 4 | 0.776842 | `virtualdesktop_hostpool_list` | ❌ |
+| 5 | 0.762578 | `eventhubs_namespace_get` | ❌ |
 
 ---
 
@@ -5477,11 +5477,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.890491 | `managedlustre_fs_list` | ✅ **EXPECTED** |
-| 2 | 0.826999 | `kusto_cluster_list` | ❌ |
-| 3 | 0.825910 | `managedlustre_fs_create` | ❌ |
-| 4 | 0.821701 | `managedlustre_fs_sku_get` | ❌ |
-| 5 | 0.814062 | `managedlustre_fs_subnetsize_validate` | ❌ |
+| 1 | 0.890170 | `managedlustre_fs_list` | ✅ **EXPECTED** |
+| 2 | 0.826604 | `kusto_cluster_list` | ❌ |
+| 3 | 0.825619 | `managedlustre_fs_create` | ❌ |
+| 4 | 0.821508 | `managedlustre_fs_sku_get` | ❌ |
+| 5 | 0.813953 | `managedlustre_fs_subnetsize_validate` | ❌ |
 
 ---
 
@@ -5494,11 +5494,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.881176 | `managedlustre_fs_list` | ✅ **EXPECTED** |
-| 2 | 0.827295 | `managedlustre_fs_create` | ❌ |
-| 3 | 0.816583 | `managedlustre_fs_sku_get` | ❌ |
-| 4 | 0.806236 | `loadtesting_testresource_list` | ❌ |
-| 5 | 0.793483 | `mysql_server_list` | ❌ |
+| 1 | 0.881200 | `managedlustre_fs_list` | ✅ **EXPECTED** |
+| 2 | 0.827276 | `managedlustre_fs_create` | ❌ |
+| 3 | 0.816668 | `managedlustre_fs_sku_get` | ❌ |
+| 4 | 0.806393 | `loadtesting_testresource_list` | ❌ |
+| 5 | 0.793431 | `mysql_server_list` | ❌ |
 
 ---
 
@@ -5579,7 +5579,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.840006 | `marketplace_product_get` | ✅ **EXPECTED** |
+| 1 | 0.840110 | `marketplace_product_get` | ✅ **EXPECTED** |
 | 2 | 0.838677 | `marketplace_product_list` | ❌ |
 | 3 | 0.760387 | `storage_account_get` | ❌ |
 | 4 | 0.756842 | `foundry_resource_get` | ❌ |
@@ -5597,7 +5597,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.853722 | `marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.777009 | `marketplace_product_get` | ❌ |
+| 2 | 0.777058 | `marketplace_product_get` | ❌ |
 | 3 | 0.762771 | `cloudarchitect_design` | ❌ |
 | 4 | 0.756989 | `search_service_list` | ❌ |
 | 5 | 0.756011 | `search_index_query` | ❌ |
@@ -5614,9 +5614,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.857997 | `marketplace_product_list` | ✅ **EXPECTED** |
-| 2 | 0.768929 | `marketplace_product_get` | ❌ |
+| 2 | 0.768986 | `marketplace_product_get` | ❌ |
 | 3 | 0.750294 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.743694 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.743810 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.741472 | `foundry_models_list` | ❌ |
 
 ---
@@ -5630,11 +5630,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.878415 | `get_bestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.848213 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.837727 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.807814 | `extension_cli_generate` | ❌ |
-| 5 | 0.802462 | `deploy_pipeline_guidance_get` | ❌ |
+| 1 | 0.878380 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.848190 | `azureterraformbestpractices_get` | ❌ |
+| 3 | 0.827076 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.807816 | `extension_cli_generate` | ❌ |
+| 5 | 0.802481 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
 
@@ -5648,7 +5648,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.863870 | `get_bestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.841056 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.836743 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.830549 | `azureterraformbestpractices_get` | ❌ |
 | 4 | 0.820558 | `deploy_pipeline_guidance_get` | ❌ |
 | 5 | 0.810741 | `cloudarchitect_design` | ❌ |
@@ -5666,7 +5666,7 @@
 |------|-------|------|--------|
 | 1 | 0.868161 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.852935 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.830869 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.820987 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.814172 | `cloudarchitect_design` | ❌ |
 | 5 | 0.808502 | `quota_usage_check` | ❌ |
 
@@ -5683,7 +5683,7 @@
 |------|-------|------|--------|
 | 1 | 0.868122 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.823458 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.821484 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.808704 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.804954 | `extension_cli_install` | ❌ |
 | 5 | 0.793741 | `extension_cli_generate` | ❌ |
 
@@ -5698,11 +5698,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.858229 | `get_bestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.825524 | `deploy_iac_rules_get` | ❌ |
-| 3 | 0.810287 | `extension_cli_install` | ❌ |
-| 4 | 0.808470 | `azureterraformbestpractices_get` | ❌ |
-| 5 | 0.808080 | `deploy_pipeline_guidance_get` | ❌ |
+| 1 | 0.858224 | `get_bestpractices_get` | ✅ **EXPECTED** |
+| 2 | 0.818895 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.810288 | `extension_cli_install` | ❌ |
+| 4 | 0.808429 | `azureterraformbestpractices_get` | ❌ |
+| 5 | 0.807974 | `deploy_pipeline_guidance_get` | ❌ |
 
 ---
 
@@ -5717,9 +5717,9 @@
 |------|-------|------|--------|
 | 1 | 0.859503 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.823916 | `azureterraformbestpractices_get` | ❌ |
-| 3 | 0.811201 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.808443 | `extension_cli_install` | ❌ |
-| 5 | 0.800786 | `cloudarchitect_design` | ❌ |
+| 3 | 0.808443 | `extension_cli_install` | ❌ |
+| 4 | 0.800786 | `cloudarchitect_design` | ❌ |
+| 5 | 0.798046 | `deploy_iac_rules_get` | ❌ |
 
 ---
 
@@ -5733,7 +5733,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.846449 | `get_bestpractices_get` | ✅ **EXPECTED** |
-| 2 | 0.817343 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.820631 | `deploy_iac_rules_get` | ❌ |
 | 3 | 0.816565 | `azureterraformbestpractices_get` | ❌ |
 | 4 | 0.815223 | `cloudarchitect_design` | ❌ |
 | 5 | 0.797049 | `applens_resource_diagnose` | ❌ |
@@ -5752,8 +5752,8 @@
 | 1 | 0.841439 | `get_bestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.816198 | `cloudarchitect_design` | ❌ |
 | 3 | 0.815282 | `azureterraformbestpractices_get` | ❌ |
-| 4 | 0.805201 | `deploy_iac_rules_get` | ❌ |
-| 5 | 0.799818 | `extension_cli_install` | ❌ |
+| 4 | 0.799818 | `extension_cli_install` | ❌ |
+| 5 | 0.797349 | `applens_resource_diagnose` | ❌ |
 
 ---
 
@@ -5768,7 +5768,7 @@
 |------|-------|------|--------|
 | 1 | 0.820628 | `deploy_plan_get` | ❌ |
 | 2 | 0.801789 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.790730 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.799225 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.769252 | `extension_cli_install` | ❌ |
 | 5 | 0.764137 | `get_bestpractices_get` | ✅ **EXPECTED** |
 
@@ -5786,7 +5786,7 @@
 | 1 | 0.814080 | `monitor_activitylog_list` | ✅ **EXPECTED** |
 | 2 | 0.787043 | `monitor_resource_log_query` | ❌ |
 | 3 | 0.780794 | `monitor_workspace_log_query` | ❌ |
-| 4 | 0.767034 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.767243 | `deploy_app_logs_get` | ❌ |
 | 5 | 0.747344 | `resourcehealth_health-events_list` | ❌ |
 
 ---
@@ -5803,7 +5803,7 @@
 | 1 | 0.836867 | `monitor_healthmodels_entity_get` | ✅ **EXPECTED** |
 | 2 | 0.798169 | `resourcehealth_availability-status_get` | ❌ |
 | 3 | 0.745048 | `resourcehealth_health-events_list` | ❌ |
-| 4 | 0.727153 | `foundry_models_deployments_list` | ❌ |
+| 4 | 0.727064 | `foundry_models_deployments_list` | ❌ |
 | 5 | 0.724203 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
@@ -5817,11 +5817,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.818924 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
-| 2 | 0.769340 | `monitor_metrics_query` | ❌ |
-| 3 | 0.740324 | `datadog_monitoredresources_list` | ❌ |
-| 4 | 0.734303 | `applens_resource_diagnose` | ❌ |
-| 5 | 0.733953 | `eventhubs_namespace_get` | ❌ |
+| 1 | 0.818978 | `monitor_metrics_definitions` | ✅ **EXPECTED** |
+| 2 | 0.769441 | `monitor_metrics_query` | ❌ |
+| 3 | 0.740290 | `datadog_monitoredresources_list` | ❌ |
+| 4 | 0.734430 | `applens_resource_diagnose` | ❌ |
+| 5 | 0.734107 | `eventhubs_namespace_get` | ❌ |
 
 ---
 
@@ -5868,11 +5868,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.825544 | `monitor_metrics_query` | ✅ **EXPECTED** |
-| 2 | 0.795088 | `applens_resource_diagnose` | ❌ |
-| 3 | 0.775598 | `applicationinsights_recommendation_list` | ❌ |
-| 4 | 0.772098 | `resourcehealth_health-events_list` | ❌ |
-| 5 | 0.771591 | `monitor_resource_log_query` | ❌ |
+| 1 | 0.825488 | `monitor_metrics_query` | ✅ **EXPECTED** |
+| 2 | 0.795008 | `applens_resource_diagnose` | ❌ |
+| 3 | 0.775527 | `applicationinsights_recommendation_list` | ❌ |
+| 4 | 0.772063 | `resourcehealth_health-events_list` | ❌ |
+| 5 | 0.771587 | `monitor_resource_log_query` | ❌ |
 
 ---
 
@@ -5972,7 +5972,7 @@
 |------|-------|------|--------|
 | 1 | 0.864572 | `monitor_workspace_log_query` | ❌ |
 | 2 | 0.858333 | `monitor_resource_log_query` | ✅ **EXPECTED** |
-| 3 | 0.847537 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.848487 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.840408 | `monitor_activitylog_list` | ❌ |
 | 5 | 0.805815 | `monitor_workspace_list` | ❌ |
 
@@ -5987,11 +5987,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.912032 | `monitor_table_list` | ✅ **EXPECTED** |
-| 2 | 0.884470 | `monitor_table_type_list` | ❌ |
-| 3 | 0.853346 | `monitor_workspace_list` | ❌ |
-| 4 | 0.831287 | `postgres_table_list` | ❌ |
-| 5 | 0.829808 | `monitor_workspace_log_query` | ❌ |
+| 1 | 0.911959 | `monitor_table_list` | ✅ **EXPECTED** |
+| 2 | 0.884489 | `monitor_table_type_list` | ❌ |
+| 3 | 0.853296 | `monitor_workspace_list` | ❌ |
+| 4 | 0.831372 | `postgres_table_list` | ❌ |
+| 5 | 0.829730 | `monitor_workspace_log_query` | ❌ |
 
 ---
 
@@ -6007,7 +6007,7 @@
 | 1 | 0.882736 | `monitor_table_list` | ✅ **EXPECTED** |
 | 2 | 0.866055 | `monitor_table_type_list` | ❌ |
 | 3 | 0.844022 | `monitor_workspace_list` | ❌ |
-| 4 | 0.838107 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.840771 | `deploy_app_logs_get` | ❌ |
 | 5 | 0.831257 | `monitor_workspace_log_query` | ❌ |
 
 ---
@@ -6025,7 +6025,7 @@
 | 2 | 0.875367 | `monitor_table_list` | ❌ |
 | 3 | 0.821336 | `monitor_workspace_list` | ❌ |
 | 4 | 0.806486 | `postgres_table_list` | ❌ |
-| 5 | 0.795468 | `monitor_workspace_log_query` | ❌ |
+| 5 | 0.796210 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -6041,7 +6041,7 @@
 | 1 | 0.930297 | `monitor_table_type_list` | ✅ **EXPECTED** |
 | 2 | 0.858293 | `monitor_table_list` | ❌ |
 | 3 | 0.820683 | `monitor_workspace_list` | ❌ |
-| 4 | 0.810121 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.814090 | `deploy_app_logs_get` | ❌ |
 | 5 | 0.804498 | `monitor_workspace_log_query` | ❌ |
 
 ---
@@ -6091,7 +6091,7 @@
 |------|-------|------|--------|
 | 1 | 0.887937 | `monitor_webtests_list` | ✅ **EXPECTED** |
 | 2 | 0.839863 | `loadtesting_testresource_list` | ❌ |
-| 3 | 0.829709 | `eventgrid_subscription_list` | ❌ |
+| 3 | 0.829759 | `eventgrid_subscription_list` | ❌ |
 | 4 | 0.821453 | `eventgrid_topic_list` | ❌ |
 | 5 | 0.820228 | `redis_list` | ❌ |
 
@@ -6140,11 +6140,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.919144 | `monitor_workspace_list` | ✅ **EXPECTED** |
-| 2 | 0.851062 | `grafana_list` | ❌ |
-| 3 | 0.839243 | `deploy_app_logs_get` | ❌ |
-| 4 | 0.836305 | `kusto_cluster_list` | ❌ |
-| 5 | 0.833202 | `monitor_table_list` | ❌ |
+| 1 | 0.918591 | `monitor_workspace_list` | ✅ **EXPECTED** |
+| 2 | 0.850868 | `grafana_list` | ❌ |
+| 3 | 0.842137 | `deploy_app_logs_get` | ❌ |
+| 4 | 0.836532 | `kusto_cluster_list` | ❌ |
+| 5 | 0.832656 | `monitor_table_list` | ❌ |
 
 ---
 
@@ -6157,7 +6157,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.867005 | `deploy_app_logs_get` | ❌ |
+| 1 | 0.870767 | `deploy_app_logs_get` | ❌ |
 | 2 | 0.861385 | `monitor_workspace_list` | ✅ **EXPECTED** |
 | 3 | 0.828604 | `monitor_workspace_log_query` | ❌ |
 | 4 | 0.814130 | `monitor_table_list` | ❌ |
@@ -6175,10 +6175,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.897758 | `monitor_workspace_list` | ✅ **EXPECTED** |
-| 2 | 0.854601 | `deploy_app_logs_get` | ❌ |
+| 2 | 0.857938 | `deploy_app_logs_get` | ❌ |
 | 3 | 0.826091 | `monitor_workspace_log_query` | ❌ |
 | 4 | 0.822058 | `grafana_list` | ❌ |
-| 5 | 0.820925 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.820997 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -6191,7 +6191,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.853658 | `deploy_app_logs_get` | ❌ |
+| 1 | 0.855162 | `deploy_app_logs_get` | ❌ |
 | 2 | 0.853168 | `monitor_workspace_log_query` | ✅ **EXPECTED** |
 | 3 | 0.827911 | `monitor_resource_log_query` | ❌ |
 | 4 | 0.823379 | `monitor_activitylog_list` | ❌ |
@@ -6229,7 +6229,7 @@
 | 2 | 0.805276 | `redis_list` | ❌ |
 | 3 | 0.790049 | `monitor_metrics_query` | ❌ |
 | 4 | 0.780457 | `quota_usage_check` | ❌ |
-| 5 | 0.775541 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.779392 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -6259,11 +6259,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.827231 | `quota_usage_check` | ❌ |
-| 2 | 0.820816 | `applens_resource_diagnose` | ❌ |
-| 3 | 0.818806 | `cloudarchitect_design` | ❌ |
-| 4 | 0.814765 | `subscription_list` | ❌ |
-| 5 | 0.810476 | `marketplace_product_list` | ❌ |
+| 1 | 0.827239 | `quota_usage_check` | ❌ |
+| 2 | 0.820824 | `applens_resource_diagnose` | ❌ |
+| 3 | 0.818905 | `cloudarchitect_design` | ❌ |
+| 4 | 0.814683 | `subscription_list` | ❌ |
+| 5 | 0.810504 | `marketplace_product_list` | ❌ |
 
 ---
 
@@ -6293,11 +6293,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.849685 | `quota_region_availability_list` | ✅ **EXPECTED** |
-| 2 | 0.795773 | `quota_usage_check` | ❌ |
-| 3 | 0.777119 | `redis_list` | ❌ |
-| 4 | 0.759548 | `group_list` | ❌ |
-| 5 | 0.756327 | `eventgrid_topic_list` | ❌ |
+| 1 | 0.849676 | `quota_region_availability_list` | ✅ **EXPECTED** |
+| 2 | 0.795915 | `quota_usage_check` | ❌ |
+| 3 | 0.777354 | `redis_list` | ❌ |
+| 4 | 0.759725 | `group_list` | ❌ |
+| 5 | 0.756711 | `eventgrid_topic_list` | ❌ |
 
 ---
 
@@ -6331,7 +6331,7 @@
 | 2 | 0.812028 | `subscription_list` | ❌ |
 | 3 | 0.808743 | `kusto_cluster_list` | ❌ |
 | 4 | 0.805561 | `search_service_list` | ❌ |
-| 5 | 0.804305 | `eventgrid_subscription_list` | ❌ |
+| 5 | 0.804389 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -6345,7 +6345,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.826482 | `role_assignment_list` | ✅ **EXPECTED** |
-| 2 | 0.816682 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.816751 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.808661 | `subscription_list` | ❌ |
 | 4 | 0.804538 | `eventgrid_topic_list` | ❌ |
 | 5 | 0.802028 | `redis_list` | ❌ |
@@ -6381,8 +6381,8 @@
 | 1 | 0.868860 | `redis_list` | ✅ **EXPECTED** |
 | 2 | 0.779446 | `quota_usage_check` | ❌ |
 | 3 | 0.766882 | `datadog_monitoredresources_list` | ❌ |
-| 4 | 0.752790 | `mysql_server_list` | ❌ |
-| 5 | 0.752675 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.754078 | `deploy_app_logs_get` | ❌ |
+| 5 | 0.752767 | `eventgrid_subscription_list` | ❌ |
 
 ---
 
@@ -6396,7 +6396,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.907147 | `redis_list` | ✅ **EXPECTED** |
-| 2 | 0.805796 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.805859 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.805620 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.792343 | `group_list` | ❌ |
 | 5 | 0.787606 | `grafana_list` | ❌ |
@@ -6412,11 +6412,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.829577 | `redis_list` | ✅ **EXPECTED** |
-| 2 | 0.761390 | `postgres_database_list` | ❌ |
-| 3 | 0.749692 | `postgres_table_list` | ❌ |
-| 4 | 0.743048 | `quota_usage_check` | ❌ |
-| 5 | 0.735729 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.829540 | `redis_list` | ✅ **EXPECTED** |
+| 2 | 0.761341 | `postgres_database_list` | ❌ |
+| 3 | 0.749666 | `postgres_table_list` | ❌ |
+| 4 | 0.743058 | `quota_usage_check` | ❌ |
+| 5 | 0.736989 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -6483,7 +6483,7 @@
 | 1 | 0.885575 | `group_list` | ✅ **EXPECTED** |
 | 2 | 0.857088 | `eventgrid_topic_list` | ❌ |
 | 3 | 0.855957 | `redis_list` | ❌ |
-| 4 | 0.847026 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.847035 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.829705 | `quota_region_availability_list` | ❌ |
 
 ---
@@ -6600,7 +6600,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.861712 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
-| 2 | 0.835872 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.835969 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.832761 | `search_service_list` | ❌ |
 | 4 | 0.831846 | `eventgrid_topic_list` | ❌ |
 | 5 | 0.815611 | `kusto_cluster_list` | ❌ |
@@ -6619,7 +6619,7 @@
 | 1 | 0.864582 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
 | 2 | 0.844059 | `search_service_list` | ❌ |
 | 3 | 0.832410 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.825710 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.825820 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.822428 | `resourcehealth_availability-status_list` | ❌ |
 
 ---
@@ -6635,7 +6635,7 @@
 |------|-------|------|--------|
 | 1 | 0.791286 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
 | 2 | 0.759813 | `applens_resource_diagnose` | ❌ |
-| 3 | 0.735213 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.737538 | `deploy_app_logs_get` | ❌ |
 | 4 | 0.729654 | `quota_usage_check` | ❌ |
 | 5 | 0.728369 | `cloudarchitect_design` | ❌ |
 
@@ -6651,7 +6651,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.833717 | `resourcehealth_health-events_list` | ✅ **EXPECTED** |
-| 2 | 0.829280 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.829363 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.811795 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.802959 | `search_service_list` | ❌ |
 | 5 | 0.774852 | `kusto_cluster_list` | ❌ |
@@ -6671,7 +6671,7 @@
 | 2 | 0.821613 | `quota_usage_check` | ❌ |
 | 3 | 0.817292 | `search_service_list` | ❌ |
 | 4 | 0.802143 | `applens_resource_diagnose` | ❌ |
-| 5 | 0.797773 | `eventgrid_topic_list` | ❌ |
+| 5 | 0.800427 | `deploy_app_logs_get` | ❌ |
 
 ---
 
@@ -6684,11 +6684,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.831616 | `servicebus_queue_details` | ✅ **EXPECTED** |
-| 2 | 0.814519 | `servicebus_topic_details` | ❌ |
-| 3 | 0.785992 | `servicebus_topic_subscription_details` | ❌ |
-| 4 | 0.783941 | `redis_list` | ❌ |
-| 5 | 0.782057 | `sql_server_show` | ❌ |
+| 1 | 0.831507 | `servicebus_queue_details` | ✅ **EXPECTED** |
+| 2 | 0.814435 | `servicebus_topic_details` | ❌ |
+| 3 | 0.785982 | `servicebus_topic_subscription_details` | ❌ |
+| 4 | 0.783904 | `redis_list` | ❌ |
+| 5 | 0.782017 | `sql_server_show` | ❌ |
 
 ---
 
@@ -6704,7 +6704,7 @@
 | 1 | 0.851454 | `servicebus_topic_details` | ✅ **EXPECTED** |
 | 2 | 0.806562 | `servicebus_topic_subscription_details` | ❌ |
 | 3 | 0.795960 | `eventgrid_topic_list` | ❌ |
-| 4 | 0.790087 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.790204 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.783687 | `redis_list` | ❌ |
 
 ---
@@ -6738,7 +6738,7 @@
 | 1 | 0.809383 | `signalr_runtime_get` | ✅ **EXPECTED** |
 | 2 | 0.772240 | `eventhubs_eventhub_get` | ❌ |
 | 3 | 0.767936 | `sql_server_show` | ❌ |
-| 4 | 0.762918 | `eventgrid_subscription_list` | ❌ |
+| 4 | 0.762973 | `eventgrid_subscription_list` | ❌ |
 | 5 | 0.761571 | `redis_list` | ❌ |
 
 ---
@@ -6752,11 +6752,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.839342 | `signalr_runtime_get` | ✅ **EXPECTED** |
-| 2 | 0.767355 | `sql_server_show` | ❌ |
-| 3 | 0.746593 | `eventhubs_eventhub_get` | ❌ |
-| 4 | 0.743524 | `servicebus_topic_details` | ❌ |
-| 5 | 0.735644 | `redis_list` | ❌ |
+| 1 | 0.839371 | `signalr_runtime_get` | ✅ **EXPECTED** |
+| 2 | 0.767315 | `sql_server_show` | ❌ |
+| 3 | 0.746548 | `eventhubs_eventhub_get` | ❌ |
+| 4 | 0.743503 | `servicebus_topic_details` | ❌ |
+| 5 | 0.735522 | `redis_list` | ❌ |
 
 ---
 
@@ -6820,7 +6820,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.794619 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.794672 | `eventgrid_subscription_list` | ❌ |
 | 2 | 0.794190 | `redis_list` | ❌ |
 | 3 | 0.792777 | `search_service_list` | ❌ |
 | 4 | 0.792107 | `eventgrid_topic_list` | ❌ |
@@ -6871,11 +6871,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.823477 | `sql_server_create` | ❌ |
-| 2 | 0.817717 | `sql_db_create` | ✅ **EXPECTED** |
-| 3 | 0.802414 | `sql_db_rename` | ❌ |
-| 4 | 0.798625 | `mysql_server_list` | ❌ |
-| 5 | 0.797121 | `appservice_database_add` | ❌ |
+| 1 | 0.823521 | `sql_server_create` | ❌ |
+| 2 | 0.817751 | `sql_db_create` | ✅ **EXPECTED** |
+| 3 | 0.802433 | `sql_db_rename` | ❌ |
+| 4 | 0.798566 | `mysql_server_list` | ❌ |
+| 5 | 0.797166 | `appservice_database_add` | ❌ |
 
 ---
 
@@ -6908,7 +6908,7 @@
 | 1 | 0.838652 | `sql_server_delete` | ❌ |
 | 2 | 0.832480 | `sql_db_delete` | ✅ **EXPECTED** |
 | 3 | 0.785882 | `sql_db_rename` | ❌ |
-| 4 | 0.772562 | `mysql_server_list` | ❌ |
+| 4 | 0.772417 | `mysql_server_list` | ❌ |
 | 5 | 0.771258 | `appservice_database_add` | ❌ |
 
 ---
@@ -6939,11 +6939,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.872997 | `mysql_database_list` | ❌ |
-| 2 | 0.869648 | `postgres_database_list` | ❌ |
-| 3 | 0.852727 | `kusto_database_list` | ❌ |
-| 4 | 0.850938 | `mysql_table_list` | ❌ |
-| 5 | 0.848516 | `kusto_table_list` | ❌ |
+| 1 | 0.872949 | `mysql_database_list` | ❌ |
+| 2 | 0.869679 | `postgres_database_list` | ❌ |
+| 3 | 0.852748 | `kusto_database_list` | ❌ |
+| 4 | 0.850883 | `mysql_table_list` | ❌ |
+| 5 | 0.848527 | `kusto_table_list` | ❌ |
 
 ---
 
@@ -7010,7 +7010,7 @@
 | 1 | 0.841836 | `sql_server_show` | ❌ |
 | 2 | 0.837908 | `postgres_server_config_get` | ❌ |
 | 3 | 0.832807 | `mysql_server_config_get` | ❌ |
-| 4 | 0.799968 | `sql_db_show` | ✅ **EXPECTED** |
+| 4 | 0.800042 | `sql_db_show` | ✅ **EXPECTED** |
 | 5 | 0.798674 | `mysql_server_param_get` | ❌ |
 
 ---
@@ -7109,11 +7109,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.820559 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
-| 2 | 0.780069 | `mysql_server_list` | ❌ |
-| 3 | 0.779536 | `aks_nodepool_get` | ❌ |
-| 4 | 0.778934 | `mysql_database_list` | ❌ |
-| 5 | 0.769399 | `mysql_table_list` | ❌ |
+| 1 | 0.820544 | `sql_elastic-pool_list` | ✅ **EXPECTED** |
+| 2 | 0.779960 | `mysql_server_list` | ❌ |
+| 3 | 0.779487 | `aks_nodepool_get` | ❌ |
+| 4 | 0.778977 | `mysql_database_list` | ❌ |
+| 5 | 0.769456 | `mysql_table_list` | ❌ |
 
 ---
 
@@ -7128,8 +7128,8 @@
 |------|-------|------|--------|
 | 1 | 0.864677 | `sql_server_create` | ✅ **EXPECTED** |
 | 2 | 0.811178 | `sql_db_create` | ❌ |
-| 3 | 0.809906 | `mysql_server_list` | ❌ |
-| 4 | 0.809841 | `storage_account_create` | ❌ |
+| 3 | 0.809841 | `storage_account_create` | ❌ |
+| 4 | 0.809783 | `mysql_server_list` | ❌ |
 | 5 | 0.801756 | `sql_db_rename` | ❌ |
 
 ---
@@ -7161,7 +7161,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.833359 | `sql_server_create` | ✅ **EXPECTED** |
-| 2 | 0.795657 | `mysql_server_list` | ❌ |
+| 2 | 0.795509 | `mysql_server_list` | ❌ |
 | 3 | 0.789083 | `sql_server_delete` | ❌ |
 | 4 | 0.788264 | `sql_server_show` | ❌ |
 | 5 | 0.786621 | `sql_db_create` | ❌ |
@@ -7215,7 +7215,7 @@
 | 2 | 0.797903 | `sql_db_delete` | ❌ |
 | 3 | 0.757697 | `sql_server_show` | ❌ |
 | 4 | 0.750805 | `mysql_database_query` | ❌ |
-| 5 | 0.737267 | `sql_server_firewall-rule_delete` | ❌ |
+| 5 | 0.737303 | `sql_server_firewall-rule_delete` | ❌ |
 
 ---
 
@@ -7230,8 +7230,8 @@
 |------|-------|------|--------|
 | 1 | 0.898488 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
 | 2 | 0.778346 | `sql_server_show` | ❌ |
-| 3 | 0.735878 | `sql_server_list` | ❌ |
-| 4 | 0.735783 | `mysql_table_list` | ❌ |
+| 3 | 0.735783 | `mysql_table_list` | ❌ |
+| 4 | 0.735595 | `sql_server_list` | ❌ |
 | 5 | 0.734118 | `mysql_database_list` | ❌ |
 
 ---
@@ -7262,11 +7262,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.854954 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
-| 2 | 0.798889 | `sql_server_show` | ❌ |
-| 3 | 0.755732 | `mysql_table_schema_get` | ❌ |
-| 4 | 0.752938 | `mysql_database_query` | ❌ |
-| 5 | 0.750993 | `cloudarchitect_design` | ❌ |
+| 1 | 0.854495 | `sql_server_entra-admin_list` | ✅ **EXPECTED** |
+| 2 | 0.797624 | `sql_server_show` | ❌ |
+| 3 | 0.755084 | `mysql_table_schema_get` | ❌ |
+| 4 | 0.752474 | `mysql_database_query` | ❌ |
+| 5 | 0.750405 | `cloudarchitect_design` | ❌ |
 
 ---
 
@@ -7280,7 +7280,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.831247 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.815308 | `sql_server_firewall-rule_delete` | ❌ |
+| 2 | 0.815312 | `sql_server_firewall-rule_delete` | ❌ |
 | 3 | 0.804633 | `sql_server_firewall-rule_list` | ❌ |
 | 4 | 0.797793 | `sql_server_show` | ❌ |
 | 5 | 0.795087 | `mysql_database_query` | ❌ |
@@ -7298,7 +7298,7 @@
 |------|-------|------|--------|
 | 1 | 0.876201 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
 | 2 | 0.802184 | `sql_server_firewall-rule_list` | ❌ |
-| 3 | 0.792967 | `sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.792933 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.738478 | `mysql_database_query` | ❌ |
 | 5 | 0.722482 | `postgres_database_query` | ❌ |
 
@@ -7314,7 +7314,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.831918 | `sql_server_firewall-rule_create` | ✅ **EXPECTED** |
-| 2 | 0.814715 | `sql_server_firewall-rule_delete` | ❌ |
+| 2 | 0.814691 | `sql_server_firewall-rule_delete` | ❌ |
 | 3 | 0.806035 | `sql_server_firewall-rule_list` | ❌ |
 | 4 | 0.756436 | `mysql_database_query` | ❌ |
 | 5 | 0.746850 | `sql_server_create` | ❌ |
@@ -7330,7 +7330,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.876326 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.876376 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.818141 | `sql_server_delete` | ❌ |
 | 3 | 0.801269 | `sql_db_delete` | ❌ |
 | 4 | 0.800536 | `sql_server_firewall-rule_list` | ❌ |
@@ -7347,7 +7347,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.852331 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.852353 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.784204 | `sql_server_firewall-rule_list` | ❌ |
 | 3 | 0.782995 | `sql_server_delete` | ❌ |
 | 4 | 0.777908 | `sql_server_firewall-rule_create` | ❌ |
@@ -7364,7 +7364,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.846636 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
+| 1 | 0.846622 | `sql_server_firewall-rule_delete` | ✅ **EXPECTED** |
 | 2 | 0.787512 | `sql_server_delete` | ❌ |
 | 3 | 0.786045 | `sql_server_firewall-rule_list` | ❌ |
 | 4 | 0.771804 | `sql_server_firewall-rule_create` | ❌ |
@@ -7382,7 +7382,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.872104 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
-| 2 | 0.819730 | `sql_server_firewall-rule_delete` | ❌ |
+| 2 | 0.819716 | `sql_server_firewall-rule_delete` | ❌ |
 | 3 | 0.815955 | `sql_server_firewall-rule_create` | ❌ |
 | 4 | 0.782384 | `mysql_table_list` | ❌ |
 | 5 | 0.778905 | `sql_server_show` | ❌ |
@@ -7400,7 +7400,7 @@
 |------|-------|------|--------|
 | 1 | 0.836402 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
 | 2 | 0.811356 | `sql_server_firewall-rule_create` | ❌ |
-| 3 | 0.802896 | `sql_server_firewall-rule_delete` | ❌ |
+| 3 | 0.802883 | `sql_server_firewall-rule_delete` | ❌ |
 | 4 | 0.787151 | `sql_server_show` | ❌ |
 | 5 | 0.778071 | `mysql_database_query` | ❌ |
 
@@ -7415,11 +7415,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.810474 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
-| 2 | 0.801510 | `sql_server_show` | ❌ |
-| 3 | 0.796085 | `sql_server_firewall-rule_create` | ❌ |
-| 4 | 0.783101 | `sql_server_firewall-rule_delete` | ❌ |
-| 5 | 0.776826 | `mysql_database_query` | ❌ |
+| 1 | 0.810427 | `sql_server_firewall-rule_list` | ✅ **EXPECTED** |
+| 2 | 0.801505 | `sql_server_show` | ❌ |
+| 3 | 0.796004 | `sql_server_firewall-rule_create` | ❌ |
+| 4 | 0.783020 | `sql_server_firewall-rule_delete` | ❌ |
+| 5 | 0.776939 | `mysql_database_query` | ❌ |
 
 ---
 
@@ -7432,8 +7432,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.852616 | `sql_server_list` | ✅ **EXPECTED** |
-| 2 | 0.849408 | `mysql_server_list` | ❌ |
+| 1 | 0.852219 | `sql_server_list` | ✅ **EXPECTED** |
+| 2 | 0.849312 | `mysql_server_list` | ❌ |
 | 3 | 0.828077 | `kusto_cluster_list` | ❌ |
 | 4 | 0.826568 | `search_service_list` | ❌ |
 | 5 | 0.811927 | `kusto_table_list` | ❌ |
@@ -7449,8 +7449,8 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.834169 | `mysql_server_list` | ❌ |
-| 2 | 0.809606 | `sql_server_list` | ✅ **EXPECTED** |
+| 1 | 0.833980 | `mysql_server_list` | ❌ |
+| 2 | 0.809229 | `sql_server_list` | ✅ **EXPECTED** |
 | 3 | 0.803620 | `kusto_cluster_list` | ❌ |
 | 4 | 0.793686 | `kusto_database_list` | ❌ |
 | 5 | 0.793317 | `redis_list` | ❌ |
@@ -7467,9 +7467,9 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.849971 | `sql_server_show` | ✅ **EXPECTED** |
-| 2 | 0.834155 | `sql_db_show` | ❌ |
-| 3 | 0.831163 | `mysql_server_list` | ❌ |
-| 4 | 0.825273 | `sql_server_list` | ❌ |
+| 2 | 0.833702 | `sql_db_show` | ❌ |
+| 3 | 0.831025 | `mysql_server_list` | ❌ |
+| 4 | 0.824924 | `sql_server_list` | ❌ |
 | 5 | 0.817213 | `sql_server_create` | ❌ |
 
 ---
@@ -7483,11 +7483,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.863991 | `sql_server_show` | ✅ **EXPECTED** |
-| 2 | 0.842656 | `postgres_server_config_get` | ❌ |
-| 3 | 0.840487 | `mysql_server_config_get` | ❌ |
-| 4 | 0.801747 | `mysql_server_param_get` | ❌ |
-| 5 | 0.786797 | `sql_db_show` | ❌ |
+| 1 | 0.864055 | `sql_server_show` | ✅ **EXPECTED** |
+| 2 | 0.842651 | `postgres_server_config_get` | ❌ |
+| 3 | 0.840563 | `mysql_server_config_get` | ❌ |
+| 4 | 0.801786 | `mysql_server_param_get` | ❌ |
+| 5 | 0.786885 | `sql_db_show` | ❌ |
 
 ---
 
@@ -7674,7 +7674,7 @@
 | 2 | 0.864153 | `storage_blob_container_get` | ❌ |
 | 3 | 0.839007 | `storage_blob_get` | ❌ |
 | 4 | 0.806190 | `storage_account_get` | ❌ |
-| 5 | 0.796175 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.796376 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -7691,7 +7691,7 @@
 | 2 | 0.849822 | `storage_blob_container_get` | ❌ |
 | 3 | 0.826988 | `storage_blob_get` | ❌ |
 | 4 | 0.805862 | `storage_account_get` | ❌ |
-| 5 | 0.799925 | `cosmos_database_container_item_query` | ❌ |
+| 5 | 0.800129 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -7741,7 +7741,7 @@
 | 1 | 0.879623 | `storage_blob_container_get` | ✅ **EXPECTED** |
 | 2 | 0.847528 | `cosmos_database_container_list` | ❌ |
 | 3 | 0.833656 | `storage_blob_get` | ❌ |
-| 4 | 0.825089 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.825182 | `cosmos_database_container_item_query` | ❌ |
 | 5 | 0.818749 | `storage_account_get` | ❌ |
 
 ---
@@ -7772,11 +7772,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.893390 | `storage_blob_get` | ✅ **EXPECTED** |
-| 2 | 0.883276 | `storage_blob_container_get` | ❌ |
-| 3 | 0.861351 | `storage_account_get` | ❌ |
-| 4 | 0.849169 | `storage_blob_container_create` | ❌ |
-| 5 | 0.805460 | `cosmos_database_container_item_query` | ❌ |
+| 1 | 0.893481 | `storage_blob_get` | ✅ **EXPECTED** |
+| 2 | 0.883416 | `storage_blob_container_get` | ❌ |
+| 3 | 0.861433 | `storage_account_get` | ❌ |
+| 4 | 0.849344 | `storage_blob_container_create` | ❌ |
+| 5 | 0.805653 | `cosmos_database_container_item_query` | ❌ |
 
 ---
 
@@ -7792,7 +7792,7 @@
 | 1 | 0.893070 | `storage_blob_container_get` | ❌ |
 | 2 | 0.890783 | `storage_blob_get` | ✅ **EXPECTED** |
 | 3 | 0.861377 | `storage_blob_container_create` | ❌ |
-| 4 | 0.844692 | `cosmos_database_container_item_query` | ❌ |
+| 4 | 0.844922 | `cosmos_database_container_item_query` | ❌ |
 | 5 | 0.841357 | `cosmos_database_container_list` | ❌ |
 
 ---
@@ -7841,7 +7841,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.856770 | `subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.842356 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.842406 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.831559 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.825601 | `cosmos_account_list` | ❌ |
 | 5 | 0.825060 | `search_service_list` | ❌ |
@@ -7857,7 +7857,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.819054 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.819087 | `eventgrid_subscription_list` | ❌ |
 | 2 | 0.803164 | `redis_list` | ❌ |
 | 3 | 0.800703 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.795662 | `subscription_list` | ✅ **EXPECTED** |
@@ -7875,7 +7875,7 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.791653 | `subscription_list` | ✅ **EXPECTED** |
-| 2 | 0.784686 | `eventgrid_subscription_list` | ❌ |
+| 2 | 0.784741 | `eventgrid_subscription_list` | ❌ |
 | 3 | 0.777850 | `eventgrid_topic_list` | ❌ |
 | 4 | 0.770929 | `redis_list` | ❌ |
 | 5 | 0.768711 | `marketplace_product_list` | ❌ |
@@ -7891,7 +7891,7 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.805756 | `eventgrid_subscription_list` | ❌ |
+| 1 | 0.805787 | `eventgrid_subscription_list` | ❌ |
 | 2 | 0.799051 | `subscription_list` | ✅ **EXPECTED** |
 | 3 | 0.792453 | `redis_list` | ❌ |
 | 4 | 0.792011 | `eventgrid_topic_list` | ❌ |
@@ -7910,7 +7910,7 @@
 |------|-------|------|--------|
 | 1 | 0.879282 | `azureterraformbestpractices_get` | ✅ **EXPECTED** |
 | 2 | 0.861340 | `get_bestpractices_get` | ❌ |
-| 3 | 0.849914 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.814913 | `deploy_iac_rules_get` | ❌ |
 | 4 | 0.804409 | `cloudarchitect_design` | ❌ |
 | 5 | 0.800976 | `quota_usage_check` | ❌ |
 
@@ -7925,11 +7925,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.821362 | `keyvault_secret_get` | ❌ |
+| 1 | 0.821345 | `keyvault_secret_get` | ❌ |
 | 2 | 0.812174 | `azureterraformbestpractices_get` | ✅ **EXPECTED** |
 | 3 | 0.808736 | `keyvault_secret_create` | ❌ |
-| 4 | 0.808426 | `deploy_iac_rules_get` | ❌ |
-| 5 | 0.807316 | `get_bestpractices_get` | ❌ |
+| 4 | 0.807316 | `get_bestpractices_get` | ❌ |
+| 5 | 0.795954 | `keyvault_secret_list` | ❌ |
 
 ---
 
@@ -7976,11 +7976,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.903074 | `virtualdesktop_hostpool_host_user-list` | ✅ **EXPECTED** |
-| 2 | 0.853121 | `virtualdesktop_hostpool_host_list` | ❌ |
-| 3 | 0.792277 | `virtualdesktop_hostpool_list` | ❌ |
-| 4 | 0.754402 | `aks_nodepool_get` | ❌ |
-| 5 | 0.740765 | `postgres_database_list` | ❌ |
+| 1 | 0.903083 | `virtualdesktop_hostpool_host_user-list` | ✅ **EXPECTED** |
+| 2 | 0.852811 | `virtualdesktop_hostpool_host_list` | ❌ |
+| 3 | 0.792047 | `virtualdesktop_hostpool_list` | ❌ |
+| 4 | 0.754118 | `aks_nodepool_get` | ❌ |
+| 5 | 0.740632 | `postgres_database_list` | ❌ |
 
 ---
 
@@ -7993,11 +7993,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.814658 | `workbooks_create` | ✅ **EXPECTED** |
-| 2 | 0.749806 | `workbooks_update` | ❌ |
-| 3 | 0.746902 | `workbooks_delete` | ❌ |
-| 4 | 0.741031 | `workbooks_list` | ❌ |
-| 5 | 0.734155 | `workbooks_show` | ❌ |
+| 1 | 0.814534 | `workbooks_create` | ✅ **EXPECTED** |
+| 2 | 0.749725 | `workbooks_update` | ❌ |
+| 3 | 0.746735 | `workbooks_delete` | ❌ |
+| 4 | 0.740871 | `workbooks_list` | ❌ |
+| 5 | 0.734070 | `workbooks_show` | ❌ |
 
 ---
 
@@ -8112,11 +8112,11 @@
 
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
-| 1 | 0.849255 | `deploy_iac_rules_get` | ❌ |
-| 2 | 0.829298 | `bicepschema_get` | ✅ **EXPECTED** |
-| 3 | 0.819148 | `foundry_models_deploy` | ❌ |
-| 4 | 0.804941 | `foundry_openai_embeddings-create` | ❌ |
-| 5 | 0.803211 | `foundry_openai_create-completion` | ❌ |
+| 1 | 0.829298 | `bicepschema_get` | ✅ **EXPECTED** |
+| 2 | 0.819148 | `foundry_models_deploy` | ❌ |
+| 3 | 0.804960 | `foundry_openai_embeddings-create` | ❌ |
+| 4 | 0.803227 | `foundry_openai_create-completion` | ❌ |
+| 5 | 0.798585 | `speech_stt_recognize` | ❌ |
 
 ---
 
@@ -8131,8 +8131,8 @@
 |------|-------|------|--------|
 | 1 | 0.839665 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.781938 | `deploy_architecture_diagram_generate` | ❌ |
-| 3 | 0.768999 | `deploy_pipeline_guidance_get` | ❌ |
-| 4 | 0.762596 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.777407 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.768999 | `deploy_pipeline_guidance_get` | ❌ |
 | 5 | 0.753698 | `deploy_plan_get` | ❌ |
 
 ---
@@ -8147,10 +8147,10 @@
 | Rank | Score | Tool | Status |
 |------|-------|------|--------|
 | 1 | 0.831567 | `cloudarchitect_design` | ✅ **EXPECTED** |
-| 2 | 0.797772 | `deploy_architecture_diagram_generate` | ❌ |
-| 3 | 0.794105 | `deploy_plan_get` | ❌ |
-| 4 | 0.790057 | `quota_usage_check` | ❌ |
-| 5 | 0.789290 | `deploy_iac_rules_get` | ❌ |
+| 2 | 0.800906 | `deploy_iac_rules_get` | ❌ |
+| 3 | 0.797772 | `deploy_architecture_diagram_generate` | ❌ |
+| 4 | 0.794105 | `deploy_plan_get` | ❌ |
+| 5 | 0.790057 | `quota_usage_check` | ❌ |
 
 ---
 
@@ -8165,8 +8165,8 @@
 |------|-------|------|--------|
 | 1 | 0.805150 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.775187 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.765922 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.765054 | `deploy_app_logs_get` | ❌ |
+| 3 | 0.773639 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.768590 | `deploy_app_logs_get` | ❌ |
 | 5 | 0.764537 | `deploy_architecture_diagram_generate` | ❌ |
 
 ---
@@ -8182,8 +8182,8 @@
 |------|-------|------|--------|
 | 1 | 0.833130 | `cloudarchitect_design` | ✅ **EXPECTED** |
 | 2 | 0.796093 | `deploy_pipeline_guidance_get` | ❌ |
-| 3 | 0.790887 | `deploy_iac_rules_get` | ❌ |
-| 4 | 0.780336 | `speech_stt_recognize` | ❌ |
+| 3 | 0.795801 | `deploy_iac_rules_get` | ❌ |
+| 4 | 0.780320 | `speech_stt_recognize` | ❌ |
 | 5 | 0.777460 | `quota_usage_check` | ❌ |
 
 ---
@@ -8191,15 +8191,15 @@
 ## Summary
 
 **Total Prompts Tested:** 454  
-**Analysis Execution Time:** 93.9645254s  
+**Analysis Execution Time:** 78.9917739s  
 
 ### Success Rate Metrics
 
-**Top Choice Success:** 84.8% (385/454 tests)  
+**Top Choice Success:** 85.0% (386/454 tests)  
 
 #### Confidence Level Distribution
 
-**💪 Very High Confidence (≥0.8):** 92.3% (419/454 tests)  
+**💪 Very High Confidence (≥0.8):** 92.5% (420/454 tests)  
 **🎯 High Confidence (≥0.7):** 99.6% (452/454 tests)  
 **✅ Good Confidence (≥0.6):** 99.6% (452/454 tests)  
 **👍 Fair Confidence (≥0.5):** 99.6% (452/454 tests)  
@@ -8208,11 +8208,11 @@
 
 #### Top Choice + Confidence Combinations
 
-**💪 Top Choice + Very High Confidence (≥0.8):** 80.2% (364/454 tests)  
-**🎯 Top Choice + High Confidence (≥0.7):** 84.8% (385/454 tests)  
-**✅ Top Choice + Good Confidence (≥0.6):** 84.8% (385/454 tests)  
-**👍 Top Choice + Fair Confidence (≥0.5):** 84.8% (385/454 tests)  
-**👌 Top Choice + Acceptable Confidence (≥0.4):** 84.8% (385/454 tests)  
+**💪 Top Choice + Very High Confidence (≥0.8):** 80.4% (365/454 tests)  
+**🎯 Top Choice + High Confidence (≥0.7):** 85.0% (386/454 tests)  
+**✅ Top Choice + Good Confidence (≥0.6):** 85.0% (386/454 tests)  
+**👍 Top Choice + Fair Confidence (≥0.5):** 85.0% (386/454 tests)  
+**👌 Top Choice + Acceptable Confidence (≥0.4):** 85.0% (386/454 tests)  
 
 ### Success Rate Analysis
 

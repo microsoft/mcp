@@ -1793,7 +1793,7 @@
     },
     {
       "name": "get",
-      "description": "This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure using Azure CLI. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with Azure CLI deployment workflows.",
+      "description": "This tool offers guidelines for creating Infrastructure as Code (IaC) files to deploy applications on Azure using Azure CLI. The guidelines outline rules to improve the quality of IaC files, ensuring they are compatible with Azure CLI deployment workflows.",
       "command": "deploy iac rules get",
       "option": [
         {
@@ -12872,5 +12872,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 49
+  "duration": 50
 }

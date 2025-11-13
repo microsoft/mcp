@@ -297,7 +297,7 @@
     "Show me the schema of table <table> in the PostgreSQL database <database> in server <server>"
   ],
   "deploy_app_logs_get": [
-    "Show me the log of the application"
+    "Show me the log of the application in resource group <resource-group-name>"
   ],
   "deploy_architecture_diagram_generate": [
     "Generate the azure architecture diagram for this application"
