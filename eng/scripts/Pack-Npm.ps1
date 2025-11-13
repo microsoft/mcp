@@ -157,6 +157,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
             bin = @{ "$cliName-$nodeOs-$arch" = "./$binPath" }
             os = @($nodeOs)
             cpu = @($arch)
+            mcpName = $server.mcpRepositoryName
         }
 
         if($wrapperPackage.os -notcontains $nodeOs) {

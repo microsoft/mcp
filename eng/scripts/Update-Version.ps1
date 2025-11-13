@@ -17,6 +17,8 @@ $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 
 $projectFile = "$RepoRoot/servers/$ServerName/src/$ServerName.csproj"
 $changeLogPath = "$RepoRoot/servers/$ServerName/CHANGELOG.md"
+$serverJsonPath = "$RepoRoot/servers/$ServerName/server.json"
+
 if(!(Test-Path $projectFile)) {
     Write-Error "Project file $projectFile does not exist."
     exit 1
@@ -51,3 +53,39 @@ else {
   -ChangelogPath $changeLogPath -Unreleased $False `
   -ReplaceLatestEntryTitle $ReplaceLatestEntryTitle -ReleaseDate $ReleaseDate
 }
+
+Write-Host "Updating server.json file $serverJsonPath"
+
+$jsonContent = Get-Content -Path $serverJsonPath -Raw
+$jsonObject = $jsonContent | ConvertFrom-Json
+
+# Update top-level version field
+if ($jsonObject.PSObject.Properties.Name -contains "version") {
+    Write-Debug "Updating top-level version: $($jsonObject.version) => $Version"
+    $jsonObject.version = $Version
+}
+
+# Update version fields in packages array
+if ($jsonObject.PSObject.Properties.Name -contains "packages" -and $jsonObject.packages -is [Array]) {
+    Write-Debug "Processing packages array..."
+
+    for ($i = 0; $i -lt $jsonObject.packages.Count; $i++) {
+        $package = $jsonObject.packages[$i]
+        
+        if ($package -is [PSCustomObject] -and $package.PSObject.Properties.Name -contains "version") {
+            $packageName = if ($package.PSObject.Properties.Name -contains "identifier") { $package.identifier } else { $null }
+
+            if ($packageName) {
+                Write-Debug "  Updating version in $packageName`: $($package.version) → $Version"
+                $package.version = $Version
+            } else {
+                Write-Debug "  Package at index $i has no identifier."
+            }
+
+        }
+    }
+}
+  
+# Convert back to JSON with proper formatting
+$updatedJson = $jsonObject | ConvertTo-Json -Depth 10
+$updatedJson | Set-Content -Path $serverJsonPath -Force -NoNewLine
