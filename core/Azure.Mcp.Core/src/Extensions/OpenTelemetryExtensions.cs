@@ -120,7 +120,7 @@ public static class OpenTelemetryExtensions
         }
 
 #if RELEASE
-        ConfigureMultipleAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
+        ConfigureAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
 #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
@@ -160,7 +160,7 @@ public static class OpenTelemetryExtensions
     }
 
 
-    private static void ConfigureMultipleAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
+    private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
     {
         foreach (var exporter in appInsightsConnectionStrings)
         {
