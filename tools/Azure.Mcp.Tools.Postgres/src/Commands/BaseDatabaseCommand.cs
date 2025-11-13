@@ -1,9 +1,11 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.CommandLine;
 using System.Diagnostics.CodeAnalysis;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Extensions;
+using Azure.Mcp.Core.Models.Option;
 using Azure.Mcp.Tools.Postgres.Options;
 using Microsoft.Extensions.Logging;
 
@@ -23,12 +25,16 @@ public abstract class BaseDatabaseCommand<
     {
         base.RegisterOptions(command);
         command.Options.Add(PostgresOptionDefinitions.Database);
+        command.Options.Add(PostgresOptionDefinitions.AuthType);
+        command.Options.Add(PostgresOptionDefinitions.Password);
     }
 
     protected override TOptions BindOptions(ParseResult parseResult)
     {
         var options = base.BindOptions(parseResult);
         options.Database = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Database.Name);
+        options.AuthType = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.AuthType.Name);
+        options.Password = parseResult.GetValueOrDefault<string>(PostgresOptionDefinitions.Password.Name);
         return options;
     }
 }
