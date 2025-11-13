@@ -14,7 +14,6 @@ using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Subscription;
 
-[Trait("Area", "Core")]
 public class SubscriptionCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
@@ -41,117 +40,92 @@ public class SubscriptionCommandTests
     public void Validate_WithEnvironmentVariableOnly_PassesValidation()
     {
         // Arrange
-        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
         EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
-        try
-        {
-            var parseResult = _commandDefinition.Parse([]);
 
-            // Act & Assert
-            Assert.Empty(parseResult.Errors);
-        }
-        finally
-        {
-            // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
-        }
+        // Act
+        var parseResult = _commandDefinition.Parse([]);
+
+        // Assert
+        Assert.Empty(parseResult.Errors);
     }
 
     [Fact]
     public async Task ExecuteAsync_WithEnvironmentVariableOnly_CallsServiceWithCorrectSubscription()
     {
         // Arrange
-        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
         EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
 
-        try
+        var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
-            {
-                new("account1", null, null, null, null, null, null, null, null, null),
-                new("account2", null, null, null, null, null, null, null, null, null)
-            };
+            new("account1", null, null, null, null, null, null, null, null, null),
+            new("account2", null, null, null, null, null, null, null, null, null)
+        };
 
-            _storageService.GetAccountDetails(
-                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-                Arg.Is("env-subs"),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(expectedAccounts));
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is("env-subs"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedAccounts));
 
-            var parseResult = _commandDefinition.Parse([]);
+        var parseResult = _commandDefinition.Parse([]);
 
-            // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
-            // Assert
-            Assert.NotNull(response);
+        // Assert
+        Assert.NotNull(response);
 
-            // Verify the service was called with the environment variable subscription
-            _ = _storageService.Received(1).GetAccountDetails(
-                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-                "env-subs",
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>());
-        }
-        finally
-        {
-            // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
-        }
+        // Verify the service was called with the environment variable subscription
+        _ = _storageService.Received(1).GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            "env-subs",
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_WithBothOptionAndEnvironmentVariable_PrefersOption()
     {
         // Arrange
-        var originalValue = EnvironmentHelpers.GetAzureSubscriptionId();
         EnvironmentHelpers.SetAzureSubscriptionId("env-subs");
 
-        try
+        var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
         {
-            var expectedAccounts = new List<Mcp.Tools.Storage.Models.StorageAccountInfo>
-            {
-                new("account1", null, null, null, null, null, null, null, null, null),
-                new("account2", null, null, null, null, null, null, null, null, null)
-            };
+            new("account1", null, null, null, null, null, null, null, null, null),
+            new("account2", null, null, null, null, null, null, null, null, null)
+        };
 
-            _storageService.GetAccountDetails(
-                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-                Arg.Is("option-subs"),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>())
-                .Returns(Task.FromResult(expectedAccounts));
+        _storageService.GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            Arg.Is("option-subs"),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(expectedAccounts));
 
-            var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
+        var parseResult = _commandDefinition.Parse(["--subscription", "option-subs"]);
 
-            // Act
-            var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
-            // Assert
-            Assert.NotNull(response);
+        // Assert
+        Assert.NotNull(response);
 
-            // Verify the service was called with the option subscription, not the environment variable
-            _ = _storageService.Received(1).GetAccountDetails(
-                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-                "option-subs",
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>());
-            _ = _storageService.DidNotReceive().GetAccountDetails(
-                Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
-                "env-subs",
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>(),
-                Arg.Any<CancellationToken>());
-        }
-        finally
-        {
-            // Cleanup
-            EnvironmentHelpers.SetAzureSubscriptionId(originalValue);
-        }
+        // Verify the service was called with the option subscription, not the environment variable
+        _ = _storageService.Received(1).GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            "option-subs",
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
+        _ = _storageService.DidNotReceive().GetAccountDetails(
+            Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
+            "env-subs",
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

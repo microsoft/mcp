@@ -9,7 +9,8 @@ public interface IEventGridService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<EventGridSubscriptionInfo>> GetSubscriptionsAsync(
         string subscription,
@@ -17,7 +18,8 @@ public interface IEventGridService
         string? topicName = null,
         string? location = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<EventPublishResult> PublishEventAsync(
         string subscription,
@@ -26,5 +28,6 @@ public interface IEventGridService
         string eventData,
         string? eventSchema = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
