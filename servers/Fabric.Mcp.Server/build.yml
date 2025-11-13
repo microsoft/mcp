@@ -8,10 +8,10 @@ parameters:
   default: false
 - name: PackageVSIX
   type: boolean
-  default: false
+  default: true
 - name: IncludeNative
   type: boolean
-  default: false
+  default: true
 
 trigger: none
 pr: none
