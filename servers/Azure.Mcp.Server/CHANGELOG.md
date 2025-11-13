@@ -14,7 +14,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- PosgreSQL MCP tools has improved the error message reported in case of failure deserializing some of the columns returned by a query. Non out-of-the-box types like `vector` cannot be deserialized and will now report a clear error message indicating which column caused the issue and an action plan so AI agents can recover from it. [[#1024](https://github.com/microsoft/mcp/pull/1024)]
+- PostgreSQL MCP tools has improved the error message reported in case of failure deserializing some of the columns returned by a query. Non out-of-the-box types like `vector` cannot be deserialized and will now report a clear error message indicating which column caused the issue and an action plan so AI agents can recover from it. [[#1024](https://github.com/microsoft/mcp/pull/1024)]
 - Fixed exit code when invoking `--help` flag. Commands like `tools list --help` now correctly return exit code `0` instead of `1` when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]
 
 ### Other Changes
