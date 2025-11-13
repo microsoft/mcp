@@ -30,13 +30,11 @@ Exposes Azure tools grouped by service namespace. Each Azure service appears as 
 
 ```bash
 # Start MCP Server with namespace-level tools (default behavior)
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     [--transport <transport>] \
     [--read-only]
 
 # Explicitly specify namespace mode
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode namespace \
     [--transport <transport>] \
@@ -49,7 +47,6 @@ Exposes all Azure tools individually. Each Azure service operation appears as a 
 
 ```bash
 # Start MCP Server with all tools exposed individually
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode all \
     [--transport <transport>] \
@@ -62,7 +59,6 @@ Exposes a single "azure" tool that handles internal routing across all Azure MCP
 
 ```bash
 # Start MCP Server with single azure tool
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode single \
     [--transport <transport>] \
@@ -75,7 +71,6 @@ Exposes only tools for specific Azure service namespaces. Use multiple `--namesp
 
 ```bash
 # Start MCP Server with only Storage tools
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --namespace storage \
     --mode all \
@@ -83,7 +78,6 @@ azmcp server start \
     [--read-only]
 
 # Start MCP Server with Storage and Key Vault tools
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --namespace storage \
     --namespace keyvault \
@@ -98,7 +92,6 @@ Exposes only specific tools by name, providing the finest level of granularity. 
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --tool azmcp_subscription_list \
     --tool azmcp_group_list \
@@ -106,7 +99,6 @@ azmcp server start \
     [--read-only]
 
 # Start MCP Server with all mode and essential storage management tools
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode all \
     --tool azmcp_storage_account_get \
@@ -133,7 +125,6 @@ Each consolidated tool groups operations that are commonly used together:
 
 ```bash
 # Start MCP Server with consolidated mode
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode consolidated \
     [--transport <transport>] \
@@ -152,7 +143,6 @@ Collapses all tools within each namespace into a single tool (e.g., all storage 
 
 ```bash
 # Start MCP Server with service proxy tools
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode namespace \
     [--transport <transport>] \
@@ -165,7 +155,6 @@ Exposes a single "azure" tool that handles internal routing across all Azure MCP
 
 ```bash
 # Start MCP Server with single Azure tool proxy
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp server start \
     --mode single \
     [--transport <transport>] \
