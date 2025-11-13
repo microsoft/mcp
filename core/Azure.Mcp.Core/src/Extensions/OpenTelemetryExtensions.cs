@@ -20,7 +20,10 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    private const string DefaultAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+    /// <summary>
+    /// The App Insights connection string to send telemetry to Microsoft.
+    /// </summary>
+    private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
@@ -35,9 +38,11 @@ public static class OpenTelemetryExtensions
                     options.Version = GetServerVersion(entryAssembly);
                 }
 
+                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
+                // over any other settings.
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
-                options.IsTelemetryEnabled = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
+                options.IsTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
@@ -105,18 +110,20 @@ public static class OpenTelemetryExtensions
 
         var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
-        if (!string.IsNullOrEmpty(userProvidedAppInsightsConnectionString))
+        if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
             appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
         }
 
+        // This environment variable can be used to disable Microsoft telemetry collection.
+        // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
 
-        bool shouldCollectMicrosoftTelemetry = string.IsNullOrEmpty(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
+        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
 
         if (shouldCollectMicrosoftTelemetry)
         {
-            appInsightsConnectionStrings.Add(("Microsoft", DefaultAppInsightsConnectionString));
+            appInsightsConnectionStrings.Add(("Microsoft", MicrosoftOwnedAppInsightsConnectionString));
         }
 
 #if RELEASE
