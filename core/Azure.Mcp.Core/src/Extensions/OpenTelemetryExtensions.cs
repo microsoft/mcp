@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -24,30 +23,6 @@ public static class OpenTelemetryExtensions
     public static void ConfigureTelemetryServices(this IServiceCollection services,
         IHostEnvironment hostEnvironment, IConfiguration configuration)
     {
-        services.AddOptions<AzureMcpServerConfiguration>()
-            .Configure<IOptions<ServiceStartOptions>>((options, serviceStartOptions) =>
-            {
-                // Assembly.GetEntryAssembly is used to retrieve the version of the server application as that is
-                // the assembly that will run the tool calls.
-                var entryAssembly = Assembly.GetEntryAssembly();
-                if (entryAssembly != null)
-                {
-                    options.Version = GetServerVersion(entryAssembly);
-                }
-
-                var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
-
-                var transport = serviceStartOptions.Value.Transport;
-
-                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-
-                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
-
-                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
-                // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
-            });
-
         services.AddSingleton<ITelemetryService, TelemetryService>();
 
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -166,32 +141,5 @@ public static class OpenTelemetryExtensions
                 builder.AddOtlpExporter();
             }
         });
-    }
-
-    /// <summary>
-    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
-    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
-    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
-    /// </summary>
-    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
-    /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly entryAssembly)
-    {
-        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        if (versionAttribute == null)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
-        }
-
-        string version = versionAttribute.InformationalVersion;
-
-        int hashSeparator = version.IndexOf('+');
-        if (hashSeparator != -1)
-        {
-            version = version.Substring(0, hashSeparator);
-        }
-
-        return version;
     }
 }

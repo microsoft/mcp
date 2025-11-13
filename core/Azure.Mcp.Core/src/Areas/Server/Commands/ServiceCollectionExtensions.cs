@@ -272,7 +272,13 @@ public static class AzureMcpServiceCollectionExtensions
                 var isStdioTransport = string.IsNullOrEmpty(transport)
                     || string.Equals(transport, TransportTypes.StdIo, StringComparison.OrdinalIgnoreCase);
 
-                options.Version = GetServerVersion(Assembly.GetEntryAssembly());
+                var entryAssembly = Assembly.GetEntryAssembly();
+                if (entryAssembly == null)
+                {
+                    throw new InvalidOperationException("Should be a managed assembly as entry assembly.");
+                }
+
+                options.Version = GetServerVersion(entryAssembly);
                 options.ApplicationInsightsConnectionString = applicationInsightsString;
 
                 // if transport is not set (default to stdio) or is set to stdio, enable telemetry
@@ -291,20 +297,15 @@ public static class AzureMcpServiceCollectionExtensions
     /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
     /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
     /// </summary>
-    /// <param name="callerAssembly">The caller assembly to extract name and version information from.</param>
+    /// <param name="entryAssembly">The caller assembly to extract name and version information from.</param>
     /// <returns>A version string.</returns>
-    internal static string GetServerVersion(Assembly? callerAssembly)
+    internal static string GetServerVersion(Assembly entryAssembly)
     {
-        if (callerAssembly == null)
-        {
-            throw new InvalidOperationException("Should be a managed assembly as entry assembly.");
-        }
-
-        AssemblyInformationalVersionAttribute? versionAttribute = callerAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)
         {
             throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{callerAssembly.FullName}'.");
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
         }
 
         string version = versionAttribute.InformationalVersion;
