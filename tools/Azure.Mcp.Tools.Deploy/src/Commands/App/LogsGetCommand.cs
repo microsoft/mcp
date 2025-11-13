@@ -31,7 +31,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
 
     public override string Description =>
         """
-        Shows application logs from Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed for deployed applications workspace and discovers the correct workspace and resources based on the provided resource group name. Use this tool to check deployment status or troubleshoot post-deployment issues.
+        Shows application logs from Log Analytics workspace for Container Apps, App Services, and Function Apps. Designed to discover the correct workspace and resources for deployed applications based on the provided resource group name. Use this tool to check deployment status or troubleshoot post-deployment issues.
         """;
 
     protected override void RegisterOptions(Command command)
