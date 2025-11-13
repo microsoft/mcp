@@ -1,0 +1,126 @@
+{
+    "name": "vscode-template-mcp-server",
+    "displayName": "Template MCP Server",
+    "description": "Template project for validating the microsoft/mcp engineering system.",
+    "version": "0.0.0",
+    "license": "MIT",
+    "icon": "resources/package-icon.png",
+    "preview": false,
+    "publisher": "ms-azuretools",
+    "aiKey": "00000000000000000000000000000000-00000000-0000-0000-0000-000000000000-0000",
+    "engines": {
+        "vscode": "^1.101.0"
+    },
+    "categories": [
+        "AI",
+        "Chat",
+        "Extension Packs"
+    ],
+    "keywords": [
+        "agent",
+        "chat",
+        "copilot",
+        "language-model-tools",
+        "mcp",
+        "model context protocol",
+        "ai"
+    ],
+    "bugs": {
+        "url": "https://github.com/microsoft/mcp/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/microsoft/mcp"
+    },
+    "activationEvents": [
+        "onStartupFinished"
+    ],
+    "main": "main.js",
+    "contributes": {
+        "mcpServerDefinitionProviders": [
+            {
+                "id": "templateMcpProvider",
+                "label": "Template MCP Server Provider"
+            }
+        ],
+        "configuration": {
+            "type": "object",
+            "title": "Template MCP",
+            "properties": {
+                "templateMcp.enabledServices": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "template"
+                        ],
+                        "markdownEnumDescriptions": [
+                            "Template Service"
+                        ]
+                    },
+                    "uniqueItems": true,
+                    "markdownDescription": "Service namespaces to enable. Leave empty to enable all. Choose from the list to avoid typing errors. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Template MCP → Start/Restart)."
+                },
+                "templateMcp.serverMode": {
+                    "type": "string",
+                    "enum": ["single", "namespace", "all"],
+                    "default": "namespace",
+                    "markdownDescription": "Server Mode determines how tools are exposed: `single` collapses every tool (100+) into one (1) single tool that routes internally, `namespace` (default) collapses all tools down into logical Template service namespace grouping (about 30 tools), while `all` exposes every MCP tool directly to the MCP client. We recommend namespace as the right balance between MCP tool count and tool selection accuracy. **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Template MCP → Start/Restart)."
+
+                },
+                "templateMcp.readOnly": {
+                    "type": "boolean",
+                    "default": false,
+                    "markdownDescription": "Start the Template MCP server in read-only mode (operations that modify resources will be disabled). **Note:** Changes require restarting the MCP server if MCP Autostart is not configured (Command Palette → MCP: List Servers → Template MCP → Start/Restart)."
+                }
+            }
+        }
+    },
+    "extensionPack": [
+    ],
+    "scripts": {
+        "vscode:prepublish": "npm run build",
+        "compile": "tsc -p ./",
+        "build": "webpack --mode production --devtool hidden-source-map",
+        "watch": "webpack --mode development --watch",
+        "dev-build": "webpack --mode development",
+        "lint": "eslint src --ext ts",
+        "test": "npm run compile && node ./out/test/runAllTests.js",
+        "unit-test": "npm run compile && node ./out/test/runUnitTests.js"
+    },
+    "devDependencies": {
+        "@azure/core-auth": "^1.4",
+        "@types/chai": "~4",
+        "@types/glob": "~7",
+        "@types/mocha": "~10",
+        "@types/node": "~16",
+        "@types/semver": "~7",
+        "@types/sinon": "^17.0.4",
+        "@types/vscode": "^1.101.0",
+        "@typescript-eslint/eslint-plugin": "~6",
+        "@typescript-eslint/parser": "~6",
+        "@vscode/test-electron": "~2",
+        "@vscode/vsce": "~3",
+        "chai": "~4",
+        "eslint": "~8",
+        "glob": "~8",
+        "mocha": "~10",
+        "node-loader": "~2",
+        "sinon": "^21.0.0",
+        "terser-webpack-plugin": "^5.3.14",
+        "ts-loader": "~9",
+        "typescript": "~5.1",
+        "webpack": "^5.99.9",
+        "webpack-bundle-analyzer": "^4.10.2",
+        "webpack-cli": "^6.0.1"
+    },
+    "dependencies": {
+        "@microsoft/vscode-azext-utils": "~2",
+        "@microsoft/vscode-azureresources-api": "~2",
+        "dayjs": "~1",
+        "dotenv": "~16",
+        "rxjs": "~7",
+        "semver": "~7",
+        "yaml": "~2"
+    }
+}
