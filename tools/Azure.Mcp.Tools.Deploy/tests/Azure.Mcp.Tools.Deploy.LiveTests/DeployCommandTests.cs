@@ -44,7 +44,6 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
             "deploy_iac_rules_get",
             new()
             {
-                { "deployment-tool", "AzCli" },
                 { "resource-types", "appservice, azurestorage" }
             });
 
