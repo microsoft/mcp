@@ -2,6 +2,26 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 2.0.0-beta.4 (2025-11-13)
+
+### Features Added
+
+- PostgreSQL MCP tools now support both Microsoft Entra authentication and native database authentication. The default is Entra authentication, users can switch to native database authentication by providing the `--auth-type` parameter with the value `PostgreSQL`. If native authentication is selected, the user must also provide the user password via the `--password` parameter. [[#1011](https://github.com/microsoft/mcp/pull/1011)]
+- Telemetry: [[#1150](https://github.com/microsoft/mcp/pull/1150)]
+  - Enabled telemetry collection for the HTTP transport mode.
+  - Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams.
+  - Added the `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default).
+
+### Bugs Fixed
+
+- PostgreSQL MCP tools has improved the error message reported in case of failure deserializing some of the columns returned by a query. Non out-of-the-box types like `vector` cannot be deserialized and will now report a clear error message indicating which column caused the issue and an action plan so AI agents can recover from it. [[#1024](https://github.com/microsoft/mcp/pull/1024)]
+- Fixed exit code when invoking `--help` flag. Commands like `tools list --help` now correctly return exit code `0` instead of `1` when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]
+
+### Other Changes
+
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+- Upgraded dependency version of `coverlet.collector` from `6.0.2` to `6.0.4`. [[#1153](https://github.com/microsoft/mcp/pull/1153)]
+
 ## 2.0.0-beta.3 (2025-11-11)
 
 ### Features Added
@@ -20,7 +40,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into a shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 
 ## 2.0.0-beta.2 (2025-11-06)
 
@@ -54,7 +74,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Added a `CancellationToken` parameter to `IBaseCommand.ExecuteAsync()` [[#1056](https://github.com/microsoft/mcp/pull/1056)]
-- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces  [[#1056](https://github.com/microsoft/mcp/pull/1056)]
+- Added a `CancellationToken` parameter to async methods to many, but not yet all, `I[SomeService]` interfaces [[#1056](https://github.com/microsoft/mcp/pull/1056)]
 - Telemetry:
   - Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1018](https://github.com/microsoft/mcp/pull/1018)]
   - Added support for exporting telemetry to OTLP exporters by configuring the environment variable `AZURE_MCP_ENABLE_OTLP_EXPORTER=true`. [[#1018](https://github.com/microsoft/mcp/pull/1018)]

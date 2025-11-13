@@ -598,9 +598,27 @@ The software may collect information about you and your use of the software and 
 <!-- remove-section: start vsix remove_telemetry_config_section -->
 ### Telemetry Configuration
 
-Telemetry collection is on by default.
+Telemetry collection is on by default. The server supports two telemetry streams:
 
-To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
+1. **User-provided telemetry**: If you configure your own Application Insights connection string via the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable, telemetry will be sent to your Application Insights resource.
+
+2. **Microsoft telemetry**: By default, telemetry is also sent to Microsoft to help improve the product. This can be disabled separately from user-provided telemetry.
+
+#### Disabling All Telemetry
+
+To disable all telemetry collection (both user-provided and Microsoft), set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY=false
+```
+
+#### Disabling Microsoft Telemetry Only
+
+To disable only Microsoft telemetry collection while keeping your own Application Insights telemetry active, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT=false
+```
 <!-- remove-section: end remove_telemetry_config_section -->
 
 ## Compliance Responsibility

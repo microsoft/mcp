@@ -27,10 +27,10 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
     public string GetRecordingAbsolutePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var relativeDirectory = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null)
+        var relativeDirectory = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null)
             .Replace('/', Path.DirectorySeparatorChar);
         var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
-        var absoluteDirectory = Path.Combine(_pathResolver.RepositoryRoot, relativeDirectory);
+        var absoluteDirectory = Path.Combine(PathResolver.RepositoryRoot, relativeDirectory);
         Directory.CreateDirectory(absoluteDirectory);
         return Path.Combine(absoluteDirectory, fileName);
     }
@@ -58,9 +58,8 @@ internal sealed class RecordedCommandTestHarness(ITestOutputHelper output, TestP
         TestVariables.Clear();
     }
 
-    [CustomMatcher(IgnoreQueryOrdering = true, CompareBodies = true)]
-    public void PerTestMatcherAttributeAppliesWhenPresent()
+    public string GetRecordingId()
     {
-        // Marker method used so that RecordedCommandTestsBase can locate the CustomMatcherAttribute via reflection.
+        return RecordingId;
     }
 }

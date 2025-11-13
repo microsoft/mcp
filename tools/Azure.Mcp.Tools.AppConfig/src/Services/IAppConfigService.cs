@@ -11,7 +11,8 @@ public interface IAppConfigService
     Task<List<AppConfigurationAccount>> GetAppConfigAccounts(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
     Task<List<KeyValueSetting>> GetKeyValues(
         string accountName,
         string subscription,

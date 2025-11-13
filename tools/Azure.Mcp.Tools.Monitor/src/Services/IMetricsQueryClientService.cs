@@ -16,6 +16,7 @@ public interface IMetricsQueryClientService
     /// </summary>
     /// <param name="tenant">Optional tenant ID for authentication</param>
     /// <param name="retryPolicy">Optional retry policy configuration</param>
+    /// <param name="cancellationToken">Cancellation token</param>
     /// <returns>A configured MetricsQueryClient instance</returns>
-    Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null);
+    Task<MetricsQueryClient> CreateClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default);
 }

@@ -20,7 +20,10 @@ namespace Azure.Mcp.Core.Extensions;
 
 public static class OpenTelemetryExtensions
 {
-    private const string DefaultAppInsights = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
+    /// <summary>
+    /// The App Insights connection string to send telemetry to Microsoft.
+    /// </summary>
+    private const string MicrosoftOwnedAppInsightsConnectionString = "InstrumentationKey=21e003c0-efee-4d3f-8a98-1868515aa2c9;IngestionEndpoint=https://centralus-2.in.applicationinsights.azure.com/;LiveEndpoint=https://centralus.livediagnostics.monitor.azure.com/;ApplicationId=f14f6a2d-6405-4f88-bd58-056f25fe274f";
 
     public static void ConfigureOpenTelemetry(this IServiceCollection services)
     {
@@ -35,17 +38,11 @@ public static class OpenTelemetryExtensions
                     options.Version = GetServerVersion(entryAssembly);
                 }
 
+                // This environment variable can be used to disable telemetry collection entirely. This takes precedence
+                // over any other settings.
                 var collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
 
-                var transport = serviceStartOptions.Value.Transport;
-
-                bool isTelemetryEnabledEnvironment = string.IsNullOrEmpty(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
-
-                bool isStdioTransport = string.IsNullOrEmpty(transport) || string.Equals(transport, "stdio", StringComparison.OrdinalIgnoreCase);
-
-                // if transport is not set (default to stdio) or is set to stdio, enable telemetry
-                // telemetry is disabled for HTTP transport
-                options.IsTelemetryEnabled = isTelemetryEnabledEnvironment && isStdioTransport;
+                options.IsTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) || (bool.TryParse(collectTelemetry, out var shouldCollect) && shouldCollect);
             });
 
         services.AddSingleton<ITelemetryService, TelemetryService>();
@@ -89,13 +86,6 @@ public static class OpenTelemetryExtensions
         });
 #endif
 
-        var appInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        if (string.IsNullOrEmpty(appInsightsConnectionString))
-        {
-            appInsightsConnectionString = DefaultAppInsights;
-        }
-
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
             var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
@@ -116,11 +106,28 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-#if RELEASE
-        otelBuilder.UseAzureMonitorExporter(options =>
+        var appInsightsConnectionStrings = new List<(string Name, string ConnectionString)>();
+
+        var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+
+        if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
-            options.ConnectionString = appInsightsConnectionString;
-        });
+            appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
+        }
+
+        // This environment variable can be used to disable Microsoft telemetry collection.
+        // By default, Microsoft telemetry is enabled.
+        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
+
+        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
+
+        if (shouldCollectMicrosoftTelemetry)
+        {
+            appInsightsConnectionStrings.Add(("Microsoft", MicrosoftOwnedAppInsightsConnectionString));
+        }
+
+#if RELEASE
+        ConfigureAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
 #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
@@ -157,5 +164,39 @@ public static class OpenTelemetryExtensions
         }
 
         return version;
+    }
+
+
+    private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
+    {
+        foreach (var exporter in appInsightsConnectionStrings)
+        {
+            otelBuilder.WithLogging(logging =>
+            {
+                logging.AddAzureMonitorLogExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+
+            otelBuilder.WithMetrics(metrics =>
+            {
+                metrics.AddAzureMonitorMetricExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+
+            otelBuilder.WithTracing(tracing =>
+            {
+                tracing.AddAzureMonitorTraceExporter(options =>
+                {
+                    options.ConnectionString = exporter.ConnectionString;
+                },
+                name: exporter.Name);
+            });
+        }
     }
 }

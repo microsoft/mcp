@@ -52,7 +52,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -176,7 +178,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = _command.GetCommand().Parse([
@@ -204,7 +208,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
         var args = _command.GetCommand().Parse([
@@ -232,7 +238,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
 
         var args = _command.GetCommand().Parse([
@@ -267,7 +275,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -345,7 +355,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -377,7 +389,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var args = _command.GetCommand().Parse([

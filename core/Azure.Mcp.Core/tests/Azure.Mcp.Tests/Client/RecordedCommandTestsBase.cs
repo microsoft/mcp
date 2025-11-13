@@ -3,7 +3,6 @@
 
 using System.ClientModel;
 using System.ClientModel.Primitives;
-using System.Reflection;
 using System.Text;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -16,6 +15,7 @@ using Microsoft.Extensions.Options;
 using ModelContextProtocol.Client;
 using ModelContextProtocol.Protocol;
 using Xunit;
+using Xunit.Sdk;
 
 namespace Azure.Mcp.Tests.Client;
 
@@ -23,7 +23,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 {
     protected TestProxy? Proxy { get; private set; } = fixture.Proxy;
 
-    private string RecordingId { get; set; } = string.Empty;
+    protected string RecordingId { get; private set; } = string.Empty;
 
     /// <summary>
     /// When true, a set of default "additional" sanitizers will be registered. Currently includes:
@@ -98,7 +98,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     }
 
     // used to resolve a recording "path" given an invoking test
-    protected static readonly RecordingPathResolver _pathResolver = new();
+    protected static readonly RecordingPathResolver PathResolver = new();
 
     protected virtual bool IsAsync => false;
 
@@ -138,30 +138,19 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
             return;
         }
 
-        var methodName = TestContext.Current?.TestMethod?.MethodName;
-        if (string.IsNullOrEmpty(methodName))
+        var attr = CustomMatcherAttribute.GetActive();
+        if (attr == null)
         {
             return;
         }
 
-        // Use reflection to find the test method on the derived class
-        var testMethod = GetType().GetMethod(methodName);
-        if (testMethod == null)
+        var matcher = new CustomDefaultMatcher
         {
-            return;
-        }
+            IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
+            CompareBodies = attr.CompareBodies,
+        };
 
-        var attr = testMethod.GetCustomAttribute<CustomMatcherAttribute>();
-        if (attr != null)
-        {
-            var matcher = new CustomDefaultMatcher
-            {
-                IgnoreQueryOrdering = attr.IgnoreQueryOrdering,
-                CompareBodies = attr.CompareBodies,
-            };
-
-            await SetMatcher(matcher, RecordingId);
-        }
+        await SetMatcher(matcher, RecordingId);
     }
 
     private async Task SetMatcher(CustomDefaultMatcher matcher, string? recordingId = null)
@@ -305,7 +294,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
 
         var testName = TryGetCurrentTestName();
         var pathToRecording = GetSessionFilePath(testName);
-        var assetsPath = _pathResolver.GetAssetsJson(GetType());
+        var assetsPath = PathResolver.GetAssetsJson(GetType());
 
         var recordOptions = new Dictionary<string, string>
         {
@@ -404,7 +393,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     private string GetSessionFilePath(string displayName)
     {
         var sanitized = RecordingPathResolver.Sanitize(displayName);
-        var dir = _pathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
+        var dir = PathResolver.GetSessionDirectory(GetType(), variantSuffix: null);
         var fileName = RecordingPathResolver.BuildFileName(sanitized, IsAsync, VersionQualifier);
         var fullPath = Path.Combine(dir, fileName).Replace('\\', '/');
         return fullPath;

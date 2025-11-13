@@ -34,6 +34,7 @@ public class SpeechService(
     /// <param name="format">Output format (simple or detailed)</param>
     /// <param name="profanity">Profanity filtering option (masked, removed, or raw)</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
     /// <returns>Continuous recognition result containing full text and individual segments</returns>
     public async Task<SpeechRecognitionResult> RecognizeSpeechFromFile(
         string endpoint,
@@ -42,7 +43,8 @@ public class SpeechService(
         string[]? phrases = null,
         string? format = null,
         string? profanity = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(filePath), filePath));
 
@@ -63,7 +65,7 @@ public class SpeechService(
                 try
                 {
                     var fastResult = await _fastTranscriptionRecognizer.RecognizeAsync(
-                        endpoint, filePath, locale, phrases, profanity, retryPolicy);
+                        endpoint, filePath, locale, phrases, profanity, retryPolicy, cancellationToken);
 
                     // Convert to unified result
                     return SpeechRecognitionResult.FromFastTranscriptionResult(fastResult);
@@ -78,7 +80,7 @@ public class SpeechService(
             // Use Realtime Transcription as fallback or primary choice
             _logger.LogInformation("Using Realtime Transcription for language '{Language}' with file '{FilePath}'", language, filePath);
             var realtimeResult = await _realtimeTranscriptionRecognizer.RecognizeAsync(
-                endpoint, filePath, locale, phrases, format, profanity, retryPolicy);
+                endpoint, filePath, locale, phrases, format, profanity, retryPolicy, cancellationToken);
 
             // Convert to unified result
             return SpeechRecognitionResult.FromRealtimeResult(realtimeResult);
@@ -102,6 +104,7 @@ public class SpeechService(
     /// <param name="format">Output audio format (default: Riff24Khz16BitMonoPcm)</param>
     /// <param name="endpointId">Optional endpoint ID for custom voice model</param>
     /// <param name="retryPolicy">Optional retry policy for resilience</param>
+    /// <param name="cancellationToken">Cancellation token to cancel the operation</param>
     /// <returns>Synthesis result with file information</returns>
     public async Task<SynthesisResult> SynthesizeSpeechToFile(
         string endpoint,
@@ -111,7 +114,8 @@ public class SpeechService(
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         return await _speechSynthesizer.SynthesizeToFileAsync(
             endpoint,
@@ -121,6 +125,7 @@ public class SpeechService(
             voice,
             format,
             endpointId,
-            retryPolicy);
+            retryPolicy,
+            cancellationToken);
     }
 }

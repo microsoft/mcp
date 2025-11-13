@@ -25,8 +25,6 @@ param entraAppDisplayName string
 @description('Unique name for the Entra Application')
 param entraAppUniqueName string
 
-var orgServiceManagementReferenceId = '4405e061-966a-4249-afdd-f7435f54a510'
-
 var entraAppRoleValue = 'Mcp.Tools.ReadWrite.All'
 var entraAppRoleId = guid(subscription().id, entraAppRoleValue)
 var entraAppRoleDisplayName = 'Azure MCP Tools ReadWrite All'
@@ -35,7 +33,6 @@ var entraAppRoleDescription = 'Application permission for Azure MCP tool calls'
 resource entraApp 'Microsoft.Graph/applications@v1.0' = {
   uniqueName: entraAppUniqueName 
   displayName: entraAppDisplayName
-  serviceManagementReference: orgServiceManagementReferenceId
   appRoles: [
     {
       id: entraAppRoleId
@@ -51,7 +48,6 @@ resource entraApp 'Microsoft.Graph/applications@v1.0' = {
 resource entraAppUpdate 'Microsoft.Graph/applications@v1.0' = {
   uniqueName: entraAppUniqueName
   displayName: entraAppDisplayName
-  serviceManagementReference: orgServiceManagementReferenceId
   appRoles: entraApp.appRoles
   identifierUris: ['api://${entraApp.appId}']
 }

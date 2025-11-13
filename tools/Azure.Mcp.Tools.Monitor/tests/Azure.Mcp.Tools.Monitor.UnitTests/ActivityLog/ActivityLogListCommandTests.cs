@@ -77,7 +77,8 @@ public sealed class ActivityLogListCommandTests
                 Arg.Any<ActivityLogEventLevel?>(),
                 Arg.Any<int>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(testActivityLogs);
         }
 
@@ -132,7 +133,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedActivityLogs);
 
         // Act
@@ -152,7 +154,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.ActivityLogListCommandResult);
@@ -178,7 +181,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(new List<ActivityLogEventData>());
 
         // Act
@@ -208,7 +212,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<ActivityLogEventData>>(new Exception("Test error")));
 
         // Act
@@ -239,7 +244,8 @@ public sealed class ActivityLogListCommandTests
             Arg.Any<ActivityLogEventLevel?>(),
             Arg.Any<int>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(new List<ActivityLogEventData>
             {
                 new()

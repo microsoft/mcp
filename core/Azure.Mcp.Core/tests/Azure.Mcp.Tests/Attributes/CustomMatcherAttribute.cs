@@ -1,6 +1,10 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Reflection;
+using System.Threading;
+using Xunit.v3;
+
 namespace Azure.Mcp.Tests.Client.Attributes;
 
 /// <summary>
@@ -9,9 +13,10 @@ namespace Azure.Mcp.Tests.Client.Attributes;
 ///
 /// Tests other than what this is applied to will use the default matcher behavior as defined in default test configuration.
 /// </summary>
-[AttributeUsage(AttributeTargets.Method, AllowMultiple = false)]
-public class CustomMatcherAttribute : Attribute
+public sealed class CustomMatcherAttribute : BeforeAfterTestAttribute
 {
+    private static readonly AsyncLocal<CustomMatcherAttribute?> Current = new();
+
     /// <summary>
     /// When true, the request/response body will be compared during playback matching. Otherwise, body comparison is skipped. Defaults to true.
     /// </summary>
@@ -22,7 +27,6 @@ public class CustomMatcherAttribute : Attribute
     /// </summary>
     public bool IgnoreQueryOrdering { get; set; }
 
-
     public CustomMatcherAttribute(
         bool compareBody = false,
         bool ignoreQueryordering = false)
@@ -30,4 +34,18 @@ public class CustomMatcherAttribute : Attribute
         CompareBodies = compareBody;
         IgnoreQueryOrdering = ignoreQueryordering;
     }
+
+    public override void Before(MethodInfo methodUnderTest, IXunitTest xunitTest)
+    {
+        base.Before(methodUnderTest, xunitTest);
+        Current.Value = this;
+    }
+
+    public override void After(MethodInfo methodUnderTest, IXunitTest xunitTest)
+    {
+        base.After(methodUnderTest, xunitTest);
+        Current.Value = null;
+    }
+
+    internal static CustomMatcherAttribute? GetActive() => Current.Value;
 }
