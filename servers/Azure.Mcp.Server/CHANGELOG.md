@@ -5,7 +5,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ## 2.0.0-beta.4 (Unreleased)
 
 ### Features Added
-- Updated User-Agent string to include the `TransportType` used to start the server. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Updated UserAgent string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
+- Enabled telemetry collection for HTTP transport mode. Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams. Added `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default). [[#1150](https://github.com/microsoft/mcp/pull/1150)]
 
 ### Breaking Changes
 - Updated `HttpClientService` to ignore `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
@@ -17,6 +19,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
 - Upgraded dependency version of coverlet.collector from 6.0.2 to 6.0.4. [[#1153](https://github.com/microsoft/mcp/pull/1153)]
+- Fixed exit code when invoking `--help` flag. Commands like `azmcp tools list --help` now correctly return exit code 0 instead of 1 when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]
 
 ## 2.0.0-beta.3 (2025-11-11)
 
@@ -38,7 +41,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Updated UserAgent string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 - Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into a shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 
 ## 2.0.0-beta.2 (2025-11-06)
