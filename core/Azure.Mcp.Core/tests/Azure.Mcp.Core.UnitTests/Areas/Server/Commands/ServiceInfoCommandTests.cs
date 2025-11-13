@@ -39,7 +39,7 @@ public class ServiceInfoCommandTests
     }
 
     [Fact]
-    public async Task ExecuteAsync_ReturnsAzureAIBestPractices()
+    public async Task ExecuteAsync_ReturnsCorrectProperties()
     {
         var args = _commandDefinition.Parse([]);
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);

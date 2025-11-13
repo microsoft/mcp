@@ -42,7 +42,7 @@ public sealed class ServiceInfoCommand(IOptions<AzureMcpServerConfiguration> ser
         try
         {
             context.Response.Results = ResponseResult.Create(
-                new(
+                new ServiceInfoCommandResult(
                     _serverOptions.Value.Name,
                     _serverOptions.Value.Version),
                 ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
