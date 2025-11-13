@@ -87,7 +87,10 @@ if ($BuildOnly) {
     exit 0
 }
 
-# log in using Key Vault
+# https://learn.microsoft.com/en-us/dotnet/azure/sdk/authentication/credential-chains?tabs=dac#use-a-specific-credential
+# Set environment variable to use Azure CLI credentials for authentication
+$env:AZURE_TOKEN_CREDENTIALS="AzureCliCredential"
+
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
 
 $hasError = $false
