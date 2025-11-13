@@ -53,7 +53,7 @@ public static class ResourceLogService
 
         if (toolErrorLogs.Count > 0)
         {
-            return $"Error during retrieval of app logs: \n{string.Join("\n", toolErrorLogs)}";
+            return $"Error during retrieval of app logs:\n{string.Join("\n", toolErrorLogs)}";
         }
 
         return "No logs found.";
