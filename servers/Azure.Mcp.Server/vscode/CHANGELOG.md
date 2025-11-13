@@ -1,5 +1,24 @@
 # Release History
 
+## 2.0.4 (2025-11-13)
+
+### Added
+
+- PostgreSQL MCP tools now support both Microsoft Entra authentication and native database authentication. The default is Entra authentication, users can switch to native database authentication by providing the `--auth-type` parameter with the value `PostgreSQL`. If native authentication is selected, the user must also provide the user password via the `--password` parameter. [[#1011](https://github.com/microsoft/mcp/pull/1011)]
+- Telemetry: [[#1150](https://github.com/microsoft/mcp/pull/1150)]
+  - Enabled telemetry collection for the HTTP transport mode.
+  - Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams.
+  - Added the `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default).
+
+### Changed
+
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1133](https://github.com/microsoft/mcp/pull/1133)]
+
+### Fixed
+
+- PosgreSQL MCP tools has improved the error message reported in case of failure deserializing some of the columns returned by a query. Non out-of-the-box types like `vector` cannot be deserialized and will now report a clear error message indicating which column caused the issue and an action plan so AI agents can recover from it. [[#1024](https://github.com/microsoft/mcp/pull/1024)]
+- Fixed exit code when invoking `--help` flag. Commands like `tools list --help` now correctly return exit code `0` instead of `1` when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]
+
 ## 2.0.3 (2025-11-11) (pre-release)
 
 ### Added
