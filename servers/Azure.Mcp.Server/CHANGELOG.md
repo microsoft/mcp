@@ -13,6 +13,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Set telemetry fields for `ToolArea` and `ToolName` when "single" mode is used. [[#952](https://github.com/microsoft/mcp/pull/952)]
+- Migrate azd tool out of C2C Deploy. [[#1108](https://github.com/microsoft/mcp/pull/1108)]
+
 
 ## 0.9.8 (2025-10-23)
 

@@ -250,9 +250,9 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
-| deploy_app_logs_get | Show me the log of the application deployed by azd  |
+| deploy_app_logs_get | Show me the log of the application |
 | deploy_architecture_diagram_generate | Generate the azure architecture diagram for this application |
-| deploy_iac_rules_get | Show me the rules to generate bicep scripts  |
+| deploy_iac_rules_get | Show me the rules to generate scripts  |
 | deploy_pipeline_guidance_get | How can I create a CI/CD pipeline to deploy this app to Azure? |
 | deploy_plan_get | Create a plan to deploy this application to azure |
 
