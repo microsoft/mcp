@@ -189,6 +189,9 @@
 # ServiceLabel: %tools-ServiceBus
 # ServiceOwners:                       @shankarsama @EldertGrootenboer
 
+# Speech
+/tools/Azure.Mcp.Tools.Speech/          @dilin-MS2
+
 # PRLabel: %tools-Redis
 /tools/Azure.Mcp.Tools.Redis/          @philon-msft @sharedferret @xiangyan99 @microsoft/azure-mcp
 
