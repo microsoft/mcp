@@ -215,10 +215,10 @@
 # ServiceOwners:                       @qianwens @xiaofanzhou
 
 # PRLabel: %tools-LoadTesting
-/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @knarayanana @krishna1s @johnsta @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
 
 # ServiceLabel: %tools-LoadTesting
-# ServiceOwners:                       @nishtha489 @knarayanana @krishna1s @johnsta
+# ServiceOwners:                       @nishtha489 @krisnaray @krishna1s @johnsta
 
 # PRLabel: %tools-VirtualDesktop
 /tools/Azure.Mcp.Tools.VirtualDesktop/ @vladimisms @microsoft/azure-mcp
