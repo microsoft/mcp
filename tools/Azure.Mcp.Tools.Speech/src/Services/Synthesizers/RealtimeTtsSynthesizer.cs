@@ -21,10 +21,7 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
 {
     private readonly ILogger<RealtimeTtsSynthesizer> _logger = logger;
 
-    /// <summary>
-    /// Synthesizes speech from text and saves it to an audio file using Azure AI Services Speech.
-    /// Uses streaming synthesis to handle large texts efficiently and avoid memory issues.
-    /// </summary>
+    /// <inheritdoc/>
     public async Task<SynthesisResult> SynthesizeToFileAsync(
         string endpoint,
         string text,
@@ -33,7 +30,8 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         string? voice = null,
         string? format = null,
         string? endpointId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(endpoint), endpoint), (nameof(text), text), (nameof(outputFilePath), outputFilePath));
 
@@ -46,10 +44,10 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         {
             // Use the reusable streaming synthesis method
             var (audioData, actualVoice) = await SynthesizeSpeechToStreamAsync(
-                endpoint, text, language, voice, format, endpointId);
+                endpoint, text, language, voice, format, endpointId, cancellationToken);
 
             // Write the complete audio data to file
-            await File.WriteAllBytesAsync(outputFilePath, audioData);
+            await File.WriteAllBytesAsync(outputFilePath, audioData, cancellationToken);
 
             _logger.LogInformation(
                 "Speech synthesized and saved to file: {OutputFile}, Audio size: {AudioSize} bytes",
@@ -97,14 +95,15 @@ public class RealtimeTtsSynthesizer(ITenantService tenantService, ILogger<Realti
         string? language = null,
         string? voice = null,
         string? format = null,
-        string? endpointId = null)
+        string? endpointId = null,
+        CancellationToken cancellationToken = default)
     {
         // Get Azure AD credential and token
-        var credential = await GetCredential();
+        var credential = await GetCredential(cancellationToken);
 
         // Get access token for Cognitive Services with proper scope
         var tokenRequestContext = new TokenRequestContext(["https://cognitiveservices.azure.com/.default"]);
-        var accessToken = await credential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+        var accessToken = await credential.GetTokenAsync(tokenRequestContext, cancellationToken);
 
         // Configure Speech SDK with endpoint
         var config = SpeechConfig.FromEndpoint(new Uri(endpoint));

@@ -65,7 +65,7 @@ public class PostgresCommandTests(ITestOutputHelper output) : CommandTestsBase(o
         };
         var tokenCredential = new DefaultAzureCredential(options);
         var tokenRequestContext = new TokenRequestContext(["https://ossrdbms-aad.database.windows.net/.default"], tenantId: Settings.TenantId);
-        AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, CancellationToken.None);
+        AccessToken accessToken = await tokenCredential.GetTokenAsync(tokenRequestContext, TestContext.Current.CancellationToken);
 
         string connectionString = $"Host={ServerFqdn};Database={TestDatabaseName};Username={AdminUsername};Password={accessToken.Token};SSL Mode=Require;Trust Server Certificate=true;";
 

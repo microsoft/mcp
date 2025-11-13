@@ -115,7 +115,8 @@ public sealed class MetricsQueryCommand(ILogger<MetricsQueryCommand> logger)
                 options.Aggregation,
                 options.Filter,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Validate bucket count limit
             if (results?.Count > 0)

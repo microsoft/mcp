@@ -150,7 +150,8 @@ public sealed class SttRecognizeCommand(ILogger<SttRecognizeCommand> logger) : B
                 options.Phrases,
                 options.Format,
                 options.Profanity,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             _logger.LogInformation(
                 "Successfully recognized speech from file: {File}. Full text length: {Length}, Segments: {SegmentCount}",
