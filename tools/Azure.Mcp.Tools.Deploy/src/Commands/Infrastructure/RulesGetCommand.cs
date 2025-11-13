@@ -33,7 +33,7 @@ public sealed class RulesGetCommand(ILogger<RulesGetCommand> logger)
 
     public override string Description =>
         """
-        This tool offers guidelines for creating Bicep/Terraform files to deploy applications on Azure using Azure CLI. The guidelines outline rules to improve the quality of Infrastructure as Code files, ensuring they are compatible with Azure CLI deployment workflows.
+        This tool offers guidelines for creating Infrastructure as Code (IaC) files to deploy applications on Azure using Azure CLI. The guidelines outline rules to improve the quality of IaC files, ensuring they are compatible with Azure CLI deployment workflows.
         """;
 
     protected override void RegisterOptions(Command command)
