@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 18
+VisualStudioVersion = 18.0.11205.157 d18.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TokenDump", "TokenDump.csproj", "{296D8B3D-5049-3765-FD4B-37E298D900E6}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{296D8B3D-5049-3765-FD4B-37E298D900E6}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{296D8B3D-5049-3765-FD4B-37E298D900E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{296D8B3D-5049-3765-FD4B-37E298D900E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{296D8B3D-5049-3765-FD4B-37E298D900E6}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {0ECF7171-8F3E-43C7-959A-686042E1173A}
+	EndGlobalSection
+EndGlobal

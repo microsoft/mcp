@@ -47,6 +47,12 @@ extends:
       jobs:
       - job: CheckTokens
         steps:
+        - task: UseDotNet@2
+          displayName: "Use .NET SDK from global.json"
+          retryCountOnTaskFailure: 3
+          inputs:
+            useGlobalJson: true
+
         - ${{ each i in split('1,2,3', ',') }}:
           - task: AzurePowershell@5
             displayName: "Azure Powershell ${{ i }}"
@@ -57,78 +63,42 @@ extends:
               azurePowerShellVersion: 'LatestVersion'
               scriptType: InlineScript
               Inline: |
-                function Get-TokenTimestamp {
-                  param (
-                    [int]$unixTime
-                  )
-                  return [DateTimeOffset]::FromUnixTimeSeconds($unixTime)
-                }
+                $env:AZURE_TOKEN_CREDENTIALS = 'AzurePowerShellCredential'
 
-                function Get-AzureToken {
-                  $token = Get-AzAccessToken -AsSecureString
-                  $similar = $token | Select-Object -Property * -ExcludeProperty Token
-                  Write-Host "Current Time: $(Get-Date)`n"
-                  Write-Host "Azure Token Info: `n$($similar | ConvertTo-Json)`n"
+                Write-Host "`Checking pipeline token..."
+                dotnet run --project ./src/TokenDump.csproj -- SYSTEM_ACCESSTOKEN
 
-                  # Convert SecureString to plain string
-                  $bstr = [Runtime.InteropServices.Marshal]::SecureStringToCoTaskMemUnicode($token.Token)
-                  $tokenString = [Runtime.InteropServices.Marshal]::PtrToStringAuto($bstr)
-                  [Runtime.InteropServices.Marshal]::ZeroFreeCoTaskMemUnicode($bstr)
-                  return $tokenString
-                }
+                Write-Host "`Vault Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://vault.azure.net/.default
 
-                function Check-AccessToken {
-                  param (
-                      [string]$token,
-                      [string]$tokenName
-                  )
+                Write-Host "`Graph Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://graph.microsoft.com/.default
 
-                  Write-Host "`nChecking $tokenName..."
-                  $token
-                  $parts = $token.Split('.')
-                  if ($parts.Length -ne 3) {
-                    Write-Host "Invalid token format for $tokenName. Expected 3 parts but got $($parts.Length)."
-                    return
-                  }
-
-                  $base64 = $parts[1]
-                  Write-Host "Token payload part: $base64"
-
-                  $paddedBase64 = $base64.PadRight($base64.Length + (4 - $base64.Length % 4) % 4, '=')
-                  $decodedBytes = [System.Convert]::FromBase64String($paddedBase64)
-                  $decodedString = [System.Text.Encoding]::UTF8.GetString($decodedBytes)
-                  $decodedToken = $decodedString | ConvertFrom-Json
-                  
-                  $issueTime = Get-TokenTimestamp $decodedToken.iat ?? $decodedToken.nbf
-                  $expirationTime = Get-TokenTimestamp $decodedToken.exp
-                  [DateTimeOffset]$now = Get-Date
-                  $remaining = $expirationTime - $now
-                  $age = $now - $issueTime
-
-                  Write-Host "$tokenName`:"
-                  Write-Host "Token Issued: $issueTime"
-                  Write-Host "Token Expires: $expirationTime"
-                  Write-Host "Token Age: $($age.ToString("hh\:mm\:ss"))"
-                  Write-Host "Remaining: $($remaining.ToString("hh\:mm\:ss"))"
-                }
-
-                # Inspect the Access token for expiration time and subject
-                Check-AccessToken -Token $env:SYSTEM_ACCESSTOKEN -TokenName "SYSTEM_ACCESSTOKEN"
-
-                # Get an Azure PowershellToken and inspect it as well
-                Write-Host "`nGetting Azure Powershell Token..."
-                Get-AzureToken | Out-Null
+                Write-Host "`Storage Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://storage.azure.com/.default
 
                 Write-Host "Waiting 3 minutes..."
                 Start-Sleep -Seconds 180
 
-                Write-Host "`nGetting Azure Powershell Token..."
-                Get-AzureToken | Out-Null
+                Write-Host "`Vault Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://vault.azure.net/.default
+
+                Write-Host "`Graph Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://graph.microsoft.com/.default
+
+                Write-Host "`Storage Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://storage.azure.com/.default
 
                 Write-Host "Waiting 3 minutes..."
                 Start-Sleep -Seconds 180
 
-                Write-Host "`nGetting Azure Powershell Token..."
-                Get-AzureToken | Out-Null
+                Write-Host "`Vault Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://vault.azure.net/.default
+
+                Write-Host "`Graph Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://graph.microsoft.com/.default
+
+                Write-Host "`Storage Token..."
+                dotnet run --project ./src/TokenDump.csproj -- https://storage.azure.com/.default                
               pwsh: true
               workingDirectory: $(Build.SourcesDirectory)
