@@ -518,8 +518,6 @@ function Get-BuildMatrices {
     Write-Host "Forming build matrices"
     $matrices = [ordered]@{}
 
-    Write-Host $pathsToTest
-
     foreach ($os in $operatingSystems.name) {
         $buildMatrix = [ordered]@{}
         $smokeTestMatrix = [ordered]@{}
@@ -553,6 +551,8 @@ function Get-BuildMatrices {
 
             $runUnitTests = $arch -eq 'x64' -and !$platform.native -and !$platform.specialPurpose
 
+            $runRecordedTests = $runUnitTests -and ($pathsToTest | Where-Object { $_.hasRecordedTests } | Measure-Object | Select-Object -ExpandProperty Count) -gt 0
+
             $buildMatrix[$legName] = [ordered]@{
                 Pool = $pool
                 OSVmImage = $vmImage
@@ -560,6 +560,7 @@ function Get-BuildMatrices {
                 Native = $platform.native
                 Trimmed = $platform.trimmed
                 RunUnitTests = $runUnitTests
+                RunRecordedTests = $runRecordedTests
             }
 
             if($runUnitTests) {
