@@ -14,6 +14,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added logging customization options to the `azmcp server start` command:
+  - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
+  - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
+
 ## 2.0.0-beta.4 (2025-11-13)
 
 ### Features Added
@@ -44,9 +48,6 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added logging customization options to the `azmcp server start` command:
-  - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
-  - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
 - Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Azure AI Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
 - Added support for text-to-speech synthesis via the command `speech_tts_synthesize`. [[#902](https://github.com/microsoft/mcp/pull/902)]
 
