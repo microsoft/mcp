@@ -27,6 +27,7 @@ public class AzureAIBestPracticesSetup : IAreaSetup
             @"Azure AI best practices - Commands returns best practices and code generation guidance for building AI applications in Azure. 
             Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features. 
             This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. 
+            Call this tool first before creating any plans, todos or code.
             > Note: Understanding User Intent for Azure AI Foundry: 
             > (1) Resource Management - use the 'foundry' tool instead
             > e.g., 'create/deploy/provision agent/embedding/model/project in Foundry', 'set up agent/model resource'
