@@ -16,7 +16,6 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 
 <!-- remove-section: end remove_install_links -->
-
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
@@ -30,7 +29,10 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end remove_installation_sub_sections -->
+        - [Docker](#docker)
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+        - [Microsoft Foundry](#microsoft-foundry)
+        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -331,6 +333,19 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 <!-- remove-section: end remove_package_manager_section -->
+
+## Remote MCP Server (preview)
+
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To use Azure MCP Server tools with these platforms, deploy the server to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+### Microsoft Foundry
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Microsoft Foundry.
+2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+
+### Microsoft Copilot Studio
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
