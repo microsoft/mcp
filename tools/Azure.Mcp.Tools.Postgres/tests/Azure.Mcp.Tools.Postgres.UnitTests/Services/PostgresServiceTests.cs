@@ -29,6 +29,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
         private string server;
         private string database;
         private string query;
+        private string authType;
 
         public PostgresServiceTests()
         {
@@ -41,7 +42,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
                 .Returns(new Azure.Core.AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
 
             _dbProvider = Substitute.For<IDbProvider>();
-            _dbProvider.GetPostgresResource(Arg.Any<string>())
+            _dbProvider.GetPostgresResource(Arg.Any<string>(), Arg.Any<string>())
                 .Returns(Substitute.For<IPostgresResource>());
             _dbProvider.GetCommand(Arg.Any<string>(), Arg.Any<IPostgresResource>())
                 .Returns(Substitute.For<NpgsqlCommand>());
@@ -56,6 +57,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             this.server = "test-server";
             this.database = "test-db";
             this.query = "SELECT * FROM test-table;";
+            this.authType = "MicrosoftEntra";
         }
 
         [Fact]
@@ -78,7 +80,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // Act
             CommandValidationException exception = await Assert.ThrowsAsync<CommandValidationException>(async () =>
             {
-                await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, query);
+                await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
             });
 
             // Assert
@@ -102,7 +104,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
                     new[] { typeof(string), typeof(int), typeof(InvalidCastItem) })));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, query);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
 
             // Assert
             Assert.Equal(4, rows.Count);
@@ -125,7 +127,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
                     new[] { typeof(string), typeof(int), typeof(InvalidCastItem) })));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, user, server, database, query);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
 
             // Assert
             Assert.Single(rows);
