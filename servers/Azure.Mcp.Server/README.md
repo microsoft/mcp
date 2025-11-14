@@ -31,7 +31,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [Docker](#docker)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
+        - [Azure AI Foundry](#azure-ai-foundry)
         - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
@@ -336,12 +336,12 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Remote MCP Server (preview)
 
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+Azure AI Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Microsoft Foundry
+### Azure AI Foundry
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Microsoft Foundry.
-2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Azure AI Foundry.
+2. See [Azure AI Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
 
 ### Microsoft Copilot Studio
 
