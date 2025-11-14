@@ -405,7 +405,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -422,7 +422,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -818,6 +818,14 @@ Azure MCP Server 1.0 does not support remote and only supports local (STDIO) tra
 - [Azure MCP Server - Azure Container Apps with Azure AI Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
 - [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
 
+### HTTPS redirection issues
+
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
+
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
+
 ### Common Issues
 
 #### 401 Unauthorized - Invalid Token
@@ -859,7 +867,7 @@ Azure MCP Server 1.0 does not support remote and only supports local (STDIO) tra
      --id <server-client-id> \
      --api https://management.azure.com/ \
      --api-permissions user_impersonation=Scope
-   
+
    az ad app permission admin-consent --id <server-client-id>
    ```
 
