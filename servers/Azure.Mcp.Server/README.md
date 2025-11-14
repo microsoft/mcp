@@ -107,9 +107,6 @@ Install Azure MCP Server using either an IDE extension or package manager. Choos
 > [!IMPORTANT]  
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
-
-## Local MCP Server Installation
-
 ## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
@@ -346,7 +343,7 @@ The instructions below give more details on how to deploy the Azure MCP Server 2
 ### Microsoft Foundry
 
 - Review the guidance for [setting up Azure MCP Server for Microsoft Foundry](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity).
-- Review the guidance [here](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/tools/model-context-protocol), for more details on Azure Foundry's preview support for connecting to remote MCP servers.
+- Review the guidance [here](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol), for more details on Azure Foundry's preview support for connecting to remote MCP servers.
 
 ### Microsoft Copilot Studio
 - Review the guidance for [setting up Azure MCP Server for Microsoft Copilot Studio](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity).
