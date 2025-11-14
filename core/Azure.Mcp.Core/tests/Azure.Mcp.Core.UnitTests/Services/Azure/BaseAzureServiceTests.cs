@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Core;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -129,6 +130,30 @@ public class BaseAzureServiceTests
         Assert.Equal(input, result);
     }
 
+    [Fact]
+    public void InitializeUserAgentPolicy_UserAgentContainsTransportType()
+    {
+        // Initialize the user agent policy before creating test service
+        BaseAzureService.InitializeUserAgentPolicy(TransportTypes.StdIo);
+        TestAzureService testAzureService = new TestAzureService(_tenantService);
+        Assert.NotNull(testAzureService.GetUserAgent());
+        Assert.Contains("azmcp-stdio", testAzureService.GetUserAgent());
+    }
+
+    [Fact]
+    public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsNull()
+    {
+        var exception = Assert.Throws<ArgumentNullException>(() => BaseAzureService.InitializeUserAgentPolicy(null!));
+        Assert.Equal("Value cannot be null. (Parameter 'transportType')", exception.Message);
+    }
+
+    [Fact]
+    public void InitializeUserAgentPolicy_ThrowsExceptionWhenTransportTypeIsEmpty()
+    {
+        var exception = Assert.Throws<ArgumentException>(() => BaseAzureService.InitializeUserAgentPolicy(string.Empty));
+        Assert.Equal("The value cannot be an empty string or composed entirely of whitespace. (Parameter 'transportType')", exception.Message);
+    }
+
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
@@ -137,5 +162,7 @@ public class BaseAzureServiceTests
         public Task<string?> ResolveTenantId(string? tenant) => ResolveTenantIdAsync(tenant);
 
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
+
+        public string GetUserAgent() => UserAgent;
     }
 }
