@@ -18,13 +18,12 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
     protected const string TenantNameReason = "Service principals cannot use TenantName for lookup";
 
     protected McpClient Client { get; private set; } = default!;
-    protected LiveTestSettings Settings { get; private set; } = default!;
+    protected LiveTestSettings Settings { get; set; } = default!;
     protected StringBuilder FailureOutput { get; } = new();
     protected ITestOutputHelper Output { get; } = output;
 
     public string[]? CustomArguments;
     public TestMode TestMode = TestMode.Live;
-
 
     /// <summary>
     /// Sets custom arguments for the MCP server. Call this before InitializeAsync().

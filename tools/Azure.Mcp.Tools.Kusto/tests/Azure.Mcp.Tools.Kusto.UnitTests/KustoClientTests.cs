@@ -24,7 +24,7 @@ public sealed class KustoClientTests
             DefaultTimeout = TimeSpan.FromSeconds(100)
         };
         var optionsWrapper = Microsoft.Extensions.Options.Options.Create(httpClientOptions);
-        var httpClientService = new HttpClientService(optionsWrapper);
+        var httpClientService = new HttpClientService(optionsWrapper, null!);
 
         // Act
         var kustoClient = new KustoClient(clusterUri, tokenCredential, userAgent, httpClientService);

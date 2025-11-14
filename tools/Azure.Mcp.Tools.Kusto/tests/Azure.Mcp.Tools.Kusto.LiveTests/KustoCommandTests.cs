@@ -39,7 +39,7 @@ public class KustoCommandTests(ITestOutputHelper output)
 
             // Create HttpClientService for KustoClient
             var httpClientOptions = new HttpClientOptions();
-            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions));
+            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions), null!);
 
             var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientService);
             var resp = await kustoClient.ExecuteControlCommandAsync(

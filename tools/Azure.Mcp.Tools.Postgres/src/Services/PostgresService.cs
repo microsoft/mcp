@@ -10,9 +10,11 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Postgres.Auth;
+using Azure.Mcp.Tools.Postgres.Options;
 using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.ResourceManager.PostgreSql.FlexibleServers;
 using Npgsql;
+
 
 namespace Azure.Mcp.Tools.Postgres.Services;
 
@@ -51,14 +53,14 @@ public class PostgresService : BaseAzureService, IPostgresService
         return server;
     }
 
-    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string user, string server)
+    public async Task<List<string>> ListDatabasesAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database=postgres;Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database=postgres;Username={user};Password={passwordToUse}";
 
         var query = "SELECT datname FROM pg_database WHERE datistemplate = false;";
-        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString);
+        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command);
         var dbs = new List<string>();
@@ -69,13 +71,13 @@ public class PostgresService : BaseAzureService, IPostgresService
         return dbs;
     }
 
-    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string query)
+    public async Task<List<string>> ExecuteQueryAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database, string query)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
-        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString);
+        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command);
 
@@ -110,14 +112,14 @@ public class PostgresService : BaseAzureService, IPostgresService
         return rows;
     }
 
-    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string user, string server, string database)
+    public async Task<List<string>> ListTablesAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
         var query = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public';";
-        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString);
+        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command);
         var tables = new List<string>();
@@ -128,15 +130,16 @@ public class PostgresService : BaseAzureService, IPostgresService
         return tables;
     }
 
-    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string user, string server, string database, string table)
+    public async Task<List<string>> GetTableSchemaAsync(string subscriptionId, string resourceGroup, string authType, string user, string? password, string server, string database, string table)
     {
-        var entraIdAccessToken = await GetEntraIdAccessTokenAsync();
+        string? passwordToUse = await GetPassword(authType, password);
         var host = NormalizeServerName(server);
-        var connectionString = $"Host={host};Database={database};Username={user};Password={entraIdAccessToken}";
+        var connectionString = $"Host={host};Database={database};Username={user};Password={passwordToUse}";
 
-        var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = '{table}';";
-        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString);
+        var query = $"SELECT column_name, data_type FROM information_schema.columns WHERE table_name = @tableName;";
+        await using IPostgresResource resource = await _dbProvider.GetPostgresResource(connectionString, authType);
         await using NpgsqlCommand command = _dbProvider.GetCommand(query, resource);
+        command.Parameters.AddWithValue("tableName", table);
         await using DbDataReader reader = await _dbProvider.ExecuteReaderAsync(command);
         var schema = new List<string>();
         while (await reader.ReadAsync())
@@ -227,5 +230,24 @@ public class PostgresService : BaseAzureService, IPostgresService
         {
             throw new Exception($"Failed to update parameter '{param}' to value '{value}'.");
         }
+    }
+
+    private async Task<string> GetPassword(string authType, string? password)
+    {
+        if (string.IsNullOrEmpty(authType) || AuthTypes.MicrosoftEntra.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+        {
+            return await GetEntraIdAccessTokenAsync();
+        }
+
+        if (AuthTypes.PostgreSQL.Equals(authType, StringComparison.InvariantCultureIgnoreCase))
+        {
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new CommandValidationException($"Password must be provided for '{AuthTypes.PostgreSQL}' authentication.", HttpStatusCode.BadRequest);
+            }
+            return password;
+        }
+
+        throw new CommandValidationException($"Unsupported authentication type. Please use '{AuthTypes.MicrosoftEntra}' or '{AuthTypes.PostgreSQL}'", HttpStatusCode.BadRequest);
     }
 }
