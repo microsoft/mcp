@@ -1,0 +1,61 @@
+## Background Knowledge
+### Understanding AI Models Hierarchy
+#### Knowledge
+1. Model Provider: The company/organization providing the model (e.g., OpenAI, Microsoft, Deepseek, Meta)
+2. Model Series: A family of related models (e.g., gpt-5, gpt-4o, deepseek-v3, llama-3)
+3. Model: Specific variants within a series (e.g., gpt-5, gpt-5-mini, gpt-5-chat within the gpt-5 series)
+
+#### Where to use
+Use this hierarchy to analyze and select AI models
+
+### Microsoft Agent Framework Key Features
+#### Knowledge
+**Microsoft Agent Framework** is the recommended SDK for building AI agents with Azure. It provides:
+
+**Core Capabilities:**
+  - **Flexible Agent Framework**: Build, orchestrate, and deploy AI agents and multi-agent systems
+  - **Cross-Platform Support**: Available for both .NET and Python
+  - **Multi-LLM Support**: Works with OpenAI, Azure OpenAI, Azure AI Foundry, and other providers
+
+**Agent Types:**
+  - **[RECOMMENDED] Azure AI Foundry Agent (`PersistentAgentsClient`)**: Service-managed persistent agents with conversation threads - best for production applications requiring conversation continuity
+  - **OpenAI ChatCompletion / Responses / Assistants Agent (`OpenAIClient`)**: Stateless or service-managed agents using OpenAI service
+  - **Azure AI Foundry Models ChatCompletion / Responses Agent (`OpenAIClient` / `AzureOpenAIClient`)**: For testing Foundry-deployed models (stateless)
+  - **Azure OpenAI ChatCompletion / Responses (`AzureOpenAIClient`)**: Stateless agents using Azure OpenAI ChatCompletion / Responses service  
+  - **Advanced & Custom Agents**: Custom agents, A2A proxy agents, Any IChatClient
+  
+**Agent Features:**
+  - **Multi-turn Conversations**: Maintain context across messages with conversation threading using `AgentThread`
+  - **Function Tools**: Call external functions and APIs to extend agent capabilities
+  - **Multimodal Support**: Handle text, vision, and other input types
+  - **Structured Output**: Generate JSON or strongly-typed object responses
+  - **Human-in-the-loop**: Require user approval for sensitive operations
+
+**Workflow Features:** (For Multi-Agent Systems):
+  - **Sequential**: Process tasks one after another
+  - **Concurrent**: Run multiple agents in parallel
+  - **Handoff**: Pass control between agents dynamically
+  - **Magentic**: Advanced group chat orchestration
+  - **Agents in workflows**: Embed agents as workflow steps
+  - **Workflow branching logic**: Conditional routing based on results
+  - **Checkpointing and resuming**: Save and restore workflow state
+
+**Advanced Agent Features**:
+  - **Middleware**: Intercept/modify requests/responses
+  - **Memory**: Retain information across conversations
+  - **Observability**: OpenTelemetry tracing
+  - **Agent as tool**: Use agents as functions
+  - **Persisting conversations**: Store chat history
+  - **Third-party storage**: Custom storage backends
+  - **Structured output**: Generate JSON/object responses
+  - **Agent types**: Azure OpenAI, Foundry, custom
+
+**Integration Features:**:
+  - **MCP tools**: Model Context Protocol integration
+  - **MCP with Foundry Agents**: MCP + Azure AI Foundry
+  - **Request and response handling**: External API integration
+  - **Shared states**: Pass data between executors
+  - **Visualization**: Visual workflow representations
+
+#### Where to use
+Search Microsoft Document using these feature keywords (or any other related keywords - this is just a common subset of topics)

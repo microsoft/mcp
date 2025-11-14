@@ -19,8 +19,19 @@ public sealed class AzureAIBestPracticesGetCommand(ILogger<AzureAIBestPracticesG
 
     private static string LoadBestPracticesText()
     {
+        string backgroundKnowledge = LoadEmbeddedText("ai-background-knowledge.txt");
+        string errorPatterns = LoadEmbeddedText("ai-error-patterns.txt");
+        string bestPracticesCore = LoadEmbeddedText("ai-best-practices-core.txt");
+
+        return bestPracticesCore
+            .Replace("{{BACKGROUND_KNOWLEDGE}}", backgroundKnowledge)
+            .Replace("{{ERROR_PATTERNS}}", errorPatterns);
+    }
+
+    private static string LoadEmbeddedText(string fileName)
+    {
         Assembly assembly = typeof(AzureAIBestPracticesGetCommand).Assembly;
-        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, "ai-best-practices-for-azure.txt");
+        string resourceName = EmbeddedResourceHelper.FindEmbeddedResource(assembly, fileName);
         return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceName);
     }
 
@@ -32,6 +43,7 @@ public sealed class AzureAIBestPracticesGetCommand(ILogger<AzureAIBestPracticesG
         @"Returns best practices and code generation guidance for building AI applications in Azure. 
         Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.
         This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. 
+        Call this tool first before creating any plans, todos or code.
         If this tool needs to be categorized, it belongs to the Azure Best Practices category.";
 
     public override string Title => CommandTitle;
