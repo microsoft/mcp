@@ -49,7 +49,7 @@ public class ServiceInfoCommandTests
         Assert.NotNull(response.Results);
 
         var json = JsonSerializer.Serialize(response.Results);
-        var result = JsonSerializer.Deserialize<ServiceInfoCommand.ServiceInfoCommandResult>(json);
+        var result = JsonSerializer.Deserialize(json, ServiceInfoJsonContext.Default.ServiceInfoCommandResult);
 
         Assert.NotNull(result);
         Assert.Equal(_mcpServerConfiguration.Name, result.Name);
