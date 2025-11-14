@@ -336,7 +336,7 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Remote MCP Server (preview)
 
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To use Azure MCP Server tools with these platforms, deploy the server to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
 ### Microsoft Foundry
 

@@ -814,9 +814,9 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ## Remote MCP Server (preview)
 
-Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS).  Detailed setup instructions can be found here:
-- [Azure MCP Server - ACA with Managed Identity](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
-- [Azure MCP Server - ACA with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
+- [Azure MCP Server - Azure Container Apps with Azure AI Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
 
 ### Common Issues
 
