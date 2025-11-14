@@ -16,6 +16,7 @@ param(
 . "$PSScriptRoot/helpers/PathHelpers.ps1"
 $RepoRoot = $RepoRoot.Path.Replace('\', '/')
 $isPipelineRun = $CI -or $env:TF_BUILD -eq 'true'
+$isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
 $exitCode = 0
 
 # We currently only want to build linux-x64 native
@@ -205,9 +206,20 @@ function Get-PathsToTest {
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
 
-    $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
-
     if($isPullRequestBuild) {
+        # Set of files that don't require build or test when changed
+        $skipFiles = @(
+            'CHANGELOG.md',
+            'README.md',
+            'SUPPORT.md',
+            'TROUBLESHOOTING.md',
+            'CONTRIBUTING.md',
+            'CODE_OF_CONDUCT.md',
+            'SECURITY.md',
+            'NOTICE.txt',
+            'LICENSE'
+        )
+
         # If we're in a pull request, use the set of changed files to narrow down the set of paths to test.
         $changedFiles = Get-ChangedFiles
         # Assuming $changedFiles = [
@@ -222,6 +234,7 @@ function Get-PathsToTest {
         # For example, updating a markdown file in a service path will still trigger tests for that path.
         # Updating a file outside of the defined paths will be seen as a change to the core path.
         $changedPaths = @($changedFiles
+        | Where-Object { $skipFiles -notcontains (Split-Path $_ -Leaf) }
         | ForEach-Object { $_ -match $projectDirectoryPattern -and $normalizedPaths -contains $Matches[0] ? $Matches[0] : 'core/Microsoft.Mcp.Core' }
         | Sort-Object -Unique)
 
@@ -491,6 +504,7 @@ function Get-ServerDetails {
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
+            mcpRepositoryName = $props.McpRepositoryName
         }
     }
 
@@ -593,8 +607,8 @@ function Get-ServerMatrix {
 Push-Location $RepoRoot
 try {
     $serverDetails = @(Get-ServerDetails)
-    $matrices = Get-BuildMatrices $serverDetails
     $pathsToTest = @(Get-PathsToTest)
+    $matrices = Get-BuildMatrices $serverDetails
     $matrices['liveTestMatrix'] = Get-TestMatrix $pathsToTest -TestType 'Live'
     $matrices['serverMatrix'] = Get-ServerMatrix $serverDetails
 
@@ -602,6 +616,17 @@ try {
     $branch = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEBRANCH') : (git rev-parse --abbrev-ref HEAD)
     $commitSha = $isPipelineRun ? (CheckVariable 'BUILD_SOURCEVERSION') : (git rev-parse HEAD)
 
+    if ($isPipelineRun) {
+        foreach($key in $matrices.Keys) {
+            if ($isPullRequestBuild -and $pathsToTest.Count -eq 0) {
+                $matrices[$key] = @{}
+            }
+            
+            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
+            Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
+        }
+    }
+    
     $buildInfo = [ordered]@{
         buildId = $BuildId
         publishTarget = $PublishTarget
@@ -619,13 +644,6 @@ try {
     New-Item -Path $parentDirectory -ItemType Directory -Force | Out-Null
 
     $buildInfo | ConvertTo-Json -Depth 5 | Out-File -FilePath $OutputPath -Encoding utf8 -Force
-
-    if ($isPipelineRun) {
-        foreach($key in $matrices.Keys) {
-            $matrixJson = $matrices[$key] | ConvertTo-Json -Compress
-            Write-Host "##vso[task.setvariable variable=${key};isOutput=true]$matrixJson"
-        }
-    }
 }
 finally {
     Pop-Location

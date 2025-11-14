@@ -535,11 +535,16 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         -PlatformReferences $platformRefs `
         -OutputPath "$tempFolder/tools/$sharedTargetFramework/any/DotnetToolSettings.xml"
 
+    $insertPayload = @{
+        ToolTitle = '.NET Tool'
+        MCPRepositoryMetadata = "<!-- mcp-name: $($server.mcpRepositoryName) -->"
+    }
+
     & "$RepoRoot/eng/scripts/Process-PackageReadMe.ps1" `
         -Command "extract" `
         -InputReadMePath "$RepoRoot/$($server.readmePath)" `
         -PackageType "nuget" `
-        -InsertPayload @{ ToolTitle = '.NET Tool' } `
+        -InsertPayload $insertPayload `
         -OutputDirectory $tempFolder
 
     LogInfo "Creating Nuget Package from $wrapperToolNuspec"

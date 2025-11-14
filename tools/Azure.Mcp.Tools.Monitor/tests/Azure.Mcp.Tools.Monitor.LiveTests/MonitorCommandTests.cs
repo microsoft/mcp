@@ -46,7 +46,7 @@ public class MonitorCommandTests(ITestOutputHelper output) : CommandTestsBase(ou
         var resourceGroupService = new ResourceGroupService(cacheService, subscriptionService, tenantService);
         var resourceResolverService = new ResourceResolverService(subscriptionService, tenantService);
         var httpClientOptions = new HttpClientOptions();
-        var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions));
+        var httpClientService = new HttpClientService(Microsoft.Extensions.Options.Options.Create(httpClientOptions), null!);
         return new MonitorService(subscriptionService, tenantService, resourceGroupService, resourceResolverService, httpClientService);
     }
 

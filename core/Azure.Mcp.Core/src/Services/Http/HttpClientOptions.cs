@@ -34,7 +34,10 @@ public sealed class HttpClientOptions
     public TimeSpan DefaultTimeout { get; set; } = TimeSpan.FromSeconds(100);
 
     /// <summary>
-    /// Gets or sets the default User-Agent header value.
+    /// Gets or sets the default User-Agent header value. 
     /// </summary>
+    /// <remarks>
+    /// UNUSED: This overwrites all user agents for all HTTP clients. So, it's not recommended to use this.
+    /// </remarks>
     public string? DefaultUserAgent { get; set; }
 }

@@ -18,9 +18,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
-  - [Remote MCP Server](#remote-mcp-server)
-      - [SSE Transport](#sse-transport)
-      - [Streamable HTTP Transport](#streamable-http-transport)
+  - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
@@ -407,7 +405,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -424,7 +422,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -814,20 +812,19 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
       }
    ```
 
-## Remote MCP Server
+## Remote MCP Server (preview)
 
-### SSE Transport
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS).  Detailed setup instructions can be found here:
+- [Azure MCP Server - ACA with Managed Identity](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md)
+- [Azure MCP Server - ACA with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
 
->[!WARNING]
->**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
->
-> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+### HTTPS redirection issues
 
-The Azure MCP Server supports remote hosting over HTTP using the **Streamable HTTP transport protocol**. For detailed configuration and deployment guidance, see the [Remote MCP Server section in CONTRIBUTING.md](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#remote-mcp-server-streamable-http-transport).
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
 
-### Streamable HTTP Transport
-
-- See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
 
 ### Common Issues
 
@@ -870,7 +867,7 @@ The Azure MCP Server supports remote hosting over HTTP using the **Streamable HT
      --id <server-client-id> \
      --api https://management.azure.com/ \
      --api-permissions user_impersonation=Scope
-   
+
    az ad app permission admin-consent --id <server-client-id>
    ```
 

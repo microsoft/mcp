@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Areas.Server.Services;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -143,6 +144,10 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         var options = BindOptions(parseResult);
+
+        // Update the UserAgentPolicy for all Azure service calls to include the transport type.
+        var transport = string.IsNullOrEmpty(options.Transport) ? TransportTypes.StdIo : options.Transport;
+        BaseAzureService.InitializeUserAgentPolicy(transport);
 
         try
         {
@@ -481,6 +486,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         WebApplication app = builder.Build();
 
+        UseHttpsRedirectionIfEnabled(app);
+
         // Configure middleware pipeline
         app.UseCors("AllowAll");
         app.UseRouting();
@@ -604,6 +611,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         WebApplication app = builder.Build();
 
+        UseHttpsRedirectionIfEnabled(app);
+
         // Configure middleware pipeline
         app.UseCors("AllowAll");
         app.UseRouting();
@@ -673,7 +682,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (!options.DangerouslyDisableHttpIncomingAuth)
         {
-            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle 
+            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle
             // the ASPNETCORE_URLS value without any additional validation.
             return;
         }
@@ -765,5 +774,22 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static string ResolveTransport(CommandResult commandResult)
     {
         return commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo;
+    }
+
+    private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
+    {
+        // Some hosting environments may not need HTTPS redirection, such as:
+        // - Running behind a reverse proxy that handles TLS termination.
+        // - Local development when not using self-signed development certs.
+        // - The application or server's HTTP stack is not listening for non-HTTPS requests.
+        //
+        // Safe default to enable HTTPS redirection unless explicitly opted-out.
+        string? httpsRedirectionOptOut = Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION");
+        if (!bool.TryParse(httpsRedirectionOptOut, out bool isOptedOut) || !isOptedOut)
+        {
+            app.UseHttpsRedirection();
+        }
+
+        return app;
     }
 }
