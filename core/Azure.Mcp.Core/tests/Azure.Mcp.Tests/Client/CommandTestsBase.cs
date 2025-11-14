@@ -39,29 +39,42 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
         await InitializeAsyncInternal(null);
     }
 
+    public static LiveTestSettings PlaybackSettings => new()
+    {
+        SubscriptionId = "00000000-0000-0000-0000-000000000000",
+        TenantId = "00000000-0000-0000-0000-000000000000",
+        ResourceBaseName = "Sanitized",
+        SubscriptionName = "Sanitized",
+        TenantName = "Sanitized",
+        TestMode = TestMode.Playback
+    };
+
     protected virtual async ValueTask LoadSettingsAsync()
+    {
+        Settings = await TryLoadLiveSettingsAsync().ConfigureAwait(false) ?? PlaybackSettings;
+
+        // if the user has set to playback in LiveTestSettings, they're
+        // intentionally checking playback mode, load the playback settings
+        // and ignore what we got from the .livetestsettings file
+        if (Settings.TestMode == TestMode.Playback)
+        {
+            Settings = PlaybackSettings;
+        }
+
+        TestMode = Settings.TestMode;
+    }
+
+    private async Task<LiveTestSettings?> TryLoadLiveSettingsAsync()
     {
         try
         {
-            // Try to load LiveTestSettings from .testsettings.json (authoritative source)
             var settingsFixture = new LiveTestSettingsFixture();
-            await settingsFixture.InitializeAsync();
-            Settings = settingsFixture.Settings;
-            TestMode = Settings.TestMode;
+            await settingsFixture.InitializeAsync().ConfigureAwait(false);
+            return settingsFixture.Settings;
         }
         catch (FileNotFoundException)
         {
-            // No .testsettings.json found - assume playback mode with sanitized values
-            Settings = new LiveTestSettings
-            {
-                SubscriptionId = "00000000-0000-0000-0000-000000000000",
-                TenantId = "00000000-0000-0000-0000-000000000000",
-                ResourceBaseName = "Sanitized",
-                SubscriptionName = "Sanitized",
-                TenantName = "Sanitized",
-                TestMode = TestMode.Playback
-            };
-            TestMode = TestMode.Playback;
+            return null;
         }
     }
 
