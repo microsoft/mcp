@@ -206,10 +206,6 @@ function Get-PathsToTest {
         | ForEach-Object { $Matches[0] }
         | Sort-Object -Unique
 
-    # For the ignite push we want to run all tests not just based on files changed in PR.
-    $isPullRequestBuild = $false
-    # $isPullRequestBuild = $env:BUILD_REASON -eq 'PullRequest'
-
     if($isPullRequestBuild) {
         # Set of files that don't require build or test when changed
         $skipFiles = @(
