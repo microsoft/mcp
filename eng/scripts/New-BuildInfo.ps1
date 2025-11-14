@@ -504,6 +504,7 @@ function Get-ServerDetails {
             dnxToolCommandName = $props.DnxToolCommandName
             dnxPackageTags = @($props.DnxPackageTags -split '[;,] *' | ForEach-Object { $_.Trim() } | Where-Object { $_ -ne '' })
             platforms = $platforms
+            mcpRepositoryName = $props.McpRepositoryName
         }
     }
 
