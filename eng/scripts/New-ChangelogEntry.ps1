@@ -41,18 +41,15 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [ValidateLength(10, 1000)]
     [string]$Description,
 
     [Parameter(Mandatory = $false)]
-    [ValidateSet("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")]
     [string]$Section,
 
     [Parameter(Mandatory = $false)]
     [string]$Subsection,
 
     [Parameter(Mandatory = $false)]
-    [ValidateRange(1, [int]::MaxValue)]
     [int]$PR,
 
     [Parameter(Mandatory = $false)]
@@ -61,6 +58,40 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Valid sections for validation
+$validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
+
+# Validate and normalize Section parameter if provided (case-insensitive)
+if ($Section) {
+    $matchedSection = $validSections | Where-Object { $_ -ieq $Section }
+    if ($matchedSection) {
+        # Use the properly cased version
+        $Section = $matchedSection
+    } else {
+        Write-Host ""
+        Write-Host "ERROR: Invalid section '$Section'" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Valid sections are:" -ForegroundColor Yellow
+        Write-Host "  - Features Added" -ForegroundColor Yellow
+        Write-Host "  - Breaking Changes" -ForegroundColor Yellow
+        Write-Host "  - Bugs Fixed" -ForegroundColor Yellow
+        Write-Host "  - Other Changes" -ForegroundColor Yellow
+        Write-Host ""
+        Write-Host "Example usage:" -ForegroundColor Cyan
+        Write-Host '  .\eng\scripts\New-ChangelogEntry.ps1 -Section "Features Added" -Description "..." -PR 1234' -ForegroundColor Gray
+        Write-Host ""
+        exit 1
+    }
+}
+
+# Validate PR parameter if provided
+if ($PR -and $PR -lt 1) {
+    Write-Host ""
+    Write-Host "ERROR: PR number must be a positive integer (got: $PR)" -ForegroundColor Red
+    Write-Host ""
+    exit 1
+}
 
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -100,7 +131,9 @@ if (-not $Section) {
         "3" { "Bugs Fixed" }
         "4" { "Other Changes" }
         default {
-            Write-Error "Invalid choice. Please select 1-4."
+            Write-Host ""
+            Write-Host "ERROR: Invalid choice '$choice'. Please select 1-4." -ForegroundColor Red
+            Write-Host ""
             exit 1
         }
     }
@@ -109,7 +142,9 @@ if (-not $Section) {
 if (-not $Subsection -and $Section -eq "Other Changes") {
     $subsectionInput = Read-Host "`nSubsection (optional, press Enter to skip)"
     if ($subsectionInput) {
-        $Subsection = $subsectionInput
+        # Title case the subsection
+        $textInfo = (Get-Culture).TextInfo
+        $Subsection = $textInfo.ToTitleCase($subsectionInput.ToLower())
     }
 }
 
@@ -118,6 +153,11 @@ if (-not $PR) {
     if ($prInput) {
         $PR = [int]$prInput
     }
+}
+
+# Ensure description ends with a period
+if (-not $Description.EndsWith(".")) {
+    $Description = $Description + "."
 }
 
 # Generate filename with timestamp in milliseconds
@@ -170,22 +210,19 @@ if (Test-Path $schemaPath) {
         
         try {
             $yamlData = Get-Content -Path $filepath -Raw | ConvertFrom-Yaml
-            $schemaData = Get-Content -Path $schemaPath -Raw | ConvertFrom-Json
             
-            # Basic validation
-            $validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
-            if ($yamlData.section -notin $validSections) {
-                Write-Error "Invalid section: $($yamlData.section)"
-                exit 1
-            }
-            
+            # Basic validation (section already validated at top of script)
             if ($yamlData.description.Length -lt 10) {
-                Write-Error "Description must be at least 10 characters"
+                Write-Host ""
+                Write-Host "ERROR: Description must be at least 10 characters" -ForegroundColor Red
+                Write-Host ""
                 exit 1
             }
             
             if ($PR -and $yamlData.pr -lt 1) {
-                Write-Error "PR number must be positive"
+                Write-Host ""
+                Write-Host "ERROR: PR number must be positive" -ForegroundColor Red
+                Write-Host ""
                 exit 1
             }
             

@@ -54,6 +54,19 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
+# Helper function to convert text to title case (capitalize first letter of each word)
+function ConvertTo-TitleCase {
+    param([string]$Text)
+    
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return $Text
+    }
+    
+    # Use TextInfo for proper title casing
+    $textInfo = (Get-Culture).TextInfo
+    return $textInfo.ToTitleCase($Text.ToLower())
+}
+
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $changelogFile = Join-Path $repoRoot $ChangelogPath
@@ -121,7 +134,12 @@ foreach ($file in $yamlFiles) {
             continue
         }
         
-        if ($entry.section -notin $validSections) {
+        # Validate and normalize section (case-insensitive)
+        $matchedSection = $validSections | Where-Object { $_ -ieq $entry.section }
+        if ($matchedSection) {
+            # Use the properly cased version
+            $normalizedSection = $matchedSection
+        } else {
             Write-Error "  Invalid section '$($entry.section)' in $($file.Name). Must be one of: $($validSections -join ', ')"
             continue
         }
@@ -144,9 +162,9 @@ foreach ($file in $yamlFiles) {
             continue
         }
         
-        # Add to entries collection
+        # Add to entries collection with normalized section name
         $entries += [PSCustomObject]@{
-            Section = $entry.section
+            Section = $normalizedSection
             Subsection = if ($entry.subsection -and $entry.subsection -ne "null") { $entry.subsection } else { $null }
             Description = $entry.description
             PR = $entry.pr
@@ -250,25 +268,190 @@ $unreleasedPattern = '(?s)(##\s+.*?Unreleased.*?\r?\n)(.*?)(?=##\s+\d+\.\d+\.\d+
 $match = [regex]::Match($changelogContent, $unreleasedPattern)
 
 if (-not $match.Success) {
-    Write-Error "Could not find 'Unreleased' section in CHANGELOG.md"
-    exit 1
+    Write-Warning "No 'Unreleased' section found in CHANGELOG.md"
+    Write-Host "Creating new Unreleased section..." -ForegroundColor Yellow
+    
+    # Create a new unreleased section at the top of the changelog
+    $newUnreleasedSection = "## Unreleased`n"
+    $newUnreleasedSection += ($markdown -join "`n") + "`n`n"
+    
+    # Insert after the first heading (usually # Changelog or # Release History)
+    $firstHeadingPattern = '(#[^#].*?\r?\n)'
+    $firstHeadingMatch = [regex]::Match($changelogContent, $firstHeadingPattern)
+    
+    if ($firstHeadingMatch.Success) {
+        $updatedChangelog = $changelogContent -replace $firstHeadingPattern, "$($firstHeadingMatch.Value)`n$newUnreleasedSection"
+    } else {
+        # If no heading found, just prepend to the file
+        $updatedChangelog = $newUnreleasedSection + $changelogContent
+    }
+} else {
+    $unreleasedHeader = $match.Groups[1].Value
+    $existingContent = $match.Groups[2].Value
+    
+    # Parse existing content by sections
+    $existingSections = @{}
+    $currentSection = $null
+    $currentSubsection = $null
+    $lines = $existingContent -split "`r?`n"
+    
+    foreach ($line in $lines) {
+        if ($line -match '^###\s+(.+?)\s*$') {
+            # Main section header - normalize to match valid sections (case-insensitive)
+            $rawSection = $matches[1]
+            $matchedSection = $validSections | Where-Object { $_ -ieq $rawSection }
+            $currentSection = if ($matchedSection) { $matchedSection } else { $rawSection }
+            $currentSubsection = $null
+            if (-not $existingSections.ContainsKey($currentSection)) {
+                $existingSections[$currentSection] = @{
+                    "" = @()  # Entries without subsection
+                }
+            }
+        }
+        elseif ($line -match '^####\s+(.+?)\s*$') {
+            # Subsection header - title case it
+            $rawSubsection = $matches[1]
+            $currentSubsection = ConvertTo-TitleCase $rawSubsection
+            if ($currentSection) {
+                # Check if this subsection already exists (case-insensitive)
+                $existingKey = $existingSections[$currentSection].Keys | Where-Object { $_ -ieq $currentSubsection -and $_ -ne "" }
+                if ($existingKey) {
+                    $currentSubsection = $existingKey
+                } elseif (-not $existingSections[$currentSection].ContainsKey($currentSubsection)) {
+                    $existingSections[$currentSection][$currentSubsection] = @()
+                }
+            }
+        }
+        elseif ($line -match '^-\s+(.+)$') {
+            # Entry line
+            if ($currentSection) {
+                if ($currentSubsection) {
+                    $existingSections[$currentSection][$currentSubsection] += $line
+                } else {
+                    $existingSections[$currentSection][""] += $line
+                }
+            }
+        }
+    }
+    
+    # Build new content by merging existing and new entries
+    $newContent = $unreleasedHeader
+    
+    foreach ($section in $sectionOrder) {
+        # Check if we have entries (existing or new) for this section
+        $hasExisting = $existingSections.ContainsKey($section)
+        $hasNew = $groupedEntries.ContainsKey($section)
+        
+        if (-not $hasExisting -and -not $hasNew) {
+            continue
+        }
+        
+        $newContent += "`n### $section`n"
+        
+        # Merge entries without subsection
+        $existingMainEntries = @()
+        if ($hasExisting -and $existingSections[$section].ContainsKey("")) {
+            $existingMainEntries = @($existingSections[$section][""])
+        }
+        $newMainEntries = @()
+        
+        if ($hasNew -and $groupedEntries[$section].ContainsKey("")) {
+            foreach ($entry in $groupedEntries[$section][""]) {
+                $description = $entry.Description
+                # Ensure description ends with a period
+                if (-not $description.EndsWith(".")) {
+                    $description = $description + "."
+                }
+                $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
+                $newMainEntries += "- $description$prLink"
+            }
+        }
+        
+        # Append new entries after existing ones (with empty line before entries)
+        $totalEntries = $existingMainEntries.Count + $newMainEntries.Count
+        if ($totalEntries -gt 0) {
+            $newContent += "`n"  # Empty line before entries
+            foreach ($line in $existingMainEntries) {
+                if ($line) {
+                    $newContent += "$line`n"
+                }
+            }
+            foreach ($line in $newMainEntries) {
+                $newContent += "$line`n"
+            }
+        }
+        
+        # Merge subsections - normalize subsection names (case-insensitive, title case)
+        $allSubsections = @()
+        $subsectionMapping = @{}  # Maps normalized (title-cased) name to actual name
+        
+        if ($hasExisting) {
+            foreach ($key in $existingSections[$section].Keys) {
+                if ($key -ne "") {
+                    $titleCased = ConvertTo-TitleCase $key
+                    if (-not $subsectionMapping.ContainsKey($titleCased)) {
+                        $subsectionMapping[$titleCased] = @{
+                            Existing = $key
+                            New = $null
+                        }
+                    }
+                }
+            }
+        }
+        
+        if ($hasNew) {
+            foreach ($key in $groupedEntries[$section].Keys) {
+                if ($key -ne "") {
+                    $titleCased = ConvertTo-TitleCase $key
+                    if ($subsectionMapping.ContainsKey($titleCased)) {
+                        $subsectionMapping[$titleCased].New = $key
+                    } else {
+                        $subsectionMapping[$titleCased] = @{
+                            Existing = $null
+                            New = $key
+                        }
+                    }
+                }
+            }
+        }
+        
+        $allSubsections = $subsectionMapping.Keys | Sort-Object
+        
+        foreach ($subsectionTitleCased in $allSubsections) {
+            $mapping = $subsectionMapping[$subsectionTitleCased]
+            $newContent += "`n#### $subsectionTitleCased`n"
+            $newContent += "`n"  # Empty line before entries
+            
+            # Existing subsection entries
+            if ($mapping.Existing -and $hasExisting -and $existingSections[$section].ContainsKey($mapping.Existing)) {
+                foreach ($line in $existingSections[$section][$mapping.Existing]) {
+                    $newContent += "$line`n"
+                }
+            }
+            
+            # New subsection entries
+            if ($mapping.New -and $hasNew -and $groupedEntries[$section].ContainsKey($mapping.New)) {
+                foreach ($entry in $groupedEntries[$section][$mapping.New]) {
+                    $description = $entry.Description
+                    # Ensure description ends with a period
+                    if (-not $description.EndsWith(".")) {
+                        $description = $description + "."
+                    }
+                    $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
+                    $newContent += "- $description$prLink`n"
+                }
+            }
+        }
+    }
+    
+    # Ensure there's an empty line at the end of the Unreleased section
+    if (-not $newContent.EndsWith("`n`n")) {
+        $newContent += "`n"
+    }
+    
+    # Replace in changelog
+    $updatedChangelog = $changelogContent -replace [regex]::Escape($unreleasedHeader + $existingContent), $newContent
 }
-
-$unreleasedHeader = $match.Groups[1].Value
-$existingContent = $match.Groups[2].Value
-
-# Check if there's already content under unreleased
-if ($existingContent.Trim()) {
-    Write-Warning "Existing content found under 'Unreleased' section"
-    Write-Host "This script will append new entries. You may need to manually review and merge." -ForegroundColor Yellow
-    Write-Host ""
-}
-
-# Insert compiled entries
-$newContent = $unreleasedHeader + ($markdown -join "`n") + "`n" + $existingContent
-
-# Replace in changelog
-$updatedChangelog = $changelogContent -replace [regex]::Escape($unreleasedHeader + $existingContent), $newContent
 
 # Write updated CHANGELOG.md
 $updatedChangelog | Set-Content -Path $changelogFile -Encoding UTF8 -NoNewline
