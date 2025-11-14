@@ -59,6 +59,9 @@ var baseArgs = [
   // Deleting '--read-only' will remove this restriction and enable tools that can create, modify, or delete Azure resources,
   // do so with caution, and ensure that access is granted only to trusted agents.
   '--read-only'
+  // SECURITY NOTE: Never add '--dangerously-disable-http-incoming-auth'.
+  // This flag disables Entra ID authentication for incoming requests, allowing unauthenticated access to the MCP server.
+  // This would permit anyone to execute Azure operations using the Container App's managed identity, bypassing all access controls.
 ]
 var namespaceArgs = [for ns in namespaces: ['--namespace', ns]]
 var serverArgs = flatten(concat([baseArgs], namespaceArgs))
@@ -89,6 +92,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: true
         targetPort: 8080
+        // SECURITY NOTE: allowInsecure is set to false to enforce HTTPS-only external access.
+        // Never set this to true as that will allow plain HTTP traffic, exposing sensitive data such as access tokens to interception.
         allowInsecure: false
         transport: 'http'
         traffic: [
