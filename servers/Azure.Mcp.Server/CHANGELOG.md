@@ -7,6 +7,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Features Added
 
 - Updated UserAgent string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Added `redis_create` command to create new Redis resources. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
 
 ### Breaking Changes
 
