@@ -8,8 +8,10 @@ using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Azure.Mcp.Core.Areas;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using static Azure.Mcp.Core.Services.Telemetry.TelemetryConstants;
 
 namespace Azure.Mcp.Core.Commands;
@@ -31,6 +33,7 @@ public class CommandFactory
     private readonly Dictionary<string, IBaseCommand> _commandMap;
     private readonly Dictionary<string, IAreaSetup> _commandNamesToArea = new(StringComparer.OrdinalIgnoreCase);
     private readonly ITelemetryService _telemetryService;
+    private readonly IOptions<AzureMcpServerConfiguration> _configurationOptions;
 
     // Add this new class inside CommandFactory
     private class StringConverter : JsonConverter<string>
@@ -49,15 +52,16 @@ public class CommandFactory
 
     internal const string RootCommandGroupName = "azmcp";
 
-    public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, ILogger<CommandFactory> logger)
+    public CommandFactory(IServiceProvider serviceProvider, IEnumerable<IAreaSetup> serviceAreas, ITelemetryService telemetryService, IOptions<AzureMcpServerConfiguration> configurationOptions, ILogger<CommandFactory> logger)
     {
         _serviceAreas = serviceAreas?.ToArray() ?? throw new ArgumentNullException(nameof(serviceAreas));
         _serviceProvider = serviceProvider;
         _logger = logger;
+        _telemetryService = telemetryService;
+        _configurationOptions = configurationOptions;
         _rootGroup = new CommandGroup(RootCommandGroupName, "Azure MCP Server");
         _rootCommand = CreateRootCommand();
         _commandMap = CreateCommandDictionary(_rootGroup);
-        _telemetryService = telemetryService;
         _srcGenWithOptions = new ModelsJsonContext(new JsonSerializerOptions
         {
             WriteIndented = true,
@@ -236,6 +240,8 @@ public class CommandFactory
         // RootCommand title/description comes from the root group
         var root = new RootCommand(_rootGroup.Description);
 
+        CustomizeHelpOption(root);
+
         // Register area groups and their commands
         RegisterCommandGroup();
 
@@ -245,9 +251,23 @@ public class CommandFactory
             ConfigureCommands(subGroup);
             root.Subcommands.Add(subGroup.Command);
             subGroup.Command.Options.Add(new HelpOption());
+
+            CustomizeHelpOption(subGroup.Command);
         }
 
         return root;
+    }
+
+    private void CustomizeHelpOption(Command command)
+    {
+        for (int i = 0; i < command.Options.Count; i++)
+        {
+            if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
+            {
+                helpOption.Action = new VersionDisplayHelpAction(_configurationOptions, helpAction);
+                break;
+            }
+        }
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)

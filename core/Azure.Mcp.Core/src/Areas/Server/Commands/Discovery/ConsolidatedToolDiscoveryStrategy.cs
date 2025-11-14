@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Azure.Mcp.Core.Configuration;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 
@@ -20,12 +21,14 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 /// </summary>
 /// <param name="commandFactory">The command factory used to access available command groups.</param>
 /// <param name="options">Options for configuring the service behavior.</param>
+/// <param name="configurationOptions">Configuration options for the Azure MCP server.</param>
 /// <param name="logger">Logger instance for this discovery strategy.</param>
-public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
+public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFactory, IServiceProvider serviceProvider, IOptions<ServiceStartOptions> options, IOptions<Azure.Mcp.Core.Configuration.AzureMcpServerConfiguration> configurationOptions, ILogger<ConsolidatedToolDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly CommandFactory _commandFactory = commandFactory;
     private readonly IServiceProvider _serviceProvider = serviceProvider;
     private readonly IOptions<ServiceStartOptions> _options = options;
+    private readonly IOptions<Azure.Mcp.Core.Configuration.AzureMcpServerConfiguration> _configurationOptions = configurationOptions;
     private CommandFactory? _consolidatedCommandFactory;
 
     /// <summary>
@@ -147,12 +150,14 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
 
         // Create a new CommandFactory with all consolidated areas
         var telemetryService = _serviceProvider.GetRequiredService<ITelemetryService>();
+        var configurationOptions = _serviceProvider.GetRequiredService<IOptions<Configuration.AzureMcpServerConfiguration>>();
         var factoryLogger = _serviceProvider.GetRequiredService<ILogger<CommandFactory>>();
 
         _consolidatedCommandFactory = new CommandFactory(
             _serviceProvider,
             consolidatedAreas,
             telemetryService,
+            configurationOptions,
             factoryLogger
         );
 

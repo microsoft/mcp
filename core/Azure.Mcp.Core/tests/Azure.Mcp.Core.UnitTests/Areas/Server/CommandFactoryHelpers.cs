@@ -46,6 +46,8 @@ using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol.Protocol;
+using Microsoft.Extensions.Options;
+using Azure.Mcp.Core.Configuration;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -97,8 +99,9 @@ internal class CommandFactoryHelpers
 
         var services = serviceProvider ?? CreateDefaultServiceProvider();
         var logger = services.GetRequiredService<ILogger<CommandFactory>>();
+        var configurationOptions = services.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
-        var commandFactory = new CommandFactory(services, areaSetups, telemetryService, logger);
+        var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);
 
         return commandFactory;
     }
