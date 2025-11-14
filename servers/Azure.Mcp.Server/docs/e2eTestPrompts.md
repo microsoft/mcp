@@ -532,6 +532,10 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 
 | Tool Name | Test Prompt |
 |:----------|:----------|
+| redis_create | Create a new Redis resource named <resource_name> with SKU <sku_name> in resource group <resource_group_name> |
+| redis_create | Create a new Redis resource for me |
+| redis_create | Create a Redis cache named <resource_name> with SKU <sku_name> in resource group <resource_group_name> |
+| redis_create | Create a new Redis cluster with name <resource_name>, SKU <sku_name> |
 | redis_list | List all Redis resources in my subscription |
 | redis_list | Show me my Redis resources |
 | redis_list | Show me the Redis resources in my subscription |

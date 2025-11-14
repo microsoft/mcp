@@ -54,7 +54,6 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : S
             var resources = await redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.AuthMethod,
                 options.RetryPolicy);
 
             context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);
