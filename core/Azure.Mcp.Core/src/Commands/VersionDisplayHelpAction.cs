@@ -3,8 +3,8 @@
 
 using System.CommandLine.Help;
 using System.CommandLine.Invocation;
-using System.Reflection;
-using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Configuration;
+using Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Commands;
 
@@ -13,22 +13,19 @@ namespace Azure.Mcp.Core.Commands;
 /// </summary>
 internal class VersionDisplayHelpAction : SynchronousCommandLineAction
 {
+    private readonly IOptions<AzureMcpServerConfiguration> _options;
     private readonly HelpAction _defaultHelp;
 
-    public VersionDisplayHelpAction(HelpAction action) => _defaultHelp = action;
+    public VersionDisplayHelpAction(IOptions<AzureMcpServerConfiguration> options, HelpAction action)
+    {
+        _options = options;
+        _defaultHelp = action;
+    }
 
     public override int Invoke(ParseResult parseResult)
     {
-        DisplayVersion();
+        Console.WriteLine($"{_options.Value.Name} {_options.Value.Version}{Environment.NewLine}");
+
         return _defaultHelp.Invoke(parseResult);
-    }
-
-    private static void DisplayVersion()
-    {
-        var assembly = Assembly.GetEntryAssembly();
-        string version = assembly != null ? AssemblyHelper.GetServerVersion(assembly) : "unknown";
-        var title = assembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "Azure MCP";
-
-        Console.WriteLine($"{title} {version}\n");
     }
 }

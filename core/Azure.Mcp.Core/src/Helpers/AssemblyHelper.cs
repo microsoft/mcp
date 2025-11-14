@@ -18,7 +18,7 @@ public static class AssemblyHelper
     /// <param name="assembly">The assembly to extract version information from.</param>
     /// <returns>A version string without build metadata (everything after '+' is stripped).</returns>
     /// <exception cref="InvalidOperationException">Thrown when the assembly does not have an AssemblyInformationalVersionAttribute.</exception>
-    public static string GetServerVersion(Assembly assembly)
+    public static string GetAssemblyVersion(Assembly assembly)
     {
         AssemblyInformationalVersionAttribute? versionAttribute = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
         if (versionAttribute == null)

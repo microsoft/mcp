@@ -36,7 +36,7 @@ public static class OpenTelemetryExtensions
                 var entryAssembly = Assembly.GetEntryAssembly();
                 if (entryAssembly != null)
                 {
-                    options.Version = AssemblyHelper.GetServerVersion(entryAssembly);
+                    options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
                 }
 
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
