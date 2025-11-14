@@ -2602,7 +2602,11 @@ Before submitting:
 
 **REQUIRED**: All new commands must update the following documentation files:
 
-- [ ] **CHANGELOG.md**: Add entry under "Unreleased" section describing the new command(s)
+- [ ] **Changelog Entry**: Create a changelog entry YAML file (if your change is a new feature, bug fix, or breaking change):
+  ```powershell
+  ./eng/scripts/New-ChangelogEntry.ps1 -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+  ```
+  See `/servers/Azure.Mcp.Server/changelog-entries/README.md` for details. Skip for internal refactoring, test-only changes, or minor updates.
 - [ ] **servers/Azure.Mcp.Server/docs/azmcp-commands.md**: Add command documentation with description, syntax, parameters, and examples
 - [ ] **Run metadata update script**: Execute `.\eng\scripts\Update-AzCommandsMetadata.ps1` to update tool metadata in azmcp-commands.md (required for CI validation)
 - [ ] **README.md**: Update the supported services table and add example prompts demonstrating the new command(s) in the appropriate toolset section

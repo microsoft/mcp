@@ -182,7 +182,7 @@ dotnet build
 - Documentation: Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md` and add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`
 - Tool validation: Run `ToolDescriptionEvaluator` for command descriptions (target: top 3 ranking, ≥0.4 confidence)
 - Spelling check: `.\eng\common\spelling\Invoke-Cspell.ps1`
-- Changelog: Update `CHANGELOG.md` with your changes
+- Changelog: Create changelog entry YAML file if the change is a new feature, bug fix, or breaking change. Check out `/servers/Azure.Mcp.Server/changelog-entries/README.md` for instructions.
 - One tool per PR: Submit single toolsets for faster review cycles
 
 ## Architecture and Project Structure
@@ -687,7 +687,7 @@ When adding new commands:
 1. **Update `/servers/Azure.Mcp.Server/docs/azmcp-commands.md`** with new command details
 2. **Add test prompts to `/servers/Azure.Mcp.Server/docs/e2eTestPrompts.md`** (maintain alphabetical order)
 3. **Update toolset README.md** with new functionality
-4. **Update CHANGELOG.md** with changes
+4. **Create changelog entry** if user-facing or critical change. Check out `/servers/Azure.Mcp.Server/changelog-entries/README.md` for instructions.
 5. **Add CODEOWNERS entry** for new toolset
 
 ### Spelling and Content Validation
