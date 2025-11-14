@@ -397,7 +397,7 @@ public class ServiceStartCommandTests
 
         // Assert
         Assert.Contains("Configuration error to disable incoming HTTP authentication", message);
-        Assert.Contains("proper authentication configured", message);
+        Assert.Contains("proper authentication is configured", message);
     }
 
     [Fact]
