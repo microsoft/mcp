@@ -140,6 +140,16 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               name: 'AZURE_LOG_LEVEL'
               value: 'Verbose'
             }
+            // SECURITY NOTE: AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION is set to 'true' because the Azure MCP Server 
+            // listens on HTTP 'internally' within the Container App pod (port 8080). 'External' traffic is HTTPS-only (allowInsecure=false),
+            // and the Container Apps Envoy proxy terminates HTTPS at the ingress boundary, then routes to the container over HTTP 
+            // within the secure pod network namespace. This HTTP traffic never leaves the pod, ensuring end-to-end encryption for 
+            // external communication while allowing efficient internal routing.
+            // See https://learn.microsoft.com/en-us/azure/container-apps/ingress-overview
+            {
+              name: 'AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION'
+              value: 'true'
+            }
           ], !empty(appInsightsConnectionString) ? [
             {
               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
