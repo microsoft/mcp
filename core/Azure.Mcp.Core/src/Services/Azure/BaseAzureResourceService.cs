@@ -11,7 +11,6 @@ using Azure.ResourceManager;
 using Azure.ResourceManager.ResourceGraph;
 using Azure.ResourceManager.ResourceGraph.Models;
 using Azure.ResourceManager.Resources;
-using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Core.Services.Azure;
 
@@ -21,11 +20,10 @@ namespace Azure.Mcp.Core.Services.Azure;
 /// </summary>
 public abstract class BaseAzureResourceService(
     ISubscriptionService subscriptionService,
-    ITenantService tenantService,
-    ILoggerFactory? loggerFactory = null) : BaseAzureService(tenantService, loggerFactory)
+    ITenantService tenantService)
+    : BaseAzureService(tenantService)
 {
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
-    private readonly ITenantService _tenantService = tenantService ?? throw new ArgumentNullException(nameof(tenantService));
 
     /// <summary>
     /// Gets the tenant resource for the specified subscription.
@@ -41,7 +39,7 @@ public abstract class BaseAzureResourceService(
         }
 
         // Get all tenants and find the matching one (GetTenants already has caching)
-        var allTenants = await _tenantService.GetTenants();
+        var allTenants = await TenantService.GetTenants();
         var tenantResource = allTenants.FirstOrDefault(t => t.Data.TenantId == tenantId.Value);
 
         if (tenantResource == null)
@@ -96,7 +94,7 @@ public abstract class BaseAzureResourceService(
 
         var results = new List<T>();
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";
@@ -161,7 +159,7 @@ public abstract class BaseAzureResourceService(
         ValidateRequiredParameters((nameof(resourceType), resourceType), (nameof(subscription), subscription));
         ArgumentNullException.ThrowIfNull(converter);
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, null, retryPolicy, cancellationToken);
         var tenantResource = await GetTenantResourceAsync(subscriptionResource.Data.TenantId, cancellationToken);
 
         var queryFilter = $"{tableName} | where type =~ '{EscapeKqlString(resourceType)}'";

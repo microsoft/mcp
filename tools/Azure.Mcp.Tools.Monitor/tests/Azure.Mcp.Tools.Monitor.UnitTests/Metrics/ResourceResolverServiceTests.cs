@@ -29,7 +29,7 @@ public class ResourceResolverServiceTests
         _tenantService = Substitute.For<ITenantService>();
         _service = new ResourceResolverService(_subscriptionService, _tenantService);
 
-        _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _subscriptionService.GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), cancellationToken: Arg.Any<CancellationToken>())
             .Returns(_subscriptionResource);
     }
 
@@ -62,12 +62,12 @@ public class ResourceResolverServiceTests
         var subscription = "87654321-4321-4321-4321-210987654321"; // Different subscription to ensure it's not used
 
         // Act
-        var result = await _service.ResolveResourceIdAsync(subscription, null, null, fullResourceId);
+        var result = await _service.ResolveResourceIdAsync(subscription, null, null, fullResourceId, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(fullResourceId, result.ToString());
         // Verify that subscription service was not called since we're passing a full resource ID
-        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -82,11 +82,11 @@ public class ResourceResolverServiceTests
         var expectedResourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/{resourceType}/{resourceName}";
 
         // Act
-        var result = await _service.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName);
+        var result = await _service.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResourceId, result);
-        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>());
+        await _subscriptionService.DidNotReceive().GetSubscription(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -96,7 +96,7 @@ public class ResourceResolverServiceTests
     {
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!));
+            _service.ResolveResourceIdAsync(subscription!, null, null, resourceName!, cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -112,7 +112,7 @@ public class ResourceResolverServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
-            _service.ResolveResourceIdAsync(subscription, null, null, resourceName));
+            _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Resource '{resourceName}' not found in subscription '{subscription}'", exception.Message);
     }
@@ -133,7 +133,7 @@ public class ResourceResolverServiceTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<Exception>(() =>
-            _service.ResolveResourceIdAsync(subscription, null, null, resourceName));
+            _service.ResolveResourceIdAsync(subscription, null, null, resourceName, cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains($"Multiple resources named '{resourceName}' found", exception.Message);
         Assert.Contains("Please specify both resourceGroup and resourceType parameters", exception.Message);
@@ -153,11 +153,11 @@ public class ResourceResolverServiceTests
         var resourcesAsyncPageable = CreateAsyncPageableWithItems(resource);
 
         subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
-        _subscriptionService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _subscriptionService.GetSubscription(subscription, Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(subscriptionResource);
 
         // Act
-        var result = await _service.ResolveResourceIdAsync(subscription, null, null, resourceName);
+        var result = await _service.ResolveResourceIdAsync(subscription, null, null, resourceName, tenant: null, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResourceId, result.ToString());
@@ -181,7 +181,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act
-        var result = await _service.ResolveResourceIdAsync(subscription, resourceGroup, null, resourceName);
+        var result = await _service.ResolveResourceIdAsync(subscription, resourceGroup, null, resourceName, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResourceId, result.ToString());
@@ -205,7 +205,7 @@ public class ResourceResolverServiceTests
         _subscriptionResource.GetGenericResourcesAsync(cancellationToken: Arg.Any<CancellationToken>()).Returns(resourcesAsyncPageable);
 
         // Act
-        var result = await _service.ResolveResourceIdAsync(subscription, null, resourceType, resourceName);
+        var result = await _service.ResolveResourceIdAsync(subscription, null, resourceType, resourceName, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedResourceId, result.ToString());

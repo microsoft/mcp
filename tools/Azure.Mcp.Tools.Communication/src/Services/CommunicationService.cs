@@ -3,8 +3,6 @@
 
 using Azure.Communication.Email;
 using Azure.Communication.Sms;
-using Azure.Core;
-using Azure.Mcp.Core.Exceptions;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -14,10 +12,9 @@ using Microsoft.Extensions.Logging;
 
 namespace Azure.Mcp.Tools.Communication.Services;
 
-public class CommunicationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<CommunicationService> logger)
+public class CommunicationService(ITenantService tenantService, ILogger<CommunicationService> logger)
     : BaseAzureService(tenantService), ICommunicationService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<CommunicationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<SmsResult>> SendSmsAsync(
@@ -28,7 +25,8 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         bool enableDeliveryReport = false,
         string? tag = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
         ValidateRequiredParameters(
@@ -46,7 +44,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         try
         {
             // Create SMS client using Azure credential from base class and endpoint
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var smsClient = new SmsClient(new Uri(endpoint), credential);
 
             var sendOptions = new SmsSendOptions(enableDeliveryReport)
@@ -60,7 +58,8 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
                 from: from,
                 to: to,
                 message: message,
-                options: sendOptions);
+                options: sendOptions,
+                cancellationToken: cancellationToken);
 
             var results = new List<SmsResult>();
             foreach (var result in response.Value)
@@ -100,7 +99,8 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         string[]? bcc = null,
         string[]? replyTo = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // Validate required parameters using base class method
         ValidateRequiredParameters(
@@ -124,7 +124,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
         try
         {
             // Create email client with credential from base class
-            var credential = await GetCredential(tenantId);
+            var credential = await GetCredential(tenantId, cancellationToken);
             var emailClient = new EmailClient(new Uri(endpoint), credential);
 
             // Create the email content
@@ -165,7 +165,7 @@ public class CommunicationService(ISubscriptionService subscriptionService, ITen
             var response = await emailClient.SendAsync(
                 WaitUntil.Completed,
                 emailMessage,
-                CancellationToken.None);
+                cancellationToken);
 
             // Get the operation result
             var operationResult = response.Value;

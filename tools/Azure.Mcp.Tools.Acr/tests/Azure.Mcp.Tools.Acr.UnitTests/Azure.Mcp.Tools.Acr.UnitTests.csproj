@@ -17,6 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Azure.Mcp.Tools.Acr.csproj" />
-    <ProjectReference Include="..\..\..\..\core\Azure.Mcp.Core\src\Azure.Mcp.Core.csproj" />
+    <ProjectReference Include="$(RepoRoot)core\Azure.Mcp.Core\tests\Azure.Mcp.Tests\Azure.Mcp.Tests.csproj" />
   </ItemGroup>
 </Project>

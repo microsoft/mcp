@@ -1,0 +1,21 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "location": {
+      "value": "${AZURE_LOCATION}"
+    },
+    "entraAppServerDisplayName": {
+      "value": "Azure MCP Storage Server API"
+    },
+    "entraAppClientDisplayName": {
+      "value": "Azure MCP Storage Custom Connector"
+    },
+    "acaName": {
+      "value": "azure-mcp-storage-server"
+    },
+    "appInsightsConnectionString": {
+      "value": "DISABLED"
+    }
+  }
+}

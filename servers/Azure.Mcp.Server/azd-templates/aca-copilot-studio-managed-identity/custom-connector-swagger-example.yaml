@@ -1,0 +1,38 @@
+# Learn more at https://learn.microsoft.com/microsoft-copilot-studio/mcp-add-existing-server-to-agent#option-2-create-a-custom-mcp-connector-in-power-apps
+swagger: '2.0'
+info:
+  title: AzureMcpStorageSandbox
+  description: >-
+    Connector to connect to an Azure Mcp Storage server which is authenticated
+    by OAuth.
+  version: '1.0'
+host: <your_remote_azure_mcp_container_app_url>
+basePath: /
+schemes:
+  - https
+consumes: []
+produces: []
+paths:
+  /:
+    post:
+      summary: Azure Mcp Storage
+      x-ms-agentic-protocol: mcp-streamable-1.0
+      responses:
+        '200':
+          description: Success
+      operationId: McpToolExecute
+definitions: {}
+parameters: {}
+responses: {}
+securityDefinitions:
+  oauth2-auth:
+    type: oauth2
+    flow: accessCode
+    tokenUrl: https://login.windows.net/common/oauth2/authorize
+    scopes:
+      <server_app_registration_client_id>/.default: <server_app_registration_client_id>/.default
+    authorizationUrl: https://login.microsoftonline.com/common/oauth2/authorize
+security:
+  - oauth2-auth:
+      - <server_app_registration_client_id>/.default
+tags: []

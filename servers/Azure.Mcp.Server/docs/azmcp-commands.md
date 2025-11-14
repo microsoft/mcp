@@ -180,7 +180,7 @@ The `azmcp server start` command supports the following options:
 | `--tool` | No | All tools | Expose specific tools by name (e.g., 'azmcp_storage_account_get'). It automatically switches to `all` mode. It can't be used together with `--namespace`. |
 | `--read-only` | No | `false` | Only expose read-only operations |
 | `--debug` | No | `false` | Enable verbose debug logging to stderr |
-| `--enable-insecure-transports` | No | false | Enable insecure transport mechanisms |
+| `--dangerously-disable-http-incoming-auth` | No | false | Dangerously disable HTTP incoming authentication |
 | `--insecure-disable-elicitation` | No | `false` | **⚠️ INSECURE**: Disable user consent prompts for sensitive operations |
 
 > **⚠️ Security Warning for `--insecure-disable-elicitation`:**
@@ -197,9 +197,31 @@ The `azmcp server start` command supports the following options:
 > azmcp server start --insecure-disable-elicitation
 > ```
 
+### Azure AI Best Practices
+
+```bash
+# Get best practices for building AI applications, workflows and agents in Azure
+# Call this before generating code for any AI application, building with Azure AI Foundry models,
+# working with Microsoft Agent Framework, or implementing AI solutions in Azure.
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp azureaibestpractices get
+
+# Includes guidance on:
+#   - Microsoft Agent Framework usage and patterns
+#   - Azure AI Foundry model selection
+#   - Best practices for ai app / agent development in Azure
+```
+
 ### Azure AI Foundry Operations
 
 ```bash
+# Create an agent in an AI Foundry project
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents create --endpoint <endpoint> \
+                            --model-deployment <model-deployment> \
+                            --agent-name <agent-name> \
+                            --systemInstruction <system-instruction>
+
 # Connect to an agent in an AI Foundry project and query it
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents connect --agent-id <agent-id> \
@@ -216,6 +238,14 @@ azmcp foundry agents evaluate --agent-id <agent-id> \
                               --azure-openai-deployment <azure-openai-deployment> \
                               [--tool-definitions <tool-definitions>]
 
+# Get SDK samples for interacting with an AI Foundry agent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
+
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
 # Query and evaluate an agent in one command
 # ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
@@ -224,10 +254,6 @@ azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
                                         --azure-openai-endpoint <azure-openai-endpoint> \
                                         --azure-openai-deployment <azure-openai-deployment> \
                                         [--evaluators <evaluators>]
-
-# List all Azure AI Agents available in the configured project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents list --endpoint <endpoint>
 
 # List knowledge indexes in an AI Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -316,6 +342,18 @@ azmcp foundry openai models-list --subscription <subscription> \
 azmcp foundry resource get --subscription <subscription> \
                            [--resource-group <resource-group>] \
                            [--resource-name <resource-name>]
+
+# Create an AI Foundry agent thread
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
+
+# Get messages of an AI Foundry agent thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
+
+# List AI Foundry agent threads in a Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads list --endpoint <endpoint>
 ```
 
 ### Azure AI Search Operations
@@ -394,6 +432,71 @@ azmcp speech stt recognize --endpoint <endpoint> --file audio.wav \
 ```
 
 Use phrase hints when you expect specific terminology, technical terms, or domain-specific vocabulary in your audio content. This significantly improves recognition accuracy for specialized content.
+
+```bash
+# Synthesize speech from text and save to an audio file using Azure AI Services Speech
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint <endpoint> \
+                            --text <text-to-synthesize> \
+                            --outputAudio <output-file-path> \
+                            [--language <language>] \
+                            [--voice <voice-name>] \
+                            [--format <audio-format>] \
+                            [--endpointId <custom-voice-endpoint-id>]
+```
+
+#### Text-to-Speech Parameters
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--endpoint` | Yes | Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/) |
+| `--text` | Yes | The text to convert to speech |
+| `--outputAudio` | Yes | Path where the synthesized audio file will be saved (e.g., output.wav, speech.mp3) |
+| `--language` | No | Speech synthesis language (default: en-US). Examples: es-ES, fr-FR, de-DE |
+| `--voice` | No | Neural voice to use (e.g., en-US-JennyNeural, es-ES-ElviraNeural). If not specified, default voice for the language is used |
+| `--format` | No | Output audio format (default: Riff24Khz16BitMonoPcm). Supported formats: Riff24Khz16BitMonoPcm, Audio16Khz32KBitRateMonoMp3, Audio24Khz96KBitRateMonoMp3, Ogg16Khz16BitMonoOpus, Raw16Khz16BitMonoPcm |
+| `--endpointId` | No | Endpoint ID of a custom voice model for personalized speech synthesis |
+
+#### Supported Audio Formats
+
+The `--format` parameter accepts the following values:
+
+- **WAV formats**: `Riff24Khz16BitMonoPcm` (default), `Riff16Khz16BitMonoPcm`, `Raw16Khz16BitMonoPcm`
+- **MP3 formats**: `Audio16Khz32KBitRateMonoMp3`, `Audio24Khz96KBitRateMonoMp3`, `Audio48Khz192KBitRateMonoMp3`
+- **OGG/Opus formats**: `Ogg16Khz16BitMonoOpus`, `Ogg24Khz16BitMonoOpus`
+
+**Examples:**
+
+```bash
+# Basic text-to-speech synthesis
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hello, welcome to Azure AI Services Speech" \
+    --outputAudio welcome.wav
+
+# Synthesize with specific language and voice
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "Hola, bienvenido a los servicios de voz de Azure" \
+    --outputAudio spanish-greeting.wav \
+    --language es-ES \
+    --voice es-ES-ElviraNeural
+
+# Generate MP3 output with high quality
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This is a high quality audio output" \
+    --outputAudio output.mp3 \
+    --format Audio48Khz192KBitRateMonoMp3
+
+# Use custom voice model
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ✅ LocalRequired
+azmcp speech tts synthesize --endpoint https://myservice.cognitiveservices.azure.com/ \
+    --text "This uses my custom trained voice" \
+    --outputAudio custom-voice.wav \
+    --voice my-custom-voice-model
+    --endpointId my-custom-voice-endpoint-id
+```
 
 ### Azure App Configuration Operations
 
@@ -1323,12 +1426,41 @@ azmcp get bestpractices get --resource <resource> --action <action>
 
 ### Azure MCP Tools
 
+The `azmcp tools list` command provides flexible ways to explore and discover available tools in the Azure MCP server. It supports multiple modes and filtering options that can be combined for precise control over the output format and content.
+
+**Available Options:**
+- `--namespace-mode`: List only top-level service namespaces instead of individual tools
+- `--name-only`: Return only tool/namespace names without descriptions, options, or metadata
+- `--namespace <namespace>`: Filter results to specific namespace(s). Can be used multiple times to include multiple namespaces
+
+**Option Combinations:**
+- Use `--name-only` alone to get a simple list of all tool names
+- Use `--namespace-mode` alone to see available service namespaces with full details
+- Combine `--namespace-mode` and `--name-only` to get just the namespace names
+- Use `--namespace` with any other option to filter results to specific services
+- All options can be combined for maximum flexibility
+
 ```bash
 # List all available tools in the Azure MCP server
 azmcp tools list
 
 # List only the available top-level service namespaces
-azmcp tools list --namespaces
+azmcp tools list --namespace-mode
+
+# List only tool names without descriptions or metadata
+azmcp tools list --name-only
+
+# Filter tools by specific namespace(s)
+azmcp tools list --namespace storage
+azmcp tools list --namespace storage --namespace keyvault
+
+# Combine options: get namespace names only for specific namespaces
+azmcp tools list --namespace-mode --name-only
+azmcp tools list --namespace-mode --name-only --namespace storage
+
+# Combine options: get tool names only for specific namespace(s)
+azmcp tools list --name-only --namespace storage
+azmcp tools list --name-only --namespace storage --namespace keyvault
 ```
 
 ### Azure Monitor Operations
@@ -2042,7 +2174,7 @@ All responses follow a consistent JSON format:
 
 ### Tool and Namespace Result Objects
 
-When invoking `azmcp tools list` (with or without `--namespaces`), each returned object now includes a `count` field:
+When invoking `azmcp tools list` (with or without `--namespace-mode`), each returned object now includes a `count` field:
 
 | Field | Description |
 |-------|-------------|

@@ -65,7 +65,7 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         // Required validation step
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -90,7 +90,8 @@ public sealed class ActivityLogListCommand(ILogger<ActivityLogListCommand> logge
                 options.EventLevel,
                 options.Top ?? 10,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Return empty array if no results
             var activityLogs = results ?? [];

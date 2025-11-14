@@ -1,3 +1,5 @@
+.assets/
+.proxy/
 .dist/
 .work/
 tests/test-cmds.txt
@@ -19,3 +21,4 @@ node_modules/
 
 generated/
 /docs/commandline
+.DS_Store

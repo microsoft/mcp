@@ -453,6 +453,27 @@
             "processId": "${command:pickProcess}"
         },
         {
+            "name": "Start MCP Server from Command Line",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "program": "${workspaceFolder}/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp",
+            "args": [
+                "server",
+                "start",
+                "--mode",
+                "consolidated",
+                "--namespace",
+                "storage"
+            ],
+            "cwd": "${workspaceFolder}",
+            "console": "integratedTerminal",
+            "stopAtEntry": true,
+            "env": {
+                "DOTNET_ENVIRONMENT": "Development"
+            }
+        },
+        {
             "name": "Debug Cosmos Container Items Query",
             "type": "coreclr",
             "request": "launch",

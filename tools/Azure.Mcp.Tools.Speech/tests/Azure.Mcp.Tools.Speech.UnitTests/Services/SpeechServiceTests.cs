@@ -3,6 +3,8 @@
 
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Speech.Services;
+using Azure.Mcp.Tools.Speech.Services.Recognizers;
+using Azure.Mcp.Tools.Speech.Services.Synthesizers;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Xunit;
@@ -13,21 +15,27 @@ public class SpeechServiceTests
 {
     private readonly ITenantService _tenantService;
     private readonly ILogger<SpeechService> _logger;
+    private readonly IFastTranscriptionRecognizer _fastTranscriptionRecognizer;
+    private readonly IRealtimeTranscriptionRecognizer _realtimeTranscriptionRecognizer;
+    private readonly IRealtimeTtsSynthesizer _realtimeTtsSynthesizer;
     private readonly SpeechService _speechService;
 
     public SpeechServiceTests()
     {
         _tenantService = Substitute.For<ITenantService>();
         _logger = Substitute.For<ILogger<SpeechService>>();
+        _fastTranscriptionRecognizer = Substitute.For<IFastTranscriptionRecognizer>();
+        _realtimeTranscriptionRecognizer = Substitute.For<IRealtimeTranscriptionRecognizer>();
+        _realtimeTtsSynthesizer = Substitute.For<IRealtimeTtsSynthesizer>();
 
-        _speechService = new SpeechService(_tenantService, _logger);
+        _speechService = new SpeechService(_tenantService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
     }
 
     [Fact]
     public void Constructor_WithValidParameters_ShouldCreateInstance()
     {
         // Arrange & Act
-        var service = new SpeechService(_tenantService, _logger);
+        var service = new SpeechService(_tenantService, _logger, _fastTranscriptionRecognizer, _realtimeTranscriptionRecognizer, _realtimeTtsSynthesizer);
 
         // Assert
         Assert.NotNull(service);

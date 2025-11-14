@@ -4,6 +4,7 @@
 using System.Xml;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Models;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
@@ -13,8 +14,8 @@ using MetricResult = Azure.Mcp.Tools.Monitor.Models.MetricResult;
 
 namespace Azure.Mcp.Tools.Monitor.Services;
 
-public class MonitorMetricsService(IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService)
-    : BaseAzureService(), IMonitorMetricsService
+public class MonitorMetricsService(IResourceResolverService resourceResolverService, IMetricsQueryClientService metricsQueryClientService, ITenantService tenantService)
+    : BaseAzureService(tenantService), IMonitorMetricsService
 {
     private readonly IResourceResolverService _resourceResolverService = resourceResolverService ?? throw new ArgumentNullException(nameof(resourceResolverService));
     private readonly IMetricsQueryClientService _metricsQueryClientService = metricsQueryClientService ?? throw new ArgumentNullException(nameof(metricsQueryClientService));
@@ -32,13 +33,14 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? aggregation = null,
         string? filter = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName), (nameof(metricNamespace), metricNamespace));
         ArgumentNullException.ThrowIfNull(metricNames);
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy, cancellationToken);
 
         // Parse time range
         DateTimeOffset? startTimeOffset = null;
@@ -121,7 +123,8 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         var response = await client.QueryResourceAsync(
             resourceId,
             metricNames,
-            queryOptions);
+            queryOptions,
+            cancellationToken);
 
         // Convert response directly to compact format
         var results = new List<MetricResult>();
@@ -209,19 +212,20 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string? metricNamespace = null,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy, cancellationToken);
 
         // List metric definitions using the metrics query client
-        var response = client.GetMetricDefinitionsAsync(resourceId, metricNamespace);
+        var response = client.GetMetricDefinitionsAsync(resourceId, metricNamespace, cancellationToken);
 
         var results = new List<MetricDefinition>();
         var pages = response.AsPages();
-        await foreach (var page in pages)
+        await foreach (var page in pages.WithCancellation(cancellationToken))
         {
             foreach (Azure.Monitor.Query.Models.MetricDefinition definition in page.Values)
             {
@@ -276,19 +280,20 @@ public class MonitorMetricsService(IResourceResolverService resourceResolverServ
         string resourceName,
         string? searchString = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
-        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy);
-        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy);
+        var resourceId = await _resourceResolverService.ResolveResourceIdAsync(subscription, resourceGroup, resourceType, resourceName, tenant, retryPolicy, cancellationToken);
+        var client = await _metricsQueryClientService.CreateClientAsync(tenant, retryPolicy, cancellationToken);
 
         // List metric namespaces using the metrics query client
-        var response = client.GetMetricNamespacesAsync(resourceId);
+        var response = client.GetMetricNamespacesAsync(resourceId, cancellationToken);
 
         var results = new List<MetricNamespace>();
         var pages = response.AsPages();
-        await foreach (var page in pages)
+        await foreach (var page in pages.WithCancellation(cancellationToken))
         {
             foreach (Azure.Monitor.Query.Models.MetricNamespace ns in page.Values)
             {

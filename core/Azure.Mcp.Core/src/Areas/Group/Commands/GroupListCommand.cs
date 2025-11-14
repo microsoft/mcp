@@ -39,7 +39,7 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -54,7 +54,8 @@ public sealed class GroupListCommand(ILogger<GroupListCommand> logger) : Subscri
             var groups = await resourceGroupService.GetResourceGroups(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = groups?.Count > 0 ?
                 ResponseResult.Create(new Result(groups), GroupJsonContext.Default.Result) :

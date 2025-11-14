@@ -1,6 +1,6 @@
-using System.CommandLine;
 using System.Text.Json;
 using Azure.Mcp.Core.Models.Command;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.ConfidentialLedger.Commands.Entries;
 using Azure.Mcp.Tools.ConfidentialLedger.Models;
 using Azure.Mcp.Tools.ConfidentialLedger.Services;
@@ -35,7 +35,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199"]);
 
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);
@@ -55,7 +55,7 @@ public sealed class LedgerEntryGetCommandTests
     [InlineData("ledgerName", " ")]
     public async Task GetLedgerEntryAsync_ThrowsArgumentNullException_WhenParametersInvalid(string? ledgerName, string? transactionId)
     {
-        var service = new ConfidentialLedgerService();
+        var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
             service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
     }
@@ -82,7 +82,7 @@ public sealed class LedgerEntryGetCommandTests
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--transaction-id", "2.199", "--collection-id", "my-collection"]);
 
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

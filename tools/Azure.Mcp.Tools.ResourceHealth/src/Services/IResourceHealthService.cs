@@ -17,7 +17,8 @@ public interface IResourceHealthService
     /// <exception cref="Exception">When the service request fails</exception>
     Task<AvailabilityStatus> GetAvailabilityStatusAsync(
         string resourceId,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists availability statuses for all resources in a subscription or resource group.
@@ -32,7 +33,8 @@ public interface IResourceHealthService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Lists service health events affecting Azure services and subscriptions.
@@ -57,5 +59,6 @@ public interface IResourceHealthService
         string? queryStartTime = null,
         string? queryEndTime = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

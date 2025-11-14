@@ -142,7 +142,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         try
         {
-            if (learn && string.IsNullOrEmpty(command))
+            if (learn)
             {
                 return await InvokeToolLearn(request, intent ?? "", tool, cancellationToken);
             }

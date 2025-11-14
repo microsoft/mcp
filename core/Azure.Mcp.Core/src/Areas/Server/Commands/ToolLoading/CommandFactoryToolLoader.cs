@@ -8,7 +8,6 @@ using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Elicitation;
-using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
@@ -24,7 +23,7 @@ public sealed class CommandFactoryToolLoader(
     IServiceProvider serviceProvider,
     CommandFactory commandFactory,
     IOptions<ToolLoaderOptions> options,
-    ILogger<CommandFactoryToolLoader> logger) : IToolLoader
+    ILogger<CommandFactoryToolLoader> logger) : BaseToolLoader(logger)
 {
     private readonly IServiceProvider _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
     private readonly CommandFactory _commandFactory = commandFactory;
@@ -33,7 +32,6 @@ public sealed class CommandFactoryToolLoader(
         (options.Value.Namespace == null || options.Value.Namespace.Length == 0)
             ? commandFactory.AllCommands
             : commandFactory.GroupCommands(options.Value.Namespace);
-    private readonly ILogger<CommandFactoryToolLoader> _logger = logger;
 
     public const string RawMcpToolInputOptionName = "raw-mcp-tool-input";
 
@@ -61,7 +59,7 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="request">The request context containing parameters and metadata.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A result containing the list of available tools.</returns>
-    public ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
+    public override ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
         var visibleCommands = CommandFactory.GetVisibleCommands(_toolCommands);
 
@@ -93,7 +91,7 @@ public sealed class CommandFactoryToolLoader(
     /// <param name="request">The request context containing parameters and metadata.</param>
     /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>The result of the tool call operation.</returns>
-    public async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
+    public override async ValueTask<CallToolResult> CallToolHandler(RequestContext<CallToolRequestParams> request, CancellationToken cancellationToken)
     {
         if (request.Params == null)
         {
@@ -150,66 +148,23 @@ public sealed class CommandFactoryToolLoader(
                 IsError = true,
             };
         }
+        activity?.SetTag(TagName.ToolId, command.Id);
         var commandContext = new CommandContext(_serviceProvider, activity);
 
         // Check if this tool requires elicitation for sensitive data
         var metadata = command.Metadata;
         if (metadata.Secret)
         {
-            // Check if elicitation is disabled by insecure option
-            if (_options.Value.InsecureDisableElicitation)
+            var elicitationResult = await HandleSecretElicitationAsync(
+                request,
+                toolName,
+                _options.Value.InsecureDisableElicitation,
+                _logger,
+                cancellationToken);
+
+            if (elicitationResult != null)
             {
-                _logger.LogWarning("Tool '{Tool}' handles sensitive data but elicitation is disabled via --insecure-disable-elicitation. Proceeding without user consent (INSECURE).", toolName);
-            }
-            else
-            {
-                // If client doesn't support elicitation, treat as rejected and don't execute
-                if (!request.Server.SupportsElicitation())
-                {
-                    _logger.LogWarning("Tool '{Tool}' handles sensitive data but client does not support elicitation. Operation rejected.", toolName);
-                    return new CallToolResult
-                    {
-                        Content = [new TextContentBlock { Text = "This tool handles sensitive data and requires user consent, but the client does not support elicitation. Operation rejected for security." }],
-                        IsError = true
-                    };
-                }
-
-                try
-                {
-                    _logger.LogInformation("Tool '{Tool}' handles sensitive data. Requesting user confirmation via elicitation.", toolName);
-
-                    // Create the elicitation request using our custom model
-                    var elicitationRequest = new ElicitationRequestParams
-                    {
-                        Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
-                        RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
-                    };
-
-                    // Use our extension method to handle the elicitation
-                    var elicitationResponse = await request.Server.RequestElicitationAsync(elicitationRequest, cancellationToken);
-
-                    if (elicitationResponse.Action != ElicitationAction.Accept)
-                    {
-                        _logger.LogInformation("User {Action} the elicitation for tool '{Tool}'. Operation not executed.",
-                            elicitationResponse.Action.ToString().ToLower(), toolName);
-                        return new CallToolResult
-                        {
-                            Content = [new TextContentBlock { Text = $"Operation cancelled by user ({elicitationResponse.Action.ToString().ToLower()})." }],
-                            IsError = true
-                        };
-                    }
-
-                    _logger.LogInformation("User accepted elicitation for tool '{Tool}'. Proceeding with execution.", toolName);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error during elicitation for tool '{Tool}': {Error}", toolName, ex.Message);
-                    return new CallToolResult
-                    {
-                        Content = [new TextContentBlock { Text = $"Elicitation failed for sensitive tool '{toolName}': {ex.Message}. Operation not executed for security." }],
-                        IsError = true
-                    };
-                }
+                return elicitationResult;
             }
         }
 
@@ -235,7 +190,7 @@ public sealed class CommandFactoryToolLoader(
 
         try
         {
-            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions);
+            var commandResponse = await command.ExecuteAsync(commandContext, commandOptions, cancellationToken);
             var jsonResponse = JsonSerializer.Serialize(commandResponse, ModelsJsonContext.Default.CommandResponse);
             var isError = commandResponse.Status < HttpStatusCode.OK || commandResponse.Status >= HttpStatusCode.Ambiguous;
 
@@ -330,9 +285,9 @@ public sealed class CommandFactoryToolLoader(
     /// Disposes resources owned by this tool loader.
     /// CommandFactoryToolLoader doesn't own external resources that need disposal.
     /// </summary>
-    public async ValueTask DisposeAsync()
+    protected override ValueTask DisposeAsyncCore()
     {
         // CommandFactoryToolLoader doesn't create or manage disposable resources
-        await ValueTask.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }

@@ -19,6 +19,7 @@ internal static class TelemetryConstants
         public const string MacAddressHash = "MacAddressHash";
         public const string ResourceHash = "AzResourceHash";
         public const string SubscriptionGuid = "AzSubscriptionGuid";
+        public const string ToolId = "ToolId";
         public const string ToolName = "ToolName";
         public const string ToolArea = "ToolArea";
         public const string ServerMode = "ServerMode";
@@ -29,7 +30,7 @@ internal static class TelemetryConstants
         public const string ToolCount = "ToolCount";
         public const string InsecureDisableElicitation = "InsecureDisableElicitation";
         public const string IsDebug = "IsDebug";
-        public const string EnableInsecureTransports = "EnableInsecureTransports";
+        public const string DangerouslyDisableHttpIncomingAuth = "DangerouslyDisableHttpIncomingAuth";
         public const string Tool = "Tool";
     }
 

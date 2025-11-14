@@ -53,7 +53,8 @@ public class AdminSettingsGetCommandTests
             Arg.Is(KnownVaultName),
             Arg.Is(KnownSubscriptionId),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns((GetSettingsResult)null!);
 
         var args = _commandDefinition.Parse([
@@ -61,7 +62,7 @@ public class AdminSettingsGetCommandTests
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
@@ -78,18 +79,21 @@ public class AdminSettingsGetCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error";
-        _keyVaultService.GetVaultSettings(
+        _keyVaultService
+            .GetVaultSettings(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>()).ThrowsAsync(new Exception(expectedError));
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
             "--vault", KnownVaultName,
             "--subscription", KnownSubscriptionId
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains(expectedError, response.Message);
@@ -103,44 +107,38 @@ public class AdminSettingsGetCommandTests
     [InlineData("", false, "Missing both")] // Missing both
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed, string expectedFailureReason = "")
     {
-        var originalSub = EnvironmentHelpers.GetAzureSubscriptionId();
-        try
+        if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
         {
-            if (args.Contains("--vault") && !args.Contains("--subscription") && shouldSucceed)
-            {
-                // Provide subscription via environment variable
-                EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
-            }
-            else if (!args.Contains("--subscription"))
-            {
-                // Ensure failure when subscription missing and not expected to succeed
-                EnvironmentHelpers.SetAzureSubscriptionId(null);
-            }
+            // Provide subscription via environment variable
+            EnvironmentHelpers.SetAzureSubscriptionId(KnownSubscriptionId);
+        }
+        else if (!args.Contains("--subscription"))
+        {
+            // Ensure failure when subscription missing and not expected to succeed
+            Assert.Null(EnvironmentHelpers.GetAzureSubscriptionId());
+        }
 
-            if (shouldSucceed)
-            {
-                // Service returns null result -> treated as empty settings
-                _keyVaultService.GetVaultSettings(
+        if (shouldSucceed)
+        {
+            // Service returns null result -> treated as empty settings
+            _keyVaultService
+                .GetVaultSettings(
                     Arg.Any<string>(),
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
-                    Arg.Any<RetryPolicyOptions?>())
-                    .Returns((GetSettingsResult)null!);
-            }
-
-            var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-            if (!shouldSucceed)
-            {
-                Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
-                Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
-            }
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
+                .Returns((GetSettingsResult)null!);
         }
-        finally
+
+        var parseResult = _commandDefinition.Parse(string.IsNullOrWhiteSpace(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (!shouldSucceed)
         {
-            EnvironmentHelpers.SetAzureSubscriptionId(originalSub);
+            Assert.Contains("required", response.Message, StringComparison.OrdinalIgnoreCase);
+            Console.WriteLine($"Validation failed as expected: {expectedFailureReason}");
         }
     }
 }

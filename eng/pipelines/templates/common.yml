@@ -29,7 +29,7 @@ resources:
   - repository: azure-sdk-build-tools
     type: git
     name: internal/azure-sdk-build-tools
-    ref: refs/tags/azure-sdk-build-tools_20250808.1
+    ref: refs/tags/azure-sdk-build-tools_20251112.1
 
 extends:
   template: /eng/pipelines/templates/1es-redirect.yml
@@ -112,7 +112,7 @@ extends:
         jobs:
         - template: /eng/pipelines/templates/jobs/sign-and-pack.yml
           parameters:
-            ServerName: ${{ parameters.ServerName }}
+            ServerMatrix: stageDependencies.Initialize.Initialize.outputs['CreateBuildInfo.serverMatrix']
             PackageDocker: ${{ parameters.PackageDocker }}
             PackageVSIX: ${{ parameters.PackageVSIX }}
 

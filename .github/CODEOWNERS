@@ -65,6 +65,12 @@
 # ServiceLabel: %tools-AppService
 # ServiceOwners:                       @ArthurMa1978 @weidongxu-microsoft 
 
+# PRLabel: %tools-AIBestPractices
+/tools/Azure.Mcp.Tools.AzureAIBestPractices/        @XiaofuHuang @microsoft/azure-mcp
+
+# ServiceLabel: %tools-AIBestPractices
+# ServiceOwners:                       @XiaofuHuang
+
 # PRLabel: %tools-BestPractices
 /tools/Azure.Mcp.Tools.AzureBestPractices/             @g2vinay @conniey @fanyang-mono @microsoft/azure-mcp
 
@@ -209,10 +215,10 @@
 # ServiceOwners:                       @qianwens @xiaofanzhou
 
 # PRLabel: %tools-LoadTesting
-/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @knarayanana @krchanda @johnsta @microsoft/azure-mcp
+/tools/Azure.Mcp.Tools.LoadTesting/    @nishtha489 @krisnaray @krishna1s @johnsta @microsoft/azure-mcp
 
 # ServiceLabel: %tools-LoadTesting
-# ServiceOwners:                       @nishtha489 @knarayanana @krchanda @johnsta
+# ServiceOwners:                       @nishtha489 @krisnaray @krishna1s @johnsta
 
 # PRLabel: %tools-VirtualDesktop
 /tools/Azure.Mcp.Tools.VirtualDesktop/ @vladimisms @microsoft/azure-mcp

@@ -3,6 +3,7 @@
 
 using Azure.Core;
 using Azure.Mcp.Core.Options;
+using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Tools.Monitor.Services;
 using Azure.Monitor.Query;
 using Azure.Monitor.Query.Models;
@@ -17,6 +18,7 @@ public class MonitorMetricsServiceTests
     private readonly IResourceResolverService _resourceResolverService;
     private readonly IMetricsQueryClientService _metricsQueryClientService;
     private readonly MetricsQueryClient _metricsQueryClient;
+    private readonly ITenantService _tenantService;
     private readonly MonitorMetricsService _service;
 
     private const string TestSubscription = "12345678-1234-1234-1234-123456789012";
@@ -31,7 +33,8 @@ public class MonitorMetricsServiceTests
         _resourceResolverService = Substitute.For<IResourceResolverService>();
         _metricsQueryClientService = Substitute.For<IMetricsQueryClientService>();
         _metricsQueryClient = Substitute.For<MetricsQueryClient>();
-        _service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        _tenantService = Substitute.For<ITenantService>();
+        _service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService, _tenantService);
 
         // Setup default behaviors
         _resourceResolverService.ResolveResourceIdAsync(
@@ -40,12 +43,14 @@ public class MonitorMetricsServiceTests
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(new ResourceIdentifier(TestResourceId));
 
         _metricsQueryClientService.CreateClientAsync(
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(_metricsQueryClient);
     }
 
@@ -55,7 +60,7 @@ public class MonitorMetricsServiceTests
     public void Constructor_WithValidParameters_Succeeds()
     {
         // Act & Assert - Constructor should not throw
-        var service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService);
+        var service = new MonitorMetricsService(_resourceResolverService, _metricsQueryClientService, _tenantService);
         Assert.NotNull(service);
     }
 
@@ -64,7 +69,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(null!, _metricsQueryClientService));
+            new MonitorMetricsService(null!, _metricsQueryClientService, _tenantService));
     }
 
     [Fact]
@@ -72,7 +77,7 @@ public class MonitorMetricsServiceTests
     {
         // Act & Assert
         Assert.Throws<ArgumentNullException>(() =>
-            new MonitorMetricsService(_resourceResolverService, null!));
+            new MonitorMetricsService(_resourceResolverService, null!, _tenantService));
     }
 
     #endregion
@@ -98,7 +103,8 @@ public class MonitorMetricsServiceTests
                 TestResourceName,
                 metricNamespace,
                 metricNames,
-                startTime: invalidStartTime));
+                startTime: invalidStartTime,
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid start time format", exception.Message);
     }
@@ -122,7 +128,8 @@ public class MonitorMetricsServiceTests
                 TestResourceName,
                 metricNamespace,
                 metricNames,
-                endTime: invalidEndTime));
+                endTime: invalidEndTime,
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid end time format", exception.Message);
     }
@@ -146,7 +153,8 @@ public class MonitorMetricsServiceTests
                 TestResourceName,
                 metricNamespace,
                 metricNames,
-                interval: invalidInterval));
+                interval: invalidInterval,
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Invalid interval format", exception.Message);
     }
@@ -168,7 +176,8 @@ public class MonitorMetricsServiceTests
             TestResourceType,
             TestResourceName,
             metricNamespace,
-            metricNames));
+            metricNames,
+            cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -188,7 +197,8 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 resourceName!,
                 metricNamespace,
-                metricNames)
+                metricNames,
+                cancellationToken: TestContext.Current.CancellationToken)
             );
     }
 
@@ -203,7 +213,8 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 TestResourceName,
                 "test-namespace",
-                null!));
+                null!,
+                cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -217,7 +228,8 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 TestResourceName,
                 null!,
-                ["Transactions"]));
+                ["Transactions"],
+                cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -232,7 +244,8 @@ public class MonitorMetricsServiceTests
                 Arg.Any<string?>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Resource not found"));
 
         // Act & Assert
@@ -243,7 +256,8 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 TestResourceName,
                 metricNamespace,
-                metricNames));
+                metricNames,
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Resource not found", exception.Message);
     }
@@ -256,7 +270,8 @@ public class MonitorMetricsServiceTests
         var metricNamespace = "Microsoft.Storage/storageAccounts";
         _metricsQueryClientService.CreateClientAsync(
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Authentication failed"));
 
         // Act & Assert
@@ -267,7 +282,8 @@ public class MonitorMetricsServiceTests
                 TestResourceType,
                 TestResourceName,
                 metricNamespace,
-                metricNames));
+                metricNames,
+                cancellationToken: TestContext.Current.CancellationToken));
 
         Assert.Contains("Authentication failed", exception.Message);
     }
@@ -286,7 +302,8 @@ public class MonitorMetricsServiceTests
                 subscription!,
                 TestResourceGroup,
                 TestResourceType,
-                TestResourceName));
+                TestResourceName,
+                cancellationToken: TestContext.Current.CancellationToken));
 
     }
 
@@ -300,7 +317,8 @@ public class MonitorMetricsServiceTests
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
-                resourceName!));
+                resourceName!,
+                cancellationToken: TestContext.Current.CancellationToken));
 
     }
 
@@ -319,7 +337,8 @@ public class MonitorMetricsServiceTests
                 subscription!,
                 TestResourceGroup,
                 TestResourceType,
-                TestResourceName));
+                TestResourceName,
+                cancellationToken: TestContext.Current.CancellationToken));
     }
 
     [Theory]
@@ -333,7 +352,8 @@ public class MonitorMetricsServiceTests
                 TestSubscription,
                 TestResourceGroup,
                 TestResourceType,
-                resourceName!));
+                resourceName!,
+                cancellationToken: TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -360,7 +380,8 @@ public class MonitorMetricsServiceTests
             TestResourceType,
             TestResourceName,
             metricNamespace,
-            metricNames);
+            metricNames,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -398,7 +419,8 @@ public class MonitorMetricsServiceTests
             metricNamespace,
             metricNames,
             startTime: startTime,
-            endTime: endTime);
+            endTime: endTime,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(capturedOptions);
@@ -432,7 +454,8 @@ public class MonitorMetricsServiceTests
             TestResourceName,
             metricNamespace,
             metricNames,
-            interval: interval);
+            interval: interval,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(capturedOptions);
@@ -464,7 +487,8 @@ public class MonitorMetricsServiceTests
             TestResourceName,
             metricNamespace,
             metricNames,
-            aggregation: aggregation);
+            aggregation: aggregation,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(capturedOptions);
@@ -498,7 +522,8 @@ public class MonitorMetricsServiceTests
             TestResourceName,
             metricNamespace,
             metricNames,
-            tenant: TestTenant);
+            tenant: TestTenant,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         await _resourceResolverService.Received(1).ResolveResourceIdAsync(
@@ -507,7 +532,8 @@ public class MonitorMetricsServiceTests
             TestResourceType,
             TestResourceName,
             TestTenant,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -533,12 +559,14 @@ public class MonitorMetricsServiceTests
             TestResourceName,
             metricNamespace,
             metricNames,
-            tenant: TestTenant);
+            tenant: TestTenant,
+            cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         await _metricsQueryClientService.Received(1).CreateClientAsync(
             TestTenant,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     #endregion

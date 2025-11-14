@@ -4,7 +4,6 @@
 using System.CommandLine;
 using System.Net;
 using System.Text.Json;
-using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Storage.Commands;
@@ -62,7 +61,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -94,7 +93,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -125,7 +124,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -149,49 +148,32 @@ public class AccountGetCommandTests
     [InlineData("--account mystorageaccount", false)] // Missing subscription
     public async Task ExecuteAsync_ValidatesInputCorrectly(string args, bool shouldSucceed)
     {
-        // Arrange
-        var originalSubscriptionEnv = EnvironmentHelpers.GetAzureSubscriptionId();
-
-        try
+        if (shouldSucceed)
         {
-            // Clear environment variable for failing test cases to ensure proper validation
-            if (!shouldSucceed && !args.Contains("--subscription"))
-            {
-                EnvironmentHelpers.SetAzureSubscriptionId(null);
-            }
+            var expectedAccount = new List<Models.StorageAccountInfo> {
+                new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
+            };
 
-            if (shouldSucceed)
-            {
-                var expectedAccount = new List<Models.StorageAccountInfo> {
-                    new ("mystorageaccount", "eastus", "StorageV2", "Standard_LRS", "Standard", true, "Succeeded", DateTimeOffset.UtcNow, true, true)
-                };
-
-                _storageService.GetAccountDetails(
-                    Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
-                    .Returns(Task.FromResult(expectedAccount));
-            }
-
-            var parseResult = _commandDefinition.Parse(args);
-
-            // Act
-            var response = await _command.ExecuteAsync(_context, parseResult);
-
-            // Assert
-            Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
-            if (shouldSucceed)
-            {
-                Assert.NotNull(response.Results);
-                Assert.Equal("Success", response.Message);
-            }
-            else
-            {
-                Assert.Contains("required", response.Message.ToLower());
-            }
+            _storageService.GetAccountDetails(
+                Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+                .Returns(Task.FromResult(expectedAccount));
         }
-        finally
+
+        var parseResult = _commandDefinition.Parse(args);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
+
+        // Assert
+        Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
+        if (shouldSucceed)
         {
-            // Restore original environment variable
-            EnvironmentHelpers.SetAzureSubscriptionId(originalSubscriptionEnv);
+            Assert.NotNull(response.Results);
+            Assert.Equal("Success", response.Message);
+        }
+        else
+        {
+            Assert.Contains("required", response.Message.ToLower());
         }
     }
 
@@ -212,7 +194,7 @@ public class AccountGetCommandTests
         var args = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -244,7 +226,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -266,7 +248,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -287,7 +269,7 @@ public class AccountGetCommandTests
         var parseResult = _commandDefinition.Parse(["--account", account, "--subscription", subscription]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);

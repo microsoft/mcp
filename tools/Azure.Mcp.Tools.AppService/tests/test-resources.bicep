@@ -136,26 +136,6 @@ resource sqlServer 'Microsoft.Sql/servers@2023-05-01-preview' = {
   }
 }
 
-// SQL DB Contributor role definition
-resource sqlDbContributorRoleDefinition 'Microsoft.Authorization/roleDefinitions@2018-01-01-preview' existing = {
-  scope: subscription()
-  // This is the SQL DB Contributor role
-  // Lets you manage SQL databases, but not access to them
-  // See https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles#sql-db-contributor
-  name: '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec'
-}
-
-// Role assignment for test application
-resource appSqlRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(sqlDbContributorRoleDefinition.id, testApplicationOid, sqlServer.id)
-  scope: sqlServer
-  properties: {
-    principalId: testApplicationOid
-    roleDefinitionId: sqlDbContributorRoleDefinition.id
-    description: 'SQL DB Contributor for testApplicationOid'
-  }
-}
-
 // Cosmos DB Account
 resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
   name: cosmosAccountName
@@ -240,6 +220,7 @@ resource cosmosAccount 'Microsoft.DocumentDB/databaseAccounts@2024-11-15' = {
 }
 
 // Role assignment for test application - Web App Contributor
+// See https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#website-contributor
 resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(webApp.id, testApplicationOid, 'de139f84-1756-47ae-9be6-808fbbe84772')
   scope: webApp
@@ -250,6 +231,7 @@ resource webAppContributorRoleAssignment 'Microsoft.Authorization/roleAssignment
 }
 
 // Role assignment for test application - SQL DB Contributor
+// See https://learn.microsoft.com/azure/role-based-access-control/built-in-roles#sql-db-contributor
 resource sqlContributorRoleAssignment 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   name: guid(sqlServer.id, testApplicationOid, '9b7fa17d-e63e-47b0-bb0a-15c516ac86ec')
   scope: sqlServer
@@ -270,4 +252,3 @@ output cosmosAccountName string = cosmosAccount.name
 output cosmosDatabaseName string = cosmosDatabaseName
 output cosmosConnectionString string = 'AccountEndpoint=${cosmosAccount.properties.documentEndpoint};AccountKey=${cosmosAccount.listKeys().primaryMasterKey};Database=${cosmosDatabaseName};'
 output baseName string = baseName
-output location string = 'westus2'

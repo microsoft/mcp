@@ -65,13 +65,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Any<AuthMethod?>(),
                 TestTenant,
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --tenant {TestTenant}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -85,7 +86,8 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Any<AuthMethod?>(),
             TestTenant,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -94,7 +96,7 @@ public class EntityGetHealthCommandTests
         var args = _commandDefinition.Parse($"--health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -109,7 +111,8 @@ public class EntityGetHealthCommandTests
             Arg.Any<string>(),
             Arg.Any<AuthMethod?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -124,13 +127,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Any<AuthMethod?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<JsonNode>(new KeyNotFoundException("Entity not found")));
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -144,7 +148,8 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Any<AuthMethod?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -159,13 +164,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Any<AuthMethod?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<JsonNode>(new ArgumentException("Invalid health model format")));
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -179,7 +185,8 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Any<AuthMethod?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -195,13 +202,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Any<AuthMethod?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(Task.FromException<JsonNode>(new Exception(expectedError)));
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -215,7 +223,8 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Any<AuthMethod?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -233,13 +242,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --auth-method {authMethod}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -252,7 +262,8 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Is<AuthMethod>(a => a == AuthMethod.Credential),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -271,13 +282,14 @@ public class EntityGetHealthCommandTests
                 TestSubscription,
                 Arg.Any<AuthMethod?>(),
                 Arg.Any<string>(),
-                Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries))
+                Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries),
+                Arg.Any<CancellationToken>())
             .Returns(mockResponse);
 
         var args = _commandDefinition.Parse($"--entity {TestEntity} --health-model {TestHealthModel} --resource-group {TestResourceGroup} --subscription {TestSubscription} --retry-delay {RetryDelay} --retry-max-retries {MaxRetries}");
 
         // Act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -290,6 +302,7 @@ public class EntityGetHealthCommandTests
             TestSubscription,
             Arg.Any<AuthMethod?>(),
             Arg.Any<string>(),
-            Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries));
+            Arg.Is<RetryPolicyOptions>(r => r.DelaySeconds == RetryDelay && r.MaxRetries == MaxRetries),
+            Arg.Any<CancellationToken>());
     }
 }

@@ -52,7 +52,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -64,7 +66,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -96,7 +98,7 @@ public class ResourceDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
-        ]));
+        ]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -112,7 +114,7 @@ public class ResourceDiagnoseCommandTests
             "--subscription", "sub123",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
-        ]));
+        ]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -128,7 +130,7 @@ public class ResourceDiagnoseCommandTests
             "--resource", "myapp",
             "--resource-group", "rg1",
             "--resource-type", "Microsoft.Web/sites"
-        ]));
+        ]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -144,7 +146,7 @@ public class ResourceDiagnoseCommandTests
             "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-type", "Microsoft.Web/sites"
-        ]));
+        ]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -160,7 +162,7 @@ public class ResourceDiagnoseCommandTests
             "--resource", "myapp",
             "--subscription", "sub123",
             "--resource-group", "rg1"
-        ]));
+        ]), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -176,7 +178,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Service error"));
 
         var args = _command.GetCommand().Parse([
@@ -188,7 +192,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -204,7 +208,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
         var args = _command.GetCommand().Parse([
@@ -216,7 +222,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -232,7 +238,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
 
         var args = _command.GetCommand().Parse([
@@ -244,7 +252,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.ServiceUnavailable, response.Status);
@@ -267,7 +275,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -279,7 +289,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -322,7 +332,7 @@ public class ResourceDiagnoseCommandTests
         var parseResult = _command.GetCommand().Parse(args.ToArray());
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -345,7 +355,9 @@ public class ResourceDiagnoseCommandTests
             "myapp",
             "sub123",
             "rg1",
-            "Microsoft.Web/sites")
+            "Microsoft.Web/sites",
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var args = _command.GetCommand().Parse([
@@ -357,7 +369,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         _logger.Received(1).Log(
@@ -377,7 +389,9 @@ public class ResourceDiagnoseCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var args = _command.GetCommand().Parse([
@@ -389,7 +403,7 @@ public class ResourceDiagnoseCommandTests
         ]);
 
         // Act
-        await _command.ExecuteAsync(_context, args);
+        await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         _logger.Received(1).Log(
