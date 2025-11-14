@@ -8,8 +8,14 @@ namespace Azure.Mcp.Tools.Postgres.Options;
 
 public class BasePostgresOptions : SubscriptionOptions
 {
+    [JsonPropertyName(PostgresOptionDefinitions.AuthTypeText)]
+    public string? AuthType { get; set; }
+
     [JsonPropertyName(PostgresOptionDefinitions.UserName)]
     public string? User { get; set; }
+
+    [JsonPropertyName(PostgresOptionDefinitions.PasswordText)]
+    public string? Password { get; set; }
 
     [JsonPropertyName(PostgresOptionDefinitions.ServerName)]
     public string? Server { get; set; }
