@@ -128,12 +128,12 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 Parameters = BinaryData.FromString(parametersJson)
             };
 
-            // await resourceGroupResource.Value.GetArmDeployments()
-            //     .CreateOrUpdateAsync(
-            //     WaitUntil.Started,
-            //     $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-            //     new ArmDeploymentContent(deploymentProperties)
-            // );
+            await resourceGroupResource.Value.GetArmDeployments()
+                .CreateOrUpdateAsync(
+                WaitUntil.Started,
+                $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
+                new ArmDeploymentContent(deploymentProperties)
+            );
 
             return new Resource
             {
