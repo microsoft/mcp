@@ -73,15 +73,12 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityName) => StartActivityInternal(activityName, null, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity<T>(string activityName, RequestContext<T> request) where T : RequestParams
-        => StartActivityInternal(activityName, request.Server.ClientInfo, request.Params?.Meta);
-
-    private Activity? StartActivityInternal(string activityName, Implementation? clientInfo, JsonObject? meta)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo)
     {
         if (!_isEnabled)
         {
@@ -106,20 +103,6 @@ internal class TelemetryService : ITelemetryService
         activity.AddTag(TagName.EventId, Guid.NewGuid().ToString());
 
         _tagsList.ForEach(kvp => activity.AddTag(kvp.Key, kvp.Value));
-
-        if (meta != null)
-        {
-            var vsCodeConversationIdNode = meta["vscode.conversationId"];
-            if (vsCodeConversationIdNode != null && vsCodeConversationIdNode.GetValueKind() == JsonValueKind.String)
-            {
-                activity.AddTag(TagName.VSCodeConversationId, vsCodeConversationIdNode.GetValue<string>());
-            }
-            var vsCodeRequestIdNode = meta["vscode.requestId"];
-            if (vsCodeRequestIdNode != null && vsCodeRequestIdNode.GetValueKind() == JsonValueKind.String)
-            {
-                activity.AddTag(TagName.VSCodeRequestId, vsCodeRequestIdNode.GetValue<string>());
-            }
-        }
 
         return activity;
     }

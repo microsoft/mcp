@@ -1,15 +1,12 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System.ComponentModel;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
-using ModelContextProtocol.Server;
 using NSubstitute;
 using Xunit;
 
@@ -66,20 +63,14 @@ public class TelemetryServiceTests
         _testConfiguration.IsTelemetryEnabled = false;
         using var service = new TelemetryService(_mockInformationProvider, _mockOptions, _mockServiceOptions, _logger);
         const string activityId = "test-activity";
-        var mcpServer = Substitute.For<McpServer>();
-        mcpServer.ClientInfo.Returns(new Implementation
+        var clientInfo = new Implementation
         {
             Name = "TestClient",
             Version = "2.0.0"
-        });
-        var request = new RequestContext<ListToolsRequestParams>(mcpServer, new JsonRpcRequest
-        {
-            Method = "tools/list",
-            Params = new JsonObject()
-        });
+        };
 
         // Act
-        using var activity = service.StartActivity(activityId, request);
+        using var activity = service.StartActivity(activityId, clientInfo);
 
         // Assert
         Assert.Null(activity);
@@ -200,19 +191,13 @@ public class TelemetryServiceTests
         // Test both overloads.
         Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id"));
 
-        var mcpServer = Substitute.For<McpServer>();
-        mcpServer.ClientInfo.Returns(new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
             Title = "Test MCP server"
-        });
-        var request = new RequestContext<ListToolsRequestParams>(mcpServer, new JsonRpcRequest
-        {
-            Method = "tools/list",
-            Params = new JsonObject()
-        });
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", request));
+        };
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
@@ -231,25 +216,19 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        var mcpServer = Substitute.For<McpServer>();
-        mcpServer.ClientInfo.Returns(new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
             Title = "Test MCP server"
-        });
-        var request = new RequestContext<ListToolsRequestParams>(mcpServer, new JsonRpcRequest
-        {
-            Method = "tools/list",
-            Params = new JsonObject()
-        });
+        };
 
         // Act & Assert
         using var service = new TelemetryService(informationProvider, mockOptions, _mockServiceOptions, _logger);
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", request));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
