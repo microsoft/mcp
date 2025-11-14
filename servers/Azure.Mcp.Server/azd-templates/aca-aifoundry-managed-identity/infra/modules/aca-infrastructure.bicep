@@ -50,6 +50,9 @@ var baseArgs = [
   // Deleting '--read-only' will remove this restriction and enable tools that can create, modify, or delete Azure resources,
   // do so with caution, and ensure that access is granted only to trusted agents.
   '--read-only'
+  // SECURITY NOTE: Never add '--dangerously-disable-http-incoming-auth'.
+  // This flag disables Entra ID authentication for incoming requests, allowing unauthenticated access to the MCP server.
+  // This would permit anyone to execute Azure operations using the Container App's managed identity, bypassing all access controls.
 ]
 var namespaceArgs = [for ns in namespaces: ['--namespace', ns]]
 var serverArgs = flatten(concat([baseArgs], namespaceArgs))
@@ -77,6 +80,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: true
         targetPort: 8080
+        // SECURITY NOTE: allowInsecure is set to false to enforce HTTPS-only external access.
+        // Never set this to true as that will allow plain HTTP traffic, exposing sensitive data such as access tokens to interception.
         allowInsecure: false
         transport: 'http'
         traffic: [
@@ -134,6 +139,16 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               name: 'AZURE_LOG_LEVEL'
               value: 'Verbose'
+            }
+            // SECURITY NOTE: AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION is set to 'true' because the Azure MCP Server 
+            // listens on HTTP 'internally' within the Container App pod (port 8080). 'External' traffic is HTTPS-only (allowInsecure=false),
+            // and the Container Apps Envoy proxy terminates HTTPS at the ingress boundary, then routes to the container over HTTP 
+            // within the secure pod network namespace. This HTTP traffic never leaves the pod, ensuring end-to-end encryption for 
+            // external communication while allowing efficient internal routing.
+            // See https://learn.microsoft.com/en-us/azure/container-apps/ingress-overview
+            {
+              name: 'AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION'
+              value: 'true'
             }
           ], !empty(appInsightsConnectionString) ? [
             {
