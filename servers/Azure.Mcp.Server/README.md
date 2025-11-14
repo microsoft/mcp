@@ -16,7 +16,6 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 
 <!-- remove-section: end remove_install_links -->
-
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
@@ -30,7 +29,10 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end remove_installation_sub_sections -->
+        - [Docker](#docker)
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+        - [Microsoft Foundry](#microsoft-foundry)
+        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -105,6 +107,9 @@ Install Azure MCP Server using either an IDE extension or package manager. Choos
 > [!IMPORTANT]  
 > Authenticate to Azure before running the Azure MCP server. See the [Authentication guide](https://github.com/microsoft/mcp/blob/main/docs/Authentication.md) for authentication methods and instructions.
 
+
+## Local MCP Server Installation
+
 ## IDE
 
 Start using Azure MCP with your favorite IDE.  We recommend VS Code:
@@ -118,7 +123,7 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
 1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
 
-### Visual Studio 2026
+## Visual Studio 2026
 1. Download [Visual Studio 2026](https://visualstudio.microsoft.com/) or [Visual Studio 2026 Insiders](https://visualstudio.microsoft.com/insiders/) and install using the **Visual Studio Installer**.
     - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
 1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
@@ -156,7 +161,7 @@ Use one of the following options to configure your `mcp.json`:
 <!-- remove-section: end remove_ide_sub_section -->
 <!-- remove-section: start npm remove_dotnet_config_sub_section -->
 <!-- remove-section: start nuget remove_dotnet_config_sub_header -->
-#### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
+### Option 1: Configure using .NET tool (dnx)<!-- remove-section: end remove_dotnet_config_sub_header -->
 - To use Azure MCP server from .NET, you must have [.NET 10 Preview 6 or later](https://dotnet.microsoft.com/download/dotnet/10.0) installed. This version of .NET adds a command, dnx, which is used to download, install, and run the MCP server from [nuget.org](https://www.nuget.org).
 To verify the .NET version, run the following command in the terminal: `dotnet --info`
 -  Configure the `mcp.json` file with the following:
@@ -289,14 +294,14 @@ To understand how platform-specific binaries are installed with @azure/mcp, revi
 
 </details>
 
-### Docker
+#### Docker
 
 Run the Azure MCP server as a Docker container for easy deployment and isolation. The container image is available at [mcr.microsoft.com/azure-sdk/azure-mcp](https://mcr.microsoft.com/artifact/mar/azure-sdk/azure-mcp).
 
 <details>
 <summary>Docker instructions</summary>
 
-#### Create an env file with Azure credentials
+##### Create an env file with Azure credentials
 
 1. Create a `.env` file with Azure credentials ([see EnvironmentCredential options](https://learn.microsoft.com/dotnet/api/azure.identity.environmentcredential)):
 
@@ -331,6 +336,21 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 <!-- remove-section: end remove_package_manager_section -->
+
+## Remote MCP Server (preview)
+
+The Microsoft Foundry and the Microsoft Copilot Studio Agent Platforms only accept a remote MCP server endpoint.  To use tools from Azure MCP server with either of these agent platforms, first self-host the MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview) to get a remote MCP server endpoint.
+
+The instructions below give more details on how to deploy the Azure MCP Server 2.0-beta (preview) as a remote MCP server accessible over HTTPS:
+
+### Microsoft Foundry
+
+- Review the guidance for [setting up Azure MCP Server for Microsoft Foundry](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity).
+- Review the guidance [here](https://learn.microsoft.com/en-us/azure/ai-foundry/agents/how-to/tools/model-context-protocol), for more details on Azure Foundry's preview support for connecting to remote MCP servers.
+
+### Microsoft Copilot Studio
+- Review the guidance for [setting up Azure MCP Server for Microsoft Copilot Studio](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity).
+
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
