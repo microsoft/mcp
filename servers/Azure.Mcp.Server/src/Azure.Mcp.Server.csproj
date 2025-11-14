@@ -7,6 +7,7 @@
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+    <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
 
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>
