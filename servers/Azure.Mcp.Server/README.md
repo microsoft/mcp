@@ -336,18 +336,16 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Remote MCP Server (preview)
 
-The Microsoft Foundry and the Microsoft Copilot Studio Agent Platforms only accept a remote MCP server endpoint.  To use tools from Azure MCP server with either of these agent platforms, first self-host the MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview) to get a remote MCP server endpoint.
-
-The instructions below give more details on how to deploy the Azure MCP Server 2.0-beta (preview) as a remote MCP server accessible over HTTPS:
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To use Azure MCP Server tools with these platforms, deploy the server to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
 ### Microsoft Foundry
 
-- Review the guidance for [setting up Azure MCP Server for Microsoft Foundry](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity).
-- Review the guidance [here](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol), for more details on Azure Foundry's preview support for connecting to remote MCP servers.
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/)
+2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for connection details
 
 ### Microsoft Copilot Studio
-- Review the guidance for [setting up Azure MCP Server for Microsoft Copilot Studio](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity).
 
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/)
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
