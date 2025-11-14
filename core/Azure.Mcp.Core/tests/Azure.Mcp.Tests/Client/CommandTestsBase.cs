@@ -55,7 +55,7 @@ public abstract class CommandTestsBase(ITestOutputHelper output) : IAsyncLifetim
 
         // if the user has set to playback in LiveTestSettings, they're
         // intentionally checking playback mode, load the playback settings
-        // and ignore what we got from the .livetestsettings file
+        // and ignore what we got from the .testsettings.json file
         if (Settings.TestMode == TestMode.Playback)
         {
             Settings = PlaybackSettings;
