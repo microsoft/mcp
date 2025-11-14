@@ -21,6 +21,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
   - Enabled telemetry collection for the HTTP transport mode.
   - Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams.
   - Added the `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default).
+- Added `redis_create` command to create new Redis resources. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
 
 ### Breaking Changes
 
