@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
@@ -35,7 +36,7 @@ public static class OpenTelemetryExtensions
                 var entryAssembly = Assembly.GetEntryAssembly();
                 if (entryAssembly != null)
                 {
-                    options.Version = GetServerVersion(entryAssembly);
+                    options.Version = AssemblyHelper.GetServerVersion(entryAssembly);
                 }
 
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
@@ -138,34 +139,6 @@ public static class OpenTelemetryExtensions
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
     }
-
-    /// <summary>
-    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
-    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
-    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
-    /// </summary>
-    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
-    /// <returns>A version string.</returns>
-    public static string GetServerVersion(Assembly entryAssembly)
-    {
-        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        if (versionAttribute == null)
-        {
-            throw new InvalidOperationException(
-                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
-        }
-
-        string version = versionAttribute.InformationalVersion;
-
-        int hashSeparator = version.IndexOf('+');
-        if (hashSeparator != -1)
-        {
-            version = version.Substring(0, hashSeparator);
-        }
-
-        return version;
-    }
-
 
     private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
     {

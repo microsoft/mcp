@@ -2,10 +2,8 @@
 // Licensed under the MIT License.
 
 using System.Net;
-using System.Reflection;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Extensions;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
@@ -44,10 +42,6 @@ internal class Program
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();
             var rootCommand = commandFactory.RootCommand;
             var parseResult = rootCommand.Parse(args);
-            if (args.Any(arg => arg == "-h" || arg == "--help" || arg == "-?"))
-            {
-                DisplayServerVersion();
-            }
             var status = await parseResult.InvokeAsync();
 
             if (status == 0)
@@ -67,28 +61,6 @@ internal class Program
             });
             return 1;
         }
-    }
-
-    private static void DisplayServerVersion()
-    {
-        var assembly = Assembly.GetEntryAssembly();
-        string version = "unknown";
-
-        if (assembly != null)
-        {
-            try
-            {
-                version = OpenTelemetryExtensions.GetServerVersion(assembly);
-            }
-            catch
-            {
-                // If version retrieval fails, fall back to "unknown"
-            }
-        }
-
-        var title = assembly?.GetCustomAttribute<AssemblyTitleAttribute>()?.Title ?? "Azure MCP Server";
-        Console.WriteLine($"{title} {version}");
-        Console.WriteLine();
     }
 
     private static IAreaSetup[] RegisterAreas()

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Help;
+using System.CommandLine.Invocation;
 using System.Diagnostics;
 using System.Net;
 using System.Reflection;
@@ -236,6 +237,8 @@ public class CommandFactory
         // RootCommand title/description comes from the root group
         var root = new RootCommand(_rootGroup.Description);
 
+        CustomizeHelpOption(root);
+
         // Register area groups and their commands
         RegisterCommandGroup();
 
@@ -245,9 +248,23 @@ public class CommandFactory
             ConfigureCommands(subGroup);
             root.Subcommands.Add(subGroup.Command);
             subGroup.Command.Options.Add(new HelpOption());
+            
+            CustomizeHelpOption(subGroup.Command);
         }
 
         return root;
+    }
+
+    private static void CustomizeHelpOption(Command command)
+    {
+        for (int i = 0; i < command.Options.Count; i++)
+        {
+            if (command.Options[i] is HelpOption helpOption && helpOption.Action is HelpAction helpAction)
+            {
+                helpOption.Action = new VersionDisplayHelpAction(helpAction);
+                break;
+            }
+        }
     }
 
     private static IBaseCommand? FindCommandInGroup(CommandGroup group, Queue<string> nameParts)
