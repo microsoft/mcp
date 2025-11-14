@@ -20,7 +20,7 @@ public interface ITelemetryService : IDisposable
     /// Creates and starts a new telemetry activity.
     /// </summary>
     /// <param name="activityName">Name of the activity.</param>
-    /// <param name="clientInfo">MCP client information to add to the activity.</param>
+    /// <param name="clientInfo">The MCP client information to add to the activity.</param>
     /// <returns>An Activity object or null if there are no active listeners or telemetry is disabled.</returns>
     /// <exception cref="InvalidOperationException">If the service is not in an operational state or <see cref="InitializeAsync"/> was not invoked.</exception>
     Activity? StartActivity(string activityName, Implementation? clientInfo);
