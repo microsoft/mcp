@@ -103,8 +103,6 @@ jobs:
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
-  # todo: publish the recorded test results separately from unit test results
-
   - task: PublishTestResults@2
     displayName: "Publish Results"
     condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
