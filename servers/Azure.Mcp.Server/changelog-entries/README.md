@@ -88,7 +88,9 @@ If you prefer to create the file manually:
 - `Bugs Fixed` - Bug fixes
 - `Other Changes` - Everything else (dependency updates, refactoring, etc.)
 
-### Example Entry
+### Example Entries
+
+**Simple entry:**
 
 **Filename:** `1731260400123.yml`
 
@@ -98,6 +100,27 @@ description: "Added support for User-Assigned Managed Identity via the `AZURE_CL
 subsection: null
 pr: 1033
 ```
+
+**Multi-line entry with a list:**
+
+**Filename:** `1731260401234.yml`
+
+```yaml
+section: "Features Added"
+description: |
+  Added new AI Foundry tools:
+  - foundry_agents_create: Create a new AI Foundry agent
+  - foundry_threads_create: Create a new AI Foundry Agent Thread
+  - foundry_threads_list: List all AI Foundry Agent Threads
+subsection: null
+pr: 945
+```
+
+**Note:** When using multi-line descriptions with the `|` block scalar:
+- The first line becomes the main bullet point
+- If the following lines are bullet items (`- item`), they'll be automatically indented as sub-bullets
+- The PR link is added to the last line
+- Trailing newlines are automatically handled
 
 ## Workflow
 

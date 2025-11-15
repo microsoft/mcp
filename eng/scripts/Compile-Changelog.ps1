@@ -90,15 +90,67 @@ function Format-ChangelogEntry {
         [int]$PR
     )
     
-    # Ensure description ends with a period
-    $formattedDescription = $Description
-    if (-not $formattedDescription.EndsWith(".")) {
-        $formattedDescription += "."
+    # Check if description contains multiple lines
+    if ($Description.Contains("`n")) {
+        # Remove trailing newlines from YAML block scalars
+        $cleanedDescription = $Description.TrimEnd("`n", "`r")
+        $lines = $cleanedDescription -split "`n"
+        $formattedLines = @()
+        
+        for ($i = 0; $i -lt $lines.Length; $i++) {
+            $line = $lines[$i]
+            
+            if ($i -eq 0) {
+                # First line: main bullet point
+                # Ensure it ends with colon if followed by a list, otherwise period
+                if ($lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+') {
+                    # Next line is a bullet, so first line should end with colon
+                    if (-not $line.EndsWith(":")) {
+                        $line += ":"
+                    }
+                }
+                else {
+                    # Regular multi-line text, ensure period at end
+                    if (-not $line.EndsWith(".")) {
+                        $line += "."
+                    }
+                }
+                $formattedLines += "- $line"
+            }
+            elseif ($i -eq $lines.Length - 1) {
+                # Last line: add PR link here
+                $trimmedLine = $line.TrimStart()
+                $indent = $line.Substring(0, $line.Length - $trimmedLine.Length)
+                
+                # For bullet items, don't add period; for regular text, ensure period
+                $needsPeriod = -not ($trimmedLine -match '^-\s+')
+                if ($needsPeriod -and -not $trimmedLine.EndsWith(".")) {
+                    $trimmedLine += "."
+                }
+                
+                # Add PR link if available
+                $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+                $formattedLines += "  $indent$trimmedLine$prLink"
+            }
+            else {
+                # Middle lines: preserve indentation and add 2 spaces for nesting
+                $formattedLines += "  $line"
+            }
+        }
+        
+        return $formattedLines -join "`n"
     }
-    
-    # Add PR link if available
-    $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
-    return "- $formattedDescription$prLink"
+    else {
+        # Single-line description: original logic
+        $formattedDescription = $Description
+        if (-not $formattedDescription.EndsWith(".")) {
+            $formattedDescription += "."
+        }
+        
+        # Add PR link if available
+        $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+        return "- $formattedDescription$prLink"
+    }
 }
 
 # Helper function to build subsection mapping (merging with case-insensitive matching)
