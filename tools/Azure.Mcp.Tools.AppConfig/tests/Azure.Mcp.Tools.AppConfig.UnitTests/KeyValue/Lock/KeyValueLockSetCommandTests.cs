@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.UnitTests.KeyValue.Lock;
 
-[Trait("Area", "AppConfig")]
 public class KeyValueLockSetCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

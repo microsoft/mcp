@@ -426,7 +426,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_create_agent()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -457,7 +456,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_connect_agent()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -488,7 +486,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_agents()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -513,7 +510,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [InlineData("task_adherence", "Task Adherence")]
     [InlineData("tool_call_accuracy", "Tool Call Accuracy")]
     [InlineData("intent_resolution", "Intent Resolution")]
-    [Trait("Category", "Live")]
     public async Task Should_query_and_evaluate_agent(string evaluatorName, string evaluationMetric)
     {
         // to be filled in
@@ -565,7 +561,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     [InlineData("task_adherence", "Task Adherence")]
     [InlineData("tool_call_accuracy", "Tool Call Accuracy")]
     [InlineData("intent_resolution", "Intent Resolution")]
-    [Trait("Category", "Live")]
     public async Task Should_evaluate_agent(string evaluatorName, string evaluationMetric)
     {
         // to be filled in
@@ -1040,7 +1035,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_create_thread()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -1061,7 +1055,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_list_threads()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";
@@ -1078,7 +1071,6 @@ public class FoundryCommandTests(ITestOutputHelper output)
     }
 
     [Fact]
-    [Trait("Category", "Live")]
     public async Task Should_get_messages()
     {
         var projectName = $"{Settings.ResourceBaseName}-ai-projects";

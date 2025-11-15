@@ -15,7 +15,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Log;
 
-[Trait("Area", "Monitor")]
 public sealed class WorkspaceLogQueryCommandTests
 {
     private readonly IServiceProvider _serviceProvider;

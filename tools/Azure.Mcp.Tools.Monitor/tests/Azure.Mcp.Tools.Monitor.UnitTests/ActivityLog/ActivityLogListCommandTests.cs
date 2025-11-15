@@ -17,7 +17,6 @@ using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.ActivityLog;
 
-[Trait("Area", "Monitor")]
 public sealed class ActivityLogListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
