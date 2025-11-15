@@ -143,11 +143,11 @@ If you are contributing significant changes, or if the issue is already assigned
    - Update [README.md](https://github.com/microsoft/mcp/blob/main/README.md) to mention the new command
 
 6. **Create a changelog entry** (if your change is a new feature, bug fix, or breaking change):
-   - Use the generator script to create a changelog entry:
+   - Use the generator script to create a changelog entry (see `docs/changelog-entries.md` for details):
      ```powershell
-     ./eng/scripts/New-ChangelogEntry.ps1 -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ./eng/scripts/New-ChangelogEntry.ps1 -ServerName <server-name> -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
      ```
-   - Or manually create a YAML file in `servers/Azure.Mcp.Server/changelog-entries/` (see `/servers/Azure.Mcp.Server/changelog-entries/README.md` for details)
+   - Or manually create a YAML file in `servers/{ServerName}/changelog-entries/`
    - Not every PR needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates. If unsure, add to the "Other Changes" section or ask a maintainer.
 
 7. **Add CODEOWNERS entry** in [CODEOWNERS](https://github.com/microsoft/mcp/blob/main/.github/CODEOWNERS) [(example)](https://github.com/microsoft/mcp/commit/08f73efe826d5d47c0f93be5ed9e614740e82091)
