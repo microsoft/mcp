@@ -14,6 +14,8 @@ public static class ServiceOptionDefinitions
     public const string DangerouslyDisableHttpIncomingAuthName = "dangerously-disable-http-incoming-auth";
     public const string InsecureDisableElicitationName = "insecure-disable-elicitation";
     public const string OutgoingAuthStrategyName = "outgoing-auth-strategy";
+    public const string LogLevelName = "log-level";
+    public const string LogFilePathName = "log-file-path";
 
     public static readonly Option<string> Transport = new($"--{TransportName}")
     {
@@ -90,5 +92,21 @@ public static class ServiceOptionDefinitions
         Required = false,
         Description = "Outgoing authentication strategy for Azure service requests. Valid values: NotSet, UseHostingEnvironmentIdentity, UseOnBehalfOf.",
         DefaultValueFactory = _ => Options.OutgoingAuthStrategy.NotSet
+    };
+
+    public static readonly Option<string?> LogLevel = new(
+        $"--{LogLevelName}")
+    {
+        Required = false,
+        Description = "Minimum logging level. Valid values: Trace, Debug, Information, Warning, Error, Critical, None. Default is Information (or Debug if --debug is set).",
+        DefaultValueFactory = _ => null
+    };
+
+    public static readonly Option<string?> LogFilePath = new(
+        $"--{LogFilePathName}")
+    {
+        Required = false,
+        Description = "Path to write log file output. When specified, logs will be written to the specified file in addition to console output.",
+        DefaultValueFactory = _ => null
     };
 }

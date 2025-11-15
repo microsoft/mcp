@@ -20,6 +20,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Added logging customization options to the `azmcp server start` command:
+  - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
+  - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
+
 ## 2.0.0-beta.4 (2025-11-13)
 
 ### Features Added
