@@ -353,42 +353,19 @@ if ($Version) {
 Write-Host "Target section: $targetVersionHeader" -ForegroundColor Cyan
 Write-Host ""
 
-# Preview output
-Write-Host "Compiled Output:" -ForegroundColor Cyan
-Write-Host "================" -ForegroundColor Cyan
-Write-Host ""
-$markdown | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
-Write-Host ""
-
-if ($DryRun) {
-    Write-Host "DRY RUN - No files were modified" -ForegroundColor Yellow
-    exit 0
-}
 # Find the target section in the changelog
 $versionSectionPattern = '(?s)(' + [regex]::Escape($targetVersionHeader) + '\r?\n)(.*?)(?=##\s+\d+\.\d+\.\d+|##\s+[^\s]+\s+\(|$)'
 $match = [regex]::Match($changelogContent, $versionSectionPattern)
 
+# Build the merged content for preview
+$mergedContent = @()
+$mergedContent += $targetVersionHeader
+
 if (-not $match.Success) {
-    Write-Host "Target section '$targetVersionHeader' not found in CHANGELOG.md" -ForegroundColor Yellow
-    Write-Host "Creating new section..." -ForegroundColor Yellow
-    
-    # Create a new section
-    $newVersionSection = "$targetVersionHeader`n"
-    $newVersionSection += ($markdown -join "`n") + "`n`n"
-    
-    # Find the first ## section and insert before it
-    $firstSectionPattern = '(?m)^##\s+'
-    $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
-    
-    if ($firstSectionMatch.Success) {
-        # Insert the new section right before the first ## section
-        $insertPosition = $firstSectionMatch.Index
-        $updatedChangelog = $changelogContent.Insert($insertPosition, "$newVersionSection")
-    } else {
-        # If no ## section found, append to the end of the file
-        $updatedChangelog = $changelogContent + "`n$newVersionSection"
-    }
+    # New section - just use the new entries
+    $mergedContent += $markdown
 } else {
+    # Existing section - merge with existing content
     $versionHeader = $match.Groups[1].Value
     $existingContent = $match.Groups[2].Value
     
@@ -437,9 +414,8 @@ if (-not $match.Success) {
         }
     }
     
-    # Build new content by merging existing and new entries
-    $newContent = $versionHeader
-    
+    # Build merged content by combining existing and new entries
+    $isFirstSection = $true
     foreach ($section in $sectionOrder) {
         # Check if we have entries (existing or new) for this section
         $hasExisting = $existingSections.ContainsKey($section)
@@ -449,7 +425,13 @@ if (-not $match.Success) {
             continue
         }
         
-        $newContent += "`n### $section`n"
+        # Add empty line before section (but not before the very first section)
+        if (-not $isFirstSection) {
+            $mergedContent += ""
+        }
+        $isFirstSection = $false
+        
+        $mergedContent += "### $section"
         
         # Merge entries without subsection
         $existingMainEntries = @()
@@ -473,14 +455,14 @@ if (-not $match.Success) {
         # Append new entries after existing ones (with empty line before entries)
         $totalEntries = $existingMainEntries.Count + $newMainEntries.Count
         if ($totalEntries -gt 0) {
-            $newContent += "`n"  # Empty line before entries
+            $mergedContent += ""  # Empty line before entries
             foreach ($line in $existingMainEntries) {
                 if ($line) {
-                    $newContent += "$line`n"
+                    $mergedContent += $line
                 }
             }
             foreach ($line in $newMainEntries) {
-                $newContent += "$line`n"
+                $mergedContent += $line
             }
         }
         
@@ -522,13 +504,14 @@ if (-not $match.Success) {
         
         foreach ($subsectionTitleCased in $allSubsections) {
             $mapping = $subsectionMapping[$subsectionTitleCased]
-            $newContent += "`n#### $subsectionTitleCased`n"
-            $newContent += "`n"  # Empty line before entries
+            $mergedContent += ""
+            $mergedContent += "#### $subsectionTitleCased"
+            $mergedContent += ""  # Empty line before entries
             
             # Existing subsection entries
             if ($mapping.Existing -and $hasExisting -and $existingSections[$section].ContainsKey($mapping.Existing)) {
                 foreach ($line in $existingSections[$section][$mapping.Existing]) {
-                    $newContent += "$line`n"
+                    $mergedContent += $line
                 }
             }
             
@@ -541,11 +524,52 @@ if (-not $match.Success) {
                         $description = $description + "."
                     }
                     $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
-                    $newContent += "- $description$prLink`n"
+                    $mergedContent += "- $description$prLink"
                 }
             }
         }
     }
+}
+
+# Preview output
+Write-Host "Compiled Output (as it will appear in CHANGELOG.md):" -ForegroundColor Cyan
+Write-Host "=====================================================" -ForegroundColor Cyan
+Write-Host ""
+$mergedContent | ForEach-Object { Write-Host $_ -ForegroundColor Gray }
+Write-Host ""
+
+if ($DryRun) {
+    Write-Host "DRY RUN - No files were modified" -ForegroundColor Yellow
+    exit 0
+}
+
+# Now apply the changes to the file
+if (-not $match.Success) {
+    Write-Host "Target section '$targetVersionHeader' not found in CHANGELOG.md" -ForegroundColor Yellow
+    Write-Host "Creating new section..." -ForegroundColor Yellow
+    
+    # Create a new section using the merged content
+    $newVersionSection = ($mergedContent -join "`n") + "`n`n"
+    
+    # Find the first ## section and insert before it
+    $firstSectionPattern = '(?m)^##\s+'
+    $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
+    
+    if ($firstSectionMatch.Success) {
+        # Insert the new section right before the first ## section
+        $insertPosition = $firstSectionMatch.Index
+        $updatedChangelog = $changelogContent.Insert($insertPosition, "$newVersionSection")
+    } else {
+        # If no ## section found, append to the end of the file
+        $updatedChangelog = $changelogContent + "`n$newVersionSection"
+    }
+} else {
+    # Replace existing section with merged content
+    $versionHeader = $match.Groups[1].Value
+    $existingContent = $match.Groups[2].Value
+    
+    # Build the new content from merged array
+    $newContent = ($mergedContent -join "`n")
     
     # Ensure there's an empty line at the end of the version section
     if (-not $newContent.EndsWith("`n`n")) {
