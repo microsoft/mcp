@@ -93,7 +93,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is(workbookId),
             Arg.Is("Updated Test Workbook"),
             Arg.Is("{\"version\":\"Notebook/1.0\",\"updated\":true}"),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -145,7 +146,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is(workbookId),
             Arg.Is("New Display Name Only"),
             Arg.Is((string?)null),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -195,7 +197,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is(workbookId),
             Arg.Is((string?)null),
             Arg.Is(newSerializedContent),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            cancellationToken: Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -249,7 +252,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -269,7 +273,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is(displayName),
             Arg.Is(serializedContent),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is((string?)null));
+            Arg.Is((string?)null),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -283,7 +288,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkbookInfo?>(null));
 
         var args = _command.GetCommand().Parse([
@@ -312,7 +318,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new Exception("Service error")));
 
         var args = _command.GetCommand().Parse([
@@ -403,7 +410,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is("Updated Complex Workbook"),
             Arg.Is(complexSerializedData),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -460,7 +468,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -480,7 +489,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is(tenantId));
+            Arg.Is(tenantId),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -509,7 +519,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -529,7 +540,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -558,7 +570,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -579,7 +592,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Is("Test Workbook"),
             Arg.Is((string?)null),
             Arg.Is<RetryPolicyOptions>(x => x.MaxRetries == 5 && x.DelaySeconds == 2.5),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -594,7 +608,8 @@ public class UpdateWorkbooksCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(exception));
 
         var args = _command.GetCommand().Parse([

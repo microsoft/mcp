@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.WebTests;
@@ -120,7 +121,7 @@ public class WebTestsListCommandTests
             }
         };
 
-        _service.ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -129,7 +130,7 @@ public class WebTestsListCommandTests
         await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListWebTests("sub1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -149,7 +150,7 @@ public class WebTestsListCommandTests
             }
         };
 
-        _service.ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var parseResult = _commandDefinition.Parse(args);
@@ -158,7 +159,7 @@ public class WebTestsListCommandTests
         await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -191,9 +192,9 @@ public class WebTestsListCommandTests
             }
         };
 
-        _service.ListWebTests(Arg.Any<string>(), Arg.Is<string>(rg => rg != null), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests(Arg.Any<string>(), Arg.Is<string>(rg => rg != null), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResults);
-        _service.ListWebTests(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResults);
 
         var argArray = string.IsNullOrEmpty(args) ? Array.Empty<string>() : args.Split(' ', StringSplitOptions.RemoveEmptyEntries);
@@ -221,7 +222,7 @@ public class WebTestsListCommandTests
     public async Task ExecuteAsync_EmptyResults_ReturnsSuccessWithNullResults()
     {
         // Arrange
-        _service.ListWebTests(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new List<WebTestSummaryInfo>());
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
@@ -242,7 +243,7 @@ public class WebTestsListCommandTests
     public async Task ExecuteAsync_CallsServiceWithCorrectParameters()
     {
         // Arrange
-        _service.ListWebTests(Arg.Any<string>(), Arg.Is<string>(rg => rg != null), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.ListWebTests(Arg.Any<string>(), Arg.Is<string>(rg => rg != null), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(new List<WebTestSummaryInfo>());
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1"]);
@@ -251,7 +252,7 @@ public class WebTestsListCommandTests
         await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).ListWebTests("sub1", "rg1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -285,11 +286,12 @@ public class WebTestsListCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service unavailable");
-        _service.When(x => x.ListWebTests(
+        _service.ListWebTests(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 
@@ -307,11 +309,12 @@ public class WebTestsListCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service error");
-        _service.When(x => x.ListWebTests(
+        _service.ListWebTests(
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
 

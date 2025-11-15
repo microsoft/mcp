@@ -112,7 +112,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
         return null;
     }
 
-    private async Task<bool> AuthenticateWithAzureCredentialsAsync(IExternalProcessService processService, ILogger logger)
+    private async Task<bool> AuthenticateWithAzureCredentialsAsync(IExternalProcessService processService, ILogger logger, CancellationToken cancellationToken = default)
     {
         if (_isAuthenticated)
         {
@@ -123,7 +123,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
         try
         {
             // Check if the semaphore is already acquired to avoid re-authentication
-            bool isAcquired = await s_authSemaphore.WaitAsync(1000);
+            bool isAcquired = await s_authSemaphore.WaitAsync(1000, cancellationToken);
             if (!isAcquired || _isAuthenticated)
             {
                 return _isAuthenticated;
@@ -138,7 +138,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
             var azPath = FindAzCliPath() ?? throw new FileNotFoundException("Azure CLI executable not found in PATH or common installation locations. Please ensure Azure CLI is installed.");
 
             var loginCommand = $"login --service-principal -u {credentials.ClientId} -p {credentials.ClientSecret} --tenant {credentials.TenantId}";
-            var result = await processService.ExecuteAsync(azPath, loginCommand, 60);
+            var result = await processService.ExecuteAsync(azPath, loginCommand, 60, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {
@@ -177,10 +177,10 @@ Your job is to answer questions about an Azure environment by executing Azure CL
             var processService = context.GetService<IExternalProcessService>();
 
             // Try to authenticate, but continue even if it fails
-            await AuthenticateWithAzureCredentialsAsync(processService, _logger);
+            await AuthenticateWithAzureCredentialsAsync(processService, _logger, cancellationToken);
 
             var azPath = FindAzCliPath() ?? throw new FileNotFoundException("Azure CLI executable not found in PATH or common installation locations. Please ensure Azure CLI is installed.");
-            var result = await processService.ExecuteAsync(azPath, command, _processTimeoutSeconds);
+            var result = await processService.ExecuteAsync(azPath, command, _processTimeoutSeconds, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {

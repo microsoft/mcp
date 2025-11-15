@@ -22,7 +22,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
     private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly IResourceGroupService _resourceGroupService = resourceGroupService;
 
-    public async Task<List<LustreFileSystem>> ListFileSystemsAsync(string subscription, string? resourceGroup = null, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<LustreFileSystem>> ListFileSystemsAsync(
+        string subscription,
+        string? resourceGroup = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -32,7 +37,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         {
             if (!string.IsNullOrWhiteSpace(resourceGroup))
             {
-                var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+                var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Resource group '{resourceGroup}' not found");
                 foreach (var fs in rg.GetAmlFileSystems())
                 {
                     results.Add(Map(fs));
@@ -41,8 +46,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             }
             else
             {
-                var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
-                await foreach (var fs in sub.GetAmlFileSystemsAsync())
+                var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
+                await foreach (var fs in sub.GetAmlFileSystemsAsync(cancellationToken))
                 {
                     results.Add(Map(fs));
                 }
@@ -194,10 +199,10 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
     public async Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
     string sku, int size,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null
-        )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var fileSystemSizeContent = new RequiredAmlFileSystemSubnetsSizeContent
         {
             SkuName = sku,
@@ -206,7 +211,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         try
         {
-            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent);
+            var sdkResult = await sub.GetRequiredAmlFSSubnetsSizeAsync(fileSystemSizeContent, cancellationToken);
             var numberOfRequiredIPs = sdkResult.Value.FilesystemSubnetSize ?? throw new Exception($"Failed to retrieve the number of IPs");
             return numberOfRequiredIPs;
         }
@@ -220,18 +225,18 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string subscription,
         string? tenant = null,
         string? location = null,
-        RetryPolicyOptions? retryPolicy = null
-        )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
 
         try
         {
             var results = new List<ManagedLustreSkuInfo>();
 
-            await foreach (var sku in sub.GetStorageCacheSkusAsync())
+            await foreach (var sku in sub.GetStorageCacheSkusAsync(cancellationToken))
             {
 
                 if (sku is null ||
@@ -286,8 +291,8 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string? sourceVaultId = null,
         string? userAssignedIdentityId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null
-    )
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription),
         (nameof(resourceGroup), resourceGroup),
@@ -297,9 +302,9 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         (nameof(subnetId), subnetId)
         );
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Subscription '{subscription}' not found");
 
         var data = new AmlFileSystemData(new AzureLocation(location))
@@ -314,7 +319,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         {
             bool? supportsZones = null;
 
-            await foreach (var loc in sub.GetLocationsAsync())
+            await foreach (var loc in sub.GetLocationsAsync(cancellationToken: cancellationToken))
             {
                 if (loc.Name.Equals(location, StringComparison.OrdinalIgnoreCase) ||
                     loc.DisplayName.Equals(location, StringComparison.OrdinalIgnoreCase))
@@ -372,7 +377,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         try
         {
             var collection = rg.GetAmlFileSystems();
-            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data);
+            var createOperationResult = await collection.CreateOrUpdateAsync(WaitUntil.Completed, name, data, cancellationToken);
             var fileSystemResource = createOperationResult.Value;
             return Map(fileSystemResource);
         }
@@ -397,16 +402,17 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         long? squashUid = null,
         long? squashGid = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceGroup), resourceGroup), (nameof(name), name));
 
-        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken)
             ?? throw new Exception($"Resource group '{resourceGroup}' not found");
 
         try
         {
-            var fs = await rg.GetAmlFileSystemAsync(name);
+            var fs = await rg.GetAmlFileSystemAsync(name, cancellationToken);
 
             var patch = new AmlFileSystemPatch();
 
@@ -428,7 +434,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 patch.RootSquashSettings = GenerateRootSquashSettings(rootSquashMode ?? "None", noSquashNidLists, squashUid, squashGid);
             }
 
-            var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch);
+            var updateOperation = await fs.Value.UpdateAsync(WaitUntil.Completed, patch, cancellationToken);
             return Map(updateOperation.Value);
         }
         catch (RequestFailedException rfe)
@@ -448,11 +454,12 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string subnetId,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(sku), sku), (nameof(subnetId), subnetId), (nameof(location), location));
 
-        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+        var sub = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken) ?? throw new Exception($"Subscription '{subscription}' not found");
         var content = new AmlFileSystemSubnetContent
         {
             FilesystemSubnet = subnetId,
@@ -463,7 +470,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
 
         try
         {
-            var response = await sub.CheckAmlFSSubnetsAsync(content);
+            var response = await sub.CheckAmlFSSubnetsAsync(content, cancellationToken);
             var status = response.Status;
             var sizeIsValid = (HttpStatusCode)status == HttpStatusCode.OK;
             if (!sizeIsValid)

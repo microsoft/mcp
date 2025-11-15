@@ -58,7 +58,8 @@ public class KeyValueGetCommandTests
           Arg.Any<string?>(),
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1"]);
@@ -95,7 +96,8 @@ public class KeyValueGetCommandTests
           "key1",
           Arg.Any<string?>(),
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--key-filter", "key1"]);
@@ -133,7 +135,8 @@ public class KeyValueGetCommandTests
           Arg.Any<string?>(),
           "prod",
           Arg.Any<string?>(),
-          Arg.Any<RetryPolicyOptions>())
+          Arg.Any<RetryPolicyOptions>(),
+          Arg.Any<CancellationToken>())
           .Returns(expectedSettings);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123", "--account", "account1", "--label-filter", "prod"]);
@@ -175,7 +178,8 @@ public class KeyValueGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
         var args = _commandDefinition.Parse([
@@ -221,7 +225,8 @@ public class KeyValueGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedSetting]);
 
         var args = _commandDefinition.Parse([
@@ -258,7 +263,8 @@ public class KeyValueGetCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Setting not found"));
 
         var args = _commandDefinition.Parse([

@@ -11,11 +11,13 @@ public class ExternalProcessService : IExternalProcessService
 {
     private readonly Dictionary<string, string> environmentVariables = [];
 
+    /// <inheritdoc/>
     public async Task<ProcessResult> ExecuteAsync(
         string executablePath,
         string arguments,
         int timeoutSeconds = 300,
-        IEnumerable<string>? customPaths = null)
+        IEnumerable<string>? customPaths = null,
+        CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrEmpty(executablePath);
 
@@ -69,14 +71,30 @@ public class ExternalProcessService : IExternalProcessService
         process.BeginOutputReadLine();
         process.BeginErrorReadLine();
 
-        await Task.WhenAll(
-            Task.Run(() => process.WaitForExit(timeoutSeconds * 1000)),
-            Task.Run(() =>
-            {
-                outputWaitHandle.WaitOne(1000);
-                errorWaitHandle.WaitOne(1000);
-            })
+        var waitTask = Task.WhenAll(
+            Task.Run(() => process.WaitForExit(timeoutSeconds * 1000), cancellationToken),
+            Task.Run(
+                () =>
+                {
+                    outputWaitHandle.WaitOne(1000);
+                    errorWaitHandle.WaitOne(1000);
+                },
+                cancellationToken)
         );
+
+        try
+        {
+            await waitTask;
+        }
+        catch (OperationCanceledException)
+        {
+            if (!process.HasExited)
+            {
+                process.Kill();
+            }
+
+            throw;
+        }
 
         if (!process.HasExited)
         {

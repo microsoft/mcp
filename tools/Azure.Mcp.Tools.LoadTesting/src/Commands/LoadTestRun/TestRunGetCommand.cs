@@ -69,7 +69,8 @@ public sealed class TestRunGetCommand(ILogger<TestRunGetCommand> logger)
                 options.TestRunId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunGetCommandResult) :

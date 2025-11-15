@@ -106,7 +106,8 @@ public class FileSystemListCommandTests
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -168,7 +169,8 @@ public class FileSystemListCommandTests
                 Arg.Is(_knownSubscriptionId),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(expected);
 
         }
@@ -206,7 +208,8 @@ public class FileSystemListCommandTests
             Arg.Is(_knownSubscriptionId),
             Arg.Is<string?>(x => x == null),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -232,7 +235,11 @@ public class FileSystemListCommandTests
     {
         // Arrange - 404 Not Found
         _amlfsService.ListFileSystemsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.NotFound, "not found"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);
@@ -248,7 +255,11 @@ public class FileSystemListCommandTests
     {
         // Arrange - 403 Forbidden
         _amlfsService.ListFileSystemsAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new RequestFailedException((int)HttpStatusCode.Forbidden, "forbidden"));
 
         var args = _commandDefinition.Parse(["--subscription", _knownSubscriptionId]);

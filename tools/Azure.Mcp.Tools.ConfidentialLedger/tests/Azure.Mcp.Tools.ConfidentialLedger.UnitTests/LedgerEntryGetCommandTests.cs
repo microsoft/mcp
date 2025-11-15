@@ -19,7 +19,7 @@ public sealed class LedgerEntryGetCommandTests
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
 
-        service.GetLedgerEntryAsync("ledger1", "2.199", null)
+        service.GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>())
             .Returns(new LedgerEntryGetResult
             {
                 LedgerName = "ledger1",
@@ -43,7 +43,7 @@ public sealed class LedgerEntryGetCommandTests
         Assert.NotNull(result);
         Assert.Equal("2.199", result!.TransactionId);
 
-        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null);
+        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", null, Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -57,7 +57,7 @@ public sealed class LedgerEntryGetCommandTests
     {
         var service = new ConfidentialLedgerService(Substitute.For<ITenantService>());
         await Assert.ThrowsAsync<ArgumentException>(() =>
-            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null));
+            service.GetLedgerEntryAsync(ledgerName!, transactionId!, null, TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -66,7 +66,7 @@ public sealed class LedgerEntryGetCommandTests
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryGetCommand>>();
 
-        service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection")
+        service.GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>())
             .Returns(new LedgerEntryGetResult
             {
                 LedgerName = "ledger1",
@@ -90,6 +90,6 @@ public sealed class LedgerEntryGetCommandTests
         Assert.NotNull(result);
         Assert.Equal("2.199", result!.TransactionId);
 
-        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", "my-collection");
+        await service.Received(1).GetLedgerEntryAsync("ledger1", "2.199", "my-collection", Arg.Any<CancellationToken>());
     }
 }

@@ -68,7 +68,8 @@ public sealed class TestRunListCommand(ILogger<TestRunListCommand> logger)
                 options.TestId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestRunListCommandResult);
         }

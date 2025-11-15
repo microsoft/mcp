@@ -61,7 +61,7 @@ public sealed class CliInstallCommandTests
         // Arrange
         if (shouldSucceed)
         {
-            _cliInstallService.GetCliInstallInstructions(Arg.Any<string>())
+            _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
                 {
                     Content = new StringContent("Instructions")
@@ -87,7 +87,7 @@ public sealed class CliInstallCommandTests
     public async Task ExecuteAsync_DeserializationValidation()
     {
         // Arrange
-        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>())
+        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new HttpResponseMessage(HttpStatusCode.OK)
             {
                 Content = new StringContent("Instructions")
@@ -114,7 +114,7 @@ public sealed class CliInstallCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>()).ThrowsAsync(new Exception("Test error"));
+        _cliInstallService.GetCliInstallInstructions(Arg.Any<string>(), Arg.Any<CancellationToken>()).ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse("--cli-type az");
 

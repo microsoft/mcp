@@ -71,7 +71,8 @@ public sealed class IndexGetCommand(ILogger<IndexGetCommand> logger) : GlobalCom
             var indexes = await searchService.GetIndexDetails(
                 options.Service!,
                 options.Index,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(indexes ?? []), SearchJsonContext.Default.IndexGetCommandResult);
         }

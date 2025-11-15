@@ -88,7 +88,8 @@ public sealed class ResourceCreateCommand(ILogger<ResourceCreateCommand> logger)
                 options.AccessKeyAuthenticationEnabled,
                 options.Modules,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new ResourceCreateCommandResult(resource),

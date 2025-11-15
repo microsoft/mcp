@@ -80,7 +80,8 @@ public sealed class FunctionAppGetCommand(ILogger<FunctionAppGetCommand> logger)
                 options.FunctionAppName!,
                 options.ResourceGroup!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(functionApps ?? []), FunctionAppJsonContext.Default.FunctionAppGetCommandResult);
         }

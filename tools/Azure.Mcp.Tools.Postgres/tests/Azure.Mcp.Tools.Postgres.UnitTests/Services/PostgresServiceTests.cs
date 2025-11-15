@@ -42,11 +42,11 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
                 .Returns(new Azure.Core.AccessToken("fake-token", DateTime.UtcNow.AddHours(1)));
 
             _dbProvider = Substitute.For<IDbProvider>();
-            _dbProvider.GetPostgresResource(Arg.Any<string>(), Arg.Any<string>())
+            _dbProvider.GetPostgresResource(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
                 .Returns(Substitute.For<IPostgresResource>());
             _dbProvider.GetCommand(Arg.Any<string>(), Arg.Any<IPostgresResource>())
                 .Returns(Substitute.For<NpgsqlCommand>());
-            _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>())
+            _dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Substitute.For<DbDataReader>());
 
             _postgresService = new PostgresService(_resourceGroupService, _tenantService, _entraTokenAuth, _dbProvider);
@@ -67,7 +67,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // message that helps AI to understand the issue and fix the query.
 
             // Arrange
-            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>())
+            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<DbDataReader>(new FakeDbDataReader(
                     new object[][] {
                     new object[] { "row1", 1, new InvalidCastItem() },
@@ -80,7 +80,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // Act
             CommandValidationException exception = await Assert.ThrowsAsync<CommandValidationException>(async () =>
             {
-                await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
+                await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
             });
 
             // Assert
@@ -93,7 +93,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // This test verifies that queries that return supported data types work as expected.
 
             // Arrange
-            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>())
+            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<DbDataReader>(new FakeDbDataReader(
                     new object[][] {
                         new object[] { "row1", 1, },
@@ -104,7 +104,7 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
                     new[] { typeof(string), typeof(int), typeof(InvalidCastItem) })));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Equal(4, rows.Count);
@@ -120,14 +120,14 @@ namespace Azure.Mcp.Tools.Postgres.UnitTests.Services
             // This test verifies that if no elements are found, only the header row is returned.
 
             // Arrange
-            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>())
+            this._dbProvider.ExecuteReaderAsync(Arg.Any<NpgsqlCommand>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult<DbDataReader>(new FakeDbDataReader(
                     new object[][] { },
                     new[] { "string", "integer" },
                     new[] { typeof(string), typeof(int), typeof(InvalidCastItem) })));
 
             // Act
-            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query);
+            List<string> rows = await _postgresService.ExecuteQueryAsync(subscriptionId, resourceGroup, authType, user, null, server, database, query, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.Single(rows);

@@ -70,7 +70,8 @@ public sealed class TestGetCommand(ILogger<TestGetCommand> logger)
                 options.TestId!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

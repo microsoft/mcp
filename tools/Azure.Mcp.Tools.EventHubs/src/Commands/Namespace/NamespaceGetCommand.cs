@@ -98,7 +98,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = namespaceDetails != null
                     ? ResponseResult.Create(new(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetCommandResult)
@@ -110,7 +111,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(namespaces ?? []), EventHubsJsonContext.Default.NamespacesGetCommandResult);
             }

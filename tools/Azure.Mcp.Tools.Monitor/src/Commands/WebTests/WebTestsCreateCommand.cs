@@ -160,7 +160,8 @@ public sealed class WebTestsCreateCommand(ILogger<WebTestsCreateCommand> logger)
                 sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
                 timeoutInSeconds: options.TimeoutInSeconds,
                 tenant: options.Tenant,
-                retryPolicy: options.RetryPolicy);
+                retryPolicy: options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(webTest),

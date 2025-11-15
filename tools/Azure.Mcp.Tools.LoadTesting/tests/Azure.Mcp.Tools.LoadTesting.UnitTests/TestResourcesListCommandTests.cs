@@ -48,7 +48,13 @@ public class TestResourceListCommandTests
     public async Task ExecuteAsync_ReturnsLoadTests_FromResourceGroup()
     {
         var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" }, new() { Id = "Id2", Name = "loadTest2" } };
-        _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is((string?)null), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.GetLoadTestResourcesAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is((string?)null),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
         var command = new TestResourceListCommand(_logger);
@@ -77,7 +83,13 @@ public class TestResourceListCommandTests
     public async Task ExecuteAsync_ReturnsLoadTests_FromTestResource()
     {
         var expectedLoadTests = new List<TestResource> { new() { Id = "Id1", Name = "loadTest1" } };
-        _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("testResourceName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.GetLoadTestResourcesAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
         var command = new TestResourceListCommand(_logger);
@@ -104,7 +116,13 @@ public class TestResourceListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsLoadTests_WhenLoadTestsNotExist()
     {
-        _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.GetLoadTestResourcesAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("loadTestName"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
              .Returns([]);
 
         var command = new TestResourceListCommand(_logger);
@@ -127,7 +145,13 @@ public class TestResourceListCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.GetLoadTestResourcesAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.GetLoadTestResourcesAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("loadTestName"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<TestResource>>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);

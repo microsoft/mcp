@@ -84,7 +84,8 @@ public sealed class AvailabilityListCommand(ILogger<AvailabilityListCommand> log
                 options.Subscription!,
                 options.CognitiveServiceModelName,
                 options.CognitiveServiceModelVersion,
-                options.CognitiveServiceDeploymentSkuName);
+                options.CognitiveServiceDeploymentSkuName,
+                cancellationToken);
 
             _logger.LogInformation("Region check result: {ToolResult}", toolResult);
 

@@ -72,7 +72,8 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                options.Label);
+                options.Label,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.Key!, options.Label, options.Lock), AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         }

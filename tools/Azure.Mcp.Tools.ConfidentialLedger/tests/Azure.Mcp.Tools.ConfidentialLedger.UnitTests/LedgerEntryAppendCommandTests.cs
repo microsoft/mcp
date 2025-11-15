@@ -21,7 +21,7 @@ public class LedgerEntryAppendCommandTests
     {
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryAppendCommand>>();
-        service.AppendEntryAsync("ledger1", "data")
+        service.AppendEntryAsync("ledger1", "data", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new AppendEntryResult { TransactionId = "tx1", State = "Committed" });
 
         var provider = new ServiceCollection()

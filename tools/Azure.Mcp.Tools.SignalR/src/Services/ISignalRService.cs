@@ -17,5 +17,6 @@ public interface ISignalRService
         string? signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

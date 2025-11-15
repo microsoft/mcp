@@ -56,7 +56,7 @@ public class RegistryToolLoaderTests
         var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
         var request = CreateListToolsRequest();
 
-        mockDiscoveryStrategy.DiscoverServersAsync()
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act

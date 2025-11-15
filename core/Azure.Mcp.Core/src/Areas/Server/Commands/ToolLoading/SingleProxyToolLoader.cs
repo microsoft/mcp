@@ -167,14 +167,14 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     /// </summary>
     /// <returns>A JSON serialized string with each area's name and a description of operations available in
     /// that namespace.</returns>
-    private async Task<string> GetRootToolsJsonAsync()
+    private async Task<string> GetRootToolsJsonAsync(CancellationToken cancellationToken)
     {
         if (_cachedRootToolsJson != null)
         {
             return _cachedRootToolsJson;
         }
 
-        var serverList = await _discoveryStrategy.DiscoverServersAsync();
+        var serverList = await _discoveryStrategy.DiscoverServersAsync(cancellationToken);
         var tools = new List<Tool>(serverList.Count());
         foreach (var server in serverList)
         {
@@ -198,7 +198,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     /// <param name="request">Calling request</param>
     /// <param name="tool">Name of the <see cref="IAreaSetup"/> to get commands for.</param>
     /// <returns>JSON serialized string representing the list of commands available in the tool's area.</returns>
-    private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool)
+    private async Task<string> GetToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         if (_cachedToolListsJson.TryGetValue(tool, out var cachedJson))
         {
@@ -206,8 +206,8 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         }
 
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions);
-        var listTools = await client.ListToolsAsync();
+        var client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
+        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
         var toolsJson = JsonSerializer.Serialize(listTools, ServerJsonContext.Default.IListMcpClientTool);
         _cachedToolListsJson[tool] = toolsJson;
 
@@ -217,7 +217,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
     private async Task<CallToolResult> RootLearnModeAsync(RequestContext<CallToolRequestParams> request, string intent, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = await GetRootToolsJsonAsync();
+        var toolsJson = await GetRootToolsJsonAsync(cancellationToken);
         var learnResponse = new CallToolResult
         {
             Content =
@@ -251,7 +251,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
             .SetTag(TagName.IsServerCommandInvoked, false)
             .SetTag(TagName.ToolArea, tool);
 
-        var toolsJson = await GetToolListJsonAsync(request, tool);
+        var toolsJson = await GetToolListJsonAsync(request, tool, cancellationToken);
         if (string.IsNullOrEmpty(toolsJson))
         {
             return await RootLearnModeAsync(request, intent, cancellationToken);
@@ -292,7 +292,7 @@ public sealed class SingleProxyToolLoader(IMcpDiscoveryStrategy discoveryStrateg
         try
         {
             var clientOptions = CreateClientOptions(request.Server);
-            client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions);
+            client = await _discoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
             if (client == null)
             {
                 _logger.LogError("Failed to get provider client for tool: {Tool}", tool);

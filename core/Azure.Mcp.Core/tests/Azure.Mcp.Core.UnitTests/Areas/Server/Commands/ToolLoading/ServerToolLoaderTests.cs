@@ -91,7 +91,7 @@ public class ServerToolLoaderTests
         var (toolLoader, mockDiscoveryStrategy) = CreateToolLoader();
         var request = CreateRequest();
 
-        mockDiscoveryStrategy.DiscoverServersAsync()
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act

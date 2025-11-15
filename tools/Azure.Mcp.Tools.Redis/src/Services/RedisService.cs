@@ -25,21 +25,23 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
     public async Task<IEnumerable<Resource>> ListResourcesAsync(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy) ?? throw new Exception($"Subscription '{subscription}' not found");
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
+                ?? throw new Exception($"Subscription '{subscription}' not found");
 
             var resources = new List<Resource>();
             var resourcesTasks = new List<Task<IEnumerable<Resource>>>();
 
             try
             {
-                resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource));
-                resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource));
+                resourcesTasks.Add(ListAcrResourcesAsync(subscriptionResource, cancellationToken));
+                resourcesTasks.Add(ListAmrResourcesAsync(subscriptionResource, cancellationToken));
                 await Task.WhenAll(resourcesTasks);
             }
             catch (Exception)
@@ -72,7 +74,8 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         bool? accessKeyAuthenticationEnabled = false,
         string[]? modules = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default
     )
     {
         ValidateRequiredParameters(
@@ -89,11 +92,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy)
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken)
                 ?? throw new Exception($"Subscription '{subscription}' not found");
 
             var resourceGroups = subscriptionResource.GetResourceGroups();
-            var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup);
+            var resourceGroupResource = await resourceGroups.GetAsync(resourceGroup, cancellationToken);
 
             if (resourceGroupResource.Value == null)
             {
@@ -132,7 +135,8 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
                 .CreateOrUpdateAsync(
                 WaitUntil.Started,
                 $"redis-{name}-{DateTimeOffset.UtcNow:yyyyMMddHHmmss}",
-                new ArmDeploymentContent(deploymentProperties)
+                new ArmDeploymentContent(deploymentProperties),
+                cancellationToken
             );
 
             return new Resource
@@ -152,11 +156,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         }
     }
 
-    private async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource)
+    private async Task<IEnumerable<Resource>> ListAcrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
-        await foreach (var acrResource in subscriptionResource.GetAllRedisAsync())
+        await foreach (var acrResource in subscriptionResource.GetAllRedisAsync(cancellationToken))
         {
             if (string.IsNullOrWhiteSpace(acrResource?.Id.ToString())
                 || string.IsNullOrWhiteSpace(acrResource.Data.Name))
@@ -256,11 +260,11 @@ public class RedisService(ISubscriptionService _subscriptionService, ITenantServ
         return resources;
     }
 
-    private async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource)
+    private async Task<IEnumerable<Resource>> ListAmrResourcesAsync(SubscriptionResource subscriptionResource, CancellationToken cancellationToken)
     {
         var resources = new List<Resource>();
 
-        await foreach (var amrResource in subscriptionResource.GetRedisEnterpriseClustersAsync())
+        await foreach (var amrResource in subscriptionResource.GetRedisEnterpriseClustersAsync(cancellationToken))
         {
             if (string.IsNullOrWhiteSpace(amrResource?.Id.ToString())
                 || string.IsNullOrWhiteSpace(amrResource.Data.Name))

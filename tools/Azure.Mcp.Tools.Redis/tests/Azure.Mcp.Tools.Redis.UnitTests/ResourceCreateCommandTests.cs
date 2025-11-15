@@ -57,7 +57,8 @@ public class ResourceCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
         var command = new ResourceCreateCommand(_logger);
@@ -145,7 +146,8 @@ public class ResourceCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
         .ThrowsAsync(new Exception("Resource group 'test-rg' not found"));
 
         var command = new ResourceCreateCommand(_logger);
@@ -173,7 +175,8 @@ public class ResourceCreateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -203,7 +206,8 @@ public class ResourceCreateCommandTests
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
         var command = new ResourceCreateCommand(_logger);
@@ -244,7 +248,8 @@ public class ResourceCreateCommandTests
                 modules.Contains("RedisBloom") &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -270,7 +275,8 @@ public class ResourceCreateCommandTests
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
         var command = new ResourceCreateCommand(_logger);
@@ -307,7 +313,8 @@ public class ResourceCreateCommandTests
             true,
             Arg.Any<string[]?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -336,7 +343,8 @@ public class ResourceCreateCommandTests
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
         .Returns(expectedResource);
 
         var command = new ResourceCreateCommand(_logger);
@@ -377,6 +385,7 @@ public class ResourceCreateCommandTests
                 modules.Length == 1 &&
                 modules.Contains("RedisJSON")),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }

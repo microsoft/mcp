@@ -36,7 +36,7 @@ public class ServerParamGetCommandTests
     public async Task ExecuteAsync_ReturnsParamValue_WhenParamExists()
     {
         var expectedValue = "value123";
-        _postgresService.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123").Returns(expectedValue);
+        _postgresService.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<CancellationToken>()).Returns(expectedValue);
 
         var command = new ServerParamGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "param123"]);
@@ -58,7 +58,7 @@ public class ServerParamGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsNull_WhenParamDoesNotExist()
     {
-        _postgresService.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123").Returns("");
+        _postgresService.GetServerParameterAsync("sub123", "rg1", "user1", "server123", "param123", Arg.Any<CancellationToken>()).Returns("");
         var command = new ServerParamGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1", "--server", "server123", "--param", "param123"]);
         var context = new CommandContext(_serviceProvider);

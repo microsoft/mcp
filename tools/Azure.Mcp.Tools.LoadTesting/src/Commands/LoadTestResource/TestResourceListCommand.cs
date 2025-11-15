@@ -52,7 +52,8 @@ public sealed class TestResourceListCommand(ILogger<TestResourceListCommand> log
                 options.ResourceGroup,
                 options.TestResourceName,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = ResponseResult.Create(new(results ?? []), LoadTestJsonContext.Default.TestResourceListCommandResult);
         }

@@ -51,7 +51,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -95,7 +96,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is((string?)null),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestCreateCommand(_logger);
@@ -116,7 +118,8 @@ public class TestCreateCommandTests
             Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"),
             Arg.Is("TestDisplayName"), Arg.Is("TestDescription"),
             Arg.Is((int?)20), Arg.Is((int?)50), Arg.Is((int?)1), Arg.Is("https://example.com/api/test"),
-            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
         var command = new TestCreateCommand(_logger);

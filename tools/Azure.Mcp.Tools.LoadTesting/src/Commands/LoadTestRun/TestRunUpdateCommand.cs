@@ -81,7 +81,8 @@ public sealed class TestRunUpdateCommand(ILogger<TestRunUpdateCommand> logger)
                 options.DisplayName,
                 options.Description,
                 false, // DebugMode false will default to a normal test run - in future we may add a DebugMode option
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestRunUpdateCommandResult) :

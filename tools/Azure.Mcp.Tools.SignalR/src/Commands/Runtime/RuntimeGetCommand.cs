@@ -73,7 +73,8 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
                 options.SignalR,
                 options.Tenant,
                 options.AuthMethod,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
                 runtimes.Count(), options.Subscription);

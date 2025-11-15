@@ -101,7 +101,13 @@ public class RuntimeGetCommandTests
                 }
             };
             _signalRService.GetRuntimeAsync(
-                Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<AuthMethod?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(runtimes);
         }
 
@@ -128,7 +134,13 @@ public class RuntimeGetCommandTests
     {
         // Arrange
         _signalRService.GetRuntimeAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
@@ -150,7 +162,13 @@ public class RuntimeGetCommandTests
     {
         // Arrange
         _signalRService.GetRuntimeAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
@@ -170,7 +188,13 @@ public class RuntimeGetCommandTests
         // Arrange
         var notFoundException = new RequestFailedException(404, "Not Found");
         _signalRService.GetRuntimeAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);
@@ -188,7 +212,13 @@ public class RuntimeGetCommandTests
         // Arrange
         var forbiddenException = new RequestFailedException(403, "Forbidden");
         _signalRService.GetRuntimeAsync(
-            Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<AuthMethod?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(forbiddenException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1"]);

@@ -53,7 +53,8 @@ public sealed class ContainerListCommand(ILogger<ContainerListCommand> logger) :
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(containers ?? []), CosmosJsonContext.Default.ContainerListCommandResult);
         }

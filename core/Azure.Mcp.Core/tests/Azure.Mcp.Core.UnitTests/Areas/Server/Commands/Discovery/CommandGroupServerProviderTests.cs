@@ -51,7 +51,7 @@ public class CommandGroupServerProviderTests
         var options = new McpClientOptions();
 
         // Act
-        var client = await mcpCommandGroup.CreateClientAsync(options);
+        var client = await mcpCommandGroup.CreateClientAsync(options, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(client);

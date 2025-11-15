@@ -56,7 +56,16 @@ public sealed class TableSchemaGetCommand(ILogger<TableSchemaGetCommand> logger)
 
 
             IPostgresService pgService = context.GetService<IPostgresService>() ?? throw new InvalidOperationException("PostgreSQL service is not available.");
-            List<string> schema = await pgService.GetTableSchemaAsync(options.Subscription!, options.ResourceGroup!, options.AuthType!, options.User!, options.Password, options.Server!, options.Database!, options.Table!);
+            List<string> schema = await pgService.GetTableSchemaAsync(
+                options.Subscription!,
+                options.ResourceGroup!,
+                options.AuthType!,
+                options.User!,
+                options.Password,
+                options.Server!,
+                options.Database!,
+                options.Table!,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(schema ?? []), PostgresJsonContext.Default.TableSchemaGetCommandResult);
         }
         catch (Exception ex)

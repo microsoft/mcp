@@ -82,7 +82,7 @@ This tool can provide installation instructions for the specified CLI tool among
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType);
+            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
             var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);

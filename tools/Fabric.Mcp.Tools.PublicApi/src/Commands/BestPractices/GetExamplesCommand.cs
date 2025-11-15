@@ -65,7 +65,7 @@ public sealed class GetExamplesCommand(ILogger<GetExamplesCommand> logger) : Glo
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!);
+            var availableExamples = await fabricService.GetWorkloadExamplesAsync(options.WorkloadType!, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(availableExamples), FabricJsonContext.Default.ExampleFileResult);
         }

@@ -49,21 +49,21 @@ public class FabricPublicApiServiceTests
         var expectedSpec = "{ \"swagger\": \"2.0\" }";
         var expectedDefinitions = new Dictionary<string, string> { { "definitions.json", "{ \"definitions\": {} }" } };
 
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedSpec));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/")
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new[] { "definitions.json" }));
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/definitions.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/definitions.json", Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedDefinitions["definitions.json"]));
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
         Assert.Equal(expectedSpec, result.apiSpecification);
         Assert.Equal(expectedDefinitions, result.apiModelDefinitions);
-        await _resourceProvider.Received(1).GetResource("fabric-rest-api-specs/contents/notebook/swagger.json");
+        await _resourceProvider.Received(1).GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -73,17 +73,19 @@ public class FabricPublicApiServiceTests
         var workload = "platform";
         var expectedSpec = "{ \"swagger\": \"2.0\" }";
 
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/platform/swagger.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/platform/swagger.json", Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedSpec));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/platform/")
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/platform/", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new[] { "definitions/" }));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/platform/definitions/")
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/platform/definitions/", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new[] { "model1.json", "model2.json" }));
-        _resourceProvider.GetResource("definitions/model1.json").Returns(Task.FromResult("{ \"model1\": {} }"));
-        _resourceProvider.GetResource("definitions/model2.json").Returns(Task.FromResult("{ \"model2\": {} }"));
+        _resourceProvider.GetResource("definitions/model1.json", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("{ \"model1\": {} }"));
+        _resourceProvider.GetResource("definitions/model2.json", Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("{ \"model2\": {} }"));
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -99,13 +101,13 @@ public class FabricPublicApiServiceTests
         // Arrange
         var workload = "notebook";
 
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(string.Empty));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/")
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(Array.Empty<string>()));
 
         // Act
-        var result = await _service.GetWorkloadPublicApis(workload);
+        var result = await _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -118,11 +120,11 @@ public class FabricPublicApiServiceTests
     {
         // Arrange
         var workload = "notebook";
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/swagger.json", Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Resource not found"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetWorkloadPublicApis(workload));
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.GetWorkloadPublicApis(workload, TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -134,26 +136,26 @@ public class FabricPublicApiServiceTests
     {
         // Arrange
         var expectedWorkloads = new[] { "notebook", "report", "platform" };
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(expectedWorkloads));
 
         // Act
-        var result = await _service.ListWorkloadsAsync();
+        var result = await _service.ListWorkloadsAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(expectedWorkloads, result);
-        await _resourceProvider.Received(1).ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory);
+        await _resourceProvider.Received(1).ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken);
     }
 
     [Fact]
     public async Task ListFabricWorkloadsAsync_WithException_PropagatesException()
     {
         // Arrange
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .ThrowsAsync(new InvalidOperationException("Service error"));
 
         // Act & Assert
-        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListWorkloadsAsync());
+        await Assert.ThrowsAsync<InvalidOperationException>(() => _service.ListWorkloadsAsync(TestContext.Current.CancellationToken));
     }
 
     #endregion
@@ -167,17 +169,17 @@ public class FabricPublicApiServiceTests
         var workloadType = "notebook";
         var expectedFiles = new[] { "example1.json", "example2.json" };
 
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(expectedFiles));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Array.Empty<string>()));
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/example1.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/example1.json", TestContext.Current.CancellationToken)
             .Returns(Task.FromResult("{ \"example1\": \"content\" }"));
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/example2.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/example2.json", TestContext.Current.CancellationToken)
             .Returns(Task.FromResult("{ \"example2\": \"content\" }"));
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -193,22 +195,22 @@ public class FabricPublicApiServiceTests
         // Arrange
         var workloadType = "notebook";
 
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(new[] { "root.json" }));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(new[] { "subdir1" }));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/subdir1/", ResourceType.File)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/subdir1/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(new[] { "sub1.json" }));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/subdir1/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/subdir1/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Array.Empty<string>()));
 
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/root.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/root.json", TestContext.Current.CancellationToken)
             .Returns(Task.FromResult("{ \"root\": \"content\" }"));
-        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/subdir1/sub1.json")
+        _resourceProvider.GetResource("fabric-rest-api-specs/contents/notebook/examples/subdir1/sub1.json", TestContext.Current.CancellationToken)
             .Returns(Task.FromResult("{ \"sub1\": \"content\" }"));
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(2, result.Count);
@@ -222,13 +224,13 @@ public class FabricPublicApiServiceTests
         // Arrange
         var workloadType = "notebook";
 
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.File, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Array.Empty<string>()));
-        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory)
+        _resourceProvider.ListResourcesInPath("fabric-rest-api-specs/contents/notebook/examples/", ResourceType.Directory, TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Array.Empty<string>()));
 
         // Act
-        var result = await _service.GetWorkloadExamplesAsync(workloadType);
+        var result = await _service.GetWorkloadExamplesAsync(workloadType, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Empty(result);

@@ -63,7 +63,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
     public override async ValueTask<ListToolsResult> ListToolsHandler(RequestContext<ListToolsRequestParams> request, CancellationToken cancellationToken)
     {
-        var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync();
+        var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
         var allToolsResponse = new ListToolsResult
         {
             Tools = new List<Tool>()
@@ -215,7 +215,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         try
         {
             var clientOptions = CreateClientOptions(request.Server);
-            client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(tool, clientOptions);
+            client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(tool, clientOptions, cancellationToken);
             if (client == null)
             {
                 _logger.LogError("Failed to get provider client for tool: {Tool}", tool);
@@ -230,7 +230,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
         try
         {
-            var availableTools = await GetChildToolListAsync(request, tool);
+            var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
 
             // When the specified command is not available, we try to learn about the tool's capabilities
             // and infer the command and parameters from the users intent.
@@ -273,7 +273,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
 
                 if (textContent.Text.Contains("Missing required options", StringComparison.OrdinalIgnoreCase))
                 {
-                    var childToolSpecJson = await GetChildToolJsonAsync(request, tool, command);
+                    var childToolSpecJson = await GetChildToolJsonAsync(request, tool, command, cancellationToken);
 
                     _logger.LogWarning("Tool {Tool} command {Command} requires additional parameters.", tool, command);
                     var finalResponse = new CallToolResult
@@ -332,7 +332,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     private async Task<CallToolResult> InvokeToolLearn(RequestContext<CallToolRequestParams> request, string? intent, string tool, CancellationToken cancellationToken)
     {
         Activity.Current?.SetTag(TagName.IsServerCommandInvoked, false);
-        var toolsJson = await GetChildToolListJsonAsync(request, tool);
+        var toolsJson = await GetChildToolListJsonAsync(request, tool, cancellationToken);
 
         var learnResponse = new CallToolResult
         {
@@ -352,7 +352,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         var response = learnResponse;
         if (SupportsSampling(request.Server) && !string.IsNullOrWhiteSpace(intent))
         {
-            var availableTools = await GetChildToolListAsync(request, tool);
+            var availableTools = await GetChildToolListAsync(request, tool, cancellationToken);
             (string? commandName, Dictionary<string, object?> parameters) = await GetCommandAndParametersFromIntentAsync(request, intent, tool, availableTools, cancellationToken);
             if (commandName != null)
             {
@@ -368,7 +368,7 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
     /// <param name="request"></param>
     /// <param name="tool"></param>
     /// <returns></returns>
-    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool)
+    private async Task<List<Tool>> GetChildToolListAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
         if (_cachedToolLists.TryGetValue(tool, out var cachedList))
         {
@@ -381,13 +381,13 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         }
 
         var clientOptions = CreateClientOptions(request.Server);
-        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(request.Params.Name, clientOptions);
+        var client = await _serverDiscoveryStrategy.GetOrCreateClientAsync(request.Params.Name, clientOptions, cancellationToken);
         if (client == null)
         {
             return [];
         }
 
-        var listTools = await client.ListToolsAsync();
+        var listTools = await client.ListToolsAsync(cancellationToken: cancellationToken);
         if (listTools == null)
         {
             _logger.LogWarning("No tools found for tool: {Tool}", tool);
@@ -403,21 +403,21 @@ public sealed class ServerToolLoader(IMcpDiscoveryStrategy serverDiscoveryStrate
         return list;
     }
 
-    private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool)
+    private async Task<string> GetChildToolListJsonAsync(RequestContext<CallToolRequestParams> request, string tool, CancellationToken cancellationToken)
     {
-        var listTools = await GetChildToolListAsync(request, tool);
+        var listTools = await GetChildToolListAsync(request, tool, cancellationToken);
         return JsonSerializer.Serialize(listTools, ServerJsonContext.Default.ListTool);
     }
 
-    private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName)
+    private async Task<Tool> GetChildToolAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
     {
-        var tools = await GetChildToolListAsync(request, toolName);
+        var tools = await GetChildToolListAsync(request, toolName, cancellationToken);
         return tools.First(t => string.Equals(t.Name, commandName, StringComparison.OrdinalIgnoreCase));
     }
 
-    private async Task<string> GetChildToolJsonAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName)
+    private async Task<string> GetChildToolJsonAsync(RequestContext<CallToolRequestParams> request, string toolName, string commandName, CancellationToken cancellationToken)
     {
-        var tool = await GetChildToolAsync(request, toolName, commandName);
+        var tool = await GetChildToolAsync(request, toolName, commandName, cancellationToken);
         return JsonSerializer.Serialize(tool, ServerJsonContext.Default.Tool);
     }
 

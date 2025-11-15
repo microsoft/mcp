@@ -31,7 +31,7 @@ public class ResourceGroupService(
 
         // Try to get from cache first
         var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
-        var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration);
+        var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
             return cachedResults;
@@ -49,7 +49,7 @@ public class ResourceGroupService(
                 .ToListAsync(cancellationToken: cancellationToken);
 
             // Cache the results
-            await _cacheService.SetAsync(CacheGroup, cacheKey, resourceGroups, s_cacheDuration);
+            await _cacheService.SetAsync(CacheGroup, cacheKey, resourceGroups, s_cacheDuration, cancellationToken);
 
             return resourceGroups;
         }
@@ -68,7 +68,7 @@ public class ResourceGroupService(
 
         // Try to get from cache first
         var cacheKey = $"{CacheKey}_{subscriptionId}_{tenant ?? "default"}";
-        var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration);
+        var cachedResults = await _cacheService.GetAsync<List<ResourceGroupInfo>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
             return cachedResults.FirstOrDefault(rg => rg.Name.Equals(resourceGroupName, StringComparison.OrdinalIgnoreCase));

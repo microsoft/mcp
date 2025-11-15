@@ -38,7 +38,11 @@ public class ServiceListCommandTests
     {
         // Arrange
         var expectedServices = new List<string> { "service1", "service2" };
-        _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListServices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedServices);
 
         var command = new ServiceListCommand(_logger);
@@ -64,7 +68,11 @@ public class ServiceListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoServices()
     {
         // Arrange
-        _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListServices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new ServiceListCommand(_logger);
@@ -93,7 +101,11 @@ public class ServiceListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "sub123";
 
-        _searchService.ListServices(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListServices(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ServiceListCommand(_logger);

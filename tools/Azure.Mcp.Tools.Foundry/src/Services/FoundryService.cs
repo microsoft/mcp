@@ -422,7 +422,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var chatClient = client.GetChatClient(deploymentName);
 
@@ -500,7 +500,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var embeddingClient = client.GetEmbeddingClient(deploymentName);
 
@@ -651,7 +651,7 @@ public class FoundryService(
         }
 
         // Create Azure OpenAI client with flexible authentication
-        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant);
+        AzureOpenAIClient client = await CreateOpenAIClientWithAuth(endpoint, resourceName, cognitiveServicesAccount.Value, authMethod, tenant, cancellationToken);
 
         var chatClient = client.GetChatClient(deploymentName);
 
@@ -766,7 +766,8 @@ public class FoundryService(
         string resourceName,
         CognitiveServicesAccountResource cognitiveServicesAccount,
         AuthMethod authMethod,
-        string? tenant = null)
+        string? tenant = null,
+        CancellationToken cancellationToken = default)
     {
         AzureOpenAIClient client;
 
@@ -774,7 +775,7 @@ public class FoundryService(
         {
             case AuthMethod.Key:
                 // Get the access key
-                var keys = await cognitiveServicesAccount.GetKeysAsync();
+                var keys = await cognitiveServicesAccount.GetKeysAsync(cancellationToken);
                 var key = keys.Value.Key1;
 
                 if (string.IsNullOrEmpty(key))
@@ -787,7 +788,7 @@ public class FoundryService(
 
             case AuthMethod.Credential:
             default:
-                var credential = await GetCredential(tenant);
+                var credential = await GetCredential(cancellationToken);
                 client = new AzureOpenAIClient(new Uri(endpoint), credential);
                 break;
         }

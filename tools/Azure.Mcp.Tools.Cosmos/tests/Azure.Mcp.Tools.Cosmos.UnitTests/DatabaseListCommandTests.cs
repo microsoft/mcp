@@ -48,7 +48,8 @@ public class DatabaseListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
 
         var args = _commandDefinition.Parse([
@@ -78,7 +79,8 @@ public class DatabaseListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -109,7 +111,8 @@ public class DatabaseListCommandTests
             Arg.Is("sub123"),
             Arg.Any<AuthMethod>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([

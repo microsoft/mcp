@@ -70,9 +70,18 @@ public class FileSystemUpdateCommandTests
         if (shouldSucceed)
         {
             _svc.UpdateFileSystemAsync(
-                Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+                Arg.Is(Sub),
+                Arg.Is(Rg),
+                Arg.Is(Name),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
 
@@ -102,7 +111,19 @@ public class FileSystemUpdateCommandTests
     public async Task ExecuteAsync_MaintenanceUpdate_CallsServiceAndReturnsResult()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>())
+        _svc.UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            "Monday",
+            "01:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -115,7 +136,19 @@ public class FileSystemUpdateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, "Monday", "01:00", null, null, null, null, null, Arg.Any<RetryPolicyOptions?>());
+        await _svc.Received(1).UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            "Monday",
+            "01:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, ManagedLustreJsonContext.Default.FileSystemUpdateResult);
@@ -127,7 +160,19 @@ public class FileSystemUpdateCommandTests
     public async Task ExecuteAsync_RootSquashUpdate_CallsService()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>())
+        _svc.UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            1000,
+            1000,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -142,16 +187,38 @@ public class FileSystemUpdateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 1000, 1000, null, Arg.Any<RetryPolicyOptions?>());
+        await _svc.Received(1).UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            1000,
+            1000,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
     public async Task ExecuteAsync_ServiceThrowsRequestFailed_ReturnsStatus()
     {
-        _svc.UpdateFileSystemAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(),
-            Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-            Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "not found"));
+        _svc.UpdateFileSystemAsync(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<long?>(),
+            Arg.Any<long?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new RequestFailedException(404, "not found"));
 
         var args = _commandDefinition.Parse([
             "--subscription", Sub,
@@ -179,9 +246,18 @@ public class FileSystemUpdateCommandTests
         if (shouldSucceed)
         {
             _svc.UpdateFileSystemAsync(
-                Arg.Is(Sub), Arg.Is(Rg), Arg.Is(Name),
-                Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<long?>(), Arg.Any<long?>(),
-                Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+                Arg.Is(Sub),
+                Arg.Is(Rg),
+                Arg.Is(Name),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<long?>(),
+                Arg.Any<long?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(CreateLustre());
         }
 
@@ -203,7 +279,19 @@ public class FileSystemUpdateCommandTests
     public async Task ExecuteAsync_RootSquashMode_WithUidGid_SucceedsAndCallsService()
     {
         var expected = CreateLustre();
-        _svc.UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>())
+        _svc.UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            2000,
+            3000,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -218,7 +306,19 @@ public class FileSystemUpdateCommandTests
 
         var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.OK, response.Status);
-        await _svc.Received(1).UpdateFileSystemAsync(Sub, Rg, Name, null, null, "All", "nid1,nid2", 2000, 3000, null, Arg.Any<RetryPolicyOptions?>());
+        await _svc.Received(1).UpdateFileSystemAsync(
+            Sub,
+            Rg,
+            Name,
+            null,
+            null,
+            "All",
+            "nid1,nid2",
+            2000,
+            3000,
+            null,
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

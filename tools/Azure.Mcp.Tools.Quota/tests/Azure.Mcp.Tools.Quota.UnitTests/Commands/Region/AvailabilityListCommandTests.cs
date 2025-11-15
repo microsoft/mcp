@@ -62,7 +62,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -89,7 +90,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -130,7 +132,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 cognitiveServiceModelName,
                 Arg.Any<string?>(),
-                cognitiveServiceDeploymentSkuName)
+                cognitiveServiceDeploymentSkuName,
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -158,7 +161,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             cognitiveServiceModelName,
             null,
-            cognitiveServiceDeploymentSkuName);
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -202,7 +206,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -218,7 +223,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
         var args = _commandDefinition.Parse([
@@ -255,7 +261,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -282,7 +289,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -297,7 +305,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -339,7 +348,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 cognitiveServiceModelName,
                 cognitiveServiceModelVersion,
-                cognitiveServiceDeploymentSkuName)
+                cognitiveServiceDeploymentSkuName,
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -367,7 +377,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             cognitiveServiceModelName,
             cognitiveServiceModelVersion,
-            cognitiveServiceDeploymentSkuName);
+            cognitiveServiceDeploymentSkuName,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -398,7 +409,8 @@ public sealed class AvailabilityListCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -419,7 +431,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -446,7 +459,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -477,7 +491,8 @@ public sealed class AvailabilityListCommandTests
                 subscriptionId,
                 Arg.Any<string?>(),
                 Arg.Any<string?>(),
-                Arg.Any<string?>())
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedRegions);
 
         var args = _commandDefinition.Parse([
@@ -501,7 +516,8 @@ public sealed class AvailabilityListCommandTests
             subscriptionId,
             null,
             null,
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
