@@ -271,6 +271,64 @@ To manually validate:
 - **Multiple entries**: Create multiple YAML files with different timestamps.
 - **Subsections**: Use sparingly for grouping related changes (e.g., dependency updates).
 
+## Why Timestamp Filenames?
+
+We use Unix timestamp in milliseconds (e.g., `1731260400123.yml`) for changelog entry filenames because:
+
+| Strategy | Pros | Cons |
+|----------|------|------|
+| **Timestamp milliseconds** ✅ | Unique, sortable, simple, can create before PR | None significant |
+| Timestamp + PR number | Guaranteed unique, traceable | Verbose, requires PR first |
+| PR number only | Simple, short | Not unique across repos, requires PR first |
+| Sequential counter | Simple, short | Requires coordination, conflict-prone |
+| GUID only | Guaranteed unique | Completely opaque, no sorting |
+
+**Key benefits:**
+- **Pre-PR friendly**: Create entries before you have a PR number
+- **No coordination needed**: No need to check what number to use next
+- **Chronological**: Files naturally sort by creation time
+- **Collision-resistant**: 1000 unique values per second makes conflicts extremely unlikely
+
+## FAQ
+
+### Do I need to compile the changelog in my PR?
+
+No! Contributors only create YAML files. Release managers compile the changelog during the release process using the compilation script.
+
+### Can I edit an existing changelog entry?
+
+Yes! Just edit the YAML file and commit the change. It will be picked up in the next compilation.
+
+### What if I forget to add a changelog entry?
+
+Add it later in a follow-up PR or ask the maintainer to create one. Each entry is a separate file, so there's no conflict with other ongoing work.
+
+### What if two entries use the same timestamp?
+
+The timestamp is in milliseconds, giving 1000 unique values per second. Collisions are extremely unlikely. If one does occur (perhaps you created two entries in the same second), Git will show a conflict and you can simply regenerate a new timestamp for one of them.
+
+### Can I add multiple changelog entries in one PR?
+
+Yes! Just create multiple YAML files with different timestamps. This is common when a PR includes several distinct user-facing changes.
+
+### Do I need to know the PR number when creating an entry?
+
+No. You can create the YAML file before opening a PR by setting `pr: 0`, then update the PR number later when you know it.
+
+### Does every PR need a changelog entry?
+
+No! Only include entries for changes worth mentioning to users:
+- ✅ New features, breaking changes, important bug fixes
+- ❌ Internal refactoring, test-only changes, minor cleanup
+
+### What happens to the YAML files after release?
+
+They're deleted by the release manager using `./eng/scripts/Compile-Changelog.ps1 -DeleteFiles` after the entries are compiled into the main CHANGELOG.md.
+
+## Background
+
+This system replaces the traditional approach of directly editing `CHANGELOG.md`, which often caused merge conflicts when multiple contributors were working simultaneously. Inspired by [GitLab's changelog system](https://about.gitlab.com/blog/solving-gitlabs-changelog-conflict-crisis/), individual YAML files eliminate these conflicts while making the changelog process more structured and reviewable.
+
 ## Questions?
 
-See the full documentation at `docs/changelog-management-system.md` or reach out to the maintainers.
+Reach out to the maintainers if you have questions or encounter issues with the changelog entry system.
