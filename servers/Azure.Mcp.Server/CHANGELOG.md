@@ -6,6 +6,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added [HiddenCommand] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
 - Enabled HTTPS redirection by default when running `server start --transport http`. This can be opted-out with `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` when not needed. [[#1169](https://github.com/microsoft/mcp/pull/1169)]
 - Updated the `User-Agent` string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 - Added support for creating new Redis resources via the `redis_create` command. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
