@@ -86,7 +86,7 @@ function ExportServerJson {
     )
 
     $output = [ordered]@{
-        '$schema' = "https://static.modelcontextprotocol.io/schemas/2025-09-29/server.schema.json"
+        '$schema' = "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json"
         description = $Description
         name = "com.microsoft/$CommandName"
         version = $Version
