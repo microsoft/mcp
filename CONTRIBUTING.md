@@ -283,7 +283,20 @@ export AzureAd__Instance="https://login.microsoftonline.com/"
 ```
 
 > **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
-
+>
+> For local development, when running with HTTPS (either via `ASPNETCORE_URLS` or HTTPS redirection), you must generate a self-signed development certificate:
+>
+>**Windows and macOS:**
+> ```bash
+> dotnet dev-certs https --trust
+> ```
+>
+> **Linux:**
+> ```bash
+> dotnet dev-certs https
+> ```
+>
+> On Linux, you must manually trust the generated certificate. See the [official documentation](https://learn.microsoft.com/dotnet/core/tools/dotnet-dev-certs) for instructions on how to do this.
 
 #### Configure mcp.json
 
@@ -309,7 +322,7 @@ Update your mcp.json to point to the locally built azmcp executable.
 {
   "servers": {
     "Azure MCP Server": {
-      "url": "http://localhost:1031/",
+      "url": "https://localhost:1031/",
       "type": "http"
     }
   }
