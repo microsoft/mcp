@@ -6,13 +6,21 @@
 .DESCRIPTION
     This script reads all YAML files from the changelog-entries directory,
     validates them against the schema, groups them by section and subsection,
-    and inserts the compiled entries into CHANGELOG.md under the "Unreleased" section.
+    and inserts the compiled entries into CHANGELOG.md under the specified version section.
+    
+    If no version is specified, entries are added to the "Unreleased" section at the top.
+    If there is no "Unreleased" section and no version is specified, a new "Unreleased" 
+    section is created using the next semantic version number.
 
 .PARAMETER ChangelogPath
     Path to the CHANGELOG.md file. Defaults to servers/Azure.Mcp.Server/CHANGELOG.md.
 
 .PARAMETER ChangelogEntriesPath
     Path to the changelog-entries directory. Defaults to servers/Azure.Mcp.Server/changelog-entries.
+
+.PARAMETER Version
+    Target version section to compile entries into (e.g., "2.0.0-beta.3", "1.5.2").
+    If not specified, uses the "Unreleased" section or creates one.
 
 .PARAMETER DryRun
     Preview what will be compiled without modifying any files.
@@ -28,7 +36,12 @@
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1
 
-    Compile entries into CHANGELOG.md.
+    Compile entries into the Unreleased section of CHANGELOG.md.
+
+.EXAMPLE
+    ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3"
+
+    Compile entries into the 2.0.0-beta.3 version section.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
@@ -43,6 +56,9 @@ param(
 
     [Parameter(Mandatory = $false)]
     [string]$ChangelogEntriesPath = "servers/Azure.Mcp.Server/changelog-entries",
+
+    [Parameter(Mandatory = $false)]
+    [string]$Version,
 
     [Parameter(Mandatory = $false)]
     [switch]$DryRun,
@@ -206,10 +222,12 @@ foreach ($section in $sectionOrder) {
         }
         
         foreach ($entry in $withSubsection) {
-            if (-not $groupedEntries[$section].ContainsKey($entry.Subsection)) {
-                $groupedEntries[$section][$entry.Subsection] = @()
+            # Normalize subsection name to title case for grouping
+            $normalizedSubsection = ConvertTo-TitleCase $entry.Subsection
+            if (-not $groupedEntries[$section].ContainsKey($normalizedSubsection)) {
+                $groupedEntries[$section][$normalizedSubsection] = @()
             }
-            $groupedEntries[$section][$entry.Subsection] += $entry
+            $groupedEntries[$section][$normalizedSubsection] += $entry
         }
     }
 }
@@ -241,12 +259,99 @@ foreach ($section in $sectionOrder) {
     foreach ($subsection in $subsections) {
         $markdown += ""
         $markdown += "#### $subsection"
+        $markdown += ""  # Empty line before subsection entries
         foreach ($entry in $sectionData[$subsection]) {
             $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
             $markdown += "- $($entry.Description)$prLink"
         }
     }
 }
+
+# Read existing CHANGELOG.md to determine target version
+$changelogContent = Get-Content -Path $changelogFile -Raw
+
+# Determine target version section
+$targetVersionHeader = $null
+$isUnreleased = $false
+
+if ($Version) {
+    # User specified a version - find it in the changelog
+    Write-Host "Looking for version section: $Version" -ForegroundColor Cyan
+    
+    # Look for exact version match (with or without date)
+    $escapedVersion = [regex]::Escape($Version)
+    $versionPattern = "(?m)^##\s+$escapedVersion(\s+\(.*?\))?\s*$"
+    $versionMatch = [regex]::Match($changelogContent, $versionPattern)
+    
+    if (-not $versionMatch.Success) {
+        Write-Error "Version '$Version' not found in CHANGELOG.md. Please ensure this version section exists before compiling entries."
+        exit 1
+    }
+    
+    $targetVersionHeader = $versionMatch.Value
+    $isUnreleased = $targetVersionHeader -match '\(Unreleased\)'
+    Write-Host "✓ Found version section: $targetVersionHeader" -ForegroundColor Green
+    Write-Host ""
+} else {
+    # No version specified - look for Unreleased section at the top
+    Write-Host "No version specified - looking for Unreleased section..." -ForegroundColor Cyan
+    
+    # Find the first ## header after any initial # headers
+    $firstSectionPattern = '(?m)^##\s+(.+?)(\s+\(.*?\))?\s*$'
+    $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
+    
+    if ($firstSectionMatch.Success) {
+        $firstSectionFull = $firstSectionMatch.Value
+        
+        # Check if it's Unreleased
+        if ($firstSectionFull -match '\(Unreleased\)') {
+            $targetVersionHeader = $firstSectionFull
+            $isUnreleased = $true
+            Write-Host "✓ Found Unreleased section: $targetVersionHeader" -ForegroundColor Green
+            Write-Host ""
+        } else {
+            # First section is not Unreleased - create new Unreleased section
+            Write-Host "No Unreleased section found at the top of CHANGELOG.md" -ForegroundColor Yellow
+            Write-Host "Creating new Unreleased section with next version number..." -ForegroundColor Yellow
+            
+            # Parse current version to determine next version
+            $currentVersion = $firstSectionMatch.Groups[1].Value.Trim()
+            Write-Host "Current version: $currentVersion" -ForegroundColor Gray
+            
+            # Parse semantic version (handles formats like "2.0.0-beta.3" or "1.5.2")
+            if ($currentVersion -match '^(\d+)\.(\d+)\.(\d+)(?:-(.+?)\.(\d+))?') {
+                $major = [int]$matches[1]
+                $minor = [int]$matches[2]
+                $patch = [int]$matches[3]
+                $prerelease = $matches[4]
+                $prereleaseNum = if ($matches[5]) { [int]$matches[5] } else { 0 }
+                
+                # Increment based on prerelease status
+                if ($prerelease) {
+                    # Increment prerelease number (e.g., beta.3 -> beta.4)
+                    $nextVersion = "$major.$minor.$patch-$prerelease.$($prereleaseNum + 1)"
+                } else {
+                    # Increment patch version (e.g., 1.5.2 -> 1.5.3)
+                    $nextVersion = "$major.$minor.$($patch + 1)"
+                }
+                
+                $targetVersionHeader = "## $nextVersion (Unreleased)"
+                $isUnreleased = $true
+                Write-Host "Next version: $nextVersion" -ForegroundColor Green
+                Write-Host ""
+            } else {
+                Write-Error "Unable to parse version number '$currentVersion' to determine next version. Please specify -Version parameter or ensure CHANGELOG.md has a valid version format."
+                exit 1
+            }
+        }
+    } else {
+        Write-Error "No version sections found in CHANGELOG.md. Please add a version section manually or specify -Version parameter."
+        exit 1
+    }
+}
+
+Write-Host "Target section: $targetVersionHeader" -ForegroundColor Cyan
+Write-Host ""
 
 # Preview output
 Write-Host "Compiled Output:" -ForegroundColor Cyan
@@ -259,34 +364,32 @@ if ($DryRun) {
     Write-Host "DRY RUN - No files were modified" -ForegroundColor Yellow
     exit 0
 }
-
-# Read existing CHANGELOG.md
-$changelogContent = Get-Content -Path $changelogFile -Raw
-
-# Find the Unreleased section
-$unreleasedPattern = '(?s)(##\s+.*?Unreleased.*?\r?\n)(.*?)(?=##\s+\d+\.\d+\.\d+|$)'
-$match = [regex]::Match($changelogContent, $unreleasedPattern)
+# Find the target section in the changelog
+$versionSectionPattern = '(?s)(' + [regex]::Escape($targetVersionHeader) + '\r?\n)(.*?)(?=##\s+\d+\.\d+\.\d+|##\s+[^\s]+\s+\(|$)'
+$match = [regex]::Match($changelogContent, $versionSectionPattern)
 
 if (-not $match.Success) {
-    Write-Warning "No 'Unreleased' section found in CHANGELOG.md"
-    Write-Host "Creating new Unreleased section..." -ForegroundColor Yellow
+    Write-Host "Target section '$targetVersionHeader' not found in CHANGELOG.md" -ForegroundColor Yellow
+    Write-Host "Creating new section..." -ForegroundColor Yellow
     
-    # Create a new unreleased section at the top of the changelog
-    $newUnreleasedSection = "## Unreleased`n"
-    $newUnreleasedSection += ($markdown -join "`n") + "`n`n"
+    # Create a new section
+    $newVersionSection = "$targetVersionHeader`n"
+    $newVersionSection += ($markdown -join "`n") + "`n`n"
     
-    # Insert after the first heading (usually # Changelog or # Release History)
-    $firstHeadingPattern = '(#[^#].*?\r?\n)'
-    $firstHeadingMatch = [regex]::Match($changelogContent, $firstHeadingPattern)
+    # Find the first ## section and insert before it
+    $firstSectionPattern = '(?m)^##\s+'
+    $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
     
-    if ($firstHeadingMatch.Success) {
-        $updatedChangelog = $changelogContent -replace $firstHeadingPattern, "$($firstHeadingMatch.Value)`n$newUnreleasedSection"
+    if ($firstSectionMatch.Success) {
+        # Insert the new section right before the first ## section
+        $insertPosition = $firstSectionMatch.Index
+        $updatedChangelog = $changelogContent.Insert($insertPosition, "$newVersionSection")
     } else {
-        # If no heading found, just prepend to the file
-        $updatedChangelog = $newUnreleasedSection + $changelogContent
+        # If no ## section found, append to the end of the file
+        $updatedChangelog = $changelogContent + "`n$newVersionSection"
     }
 } else {
-    $unreleasedHeader = $match.Groups[1].Value
+    $versionHeader = $match.Groups[1].Value
     $existingContent = $match.Groups[2].Value
     
     # Parse existing content by sections
@@ -335,7 +438,7 @@ if (-not $match.Success) {
     }
     
     # Build new content by merging existing and new entries
-    $newContent = $unreleasedHeader
+    $newContent = $versionHeader
     
     foreach ($section in $sectionOrder) {
         # Check if we have entries (existing or new) for this section
@@ -444,13 +547,13 @@ if (-not $match.Success) {
         }
     }
     
-    # Ensure there's an empty line at the end of the Unreleased section
+    # Ensure there's an empty line at the end of the version section
     if (-not $newContent.EndsWith("`n`n")) {
         $newContent += "`n"
     }
     
     # Replace in changelog
-    $updatedChangelog = $changelogContent -replace [regex]::Escape($unreleasedHeader + $existingContent), $newContent
+    $updatedChangelog = $changelogContent -replace [regex]::Escape($versionHeader + $existingContent), $newContent
 }
 
 # Write updated CHANGELOG.md

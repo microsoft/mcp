@@ -116,19 +116,32 @@ Before tagging a release:
 
 1. **Preview compilation:**
    ```powershell
+   # Compile to the default Unreleased section
    ./eng/scripts/Compile-Changelog.ps1 -DryRun
+   
+   # Or compile to a specific version
+   ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DryRun
    ```
 
 2. **Compile entries:**
    ```powershell
+   # Compile to Unreleased section and delete YAML files
    ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
+   
+   # Or compile to a specific version
+   ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DeleteFiles
    ```
 
-3. **Update CHANGELOG.md:**
+3. **Version behavior:**
+   - If `-Version` is specified: Entries are compiled into that version section (must exist in CHANGELOG.md)
+   - If no `-Version` is specified: Entries are compiled into the "Unreleased" section at the top
+   - If no "Unreleased" section exists and no `-Version` is specified: A new "Unreleased" section is created with the next version number
+
+4. **Update CHANGELOG.md** (if compiling to Unreleased):
    - Change "Unreleased" to the actual version number
    - Add release date
 
-4. **Commit and tag the release**
+5. **Commit and tag the release**
 
 ## Compiled Output
 
