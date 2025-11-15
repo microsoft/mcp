@@ -112,7 +112,7 @@ jobs:
       mergeTestResults: true
 
   - task: PublishTestResults@2
-    displayName: "Publish Results"
+    displayName: "Publish Recorded Test Results"
     condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/recordedTestResults/*.trx"
