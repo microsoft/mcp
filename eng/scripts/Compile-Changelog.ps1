@@ -505,18 +505,13 @@ if (-not $match.Success) {
             continue
         }
         
-        # Add empty line before section (but not before the very first section)
-        if (-not $isFirstSection) {
-            $mergedContent += ""
-        }
-        $isFirstSection = $false
-        
-        $mergedContent += "### $section"
+        # Collect entries for this section
+        $sectionContent = @()
         
         # Merge entries without subsection
         $existingMainEntries = @()
         if ($hasExisting -and $existingSections[$section].ContainsKey("")) {
-            $existingMainEntries = @($existingSections[$section][""])
+            $existingMainEntries = @($existingSections[$section][""] | Where-Object { $_.Trim() -ne '' })
         }
         $newMainEntries = @()
         
@@ -526,17 +521,15 @@ if (-not $match.Success) {
             }
         }
         
-        # Append new entries after existing ones (with empty line before entries)
-        $totalEntries = $existingMainEntries.Count + $newMainEntries.Count
-        if ($totalEntries -gt 0) {
-            $mergedContent += ""  # Empty line before entries
+        # Add main entries to section content
+        $totalMainEntries = $existingMainEntries.Count + $newMainEntries.Count
+        if ($totalMainEntries -gt 0) {
+            $sectionContent += ""  # Empty line before entries
             foreach ($line in $existingMainEntries) {
-                if ($line) {
-                    $mergedContent += $line
-                }
+                $sectionContent += $line
             }
             foreach ($line in $newMainEntries) {
-                $mergedContent += $line
+                $sectionContent += $line
             }
         }
         
@@ -546,23 +539,39 @@ if (-not $match.Success) {
         
         foreach ($subsectionTitleCased in $allSubsections) {
             $mapping = $subsectionMapping[$subsectionTitleCased]
-            $mergedContent += ""
-            $mergedContent += "#### $subsectionTitleCased"
-            $mergedContent += ""  # Empty line before entries
+            $subsectionEntries = @()
             
-            # Existing subsection entries
+            # Existing subsection entries (filter out empty lines)
             if ($mapping.Existing -and $hasExisting -and $existingSections[$section].ContainsKey($mapping.Existing)) {
-                foreach ($line in $existingSections[$section][$mapping.Existing]) {
-                    $mergedContent += $line
-                }
+                $subsectionEntries += @($existingSections[$section][$mapping.Existing] | Where-Object { $_.Trim() -ne '' })
             }
             
             # New subsection entries
             if ($mapping.New -and $hasNew -and $groupedEntries[$section].ContainsKey($mapping.New)) {
                 foreach ($entry in $groupedEntries[$section][$mapping.New]) {
-                    $mergedContent += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+                    $subsectionEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
                 }
             }
+            
+            # Only add subsection if it has content
+            if ($subsectionEntries.Count -gt 0) {
+                $sectionContent += ""
+                $sectionContent += "#### $subsectionTitleCased"
+                $sectionContent += ""  # Empty line before entries
+                $sectionContent += $subsectionEntries
+            }
+        }
+        
+        # Only add section to merged content if it has any content
+        if ($sectionContent.Count -gt 0) {
+            # Add empty line before section (but not before the very first section)
+            if (-not $isFirstSection) {
+                $mergedContent += ""
+            }
+            $isFirstSection = $false
+            
+            $mergedContent += "### $section"
+            $mergedContent += $sectionContent
         }
     }
 }
