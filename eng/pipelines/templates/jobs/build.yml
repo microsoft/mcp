@@ -96,7 +96,6 @@ jobs:
       pwsh: true
       filePath:  $(Build.SourcesDirectory)/eng/scripts/Test-Code.ps1
       arguments: >
-        -CollectCoverage:$${{ eq(parameters.OSName, 'linux') }}
         -TestType 'Recorded'
         -TestResultsPath '$(Build.ArtifactStagingDirectory)/recordedTestResults'
       workingDirectory: $(Build.SourcesDirectory)
