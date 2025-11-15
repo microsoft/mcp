@@ -30,7 +30,8 @@ public sealed class AksService(
         string? clusterName,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
@@ -48,13 +49,13 @@ public sealed class AksService(
             }
 
             // Try to get from cache first
-            var cachedClusters = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedClusters = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedClusters != null)
             {
                 return cachedClusters;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var clusters = new List<Cluster>();
 
             try
@@ -62,7 +63,7 @@ public sealed class AksService(
                 if (string.IsNullOrEmpty(resourceGroup))
                 {
 
-                    await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync())
+                    await foreach (var cluster in subscriptionResource.GetContainerServiceManagedClustersAsync(cancellationToken))
                     {
                         if (cluster?.Data != null)
                         {
@@ -74,13 +75,13 @@ public sealed class AksService(
                 }
                 else
                 {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                     if (resourceGroupResource?.Value == null)
                     {
                         return clusters;
                     }
 
-                    await foreach (var cluster in resourceGroupResource.Value.GetContainerServiceManagedClusters().GetAllAsync())
+                    await foreach (var cluster in resourceGroupResource.Value.GetContainerServiceManagedClusters().GetAllAsync(cancellationToken))
                     {
                         if (cluster?.Data != null)
                         {
@@ -90,7 +91,7 @@ public sealed class AksService(
                 }
 
                 // Cache the results
-                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration);
+                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -109,18 +110,18 @@ public sealed class AksService(
             : $"cluster_{subscription}_{resourceGroup}_{clusterName}_{tenant}";
 
             // Try to get from cache first
-            var cachedCluster = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedCluster = await _cacheService.GetAsync<List<Cluster>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedCluster != null)
             {
                 return cachedCluster;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
             try
             {
                 var resourceGroupResource = await subscriptionResource
-                    .GetResourceGroupAsync(resourceGroup);
+                    .GetResourceGroupAsync(resourceGroup, cancellationToken);
 
                 if (resourceGroupResource?.Value == null)
                 {
@@ -129,7 +130,7 @@ public sealed class AksService(
 
                 var clusterResource = await resourceGroupResource.Value
                     .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName);
+                    .GetAsync(clusterName, cancellationToken);
 
                 if (clusterResource?.Value?.Data == null)
                 {
@@ -139,7 +140,7 @@ public sealed class AksService(
                 var clusters = new List<Cluster>() { ConvertToClusterModel(clusterResource.Value) };
 
                 // Cache the result
-                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration);
+                await _cacheService.SetAsync(CacheGroup, cacheKey, clusters, s_cacheDuration, cancellationToken);
 
                 return clusters;
             }
@@ -156,7 +157,7 @@ public sealed class AksService(
         string clusterName,
         string? nodePoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -171,18 +172,18 @@ public sealed class AksService(
                 : $"{AksNodePoolsCacheKey}_{subscription}_{resourceGroup}_{clusterName}_{tenant}";
 
             // Try to get from cache first
-            var cachedNodePools = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedNodePools = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedNodePools != null)
             {
                 return cachedNodePools;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var nodePools = new List<NodePool>();
 
             try
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (resourceGroupResource?.Value == null)
                 {
                     return nodePools;
@@ -190,7 +191,7 @@ public sealed class AksService(
 
                 var clusterResource = await resourceGroupResource.Value
                     .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName);
+                    .GetAsync(clusterName, cancellationToken);
 
                 if (clusterResource?.Value == null)
                 {
@@ -199,7 +200,7 @@ public sealed class AksService(
 
                 await foreach (var agentPool in clusterResource.Value
                                    .GetContainerServiceAgentPools()
-                                   .GetAllAsync())
+                                   .GetAllAsync(cancellationToken))
                 {
                     if (agentPool?.Data != null)
                     {
@@ -208,7 +209,7 @@ public sealed class AksService(
                 }
 
                 // Cache the results
-                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
+                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
             }
             catch (Exception ex)
             {
@@ -225,17 +226,17 @@ public sealed class AksService(
             : $"nodepool_{subscription}_{resourceGroup}_{clusterName}_{nodePoolName}_{tenant}";
 
             // Try to get from cache first
-            var cachedNodePool = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedNodePool = await _cacheService.GetAsync<List<NodePool>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedNodePool != null)
             {
                 return cachedNodePool;
             }
 
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
             try
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (resourceGroupResource?.Value == null)
                 {
                     return [];
@@ -243,7 +244,7 @@ public sealed class AksService(
 
                 var clusterResource = await resourceGroupResource.Value
                     .GetContainerServiceManagedClusters()
-                    .GetAsync(clusterName);
+                    .GetAsync(clusterName, cancellationToken);
 
                 if (clusterResource?.Value == null)
                 {
@@ -252,7 +253,7 @@ public sealed class AksService(
 
                 var agentPoolResource = await clusterResource.Value
                     .GetContainerServiceAgentPools()
-                    .GetAsync(nodePoolName);
+                    .GetAsync(nodePoolName, cancellationToken);
 
                 if (agentPoolResource?.Value?.Data == null)
                 {
@@ -262,7 +263,7 @@ public sealed class AksService(
                 var nodePools = new List<NodePool>() { ConvertToNodePoolModel(agentPoolResource.Value) };
 
                 // Cache the result
-                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration);
+                await _cacheService.SetAsync(CacheGroup, cacheKey, nodePools, s_cacheDuration, cancellationToken);
 
                 return nodePools;
             }

@@ -51,7 +51,8 @@ public class EventHubDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(true);
         }
 
@@ -84,7 +85,8 @@ public class EventHubDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
@@ -108,7 +110,8 @@ public class EventHubDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
@@ -132,7 +135,8 @@ public class EventHubDeleteCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
@@ -156,7 +160,8 @@ public class EventHubDeleteCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(false);
 
         // Act

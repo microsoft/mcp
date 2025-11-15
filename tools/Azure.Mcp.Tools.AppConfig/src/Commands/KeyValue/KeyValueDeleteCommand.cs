@@ -54,7 +54,8 @@ public sealed class KeyValueDeleteCommand(ILogger<KeyValueDeleteCommand> logger)
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                options.Label);
+                options.Label,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.Key, options.Label), AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
         }

@@ -10,7 +10,7 @@ internal class CliInstallService(IHttpClientService httpClientService) : ICliIns
 {
     private readonly IHttpClientService _httpClientService = httpClientService;
 
-    public async Task<HttpResponseMessage> GetCliInstallInstructions(string cliType)
+    public async Task<HttpResponseMessage> GetCliInstallInstructions(string cliType, CancellationToken cancellationToken)
     {
         string osStr;
         if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
@@ -53,7 +53,7 @@ internal class CliInstallService(IHttpClientService httpClientService) : ICliIns
             Method = HttpMethod.Get,
             RequestUri = new Uri(instructionsUrl)
         };
-        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage);
+        HttpResponseMessage responseMessage = await _httpClientService.DefaultClient.SendAsync(requestMessage, cancellationToken);
         return responseMessage;
     }
 }

@@ -29,7 +29,8 @@ public class AppServiceService(
         string connectionString,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         _logger.LogInformation(
             "Adding database connection to App Service {AppName} in resource group {ResourceGroup}",
@@ -48,14 +49,14 @@ public class AppServiceService(
                 );
 
             // Get Azure resources
-            var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy);
+            var webApp = await GetWebAppResourceAsync(subscription, resourceGroup, appName, tenant, retryPolicy, cancellationToken);
 
             // Prepare connection string
             var finalConnectionString = PrepareConnectionString(connectionString, databaseType, databaseServer, databaseName);
             var connectionStringName = $"{databaseName}Connection";
 
             // Update web app configuration
-            await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType);
+            await UpdateWebAppConnectionStringAsync(webApp, connectionStringName, finalConnectionString, databaseType, cancellationToken);
 
             _logger.LogInformation(
                 "Successfully added database connection {ConnectionName} to App Service {AppName}",
@@ -74,18 +75,18 @@ public class AppServiceService(
     }
 
     private async Task<WebSiteResource> GetWebAppResourceAsync(string subscription, string resourceGroup,
-        string appName, string? tenant, RetryPolicyOptions? retryPolicy)
+        string appName, string? tenant, RetryPolicyOptions? retryPolicy, CancellationToken cancellationToken)
     {
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
-        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+        var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
         if (resourceGroupResource?.Value == null)
         {
             throw new ArgumentException($"Resource group '{resourceGroup}' not found in subscription '{subscription}'.");
         }
 
         var webApps = resourceGroupResource.Value.GetWebSites();
-        var webAppResource = await webApps.GetAsync(appName);
+        var webAppResource = await webApps.GetAsync(appName, cancellationToken);
         if (webAppResource?.Value == null)
         {
             throw new ArgumentException($"Web app '{appName}' not found in resource group '{resourceGroup}'.");
@@ -103,11 +104,11 @@ public class AppServiceService(
     }
 
     private static async Task UpdateWebAppConnectionStringAsync(WebSiteResource webApp, string connectionStringName,
-        string connectionString, string databaseType)
+        string connectionString, string databaseType, CancellationToken cancellationToken)
     {
         // Get current web app configuration
         var configResource = webApp.GetWebSiteConfig();
-        var config = await configResource.GetAsync();
+        var config = await configResource.GetAsync(cancellationToken);
 
         if (config?.Value?.Data == null)
         {
@@ -133,7 +134,7 @@ public class AppServiceService(
         var configData = config.Value.Data;
         configData.ConnectionStrings = connectionStrings;
 
-        var updatedConfig = await configResource.CreateOrUpdateAsync(Azure.WaitUntil.Completed, configData);
+        var updatedConfig = await configResource.CreateOrUpdateAsync(Azure.WaitUntil.Completed, configData, cancellationToken);
         if (updatedConfig?.Value == null)
         {
             throw new InvalidOperationException($"Failed to update configuration for web app '{webApp.Data.Name}'.");

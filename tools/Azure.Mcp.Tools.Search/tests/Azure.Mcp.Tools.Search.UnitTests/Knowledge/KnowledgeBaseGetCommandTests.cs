@@ -43,7 +43,11 @@ public class KnowledgeBaseGetCommandTests
             new("base2", "Second base", ["source2", "source3"])
         };
 
-        _searchService.ListKnowledgeBases(Arg.Is("service123"), Arg.Is((string?)null), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is("service123"),
+            Arg.Is((string?)null),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedBases);
 
         var command = new KnowledgeBaseGetCommand(_logger);
@@ -73,7 +77,11 @@ public class KnowledgeBaseGetCommandTests
     {
         var expectedBase = new KnowledgeBaseInfo("base1", "First base", ["source1"]);
 
-        _searchService.ListKnowledgeBases(Arg.Is("service123"), Arg.Is("base1"), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is("service123"),
+            Arg.Is("base1"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns([expectedBase]);
 
         var command = new KnowledgeBaseGetCommand(_logger);
@@ -96,7 +104,12 @@ public class KnowledgeBaseGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoBases()
     {
-        _searchService.ListKnowledgeBases(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>()).Returns([]);
+        _searchService.ListKnowledgeBases(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
+            .Returns([]);
 
         var command = new KnowledgeBaseGetCommand(_logger);
 
@@ -118,7 +131,11 @@ public class KnowledgeBaseGetCommandTests
         var expectedError = "Test error";
         var serviceName = "service123";
 
-        _searchService.ListKnowledgeBases(Arg.Is(serviceName), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions>())
+        _searchService.ListKnowledgeBases(
+            Arg.Is(serviceName),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new KnowledgeBaseGetCommand(_logger);

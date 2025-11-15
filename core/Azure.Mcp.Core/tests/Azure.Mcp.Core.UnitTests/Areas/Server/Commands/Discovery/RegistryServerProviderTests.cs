@@ -113,7 +113,7 @@ public class RegistryServerProviderTests
 
     //     // Act & Assert
     //     var exception = await Assert.ThrowsAsync<HttpRequestException>(
-    //         () => provider.CreateClientAsync(new McpClientOptions()));
+    //         () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
     //     Assert.Contains(((int)HttpStatusCode.NotFound).ToString(), exception.Message);
     // }
@@ -135,7 +135,7 @@ public class RegistryServerProviderTests
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
         Assert.Contains($"Failed to create MCP client for registry server '{testId}'", exception.Message);
     }
@@ -161,7 +161,7 @@ public class RegistryServerProviderTests
         // Act & Assert - Should throw InvalidOperationException for subprocess startup failure
         // since configuration is valid but external process fails to start properly
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
         Assert.Contains($"Failed to create MCP client for registry server '{testId}'", exception.Message);
     }
@@ -180,7 +180,7 @@ public class RegistryServerProviderTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<ArgumentException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
         Assert.Contains($"Registry server '{testId}' does not have a valid transport type.",
             exception.Message);
@@ -201,7 +201,7 @@ public class RegistryServerProviderTests
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
         Assert.Contains($"Registry server '{testId}' does not have a valid command for stdio transport.",
             exception.Message);
@@ -225,7 +225,7 @@ public class RegistryServerProviderTests
 
         // Act & Assert - Should throw InvalidOperationException with install instructions
         var exception = await Assert.ThrowsAsync<InvalidOperationException>(
-            () => provider.CreateClientAsync(new McpClientOptions()));
+            () => provider.CreateClientAsync(new McpClientOptions(), TestContext.Current.CancellationToken));
 
         // Verify the exception message contains the install instructions
         Assert.Contains($"Failed to initialize the '{testId}' MCP tool.", exception.Message);

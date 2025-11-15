@@ -23,17 +23,18 @@ public class QuotaService(
     public async Task<Dictionary<string, List<UsageInfo>>> GetAzureQuotaAsync(
         List<string> resourceTypes,
         string subscriptionId,
-        string location)
+        string location,
+        CancellationToken cancellationToken)
     {
-        TokenCredential credential = await GetCredential();
+        TokenCredential credential = await GetCredential(cancellationToken);
         Dictionary<string, List<UsageInfo>> quotaByResourceTypes = await AzureQuotaService.GetAzureQuotaAsync(
             credential,
             resourceTypes,
             subscriptionId,
             location,
             loggerFactory,
-            _httpClientService
-            );
+            _httpClientService,
+            cancellationToken);
         return quotaByResourceTypes;
     }
 
@@ -42,9 +43,10 @@ public class QuotaService(
         string subscriptionId,
         string? cognitiveServiceModelName = null,
         string? cognitiveServiceModelVersion = null,
-        string? cognitiveServiceDeploymentSkuName = null)
+        string? cognitiveServiceDeploymentSkuName = null,
+        CancellationToken cancellationToken = default)
     {
-        ArmClient armClient = await CreateArmClientAsync();
+        ArmClient armClient = await CreateArmClientAsync(cancellationToken: cancellationToken);
 
         // Create cognitive service properties if any of the parameters are provided
         CognitiveServiceProperties? cognitiveServiceProperties = null;
@@ -60,7 +62,14 @@ public class QuotaService(
             };
         }
 
-        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(armClient, resourceTypes, subscriptionId, loggerFactory, cognitiveServiceProperties);
+        var availableRegions = await AzureRegionService.GetAvailableRegionsForResourceTypesAsync(
+            armClient,
+            resourceTypes,
+            subscriptionId,
+            loggerFactory,
+            cognitiveServiceProperties,
+            cancellationToken);
+
         var allRegions = availableRegions.Values
             .Where(regions => regions.Count > 0)
             .SelectMany(regions => regions)

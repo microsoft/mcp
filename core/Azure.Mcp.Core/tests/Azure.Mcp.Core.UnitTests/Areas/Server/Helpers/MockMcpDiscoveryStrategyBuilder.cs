@@ -4,6 +4,7 @@
 using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using ModelContextProtocol.Client;
 using NSubstitute;
+using Xunit;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server.Helpers;
 
@@ -44,13 +45,13 @@ public sealed class MockMcpDiscoveryStrategyBuilder
 
         if (client != null)
         {
-            mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(Task.FromResult(client));
+            mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(client));
         }
         else
         {
             // If no client is provided, create a basic substitute
             var defaultClient = Substitute.For<McpClient>();
-            mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>()).Returns(Task.FromResult(defaultClient));
+            mockProvider.CreateClientAsync(Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(Task.FromResult(defaultClient));
         }
 
         _providers.Add(mockProvider);
@@ -121,10 +122,10 @@ public sealed class MockMcpDiscoveryStrategyBuilder
         var mockStrategy = Substitute.For<IMcpDiscoveryStrategy>();
 
         // Configure DiscoverServersAsync to return the current providers
-        mockStrategy.DiscoverServersAsync().Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(_providers));
+        mockStrategy.DiscoverServersAsync(Arg.Any<CancellationToken>()).Returns(Task.FromResult<IEnumerable<IMcpServerProvider>>(_providers));
 
         // Configure FindServerProviderAsync to find providers by name (case-insensitive)
-        mockStrategy.FindServerProviderAsync(Arg.Any<string>()).Returns(callInfo =>
+        mockStrategy.FindServerProviderAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(callInfo =>
         {
             var serverName = callInfo.Arg<string>();
             var provider = _providers.FirstOrDefault(p =>
@@ -139,7 +140,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
         });
 
         // Configure GetOrCreateClientAsync to return the appropriate client
-        mockStrategy.GetOrCreateClientAsync(Arg.Any<string>(), Arg.Any<McpClientOptions>()).Returns(callInfo =>
+        mockStrategy.GetOrCreateClientAsync(Arg.Any<string>(), Arg.Any<McpClientOptions>(), Arg.Any<CancellationToken>()).Returns(callInfo =>
         {
             var serverName = callInfo.Arg<string>();
             var clientOptions = callInfo.ArgAt<McpClientOptions>(1) ?? new McpClientOptions();
@@ -153,7 +154,7 @@ public sealed class MockMcpDiscoveryStrategyBuilder
             }
 
             // Return the client from the provider
-            return provider.CreateClientAsync(clientOptions);
+            return provider.CreateClientAsync(clientOptions, TestContext.Current.CancellationToken);
         });
 
         return mockStrategy;

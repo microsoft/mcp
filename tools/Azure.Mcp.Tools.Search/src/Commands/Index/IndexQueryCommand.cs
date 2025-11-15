@@ -70,7 +70,8 @@ public sealed class IndexQueryCommand(ILogger<IndexQueryCommand> logger) : Globa
                 options.Service!,
                 options.Index!,
                 options.Query!,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(results, SearchJsonContext.Default.ListJsonElement);
         }

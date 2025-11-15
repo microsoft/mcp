@@ -76,7 +76,8 @@ public sealed class QueueDetailsCommand(ILogger<QueueDetailsCommand> logger) : S
                 options.Namespace!,
                 options.Name!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.QueueDetailsCommandResult);
         }
