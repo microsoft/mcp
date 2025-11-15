@@ -83,11 +83,73 @@ function ConvertTo-TitleCase {
     return $textInfo.ToTitleCase($Text.ToLower())
 }
 
+# Helper function to format a changelog entry with description and PR link
+function Format-ChangelogEntry {
+    param(
+        [string]$Description,
+        [int]$PR
+    )
+    
+    # Ensure description ends with a period
+    $formattedDescription = $Description
+    if (-not $formattedDescription.EndsWith(".")) {
+        $formattedDescription += "."
+    }
+    
+    # Add PR link if available
+    $prLink = if ($PR -gt 0) { " [[#$PR](https://github.com/microsoft/mcp/pull/$PR)]" } else { "" }
+    return "- $formattedDescription$prLink"
+}
+
+# Helper function to build subsection mapping (merging with case-insensitive matching)
+function Build-SubsectionMapping {
+    param(
+        [hashtable]$ExistingSections,
+        [hashtable]$GroupedEntries,
+        [string]$Section
+    )
+    
+    $subsectionMapping = @{}
+    $hasExisting = $ExistingSections.ContainsKey($Section)
+    $hasNew = $GroupedEntries.ContainsKey($Section)
+    
+    if ($hasExisting) {
+        foreach ($key in $ExistingSections[$Section].Keys) {
+            if ($key -ne "") {
+                $titleCased = ConvertTo-TitleCase $key
+                if (-not $subsectionMapping.ContainsKey($titleCased)) {
+                    $subsectionMapping[$titleCased] = @{
+                        Existing = $key
+                        New = $null
+                    }
+                }
+            }
+        }
+    }
+    
+    if ($hasNew) {
+        foreach ($key in $GroupedEntries[$Section].Keys) {
+            if ($key -ne "") {
+                $titleCased = ConvertTo-TitleCase $key
+                if ($subsectionMapping.ContainsKey($titleCased)) {
+                    $subsectionMapping[$titleCased].New = $key
+                } else {
+                    $subsectionMapping[$titleCased] = @{
+                        Existing = $null
+                        New = $key
+                    }
+                }
+            }
+        }
+    }
+    
+    return $subsectionMapping
+}
+
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $changelogFile = Join-Path $repoRoot $ChangelogPath
 $changelogEntriesDir = Join-Path $repoRoot $ChangelogEntriesPath
-$schemaPath = Join-Path $repoRoot "eng/schemas/changelog-entry.schema.json"
 
 Write-Host "Changelog Compiler" -ForegroundColor Cyan
 Write-Host "==================" -ForegroundColor Cyan
@@ -124,9 +186,6 @@ if (-not $yamlModule) {
     Install-Module -Name powershell-yaml -Force -Scope CurrentUser -AllowClobber
 }
 Import-Module powershell-yaml -ErrorAction Stop
-
-# Load schema
-$schema = Get-Content -Path $schemaPath -Raw | ConvertFrom-Json
 
 # Parse and validate YAML files
 $entries = @()
@@ -232,47 +291,11 @@ foreach ($section in $sectionOrder) {
     }
 }
 
-# Generate markdown
-$markdown = @()
-
-foreach ($section in $sectionOrder) {
-    if (-not $groupedEntries.ContainsKey($section)) {
-        continue
-    }
-    
-    $markdown += ""
-    $markdown += "### $section"
-    $markdown += ""
-    
-    $sectionData = $groupedEntries[$section]
-    
-    # Entries without subsection first
-    if ($sectionData.ContainsKey("")) {
-        foreach ($entry in $sectionData[""]) {
-            $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
-            $markdown += "- $($entry.Description)$prLink"
-        }
-    }
-    
-    # Entries with subsections
-    $subsections = $sectionData.Keys | Where-Object { $_ -ne "" } | Sort-Object
-    foreach ($subsection in $subsections) {
-        $markdown += ""
-        $markdown += "#### $subsection"
-        $markdown += ""  # Empty line before subsection entries
-        foreach ($entry in $sectionData[$subsection]) {
-            $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
-            $markdown += "- $($entry.Description)$prLink"
-        }
-    }
-}
-
 # Read existing CHANGELOG.md to determine target version
 $changelogContent = Get-Content -Path $changelogFile -Raw
 
 # Determine target version section
 $targetVersionHeader = $null
-$isUnreleased = $false
 
 if ($Version) {
     # User specified a version - find it in the changelog
@@ -289,7 +312,6 @@ if ($Version) {
     }
     
     $targetVersionHeader = $versionMatch.Value
-    $isUnreleased = $targetVersionHeader -match '\(Unreleased\)'
     Write-Host "✓ Found version section: $targetVersionHeader" -ForegroundColor Green
     Write-Host ""
 } else {
@@ -306,7 +328,6 @@ if ($Version) {
         # Check if it's Unreleased
         if ($firstSectionFull -match '\(Unreleased\)') {
             $targetVersionHeader = $firstSectionFull
-            $isUnreleased = $true
             Write-Host "✓ Found Unreleased section: $targetVersionHeader" -ForegroundColor Green
             Write-Host ""
         } else {
@@ -336,7 +357,6 @@ if ($Version) {
                 }
                 
                 $targetVersionHeader = "## $nextVersion (Unreleased)"
-                $isUnreleased = $true
                 Write-Host "Next version: $nextVersion" -ForegroundColor Green
                 Write-Host ""
             } else {
@@ -402,8 +422,9 @@ if (-not $match.Success) {
                 }
             }
         }
-        elseif ($line -match '^-\s+(.+)$') {
-            # Entry line
+        elseif ($line -match '^-\s+' -or ($currentSection -and $line.Trim() -ne "" -and $line -match '^\s+')) {
+            # Entry line (starts with -) or continuation line (indented, non-empty)
+            # Skip if it's empty or if we're not in a section yet
             if ($currentSection) {
                 if ($currentSubsection) {
                     $existingSections[$currentSection][$currentSubsection] += $line
@@ -442,13 +463,7 @@ if (-not $match.Success) {
         
         if ($hasNew -and $groupedEntries[$section].ContainsKey("")) {
             foreach ($entry in $groupedEntries[$section][""]) {
-                $description = $entry.Description
-                # Ensure description ends with a period
-                if (-not $description.EndsWith(".")) {
-                    $description = $description + "."
-                }
-                $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
-                $newMainEntries += "- $description$prLink"
+                $newMainEntries += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
             }
         }
         
@@ -467,39 +482,7 @@ if (-not $match.Success) {
         }
         
         # Merge subsections - normalize subsection names (case-insensitive, title case)
-        $allSubsections = @()
-        $subsectionMapping = @{}  # Maps normalized (title-cased) name to actual name
-        
-        if ($hasExisting) {
-            foreach ($key in $existingSections[$section].Keys) {
-                if ($key -ne "") {
-                    $titleCased = ConvertTo-TitleCase $key
-                    if (-not $subsectionMapping.ContainsKey($titleCased)) {
-                        $subsectionMapping[$titleCased] = @{
-                            Existing = $key
-                            New = $null
-                        }
-                    }
-                }
-            }
-        }
-        
-        if ($hasNew) {
-            foreach ($key in $groupedEntries[$section].Keys) {
-                if ($key -ne "") {
-                    $titleCased = ConvertTo-TitleCase $key
-                    if ($subsectionMapping.ContainsKey($titleCased)) {
-                        $subsectionMapping[$titleCased].New = $key
-                    } else {
-                        $subsectionMapping[$titleCased] = @{
-                            Existing = $null
-                            New = $key
-                        }
-                    }
-                }
-            }
-        }
-        
+        $subsectionMapping = Build-SubsectionMapping -ExistingSections $existingSections -GroupedEntries $groupedEntries -Section $section
         $allSubsections = $subsectionMapping.Keys | Sort-Object
         
         foreach ($subsectionTitleCased in $allSubsections) {
@@ -518,13 +501,7 @@ if (-not $match.Success) {
             # New subsection entries
             if ($mapping.New -and $hasNew -and $groupedEntries[$section].ContainsKey($mapping.New)) {
                 foreach ($entry in $groupedEntries[$section][$mapping.New]) {
-                    $description = $entry.Description
-                    # Ensure description ends with a period
-                    if (-not $description.EndsWith(".")) {
-                        $description = $description + "."
-                    }
-                    $prLink = if ($entry.PR -gt 0) { " [[#$($entry.PR)](https://github.com/microsoft/mcp/pull/$($entry.PR))]" } else { "" }
-                    $mergedContent += "- $description$prLink"
+                    $mergedContent += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
                 }
             }
         }
@@ -571,9 +548,13 @@ if (-not $match.Success) {
     # Build the new content from merged array
     $newContent = ($mergedContent -join "`n")
     
-    # Ensure there's an empty line at the end of the version section
+    # Ensure there's an empty line at the end of the version section (two newlines total)
     if (-not $newContent.EndsWith("`n`n")) {
-        $newContent += "`n"
+        if ($newContent.EndsWith("`n")) {
+            $newContent += "`n"
+        } else {
+            $newContent += "`n`n"
+        }
     }
     
     # Replace in changelog
