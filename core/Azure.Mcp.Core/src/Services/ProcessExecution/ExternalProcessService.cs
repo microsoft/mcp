@@ -42,9 +42,9 @@ public class ExternalProcessService : IExternalProcessService
             processStartInfo.EnvironmentVariables[keyValuePair.Key] = keyValuePair.Value;
         }
 
-        using var process = new Process { StartInfo = processStartInfo };
         using var outputWaitHandle = new AutoResetEvent(false);
         using var errorWaitHandle = new AutoResetEvent(false);
+        using var process = new Process { StartInfo = processStartInfo };
 
         var outputBuilder = new StringBuilder();
         var errorBuilder = new StringBuilder();

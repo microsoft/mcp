@@ -302,8 +302,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
             $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).",
-        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
-            "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --dangerously-disable-http-incoming-auth") =>
+            "Configuration error to disable incoming HTTP authentication. Ensure proper authentication is configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
     };
 
