@@ -90,6 +90,9 @@ function Format-ChangelogEntry {
         [int]$PR
     )
     
+    # Trim leading and trailing whitespace from the entire description
+    $Description = $Description.Trim()
+    
     # Check if description contains multiple lines
     if ($Description.Contains("`n")) {
         # Remove trailing newlines from YAML block scalars
@@ -98,10 +101,11 @@ function Format-ChangelogEntry {
         $formattedLines = @()
         
         for ($i = 0; $i -lt $lines.Length; $i++) {
-            $line = $lines[$i]
+            $line = $lines[$i].TrimEnd()  # Trim trailing spaces from each line
             
             if ($i -eq 0) {
-                # First line: main bullet point
+                # First line: main bullet point - also trim leading spaces
+                $line = $line.TrimStart()
                 # Ensure it ends with colon if followed by a list, otherwise period
                 if ($lines.Length -gt 1 -and $lines[1].TrimStart() -match '^-\s+') {
                     # Next line is a bullet, so first line should end with colon
@@ -119,8 +123,10 @@ function Format-ChangelogEntry {
             }
             elseif ($i -eq $lines.Length - 1) {
                 # Last line: add PR link here
+                # Line is already trimmed at the end, preserve leading indentation
                 $trimmedLine = $line.TrimStart()
-                $indent = $line.Substring(0, $line.Length - $trimmedLine.Length)
+                $leadingSpaces = $line.Length - $trimmedLine.Length
+                $indent = if ($leadingSpaces -gt 0) { $line.Substring(0, $leadingSpaces) } else { "" }
                 
                 # For bullet items, don't add period; for regular text, ensure period
                 $needsPeriod = -not ($trimmedLine -match '^-\s+')
@@ -134,6 +140,7 @@ function Format-ChangelogEntry {
             }
             else {
                 # Middle lines: preserve indentation and add 2 spaces for nesting
+                # Line is already trimmed at the end
                 $formattedLines += "  $line"
             }
         }
