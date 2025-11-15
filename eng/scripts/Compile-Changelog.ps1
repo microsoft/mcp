@@ -12,11 +12,15 @@
     If there is no "Unreleased" section and no version is specified, a new "Unreleased" 
     section is created using the next semantic version number.
 
+.PARAMETER ServerName
+    Name of the server to compile changelog for (e.g., "Azure.Mcp.Server", "Fabric.Mcp.Server").
+    Defaults to "Azure.Mcp.Server".
+
 .PARAMETER ChangelogPath
-    Path to the CHANGELOG.md file. Defaults to servers/Azure.Mcp.Server/CHANGELOG.md.
+    Path to the CHANGELOG.md file. If not specified, uses servers/{ServerName}/CHANGELOG.md.
 
 .PARAMETER ChangelogEntriesPath
-    Path to the changelog-entries directory. Defaults to servers/Azure.Mcp.Server/changelog-entries.
+    Path to the changelog-entries directory. If not specified, uses servers/{ServerName}/changelog-entries.
 
 .PARAMETER Version
     Target version section to compile entries into (e.g., "2.0.0-beta.3", "1.5.2").
@@ -31,17 +35,22 @@
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -DryRun
 
-    Preview what will be compiled without making changes.
+    Preview what will be compiled for Azure.Mcp.Server without making changes.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1
+    ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server"
 
-    Compile entries into the Unreleased section of CHANGELOG.md.
+    Compile entries into the Unreleased section for Fabric.Mcp.Server.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3"
 
-    Compile entries into the 2.0.0-beta.3 version section.
+    Compile entries into the 2.0.0-beta.3 version section for Azure.Mcp.Server.
+
+.EXAMPLE
+    ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -Version "1.0.0"
+
+    Compile entries into the 1.0.0 version section for Fabric.Mcp.Server.
 
 .EXAMPLE
     ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
@@ -52,10 +61,13 @@
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$ChangelogPath = "servers/Azure.Mcp.Server/CHANGELOG.md",
+    [string]$ServerName = "Azure.Mcp.Server",
 
     [Parameter(Mandatory = $false)]
-    [string]$ChangelogEntriesPath = "servers/Azure.Mcp.Server/changelog-entries",
+    [string]$ChangelogPath,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ChangelogEntriesPath,
 
     [Parameter(Mandatory = $false)]
     [string]$Version,
@@ -68,7 +80,15 @@ param(
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
+
+# Set default paths based on ServerName
+if (-not $ChangelogPath) {
+    $ChangelogPath = "servers/$ServerName/CHANGELOG.md"
+}
+if (-not $ChangelogEntriesPath) {
+    $ChangelogEntriesPath = "servers/$ServerName/changelog-entries"
+}
 
 # Helper function to convert text to title case (capitalize first letter of each word)
 function ConvertTo-TitleCase {
@@ -227,7 +247,7 @@ if (-not (Test-Path $changelogFile)) {
 }
 
 # Get all YAML files
-$yamlFiles = Get-ChildItem -Path $changelogEntriesDir -Filter "*.yml" -File | Where-Object { $_.Name -ne "README.yml" }
+$yamlFiles = @(Get-ChildItem -Path $changelogEntriesDir -Filter "*.yml" -File | Where-Object { $_.Name -ne "README.yml" })
 
 if ($yamlFiles.Count -eq 0) {
     Write-Host "No changelog entries found in $changelogEntriesDir" -ForegroundColor Yellow
@@ -378,7 +398,8 @@ if ($Version) {
     Write-Host "No version specified - looking for Unreleased section..." -ForegroundColor Cyan
     
     # Find the first ## header after any initial # headers
-    $firstSectionPattern = '(?m)^##\s+(.+?)(\s+\(.*?\))?\s*$'
+    # This regex handles both formats: "## 2.0.0 (Unreleased)" and "## [0.0.1] - 2025-09-16"
+    $firstSectionPattern = '(?m)^##\s+(?:\[(.+?)\]|(\S+))(?:\s+-\s+|\s+\()'
     $firstSectionMatch = [regex]::Match($changelogContent, $firstSectionPattern)
     
     if ($firstSectionMatch.Success) {
@@ -395,7 +416,12 @@ if ($Version) {
             Write-Host "Creating new Unreleased section with next version number..." -ForegroundColor Yellow
             
             # Parse current version to determine next version
-            $currentVersion = $firstSectionMatch.Groups[1].Value.Trim()
+            # Handle both bracketed and non-bracketed version formats
+            $currentVersion = if ($firstSectionMatch.Groups[1].Success) { 
+                $firstSectionMatch.Groups[1].Value.Trim() 
+            } else { 
+                $firstSectionMatch.Groups[2].Value.Trim() 
+            }
             Write-Host "Current version: $currentVersion" -ForegroundColor Gray
             
             # Parse semantic version (handles formats like "2.0.0-beta.3" or "1.5.2")
@@ -432,6 +458,34 @@ if ($Version) {
 Write-Host "Target section: $targetVersionHeader" -ForegroundColor Cyan
 Write-Host ""
 
+# Generate markdown content from grouped entries (needed for new sections)
+$newEntriesMarkdown = @()
+foreach ($section in $sectionOrder) {
+    if ($groupedEntries.ContainsKey($section)) {
+        $newEntriesMarkdown += ""
+        $newEntriesMarkdown += "### $section"
+        $newEntriesMarkdown += ""
+        
+        $subsections = $groupedEntries[$section]
+        # Process entries without subsection first
+        if ($subsections.ContainsKey("")) {
+            foreach ($entry in $subsections[""]) {
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+            }
+        }
+        
+        # Then process subsections
+        foreach ($subsectionName in ($subsections.Keys | Where-Object { $_ -ne "" } | Sort-Object)) {
+            $newEntriesMarkdown += ""
+            $newEntriesMarkdown += "#### $subsectionName"
+            $newEntriesMarkdown += ""
+            foreach ($entry in $subsections[$subsectionName]) {
+                $newEntriesMarkdown += Format-ChangelogEntry -Description $entry.Description -PR $entry.PR
+            }
+        }
+    }
+}
+
 # Find the target section in the changelog
 $versionSectionPattern = '(?s)(' + [regex]::Escape($targetVersionHeader) + '\r?\n)(.*?)(?=##\s+\d+\.\d+\.\d+|##\s+[^\s]+\s+\(|$)'
 $match = [regex]::Match($changelogContent, $versionSectionPattern)
@@ -442,7 +496,7 @@ $mergedContent += $targetVersionHeader
 
 if (-not $match.Success) {
     # New section - just use the new entries
-    $mergedContent += $markdown
+    $mergedContent += $newEntriesMarkdown
 } else {
     # Existing section - merge with existing content
     $versionHeader = $match.Groups[1].Value

@@ -29,13 +29,24 @@ The easiest way to create a changelog entry is using the generator script:
 
 ```powershell
 # Interactive mode (prompts for all fields)
+# Defaults to Azure.Mcp.Server
 ./eng/scripts/New-ChangelogEntry.ps1
 
-# With parameters
+# For a different server
+./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
+
+# With parameters (defaults to Azure.Mcp.Server)
 ./eng/scripts/New-ChangelogEntry.ps1 `
   -Description "Added support for User-Assigned Managed Identity" `
   -Section "Features Added" `
   -PR 1033
+
+# For a specific server
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -ServerName "Fabric.Mcp.Server" `
+  -Description "Added new Fabric workspace tools" `
+  -Section "Features Added" `
+  -PR 1234
 
 # With subsection (automatically title-cased)
 ./eng/scripts/New-ChangelogEntry.ps1 `
@@ -59,6 +70,7 @@ Added new AI Foundry tools:
 ```
 
 **Features:**
+- Works with any server (Azure.Mcp.Server, Fabric.Mcp.Server, etc.) via `-ServerName` parameter
 - Automatic title-casing of subsections
 - Whitespace trimming from descriptions
 - Support for multi-line descriptions with lists
@@ -86,7 +98,10 @@ If you prefer to create the file manually:
    pr: 1234  # Can be added later if not known yet
    ```
 
-3. **Save the file** in the `servers/Azure.Mcp.Server/changelog-entries/` directory
+3. **Save the file** in the appropriate server's changelog-entries directory:
+   - Azure MCP Server: `servers/Azure.Mcp.Server/changelog-entries/`
+   - Fabric MCP Server: `servers/Fabric.Mcp.Server/changelog-entries/`
+   - Other servers: `servers/{ServerName}/changelog-entries/`
 
 ## YAML File Format
 
@@ -158,8 +173,11 @@ Before tagging a release:
 
 1. **Preview compilation:**
    ```powershell
-   # Compile to the default Unreleased section
+   # Compile to the default Unreleased section (defaults to Azure.Mcp.Server)
    ./eng/scripts/Compile-Changelog.ps1 -DryRun
+   
+   # For a different server
+   ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
    
    # Or compile to a specific version
    ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DryRun
@@ -167,23 +185,39 @@ Before tagging a release:
 
 2. **Compile entries:**
    ```powershell
-   # Compile to Unreleased section and delete YAML files
+   # Compile to Unreleased section and delete YAML files (defaults to Azure.Mcp.Server)
    ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
+   
+   # For a specific server
+   ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DeleteFiles
    
    # Or compile to a specific version
    ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DeleteFiles
    ```
 
-3. **Version behavior:**
+3. **Server and version behavior:**
+   - `-ServerName`: Defaults to `Azure.Mcp.Server`, can be any server (e.g., `Fabric.Mcp.Server`)
    - If `-Version` is specified: Entries are compiled into that version section (must exist in CHANGELOG.md)
    - If no `-Version` is specified: Entries are compiled into the "Unreleased" section at the top
    - If no "Unreleased" section exists and no `-Version` is specified: A new "Unreleased" section is created with the next version number
 
-4. **Update CHANGELOG.md** (if compiling to Unreleased):
+4. **Sync the VS Code extension CHANGELOG** (if applicable):
+   ```powershell
+   # Preview the sync (Azure.Mcp.Server)
+   ./eng/scripts/Sync-VsCodeChangelog.ps1 -DryRun
+   
+   # For a different server
+   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
+   
+   # Apply the sync
+   ./eng/scripts/Sync-VsCodeChangelog.ps1
+   ```
+
+5. **Update CHANGELOG.md** (if compiling to Unreleased):
    - Change "Unreleased" to the actual version number
    - Add release date
 
-5. **Commit and tag the release**
+6. **Commit and tag the release**
 
 ## Compiled Output
 
@@ -213,15 +247,24 @@ The scripts automatically validate your YAML files against the schema at `eng/sc
 
 To manually validate:
 ```powershell
-# The New-ChangelogEntry.ps1 script validates automatically
+# The New-ChangelogEntry.ps1 script validates automatically (defaults to Azure.Mcp.Server)
 ./eng/scripts/New-ChangelogEntry.ps1
+
+# For a specific server
+./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
 
 # The Compile-Changelog.ps1 script also validates
 ./eng/scripts/Compile-Changelog.ps1 -DryRun
+
+# For a specific server
+./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
 ```
 
 ## Tips
 
+- **Multiple servers**: All scripts support the `-ServerName` parameter (defaults to `Azure.Mcp.Server`)
+  - Available servers: `Azure.Mcp.Server`, `Fabric.Mcp.Server`, `Template.Mcp.Server`, etc.
+  - Each server has its own `changelog-entries/` folder and `CHANGELOG.md`
 - **Filename collisions**: The timestamp is in milliseconds, giving 1000 unique values per second. Collisions are extremely unlikely.
 - **PR number unknown**: You can create the entry before opening a PR. Just use `pr: 0` and update it later.
 - **Edit existing entry**: Just edit the YAML file and commit the change.

@@ -19,23 +19,32 @@
 .PARAMETER PR
     Pull request number (integer).
 
+.PARAMETER ServerName
+    Name of the server to create changelog entry for (e.g., "Azure.Mcp.Server", "Fabric.Mcp.Server").
+    Defaults to "Azure.Mcp.Server".
+
 .PARAMETER ChangelogEntriesPath
-    Path to the changelog-entries directory. Defaults to servers/Azure.Mcp.Server/changelog-entries.
+    Path to the changelog-entries directory. If not specified, uses servers/{ServerName}/changelog-entries.
 
 .EXAMPLE
     ./eng/scripts/New-ChangelogEntry.ps1
 
-    Runs in interactive mode, prompting for all required fields.
+    Runs in interactive mode for Azure.Mcp.Server, prompting for all required fields.
+
+.EXAMPLE
+    ./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
+
+    Runs in interactive mode for Fabric.Mcp.Server.
 
 .EXAMPLE
     ./eng/scripts/New-ChangelogEntry.ps1 -Description "Added new feature" -Section "Features Added" -PR 1234
 
-    Creates a changelog entry with the specified parameters.
+    Creates a changelog entry for Azure.Mcp.Server with the specified parameters.
 
 .EXAMPLE
-    ./eng/scripts/New-ChangelogEntry.ps1 -Description "Updated Azure.Core to 1.2.3" -Section "Other Changes" -Subsection "Dependency Updates" -PR 1234
+    ./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server" -Description "Updated Azure.Core to 1.2.3" -Section "Other Changes" -Subsection "Dependency Updates" -PR 1234
 
-    Creates a changelog entry with a subsection.
+    Creates a changelog entry for Fabric.Mcp.Server with a subsection.
 
 .EXAMPLE
     $description = @"
@@ -52,6 +61,9 @@ Added new AI Foundry tools:
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
+    [string]$ServerName = "Azure.Mcp.Server",
+
+    [Parameter(Mandatory = $false)]
     [string]$Description,
 
     [Parameter(Mandatory = $false)]
@@ -64,11 +76,16 @@ param(
     [int]$PR,
 
     [Parameter(Mandatory = $false)]
-    [string]$ChangelogEntriesPath = "servers/Azure.Mcp.Server/changelog-entries"
+    [string]$ChangelogEntriesPath
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Set default path based on ServerName
+if (-not $ChangelogEntriesPath) {
+    $ChangelogEntriesPath = "servers/$ServerName/changelog-entries"
+}
 
 # Helper function to convert text to title case (capitalize first letter of each word)
 function ConvertTo-TitleCase {
@@ -133,6 +150,9 @@ if (-not (Test-Path $changelogEntriesDir)) {
     New-Item -ItemType Directory -Path $changelogEntriesDir | Out-Null
 }
 
+# Determine if we're in interactive mode (missing Description, Section, or PR)
+$isInteractive = (-not $Description) -or (-not $Section) -or (-not $PSBoundParameters.ContainsKey('PR'))
+
 # Interactive mode if parameters not provided
 if (-not $Description) {
     Write-Host "`nChangelog Entry Creator" -ForegroundColor Cyan
@@ -175,7 +195,7 @@ if (-not $Section) {
 }
 
 # Allow subsection for any section in interactive mode
-if (-not $PSBoundParameters.ContainsKey('Subsection')) {
+if (-not $PSBoundParameters.ContainsKey('Subsection') -and $isInteractive) {
     $subsectionInput = Read-Host "`nSubsection (optional, press Enter to skip)"
     if ($subsectionInput) {
         # Trim and title case the subsection
@@ -183,7 +203,7 @@ if (-not $PSBoundParameters.ContainsKey('Subsection')) {
     }
 }
 
-if (-not $PR) {
+if (-not $PR -and $isInteractive) {
     $prInput = Read-Host "`nPR number (press Enter to skip if not known yet)"
     if ($prInput) {
         $PR = [int]$prInput
