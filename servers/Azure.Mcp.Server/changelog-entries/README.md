@@ -37,13 +37,32 @@ The easiest way to create a changelog entry is using the generator script:
   -Section "Features Added" `
   -PR 1033
 
-# With subsection
+# With subsection (automatically title-cased)
 ./eng/scripts/New-ChangelogEntry.ps1 `
   -Description "Updated Azure.Core to 1.2.3" `
   -Section "Other Changes" `
-  -Subsection "Dependency Updates" `
+  -Subsection "dependency updates" `
   -PR 1234
+
+# Multi-line description with a list
+$description = @"
+Added new AI Foundry tools:
+- foundry_agents_create: Create a new AI Foundry agent
+- foundry_threads_create: Create a new AI Foundry Agent Thread
+- foundry_threads_list: List all AI Foundry Agent Threads
+"@
+
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -Description $description `
+  -Section "Features Added" `
+  -PR 945
 ```
+
+**Features:**
+- Automatic title-casing of subsections
+- Whitespace trimming from descriptions
+- Support for multi-line descriptions with lists
+- Interactive validation
 
 ### Manual Creation
 

@@ -36,6 +36,17 @@
     ./eng/scripts/New-ChangelogEntry.ps1 -Description "Updated Azure.Core to 1.2.3" -Section "Other Changes" -Subsection "Dependency Updates" -PR 1234
 
     Creates a changelog entry with a subsection.
+
+.EXAMPLE
+    $description = @"
+Added new AI Foundry tools:
+- foundry_agents_create: Create a new AI Foundry agent
+- foundry_threads_create: Create a new AI Foundry Agent Thread
+- foundry_threads_list: List all AI Foundry Agent Threads
+"@
+    ./eng/scripts/New-ChangelogEntry.ps1 -Description $description -Section "Features Added" -PR 945
+
+    Creates a changelog entry with a multi-line description containing a list.
 #>
 
 [CmdletBinding()]
@@ -58,6 +69,19 @@ param(
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
+
+# Helper function to convert text to title case (capitalize first letter of each word)
+function ConvertTo-TitleCase {
+    param([string]$Text)
+    
+    if ([string]::IsNullOrWhiteSpace($Text)) {
+        return $Text
+    }
+    
+    # Use TextInfo for proper title casing
+    $textInfo = (Get-Culture).TextInfo
+    return $textInfo.ToTitleCase($Text.ToLower())
+}
 
 # Valid sections for validation
 $validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
@@ -93,6 +117,11 @@ if ($PR -and $PR -lt 1) {
     exit 1
 }
 
+# Normalize subsection to title case if provided
+if ($Subsection) {
+    $Subsection = ConvertTo-TitleCase -Text $Subsection.Trim()
+}
+
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
 $changelogEntriesDir = Join-Path $repoRoot $ChangelogEntriesPath
@@ -109,11 +138,17 @@ if (-not $Description) {
     Write-Host "`nChangelog Entry Creator" -ForegroundColor Cyan
     Write-Host "======================" -ForegroundColor Cyan
     Write-Host ""
+    Write-Host "Note: For multi-line descriptions (e.g., with lists), use the -Description parameter with a here-string." -ForegroundColor Gray
+    Write-Host ""
     
     $Description = Read-Host "Description (minimum 10 characters)"
+    # Trim whitespace from user input
+    $Description = $Description.Trim()
+    
     while ($Description.Length -lt 10) {
         Write-Host "Description must be at least 10 characters long." -ForegroundColor Red
         $Description = Read-Host "Description (minimum 10 characters)"
+        $Description = $Description.Trim()
     }
 }
 
@@ -139,12 +174,12 @@ if (-not $Section) {
     }
 }
 
-if (-not $Subsection -and $Section -eq "Other Changes") {
+# Allow subsection for any section in interactive mode
+if (-not $PSBoundParameters.ContainsKey('Subsection')) {
     $subsectionInput = Read-Host "`nSubsection (optional, press Enter to skip)"
     if ($subsectionInput) {
-        # Title case the subsection
-        $textInfo = (Get-Culture).TextInfo
-        $Subsection = $textInfo.ToTitleCase($subsectionInput.ToLower())
+        # Trim and title case the subsection
+        $Subsection = ConvertTo-TitleCase -Text $subsectionInput.Trim()
     }
 }
 
@@ -155,10 +190,8 @@ if (-not $PR) {
     }
 }
 
-# Ensure description ends with a period
-if (-not $Description.EndsWith(".")) {
-    $Description = $Description + "."
-}
+# Trim whitespace from description if provided via parameter
+$Description = $Description.Trim()
 
 # Generate filename with timestamp in milliseconds
 $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
@@ -166,10 +199,25 @@ $filename = "$timestamp.yml"
 $filepath = Join-Path $changelogEntriesDir $filename
 
 # Create YAML content
-$yamlContent = @"
+# Use block scalar (|) for multi-line descriptions, quoted string for single-line
+if ($Description.Contains("`n")) {
+    # Multi-line description - use block scalar with proper indentation
+    $descriptionLines = $Description -split "`n"
+    $indentedLines = $descriptionLines | ForEach-Object { "  $_" }
+    $yamlContent = @"
 section: "$Section"
-description: "$Description"
+description: |
+$($indentedLines -join "`n")
 "@
+} else {
+    # Single-line description - use quoted string
+    # Escape double quotes in the description
+    $escapedDescription = $Description -replace '"', '\"'
+    $yamlContent = @"
+section: "$Section"
+description: "$escapedDescription"
+"@
+}
 
 if ($Subsection) {
     $yamlContent += "`nsubsection: `"$Subsection`""
