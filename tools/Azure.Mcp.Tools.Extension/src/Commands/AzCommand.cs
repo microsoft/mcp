@@ -138,7 +138,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
             var azPath = FindAzCliPath() ?? throw new FileNotFoundException("Azure CLI executable not found in PATH or common installation locations. Please ensure Azure CLI is installed.");
 
             var loginCommand = $"login --service-principal -u {credentials.ClientId} -p {credentials.ClientSecret} --tenant {credentials.TenantId}";
-            var result = await processService.ExecuteAsync(azPath, loginCommand, 60, cancellationToken: cancellationToken);
+            var result = await processService.ExecuteAsync(azPath, loginCommand, null, 60, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {
@@ -180,7 +180,7 @@ Your job is to answer questions about an Azure environment by executing Azure CL
             await AuthenticateWithAzureCredentialsAsync(processService, _logger, cancellationToken);
 
             var azPath = FindAzCliPath() ?? throw new FileNotFoundException("Azure CLI executable not found in PATH or common installation locations. Please ensure Azure CLI is installed.");
-            var result = await processService.ExecuteAsync(azPath, command, _processTimeoutSeconds, cancellationToken: cancellationToken);
+            var result = await processService.ExecuteAsync(azPath, command, null, _processTimeoutSeconds, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {
