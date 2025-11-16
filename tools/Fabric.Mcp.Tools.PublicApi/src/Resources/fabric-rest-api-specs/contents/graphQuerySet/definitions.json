@@ -1,0 +1,135 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "GraphQuerySet data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "GraphQuerySet": {
+            "description": "A graph queryset object.",
+            "type": "object",
+            "required": ["type"],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ]
+        },
+        "GraphQuerySets": {
+            "description": "A list of graph queryset objects.",
+            "required": ["value"],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of graph queryset objects.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GraphQuerySet"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateGraphQuerySetRequest": {
+            "description": "Create GraphQuerySet request payload.",
+            "required": ["displayName"],
+            "properties": {
+                "displayName": {
+                    "description": "The GraphQuerySet display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The GraphQuerySet description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The GraphQuerySet public definition.",
+                    "$ref": "#/definitions/GraphQuerySetPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphQuerySetDefinitionRequest": {
+            "description": "Update GraphQuerySet public definition request payload.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphQuerySetPublicDefinition"
+                }
+            }
+        },
+        "GraphQuerySetDefinitionResponse": {
+            "description": "GraphQuerySet public definition response.",
+            "required": ["definition"],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphQuerySetPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "GraphQuerySetPublicDefinition" : {
+            "description": "GraphQuerySet public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-queryset) for more details on how to craft a GraphQuerySet public definition.",
+            "type": "object",
+            "required": ["parts"],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Currently we support json format.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GraphQuerySetPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "GraphQuerySetPublicDefinitionPart": {
+            "description": "GraphQuerySet definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The GraphQuerySet public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The GraphQuerySet public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType":{
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphQuerySetRequest": {
+            "description": "Update GraphQuerySet request.",
+            "properties": {
+                "displayName": {
+                    "description": "The GraphQuerySet display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The GraphQuerySet description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        }
+    }
+}
