@@ -22,24 +22,6 @@
                     "value": "start"
                 }
             ]
-        },
-        {
-            "registryType": "npm",
-            "identifier": "@azure/mcp",
-            "version": "2.0.0-beta.5",
-            "transport": {
-                "type": "stdio"
-            },
-            "packageArguments": [
-                {
-                    "type": "positional",
-                    "value": "server"
-                },
-                {
-                    "type": "positional",
-                    "value": "start"
-                }
-            ]
         }
     ],
     "repository": {
