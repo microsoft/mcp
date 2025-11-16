@@ -21,7 +21,13 @@
                             "userDetails": {
                                 "userPrincipalName": "jacob@example.com"
                             }
-                        }
+                        },
+                        "tags": [
+                            {
+                                "displayName": "Tag 1",
+                                "id": "b4e54dd6-1d37-4e7a-9e9a-49a596ff4470"
+                            }
+                        ]
                     }
                 ],
                 "continuationUri": null,

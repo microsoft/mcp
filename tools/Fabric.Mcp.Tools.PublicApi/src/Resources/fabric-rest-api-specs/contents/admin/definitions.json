@@ -153,6 +153,14 @@
             "format": "uuid",
             "readOnly": true,
             "description": "The folder ID of the item."
+          },
+          "tags": {
+              "description": "List of applied tags.",
+              "type": "array",
+              "items": {
+                  "$ref": "../common/definitions.json#/definitions/ItemTag"
+               },
+              "readOnly": true
           }
         }
       },

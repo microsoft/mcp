@@ -330,8 +330,11 @@
           }
         },
         "x-ms-examples": {
-          "Example": {
+          "Example of Get ML Model Endpoint": {
             "$ref": "./examples/GetMLModelEndpoint.json"
+          },
+          "Example of Get ML Model Endpoint with an Activation Failure": {
+            "$ref": "./examples/GetMLModelEndpointWithFailureDetails.json"
           }
         }
       },
@@ -386,8 +389,11 @@
           }
         },
         "x-ms-examples": {
-          "Example": {
+          "Example of Update ML Model Endpoint": {
             "$ref": "./examples/UpdateMLModelEndpoint.json"
+          },
+          "Example of Update ML Model Endpoint with an Activation Failure": {
+            "$ref": "./examples/UpdateMLModelEndpointWithFailureDetails.json"
           }
         }
       }
@@ -563,8 +569,11 @@
           }
         },
         "x-ms-examples": {
-          "Example": {
+          "Example of Get ML Model Endpoint Version": {
             "$ref": "./examples/GetMLModelEndpointVersion.json"
+          },
+          "Example of Get ML Model Endpoint Version with an Activation Failure": {
+            "$ref": "./examples/GetMLModelEndpointVersionWithFailureDetails.json"
           }
         }
       },
@@ -626,8 +635,11 @@
           }
         },
         "x-ms-examples": {
-          "Example": {
+          "Example of Update ML Model Endpoint Version": {
             "$ref": "./examples/UpdateMLModelEndpointVersion.json"
+          },
+          "Example of Update ML Model Endpoint Version with an Activation Failure": {
+            "$ref": "./examples/UpdateMLModelEndpointVersionWithFailureDetails.json"
           }
         }
       }
@@ -930,7 +942,8 @@
           }
         },
         "x-ms-examples": {
-          "Example": {
+          "Example":
+          {
             "$ref": "./examples/ScoreMLModelEndpointVersion.json"
           }
         }

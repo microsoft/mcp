@@ -1,0 +1,67 @@
+{
+    "parameters": {
+        "workspaceId": "cfafbeb1-8037-4d0c-896e-a46fb27ff229",
+        "GraphModelId": "5b218778-e7a5-4d73-8187-f10824047715",
+        "createQueryResultRequest": {
+            "query": "MATCH (node_station:`station`) RETURN TO_JSON_STRING(node_station) AS `station` LIMIT 10;"
+        },
+        "preview": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "status": {
+                    "code": "00000",
+                    "description": "note: successful completion",
+                    "diagnostics": {
+                        "OPERATION": "query",
+                        "OPERATION_CODE": "0",
+                        "CURRENT_SCHEMA": "/"
+                    }
+                },
+                "result": {
+                    "kind": "TABLE",
+                    "columns": [
+                        {
+                            "name": "station",
+                            "gqlType": "STRING",
+                            "jsonType": "string"
+                        }
+                    ],
+                    "data": [
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263937\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Holborn\u0022,\u0022stationTo\u0022:\u0022Chancery_Lane\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263938\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Chancery_Lane\u0022,\u0022stationTo\u0022:\u0022St_Paul\u0027s\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263939\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Hyde_Park_Corner\u0022,\u0022stationTo\u0022:\u0022Green_Park\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263940\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Holborn\u0022,\u0022stationTo\u0022:\u0022Russel_Square\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263941\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Euston\u0022,\u0022stationTo\u0022:\u0022Warren_Street\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263942\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Victoria\u0022,\u0022stationTo\u0022:\u0022Pimlico\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263943\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022London_Bridge\u0022,\u0022stationTo\u0022:\u0022Monument\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263944\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Moorgate\u0022,\u0022stationTo\u0022:\u0022Old_Street\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263945\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022South_Kensington\u0022,\u0022stationTo\u0022:\u0022Sloane_Square\u0022}}"
+                        },
+                        {
+                            "station": "{\u0022labels\u0022:[\u0022station\u0022],\u0022oid\u0022:\u00221688849860263946\u0022,\u0022properties\u0022:{\u0022stationFrom\u0022:\u0022Victoria\u0022,\u0022stationTo\u0022:\u0022St_James\u0027s_Park\u0022}}"
+                        }
+                    ]
+                }
+            }
+        }
+    }
+}

@@ -14,7 +14,10 @@
                 "properties": {
                     "connectionString": "Data Source=fvzeldvqgvce3b2hxvbg4hnjqu-nowrtjcsie2e3ny6v4ojbd3esa.database.fabric.microsoft.com,1433;Initial Catalog=SQLDatabase1-45c6e7cf-89b1-4a69-b4e1-5495271c7e45;MultipleActiveResultSets=False;Connect Timeout=30;Encrypt=True;TrustServerCertificate=False",
                     "databaseName": "SQLDatabase1-45c6e7cf-89b1-4a69-b4e1-5495271c7e45",
-                    "serverFqdn": "fvzeldvqgvce3b2hxvbg4hnjqu-nowrtjcsie2e3ny6v4ojbd3esa.database.fabric.microsoft.com,1433"
+                    "serverFqdn": "fvzeldvqgvce3b2hxvbg4hnjqu-nowrtjcsie2e3ny6v4ojbd3esa.database.fabric.microsoft.com,1433",
+                    "earliestRestorePoint": "2024-12-01T00:00:00.000Z",
+                    "latestRestorePoint": "2024-12-02T00:00:00.000Z",
+                    "backupRetentionDays": 7
                 }
             }
         }
