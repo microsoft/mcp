@@ -12,19 +12,29 @@ public record ProcessResult(
 public interface IExternalProcessService
 {
     /// <summary>
-    /// Executes an external process and returns the result
+    /// Executes an external process and captures its standard output and error streams.
     /// </summary>
-    /// <param name="executableName">Name of the executable to find in PATH or common install locations</param>
-    /// <param name="arguments">Arguments to pass to the executable</param>
-    /// <param name="timeoutSeconds">Timeout in seconds</param>
-    /// <param name="customPaths">Optional additional paths to search for the executable</param>
-    /// <param name="cancellationToken">A token to cancel the operation.</param>
-    /// <returns>Process execution result containing exit code, output and error streams</returns>
+    /// <param name="executablePath">Full path to the executable to run.</param>
+    /// <param name="arguments">Command-line arguments to pass to the executable.</param>
+    /// <param name="environmentVariables">
+    /// Optional environment variables to set for the process. If null or not provided, no additional
+    /// environment variables will be set beyond those inherited from the parent process.
+    /// </param>
+    /// <param name="operationTimeoutSeconds">
+    /// Total timeout in seconds for the entire operation, including process execution and output capture.
+    /// Defaults to 300 seconds (5 minutes). Must be greater than zero.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// Cancellation token to abort the operation. The process will be terminated if cancellation is requested.
+    /// </param>
+    /// <returns>
+    /// A <see cref="ProcessResult"/> containing the exit code, standard output, standard error, and command string.
+    /// </returns>
     Task<ProcessResult> ExecuteAsync(
-        string executableName,
+        string executablePath,
         string arguments,
-        int timeoutSeconds = 300,
-        IEnumerable<string>? customPaths = null,
+        IDictionary<string, string>? environmentVariables = default,
+        int operationTimeoutSeconds = 300,
         CancellationToken cancellationToken = default);
 
     /// <summary>
@@ -33,10 +43,4 @@ public interface IExternalProcessService
     /// <param name="result">Process execution result</param>
     /// <returns>Parsed JSON element or formatted error object if parsing fails</returns>
     JsonElement ParseJsonOutput(ProcessResult result);
-
-    /// <summary>
-    /// Sets environment variables for the process execution
-    /// /// </summary>
-    /// <param name="variables">Dictionary of environment variables to set</param>
-    void SetEnvironmentVariables(IDictionary<string, string> variables);
 }
