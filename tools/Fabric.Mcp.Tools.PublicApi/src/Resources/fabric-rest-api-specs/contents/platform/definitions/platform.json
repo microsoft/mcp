@@ -1,10 +1,10 @@
 {
-    "swagger": "2.0",
-    "info": {
-        "version": "v1",
-        "title": "Platform data types"
-    },
-    "paths": {},
+  "swagger": "2.0",
+  "info": {
+      "version": "v1",
+      "title": "Platform data types"
+  },
+  "paths": {},
   "definitions": {
     "Workspaces": {
       "required": [ "value" ],
@@ -1727,7 +1727,7 @@
           "type": "string",
           "enum": [ "NotStarted", "InProgress", "Completed", "Failed", "Cancelled", "Deduped" ],
           "x-ms-enum": {
-            "name": "Status",
+            "name": "ItemJobStatus",
             "modelAsString": true,
             "values": [
               {

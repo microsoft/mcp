@@ -1,0 +1,323 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "title": "GraphModel data types",
+        "version": "v1"
+    },
+    "paths": {},
+    "definitions": {
+        "GraphModel": {
+            "description": "A GraphModel object.",
+            "type": "object",
+            "required": [
+                "type"
+            ],
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/Item"
+                }
+            ],
+            "properties": {
+                "properties": {
+                    "description": "The GraphModel properties.",
+                    "$ref": "#/definitions/GraphModelProperties"
+                }
+            }
+        },
+        "GraphModelProperties": {
+            "description": "The GraphModel properties.",
+            "type": "object",
+            "required": [
+                "oneLakeRootPath"
+            ],
+            "properties": {
+                "oneLakeRootPath": {
+                    "description": "OneLake path to the GraphModel root directory.",
+                    "type": "string"
+                }
+            }
+        },
+        "GraphModels": {
+            "description": "A list of Public Facing Collection Names.",
+            "required": [
+                "value"
+            ],
+            "type": "object",
+            "properties": {
+                "value": {
+                    "description": "A list of Public Facing Collection Names.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GraphModel"
+                    }
+                }
+            },
+            "allOf": [
+                {
+                    "$ref": "../common/definitions.json#/definitions/PaginatedResponse"
+                }
+            ]
+        },
+        "CreateGraphModelRequest": {
+            "description": "Create GraphModel request payload.",
+            "required": [
+                "displayName"
+            ],
+            "properties": {
+                "displayName": {
+                    "description": "The GraphModel display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The GraphModel description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "folderId": {
+                    "description": "The folder ID. If not specified or null, the GraphModel is created with the workspace as its folder.",
+                    "type": "string",
+                    "format": "uuid",
+                    "readOnly": false
+                },
+                "definition": {
+                    "description": "The GraphModel public definition.",
+                    "$ref": "#/definitions/GraphModelPublicDefinition",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphModelDefinitionRequest": {
+            "description": "Update GraphModel public definition request payload.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphModelPublicDefinition"
+                }
+            }
+        },
+        "GraphModelDefinitionResponse": {
+            "description": "GraphModel public definition response.",
+            "required": [
+                "definition"
+            ],
+            "properties": {
+                "definition": {
+                    "$ref": "#/definitions/GraphModelPublicDefinition",
+                    "readOnly": true
+                }
+            }
+        },
+        "GraphModelPublicDefinition": {
+            "description": "GraphModel public definition object. Refer to this [article](/rest/api/fabric/articles/item-management/definitions/graph-model) for more details on how to craft a GraphModel public definition.",
+            "type": "object",
+            "required": [
+                "parts"
+            ],
+            "properties": {
+                "format": {
+                    "description": "The format of the item definition. Additional `format` types may be added over time.",
+                    "type": "string",
+                    "enum": [
+                        "json"
+                    ],
+                    "x-ms-enum": {
+                        "name": "GraphModelDefinitionFormat",
+                        "modelAsString": true,
+                        "values": [
+                            {
+                                "value": "json",
+                                "description": "JSON format for the GraphModel public definition, specifically designed to support CI/CD scenarios in Fabric."
+                            }
+                        ]
+                    },
+                    "readOnly": false
+                },
+                "parts": {
+                    "description": "A list of definition parts.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/GraphModelPublicDefinitionPart"
+                    },
+                    "readOnly": false
+                }
+            }
+        },
+        "GraphModelPublicDefinitionPart": {
+            "description": "GraphModel definition part object.",
+            "type": "object",
+            "properties": {
+                "path": {
+                    "description": "The GraphModel public definition part path.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payload": {
+                    "description": "The GraphModel public definition part payload.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "payloadType": {
+                    "description": "The payload type.",
+                    "$ref": "../common/definitions.json#/definitions/PayloadType",
+                    "readOnly": false
+                }
+            }
+        },
+        "UpdateGraphModelRequest": {
+            "description": "Update GraphModel request.",
+            "properties": {
+                "displayName": {
+                    "description": "The GraphModel display name. The display name must follow naming rules according to item type.",
+                    "type": "string",
+                    "readOnly": false
+                },
+                "description": {
+                    "description": "The GraphModel description. Maximum length is 256 characters.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "ExecuteQueryRequest": {
+            "description": "Execute query request payload.",
+            "required": [
+                "query"
+            ],
+            "properties": {
+                "query": {
+                    "description": "The query string.",
+                    "type": "string",
+                    "readOnly": false
+                }
+            }
+        },
+        "GraphType": {
+            "description": "The graph type that specifies the structure of a graph.",
+            "type": "object",
+            "properties": {
+                "nodeTypes": {
+                    "description": "A list of graph node types.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/NodeType"
+                    }
+                },
+                "edgeTypes": {
+                    "description": "A list of graph edge types.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/EdgeType"
+                    }
+                }
+            }
+        },
+        "NodeType": {
+            "description": "A graph node type.",
+            "type": "object",
+            "required": [
+                "alias",
+                "labels",
+                "primaryKeyProperties"
+            ],
+            "properties": {
+                "alias": {
+                    "description": "The node type alias.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "The node type labels.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "properties": {
+                    "description": "A list of node type properties.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Property"
+                    }
+                },
+                "primaryKeyProperties": {
+                    "description": "A list of node type primary key properties.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "EdgeType": {
+            "description": "A graph edge type.",
+            "type": "object",
+            "required": [
+                "alias",
+                "labels",
+                "sourceNodeType",
+                "destinationNodeType"
+            ],
+            "properties": {
+                "alias": {
+                    "description": "The edge type alias.",
+                    "type": "string"
+                },
+                "labels": {
+                    "description": "The edge type labels.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "properties": {
+                    "description": "A list of edge type properties.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/Property"
+                    }
+                },
+                "sourceNodeType": {
+                    "description": "The source node type.",
+                    "$ref": "#/definitions/NodeTypeReference"
+                },
+                "destinationNodeType": {
+                    "description": "The target node type.",
+                    "$ref": "#/definitions/NodeTypeReference"
+                }
+            }
+        },
+        "Property": {
+            "description": "A graph element property.",
+            "type": "object",
+            "required": [
+                "name",
+                "type"
+            ],
+            "properties": {
+                "name": {
+                    "description": "The property name.",
+                    "type": "string"
+                },
+                "type": {
+                    "description": "The property type.",
+                    "type": "string"
+                }
+            }
+        },
+        "NodeTypeReference": {
+            "description": "A reference to a node type.",
+            "type": "object",
+            "required": [
+                "alias"
+            ],
+            "properties": {
+                "alias": {
+                    "description": "The node type alias.",
+                    "type": "string"
+                }
+            }
+        }
+    }
+}
