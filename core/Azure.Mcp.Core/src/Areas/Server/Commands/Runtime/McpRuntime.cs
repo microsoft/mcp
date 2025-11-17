@@ -61,7 +61,7 @@ public sealed class McpRuntime : IMcpRuntime
         using var activity = _telemetry.StartActivity(ActivityName.ToolExecuted, request.Server.ClientInfo);
         CaptureToolCallMeta(activity, request.Params?.Meta);
 
-        if (request?.Params == null)
+        if (request.Params == null)
         {
             var content = new TextContentBlock
             {
