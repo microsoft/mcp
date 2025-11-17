@@ -26,27 +26,27 @@ public class FabricPublicApiService(
 
     #region IFabricPublicApiService
 
-    public async Task<FabricWorkloadPublicApi> GetWorkloadPublicApis(string workload)
+    public async Task<FabricWorkloadPublicApi> GetWorkloadPublicApis(string workload, CancellationToken cancellationToken)
     {
         var workloadApiSpecPath = string.Format(FormattedSpecPath, workload);
 
         _logger.LogInformation("Getting public API specifications for workload {workload}", workload);
 
-        var workloadSpec = await _resourceProviderService.GetResource(workloadApiSpecPath);
+        var workloadSpec = await _resourceProviderService.GetResource(workloadApiSpecPath, cancellationToken);
 
-        return new(workloadSpec ?? string.Empty, await GetWorkloadSpecDefinitionsAsync(workload));
+        return new(workloadSpec ?? string.Empty, await GetWorkloadSpecDefinitionsAsync(workload, cancellationToken));
     }
 
-    public async Task<IEnumerable<string>> ListWorkloadsAsync()
+    public async Task<IEnumerable<string>> ListWorkloadsAsync(CancellationToken cancellationToken)
     {
         var contentDirPath = BaseResourcePath;
 
         _logger.LogInformation("Listing available Fabric workloads");
 
-        return await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory);
+        return await _resourceProviderService.ListResourcesInPath(contentDirPath, ResourceType.Directory, cancellationToken);
     }
 
-    public async Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType)
+    public async Task<IDictionary<string, string>> GetWorkloadExamplesAsync(string workloadType, CancellationToken cancellationToken)
     {
         // Construct the full path: workloadType/examples
         var workloadExamplesDirPath = BaseResourcePath + workloadType + "/" + APISpecExamplesDirName;
@@ -55,7 +55,7 @@ public class FabricPublicApiService(
 
         var res = new Dictionary<string, string>();
 
-        return await GetExamplesFromDirectoryAsync(workloadExamplesDirPath);
+        return await GetExamplesFromDirectoryAsync(workloadExamplesDirPath, cancellationToken);
     }
 
     public string GetWorkloadItemDefinition(string workloadType)
@@ -76,46 +76,46 @@ public class FabricPublicApiService(
 
     #endregion IFabricPublicApiService
 
-    private async Task<IDictionary<string, string>> GetWorkloadSpecDefinitionsAsync(string workloadType)
+    private async Task<IDictionary<string, string>> GetWorkloadSpecDefinitionsAsync(string workloadType, CancellationToken cancellationToken)
     {
         var workloadDirPath = BaseResourcePath + workloadType + '/';
 
-        var content = await _resourceProviderService.ListResourcesInPath(workloadDirPath);
+        var content = await _resourceProviderService.ListResourcesInPath(workloadDirPath, cancellationToken: cancellationToken);
 
         var res = new Dictionary<string, string>();
 
         if (content.Contains(APISpecDefinitionsFileName))
         {
-            res[APISpecDefinitionsFileName] = await _resourceProviderService.GetResource($"{workloadDirPath}{APISpecDefinitionsFileName}");
+            res[APISpecDefinitionsFileName] = await _resourceProviderService.GetResource($"{workloadDirPath}{APISpecDefinitionsFileName}", cancellationToken);
         }
 
         if (content.Contains(APISpecDefinitionsDirName))
         {
-            var definitions = await _resourceProviderService.ListResourcesInPath($"{workloadDirPath}{APISpecDefinitionsDirName}");
+            var definitions = await _resourceProviderService.ListResourcesInPath($"{workloadDirPath}{APISpecDefinitionsDirName}", cancellationToken: cancellationToken);
             foreach (var definition in definitions)
             {
 
-                res[$"{APISpecDefinitionsDirName}{definition}"] = await _resourceProviderService.GetResource($"{APISpecDefinitionsDirName}{definition}");
+                res[$"{APISpecDefinitionsDirName}{definition}"] = await _resourceProviderService.GetResource($"{APISpecDefinitionsDirName}{definition}", cancellationToken);
             }
         }
 
         return res;
     }
 
-    private async Task<IDictionary<string, string>> GetExamplesFromDirectoryAsync(string directory)
+    private async Task<IDictionary<string, string>> GetExamplesFromDirectoryAsync(string directory, CancellationToken cancellationToken)
     {
         var res = new Dictionary<string, string>();
 
         // Check if this is a file (not a directory)
-        foreach (var example in await _resourceProviderService.ListResourcesInPath(directory, ResourceType.File))
+        foreach (var example in await _resourceProviderService.ListResourcesInPath(directory, ResourceType.File, cancellationToken))
         {
 
-            res[example] = await _resourceProviderService.GetResource($"{directory}{example}");
+            res[example] = await _resourceProviderService.GetResource($"{directory}{example}", cancellationToken);
         }
 
-        foreach (var subDir in await _resourceProviderService.ListResourcesInPath(directory, ResourceType.Directory))
+        foreach (var subDir in await _resourceProviderService.ListResourcesInPath(directory, ResourceType.Directory, cancellationToken))
         {
-            var subDirExamples = await GetExamplesFromDirectoryAsync($"{directory}{subDir}/");
+            var subDirExamples = await GetExamplesFromDirectoryAsync($"{directory}{subDir}/", cancellationToken);
             foreach (var (exampleFile, exampleContent) in subDirExamples)
             {
                 res[$"{subDir}{exampleFile}"] = exampleContent;

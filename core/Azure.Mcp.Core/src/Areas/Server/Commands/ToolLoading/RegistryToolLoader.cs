@@ -178,7 +178,7 @@ public sealed class RegistryToolLoader(
                 return;
             }
 
-            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync();
+            var serverList = await _serverDiscoveryStrategy.DiscoverServersAsync(cancellationToken);
 
             foreach (var server in serverList)
             {
@@ -186,7 +186,7 @@ public sealed class RegistryToolLoader(
                 McpClient? mcpClient;
                 try
                 {
-                    mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions);
+                    mcpClient = await _serverDiscoveryStrategy.GetOrCreateClientAsync(serverMetadata.Name, ClientOptions, cancellationToken);
                 }
                 catch (InvalidOperationException ex)
                 {

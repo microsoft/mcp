@@ -21,7 +21,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
     {
         // Try to get from cache first
         var cacheKey = string.IsNullOrEmpty(tenant) ? CacheKey : $"{CacheKey}_{tenant}";
-        var cachedResults = await _cacheService.GetAsync<List<SubscriptionData>>(CacheGroup, cacheKey, s_cacheDuration);
+        var cachedResults = await _cacheService.GetAsync<List<SubscriptionData>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedResults != null)
         {
             return cachedResults;
@@ -38,7 +38,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         }
 
         // Cache the results
-        await _cacheService.SetAsync(CacheGroup, cacheKey, results, s_cacheDuration);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, results, s_cacheDuration, cancellationToken);
 
         return results;
     }
@@ -69,7 +69,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         var cacheKey = string.IsNullOrEmpty(tenant)
             ? $"{SubscriptionCacheKey}_{subscriptionId}"
             : $"{SubscriptionCacheKey}_{subscriptionId}_{tenant}";
-        var cachedSubscription = await _cacheService.GetAsync<SubscriptionResource>(CacheGroup, cacheKey, s_cacheDuration);
+        var cachedSubscription = await _cacheService.GetAsync<SubscriptionResource>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
         if (cachedSubscription != null)
         {
             return cachedSubscription;
@@ -83,7 +83,7 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
         }
 
         // Cache the result using subscription ID
-        await _cacheService.SetAsync(CacheGroup, cacheKey, response.Value, s_cacheDuration);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, response.Value, s_cacheDuration, cancellationToken);
 
         return response.Value;
     }

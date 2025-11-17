@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.Metrics;
@@ -717,7 +718,7 @@ public class MetricsQueryCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service unavailable");
-        _service.When(x => x.QueryMetricsAsync(
+        _service.QueryMetricsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -731,8 +732,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>()))
-            .Do(x => throw expectedException);
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");
@@ -751,7 +752,7 @@ public class MetricsQueryCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service error");
-        _service.When(x => x.QueryMetricsAsync(
+        _service.QueryMetricsAsync(
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
@@ -765,8 +766,8 @@ public class MetricsQueryCommandTests
             Arg.Any<string?>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>()))
-            .Do(x => throw expectedException);
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var context = new CommandContext(_serviceProvider);
         var parseResult = _command.GetCommand().Parse("--subscription sub1 --resource sa1 --metric-names CPU --metric-namespace microsoft.compute/virtualmachines");

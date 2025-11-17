@@ -215,11 +215,8 @@ public sealed class ConsolidatedToolDiscoveryStrategy(CommandFactory commandFact
             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
-    /// <summary>
-    /// Discovers available command groups and converts them to MCP server providers.
-    /// </summary>
-    /// <returns>A collection of command group server providers.</returns>
-    public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
+    /// <inheritdoc/>
+    public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
         return Task.FromResult<IEnumerable<IMcpServerProvider>>(new List<IMcpServerProvider>());
     }

@@ -62,7 +62,8 @@ public sealed class RecommendationListCommand(ILogger<RecommendationListCommand>
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = insights?.Count() > 0 ?
                 ResponseResult.Create(new RecommendationListCommandResult(insights), ApplicationInsightsJsonContext.Default.RecommendationListCommandResult) :

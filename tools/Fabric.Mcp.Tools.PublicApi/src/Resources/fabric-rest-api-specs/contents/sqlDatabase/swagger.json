@@ -63,7 +63,7 @@
       },
       "post": {
         "summary": "Creates a SQL database in the specified workspace.",
-        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n This API does not support create a SQL database with definition. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a SQL database the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> SQL Database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create a SQL database with a public definition, refer to [SQLDatabase definition](/rest/api/fabric/articles/item-management/definitions/sql-database) article. \n\n## Permissions\n\nThe caller must have a *contributor* workspace role.\n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All \n\n## Limitations \n- To create a SQL database the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "Items"
         ],
@@ -129,6 +129,12 @@
         "x-ms-examples": {
           "Create a SQLDatabase example": {
             "$ref": "./examples/CreateSQLDatabase.json"
+          },
+          "Create a SQLDatabase with payload example": {
+            "$ref": "./examples/CreateSQLDatabaseWithPayload.json"
+          },
+          "Create a SQLDatabase with definition example": {
+            "$ref": "./examples/CreateSQLDatabaseWithDefinition.json"
           }
         }
       }
@@ -287,7 +293,250 @@
           }
         }
       }
-    }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified SQL database public definition.",
+        "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a SQL database's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n\n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetSQLDatabaseDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "SQLDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/SQLDatabaseDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a Digital Twin Builder Flow public definition example": {
+            "$ref": "./examples/GetSQLDatabaseDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified SQL database.",
+        "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n Updating the SQL database's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateSQLDatabasesDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "SQLDatabaseId",
+            "description": "The SQL database ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the SQL database.platform file is provided as part of the definition, the item's metadata is updated using the metadata in the SQL database.platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateSQLDatabaseDefinitionRequest",
+            "description": "Update SQL database definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateSQLDatabaseDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a SQL database public definition example": {
+            "$ref": "./examples/UpdateSQLDatabaseDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/startMirroring": {
+        "post": {
+            "tags": [
+                "Mirroring"
+            ],
+            "operationId": "StartMirroring",
+            "summary": "Starts the mirroring of the specified SQL database..",
+            "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+            "produces": [
+                "application/json"
+            ],
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "workspaceId",
+                    "description": "The workspace identifier.",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "path",
+                    "name": "SQLDatabaseId",
+                    "description": "The SQL database ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                  "description": "Request completed successfully."
+                },
+                "default": {
+                    "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+                    "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                    }
+                }
+            },
+            "x-ms-examples": {
+                "Start mirroring example": {
+                    "$ref": "./examples/StartMirroring.json"
+                }
+            }
+        }
+     },
+    "/workspaces/{workspaceId}/sqlDatabases/{SQLDatabaseId}/stopMirroring": {
+        "post": {
+            "tags": [
+                "Mirroring"
+            ],
+            "operationId": "StopMirroring",
+            "summary": "Stops the mirroring of the specified SQL database.",
+            "description": "> [!NOTE]\n> SQL database item is currently in Preview ([learn more](/fabric/fundamentals/preview)). \n\n## Permissions\n\n The caller must have *read and write* permissions for the SQL database. \n## Required Delegated Scopes\n\n SQLDatabase.ReadWrite.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+            "produces": [
+                "application/json"
+            ],
+            "parameters": [
+                {
+                    "in": "path",
+                    "name": "workspaceId",
+                    "description": "The workspace identifier.",
+                    "type": "string",
+                    "required": true
+                },
+                {
+                    "in": "path",
+                    "name": "SQLDatabaseId",
+                    "description": "The SQL database ID.",
+                    "type": "string",
+                    "format": "uuid",
+                    "required": true
+                }
+            ],
+            "responses": {
+                "200": {
+                  "description": "Request completed successfully."
+                },
+                "default": {
+                    "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+                    "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                    }
+                }
+            },
+            "x-ms-examples": {
+                "Stop mirroring example": {
+                    "$ref": "./examples/StopMirroring.json"
+                }
+            }
+         }
+      }
   },
   "responses": {},
   "security": [],

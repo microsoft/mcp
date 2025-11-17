@@ -34,7 +34,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -47,7 +47,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = (await strategy.DiscoverServersAsync()).ToList();
+        var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
 
         // Assert
         Assert.NotEmpty(result);
@@ -69,7 +69,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -83,7 +83,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -108,7 +108,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -123,8 +123,8 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result1 = await strategy.DiscoverServersAsync();
-        var result2 = await strategy.DiscoverServersAsync();
+        var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var result2 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result1);
@@ -147,8 +147,8 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result1 = await strategy.DiscoverServersAsync();
-        var result2 = await strategy.DiscoverServersAsync();
+        var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var result2 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var count1 = result1.Count();
@@ -164,7 +164,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         // Should successfully load from the embedded registry.json resource
@@ -182,7 +182,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
 
         // Assert
@@ -206,7 +206,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -226,7 +226,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -249,7 +249,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
 
         // Assert
@@ -272,7 +272,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -296,7 +296,7 @@ public class RegistryDiscoveryStrategyTests
         Assert.IsAssignableFrom<BaseDiscoveryStrategy>(strategy);
 
         // Should implement the base contract
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
 
@@ -305,7 +305,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task ShouldDiscoverServers()
     {
         var strategy = CreateStrategy();
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
 
@@ -313,7 +313,7 @@ public class RegistryDiscoveryStrategyTests
     public async Task ShouldDiscoverServers_ReturnsExpectedProviders()
     {
         var strategy = CreateStrategy();
-        var result = (await strategy.DiscoverServersAsync()).ToList();
+        var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
         Assert.NotEmpty(result);
         // Should contain the 'documentation' server from registry.json
         var documentationProvider = result.FirstOrDefault(p => p.CreateMetadata().Name == "documentation");
@@ -333,7 +333,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -350,7 +350,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -367,7 +367,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -389,7 +389,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -404,7 +404,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -427,7 +427,7 @@ public class RegistryDiscoveryStrategyTests
         var strategy = CreateStrategy(options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
