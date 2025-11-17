@@ -208,7 +208,18 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 #### Setting the matcher
 
 ```cs
-
+public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+    public override CustomDefaultMatcher? TestMatcher { get; set; } = new CustomDefaultMatcher()
+    {
+        // By default, request and response bodies are compared during matching, You can disable this by setting CompareBodies to false.
+        CompareBodies = false,
+        // By default query ordering is considered a different URI during matching. To ignore query ordering, set IgnoreQueryOrdering to true.
+        IgnoreQueryOrdering = true,
+        // During matching, excluded headers are totally excluded from matching. Both presence and value are not compared.
+        ExcludedHeaders = "x-ms-request-id,x-ms-correlation-request-id,Date,Strict-Transport-Security,Transfer-Encoding,Content-Length",
+        // Ignored headers are compared for presence only, not value. EG x-ms-client-request-id present on a recording, but not on incoming request will not cause a mismatch.
+        IgnoredHeaders = "x-ms-client-request-id"
+    };
 ```
 
 #### Overriding matcher for specific recording
