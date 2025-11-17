@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.0.0-beta.1</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Fabric.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric-icon.png</PackageIcon>
+    <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName>
 
     <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>

@@ -2,6 +2,36 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
+## 2.0.0-beta.6 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+## 2.0.0-beta.5 (2025-11-14)
+
+### Features Added
+
+- Enabled HTTPS redirection by default when running `server start --transport http`. This can be opted-out with `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` when not needed. [[#1169](https://github.com/microsoft/mcp/pull/1169)]
+- Updated the `User-Agent` string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Added support for creating new Redis resources via the `redis_create` command. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
+
+### Breaking Changes
+
+- Updated `HttpClientService` to ignore the `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
+### Bugs Fixed
+
+- Removed the `DefaultUserAgent` configuration from `ApplicationInsightsSetup` that had a hardcoded version and set the `User-Agent` string for all other service areas that used the `HttpClientService`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
+### Other Changes
+
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1178](https://github.com/microsoft/mcp/pull/1178)]
+
 ## 2.0.0-beta.4 (2025-11-13)
 
 ### Features Added
@@ -33,14 +63,16 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 - PostgreSQL MCP tools now require SSL and verify the server's full certificate chain before creating database connections. This SSL mode provides both `eavesdropping protection` and `man-in-the-middle protection`. See [SSL Mode VerifyFull](https://www.npgsql.org/doc/security.html?tabs=tabid-1#encryption-ssltls) for more details. [[#1023](https://github.com/microsoft/mcp/pull/1023)]
 
+
 ### Bugs Fixed
 
 - Updated a codepath `--mode namespace` where `learn=true` wouldn't always result in agent learning happening. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 - Use the correct `Assembly` to find `Version` for telemetry. [[#1122](https://github.com/microsoft/mcp/pull/1122)]
 
+
 ### Other Changes
 
-- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+- Refactored duplicate elicitation handling code in `CommandFactoryToolLoader` and `NamespaceToolLoader` into a shared `BaseToolLoader.HandleSecretElicitationAsync` method. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
 
 ## 2.0.0-beta.2 (2025-11-06)
 

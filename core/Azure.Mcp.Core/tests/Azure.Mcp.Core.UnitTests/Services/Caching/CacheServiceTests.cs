@@ -27,11 +27,11 @@ public class CacheServiceTests
         string value = "test-value";
 
         // Clear any existing cache data
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.SetAsync(group, key, value);
-        var result = await _cacheService.GetAsync<string>(group, key);
+        await _cacheService.SetAsync(group, key, value, cancellationToken: TestContext.Current.CancellationToken);
+        var result = await _cacheService.GetAsync<string>(group, key, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(value, result);
@@ -46,11 +46,11 @@ public class CacheServiceTests
         string value = "test-value";
 
         // Clear any existing cache data
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.SetAsync(group, key, value);
-        var result = await _cacheService.GetAsync<string>(group, key);
+        await _cacheService.SetAsync(group, key, value, cancellationToken: TestContext.Current.CancellationToken);
+        var result = await _cacheService.GetAsync<string>(group, key, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(value, result);
@@ -67,12 +67,12 @@ public class CacheServiceTests
         string value2 = "test-value2";
 
         // Clear any existing cache data
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.SetAsync(group, key1, value1);
-        await _cacheService.SetAsync(group, key2, value2);
-        var groupKeys = await _cacheService.GetGroupKeysAsync(group);
+        await _cacheService.SetAsync(group, key1, value1, cancellationToken: TestContext.Current.CancellationToken);
+        await _cacheService.SetAsync(group, key2, value2, cancellationToken: TestContext.Current.CancellationToken);
+        var groupKeys = await _cacheService.GetGroupKeysAsync(group, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(2, groupKeys.Count());
@@ -91,16 +91,18 @@ public class CacheServiceTests
         string value2 = "test-value2";
 
         // Clear any existing cache data
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.SetAsync(group, key1, value1);
-        await _cacheService.SetAsync(group, key2, value2);
-        await _cacheService.DeleteAsync(group, key1);
+        await _cacheService.SetAsync(group, key1, value1, cancellationToken: TestContext.Current.CancellationToken);
+        await _cacheService.SetAsync(group, key2, value2, cancellationToken: TestContext.Current.CancellationToken);
+        await _cacheService.DeleteAsync(group, key1, TestContext.Current.CancellationToken);
 
-        var groupKeys = await _cacheService.GetGroupKeysAsync(group);
-        var result1 = await _cacheService.GetAsync<string>(group, key1);
-        var result2 = await _cacheService.GetAsync<string>(group, key2);        // Assert
+        var groupKeys = await _cacheService.GetGroupKeysAsync(group, TestContext.Current.CancellationToken);
+        var result1 = await _cacheService.GetAsync<string>(group, key1, cancellationToken: TestContext.Current.CancellationToken);
+        var result2 = await _cacheService.GetAsync<string>(group, key2, cancellationToken: TestContext.Current.CancellationToken);
+
+        // Assert
         Assert.Single(groupKeys);
         Assert.Contains(key2, groupKeys);
         Assert.Null(result1);
@@ -118,19 +120,19 @@ public class CacheServiceTests
         string value2 = "test-value2";
 
         // Clear any existing cache data first
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
-        await _cacheService.SetAsync(group1, key1, value1);
-        await _cacheService.SetAsync(group2, key2, value2);
+        await _cacheService.SetAsync(group1, key1, value1, cancellationToken: TestContext.Current.CancellationToken);
+        await _cacheService.SetAsync(group2, key2, value2, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
         // Assert
-        var group1Keys = await _cacheService.GetGroupKeysAsync(group1);
-        var group2Keys = await _cacheService.GetGroupKeysAsync(group2);
-        var result1 = await _cacheService.GetAsync<string>(group1, key1);
-        var result2 = await _cacheService.GetAsync<string>(group2, key2);
+        var group1Keys = await _cacheService.GetGroupKeysAsync(group1, TestContext.Current.CancellationToken);
+        var group2Keys = await _cacheService.GetGroupKeysAsync(group2, TestContext.Current.CancellationToken);
+        var result1 = await _cacheService.GetAsync<string>(group1, key1, cancellationToken: TestContext.Current.CancellationToken);
+        var result2 = await _cacheService.GetAsync<string>(group2, key2, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Empty(group1Keys);
         Assert.Empty(group2Keys);
@@ -150,19 +152,19 @@ public class CacheServiceTests
         string value2 = "test-value2";
 
         // Clear any existing cache data first
-        await _cacheService.ClearAsync();
+        await _cacheService.ClearAsync(TestContext.Current.CancellationToken);
 
-        await _cacheService.SetAsync(group1, key1, value1);
-        await _cacheService.SetAsync(group2, key2, value2);
+        await _cacheService.SetAsync(group1, key1, value1, cancellationToken: TestContext.Current.CancellationToken);
+        await _cacheService.SetAsync(group2, key2, value2, cancellationToken: TestContext.Current.CancellationToken);
 
         // Act
-        await _cacheService.ClearGroupAsync(group1);
+        await _cacheService.ClearGroupAsync(group1, TestContext.Current.CancellationToken);
 
         // Assert
-        var group1Keys = await _cacheService.GetGroupKeysAsync(group1);
-        var group2Keys = await _cacheService.GetGroupKeysAsync(group2);
-        var result1 = await _cacheService.GetAsync<string>(group1, key1);
-        var result2 = await _cacheService.GetAsync<string>(group2, key2);
+        var group1Keys = await _cacheService.GetGroupKeysAsync(group1, TestContext.Current.CancellationToken);
+        var group2Keys = await _cacheService.GetGroupKeysAsync(group2, TestContext.Current.CancellationToken);
+        var result1 = await _cacheService.GetAsync<string>(group1, key1, cancellationToken: TestContext.Current.CancellationToken);
+        var result2 = await _cacheService.GetAsync<string>(group2, key2, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.Empty(group1Keys);
         Assert.Single(group2Keys);

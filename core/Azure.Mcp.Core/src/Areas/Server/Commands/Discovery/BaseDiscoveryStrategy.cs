@@ -23,19 +23,11 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
 
     private bool _disposed = false;
 
-    /// <summary>
-    /// Discovers available MCP servers via the implementing strategy.
-    /// </summary>
-    /// <returns>A collection of discovered MCP server providers.</returns>
-    public abstract Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync();
+    /// <inheritdoc/>
+    public abstract Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken);
 
-    /// <summary>
-    /// Finds a server provider by name from the discovered servers.
-    /// </summary>
-    /// <param name="name">The name of the server to find.</param>
-    /// <returns>The server provider if found.</returns>
-    /// <exception cref="KeyNotFoundException">Thrown when no server with the specified name is found.</exception>
-    public async Task<IMcpServerProvider> FindServerProviderAsync(string name)
+    /// <inheritdoc/>
+    public async Task<IMcpServerProvider> FindServerProviderAsync(string name, CancellationToken cancellationToken)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         if (string.IsNullOrWhiteSpace(name))
@@ -43,7 +35,7 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
             throw new ArgumentNullException(nameof(name), "Server name cannot be null or empty.");
         }
 
-        var serverProviders = await DiscoverServersAsync();
+        var serverProviders = await DiscoverServersAsync(cancellationToken);
         foreach (var serverProvider in serverProviders)
         {
             var metadata = serverProvider.CreateMetadata();
@@ -56,15 +48,8 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
         throw new KeyNotFoundException($"No MCP server found with the name '{name}'.");
     }
 
-    /// <summary>
-    /// Gets an existing MCP client from the cache or creates a new one if not found.
-    /// </summary>
-    /// <param name="name">The name of the server to get or create a client for.</param>
-    /// <param name="clientOptions">Optional client configuration options. If null, default options are used.</param>
-    /// <returns>An MCP client that can communicate with the specified server.</returns>
-    /// <exception cref="ArgumentNullException">Thrown when the name parameter is null.</exception>
-    /// <exception cref="KeyNotFoundException">Thrown when no server with the specified name is found.</exception>
-    public async Task<McpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null)
+    /// <inheritdoc/>
+    public async Task<McpClient> GetOrCreateClientAsync(string name, McpClientOptions? clientOptions = null, CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(name, nameof(name));
         if (string.IsNullOrWhiteSpace(name))
@@ -77,8 +62,8 @@ public abstract class BaseDiscoveryStrategy(ILogger logger) : IMcpDiscoveryStrat
             return client;
         }
 
-        var serverProvider = await FindServerProviderAsync(name);
-        client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions());
+        var serverProvider = await FindServerProviderAsync(name, cancellationToken);
+        client = await serverProvider.CreateClientAsync(clientOptions ?? new McpClientOptions(), cancellationToken);
         _clientCache[name] = client;
 
         return client;

@@ -58,14 +58,16 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
                 hostpools = await virtualDesktopService.ListHostpoolsAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);

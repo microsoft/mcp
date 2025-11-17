@@ -1762,6 +1762,17 @@ azmcp role assignment list --subscription <subscription> \
 ### Azure Redis Operations
 
 ```bash
+# Creates a new Azure Managed Redis resource
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp redis create --subscription <subscription> \
+                   --resource-group <resource-group> \
+                   --name <name> \
+                   --sku <sku> \
+                   --location <location> \
+                   [--modules <modules>]
+```
+
+```bash
 # Lists all Redis resources
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp redis list --subscription <subscription>

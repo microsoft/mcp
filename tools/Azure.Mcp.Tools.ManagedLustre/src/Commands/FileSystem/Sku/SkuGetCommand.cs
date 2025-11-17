@@ -59,7 +59,7 @@ public sealed class SkuGetCommand(ILogger<SkuGetCommand> logger)
 
             var options = BindOptions(parseResult);
             var service = context.GetService<IManagedLustreService>();
-            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy);
+            var skus = await service.SkuGetInfoAsync(options.Subscription!, options.Tenant, options.Location, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(skus ?? []), ManagedLustreJsonContext.Default.SkuGetResult);
         }

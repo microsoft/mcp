@@ -387,17 +387,17 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
-    public void GetErrorMessage_WithInsecureTransportException_ReturnsCustomMessage()
+    public void GetErrorMessage_WithDangerouslyDisableHttpIncomingAuthException_ReturnsCustomMessage()
     {
         // Arrange
-        var exception = new InvalidOperationException("Using --enable-insecure-transport requires...");
+        var exception = new InvalidOperationException("Using --dangerously-disable-http-incoming-auth requires...");
 
         // Act
         var message = GetErrorMessage(exception);
 
         // Assert
-        Assert.Contains("Insecure transport configuration error", message);
-        Assert.Contains("proper authentication configured", message);
+        Assert.Contains("Configuration error to disable incoming HTTP authentication", message);
+        Assert.Contains("proper authentication is configured", message);
     }
 
     [Fact]

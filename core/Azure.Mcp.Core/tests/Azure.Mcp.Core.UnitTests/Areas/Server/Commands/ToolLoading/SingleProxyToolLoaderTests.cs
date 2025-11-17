@@ -103,7 +103,7 @@ public class SingleProxyToolLoaderTests
         var request = CreateListToolsRequest();
 
         // Setup mock to return empty servers (SingleProxyToolLoader always returns the azure tool)
-        mockDiscoveryStrategy.DiscoverServersAsync()
+        mockDiscoveryStrategy.DiscoverServersAsync(TestContext.Current.CancellationToken)
             .Returns(Task.FromResult(Enumerable.Empty<IMcpServerProvider>()));
 
         // Act

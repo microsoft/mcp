@@ -61,7 +61,8 @@ public class ConsumerGroupGetCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(consumerGroups);
 
             _eventHubsService.GetConsumerGroupAsync(
@@ -71,7 +72,8 @@ public class ConsumerGroupGetCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(consumerGroups.First());
         }
 
@@ -109,7 +111,8 @@ public class ConsumerGroupGetCommandTests
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedConsumerGroups);
 
         // Act
@@ -125,7 +128,8 @@ public class ConsumerGroupGetCommandTests
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -152,7 +156,8 @@ public class ConsumerGroupGetCommandTests
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedConsumerGroup);
 
         // Act
@@ -169,7 +174,8 @@ public class ConsumerGroupGetCommandTests
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -185,7 +191,8 @@ public class ConsumerGroupGetCommandTests
             "test-rg",
             "test-subscription",
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns((Models.ConsumerGroup?)null);
 
         // Act
@@ -208,7 +215,8 @@ public class ConsumerGroupGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Event Hub 'test-eventhub' could not be found"));
 
         // Act
@@ -232,7 +240,8 @@ public class ConsumerGroupGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("The current user does not have access to subscription 'unauthorized-sub'"));
 
         // Act

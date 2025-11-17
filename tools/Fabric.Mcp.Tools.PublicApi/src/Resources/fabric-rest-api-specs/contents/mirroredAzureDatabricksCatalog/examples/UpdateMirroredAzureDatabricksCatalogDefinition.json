@@ -7,7 +7,7 @@
       "definition": {
         "parts": [
           {
-            "path": "mirroredAzureDatabricksCatalog.json",
+            "path": "definition.json",
             "payload": "eyAicHJvcGVydGllcy..WJsZSIgfSB9IH0gXSB9IH0",
             "payloadType": "InlineBase64"
           },

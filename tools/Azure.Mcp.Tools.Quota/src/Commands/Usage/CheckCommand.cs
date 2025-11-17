@@ -75,7 +75,8 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
             Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
                 resourceTypes,
                 options.Subscription!,
-                options.Region);
+                options.Region,
+                cancellationToken);
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);
 

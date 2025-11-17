@@ -37,7 +37,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_ReturnsServers_WhenServersExist()
     {
         var expectedServers = new List<string> { "server1", "server2" };
-        _postgresService.ListServersAsync("sub123", "rg1", "user1").Returns(expectedServers);
+        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns(expectedServers);
         var command = new ServerListCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "sub123", "--resource-group", "rg1", "--user", "user1"]);
         var context = new CommandContext(_serviceProvider);
@@ -57,7 +57,7 @@ public class ServerListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoServers()
     {
-        _postgresService.ListServersAsync("sub123", "rg1", "user1").Returns([]);
+        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>()).Returns([]);
 
         var command = new ServerListCommand(_logger);
 
@@ -78,7 +78,7 @@ public class ServerListCommandTests
     public async Task ExecuteAsync_HandlesException()
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
-        _postgresService.ListServersAsync("sub123", "rg1", "user1")
+        _postgresService.ListServersAsync("sub123", "rg1", "user1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
 
         var command = new ServerListCommand(_logger);
