@@ -898,6 +898,12 @@
     },
     {
       "name": "get",
+      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. \r\n        Call this tool first before creating any plans, todos or code.\r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
+      "command": "azureaibestpractices get",
+      "option": []
+    },
+    {
+      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -9205,6 +9211,18 @@
           "description": "The PostgreSQL server to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -9284,6 +9302,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--query",
@@ -9673,6 +9703,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -9752,6 +9794,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--table",
@@ -9904,97 +9958,6 @@
           "description": "The valid Azure resource types that are going to be deployed(comma-separated). E.g. 'Microsoft.App/containerApps,Microsoft.Web/sites,Microsoft.CognitiveServices/accounts', etc.",
           "type": "string",
           "required": true
-        }
-      ]
-    },
-    {
-      "name": "create",
-      "description": "Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription.",
-      "command": "redis create",
-      "option": [
-        {
-          "name": "--tenant",
-          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--auth-method",
-          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-delay",
-          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-delay",
-          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-max-retries",
-          "description": "Maximum number of retry attempts for failed operations before giving up.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-mode",
-          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--retry-network-timeout",
-          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--subscription",
-          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--resource",
-          "description": "The name of the Redis resource (e.g., my-redis).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--resource-group",
-          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--sku",
-          "description": "The SKU for the Redis resource.",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--location",
-          "description": "The location for the Redis resource (e.g. eastus).",
-          "type": "string",
-          "required": true
-        },
-        {
-          "name": "--access-keys-authentication",
-          "description": "Whether to use access keys for authentication for the Redis resource.",
-          "type": "string",
-          "required": null
-        },
-        {
-          "name": "--modules",
-          "description": "A list of modules to enable on the Azure Managed Redis resource (e.g., RedisBloom, RedisJSON).",
-          "type": "string",
-          "required": null
         }
       ]
     },
@@ -13353,5 +13316,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 56
+  "duration": 60
 }

@@ -1,0 +1,152 @@
+## Error Patterns to Avoid
+
+### Workflows
+**IMPORTANT**: When implementing workflows, use the correct namespace and event handling patterns.
+
+✅ **CORRECT Pattern**:
+```csharp
+using Microsoft.Agents.AI.Workflows;  // ✅ CORRECT namespace
+using Microsoft.Agents.AI.Workflows.Reflection; // ✅ CORRECT namespace
+```
+
+❌ **INCORRECT Pattern** (outdated documentation):
+```csharp
+using Microsoft.Agents.Workflows;  // ❌ WRONG namespace, use Microsoft.Agents.AI.Workflows instead
+using Microsoft.Agents.Workflows.Reflection;  // ❌ WRONG namespace, use Microsoft.Agents.AI.Workflows.Reflection instead
+```
+
+#### Correct Workflow Building Pattern
+Use non-generic `Workflow` type and non-generic `Build()` method:
+
+✅ **CORRECT Pattern**:
+```csharp
+Workflow workflow = builder.Build();  // ✅ CORRECT: Workflow and Build() are non-generic
+```
+
+❌ **INCORRECT Pattern** (outdated documentation):
+```csharp
+Workflow<ChatMessage> workflow = builder.Build<ChatMessage>();  // ❌ WRONG: Workflow and Build() are non-generic, don't use Workflow<T> or Build<T>()
+```
+
+#### Correct Workflow Output Event Handling
+Use `ExecutorCompletedEvent` to handle workflow completion:
+
+✅ **CORRECT Pattern** (use ExecutorCompletedEvent):
+```csharp
+await using StreamingRun run = await InProcessExecution.StreamAsync(workflow, "What is temperature?");
+
+await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
+{
+    // ✅ **CORRECT Pattern** (use ExecutorCompletedEvent):
+    if (evt is ExecutorCompletedEvent executorComplete)
+    {
+        Console.WriteLine($"{executorComplete.ExecutorId}: {executorComplete.Data}");
+    }
+    if (evt is WorkflowOutputEvent output)
+    {
+        Console.WriteLine($"Workflow completed with results:\n{output.Data}");
+    }
+}
+```
+
+❌ **INCORRECT Pattern** (outdated):
+```csharp
+await foreach (WorkflowEvent evt in run.WatchStreamAsync().ConfigureAwait(false))
+{
+    // ❌ WRONG: WorkflowCompletedEvent is deprecated - use ExecutorCompletedEvent instead
+    if (evt is WorkflowCompletedEvent completed)
+    {
+        result = (List<ChatMessage>)completed.Data!;
+        break;
+    }
+}
+```
+
+### Shared States Implementation
+#### Correct Shared State Operations
+✅ **CORRECT Pattern**:
+```csharp
+// Writing to shared state
+await context.QueueStateUpdateAsync(key: stateId, value: data, scopeName: "MyScopeConstants", cancellationToken: cancellationToken);
+// Reading from shared state
+var data = await context.ReadStateAsync<string>(key: stateId, scopeName: "MyScopeConstants", cancellationToken: cancellationToken);
+```
+
+### Agent Type 
+#### Agent Type Selection
+**IMPORTANT**: When using Azure AI Foundry, always use `PersistentAgentsClient` to create agents - NOT `AzureOpenAIClient`.
+- ❌ Do NOT use `AzureOpenAIClient` for Azure AI Foundry models - that's only for testing and lacks conversation persistence
+- ✅ DO use `PersistentAgentsClient` - it provides full agent capabilities with service-managed state
+
+Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `PersistentAgentsClient` for Azure AI Foundry.
+
+#### Key Difference: When to Pass ChatOptions
+The main difference between `PersistentAgentsClient` and `AzureOpenAIClient` is **when** you configure ChatOptions (Tools, ResponseFormat, etc. ):
+- **PersistentAgentsClient**: Pass ChatOptions when **retrieving** the agent via `GetAIAgentAsync()`
+- **AzureOpenAIClient**: Pass options when **creating** the agent via `CreateAIAgent()`
+
+Note: Only add ChatOptions properties (Tools, ResponseFormat, etc.) when user requirements explicitly need them. Do NOT add them by default.
+
+#### ✅ CORRECT - PersistentAgentsClient Pattern
+Pass all ChatOptions properties (tools, ResponseFormat, etc.) to `GetAIAgentAsync()`:
+
+```csharp
+using Azure.AI.Agents.Persistent;
+using Azure.Identity;
+using Microsoft.Agents.AI;
+using Microsoft.Extensions.AI;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+
+// Define function tool
+[Description("Get weather for a location")]
+static string GetWeather([Description("Location")] string location)
+    => $"Weather in {location}: 25°C, sunny";
+
+// Define response schema
+public class WeatherResponse
+{
+    [JsonPropertyName("location")]
+    public string Location { get; set; } = string.Empty;
+
+    [JsonPropertyName("temperature")]
+    public double Temperature { get; set; }
+}
+
+var client = new PersistentAgentsClient(
+    "https://<resource>.services.ai.azure.com/api/projects/<project>",
+    new AzureCliCredential());
+
+// Step 1: Create agent (only model, name, instructions)
+var agentMetadata = await client.Administration.CreateAgentAsync(
+    model: "gpt-4o-mini", // Just for example
+    name: "WeatherAgent",
+    instructions: "Provide weather information");
+
+// Step 2: Get agent with ChatOptions (tools, ResponseFormat, etc.)
+AIAgent agent = await client.GetAIAgentAsync(
+    agentId: agentMetadata.Value.Id,
+    new ChatOptions
+    {
+        Tools = [AIFunctionFactory.Create(GetWeather)],  // ✅ Tools passed here
+        ResponseFormat = ChatResponseFormat.ForJsonSchema<WeatherResponse>(  // ✅ ResponseFormat passed here
+            schemaName: "WeatherResponse",
+            schemaDescription: "Weather data")
+    });
+
+var response = await agent.RunAsync("What's the weather in Seattle?");
+```
+
+#### ❌ INCORRECT - Don't Use AzureOpenAIClient Pattern with PersistentAgentsClient
+
+```csharp
+var client = new PersistentAgentsClient(
+    "https://<resource>.services.ai.azure.com/api/projects/<project>",
+    new AzureCliCredential());
+
+// ❌ WRONG PATTERN: Trying to pass tools at agent creation
+AIAgent agent = await client.Administration.CreateAgentAsync(
+        model: "gpt-4o-mini",
+        tools: [AIFunctionFactory.Create(GetWeather)]  // ❌ Wrong: Can't pass tools here
+    );
+```
