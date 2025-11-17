@@ -64,5 +64,6 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 [JsonSerializable(typeof(ThreadCreateResult))]
 [JsonSerializable(typeof(ThreadListResult))]
 [JsonSerializable(typeof(ThreadGetMessagesResult))]
+[JsonSerializable(typeof(List<AgentFileSearchResult>))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingDefault)]
 internal sealed partial class FoundryJsonContext : JsonSerializerContext;
