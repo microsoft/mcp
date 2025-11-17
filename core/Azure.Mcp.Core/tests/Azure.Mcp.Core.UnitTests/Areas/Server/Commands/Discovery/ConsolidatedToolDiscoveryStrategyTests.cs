@@ -6,7 +6,6 @@ using Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
