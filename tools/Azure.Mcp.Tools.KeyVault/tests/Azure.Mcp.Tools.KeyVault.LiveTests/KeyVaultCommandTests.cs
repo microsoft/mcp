@@ -305,10 +305,17 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
             var pfxBytes = File.ReadAllBytes(pfxPath);
             var pfxBase64 = Convert.ToBase64String(pfxBytes);
 
+            var flags = X509KeyStorageFlags.Exportable;
+
+            if (!OperatingSystem.IsMacOS())
+            {
+                flags |= X509KeyStorageFlags.EphemeralKeySet;
+            }
+
             using var certificate = X509CertificateLoader.LoadPkcs12(
                 pfxBytes,
                 ImportCertificatePassword,
-                X509KeyStorageFlags.Exportable | X509KeyStorageFlags.EphemeralKeySet);
+                flags);
 
             var cerBytes = certificate.Export(X509ContentType.Cert);
             var cerBase64 = Convert.ToBase64String(cerBytes);
