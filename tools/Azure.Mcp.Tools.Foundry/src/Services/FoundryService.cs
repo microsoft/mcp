@@ -1305,7 +1305,7 @@ public class FoundryService(
                                     ["score_threshold"] = fileSearch.FileSearch.RankingOptions.ScoreThreshold,
                                 }, DictionaryTypeInfo)
                             });
-                            yield return CreateResponseMessage(fileSearch.FileSearch.Results.Select(r => new
+                            yield return CreateResponseMessage(fileSearch.FileSearch.Results.Select(r => new AgentFileSearchResult
                             {
                                 file_id = r.FileId,
                                 file_name = r.FileName,
