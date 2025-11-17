@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Diagnostics;
+using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Microsoft.Extensions.Logging;
@@ -72,12 +73,12 @@ internal class TelemetryService : ITelemetryService
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityId) => StartActivity(activityId, null);
+    public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
 
     /// <summary>
     /// <inheritdoc/>
     /// </summary>
-    public Activity? StartActivity(string activityId, Implementation? clientInfo)
+    public Activity? StartActivity(string activityName, Implementation? clientInfo)
     {
         if (!_isEnabled)
         {
@@ -86,7 +87,7 @@ internal class TelemetryService : ITelemetryService
 
         CheckInitialization();
 
-        var activity = Parent.StartActivity(activityId);
+        var activity = Parent.StartActivity(activityName);
 
         if (activity == null)
         {
