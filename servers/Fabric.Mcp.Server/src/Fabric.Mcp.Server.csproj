@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>0.0.1</Version>
+    <Version>0.1.0-beta.1</Version>
     <CliName>fabmcp</CliName>
     <AssemblyTitle>Fabric MCP Server</AssemblyTitle>
     <Description>Microsoft Fabric MCP Server - Model Context Protocol implementation for Fabric</Description>
