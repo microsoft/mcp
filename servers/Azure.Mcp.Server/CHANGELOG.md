@@ -9,9 +9,10 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Breaking Changes
 
 ### Bugs Fixed
-- Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ### Other Changes
+
+- Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ## 2.0.0-beta.5 (2025-11-14)
 
