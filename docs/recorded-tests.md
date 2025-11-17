@@ -44,7 +44,7 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 Follow this checklist any time you need to update recordings:
 
 0. **Deploy LiveResources** - `Connect-AzAccount` with your targeted subscription, then invoke `./eng/scripts/Deploy-TestResources.ps1`. EG `./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault`.
-1. **Set record mode** – Locate the `.livesettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/..livetestsettings.json`). Update the file `TestMod` value to `Record`:
+1. **Set record mode** – Locate the `.livesettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/..livetestsettings.json`). Update the file `TestMode` value to `Record`:
    ```jsonc
    {
      // ...
@@ -58,6 +58,7 @@ Follow this checklist any time you need to update recordings:
    ./.proxy/Azure.Sdk.Tools.TestProxy.exe config locate -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
    ```
    Review each JSON recording and confirm no secrets or unstable data were missed by existing sanitizers.
+   - Note that on `unix` platforms there is no `.exe` suffix.
 4. **Switch to playback** – Change the `TestMode` value in `.livetestsettings.json` to `playback`. Re-run the tests to verify they pass without hitting live resources.
 5. **Push assets** – When satisfied, publish the updated recordings:
    ```powershell
@@ -76,17 +77,17 @@ Follow this checklist any time you need to update recordings:
 | Restore recordings referenced by an assets file | `./.proxy/Azure.Sdk.Tools.TestProxy.exe restore -a path/to/assets.json` |
 | Reset local clone to the current tag | `./.proxy/Azure.Sdk.Tools.TestProxy.exe reset -a path/to/assets.json` |
 
-## 5. Migration Guide (Live ➜ Recorded)
+## Migration Guide (Live ➜ Recorded)
 
 1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
-2. **Reparent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`. Override `BodyKeySanitizers`, `BodyRegexSanitizers`, etc. as needed.
+2. **Reparent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
 3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `HttpClientService.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/assets.json`:
+4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<livetestcsprojfolder/assets.json`:
    ```json
    {
      "AssetsRepo": "Azure/azure-sdk-assets",
-     "AssetsRepoPrefixPath": "net",
-     "TagPrefix": "net/Azure.Mcp.Tools.YourService",
+     "AssetsRepoPrefixPath": "",
+     "TagPrefix": "Azure.Mcp.Tools.YourService",
      "Tag": ""
    }
    ```
@@ -96,7 +97,14 @@ Follow this checklist any time you need to update recordings:
 Example Migrations:
  - [Azure.Mcp.Tools.KeyVault](https://github.com/microsoft/mcp/pull/1080)
 
-## 6. Working With Sanitizers, Matchers, and Transforms
+## Working With Sanitizers and Matchers
+
+The test proxy supports abstractions that must be understood:
+
+- `Sanitizers`: Applied before writing a recording to disk, and while matching requests in `playback` mode.
+  - Think of these as regex-based censors that blank out sensitive parts of your recording.
+- `Matchers`: By default, the test-proxy compares all parts of the request: headers, body bytes, and the URI
+  - These can be optionally overridden for all tests within a test class or for an individual test case.
 
 `RecordedCommandTestsBase` exposes virtual collections for customization:
 
@@ -105,18 +113,120 @@ Example Migrations:
 - `BodyKeySanitizers` / `BodyRegexSanitizers` – patch JSON fields or bodies.
 - `UriRegexSanitizers` – mask host or query segments.
 - `DisabledDefaultSanitizers` – opt out of built-in sanitizers if they interfere with playback.
-- `TestMatcher` or `[CustomMatcher]` – adjust matching rules during playback.
 
-todo: examples of each
+`RecordedCommandTestsBase` exposes a global matcher
+- `TestMatcher` or set the attribute `[CustomMatcher]` on an individual – adjust matching rules during playback.
 
-## 7. Troubleshooting Tips
+### In practice
+
+#### Playback variables
+
+When writing tests, users can identify values that should be retrieved from the recording during `playback` mode.
+
+Example:
+
+```cs
+    [Fact]
+    public async Task Should_create_key()
+    {
+        var keyName = "key" + Random.Shared.NextInt64();
+
+        RegisterVariable("keyName", keyName); // register a variable for save when recording ends
+
+        var result = await CallToolAsync(
+            "keyvault_key_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "vault", Settings.ResourceBaseName },
+                // during playback, the saved value from recording will be retrieved and utilized
+                { "key", TestVariables["keyName"]},
+                { "key-type", KeyType.Rsa.ToString() }
+            });
+```
+
+This means values that don't make sense for `sanitization` can be propogated to the recording and automatically retrieved by the test-proxy harness during `playback`.
+
+#### An example of setting each sanitizer type
+
+```cs
+public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
+
+    // given a json path
+    public override List<BodyKeySanitizer> BodyKeySanitizers => new()
+    {
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$..id") // this input uses JSONPath syntax
+        {
+            // Regex = ".*" by default
+            // GroupForReplace = null (replace entire match)
+            Value = "Sanitized"
+        }),
+        // clear out latter half of a Body Key by targeting group
+        // named groups are also supported
+        new BodyKeySanitizer(new BodyKeySanitizerBody("$.attributes.recoveryLevel")
+        {
+            Regex = "Recoverable(.*)",
+            GroupForReplace = "0",
+            Value = ""
+        })
+    };
+
+    public override List<UriRegexSanitizer> UriRegexSanitizers => new()
+    {
+        new UriRegexSanitizer(new UriRegexSanitizerBody
+        {
+            Regex = "/subscriptions/(?<sub>[^/]+)/",
+            GroupForReplace = "sub",
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    };
+
+    public override List<HeaderRegexSanitizer> HeaderRegexSanitizers => new()
+    {
+        // named regex replace example.
+        new HeaderRegexSanitizer(new HeaderRegexSanitizerBody("Authorization")
+        {
+            Regex = "Bearer (?<token>.+)",
+            GroupForReplace = "token",
+            Value = "Sanitized"
+        })
+    };
+
+    public override List<GeneralRegexSanitizer> GeneralRegexSanitizers => new()
+    {
+        new GeneralRegexSanitizer(new GeneralRegexSanitizerBody
+        {
+            // notice escaped \ for \s regex character
+            Regex = "tenantId\\s*:\\s*(?<tenant>[0-9a-fA-F-]{36})",
+            GroupForReplace = "tenant",
+            Value = "00000000-0000-0000-0000-000000000000"
+        })
+    };
+    ...
+```
+
+#### Setting the matcher
+
+```cs
+
+```
+
+#### Overriding matcher for specific recording
+
+```cs
+    [Fact]
+    [CustomMatcher(compareBody: false)] // this test will ignore the body during matching operations
+    public async Task Should_import_certificate()
+```
+
+## Troubleshooting Tips
 
 - **Proxy missing** – Delete `.proxy/` and re-run the tests; the harness re-downloads the latest release automatically.
 - **Recordings missing** – Use `config locate` to confirm where the sparse clone lives. Check timestamps under `.assets/`.
 - **Playback mismatch** – Add sanitizers for dynamic data, adjust the matcher to ignore irrelevant fields, or register a variable.
 - **Need a clean slate** – Run `reset` before re-recording to ensure the sparse clone matches the tagged state.
 
-## 8. Additional Resources
+## Additional Resources
 
 - [RecordedCommandTestsBase source](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
 - [Azure SDK Test Proxy README](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/README.md)
@@ -124,6 +234,4 @@ todo: examples of each
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo
 - [Azure SDK Test Proxy Discussions](https://teams.microsoft.com/l/channel/19%3Ab7c3eda7e0864d059721517174502bdb%40thread.skype/Test-Proxy%20-%20Questions%2C%20Help%2C%20and%20Discussion?groupId=3e17dcb0-4257-4a30-b843-77f47f1d4121&tenantId=72f988bf-86f1-41af-91ab-2d7cd011db47)
   - Feel free to post any questions about the test-proxy here in addition to the standard MCP channels.
-
-Keeping this document up to date ensures everyone follows the same playbook for safe, deterministic recorded tests. Cross-link any new tooling or scripts you introduce so future devs can pick up where you left off.
 

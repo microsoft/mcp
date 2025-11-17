@@ -39,8 +39,8 @@
   {
     "AssetsRepo": "Azure/azure-sdk-assets",
     "AssetsRepoPrefixPath": "",
-    "TagPrefix": "<LiveTestCSProjFileNameWithoutExtension>", // e.g., "Azure.Mcp.Tools.KeyVault.LiveTests"
+    "TagPrefix": "<LiveTestCsProjFileNameWithoutExtension>", // e.g., "Azure.Mcp.Tools.KeyVault.LiveTests"
     "Tag": ""
   }
   ```
-- Copilot should follow the `The sanitization/playback loop` loop section within the [recorded test documentation](../docs/recorded-tests.md) for more details on how to convert and validate recorded tests.
+- Copilot utilize the [recorded test documentation](../docs/recorded-tests.md) for more details on how to convert and validate recorded tests.
