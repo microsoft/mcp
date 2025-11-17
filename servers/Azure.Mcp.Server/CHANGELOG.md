@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed a bug where agents connect command result including file search result fail with serialization error. [[#1205](https://github.com/microsoft/mcp/pull/1205)]
+
 ### Other Changes
 
 - Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
