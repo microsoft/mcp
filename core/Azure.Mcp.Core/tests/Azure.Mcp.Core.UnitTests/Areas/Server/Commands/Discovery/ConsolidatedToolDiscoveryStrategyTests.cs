@@ -22,13 +22,8 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var factory = commandFactory ?? CommandFactoryHelpers.CreateCommandFactory();
         var serviceProvider = CommandFactoryHelpers.SetupCommonServices().BuildServiceProvider();
         var startOptions = Microsoft.Extensions.Options.Options.Create(options ?? new ServiceStartOptions());
-        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
-        {
-            Name = "Test Server",
-            Version = "1.0.0"
-        });
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<ConsolidatedToolDiscoveryStrategy>>();
-        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, configurationOptions, logger);
+        var strategy = new ConsolidatedToolDiscoveryStrategy(factory, serviceProvider, startOptions, logger);
         if (entryPoint != null)
         {
             strategy.EntryPoint = entryPoint;
