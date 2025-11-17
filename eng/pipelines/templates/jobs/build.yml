@@ -75,7 +75,7 @@ jobs:
         -SingleFile
 
   - task: Powershell@2
-    displayName: "Run tests"
+    displayName: "Run unit tests"
     condition: and(succeeded(), eq(variables['RunUnitTests'], 'true'))
     timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
     inputs:
@@ -88,12 +88,35 @@ jobs:
     env:
       AZURE_MCP_COLLECT_TELEMETRY: 'false'
 
+  - task: Powershell@2
+    displayName: "Run recorded tests"
+    condition: and(succeeded(), eq(variables['RunRecordedTests'], 'true'))
+    timeoutInMinutes: ${{ parameters.TestTimeoutInMinutes }}
+    inputs:
+      pwsh: true
+      filePath:  $(Build.SourcesDirectory)/eng/scripts/Test-Code.ps1
+      arguments: >
+        -TestType 'Recorded'
+        -TestResultsPath '$(Build.ArtifactStagingDirectory)/recordedTestResults'
+      workingDirectory: $(Build.SourcesDirectory)
+    env:
+      AZURE_MCP_COLLECT_TELEMETRY: 'false'
+
   - task: PublishTestResults@2
     displayName: "Publish Results"
     condition: and(succeededOrFailed(), eq(variables['RunUnitTests'], 'true'))
     inputs:
       testResultsFiles: "$(Build.ArtifactStagingDirectory)/testResults/*.trx"
       testRunTitle: "unit-${{ parameters.OSName }}-$(Architecture)"
+      testResultsFormat: "VSTest"
+      mergeTestResults: true
+
+  - task: PublishTestResults@2
+    displayName: "Publish Recorded Test Results"
+    condition: and(succeededOrFailed(), eq(variables['RunRecordedTests'], 'true'))
+    inputs:
+      testResultsFiles: "$(Build.ArtifactStagingDirectory)/recordedTestResults/*.trx"
+      testRunTitle: "recorded-${{ parameters.OSName }}-$(Architecture)"
       testResultsFormat: "VSTest"
       mergeTestResults: true
 

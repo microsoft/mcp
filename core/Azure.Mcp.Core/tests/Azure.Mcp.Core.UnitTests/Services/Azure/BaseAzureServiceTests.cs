@@ -23,7 +23,7 @@ public class BaseAzureServiceTests
     public BaseAzureServiceTests()
     {
         _azureService = new TestAzureService(_tenantService);
-        _tenantService.GetTenantId(TenantName).Returns(TenantId);
+        _tenantService.GetTenantId(TenantName, Arg.Any<CancellationToken>()).Returns(TenantId);
         _tenantService.GetTokenCredentialAsync(
             Arg.Any<string?>(),
             Arg.Any<CancellationToken>())
@@ -37,7 +37,7 @@ public class BaseAzureServiceTests
         var tenantName2 = "Other-Tenant-Name";
         var tenantId2 = "Other-Tenant-Id";
 
-        _tenantService.GetTenantId(tenantName2).Returns(tenantId2);
+        _tenantService.GetTenantId(tenantName2, Arg.Any<CancellationToken>()).Returns(tenantId2);
 
         var retryPolicyArgs = new RetryPolicyOptions
         {
@@ -63,7 +63,7 @@ public class BaseAzureServiceTests
     [Fact]
     public async Task ResolveTenantIdAsync_ReturnsNullOnNull()
     {
-        string? actual = await _azureService.ResolveTenantId(null);
+        string? actual = await _azureService.ResolveTenantId(null, TestContext.Current.CancellationToken);
         Assert.Null(actual);
     }
 
@@ -159,7 +159,8 @@ public class BaseAzureServiceTests
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
             CreateArmClientAsync(tenant, retryPolicy);
 
-        public Task<string?> ResolveTenantId(string? tenant) => ResolveTenantIdAsync(tenant);
+        // Expose the protected ResolveTenantIdAsync method for testing
+        public Task<string?> ResolveTenantId(string? tenant, CancellationToken cancellationToken) => ResolveTenantIdAsync(tenant, cancellationToken);
 
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
 

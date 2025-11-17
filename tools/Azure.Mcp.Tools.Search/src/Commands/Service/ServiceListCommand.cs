@@ -52,7 +52,8 @@ public sealed class ServiceListCommand(ILogger<ServiceListCommand> logger) : Sub
             var services = await searchService.ListServices(
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(services ?? []), SearchJsonContext.Default.ServiceListCommandResult);
         }

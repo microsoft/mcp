@@ -2,27 +2,40 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.5 (Unreleased)
+## 2.0.0-beta.6 (Unreleased)
+
+### Features Added
+
+### Breaking Changes
+
+### Bugs Fixed
+
+### Other Changes
+
+- Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
+- Added logging customization options to the `azmcp server start` command:
+  - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
+  - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
+
+## 2.0.0-beta.5 (2025-11-14)
 
 ### Features Added
 
 - Enabled HTTPS redirection by default when running `server start --transport http`. This can be opted-out with `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` when not needed. [[#1169](https://github.com/microsoft/mcp/pull/1169)]
-- Updated UserAgent string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
-- Added `redis_create` command to create new Redis resources. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
+- Updated the `User-Agent` string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Added support for creating new Redis resources via the `redis_create` command. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
 
 ### Breaking Changes
 
-- Updated `HttpClientService` to ignore `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Updated `HttpClientService` to ignore the `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 
 ### Bugs Fixed
 
-- Removed the `DefaultUserAgent` configuration from `ApplicationInsightsSetup` that had hardcoded version and set User-Agent string for all other service areas that used the HttpClientService. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Removed the `DefaultUserAgent` configuration from `ApplicationInsightsSetup` that had a hardcoded version and set the `User-Agent` string for all other service areas that used the `HttpClientService`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 
 ### Other Changes
 
-- Added logging customization options to the `azmcp server start` command:
-  - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
-  - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1178](https://github.com/microsoft/mcp/pull/1178)]
 
 ## 2.0.0-beta.4 (2025-11-13)
 

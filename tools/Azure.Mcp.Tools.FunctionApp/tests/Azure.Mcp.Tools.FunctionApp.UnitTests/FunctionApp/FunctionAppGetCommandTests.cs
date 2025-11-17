@@ -54,7 +54,8 @@ public sealed class FunctionAppGetCommandTests
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(testFunctionApps);
         }
 
@@ -91,7 +92,8 @@ public sealed class FunctionAppGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedFunctionApps);
 
         var context = new CommandContext(_serviceProvider);
@@ -110,7 +112,8 @@ public sealed class FunctionAppGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
 
@@ -135,7 +138,8 @@ public sealed class FunctionAppGetCommandTests
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Is<string?>(s => string.IsNullOrEmpty(s)),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var context = new CommandContext(_serviceProvider);
@@ -159,7 +163,13 @@ public sealed class FunctionAppGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.GetFunctionApp(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<FunctionAppInfo>?>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);
@@ -191,7 +201,13 @@ public sealed class FunctionAppGetCommandTests
     {
         if (shouldSucceed)
         {
-            _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            _service.GetFunctionApp(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns([new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null)]);
         }
 
@@ -207,7 +223,13 @@ public sealed class FunctionAppGetCommandTests
     public async Task ExecuteAsync_ReturnsFunctionApp()
     {
         var expected = new FunctionAppInfo("app1", "rg1", "eastus", "plan1", "Running", "app1.azurewebsites.net", null);
-        _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.GetFunctionApp(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([expected]);
 
         var context = new CommandContext(_serviceProvider);
@@ -228,7 +250,13 @@ public sealed class FunctionAppGetCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsEmptyWhenNotFound()
     {
-        _service.GetFunctionApp(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.GetFunctionApp(
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns((List<FunctionAppInfo>?)null);
 
         var context = new CommandContext(_serviceProvider);

@@ -10,12 +10,12 @@ namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
 public class ComputeUsageChecker(TokenCredential credential, string subscriptionId, ILogger<ComputeUsageChecker> logger) : AzureUsageChecker(credential, subscriptionId, logger)
 {
-    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location)
+    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
         try
         {
             var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
-            var usages = subscription.GetUsagesAsync(location);
+            var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
             await foreach (ComputeUsage item in usages)

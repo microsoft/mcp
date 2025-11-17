@@ -71,7 +71,8 @@ public sealed class WebTestsGetCommand(ILogger<WebTestsGetCommand> logger) : Bas
                 options.ResourceGroup!,
                 options.ResourceName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             if (webTest != null)
             {

@@ -18,11 +18,9 @@ namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 public sealed class RegistryDiscoveryStrategy(IOptions<ServiceStartOptions> options, ILogger<RegistryDiscoveryStrategy> logger) : BaseDiscoveryStrategy(logger)
 {
     private readonly IOptions<ServiceStartOptions> _options = options;
-    /// <summary>
-    /// Discovers available MCP servers from the embedded registry.
-    /// </summary>
-    /// <returns>A collection of server providers defined in the registry.</returns>
-    public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
+
+    /// <inheritdoc/>
+    public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
         var registryRoot = await LoadRegistryAsync();
         if (registryRoot == null)

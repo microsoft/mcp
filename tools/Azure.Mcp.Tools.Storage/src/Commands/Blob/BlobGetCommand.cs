@@ -70,7 +70,8 @@ public sealed class BlobGetCommand(ILogger<BlobGetCommand> logger) : BaseContain
                 options.Blob,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy
+                options.RetryPolicy,
+                cancellationToken
             );
 
             context.Response.Results = ResponseResult.Create(new(details ?? []), StorageJsonContext.Default.BlobGetCommandResult);

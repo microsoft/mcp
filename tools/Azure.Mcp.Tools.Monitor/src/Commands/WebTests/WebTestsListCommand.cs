@@ -63,8 +63,8 @@ public sealed class WebTestsListCommand(ILogger<WebTestsListCommand> logger) : B
         {
             var monitorWebTestService = context.GetService<IMonitorWebTestService>();
             var webTests = options.ResourceGroup == null
-                ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy)
-                : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy);
+                ? await monitorWebTestService.ListWebTests(options.Subscription!, options.Tenant, options.RetryPolicy, cancellationToken)
+                : await monitorWebTestService.ListWebTests(options.Subscription!, options.ResourceGroup, options.Tenant, options.RetryPolicy, cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(webTests ?? []), MonitorJsonContext.Default.WebTestsListCommandResult);
         }
