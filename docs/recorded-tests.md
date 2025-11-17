@@ -171,6 +171,15 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
         })
     };
 
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
+        // should clear out kid hostnames of actual vault names appearing anywhere in any section
+        // of the body
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "(?=http://|https://)(?<host[^/?\.]+)",
+          GroupForReplace = "host",
+        })
+    };
+
     public override List<UriRegexSanitizer> UriRegexSanitizers => new()
     {
         new UriRegexSanitizer(new UriRegexSanitizerBody
