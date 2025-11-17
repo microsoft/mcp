@@ -69,7 +69,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
                 options.WorkspaceFolder!,
                 options.AzdEnvName!,
                 options.Subscription!,
-                options.Limit);
+                options.Limit, cancellationToken);
 
             context.Response.Message = result;
         }

@@ -37,16 +37,17 @@ public sealed class SignalRService(
         string? signalRName,
         string? tenant = null,
         AuthMethod? authMethod = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var runtimes = new List<Runtime>();
         if (string.IsNullOrEmpty(signalRName))
         {
             var cacheKey = string.IsNullOrEmpty(tenant) ? subscription : $"{subscription}_{tenant}";
             cacheKey = string.IsNullOrEmpty(resourceGroup) ? cacheKey : $"{cacheKey}_{resourceGroup}";
-            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
             {
                 return cachedResults;
@@ -56,7 +57,7 @@ public sealed class SignalRService(
             {
                 if (string.IsNullOrEmpty(resourceGroup))
                 {
-                    var signalRResources = subscriptionResource.GetSignalRsAsync();
+                    var signalRResources = subscriptionResource.GetSignalRsAsync(cancellationToken);
                     await foreach (var runtime in signalRResources)
                     {
                         runtimes.Add(ConvertToRuntimeModel(runtime));
@@ -64,19 +65,19 @@ public sealed class SignalRService(
                 }
                 else
                 {
-                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                    var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                     if (!resourceGroupResource.HasValue)
                     {
                         throw new Exception($"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                     }
 
-                    var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync();
+                    var signalRResources = resourceGroupResource.Value.GetSignalRs().GetAllAsync(cancellationToken);
                     await foreach (var runtime in signalRResources)
                     {
                         runtimes.Add(ConvertToRuntimeModel(runtime));
                     }
 
-                    await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration);
+                    await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
                 }
             }
             catch (Exception ex)
@@ -91,7 +92,7 @@ public sealed class SignalRService(
                 ? $"{subscription}_{resourceGroup}_{signalRName}"
                 : $"{subscription}_{tenant}_{resourceGroup}_{signalRName}";
 
-            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration);
+            var cachedResults = await _cacheService.GetAsync<List<Runtime>>(CacheGroup, cacheKey, s_cacheDuration, cancellationToken);
             if (cachedResults != null)
             {
                 return cachedResults;
@@ -99,14 +100,14 @@ public sealed class SignalRService(
 
             try
             {
-                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup);
+                var resourceGroupResource = await subscriptionResource.GetResourceGroupAsync(resourceGroup, cancellationToken);
                 if (!resourceGroupResource.HasValue)
                 {
                     throw new Exception(
                         $"Resource group '{resourceGroup}' not found in subscription '{subscription}'");
                 }
 
-                var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName);
+                var signalRResource = await resourceGroupResource.Value.GetSignalRs().GetAsync(signalRName, cancellationToken);
                 if (!signalRResource.HasValue)
                 {
                     throw new Exception(
@@ -114,7 +115,7 @@ public sealed class SignalRService(
                 }
 
                 runtimes.Add(ConvertToRuntimeModel(signalRResource.Value));
-                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration);
+                await _cacheService.SetAsync(CacheGroup, cacheKey, signalRName, s_cacheDuration, cancellationToken);
             }
             catch (Exception ex)
             {

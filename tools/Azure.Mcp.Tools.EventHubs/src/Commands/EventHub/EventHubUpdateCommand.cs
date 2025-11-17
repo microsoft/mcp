@@ -91,7 +91,8 @@ public sealed class EventHubUpdateCommand(ILogger<EventHubUpdateCommand> logger,
                 options.PartitionCount,
                 options.MessageRetentionInHours,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(eventHub),

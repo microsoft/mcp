@@ -36,13 +36,10 @@ public sealed class CompositeDiscoveryStrategy(IEnumerable<IMcpDiscoveryStrategy
         return strategyList;
     }
 
-    /// <summary>
-    /// Discovers available MCP servers from all combined discovery strategies.
-    /// </summary>
-    /// <returns>A collection of all discovered MCP server providers from all strategies.</returns>
-    public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
+    /// <inheritdoc/>
+    public override async Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
-        var tasks = _strategies.Select(strategy => strategy.DiscoverServersAsync());
+        var tasks = _strategies.Select(strategy => strategy.DiscoverServersAsync(cancellationToken));
         var results = await Task.WhenAll(tasks);
 
         return results.SelectMany(result => result);

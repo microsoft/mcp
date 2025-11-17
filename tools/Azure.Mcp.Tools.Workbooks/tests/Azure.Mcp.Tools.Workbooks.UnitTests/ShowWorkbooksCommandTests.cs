@@ -92,7 +92,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -129,7 +130,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<WorkbookInfo?>(null));
 
         var args = _command.GetCommand().Parse([
@@ -156,7 +158,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<WorkbookInfo?>(new Exception("Service error")));
 
         var args = _command.GetCommand().Parse([
@@ -197,7 +200,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -214,7 +218,8 @@ public class ShowWorkbooksCommandTests
         await _service.Received(1).GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is("test-tenant"));
+            Arg.Is("test-tenant"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -240,7 +245,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -256,7 +262,8 @@ public class ShowWorkbooksCommandTests
         await _service.Received(1).GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is((string?)null));
+            Arg.Is((string?)null),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -282,7 +289,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbook);
 
         var args = _command.GetCommand().Parse([
@@ -299,7 +307,8 @@ public class ShowWorkbooksCommandTests
         await _service.Received(1).GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -400,7 +409,8 @@ public class ShowWorkbooksCommandTests
         _service.GetWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbook);
 
         var args = _command.GetCommand().Parse([

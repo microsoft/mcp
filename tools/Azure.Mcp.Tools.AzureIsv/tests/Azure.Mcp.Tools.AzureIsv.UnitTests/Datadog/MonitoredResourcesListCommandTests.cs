@@ -38,7 +38,7 @@ public class MonitoredResourcesListCommandTests
             "/subscriptions/1234/resourceGroups/rg-demo/providers/Microsoft.Datadog/monitors/app-demo-1",
             "/subscriptions/1234/resourceGroups/rg-demo/providers/Microsoft.Datadog/monitors/vm-demo-2"
         };
-        _datadogService.ListMonitoredResources(Arg.Is("rg1"), Arg.Is("sub123"), Arg.Is("datadog1"))
+        _datadogService.ListMonitoredResources(Arg.Is("rg1"), Arg.Is("sub123"), Arg.Is("datadog1"), Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         var command = new MonitoredResourcesListCommand(_logger);
@@ -57,7 +57,7 @@ public class MonitoredResourcesListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoResources()
     {
         // Arrange
-        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1")
+        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new MonitoredResourcesListCommand(_logger);
@@ -76,7 +76,7 @@ public class MonitoredResourcesListCommandTests
     {
         // Arrange
         var expectedError = "Missing required arguments: datadog-resource";
-        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1")
+        _datadogService.ListMonitoredResources("rg1", "sub123", "datadog1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new MonitoredResourcesListCommand(_logger);

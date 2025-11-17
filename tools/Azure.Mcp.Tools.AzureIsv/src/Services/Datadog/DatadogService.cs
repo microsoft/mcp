@@ -14,18 +14,18 @@ public partial class DatadogService : BaseAzureService, IDatadogService
     {
     }
 
-    public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource)
+    public async Task<List<string>> ListMonitoredResources(string resourceGroup, string subscription, string datadogResource, CancellationToken cancellationToken = default)
     {
         try
         {
-            var tenantId = await ResolveTenantIdAsync(null);
-            var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null);
+            var tenantId = await ResolveTenantIdAsync(null, cancellationToken);
+            var armClient = await CreateArmClientAsync(tenantIdOrName: tenantId, retryPolicy: null, armClientOptions: null, cancellationToken);
 
             var resourceId = $"/subscriptions/{subscription}/resourceGroups/{resourceGroup}/providers/Microsoft.Datadog/monitors/{datadogResource}";
 
             ResourceIdentifier id = new ResourceIdentifier(resourceId);
             var datadogMonitorResource = armClient.GetDatadogMonitorResource(id);
-            var monitoredResources = datadogMonitorResource.GetMonitoredResources();
+            var monitoredResources = datadogMonitorResource.GetMonitoredResources(cancellationToken);
 
             var resourceList = new List<string>();
             foreach (var resource in monitoredResources)

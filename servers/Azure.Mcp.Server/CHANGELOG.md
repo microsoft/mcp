@@ -2,36 +2,48 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.5 (Unreleased)
+## 2.0.0-beta.6 (Unreleased)
 
 ### Features Added
-
-- Enabled HTTPS redirection by default when running `server start --transport http`. This can be opted-out with `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` when not needed. [[#1169](https://github.com/microsoft/mcp/pull/1169)]
-- Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ### Breaking Changes
 
 ### Bugs Fixed
+- Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ### Other Changes
+
+## 2.0.0-beta.5 (2025-11-14)
+
+### Features Added
+
+- Enabled HTTPS redirection by default when running `server start --transport http`. This can be opted-out with `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` when not needed. [[#1169](https://github.com/microsoft/mcp/pull/1169)]
+- Updated the `User-Agent` string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+- Added support for creating new Redis resources via the `redis_create` command. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
+
+### Breaking Changes
+
+- Updated `HttpClientService` to ignore the `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
+### Bugs Fixed
+
+- Removed the `DefaultUserAgent` configuration from `ApplicationInsightsSetup` that had a hardcoded version and set the `User-Agent` string for all other service areas that used the `HttpClientService`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
+### Other Changes
+
+- Added a `CancellationToken` parameter to async methods to more `I[SomeService]` interfaces. [[#1178](https://github.com/microsoft/mcp/pull/1178)]
 
 ## 2.0.0-beta.4 (2025-11-13)
 
 ### Features Added
-- Updated UserAgent string to include transport type (stdio or http) for better telemetry and monitoring of Azure service calls. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
+
 - PostgreSQL MCP tools now support both Microsoft Entra authentication and native database authentication. The default is Entra authentication, users can switch to native database authentication by providing the `--auth-type` parameter with the value `PostgreSQL`. If native authentication is selected, the user must also provide the user password via the `--password` parameter. [[#1011](https://github.com/microsoft/mcp/pull/1011)]
 - Telemetry: [[#1150](https://github.com/microsoft/mcp/pull/1150)]
   - Enabled telemetry collection for the HTTP transport mode.
   - Refactored Azure Monitor exporter configuration to support multiple exporters with separate user-provided and Microsoft telemetry streams.
   - Added the `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` environment variable to control Microsoft-specific telemetry collection (enabled by default).
-- Added `redis_create` command to create new Redis resources. [[#1093](https://github.com/microsoft/mcp/issues/1093)]
-
-### Breaking Changes
-
-- Updated `HttpClientService` to ignore `DefaultUserAgent` string set in `HttpClientOptions`. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 
 ### Bugs Fixed
-- Removed the `DefaultUserAgent` configuration from `ApplicationInsightsSetup` that had hardcoded version and set User-Agent string for all other service areas that used the HttpClientService. [[#1146](https://github.com/microsoft/mcp/pull/1146)]
 
 - PostgreSQL MCP tools has improved the error message reported in case of failure deserializing some of the columns returned by a query. Non out-of-the-box types like `vector` cannot be deserialized and will now report a clear error message indicating which column caused the issue and an action plan so AI agents can recover from it. [[#1024](https://github.com/microsoft/mcp/pull/1024)]
 - Fixed exit code when invoking `--help` flag. Commands like `tools list --help` now correctly return exit code `0` instead of `1` when successfully displaying help output. [[#1118](https://github.com/microsoft/mcp/pull/1118)]

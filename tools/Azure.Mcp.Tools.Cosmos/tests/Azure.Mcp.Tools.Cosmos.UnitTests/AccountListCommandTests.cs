@@ -44,7 +44,7 @@ public class AccountListCommandTests
     {
         // Arrange
         var expectedAccounts = new List<string> { "account1", "account2" };
-        _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _cosmosService.GetCosmosAccounts(Arg.Is("sub123"), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedAccounts);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
@@ -67,7 +67,7 @@ public class AccountListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoAccountsExist()
     {
         // Arrange
-        _cosmosService.GetCosmosAccounts("sub123", null, null)
+        _cosmosService.GetCosmosAccounts("sub123", null, null, Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse(["--subscription", "sub123"]);
@@ -104,7 +104,7 @@ public class AccountListCommandTests
         var expectedError = "Test error";
         var subscriptionId = "sub123";
 
-        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
@@ -123,8 +123,8 @@ public class AccountListCommandTests
     {
         // Arrange
         var subscriptionId = "sub123";
-        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
-            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, System.Net.HttpStatusCode.ServiceUnavailable));
+        _cosmosService.GetCosmosAccounts(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
+            .ThrowsAsync(new HttpRequestException("Service Unavailable", null, HttpStatusCode.ServiceUnavailable));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId]);
 

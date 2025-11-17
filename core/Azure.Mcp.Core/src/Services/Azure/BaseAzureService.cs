@@ -129,23 +129,23 @@ public abstract class BaseAzureService
         return value.Replace("\\", "\\\\").Replace("'", "''");
     }
 
-    protected async Task<string?> ResolveTenantIdAsync(string? tenant)
+    protected async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         if (tenant == null)
             return tenant;
-        return await TenantService.GetTenantId(tenant);
+        return await TenantService.GetTenantId(tenant, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         return await GetCredential(null, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
-        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
@@ -211,7 +211,7 @@ public abstract class BaseAzureService
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(tenantIdOrName);
+        var tenantId = await ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
         try
         {

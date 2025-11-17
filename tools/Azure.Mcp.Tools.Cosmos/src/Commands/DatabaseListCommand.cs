@@ -51,7 +51,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(databases ?? []), CosmosJsonContext.Default.DatabaseListCommandResult);
         }

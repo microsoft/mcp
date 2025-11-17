@@ -1,0 +1,100 @@
+{
+    "parameters": {
+        "workspaceId": "f089354e-8366-4e18-aea3-4cb4a3a50b48",
+        "GraphModelId": "41ce06d1-d81b-4ea0-bc6d-2ce3dd2f8e87",
+        "preview": true
+    },
+    "responses": {
+        "200": {
+            "body": {
+                "nodeTypes": [
+                    {
+                        "alias": "096a5133-fd82-4000-ac8a-404532ab6fd6",
+                        "primaryKeyProperties": [
+                            "customerIDK"
+                        ],
+                        "labels": [
+                            "customer"
+                        ],
+                        "properties": [
+                            {
+                                "name": "customerIDK",
+                                "type": "INT"
+                            },
+                            {
+                                "name": "firstName",
+                                "type": "STRING"
+                            },
+                            {
+                                "name": "lastName",
+                                "type": "STRING"
+                            },
+                            {
+                                "name": "fullName",
+                                "type": "STRING"
+                            }
+                        ]
+                    },
+                    {
+                        "alias": "dced4642-b93d-4da4-815c-a171932043a4",
+                        "primaryKeyProperties": [
+                            "productIDK"
+                        ],
+                        "labels": [
+                            "products"
+                        ],
+                        "properties": [
+                            {
+                                "name": "productIDK",
+                                "type": "INT"
+                            },
+                            {
+                                "name": "productNumber",
+                                "type": "STRING"
+                            },
+                            {
+                                "name": "productName",
+                                "type": "STRING"
+                            },
+                            {
+                                "name": "modelName",
+                                "type": "STRING"
+                            },
+                            {
+                                "name": "makeFlag",
+                                "type": "INT"
+                            },
+                            {
+                                "name": "standardCost",
+                                "type": "FLOAT"
+                            },
+                            {
+                                "name": "listPrice",
+                                "type": "FLOAT"
+                            },
+                            {
+                                "name": "subCategoryIDFK",
+                                "type": "INT"
+                            }
+                        ]
+                    }
+                ],
+                "edgeTypes": [
+                    {
+                        "alias": "3ef6a474-ef38-4923-abcf-6f2e9230f1eb",
+                        "labels": [
+                            "customerProducts"
+                        ],
+                        "sourceNodeType": {
+                            "alias": "096a5133-fd82-4000-ac8a-404532ab6fd6"
+                        },
+                        "destinationNodeType": {
+                            "alias": "dced4642-b93d-4da4-815c-a171932043a4"
+                        },
+                        "properties": []
+                    }
+                ]
+            }
+        }
+    }
+}

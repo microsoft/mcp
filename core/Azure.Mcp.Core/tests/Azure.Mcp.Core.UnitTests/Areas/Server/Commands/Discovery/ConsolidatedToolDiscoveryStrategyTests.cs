@@ -43,7 +43,7 @@ public class ConsolidatedToolDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);

@@ -24,7 +24,8 @@ public interface IStorageService
         string? accessTier = null,
         bool? enableHierarchicalNamespace = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<BlobInfo>> GetBlobDetails(
         string account,
@@ -32,21 +33,24 @@ public interface IStorageService
         string? blob,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<ContainerInfo>> GetContainerDetails(
         string account,
         string? container,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<ContainerInfo> CreateContainer(
         string account,
         string container,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<BlobUploadResult> UploadBlob(
         string account,
@@ -55,5 +59,6 @@ public interface IStorageService
         string localFilePath,
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

@@ -54,7 +54,14 @@
                         "capacityId": "3c0cd366-dc28-4b6d-a525-4d415a8666e7",
                         "operationName": "Batch Livy Run",
                         "runtimeVersion": "1.3",
-                        "livySessionItemResourceUri": ""
+                        "livySessionItemResourceUri": "",
+                        "driverMemory": 4,
+                        "driverCores": 2,
+                        "executorMemory": 8,
+                        "executorCores": 4,
+                        "numExecutors": 10,
+                        "isDynamicAllocationEnabled": true,
+                        "dynamicAllocationMaxExecutors": 20
                     }                
                 ]
             }
