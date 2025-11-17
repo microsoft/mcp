@@ -7,11 +7,11 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Azure.Mcp.Core.Configuration;
 
 namespace Azure.Mcp.Core.Areas.Server.Commands.Discovery;
 

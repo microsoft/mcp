@@ -8,6 +8,7 @@ using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Areas.Tools;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Aks;
@@ -45,9 +46,8 @@ using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using ModelContextProtocol.Protocol;
 using Microsoft.Extensions.Options;
-using Azure.Mcp.Core.Configuration;
+using ModelContextProtocol.Protocol;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 

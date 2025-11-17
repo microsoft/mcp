@@ -31,13 +31,13 @@ public class CommandFactoryTests
     {
         var services = new ServiceCollection();
         services.AddLogging();
-        
+
         _serverConfiguration = new AzureMcpServerConfiguration
         {
             Name = "Test Server",
             Version = "Test Version"
         };
-        
+
         _serviceProvider = services.BuildServiceProvider();
         _logger = Substitute.For<ILogger<CommandFactory>>();
         _telemetryService = Substitute.For<ITelemetryService>();
