@@ -1296,7 +1296,7 @@ public class FoundryService(
                                 Score = r.Score,
                                 Content = r.Content,
                             }).ToList();
-                            yield return CreateResponseMessage(toolCall.Id, JsonSerializer.SerializeToElement(fileSearchResults, FoundryJsonContext.Default.ListAgentFileSearchResult), step);
+                            yield return CreateResponseMessage(toolCall.Id, fileSearchResults, step);
                             break;
 
                         case RunStepAzureAISearchToolCall aiSearch:
@@ -1684,7 +1684,7 @@ public class FoundryService(
         };
     }
 
-    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, AgentFileSearchResult result, RunStep step)
+    internal static Microsoft.Extensions.AI.ChatMessage CreateResponseMessage(string toolCallId, List<AgentFileSearchResult> result, RunStep step)
     {
         return new(ChatRole.Tool, [new FunctionResultContent(toolCallId, result)])
         {
