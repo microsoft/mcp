@@ -90,7 +90,8 @@ public class AccountCreateCommandTests
                 Arg.Any<string>(),
                 Arg.Any<bool?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
                 .Returns(expectedAccount);
         }
 
@@ -133,7 +134,8 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(conflictException);
 
         var parseResult = _commandDefinition.Parse(["--account", "existingaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
@@ -161,7 +163,8 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(notFoundException);
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "nonexistentrg", "--location", "eastus", "--subscription", "sub123"]);
@@ -189,7 +192,8 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(authException);
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
@@ -215,7 +219,8 @@ public class AccountCreateCommandTests
             Arg.Any<string>(),
             Arg.Any<bool?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<StorageAccountResult>(new Exception("Test error")));
 
         var parseResult = _commandDefinition.Parse(["--account", "testaccount", "--resource-group", "testrg", "--location", "eastus", "--subscription", "sub123"]);
@@ -261,7 +266,8 @@ public class AccountCreateCommandTests
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedAccount);
 
         var parseResult = _commandDefinition.Parse([
@@ -288,6 +294,7 @@ public class AccountCreateCommandTests
             "Cool",
             true,
             null,
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

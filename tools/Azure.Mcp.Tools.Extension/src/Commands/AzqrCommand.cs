@@ -103,7 +103,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             command += " --json";
 
             var processService = context.GetService<IExternalProcessService>();
-            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds);
+            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {

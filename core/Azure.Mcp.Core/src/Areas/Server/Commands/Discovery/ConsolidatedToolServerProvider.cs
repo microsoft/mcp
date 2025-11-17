@@ -35,10 +35,8 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
     /// </summary>
     public bool ReadOnly { get; set; } = false;
 
-    /// <summary>
-    /// Creates an MCP client from a command group.
-    /// </summary>
-    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions)
+    /// <inheritdoc/>
+    public async Task<McpClient> CreateClientAsync(McpClientOptions clientOptions, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(EntryPoint))
         {
@@ -55,7 +53,7 @@ public sealed class ConsolidatedToolServerProvider(CommandGroup commandGroup) : 
         };
 
         var clientTransport = new StdioClientTransport(transportOptions);
-        return await McpClient.CreateAsync(clientTransport, clientOptions);
+        return await McpClient.CreateAsync(clientTransport, clientOptions, cancellationToken: cancellationToken);
     }
 
     /// <summary>

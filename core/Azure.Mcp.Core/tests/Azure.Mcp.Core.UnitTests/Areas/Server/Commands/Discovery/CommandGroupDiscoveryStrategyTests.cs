@@ -130,7 +130,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -146,7 +146,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -162,7 +162,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -178,7 +178,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -194,7 +194,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(entryPoint: customEntryPoint);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -209,7 +209,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(entryPoint: null);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -231,7 +231,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(entryPoint: "");
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -251,7 +251,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(entryPoint: "   ");
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -271,7 +271,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var names = result.Select(p => p.CreateMetadata().Name).ToList();
@@ -290,7 +290,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -314,7 +314,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -328,7 +328,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -343,8 +343,8 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result1 = await strategy.DiscoverServersAsync();
-        var result2 = await strategy.DiscoverServersAsync();
+        var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var result2 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result1);
@@ -367,7 +367,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(); // Uses real command factory
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var providers = result.ToList();
@@ -396,7 +396,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options, entryPoint: azmcpEntryPoint);
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEmpty(result);
@@ -415,7 +415,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var names = result.Select(p => p.CreateMetadata().Name).ToList();
@@ -434,8 +434,8 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy();
 
         // Act
-        var result1 = await strategy.DiscoverServersAsync();
-        var result2 = await strategy.DiscoverServersAsync();
+        var result1 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
+        var result2 = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
 
         // Assert
         var count1 = result1.Count();
@@ -452,7 +452,7 @@ public class CommandGroupDiscoveryStrategyTests
         var options = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
         var logger = NSubstitute.Substitute.For<Microsoft.Extensions.Logging.ILogger<CommandGroupDiscoveryStrategy>>();
         var strategy = new CommandGroupDiscoveryStrategy(commandFactory, options, logger);
-        var result = await strategy.DiscoverServersAsync();
+        var result = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         Assert.NotNull(result);
     }
 
@@ -467,7 +467,7 @@ public class CommandGroupDiscoveryStrategyTests
         {
             EntryPoint = azmcpEntryPoint
         };
-        var result = (await strategy.DiscoverServersAsync()).ToList();
+        var result = (await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken)).ToList();
         Assert.NotEmpty(result);
         // Should not include ignored groups
         var ignored = DiscoveryConstants.IgnoredCommandGroups;
@@ -522,7 +522,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var servers = await strategy.DiscoverServersAsync();
+        var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         var serverNames = servers.Select(s => s.CreateMetadata().Name).ToList();
 
         // Assert
@@ -547,7 +547,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var servers = await strategy.DiscoverServersAsync();
+        var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         var serverNames = servers.Select(s => s.CreateMetadata().Name).ToList();
 
         // Assert
@@ -574,7 +574,7 @@ public class CommandGroupDiscoveryStrategyTests
         var strategy = CreateStrategy(options: options);
 
         // Act
-        var servers = await strategy.DiscoverServersAsync();
+        var servers = await strategy.DiscoverServersAsync(TestContext.Current.CancellationToken);
         var serverNames = servers.Select(s => s.CreateMetadata().Name).ToList();
 
         // Assert

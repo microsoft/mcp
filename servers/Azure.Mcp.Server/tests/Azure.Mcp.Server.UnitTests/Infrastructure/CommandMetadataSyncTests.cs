@@ -35,7 +35,7 @@ public class CommandMetadataSyncTests
         var pwshPath = FindPowerShellExecutable();
         var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
 
-        var updateResult = await processService.ExecuteAsync(pwshPath, arguments);
+        var updateResult = await processService.ExecuteAsync(pwshPath, arguments, cancellationToken: TestContext.Current.CancellationToken);
 
         Assert.True(updateResult.ExitCode == 0,
             $"Update script failed with exit code {updateResult.ExitCode}. Output: {updateResult.Output}. Error: {updateResult.Error}");

@@ -72,7 +72,8 @@ public class SkuGetCommandTests
             Arg.Is(_knownSubscriptionId),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var args = _commandDefinition.Parse([
@@ -104,7 +105,12 @@ public class SkuGetCommandTests
     {
         if (shouldSucceed)
         {
-            _amlfsService.SkuGetInfoAsync(Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+            _amlfsService.SkuGetInfoAsync(
+                Arg.Any<string>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns([new("n", "eastus", false, [])]);
         }
 

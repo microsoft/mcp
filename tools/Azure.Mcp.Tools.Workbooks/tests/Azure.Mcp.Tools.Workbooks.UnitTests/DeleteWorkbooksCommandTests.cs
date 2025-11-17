@@ -64,7 +64,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -98,7 +99,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(false);
 
         var args = _command.GetCommand().Parse([
@@ -125,7 +127,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<bool>(new Exception("Service error")));
 
         var args = _command.GetCommand().Parse([
@@ -152,7 +155,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -169,7 +173,8 @@ public class DeleteWorkbooksCommandTests
         await _service.Received(1).DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is("test-tenant"));
+            Arg.Is("test-tenant"),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -181,7 +186,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -197,7 +203,8 @@ public class DeleteWorkbooksCommandTests
         await _service.Received(1).DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Is((string?)null));
+            Arg.Is((string?)null),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -209,7 +216,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -226,7 +234,8 @@ public class DeleteWorkbooksCommandTests
         await _service.Received(1).DeleteWorkbook(
             Arg.Is(workbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -274,7 +283,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Is(validWorkbookId),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -307,7 +317,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Is(displayName),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -340,7 +351,8 @@ public class DeleteWorkbooksCommandTests
         _service.DeleteWorkbook(
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         var args = _command.GetCommand().Parse([
@@ -360,6 +372,7 @@ public class DeleteWorkbooksCommandTests
             Arg.Is<RetryPolicyOptions>(options =>
                 options.MaxRetries == 5 &&
                 options.DelaySeconds == 2),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 }

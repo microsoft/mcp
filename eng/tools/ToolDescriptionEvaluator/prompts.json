@@ -1,4 +1,11 @@
 {
+  "azureaibestpractices_get": [
+    "Get best practices for building AI applications in Azure",
+    "Show me the best practices for Azure AI Foundry agents code generation",
+    "Get guidance for building agents with Azure AI Foundry",
+    "Create an AI app that helps me to manage travel queries.",
+    "Create an AI app that helps me to manage travel queries in Azure AI Foundry"
+  ],
   "foundry_agents_connect": [
     "Query an agent in my Azure AI foundry resource"
   ],
@@ -553,13 +560,6 @@
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
   ],
-  "azureaibestpractices_get": [
-    "Get best practices for building AI applications in Azure",
-    "Show me the best practices for Azure AI Foundry agents code generation",
-    "Get guidance for building agents with Azure AI Foundry",
-    "Create an AI app that helps me to manage travel queries.",
-    "Create an AI app that helps me to manage travel queries in Azure AI Foundry"
-  ],
   "get_bestpractices_get": [
     "Get the latest Azure code generation best practices",
     "Get the latest Azure deployment best practices",
@@ -640,6 +640,12 @@
   "role_assignment_list": [
     "List all available role assignments in my subscription",
     "Show me the available role assignments in my subscription"
+  ],
+  "redis_create": [
+    "Create a new Redis resource named <resource_name> with SKU <sku_name> in resource group <resource_group_name>",
+    "Create a new Redis resource for me",
+    "Create a Redis cache named <resource_name> with SKU <sku_name> in resource group <resource_group_name>",
+    "Create a new Redis cluster with name <resource_name>, SKU <sku_name>"
   ],
   "redis_list": [
     "List all Redis resources in my subscription",

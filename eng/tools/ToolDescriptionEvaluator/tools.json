@@ -898,6 +898,12 @@
     },
     {
       "name": "get",
+      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Azure AI Foundry) for application development only. \r\n        Call this tool first before creating any plans, todos or code.\r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
+      "command": "azureaibestpractices get",
+      "option": []
+    },
+    {
+      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -9205,6 +9211,18 @@
           "description": "The PostgreSQL server to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -9284,6 +9302,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--query",
@@ -9673,6 +9703,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -9752,6 +9794,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--table",
@@ -13262,5 +13316,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 56
+  "duration": 60
 }
