@@ -47,8 +47,23 @@ public class SubscriptionService(ICacheService cacheService, ITenantService tena
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        // Get the subscription ID first, whether the input is a name or ID
-        var subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy, cancellationToken);
+        string subscriptionId;
+        try
+        {
+            // Get the subscription ID first, whether the input is a name or ID
+            subscriptionId = await GetSubscriptionId(subscription, tenant, retryPolicy, cancellationToken);
+        }
+        catch
+        {
+            // If the subscription lookup failed, try environment variable as fallback
+            var envSubscription = Core.Helpers.EnvironmentHelpers.GetAzureSubscriptionId();
+            if (string.IsNullOrEmpty(envSubscription))
+            {
+                throw; // Re-throw the original exception if no environment variable is available
+            }
+
+            subscriptionId = await GetSubscriptionId(envSubscription, tenant, retryPolicy, cancellationToken);
+        }
 
         // Use subscription ID for cache key
         var cacheKey = string.IsNullOrEmpty(tenant)

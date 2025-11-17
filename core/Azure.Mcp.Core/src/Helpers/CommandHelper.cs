@@ -26,11 +26,9 @@ namespace Azure.Mcp.Core.Helpers
             var subscriptionValue = parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.Subscription.Name);
 
             var envSubscription = EnvironmentHelpers.GetAzureSubscriptionId();
-            return (string.IsNullOrEmpty(subscriptionValue) || IsPlaceholder(subscriptionValue)) && !string.IsNullOrEmpty(envSubscription)
+            return string.IsNullOrEmpty(subscriptionValue) && !string.IsNullOrEmpty(envSubscription)
                 ? envSubscription
                 : subscriptionValue;
         }
-
-        private static bool IsPlaceholder(string value) => value.Contains("subscription") || value.Contains("default");
     }
 }
