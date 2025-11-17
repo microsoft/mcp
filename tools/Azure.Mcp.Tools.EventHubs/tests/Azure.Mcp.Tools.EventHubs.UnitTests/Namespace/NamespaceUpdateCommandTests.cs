@@ -88,7 +88,8 @@ public class NamespaceUpdateCommandTests
                 Arg.Any<bool?>(),
                 Arg.Any<Dictionary<string, string>?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(updatedNamespace);
         }
 
@@ -140,7 +141,8 @@ public class NamespaceUpdateCommandTests
             null, // zoneRedundant
             null, // tags
             null, // tenant
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -163,7 +165,8 @@ public class NamespaceUpdateCommandTests
             null,
             null,
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -193,7 +196,8 @@ public class NamespaceUpdateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -241,7 +245,8 @@ public class NamespaceUpdateCommandTests
                 tags.ContainsKey("team") &&
                 tags["team"] == "platform"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -304,7 +309,8 @@ public class NamespaceUpdateCommandTests
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -327,7 +333,8 @@ public class NamespaceUpdateCommandTests
             true,
             Arg.Any<Dictionary<string, string>?>(),
             null,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -355,7 +362,8 @@ public class NamespaceUpdateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Update failed"));
 
         // Act
@@ -391,7 +399,8 @@ public class NamespaceUpdateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new KeyNotFoundException("Namespace not found"));
 
         // Act
@@ -429,7 +438,8 @@ public class NamespaceUpdateCommandTests
             Arg.Any<bool?>(),
             Arg.Any<Dictionary<string, string>?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(updatedNamespace);
 
         // Act
@@ -451,7 +461,8 @@ public class NamespaceUpdateCommandTests
             null,
             null,
             "test-tenant-123",
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]

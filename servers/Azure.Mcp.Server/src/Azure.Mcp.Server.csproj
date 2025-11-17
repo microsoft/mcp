@@ -1,12 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Version>2.0.0-beta.5</Version>
+    <Version>2.0.0-beta.6</Version>
     <CliName>azmcp</CliName>
     <AssemblyTitle>Azure MCP Server</AssemblyTitle>
     <Description>Azure MCP Server - Model Context Protocol implementation for Azure</Description>
     <ReadmeUrl>https://github.com/Microsoft/mcp/blob/main/servers/Azure.Mcp.Server#readme</ReadmeUrl>
     <ReadmePath>$(RepoRoot)/servers/Azure.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(MSBuildThisFileDirectory)../azureicon.png</PackageIcon>
+    <McpRepositoryName>com.microsoft/azure</McpRepositoryName>
 
     <!-- npm settings -->
     <NpmPackageName>@azure/mcp</NpmPackageName>

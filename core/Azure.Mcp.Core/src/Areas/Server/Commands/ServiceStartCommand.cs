@@ -297,8 +297,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             "Configuration error: The --namespace and --tool options are mutually exclusive. Use either one or the other to filter available tools.",
         ArgumentException argEx when argEx.Message.Contains($"{OutgoingAuthStrategy.UseOnBehalfOf} outgoing authentication strategy") =>
             $"Configuration error: The {OutgoingAuthStrategy.UseOnBehalfOf} authentication strategy requires the server to run in authenticated HTTP mode (--transport http without --{ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuthName}).",
-        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --enable-insecure-transport") =>
-            "Insecure transport configuration error. Ensure proper authentication configured with Managed Identity or Workload Identity.",
+        InvalidOperationException invOpEx when invOpEx.Message.Contains("Using --dangerously-disable-http-incoming-auth") =>
+            "Configuration error to disable incoming HTTP authentication. Ensure proper authentication is configured with Managed Identity or Workload Identity.",
         _ => base.GetErrorMessage(ex)
     };
 
@@ -475,6 +475,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         WebApplication app = builder.Build();
 
+        UseHttpsRedirectionIfEnabled(app);
+
         // Configure middleware pipeline
         app.UseCors("AllowAll");
         app.UseRouting();
@@ -595,6 +597,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         WebApplication app = builder.Build();
 
+        UseHttpsRedirectionIfEnabled(app);
+
         // Configure middleware pipeline
         app.UseCors("AllowAll");
         app.UseRouting();
@@ -620,7 +624,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     {
         if (!options.DangerouslyDisableHttpIncomingAuth)
         {
-            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle 
+            // When running in secured HTTP mode, allow the standard IConfiguration binding to handle
             // the ASPNETCORE_URLS value without any additional validation.
             return;
         }
@@ -712,5 +716,22 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     private static string ResolveTransport(CommandResult commandResult)
     {
         return commandResult.GetValueOrDefault<string>(ServiceOptionDefinitions.Transport.Name) ?? TransportTypes.StdIo;
+    }
+
+    private static WebApplication UseHttpsRedirectionIfEnabled(WebApplication app)
+    {
+        // Some hosting environments may not need HTTPS redirection, such as:
+        // - Running behind a reverse proxy that handles TLS termination.
+        // - Local development when not using self-signed development certs.
+        // - The application or server's HTTP stack is not listening for non-HTTPS requests.
+        //
+        // Safe default to enable HTTPS redirection unless explicitly opted-out.
+        string? httpsRedirectionOptOut = Environment.GetEnvironmentVariable("AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION");
+        if (!bool.TryParse(httpsRedirectionOptOut, out bool isOptedOut) || !isOptedOut)
+        {
+            app.UseHttpsRedirection();
+        }
+
+        return app;
     }
 }

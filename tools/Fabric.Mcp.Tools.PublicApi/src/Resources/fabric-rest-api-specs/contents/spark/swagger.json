@@ -426,6 +426,96 @@
               }
           }
       }
+    },
+    "/workspaces/{workspaceId}/spark/livySessions?preview=true": {
+      "get": {
+          "tags": [
+              "LivySessions"
+          ],
+          "summary": "Returns a list of livy sessions from the specified workspace (preview).",
+          "description": "[!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\n This API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+          "operationId": "LivySessions_List_Livy_Sessions_(preview)",
+          "x-ms-pageable": {
+              "nextLinkName": "continuationUri"
+          },
+          "produces": [
+              "application/json"
+          ],
+          "parameters": [
+              {
+                  "in": "path",
+                  "name": "workspaceId",
+                  "description": "The workspace identifier.",
+                  "format": "uuid",
+                  "type": "string",
+                  "required": true
+              },
+              {
+                  "in": "query",
+                  "name": "preview",
+                  "description": "This required parameter must be set to `true` to access this API, which is currently in preview.",
+                  "type": "boolean",
+                  "required": true
+              },
+              {
+                  "in": "query",
+                  "name": "submittedDateTime",
+                  "description": "Submitted date time filter. Filter the sessions based on the submitted date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                  "type": "string",
+                  "format": "date-time",
+                  "required": false
+              },
+              {
+                  "in": "query",
+                  "name": "endDateTime",
+                  "description": "Ended date time filter. Filter the sessions based on the ended date time in UTC, using the YYYY-MM-DDTHH:mm:ssZ format.",
+                  "type": "string",
+                  "format": "date-time",
+                  "required": false
+              },
+              {
+                  "in": "query",
+                  "name": "submitter.Id",
+                  "description": "The GUID value of the user who submitted the session.",
+                  "type": "string",
+                  "format": "uuid",
+                  "required": false
+              },
+              {
+                  "in": "query",
+                  "name": "state",
+                  "description": "The state of the session. Possible values are: `NotStarted`, `InProgress`, `Cancelled`, `Failed`, `Succeeded`, `Unknown`. This value maps to the `state` field in the response.",
+                  "type": "string",
+                  "required": false
+              },
+              {
+                  "in": "query",
+                  "name": "continuationToken",
+                  "description": "Token to retrieve the next page of results, if available.",
+                  "type": "string",
+                  "required": false
+              }
+          ],
+          "responses": {
+              "200": {
+                  "description": "OK -- Returns a list of all livy sessions associated to an itemId.",
+                  "schema": {
+                      "$ref": "../common/spark_definitions.json#/definitions/LivySessions"
+                  }
+              },
+              "default": {
+                  "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+                  "schema": {
+                      "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+                  }
+              }
+          },
+          "x-ms-examples": {
+              "List all livy sessions (Preview) example": {
+                  "$ref": "./examples/ListSessionsInItemId_preview.json"
+              }
+          }
+      }
     }
   },
   "responses": {},

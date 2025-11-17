@@ -72,7 +72,7 @@ public sealed class KnowledgeSourceGetCommand(ILogger<KnowledgeSourceGetCommand>
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var sources = await searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy);
+            var sources = await searchService.ListKnowledgeSources(options.Service!, options.KnowledgeSource, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(sources ?? []), SearchJsonContext.Default.KnowledgeSourceGetCommandResult);
         }
         catch (Exception ex)

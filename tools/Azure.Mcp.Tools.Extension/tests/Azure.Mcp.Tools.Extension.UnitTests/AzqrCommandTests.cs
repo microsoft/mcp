@@ -74,7 +74,8 @@ public sealed class AzqrCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<IEnumerable<string>>())
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<CancellationToken>())
             .Returns(new ProcessResult(0, expectedOutput, string.Empty, $"scan --subscription-id {mockSubscriptionId}"));
 
         try
@@ -90,7 +91,8 @@ public sealed class AzqrCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<int>(),
-                Arg.Any<IEnumerable<string>>());
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {

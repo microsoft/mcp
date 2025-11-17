@@ -7,6 +7,8 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
 <!-- remove-section: end remove_note_ga -->
 
+<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
 [![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
@@ -31,7 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [Docker](#docker)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Microsoft Foundry](#microsoft-foundry)
+        - [Azure AI Foundry](#azure-ai-foundry)
         - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
@@ -336,12 +338,12 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Remote MCP Server (preview)
 
-Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To use Azure MCP Server tools with these platforms, deploy the server to [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+Azure AI Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Microsoft Foundry
+### Azure AI Foundry
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Microsoft Foundry.
-2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Azure AI Foundry.
+2. See [Azure AI Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
 
 ### Microsoft Copilot Studio
 

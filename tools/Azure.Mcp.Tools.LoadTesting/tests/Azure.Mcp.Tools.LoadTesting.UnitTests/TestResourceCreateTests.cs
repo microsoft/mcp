@@ -48,7 +48,13 @@ public class TestResourceCreateCommandTests
     public async Task ExecuteAsync_CreateLoadTests()
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
-        _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("testResourceName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.CreateOrUpdateLoadTestingResourceAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
         var command = new TestResourceCreateCommand(_logger);
@@ -76,7 +82,13 @@ public class TestResourceCreateCommandTests
     public async Task ExecuteAsync_CreateLoadTests_FromDefaultResource()
     {
         var expectedLoadTests = new TestResource { Id = "Id1", Name = "loadTest1" };
-        _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is((string?)null), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.CreateOrUpdateLoadTestingResourceAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is((string?)null),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLoadTests);
 
         var command = new TestResourceCreateCommand(_logger);
@@ -101,7 +113,13 @@ public class TestResourceCreateCommandTests
     [Fact]
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
-        _service.CreateOrUpdateLoadTestingResourceAsync(Arg.Is("sub123"), Arg.Is("resourceGroup123"), Arg.Is("loadTestName"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+        _service.CreateOrUpdateLoadTestingResourceAsync(
+            Arg.Is("sub123"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("loadTestName"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<TestResource>(new Exception("Test error")));
 
         var context = new CommandContext(_serviceProvider);

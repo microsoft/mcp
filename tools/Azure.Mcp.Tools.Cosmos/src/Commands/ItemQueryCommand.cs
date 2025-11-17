@@ -75,7 +75,8 @@ public sealed class ItemQueryCommand(ILogger<ItemQueryCommand> logger) : BaseCon
                 options.Subscription!,
                 options.AuthMethod ?? AuthMethod.Credential,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(items ?? []), CosmosJsonContext.Default.ItemQueryCommandResult);
         }

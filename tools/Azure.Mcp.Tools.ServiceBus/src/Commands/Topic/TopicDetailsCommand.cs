@@ -73,7 +73,8 @@ public sealed class TopicDetailsCommand(ILogger<TopicDetailsCommand> logger) : S
                 options.Namespace!,
                 options.TopicName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.TopicDetailsCommandResult);
         }

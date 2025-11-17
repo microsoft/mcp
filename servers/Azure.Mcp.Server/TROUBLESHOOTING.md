@@ -405,7 +405,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -422,7 +422,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -814,9 +814,17 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
 
 ## Remote MCP Server (preview)
 
-Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS).  Detailed setup instructions can be found here:
-- [Azure MCP Server - ACA with Managed Identity](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
-- [Azure MCP Server - ACA with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
+- [Azure MCP Server - Azure Container Apps with Azure AI Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
+
+### HTTPS redirection issues
+
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
+
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
 
 ### Common Issues
 
@@ -859,7 +867,7 @@ Azure MCP Server 1.0 does not support remote and only supports local (STDIO) tra
      --id <server-client-id> \
      --api https://management.azure.com/ \
      --api-permissions user_impersonation=Scope
-   
+
    az ad app permission admin-consent --id <server-client-id>
    ```
 
@@ -1021,7 +1029,7 @@ dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remote
 This starts the MCP server in **remote HTTP mode** with the following configuration:
 - **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
 - **Environment variables** for Entra ID authentication and ASP.NET Core settings
-- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
+- **HTTP endpoint:** `https://localhost:1031` for easier debugging and testing
 
 **To connect to the MCP server, configure your mcp.json:**
 
@@ -1029,7 +1037,7 @@ This starts the MCP server in **remote HTTP mode** with the following configurat
 {
   "servers": {
     "Azure MCP Server": {
-      "url": "http://localhost:1031/",
+      "url": "https://localhost:1031/",
       "type": "http"
     }
   }

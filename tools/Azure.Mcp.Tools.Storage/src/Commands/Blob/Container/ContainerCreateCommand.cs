@@ -52,7 +52,8 @@ public sealed class ContainerCreateCommand(ILogger<ContainerCreateCommand> logge
                 options.Container!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(containerInfo), StorageJsonContext.Default.ContainerCreateCommandResult);
         }

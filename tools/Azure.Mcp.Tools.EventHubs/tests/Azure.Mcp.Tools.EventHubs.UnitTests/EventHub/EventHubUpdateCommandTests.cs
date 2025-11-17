@@ -68,7 +68,8 @@ public class EventHubUpdateCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<long?>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(eventHub);
         }
 
@@ -103,7 +104,8 @@ public class EventHubUpdateCommandTests
             Arg.Any<int?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
@@ -129,7 +131,8 @@ public class EventHubUpdateCommandTests
             Arg.Any<int?>(),
             Arg.Any<long?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
@@ -167,7 +170,8 @@ public class EventHubUpdateCommandTests
             Arg.Is(8),
             Arg.Is(336L),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(eventHub);
 
         // Act

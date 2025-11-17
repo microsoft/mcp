@@ -65,7 +65,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             null,
             Arg.Any<string>(),
-            Arg.Any<string[]>());
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -101,7 +102,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             "prod",
             Arg.Any<string>(),
-            Arg.Any<string[]>());
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -139,7 +141,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             null,
             "application/json",
-            Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")));
+            Arg.Is<string[]>(tags => tags.Contains("environment=prod") && tags.Contains("team=backend")),
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueSetCommandResult);
@@ -166,7 +169,8 @@ public class KeyValueSetCommandTests
             Arg.Any<RetryPolicyOptions>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<string[]>())
+            Arg.Any<string[]>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to set key-value"));
 
         var args = _commandDefinition.Parse([
