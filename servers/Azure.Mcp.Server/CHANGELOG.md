@@ -12,6 +12,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
+- Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
+
 ## 2.0.0-beta.5 (2025-11-14)
 
 ### Features Added
