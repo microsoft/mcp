@@ -1,4 +1,11 @@
 {
+  "azureaibestpractices_get": [
+    "Get best practices for building AI applications in Azure",
+    "Show me the best practices for Azure AI Foundry agents code generation",
+    "Get guidance for building agents with Azure AI Foundry",
+    "Create an AI app that helps me to manage travel queries.",
+    "Create an AI app that helps me to manage travel queries in Azure AI Foundry"
+  ],
   "foundry_agents_connect": [
     "Query an agent in my Azure AI foundry resource"
   ],
@@ -552,13 +559,6 @@
   "marketplace_product_list": [
     "Search for Microsoft products in the marketplace",
     "Show me marketplace products from publisher <publisher_name>"
-  ],
-  "azureaibestpractices_get": [
-    "Get best practices for building AI applications in Azure",
-    "Show me the best practices for Azure AI Foundry agents code generation",
-    "Get guidance for building agents with Azure AI Foundry",
-    "Create an AI app that helps me to manage travel queries.",
-    "Create an AI app that helps me to manage travel queries in Azure AI Foundry"
   ],
   "get_bestpractices_get": [
     "Get the latest Azure code generation best practices",

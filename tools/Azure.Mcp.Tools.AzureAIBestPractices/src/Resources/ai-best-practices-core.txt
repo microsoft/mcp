@@ -1,0 +1,277 @@
+# Best Practices for Building AI Apps with Azure AI Services
+
+This guide covers best practices for:
+- Generating code for AI agent applications using Azure AI Foundry and any other Azure AI models
+- Building agents with Azure AI Foundry
+- Implementing chatbots, workflows, assistants, and multi-agent systems with Microsoft Agent Framework
+
+> Note: Understanding User Intent of Azure AI Foundry
+> 
+> **Two Types of Operations:**
+> 
+> **1. Resource Management** - Use `foundry` tool
+> - Keywords: "create/deploy/provision agent/embedding IN Foundry", "set up agent/embedding resource"
+> - Creates Azure AI Foundry agent resource via commands under `foundry`
+> 
+> **2. Application Development** - Use this best practices tool
+> - Keywords: "build/write/implement agent", "develop chatbot/assistant", "agent code"
+> - Generates code using Microsoft Agent Framework SDK
+> - Returns code samples and implementation patterns
+> 
+> **When unsure, ask:** "Do you want to create an agent resource in Azure AI Foundry, or generate agent application code?"
+
+## Key Principles
+**Defaults and Recommendations:**
+- **Default language**: If the user does not specify a programming language, use **.NET** as the default programming language.
+- **Recommended SDK**: Use **Microsoft Agent Framework** for building AI agents, chatbots, assistants, and multi-agent systems - it provides flexible orchestration, multi-agent patterns, and cross-platform support (.NET and Python)
+- **Select model first**: Model selection is REQUIRED for ANY AI implementation - always select the appropriate AI model before coding if the user does not specify a model
+
+**Process:**
+1. **Gather information first**: Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, feature guides, code samples) BEFORE thinking or writing any code - this ensures high-quality code generation on the first attempt and reduces errors
+2. **Think before plan**: Output your thoughts on model and SDK selection, analyze requirements, and consider implementation approach
+3. **Plan**: Create a detailed step-by-step implementation plan covering all aspects of development
+4. **Code**: Implement the solution following the plan, implementation guidelines and best practices
+5. **Build and verify iteratively**: After implementing code, you MUST enter a build-fix loop: build → [if fails] fix → rebuild → [if fails] fix → rebuild → repeat until build succeeds. Never stop at a failed build or after fixing without rebuilding.
+
+**Additional Guidelines:**
+- **Search as you go**: Continue using Microsoft Document Search throughout implementation - coding, debugging, troubleshooting (one topic at a time). Call this tool **as often as needed** - multiple searches are encouraged to ensure accurate and up-to-date information.
+
+{{BACKGROUND_KNOWLEDGE}}
+
+## Tool Use Guidelines
+### Microsoft Document Search Tool
+
+#### How to Search Effectively
+**Query strategy**:
+- Focus on **one specific topic** per query to improve accuracy and relevance
+- Use specific feature names or keywords (e.g., "Microsoft Agent Framework sequential workflow", "Agent Framework function tools", "Agent Framework memory")
+- Call this tool **as often as needed** - multiple searches are encouraged to ensure accurate and up-to-date information
+- **Use this tool whenever you encounter unknowns** during any phase: planning (before coding), implementation (while coding), debugging (fixing errors), or troubleshooting (resolving issues)
+
+**Search Operation vs Fetch Operation in Microsoft Document Search Tool**:
+- **Search**: Use when you need to discover information or find relevant documents across Microsoft Document
+- **Fetch**: Use when you have a specific Microsoft Document URL and need the complete, unabridged content
+
+**Choosing the Right Fetch Tool**:
+- **For `https://learn.microsoft.com/` URLs**: ALWAYS use Microsoft Document Fetch Tool - provides better formatting and complete content
+- **For other URLs**: Use generic webpage/fetch tools
+
+
+## Gather Information
+Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, feature guides, code samples) BEFORE thinking or writing any code. This ensures high-quality code generation on the first attempt and reduces errors.
+
+**Remember**: Refer to the "Understanding Microsoft Document Tools" section above for guidance on effective searching.
+
+### 1. Search for Implementation Knowledge
+After completing the required model selection process above, gather SDK and implementation information.
+#### Step 1: Fetch common quickstart pages
+  Use the Microsoft Document **fetch** operation to retrieve these pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
+  - [Default] Azure AI Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
+
+#### Step 2 (Optional): Search for specific agent type documentation
+  **ONLY if user explicitly requests a NON-Azure AI Foundry service provider:**
+  - **Default for Azure AI Foundry**: ALWAYS use Azure AI Foundry Agent (`PersistentAgentsClient`) - skip this step
+  - **DO NOT use this step for demos, prototypes, or "local testing"** - still use `PersistentAgentsClient`
+  - **ONLY search other agent types if user explicitly says**: "use OpenAI service", "use Azure OpenAI service", etc.
+    - Example: User says "use OpenAI service" → Search "Agent Framework OpenAI ChatCompletion Agents"
+    - Example: User says "use Azure OpenAI" → Search "Agent Framework Azure OpenAI ChatCompletion Agents"
+
+#### Step 3: Search for feature guidelines
+**Stage 1 - Identify Core Capabilities:**
+Break down the user's requirement into individual capabilities
+- Example: "Build a weather agent for user to query weather" → ["function calling"]
+
+**Stage 2 - Map to Framework Features:**
+For each capability, identify matching features from "Microsoft Agent Framework Key Features" section
+- Example: "function calling" → Function Tools
+
+**Stage 3 - Search Primary Features:**
+Search for each mapped feature individually
+Use Microsoft Document **search** operation with  "Microsoft Agent Framework" + keyword + programming language
+- Example: Search "Microsoft Agent Framework function tools csharp"
+
+**Stage 4 - Identify Implementation Patterns:**
+From search results, identify specific APIs/classes mentioned
+- Example:  "Microsoft Agent Framework AIFunctionFactory csharp"
+
+**Stage 5 - Search Related/Adjacent Features:**
+Based on documentation, identify complementary features
+
+Note: Complex requirements typically need 5-10+ searches. Continue searching until you have:
+- All core features documented
+- All implementation APIs identified
+- All related/adjacent features covered
+
+### 2. Search for Model Selection
+Model selection is required for any AI code generation in Azure - all AI apps (Microsoft Agent Framework apps) require an AI model.
+
+#### Step 1: Fetch models catalog documentation
+**REQUIRED: Call ALL operations below EVERY TIME before generating ANY model name in code** (including samples/placeholders).
+**IMPORTANT**: Ignore ALL model names from code samples, documentation examples, and guidelines. Always use the operations below to select the latest, current model - do not rely on existing knowledge.
+
+  - Use the Microsoft Document **fetch** operation to retrieve `https://learn.microsoft.com/azure/ai-foundry/foundry-models/concepts/models-sold-directly-by-azure`
+  - This provides comprehensive model release dates, capabilities, features, and use cases
+  - **Note**: Must use **fetch** operation (NOT search) to get the complete page without summarization
+
+#### Step 2: Fetch model selection guide
+  - Use the Microsoft Document **fetch** operation to retrieve `https://learn.microsoft.com/azure/ai-foundry/foundry-models/how-to/model-choice-guide`
+  - This provides model selection guidance, comparison criteria, and when to use each model
+  - **Note**: Must use **fetch** operation (NOT search) to get the complete page without summarization
+
+#### Step 3: Get available models from Foundry catalog
+  - Use the Foundry Service **models_list** operation to retrieve models available in the Foundry catalog
+  - This shows which models the user can actually access (documentation may list models not available to them)
+
+## Think and Output Your Thoughts
+Always output your thoughts on model and SDK selection before planning and coding.
+
+**How to output**: Present your analysis and reasoning directly in your response as readable text for the user. Write your thinking process inline as part of your answer. This ensures transparency and helps the user understand your decision-making process.
+Follow the exact format structure below in the specified order. Each section (1, 2, 3) must be completed with the prescribed output format.
+
+### 1. User Requirements Analysis
+
+**Output format:**
+```
+User Requirements Analysis:
+- Primary task: [What the user wants to build]
+- Key features in Microsoft Agent Framework needed: [List of specific Microsoft Agent Framework features required]
+- Model selection requirement:
+  - Model Required capabilities: [Model features needed]
+  - Model performance needs: [Context window, speed, etc.]
+```
+
+### 2. Explain SDK selection
+**Recommended SDK:** Microsoft Agent Framework
+**Recommended Agent Type:** Azure AI Foundry Agents with PersistentAgentsClient
+**Default Programming Language:** .NET
+
+** Agent Type Selection Rules **
+- **ALWAYS use `PersistentAgentsClient` for Azure AI Foundry** 
+- **DO NOT use `AzureOpenAIClient`** for Azure AI Foundry models, even for demos, prototypes, or local testing
+- `PersistentAgentsClient` provides service-managed persistence, conversation threads, and full agent capabilities
+- Only use other agent types (OpenAI ChatCompletion, Azure OpenAI, etc.) if the user **explicitly requests a different service provider**
+
+**Output format:**
+```
+SDK Selection: Microsoft Agent Framework
+
+Agent Type: Azure AI Foundry Agents (PersistentAgentsClient)
+
+Programming Language: [.NET (default) OR Python (if user specified)]
+
+Reason: [Detail why this SDK and agent type are suitable for the user's requirements. Explain if conversation persistence is needed, whether the user needs service-managed state, etc.]
+
+Searched SDK Related Knowledge:
+(Output the related knowledge you searched and will use for implementation)
+- [Key feature name 1]:
+  - Documentation: [List documentation URLs/titles matching the target language]
+  - Programming Language: [Target language: "CSharp" or "Python"]
+  - How it will be used: [Brief description]
+- [Key feature name 2]:
+  - Documentation: [List documentation URLs/titles matching the target language]
+  - Programming Language: [Target language: "CSharp" or "Python"]
+  - How it will be used: [Brief description]
+- [Additional features as needed...]
+
+Total Searches Performed: [Number]
+```
+
+### 3. Select and explain model choice
+
+**Selection criteria:**
+- Summarize the latest models from "Step 1: Fetch models catalog documentation"
+- List 3-5 candidate new models matching requirements and availability
+- Select based on: (a) Latest release date, (b) Capability match, (c) Availability from Step 3, (d) The model if user specifies
+- **Ignore regional deployment limitations from Step 1 documentation** - if a model appears in Step 3's Foundry catalog, it IS available to the user regardless of regional constraints mentioned in documentation
+- Ignore model names in code samples/documents - they use older models for backward compatibility. Always select the LATEST model.
+
+**Output format:**
+```
+Code Sample Model: [code-sample-model-name]
+Note: Code samples show [code-sample-model-name] is old. For backward compatibility, always select the new model for new implementations.
+
+Model Candidates:
+1. [Model Provider] - [Model Series] - [Model] - [Release Date]
+   - Capability: [Key capabilities]
+   - Match: [How it addresses needs]
+   - Available: [Yes/No - ONLY check Step 3 Foundry catalog results, ignore Step 1 regional limitations]
+[Repeat for 2-4 more candidates]
+
+Model Selection: [Selected Model]
+Reasoning: [Requirement match, latest in category, trade-offs, availability confirmed by Step 3, user specification]
+```
+
+## Create Implementation Plan
+
+Create a step-by-step plan / todo list covering project initialization, installation, setup, core functionality, features, error handling, **build verification, documentation generation, and summary**.
+
+**Code implementation steps must include these final steps:**
+**Build and fix errors** (Required): Run build command (`dotnet build` or equivalent)
+   - If build fails: Analyze build errors → Fix code issues → Rebuild
+   - Repeat fix-rebuild cycle until build succeeds with zero errors
+
+
+## Code - Implementation Guidelines
+**Note**: Continue using Microsoft Document Search throughout implementation for any unknowns.
+
+### Language-Specific Implementation:
+**IMPORTANT**: Search results may contain documentation and code samples for multiple programming languages (csharp, Python, etc.)
+
+- Only use documentation and code samples that match your target programming language
+- API signatures, syntax, and patterns differ between languages - do not mix language-specific code
+- Ignore code samples and documentation from other programming languages
+
+### Installation
+**IMPORTANT**: Always run installation commands (`dotnet add package` or `pip install`) instead of manually editing project files (.csproj, requirements.txt). This ensures proper dependency resolution and project configuration.
+
+#### Python
+The `--pre` flag is required while Agent Framework is in preview. The Core + Azure AI integration includes Azure AI / Foundry / OpenAI supports, as well as workflows and orchestrations.
+```bash
+pip install agent-framework-azure-ai --pre
+```
+DO REMIND USER THE `--pre` OR `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
+
+#### .NET
+Agent type-specific installation packages:
+- **Azure AI Foundry Agent (RECOMMENDED)** - `PersistentAgentsClient`:
+  ```bash
+  dotnet add package Azure.Identity
+  dotnet add package Microsoft.Agents.AI.AzureAI --prerelease
+  ```
+- **Workflows and Orchestration** - For multi-agent systems and workflow features, also add:
+  ```bash
+  dotnet add package Microsoft.Agents.AI.Workflows --prerelease
+  ```
+- For other agent types (OpenAI ChatCompletion, OpenAI Responses, OpenAI Assistants, Azure AI Foundry Models, etc.), use Microsoft Document Search tool to search for how to install dependencies.
+
+DO REMIND USER THE `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
+
+{{ERROR_PATTERNS}}
+
+## Build and Verification
+**IMPORTANT: Build must succeed before completing the task. This step is REQUIRED and NON-NEGOTIABLE.**
+
+### Build Requirements
+1. **After implementing ALL code**: Run build command
+2. **If build FAILS** - Enter the fix-rebuild loop (may require MANY iterations):
+   - Analyze the error messages carefully
+   - Use Microsoft Document Search to find solutions for specific errors
+   - Fix code errors by editing files as needed
+   - **Never update plan status when editing files** - file edits are sub-operations within this build-and-fix step
+   - **IMMEDIATELY run build again** after fixing
+   - **Never update plan status or mark anything as complete during this entire loop**
+   - Repeat: fix → rebuild → fix → rebuild until build succeeds
+
+3. **If build SUCCEEDS**:
+   - **NOW you can mark task as complete** - build success is the ONLY trigger for completion
+   - **STOP making any code changes** - build success is the final state
+   - **Do NOT edit code after successful build** - this introduces new errors
+
+### Rules
+- ❌ Never skip rebuilding after fixing errors
+- ❌ Never update plan status during the fix-rebuild loop or editing files to fix build errors
+- ❌ Never stop at "I've created a plan" without implementing and building
+- ❌ Never mark task complete until build succeeds
+- ✅ Always rebuild after every fix to verify it works
+- ✅ Expect multiple fix-rebuild iterations - this is normal
+- ✅ Build success is the ONLY acceptable completion state*. Update step status ONLY after successful build
