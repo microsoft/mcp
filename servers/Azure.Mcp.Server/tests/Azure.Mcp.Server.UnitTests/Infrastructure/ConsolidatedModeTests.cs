@@ -106,9 +106,9 @@ public class ConsolidatedModeTests
             {
                 return dir.FullName;
             }
-            dir = dir.Parent;
+            throw new InvalidOperationException($"Could not find repository root {dir.FullName} containing global.json and servers directory");
         }
 
-        throw new InvalidOperationException("Could not find repository root containing global.json and servers directory");
+        throw new InvalidOperationException("Current directory info is null, cannot determine repository root.");
     }
 }
