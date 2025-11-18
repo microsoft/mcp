@@ -342,7 +342,7 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 
 ### Microsoft Foundry
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Microsoft Foundry.
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/) for Microsoft Foundry.
 2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
 
 ### Microsoft Copilot Studio

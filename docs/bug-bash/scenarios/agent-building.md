@@ -30,18 +30,18 @@
 
 **Option A: Prompt GitHub Copilot Chat** (Recommended):
 ```
-Create an Azure resource group 'bugbash-aifoundry-rg' in eastus, then create an Azure AI Services account with SKU S0, and deploy GPT-4o model with deployment name 'gpt-4o-deployment'
+Create an Azure resource group 'bugbash-foundry-rg' in eastus, then create an Azure AI Services account with SKU S0, and deploy GPT-4o model with deployment name 'gpt-4o-deployment'
 ```
 
 **Option B: Run Azure CLI Commands Manually**:
 ```bash
 # Create resource group
-az group create --name bugbash-aifoundry-rg --location eastus
+az group create --name bugbash-foundry-rg --location eastus
 
 # Create Microsoft Foundry resource (AI Services account)
 az cognitiveservices account create \
   --name bugbash-ai-foundry-$RANDOM \
-  --resource-group bugbash-aifoundry-rg \
+  --resource-group bugbash-foundry-rg \
   --location eastus \
   --kind AIServices \
   --sku S0
@@ -49,7 +49,7 @@ az cognitiveservices account create \
 # Deploy a model (GPT-4o)
 az cognitiveservices account deployment create \
   --name <account-name-from-above> \
-  --resource-group bugbash-aifoundry-rg \
+  --resource-group bugbash-foundry-rg \
   --deployment-name gpt-4o-deployment \
   --model-name gpt-4o \
   --model-version "2024-05-13" \
@@ -72,7 +72,7 @@ Show me details for Microsoft Foundry resources in my subscription
 
 **2.2 Alternative phrasing**:
 ```
-List all Microsoft Foundry resources in resource group 'bugbash-aifoundry-rg'
+List all Microsoft Foundry resources in resource group 'bugbash-foundry-rg'
 ```
 
 ### Step 3: List Available Models with Azure MCP Server
@@ -128,7 +128,7 @@ Show me all deployed models in my Microsoft Foundry resource
 
 **5.1 List OpenAI models** (uses `azmcp_foundry_openai_models-list`):
 ```
-List all OpenAI models and deployments in my Azure AI resource '<resource-name>' in resource group 'bugbash-aifoundry-rg'
+List all OpenAI models and deployments in my Azure AI resource '<resource-name>' in resource group 'bugbash-foundry-rg'
 ```
 
 **Verify**:
@@ -140,13 +140,13 @@ List all OpenAI models and deployments in my Azure AI resource '<resource-name>'
 
 **Option A: Prompt GitHub Copilot Chat**:
 ```
-Delete the Azure resource group 'bugbash-aifoundry-rg' and all its resources
+Delete the Azure resource group 'bugbash-foundry-rg' and all its resources
 ```
 
 **Option B: Run Azure CLI Command Manually**:
 ```bash
 # Delete resource group (removes all resources)
-az group delete --name bugbash-aifoundry-rg --yes --no-wait
+az group delete --name bugbash-foundry-rg --yes --no-wait
 ```
 
 **Expected Results**:
