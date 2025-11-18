@@ -20,12 +20,12 @@ public sealed class ModelsListCommand : GlobalCommand<ModelsListOptions>
 
     public override string Description =>
         """
-        Retrieves a list of supported models from the Azure AI Foundry catalog.
+        Retrieves a list of supported models from the Microsoft Foundry catalog.
         This function is useful when a user requests a list of available Foundry models or Foundry Labs projects.
         It fetches models based on optional filters like whether the model supports free playground usage,
         the publisher name, and the license type. The function will return the list of models with useful fields.
         Usage:
-            Use this function when users inquire about available models from the Azure AI Foundry catalog.
+            Use this function when users inquire about available models from the Microsoft Foundry catalog.
             It can also be used when filtering models by free playground usage, publisher name, or license type.
             If user didn't specify free playground or ask for models that support GitHub token, always explain that by default it will show the all the models but some of them would support free playground.
             Explain to the user that if they want to find models suitable for prototyping and free to use with support for free playground, they can look for models that supports free playground, or look for models that they can use with GitHub token.

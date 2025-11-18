@@ -74,9 +74,9 @@ When configured this way, you will need to update the version as new release bec
 
 Here are some cool prompts you can try across our supported Azure services:
 
-### 🧮 Azure AI Foundry
+### 🧮 Microsoft Foundry
 
-* List Azure Foundry models
+* List Microsoft Foundry models
 * Deploy foundry models
 * List foundry model deployments
 * List knowledge indexes
@@ -392,7 +392,7 @@ For detailed command documentation and examples, see [Azure MCP Commands](https:
 
 The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
-- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
+- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance

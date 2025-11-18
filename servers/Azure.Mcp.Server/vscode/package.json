@@ -107,7 +107,7 @@
                             "Event Grid — Commands for managing and accessing Event Grid topics, domains, and subscriptions.",
                             "Azure CLI (az), Azure Developer CLI (azd), Azure Quick Review CLI (azqr)  — Execute CLI commands in context.",
                             "Function App — Commands for managing and accessing Azure Function Apps.",
-                            "Azure Foundry — AI model management and deployment.",
+                            "Microsoft Foundry — AI model management and deployment.",
                             "Azure Managed Grafana — Monitoring dashboards.",
                             "Azure Resource Groups — Resource organization.",
                             "Azure Key Vault — Secrets, keys, and certificates.",
