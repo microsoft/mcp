@@ -2657,7 +2657,7 @@
 ## Test 130
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>  
+**Prompt:** Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>  
 
 ### Results
 
@@ -2691,7 +2691,7 @@
 ## Test 132
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** List all agents in my AI Foundry project  
+**Prompt:** List all agents in my Microsoft Foundry project  
 
 ### Results
 
@@ -2708,7 +2708,7 @@
 ## Test 133
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** List all AI Foundry model deployments  
+**Prompt:** List all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -2725,7 +2725,7 @@
 ## Test 134
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** List all AI Foundry models  
+**Prompt:** List all Microsoft Foundry models  
 
 ### Results
 
@@ -2742,7 +2742,7 @@
 ## Test 135
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** List all AI Foundry resources in my subscription  
+**Prompt:** List all Microsoft Foundry resources in my subscription  
 
 ### Results
 
@@ -2776,7 +2776,7 @@
 ## Test 137
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** List all knowledge indexes in my AI Foundry project  
+**Prompt:** List all knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
@@ -2793,7 +2793,7 @@
 ## Test 138
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Query an agent in my AI foundry project  
+**Prompt:** Query an agent in my Microsoft Foundry project  
 
 ### Results
 
@@ -2810,7 +2810,7 @@
 ## Test 139
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Query and evaluate an agent in my AI Foundry project for task_adherence  
+**Prompt:** Query and evaluate an agent in my Microsoft Foundry project for task_adherence  
 
 ### Results
 
@@ -2827,7 +2827,7 @@
 ## Test 140
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me all AI Foundry model deployments  
+**Prompt:** Show me all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -2844,7 +2844,7 @@
 ## Test 141
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me the AI Foundry resources in resource group <resource_group_name>  
+**Prompt:** Show me the Microsoft Foundry resources in resource group <resource_group_name>  
 
 ### Results
 
@@ -2861,7 +2861,7 @@
 ## Test 142
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me the available agents in my AI Foundry project  
+**Prompt:** Show me the available agents in my Microsoft Foundry project  
 
 ### Results
 
@@ -2878,7 +2878,7 @@
 ## Test 143
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me the available AI Foundry models  
+**Prompt:** Show me the available Microsoft Foundry models  
 
 ### Results
 
@@ -2895,7 +2895,7 @@
 ## Test 144
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me the knowledge indexes in my AI Foundry project  
+**Prompt:** Show me the knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
@@ -2929,7 +2929,7 @@
 ## Test 146
 
 **Expected Tool:** `azmcp_foundry`  
-**Prompt:** Show me the schema for knowledge index <index-name> in my AI Foundry project  
+**Prompt:** Show me the schema for knowledge index <index-name> in my Microsoft Foundry project  
 
 ### Results
 

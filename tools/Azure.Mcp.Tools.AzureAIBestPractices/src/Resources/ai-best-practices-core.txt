@@ -1,24 +1,24 @@
 # Best Practices for Building AI Apps with Azure AI Services
 
 This guide covers best practices for:
-- Generating code for AI agent applications using Azure AI Foundry and any other Azure AI models
-- Building agents with Azure AI Foundry
+- Generating code for AI agent applications using Microsoft Foundry and any other Azure AI models
+- Building agents with Microsoft Foundry
 - Implementing chatbots, workflows, assistants, and multi-agent systems with Microsoft Agent Framework
 
-> Note: Understanding User Intent of Azure AI Foundry
+> Note: Understanding User Intent of Microsoft Foundry
 > 
 > **Two Types of Operations:**
 > 
 > **1. Resource Management** - Use `foundry` tool
 > - Keywords: "create/deploy/provision agent/embedding IN Foundry", "set up agent/embedding resource"
-> - Creates Azure AI Foundry agent resource via commands under `foundry`
+> - Creates Microsoft Foundry agent resource via commands under `foundry`
 > 
 > **2. Application Development** - Use this best practices tool
 > - Keywords: "build/write/implement agent", "develop chatbot/assistant", "agent code"
 > - Generates code using Microsoft Agent Framework SDK
 > - Returns code samples and implementation patterns
 > 
-> **When unsure, ask:** "Do you want to create an agent resource in Azure AI Foundry, or generate agent application code?"
+> **When unsure, ask:** "Do you want to create an agent resource in Microsoft Foundry, or generate agent application code?"
 
 ## Key Principles
 **Defaults and Recommendations:**
@@ -66,11 +66,11 @@ Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, 
 After completing the required model selection process above, gather SDK and implementation information.
 #### Step 1: Fetch common quickstart pages
   Use the Microsoft Document **fetch** operation to retrieve these pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
-  - [Default] Azure AI Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
+  - [Default] Microsoft Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
 
 #### Step 2 (Optional): Search for specific agent type documentation
-  **ONLY if user explicitly requests a NON-Azure AI Foundry service provider:**
-  - **Default for Azure AI Foundry**: ALWAYS use Azure AI Foundry Agent (`PersistentAgentsClient`) - skip this step
+  **ONLY if user explicitly requests a NON-Microsoft Foundry service provider:**
+  - **Default for Microsoft Foundry**: ALWAYS use Microsoft Foundry Agent (`PersistentAgentsClient`) - skip this step
   - **DO NOT use this step for demos, prototypes, or "local testing"** - still use `PersistentAgentsClient`
   - **ONLY search other agent types if user explicitly says**: "use OpenAI service", "use Azure OpenAI service", etc.
     - Example: User says "use OpenAI service" → Search "Agent Framework OpenAI ChatCompletion Agents"
@@ -142,12 +142,12 @@ User Requirements Analysis:
 
 ### 2. Explain SDK selection
 **Recommended SDK:** Microsoft Agent Framework
-**Recommended Agent Type:** Azure AI Foundry Agents with PersistentAgentsClient
+**Recommended Agent Type:** Microsoft Foundry Agents with PersistentAgentsClient
 **Default Programming Language:** .NET
 
 ** Agent Type Selection Rules **
-- **ALWAYS use `PersistentAgentsClient` for Azure AI Foundry** 
-- **DO NOT use `AzureOpenAIClient`** for Azure AI Foundry models, even for demos, prototypes, or local testing
+- **ALWAYS use `PersistentAgentsClient` for Microsoft Foundry** 
+- **DO NOT use `AzureOpenAIClient`** for Microsoft Foundry models, even for demos, prototypes, or local testing
 - `PersistentAgentsClient` provides service-managed persistence, conversation threads, and full agent capabilities
 - Only use other agent types (OpenAI ChatCompletion, Azure OpenAI, etc.) if the user **explicitly requests a different service provider**
 
@@ -155,7 +155,7 @@ User Requirements Analysis:
 ```
 SDK Selection: Microsoft Agent Framework
 
-Agent Type: Azure AI Foundry Agents (PersistentAgentsClient)
+Agent Type: Microsoft Foundry Agents (PersistentAgentsClient)
 
 Programming Language: [.NET (default) OR Python (if user specified)]
 
@@ -233,7 +233,7 @@ DO REMIND USER THE `--pre` OR `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
 
 #### .NET
 Agent type-specific installation packages:
-- **Azure AI Foundry Agent (RECOMMENDED)** - `PersistentAgentsClient`:
+- **Microsoft Foundry Agent (RECOMMENDED)** - `PersistentAgentsClient`:
   ```bash
   dotnet add package Azure.Identity
   dotnet add package Microsoft.Agents.AI.AzureAI --prerelease
@@ -242,7 +242,7 @@ Agent type-specific installation packages:
   ```bash
   dotnet add package Microsoft.Agents.AI.Workflows --prerelease
   ```
-- For other agent types (OpenAI ChatCompletion, OpenAI Responses, OpenAI Assistants, Azure AI Foundry Models, etc.), use Microsoft Document Search tool to search for how to install dependencies.
+- For other agent types (OpenAI ChatCompletion, OpenAI Responses, OpenAI Assistants, Microsoft Foundry Models, etc.), use Microsoft Document Search tool to search for how to install dependencies.
 
 DO REMIND USER THE `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
 

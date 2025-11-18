@@ -1,6 +1,6 @@
 extension microsoftGraphV1
 
-@description('AI Foundry project resource ID')
+@description('Microsoft Foundry project resource ID')
 @metadata({
   example: '/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myResourceGroup/providers/Microsoft.CognitiveServices/accounts/myAccount/projects/firstProject'
 })

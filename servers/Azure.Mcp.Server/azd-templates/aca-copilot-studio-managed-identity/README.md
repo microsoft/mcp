@@ -1,6 +1,6 @@
 # Azure MCP Server - ACA with Copilot Studio agent
 
-This document explains how to deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tools that perform Azure operations on your behalf. It also explains how to configure a Copilot Studio Agent to connect to such a remotely self-hosted Azure MCP server.
+This document explains how to deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Microsoft Foundry](https://azure.microsoft.com/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tools that perform Azure operations on your behalf. It also explains how to configure a Copilot Studio Agent to connect to such a remotely self-hosted Azure MCP server.
 
 ## Prerequisite
 
