@@ -13,7 +13,7 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
-  - Manages recording state (`Record`, `Playback`, `Live`) based on `.livesettings.json`.
+  - Manages recording state (`Record`, `Playback`, `Live`) based on `.testsettings.json`.
 
 - **HTTP Redirect** – In Debug builds the server-side `HttpClientService.CreateClient()` automatically routes traffic through the proxy when `TEST_PROXY_URL` is set. Tests don’t need to customize transports, they merely need to ensure the tool they are testing is correctly injecting and utilizing `HttpClientService`.
 
@@ -28,7 +28,7 @@ For MCP developers, the key takeaways are:
 
 - The proxy exposes various endpoints that affect matching behavior, sanitization of recordings at rest and during playback, and other transport customizations. `RecordedCommandTestsBase` handles these calls automatically.
 - Recordings are **externalized** via `assets.json` files and stored in the shared `Azure/azure-sdk-assets` repository. The proxy clones the relevant slice into `.assets/<hash>/...` on demand.
-- Asset management commands are exposed through the proxy CLI (`restore`, `reset`, `push`, `config locate/show`). MCP devs invoke these via the auto-downloaded binary in `.proxy/`.
+- Asset management commands are exposed through the proxy CLI (`restore`, `reset`, `push`, `config locate/show`). MCP developers invoke these via the auto-downloaded binary in `.proxy/`.
 
 ## Repository Layout Recap
 
@@ -46,7 +46,7 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 Follow this checklist any time you need to update recordings:
 
 0. **Deploy LiveResources** - `Connect-AzAccount` with your targeted subscription, then invoke `./eng/scripts/Deploy-TestResources.ps1`. EG `./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault`.
-1. **Set record mode** – Locate the `.livesettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/.livetestsettings.json`). Update the file `TestMode` value to `Record`:
+1. **Set record mode** – Locate the `.testsettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/.testsettings.json`). Update the file `TestMode` value to `Record`:
    ```jsonc
    {
      // ...
@@ -61,7 +61,7 @@ Follow this checklist any time you need to update recordings:
    ```
    Review each JSON recording and confirm no secrets or unstable data were missed by existing sanitizers.
    - Note that on `unix` platforms there is no `.exe` suffix.
-4. **Switch to playback** – Change the `TestMode` value in `.livetestsettings.json` to `Playback`. Re-run the tests to verify they pass without hitting live resources.
+4. **Switch to playback** – Change the `TestMode` value in `.testsettings.json` to `Playback`. Re-run the tests to verify they pass without hitting live resources.
 5. **Push assets** – When satisfied, publish the updated recordings:
    ```powershell
    ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
@@ -82,9 +82,9 @@ Follow this checklist any time you need to update recordings:
 ## Migration Guide (Live ➜ Recorded)
 
 1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
-2. **Reparent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
+2. **Re-parent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
 3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `HttpClientService.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<livetestcsprojfolder>/assets.json`:
+4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<LiveTest.CsProj.Folder>/assets.json`:
    ```json
    {
      "AssetsRepo": "Azure/azure-sdk-assets",
