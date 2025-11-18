@@ -444,7 +444,7 @@
     },
     {
       "name": "deploy_azure_ai_models",
-      "description": "Deploy AI models to Azure AI Foundry for machine learning inference and production use.",
+      "description": "Deploy AI models to Microsoft Foundry for machine learning inference and production use.",
       "toolMetadata": {
         "destructive": {
           "value": true,
@@ -982,7 +982,7 @@
     },
     {
       "name": "get_azure_best_practices",
-      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and AI Foundry sdk code samples.",
+      "description": "Retrieve Azure best practices and infrastructure schema for code generation, deployment, and operations. Covers general Azure practices, Azure Functions best practices, AI app development best practices, Terraform configurations, Bicep template schemas, deployment best practices and Microsoft Foundry sdk code samples.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1157,7 +1157,7 @@
     },
     {
       "name": "get_azure_ai_resources_details",
-      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by AI Foundry, knowledge base and source information, and listing AI Foundry , threads, messages and resources.",
+      "description": "Get details about Azure AI resources including listing and querying AI Search services, listing models available to be deployed and models deployed already, knowledge index schema by Microsoft Foundry, knowledge base and source information, and listing Microsoft Foundry , threads, messages and resources.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1236,7 +1236,7 @@
     },
     {
       "name": "use_azure_openai_models",
-      "description": "Generate text completions, chat responses, and embeddings using Azure OpenAI models in AI Foundry. Create conversational AI interactions and vector embeddings for semantic search and analysis.",
+      "description": "Generate text completions, chat responses, and embeddings using Azure OpenAI models in Microsoft Foundry. Create conversational AI interactions and vector embeddings for semantic search and analysis.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1270,8 +1270,8 @@
       ]
     },
     {
-      "name": "create_azure_ai_foundry_agent_resources",
-      "description": "Create Azure AI Foundry agent or thread.",
+      "name": "create_foundry_agent_resources",
+      "description": "Create Microsoft Foundry agent or thread.",
        "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1304,8 +1304,8 @@
       ]
     },
     {
-      "name": "connect_azure_ai_foundry_agents",
-      "description": "Connect to Azure AI Foundry agents for establishing agent connections and communication channels.",
+      "name": "connect_foundry_agents",
+      "description": "Connect to Microsoft Foundry agents for establishing agent connections and communication channels.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1337,8 +1337,8 @@
       ]
     },
     {
-      "name": "query_and_evaluate_azure_ai_foundry_agents",
-      "description": "Query Azure AI Foundry agents with prompts and evaluate their responses using various metrics for comprehensive performance assessment.",
+      "name": "query_and_evaluate_foundry_agents",
+      "description": "Query Microsoft Foundry agents with prompts and evaluate their responses using various metrics for comprehensive performance assessment.",
       "toolMetadata": {
         "destructive": {
           "value": false,
@@ -1370,8 +1370,8 @@
       ]
     },
     {
-      "name": "evaluate_azure_ai_foundry_agents",
-      "description": "Evaluate Azure AI Foundry agents for performance assessment and testing of agent capabilities using evaluation metrics.",
+      "name": "evaluate_foundry_agents",
+      "description": "Evaluate Microsoft Foundry agents for performance assessment and testing of agent capabilities using evaluation metrics.",
       "toolMetadata": {
         "destructive": {
           "value": false,

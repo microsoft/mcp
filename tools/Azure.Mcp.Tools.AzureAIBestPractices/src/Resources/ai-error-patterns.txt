@@ -74,11 +74,11 @@ var data = await context.ReadStateAsync<string>(key: stateId, scopeName: "MyScop
 
 ### Agent Type 
 #### Agent Type Selection
-**IMPORTANT**: When using Azure AI Foundry, always use `PersistentAgentsClient` to create agents - NOT `AzureOpenAIClient`.
-- ❌ Do NOT use `AzureOpenAIClient` for Azure AI Foundry models - that's only for testing and lacks conversation persistence
+**IMPORTANT**: When using Microsoft Foundry, always use `PersistentAgentsClient` to create agents - NOT `AzureOpenAIClient`.
+- ❌ Do NOT use `AzureOpenAIClient` for Microsoft Foundry models - that's only for testing and lacks conversation persistence
 - ✅ DO use `PersistentAgentsClient` - it provides full agent capabilities with service-managed state
 
-Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `PersistentAgentsClient` for Azure AI Foundry.
+Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `PersistentAgentsClient` for Microsoft Foundry.
 
 #### Key Difference: When to Pass ChatOptions
 The main difference between `PersistentAgentsClient` and `AzureOpenAIClient` is **when** you configure ChatOptions (Tools, ResponseFormat, etc. ):

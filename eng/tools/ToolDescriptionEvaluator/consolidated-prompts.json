@@ -313,40 +313,40 @@
     "Update a test run display name as <display-name> for the id <testrun-id> for test <test-id> in the load testing resource <load-testing-resource> in resource group <resource-group>."
   ],
   "get_azure_ai_resources_details": [
-    "Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>",
+    "Get details for Foundry resource <resource_name> in resource group <resource_group_name>",
     "Get the details of knowledge base <agent-name> in the Azure AI Search service <service-name>",
     "Get the details of knowledge source <source-name> in the Azure AI Search service <service-name>",
     "Get the schema configuration for knowledge index <index-name>",
-    "List all agents in my Azure AI Foundry resource",
-    "List all AI Foundry model deployments",
-    "List all AI Foundry models",
-    "List all AI Foundry resources in my subscription",
-    "List all available OpenAI models in my Azure AI Foundry resource",
+    "List all agents in my Foundry resource",
+    "List all Foundry model deployments",
+    "List all Foundry models",
+    "List all Foundry resources in my subscription",
+    "List all available OpenAI models in my Foundry resource",
     "List all Cognitive Search services in my subscription",
     "List all indexes in the Cognitive Search service <service-name>",
     "List all knowledge bases in the Azure AI Search service <service-name>",
     "List all knowledge bases in the search service <service-name>",
-    "List all knowledge indexes in my AI Foundry project",
+    "List all knowledge indexes in my Foundry project",
     "List all knowledge sources in the Azure AI Search service <service-name>",
     "List all knowledge sources in the search service <service-name>",
     "Search for instances of <search_term> in the index <index-name> in Cognitive Search service <service-name>",
-    "Show me all AI Foundry model deployments",
+    "Show me all Foundry model deployments",
     "Show me my Cognitive Search services",
-    "Show me the AI Foundry resources in resource group <resource_group_name>",
-    "Show me the available agents in my Azure AI Foundry resource",
-    "Show me the available AI Foundry models",
+    "Show me the Foundry resources in resource group <resource_group_name>",
+    "Show me the available agents in my Foundry resource",
+    "Show me the available Foundry models",
     "Show me the Cognitive Search services in my subscription",
     "Show me the details of the index <index-name> in Cognitive Search service <service-name>",
     "Show me the indexes in the Cognitive Search service <service-name>",
     "Show me the knowledge base <agent-name> in search service <service-name>",
     "Show me the knowledge bases in the Azure AI Search service <service-name>",
     "Show me the knowledge bases in the search service <service-name>",
-    "Show me the knowledge indexes in my AI Foundry project",
+    "Show me the knowledge indexes in my Foundry project",
     "Show me the knowledge source <source-name> in search service <service-name>",
     "Show me the knowledge sources in the Azure AI Search service <service-name>",
     "Show me the knowledge sources in the search service <service-name>",
-    "Show me the OpenAI model deployments in my Azure AI Foundry resource",
-    "Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource"
+    "Show me the OpenAI model deployments in my Foundry resource",
+    "Show me the schema for knowledge index <index-name> in my Foundry resource"
   ],
   "retrieve_azure_ai_knowledge_base_content": [
     "Ask knowledge base <agent-name> in search service <service-name> to retrieve information about <query>",
@@ -358,18 +358,18 @@
     "What does knowledge base <agent-name> in search service <service-name> know about <query>"
   ],
   "use_azure_openai_models": [
-    "Create a chat completion with the message \"Hello, how are you today?\" using my Azure AI Foundry resource",
-    "Create a completion with the prompt \"What is Azure?\" using my Azure AI Foundry resource",
-    "Create vector embeddings for my text using my Azure AI Foundry resource",
-    "Generate embeddings for the text \"Azure OpenAI Service\" using my Azure AI Foundry resource"
+    "Create a chat completion with the message \"Hello, how are you today?\" using my Foundry resource",
+    "Create a completion with the prompt \"What is Azure?\" using my Foundry resource",
+    "Create vector embeddings for my text using my Foundry resource",
+    "Generate embeddings for the text \"Azure OpenAI Service\" using my Foundry resource"
   ],
-  "connect_azure_ai_foundry_agents": [
-    "Query an agent in my Azure AI foundry resource"
+  "connect_foundry_agents": [
+    "Query an agent in my Foundry resource"
   ],
-  "query_and_evaluate_azure_ai_foundry_agents": [
-    "Query and evaluate an agent in my Azure AI Foundry resource for task_adherence"
+  "query_and_evaluate_foundry_agents": [
+    "Query and evaluate an agent in my Foundry resource for task_adherence"
   ],
-  "evaluate_azure_ai_foundry_agents": [
+  "evaluate_foundry_agents": [
     "Evaluate the full query and response I got from my agent for task_adherence"
   ],
   "get_azure_storage_details": [

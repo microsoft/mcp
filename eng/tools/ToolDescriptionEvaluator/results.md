@@ -514,7 +514,7 @@
 ## Test 2
 
 **Expected Tool:** `azureaibestpractices_get`  
-**Prompt:** Show me the best practices for Azure AI Foundry agents code generation  
+**Prompt:** Show me the best practices for Microsoft Foundry agents code generation  
 
 ### Results
 
@@ -531,7 +531,7 @@
 ## Test 3
 
 **Expected Tool:** `azureaibestpractices_get`  
-**Prompt:** Get guidance for building agents with Azure AI Foundry  
+**Prompt:** Get guidance for building agents with Microsoft Foundry  
 
 ### Results
 
@@ -565,7 +565,7 @@
 ## Test 5
 
 **Expected Tool:** `azureaibestpractices_get`  
-**Prompt:** Create an AI app that helps me to manage travel queries in Azure AI Foundry  
+**Prompt:** Create an AI app that helps me to manage travel queries in Microsoft Foundry  
 
 ### Results
 
@@ -582,7 +582,7 @@
 ## Test 6
 
 **Expected Tool:** `foundry_agents_connect`  
-**Prompt:** Query an agent in my Azure AI foundry resource  
+**Prompt:** Query an agent in my Microsoft Foundry resource  
 
 ### Results
 
@@ -599,7 +599,7 @@
 ## Test 7
 
 **Expected Tool:** `foundry_agents_create`  
-**Prompt:** Create a new Azure AI Foundry agent using instructions in the active editor  
+**Prompt:** Create a new Microsoft Foundry agent using instructions in the active editor  
 
 ### Results
 
@@ -633,7 +633,7 @@
 ## Test 9
 
 **Expected Tool:** `foundry_agents_get-sdk-sample`  
-**Prompt:** Create a CLI app that can talk to an Azure AI Foundry Agent using Python SDK  
+**Prompt:** Create a CLI app that can talk to an Microsoft Foundry Agent using Python SDK  
 
 ### Results
 
@@ -650,7 +650,7 @@
 ## Test 10
 
 **Expected Tool:** `foundry_agents_list`  
-**Prompt:** List all agents in my Azure AI Foundry resource  
+**Prompt:** List all agents in my Microsoft Foundry resource  
 
 ### Results
 
@@ -667,7 +667,7 @@
 ## Test 11
 
 **Expected Tool:** `foundry_agents_list`  
-**Prompt:** Show me the available agents in my Azure AI Foundry resource  
+**Prompt:** Show me the available agents in my Microsoft Foundry resource  
 
 ### Results
 
@@ -684,7 +684,7 @@
 ## Test 12
 
 **Expected Tool:** `foundry_agents_query-and-evaluate`  
-**Prompt:** Query and evaluate an agent in my Azure AI Foundry resource for task_adherence  
+**Prompt:** Query and evaluate an agent in my Microsoft Foundry resource for task_adherence  
 
 ### Results
 
@@ -701,7 +701,7 @@
 ## Test 13
 
 **Expected Tool:** `foundry_knowledge_index_list`  
-**Prompt:** List all knowledge indexes in my AI Foundry project  
+**Prompt:** List all knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
@@ -718,7 +718,7 @@
 ## Test 14
 
 **Expected Tool:** `foundry_knowledge_index_list`  
-**Prompt:** Show me the knowledge indexes in my AI Foundry project  
+**Prompt:** Show me the knowledge indexes in my Microsoft Foundry project  
 
 ### Results
 
@@ -735,7 +735,7 @@
 ## Test 15
 
 **Expected Tool:** `foundry_knowledge_index_schema`  
-**Prompt:** Show me the schema for knowledge index <index-name> in my Azure AI Foundry resource  
+**Prompt:** Show me the schema for knowledge index <index-name> in my Microsoft Foundry resource  
 
 ### Results
 
@@ -786,7 +786,7 @@
 ## Test 18
 
 **Expected Tool:** `foundry_models_deployments_list`  
-**Prompt:** List all AI Foundry model deployments  
+**Prompt:** List all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -803,7 +803,7 @@
 ## Test 19
 
 **Expected Tool:** `foundry_models_deployments_list`  
-**Prompt:** Show me all AI Foundry model deployments  
+**Prompt:** Show me all Microsoft Foundry model deployments  
 
 ### Results
 
@@ -820,7 +820,7 @@
 ## Test 20
 
 **Expected Tool:** `foundry_models_list`  
-**Prompt:** List all AI Foundry models  
+**Prompt:** List all Microsoft Foundry models  
 
 ### Results
 
@@ -837,7 +837,7 @@
 ## Test 21
 
 **Expected Tool:** `foundry_models_list`  
-**Prompt:** Show me the available AI Foundry models  
+**Prompt:** Show me the available Microsoft Foundry models  
 
 ### Results
 
@@ -854,7 +854,7 @@
 ## Test 22
 
 **Expected Tool:** `foundry_openai_chat-completions-create`  
-**Prompt:** Create a chat completion with the message "Hello, how are you today?" using my Azure AI Foundry resource  
+**Prompt:** Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource  
 
 ### Results
 
@@ -871,7 +871,7 @@
 ## Test 23
 
 **Expected Tool:** `foundry_openai_create-completion`  
-**Prompt:** Create a completion with the prompt "What is Azure?" using my Azure AI Foundry resource  
+**Prompt:** Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource  
 
 ### Results
 
@@ -888,7 +888,7 @@
 ## Test 24
 
 **Expected Tool:** `foundry_openai_embeddings-create`  
-**Prompt:** Generate embeddings for the text "Azure OpenAI Service" using my Azure AI Foundry resource  
+**Prompt:** Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource  
 
 ### Results
 
@@ -905,7 +905,7 @@
 ## Test 25
 
 **Expected Tool:** `foundry_openai_embeddings-create`  
-**Prompt:** Create vector embeddings for my text using my Azure AI Foundry resource  
+**Prompt:** Create vector embeddings for my text using my Microsoft Foundry resource  
 
 ### Results
 
@@ -922,7 +922,7 @@
 ## Test 26
 
 **Expected Tool:** `foundry_openai_models-list`  
-**Prompt:** List all available OpenAI models in my Azure AI Foundry resource  
+**Prompt:** List all available OpenAI models in my Microsoft Foundry resource  
 
 ### Results
 
@@ -939,7 +939,7 @@
 ## Test 27
 
 **Expected Tool:** `foundry_openai_models-list`  
-**Prompt:** Show me the OpenAI model deployments in my Azure AI Foundry resource  
+**Prompt:** Show me the OpenAI model deployments in my Microsoft Foundry resource  
 
 ### Results
 
@@ -956,7 +956,7 @@
 ## Test 28
 
 **Expected Tool:** `foundry_resource_get`  
-**Prompt:** List all AI Foundry resources in my subscription  
+**Prompt:** List all Microsoft Foundry resources in my subscription  
 
 ### Results
 
@@ -973,7 +973,7 @@
 ## Test 29
 
 **Expected Tool:** `foundry_resource_get`  
-**Prompt:** Show me the AI Foundry resources in resource group <resource_group_name>  
+**Prompt:** Show me the Microsoft Foundry resources in resource group <resource_group_name>  
 
 ### Results
 
@@ -990,7 +990,7 @@
 ## Test 30
 
 **Expected Tool:** `foundry_resource_get`  
-**Prompt:** Get details for AI Foundry resource <resource_name> in resource group <resource_group_name>  
+**Prompt:** Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name>  
 
 ### Results
 
@@ -1007,7 +1007,7 @@
 ## Test 31
 
 **Expected Tool:** `foundry_threads_create`  
-**Prompt:** Create an Azure AI Foundry thread to hold the conversation  
+**Prompt:** Create an Microsoft Foundry thread to hold the conversation  
 
 ### Results
 
@@ -1024,7 +1024,7 @@
 ## Test 32
 
 **Expected Tool:** `foundry_threads_get-messages`  
-**Prompt:** Show me the messages in the AI Foundry thread with id <thread_id>  
+**Prompt:** Show me the messages in the Microsoft Foundry thread with id <thread_id>  
 
 ### Results
 
@@ -1041,7 +1041,7 @@
 ## Test 33
 
 **Expected Tool:** `foundry_threads_list`  
-**Prompt:** List my AI Foundry threads  
+**Prompt:** List my Microsoft Foundry threads  
 
 ### Results
 

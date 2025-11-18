@@ -1,20 +1,20 @@
-# Interact with Agent using AI Foundry TypeScript SDK
+# Interact with Agent using Microsoft Foundry TypeScript SDK
 
 ## Prerequisites:
 
 - LTS version of Node.js
 - Typescript is installed
 - An Azure subscription
-- A project in Azure AI Foundry
-- The project endpoint string. This can be found in the Azure AI Foundry project overview page under "Project details" in Azure AI Foundry Portal.
+- A project in Microsoft Foundry
+- The project endpoint string. This can be found in the Microsoft Foundry project overview page under "Project details" in Microsoft Foundry Portal.
 - A model deployment in the project
 - A user Entra ID to authenticate the client
   - The user Entra ID needs to have "Azure AI User" RBAC role
   - Azure CLI must be installed
   - The user must sign in with the Entra ID in Azure CLI using `az login` command
-  - The default subscription in Azure CLI must be set to the same Azure subscription containing the AI Foundry project
+  - The default subscription in Azure CLI must be set to the same Azure subscription containing the Microsoft Foundry project
 
-## Install AI Foundry JavaScript SDK
+## Install Microsoft Foundry JavaScript SDK
 
 Use the npm command `npm install @azure/ai-projects @azure/ai-agents @azure/identity`
 
@@ -52,7 +52,7 @@ const agent = await agentsClient.createAgent("gpt-4o", {
 });
 ```
 
-Once an Agent is created, you can reuse it by getting it from the id. The Agent ID can be found in Azure AI Foundry Portal.
+Once an Agent is created, you can reuse it by getting it from the id. The Agent ID can be found in Microsoft Foundry Portal.
 
 ```typescript
 const agent = agentsClient.getAgent("user_provided_agent_id")
