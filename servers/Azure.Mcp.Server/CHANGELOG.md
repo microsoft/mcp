@@ -6,12 +6,15 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added [Hidden] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
 
 ### Other Changes
 
+- Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
 - Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ## 2.0.0-beta.5 (2025-11-14)
