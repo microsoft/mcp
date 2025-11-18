@@ -66,7 +66,7 @@ Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, 
 After completing the required model selection process above, gather SDK and implementation information.
 #### Step 1: Fetch common quickstart pages
   Use the Microsoft Document **fetch** operation to retrieve these pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
-  - [Default] Microsoft Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/microsoft-foundry-agent`
+  - [Default] Microsoft Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
 
 #### Step 2 (Optional): Search for specific agent type documentation
   **ONLY if user explicitly requests a NON-Microsoft Foundry service provider:**
