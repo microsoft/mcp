@@ -98,7 +98,11 @@ internal class CommandFactoryHelpers
 
         var services = serviceProvider ?? CreateDefaultServiceProvider();
         var logger = services.GetRequiredService<ILogger<CommandFactory>>();
-        var configurationOptions = services.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
+        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
+        {
+            Name = "Test Server",
+            Version = "Test Version"
+        });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
         var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);
 
