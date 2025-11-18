@@ -10,6 +10,7 @@ using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Telemetry;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
@@ -147,6 +148,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         try
         {
             using var host = CreateHost(options);
+
+            var httpClientService = host.Services.GetRequiredService<IHttpClientService>();
+            BaseAzureService.InitializeHttpClientTransport(httpClientService);
 
             await InitializeServicesAsync(host.Services);
 

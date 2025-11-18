@@ -1,11 +1,15 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.Net.Http;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.ResourceManager;
 using NSubstitute;
 using Xunit;
@@ -154,6 +158,32 @@ public class BaseAzureServiceTests
         Assert.Equal("The value cannot be an empty string or composed entirely of whitespace. (Parameter 'transportType')", exception.Message);
     }
 
+    [Fact]
+    public void InitializeHttpClientTransport_ConfiguresSharedTransport()
+    {
+        var httpClientService = Substitute.For<IHttpClientService>();
+        httpClientService.DefaultClient.Returns(new HttpClient(new HttpClientHandler()));
+
+        BaseAzureService.InitializeHttpClientTransport(httpClientService);
+
+        var clientOptions = new TestClientOptions();
+        _azureService.ApplyDefaultPolicies(clientOptions);
+
+        Assert.IsType<HttpClientTransport>(clientOptions.Transport);
+    }
+
+    [Fact]
+    public void AddDefaultPolicies_DoesNotOverrideExistingTransport()
+    {
+        var clientOptions = new TestClientOptions();
+        var customTransport = new NoopTransport();
+        clientOptions.Transport = customTransport;
+
+        _azureService.ApplyDefaultPolicies(clientOptions);
+
+        Assert.Same(customTransport, clientOptions.Transport);
+    }
+
     private sealed class TestAzureService(ITenantService tenantService) : BaseAzureService(tenantService)
     {
         public Task<ArmClient> GetArmClientAsync(string? tenant = null, RetryPolicyOptions? retryPolicy = null) =>
@@ -165,5 +195,22 @@ public class BaseAzureServiceTests
         public string EscapeKqlStringTest(string value) => EscapeKqlString(value);
 
         public string GetUserAgent() => UserAgent;
+
+        public ClientOptions ApplyDefaultPolicies(ClientOptions options) => AddDefaultPolicies(options);
+    }
+
+    private sealed class TestClientOptions : ClientOptions
+    {
+    }
+
+    private sealed class NoopTransport : HttpPipelineTransport
+    {
+        private static readonly HttpClientTransport Inner = HttpClientTransport.Shared;
+
+        public override Request CreateRequest() => Inner.CreateRequest();
+
+        public override void Process(HttpMessage message) => throw new NotImplementedException();
+
+        public override ValueTask ProcessAsync(HttpMessage message) => throw new NotImplementedException();
     }
 }

@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Reflection;
 using System.Runtime.Versioning;
 using Azure.Core;
+using Azure.Core.Pipeline;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.ResourceManager;
 
 namespace Azure.Mcp.Core.Services.Azure;
@@ -16,6 +19,9 @@ public abstract class BaseAzureService
     private static string? s_userAgent;
     private static volatile bool s_initialized = false;
     private static readonly object s_initializeLock = new();
+    private static HttpPipelineTransport? s_sharedHttpTransport;
+    private static volatile bool s_httpTransportInitialized;
+    private static readonly object s_httpTransportLock = new();
     private readonly ITenantService? _tenantServiceDoNotUseDirectly;
 
     // Cache assembly metadata to avoid repeated reflection
@@ -160,6 +166,10 @@ public abstract class BaseAzureService
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
+        if (s_sharedHttpTransport != null && (clientOptions.Transport == null || ReferenceEquals(clientOptions.Transport, HttpClientTransport.Shared)))
+        {
+            clientOptions.Transport = s_sharedHttpTransport;
+        }
         return clientOptions;
     }
 
@@ -244,6 +254,26 @@ public abstract class BaseAzureService
         {
             throw new ArgumentException(
                 $"Required parameter{(missingParams.Length > 1 ? "s are" : " is")} null or empty: {string.Join(", ", missingParams)}");
+        }
+    }
+
+    /// <summary>
+    /// Initializes the shared HTTP transport to ensure Azure SDK clients reuse the same configured <see cref="HttpClient"/> pipeline.
+    /// </summary>
+    /// <param name="httpClientService">The <see cref="IHttpClientService"/> that provides the shared <see cref="HttpClient"/>.</param>
+    public static void InitializeHttpClientTransport(IHttpClientService httpClientService)
+    {
+        ArgumentNullException.ThrowIfNull(httpClientService);
+
+        lock (s_httpTransportLock)
+        {
+            if (s_httpTransportInitialized)
+            {
+                return;
+            }
+
+            s_sharedHttpTransport = new HttpClientTransport(httpClientService.DefaultClient);
+            s_httpTransportInitialized = true;
         }
     }
 }
