@@ -6,6 +6,7 @@ using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Group;
 using Azure.Mcp.Core.Areas.Subscription;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Tools.Acr;
 using Azure.Mcp.Tools.Aks;
@@ -43,6 +44,7 @@ using Azure.Mcp.Tools.VirtualDesktop;
 using Azure.Mcp.Tools.Workbooks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
 using ModelContextProtocol.Server;
 
@@ -96,8 +98,13 @@ internal class CommandFactoryHelpers
 
         var services = serviceProvider ?? CreateDefaultServiceProvider();
         var logger = services.GetRequiredService<ILogger<CommandFactory>>();
+        var configurationOptions = Microsoft.Extensions.Options.Options.Create(new AzureMcpServerConfiguration
+        {
+            Name = "Test Server",
+            Version = "Test Version"
+        });
         var telemetryService = services.GetService<ITelemetryService>() ?? new NoOpTelemetryService();
-        var commandFactory = new CommandFactory(services, areaSetups, telemetryService, logger);
+        var commandFactory = new CommandFactory(services, areaSetups, telemetryService, configurationOptions, logger);
 
         return commandFactory;
     }

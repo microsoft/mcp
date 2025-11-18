@@ -13,7 +13,6 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
@@ -63,6 +62,7 @@ internal class Program
             return 1;
         }
     }
+
     private static IAreaSetup[] RegisterAreas()
     {
 
