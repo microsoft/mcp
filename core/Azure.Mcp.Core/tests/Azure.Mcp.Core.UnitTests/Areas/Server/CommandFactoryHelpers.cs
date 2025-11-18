@@ -4,9 +4,7 @@
 using System.Diagnostics;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Areas.Group;
-using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Subscription;
-using Azure.Mcp.Core.Areas.Tools;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
@@ -48,6 +46,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using ModelContextProtocol.Protocol;
+using ModelContextProtocol.Server;
 
 namespace Azure.Mcp.Core.UnitTests.Areas.Server;
 
@@ -169,7 +168,7 @@ internal class CommandFactoryHelpers
 
     public class NoOpTelemetryService : ITelemetryService
     {
-        public Activity? StartActivity(string activityName) => StartActivity(activityName, null);
+        public Activity? StartActivity(string activityName) => null;
 
         public Activity? StartActivity(string activityName, Implementation? clientInfo) => null;
 
