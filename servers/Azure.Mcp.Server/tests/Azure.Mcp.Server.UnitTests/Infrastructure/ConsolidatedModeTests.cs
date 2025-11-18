@@ -7,8 +7,6 @@ namespace Azure.Mcp.Server.UnitTests.Infrastructure;
 
 public class ConsolidatedModeTests
 {
-    private static readonly string _repoRoot = GetRepoRoot();
-
     [Fact]
     public async Task ConsolidatedMode_Should_List_Tools_Successfully()
     {
@@ -92,23 +90,5 @@ public class ConsolidatedModeTests
         {
             return null;
         }
-    }
-
-    private static string GetRepoRoot()
-    {
-        var currentDir = Directory.GetCurrentDirectory();
-        var dir = new DirectoryInfo(currentDir);
-
-        while (dir != null)
-        {
-            if (File.Exists(Path.Combine(dir.FullName, "global.json")) &&
-                Directory.Exists(Path.Combine(dir.FullName, "servers")))
-            {
-                return dir.FullName;
-            }
-            throw new InvalidOperationException($"Could not find repository root {dir.FullName} containing global.json and servers directory");
-        }
-
-        throw new InvalidOperationException("Current directory info is null, cannot determine repository root.");
     }
 }
