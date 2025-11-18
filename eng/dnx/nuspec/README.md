@@ -392,7 +392,6 @@ For detailed command documentation and examples, see [Azure MCP Commands](https:
 
 The Azure MCP Server provides tools for interacting with **30+ Azure service areas**:
 
-- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
@@ -428,6 +427,7 @@ The Azure MCP Server provides tools for interacting with **30+ Azure service are
 - 📊 **Azure Workbooks** - Custom visualizations
 - 🏗️ **Bicep** - Azure resource templates
 - 🏗️ **Cloud Architect** - Guided architecture design
+- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 
 ## Documentation
 
