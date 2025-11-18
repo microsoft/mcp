@@ -1,6 +1,6 @@
 # Azure MCP Server - ACA with Managed Identity
 
-Deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Azure AI Foundry](https://azure.microsoft.com/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tool calls that perform Azure operations on your behalf.
+Deploy the [Azure MCP Server 2.0-beta](https://mcr.microsoft.com/product/azure-sdk/azure-mcp) as a remote MCP server accessible over HTTPS. This enables AI agents from [Microsoft Foundry](https://azure.microsoft.com/products/ai-foundry) and [Microsoft Copilot Studio](https://www.microsoft.com/microsoft-copilot/microsoft-copilot-studio) to securely invoke MCP tool calls that perform Azure operations on your behalf.
 
 This reference Azure Developer CLI (azd) template shows how to host the server on Azure Container Apps with storage tools enabled, using managed identity authentication for secure access to Azure Storage.
 
@@ -20,7 +20,7 @@ azd up
 
 You'll be prompted for:
 - **Storage Account Resource ID** - The Azure resource ID of the storage account the MCP server will access
-- **AI Foundry Project Resource ID** - The Azure resource ID of the AI Foundry project for agent integration
+- **Microsoft Foundry Project Resource ID** - The Azure resource ID of the Microsoft Foundry project for agent integration
 
 ## What Gets Deployed
 
@@ -28,7 +28,7 @@ You'll be prompted for:
 - **Role Assignments** - Container App managed identity granted roles for outbound authentication to the storage account specified by the input storage resource ID:
   - Reader (read-only access to storage account properties)
   - Storage Blob Data Reader (read-only access to blob data)
-- **Entra App Registration** - For incoming OAuth 2.0 authentication from clients (e.g., agents) with `Mcp.Tools.ReadWrite.All` role. This role is assigned to the managed identity of the AI Foundry project specified by the input AI Foundry resource ID
+- **Entra App Registration** - For incoming OAuth 2.0 authentication from clients (e.g., agents) with `Mcp.Tools.ReadWrite.All` role. This role is assigned to the managed identity of the Microsoft Foundry project specified by the input Microsoft Foundry resource ID
 - **Application Insights** - Telemetry and monitoring
 
 ### Deployment Outputs
@@ -49,11 +49,11 @@ ENTRA_APP_ROLE_ID="3e60879b-a1bd-5faf-bb8c-cb55e3bfeeb8"
 ENTRA_APP_SERVICE_PRINCIPAL_ID="31b42369-583b-40b7-a535-ad343f75e463"
 ```
 
-## Using from AI Foundry Agent
+## Using from Microsoft Foundry Agent
 
 1. Get your Container App URL from `azd` output: `CONTAINER_APP_URL`
 2. Get Entra App Client ID from `azd` output: `ENTRA_APP_CLIENT_ID`
-3. <TODO: Add one liner AI Foundry integration step later (reference to AIF documentation)>
+3. <TODO: Add one liner Microsoft Foundry integration step later (reference to Microsoft Foundry documentation)>
 
 ## Clean Up
 
@@ -69,6 +69,6 @@ The `azd` template consists of the following Bicep modules:
 - **`aca-infrastructure.bicep`** - Deploys Container App hosting the Azure MCP Server
 - **`aca-role-assignment-resource-storage.bicep`** - Assigns Azure storage RBAC roles to the Container App managed identity on the storage account specified by the input storage resource ID
 - **`entra-app.bicep`** - Creates Entra App registration with custom app role for OAuth 2.0 authentication
-- **`aif-role-assignment-entraapp.bicep`** - Assigns Entra App role to the managed identity of the AI Foundry project specified by the input AI Foundry resource ID for the Azure MCP Server access
+- **`aif-role-assignment-entraapp.bicep`** - Assigns Entra App role to the managed identity of the Microsoft Foundry project specified by the input Microsoft Foundry resource ID for the Azure MCP Server access
 - **`application-insights.bicep`** - Deploys Application Insights for telemetry and monitoring (conditional deployment)
 

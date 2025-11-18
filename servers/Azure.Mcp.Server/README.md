@@ -33,7 +33,7 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
         - [NPM](#npm)
         - [Docker](#docker)
     - [Remote MCP Server (preview)](#remote-mcp-server-preview)
-        - [Azure AI Foundry](#azure-ai-foundry)
+        - [Microsoft Foundry](#microsoft-foundry)
         - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
@@ -338,12 +338,12 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ## Remote MCP Server (preview)
 
-Azure AI Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
 
-### Azure AI Foundry
+### Microsoft Foundry
 
-1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-aifoundry-managed-identity/) for Azure AI Foundry.
-2. See [Azure AI Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/) for Microsoft Foundry.
+2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
 
 ### Microsoft Copilot Studio
 
@@ -367,21 +367,21 @@ Azure AI Foundry and Microsoft Copilot Studio require remote MCP server endpoint
 
 ✨ The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
 
-### 🧮 Azure AI Foundry
+### 🧮 Microsoft Foundry
 
-* List AI Foundry models
-* Deploy AI Foundry models
-* List AI Foundry model deployments
+* List Microsoft Foundry models
+* Deploy Microsoft Foundry models
+* List Microsoft Foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
-* Create AI Foundry agents
-* List AI Foundry agents
-* Connect and query AI Foundry agents
-* Evaluate AI Foundry agents
-* Get SDK samples for interacting with AI Foundry agent
-* Create AI Foundry agent threads
-* List AI Foundry agent threads
-* Get messages of an AI Foundry thread
+* Create Microsoft Foundry agents
+* List Microsoft Foundry agents
+* Connect and query Microsoft Foundry agents
+* Evaluate Microsoft Foundry agents
+* Get SDK samples for interacting with Microsoft Foundry agent
+* Create Microsoft Foundry agent threads
+* List Microsoft Foundry agent threads
+* Get messages of a Microsoft Foundry thread
   
 ### 🔎 Azure AI Search
 
@@ -536,10 +536,10 @@ Azure AI Foundry and Microsoft Copilot Studio require remote MCP server endpoint
 
 The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
-- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
+- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
 - 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
-- 🤖 **Azure AI Best Practices** - AI app development guidance for Azure AI Foundry and Microsoft Agent Framework
+- 🤖 **Azure AI Best Practices** - AI app development guidance for Microsoft Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance

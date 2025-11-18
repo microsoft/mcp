@@ -11,14 +11,14 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class ThreadGetMessagesCommand : GlobalCommand<ThreadGetMessagesOptions>
 {
-    private const string CommandTitle = "Get messages in an AI Foundry Agent Thread";
+    private const string CommandTitle = "Get messages in a Microsoft Foundry Agent Thread";
     public override string Id => "7769d80f-31b0-4bc3-9e34-991e23d00fee";
     public override string Name => "get-messages";
 
 
     public override string Description =>
         """
-            Get messages in an AI Foundry Agent Thread.
+            Get messages in a Microsoft Foundry Agent Thread.
         """;
 
     public override ToolMetadata Metadata => new()

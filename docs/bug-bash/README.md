@@ -173,7 +173,7 @@ We've prepared detailed testing guides for common scenarios:
 5. **[Database Operations](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/database-operations.md)** - Work with Cosmos DB, PostgreSQL, and Azure SQL
 6. **[Deployment Scenarios](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/deployment.md)** - Deploy resources and applications
 7. **[Full Stack Applications](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/full-stack-apps.md)** - Build complete apps with database backends
-8. **[Agent Building](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/agent-building.md)** - Create and deploy Azure Foundry agents
+8. **[Agent Building](https://github.com/microsoft/mcp/tree/main/docs/bug-bash/scenarios/agent-building.md)** - Create and deploy Microsoft Foundry agents
 
 ### Quick Start Scenarios
 

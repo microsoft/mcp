@@ -10,14 +10,14 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public class ThreadCreateCommand : GlobalCommand<ThreadCreateOptions>
 {
-    private const string CommandTitle = "Create an AI Foundry Agent Thread";
+    private const string CommandTitle = "Create a Microsoft Foundry Agent Thread";
     public override string Id => "2a30ef19-fac5-4157-8a86-30591b15818a";
     public override string Name => "create";
 
 
     public override string Description =>
         """
-            Creates an AI Foundry Agent Thread that holds the messages between the Agent and the user.
+            Creates a Microsoft Foundry Agent Thread that holds the messages between the Agent and the user.
         """;
 
     public override ToolMetadata Metadata => new()
