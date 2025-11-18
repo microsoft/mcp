@@ -14,7 +14,7 @@ public class ConsolidatedModeTests
     {
         // Arrange
         var exeName = OperatingSystem.IsWindows() ? "azmcp.exe" : "azmcp";
-        var azmcpPath = Path.Combine(AppContext.BaseDirectory, "azmcp");
+        var azmcpPath = Path.Combine(AppContext.BaseDirectory, exeName);
 
         Assert.True(File.Exists(azmcpPath), $"Executable not found at {azmcpPath}. Please build the Azure.Mcp.Server project first.");
 
