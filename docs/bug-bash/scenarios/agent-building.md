@@ -182,7 +182,7 @@ When logging issues, include:
 
 ## Related Resources
 
-- [Microsoft Foundry Documentation](https://learn.microsoft.com/azure/ai-studio/)
+- [Microsoft Foundry Documentation](https://learn.microsoft.com/azure/ai-foundry/)
 - [Azure OpenAI Service](https://learn.microsoft.com/azure/ai-services/openai/)
 - [Azure AI Agents](https://learn.microsoft.com/azure/ai-services/agents/)
 - [Model Context Protocol](https://modelcontextprotocol.io/)
