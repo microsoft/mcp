@@ -6,11 +6,13 @@ using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Monitor.OpenTelemetry.AspNetCore;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
@@ -106,37 +108,27 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-        var appInsightsConnectionStrings = new List<(string Name, string ConnectionString)>();
-
-        var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
-
-        if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
-        {
-            appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
-        }
-
-        // This environment variable can be used to disable Microsoft telemetry collection.
-        // By default, Microsoft telemetry is enabled.
-        var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
-
-        bool shouldCollectMicrosoftTelemetry = string.IsNullOrWhiteSpace(microsoftTelemetry) || (bool.TryParse(microsoftTelemetry, out var shouldCollect) && shouldCollect);
-
-        if (shouldCollectMicrosoftTelemetry)
-        {
-            appInsightsConnectionStrings.Add(("Microsoft", MicrosoftOwnedAppInsightsConnectionString));
-        }
-
-#if RELEASE
-        ConfigureAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
-#endif
-
+        // !!! WARNING !!!
+        //
+        // OTel is a sequential pipeline. The order of processors and exporters matters!
+        // An exporter is just a special processor that sends data to an external system.
+        // Regular processors modify data in some way. When one processor modifies data,
+        // all subsequent processors and exporters see the modified data. The pipeline
+        // stops after the end of the last processor (or exporter as a processor). It's ok
+        // to have [start] -> [processor1] -> [exporter1] -> [processor2] -> [exporter2].
+        // In this case, we want:
+        // - processor1: common mutator of signal seen by everything downstream
+        // - exporter1: user-provided App Insights exporter
+        // - processor2: data scrubber before sending to Microsoft-owned App Insights
+        // - exporter2: Microsoft-owned App Insights exporter
+        ConfigureUserSuppliedAppInsightsExporter(otelBuilder);
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
         if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
         {
-            otelBuilder.WithTracing(tracing => tracing.AddOtlpExporter())
-                .WithMetrics(metrics => metrics.AddOtlpExporter())
-                .WithLogging(logging => logging.AddOtlpExporter());
+            otelBuilder.UseOtlpExporter();
         }
+
+        ConfigureMicrosoftOwnedAppInsightsExporter(otelBuilder);
     }
 
     /// <summary>
@@ -166,37 +158,14 @@ public static class OpenTelemetryExtensions
         return version;
     }
 
-
-    private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
+    private static void ConfigureUserSuppliedAppInsightsExporter(OpenTelemetryBuilder otelBuilder)
     {
-        foreach (var exporter in appInsightsConnectionStrings)
-        {
-            otelBuilder.WithLogging(logging =>
-            {
-                logging.AddAzureMonitorLogExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
+        otelBuilder.UseAzureMonitor();
+    }
 
-            otelBuilder.WithMetrics(metrics =>
-            {
-                metrics.AddAzureMonitorMetricExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-
-            otelBuilder.WithTracing(tracing =>
-            {
-                tracing.AddAzureMonitorTraceExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-        }
+    private static void ConfigureMicrosoftOwnedAppInsightsExporter(OpenTelemetryBuilder otelBuilder)
+    {
+        // Nothing while debugging for now.
+        return;
     }
 }

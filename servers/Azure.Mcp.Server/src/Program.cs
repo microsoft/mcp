@@ -22,6 +22,7 @@ internal class Program
 
     private static async Task<int> Main(string[] args)
     {
+        args = "server start --transport http --outgoing-auth-strategy UseOnBehalfOf".Split(' ').Concat(args).ToArray();
         try
         {
             ServiceStartCommand.ConfigureServices = ConfigureServices;
@@ -37,7 +38,9 @@ internal class Program
                 builder.SetMinimumLevel(LogLevel.Information);
             });
 
+#pragma warning disable ASP0000 // Do not call 'IServiceCollection.BuildServiceProvider' in 'ConfigureServices'
             var serviceProvider = services.BuildServiceProvider();
+#pragma warning restore ASP0000 // Do not call 'IServiceCollection.BuildServiceProvider' in 'ConfigureServices'
             await InitializeServicesAsync(serviceProvider);
 
             var commandFactory = serviceProvider.GetRequiredService<CommandFactory>();

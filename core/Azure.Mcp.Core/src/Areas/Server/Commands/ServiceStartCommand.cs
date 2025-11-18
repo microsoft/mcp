@@ -391,6 +391,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         IServiceCollection services = builder.Services;
 
+        var azureAd = builder.Configuration.GetSection("AzureAd");
+
         // Configure outgoing and incoming authentication and authorization.
         //
         // Configure incoming authentication and authorization.
