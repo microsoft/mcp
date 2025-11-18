@@ -43,4 +43,4 @@
     "Tag": ""
   }
   ```
-- Copilot utilize the [recorded test documentation](../docs/recorded-tests.md) for more details on how to convert and validate recorded tests.
+- Copilot should utilize the [recorded test documentation](https://github.com/microsoft/mcp/blob/main/docs/recorded-tests.md) in `docs/recorded-tests.md` for more details on how to convert and validate recorded tests.

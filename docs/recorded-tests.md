@@ -6,8 +6,10 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 
 ## Architecture Overview
 
+
+
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
-- **Test Harness** – Live tests inherit from [`CommandTestsBase`](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs) The harness:
+- **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
   - Handles start/stop of the proxy as necessary
   - Registers any behavior changes from default for the auto-started proxy
@@ -44,7 +46,7 @@ The `.proxy` directory is recreated whenever a recorded test run needs the Test 
 Follow this checklist any time you need to update recordings:
 
 0. **Deploy LiveResources** - `Connect-AzAccount` with your targeted subscription, then invoke `./eng/scripts/Deploy-TestResources.ps1`. EG `./eng/scripts/Deploy-TestResources.ps1 -Paths KeyVault`.
-1. **Set record mode** – Locate the `.livesettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/..livetestsettings.json`). Update the file `TestMode` value to `Record`:
+1. **Set record mode** – Locate the `.livesettings.json` next to your test project (for example `tools/Azure.Mcp.Tools.KeyVault/tests/Azure.Mcp.Tools.KeyVault.LiveTests/.livetestsettings.json`). Update the file `TestMode` value to `Record`:
    ```jsonc
    {
      // ...
@@ -59,7 +61,7 @@ Follow this checklist any time you need to update recordings:
    ```
    Review each JSON recording and confirm no secrets or unstable data were missed by existing sanitizers.
    - Note that on `unix` platforms there is no `.exe` suffix.
-4. **Switch to playback** – Change the `TestMode` value in `.livetestsettings.json` to `playback`. Re-run the tests to verify they pass without hitting live resources.
+4. **Switch to playback** – Change the `TestMode` value in `.livetestsettings.json` to `Playback`. Re-run the tests to verify they pass without hitting live resources.
 5. **Push assets** – When satisfied, publish the updated recordings:
    ```powershell
    ./.proxy/Azure.Sdk.Tools.TestProxy.exe push -a tools/Azure.Mcp.Tools.KeyVault/tests/assets.json
@@ -82,7 +84,7 @@ Follow this checklist any time you need to update recordings:
 1. **Rebase on latest** – Ensure your branch includes the current recorded-test infrastructure.
 2. **Reparent the test class** – Update live tests to inherit from `RecordedCommandTestsBase` instead of `CommandTestsBase`.
 3. **Ensure proxy-aware HTTP usage** – Commands must obtain `HttpClient` instances via `HttpClientService.CreateClient()` to benefit from playback redirection.
-4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<livetestcsprojfolder/assets.json`:
+4. **Add `assets.json`** – If the toolset doesn’t have one, create `tools/<Tool>/tests/<livetestcsprojfolder>/assets.json`:
    ```json
    {
      "AssetsRepo": "Azure/azure-sdk-assets",
@@ -114,8 +116,9 @@ The test proxy supports abstractions that must be understood:
 - `UriRegexSanitizers` – mask host or query segments.
 - `DisabledDefaultSanitizers` – opt out of built-in sanitizers if they interfere with playback.
 
-`RecordedCommandTestsBase` exposes a global matcher
-- `TestMatcher` or set the attribute `[CustomMatcher]` on an individual – adjust matching rules during playback.
+`RecordedCommandTestsBase` exposes a global configuration via:
+- Overridable `TestMatcher` property
+- OR devs can set the attribute `[CustomMatcher]` on an individual test-case to adjust the matching behavior for a specific test.
 
 ### In practice
 
@@ -145,7 +148,7 @@ Example:
             });
 ```
 
-This means values that don't make sense for `sanitization` can be propogated to the recording and automatically retrieved by the test-proxy harness during `playback`.
+This means values that don't make sense for `sanitization` can be propagated to the recording and automatically retrieved by the test-proxy harness during `playback`.
 
 #### An example of setting each sanitizer type
 
@@ -220,7 +223,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixture) : RecordedCommandTestsBase(output, fixture) {
     public override CustomDefaultMatcher? TestMatcher { get; set; } = new CustomDefaultMatcher()
     {
-        // By default, request and response bodies are compared during matching, You can disable this by setting CompareBodies to false.
+        // By default, request and response bodies are compared during matching. You can disable this by setting CompareBodies to false.
         CompareBodies = false,
         // By default query ordering is considered a different URI during matching. To ignore query ordering, set IgnoreQueryOrdering to true.
         IgnoreQueryOrdering = true,
@@ -248,7 +251,7 @@ public class SampleRecordedTest(ITestOutputHelper output, TestProxyFixture fixtu
 
 ## Additional Resources
 
-- [RecordedCommandTestsBase source](../core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
+- [RecordedCommandTestsBase source](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs)
 - [Azure SDK Test Proxy README](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/README.md)
 - [Test Proxy Asset Sync Guide](https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/documentation/asset-sync/README.md)
   - Details on how assets are stored in `Azure/azure-sdk-assets` repo
