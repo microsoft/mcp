@@ -71,10 +71,6 @@ public class ConsolidatedModeTests
             // Assert - Verify we got tools back
             Assert.Contains("\"result\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
             Assert.Contains("\"tools\"", listToolsResponse, StringComparison.OrdinalIgnoreCase);
-
-            // Kill the process gracefully
-            process.Kill();
-            await process.WaitForExitAsync(TestContext.Current.CancellationToken);
         }
         finally
         {
