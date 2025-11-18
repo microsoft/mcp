@@ -2,13 +2,13 @@
     "$schema": "https://static.modelcontextprotocol.io/schemas/2025-10-17/server.schema.json",
     "name": "com.microsoft/fabric-mcp",
     "description": "<<INSERT_SERVER_DESCRIPTION>>",
-    "version": "0.0.1",
+    "version": "<<PLACEHOLDER_VERSION>>",
     "title": "Microsoft Fabric MCP Server",
     "packages": [
         {
             "registryType": "nuget",
             "identifier": "<<INSERT_PACKAGE_NAME>>",
-            "version": "0.0.1",
+            "version": "<<PLACEHOLDER_VERSION>>",
             "transport": {
                 "type": "stdio"
             }
