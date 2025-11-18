@@ -261,6 +261,12 @@ function Get-PathsToTest {
             }
         }
 
+        # Always include Azure.Mcp.Server to run ConsolidatedModeTests.cs in all PRs
+        if ($pathsToTest -notcontains 'servers/Azure.Mcp.Server') {
+            Write-Host "Adding servers/Azure.Mcp.Server to test paths for PR validation" -ForegroundColor Cyan
+            $pathsToTest += 'servers/Azure.Mcp.Server'
+        }
+
         $normalizedPaths = @($pathsToTest | Sort-Object -Unique)
 
         <# Making $paths = @(
