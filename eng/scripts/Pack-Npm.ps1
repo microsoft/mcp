@@ -105,6 +105,7 @@ function BuildServerPackages([hashtable] $server, [bool] $native) {
         cpu = @()
         optionalDependencies = @{}
         scripts = @{ postinstall = "node ./scripts/post-install-script.js" }
+        mcpName = $server.mcpRepositoryName
     }
 
     # Build the project
