@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
-using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
