@@ -65,18 +65,9 @@ Always search / fetch / query for sufficient knowledge (quickstarts, tutorials, 
 ### 1. Search for Implementation Knowledge
 After completing the required model selection process above, gather SDK and implementation information.
 #### Step 1: Fetch common quickstart pages
-  Use the Microsoft Document **fetch** operation to retrieve these pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
-  - [Default] Microsoft Foundry Quickstart: `https://learn.microsoft.com/agent-framework/user-guide/agents/agent-types/azure-ai-foundry-agent`
-
-#### Step 2 (Optional): Search for specific agent type documentation
-  **ONLY if user explicitly requests a NON-Microsoft Foundry service provider:**
-  - **Default for Microsoft Foundry**: ALWAYS use Microsoft Foundry Agent (`PersistentAgentsClient`) - skip this step
-  - **DO NOT use this step for demos, prototypes, or "local testing"** - still use `PersistentAgentsClient`
-  - **ONLY search other agent types if user explicitly says**: "use OpenAI service", "use Azure OpenAI service", etc.
-    - Example: User says "use OpenAI service" → Search "Agent Framework OpenAI ChatCompletion Agents"
-    - Example: User says "use Azure OpenAI" → Search "Agent Framework Azure OpenAI ChatCompletion Agents"
-
-#### Step 3: Search for feature guidelines
+  Use the **fetch** operation to retrieve GitHub pages directly for complete, unabridged content. These are the most commonly needed references and should be fetched for EVERY implementation:
+  - [Default] Microsoft Agent Framework Quickstart: `https://github.com/microsoft/agent-framework/blob/main/dotnet/samples/GettingStarted/AgentProviders/Agent_With_AzureAIProject/Program.cs`
+#### Step 2: Search for feature guidelines
 **Stage 1 - Identify Core Capabilities:**
 Break down the user's requirement into individual capabilities
 - Example: "Build a weather agent for user to query weather" → ["function calling"]
@@ -142,20 +133,20 @@ User Requirements Analysis:
 
 ### 2. Explain SDK selection
 **Recommended SDK:** Microsoft Agent Framework
-**Recommended Agent Type:** Microsoft Foundry Agents with PersistentAgentsClient
+**Recommended Agent Type:** Microsoft Foundry Agents with AIProjectClient
 **Default Programming Language:** .NET
 
 ** Agent Type Selection Rules **
-- **ALWAYS use `PersistentAgentsClient` for Microsoft Foundry** 
-- **DO NOT use `AzureOpenAIClient`** for Microsoft Foundry models, even for demos, prototypes, or local testing
-- `PersistentAgentsClient` provides service-managed persistence, conversation threads, and full agent capabilities
+- **ALWAYS use `AIProjectClient` for Microsoft Foundry** 
+- **DO NOT use `AzureOpenAIClient` or `PersistentAgentsClient`** for Microsoft Foundry models, even for demos, prototypes, or local testing
+- `AIProjectClient` provides service-managed persistence, conversation threads, and full agent capabilities
 - Only use other agent types (OpenAI ChatCompletion, Azure OpenAI, etc.) if the user **explicitly requests a different service provider**
 
 **Output format:**
 ```
 SDK Selection: Microsoft Agent Framework
 
-Agent Type: Microsoft Foundry Agents (PersistentAgentsClient)
+Agent Type: Microsoft Foundry Agents (AIProjectClient)
 
 Programming Language: [.NET (default) OR Python (if user specified)]
 
@@ -210,6 +201,7 @@ Create a step-by-step plan / todo list covering project initialization, installa
    - If build fails: Analyze build errors → Fix code issues → Rebuild
    - Repeat fix-rebuild cycle until build succeeds with zero errors
 
+Creating the plan is NOT the end - it's the beginning. Continue to implement the code.
 
 ## Code - Implementation Guidelines
 **Note**: Continue using Microsoft Document Search throughout implementation for any unknowns.
@@ -233,11 +225,16 @@ DO REMIND USER THE `--pre` OR `--prerelease` FLAG IS REQUIRED IN GENERATED DOC.
 
 #### .NET
 Agent type-specific installation packages:
-- **Microsoft Foundry Agent (RECOMMENDED)** - `PersistentAgentsClient`:
+- **Microsoft Foundry Agent (RECOMMENDED)** - `AIProjectClient`:
   ```bash
   dotnet add package Azure.Identity
   dotnet add package Microsoft.Agents.AI.AzureAI --prerelease
   ```
+  
+  Do NOT add `Azure.AI.Projects` separately - it's already included in `Microsoft.Agents.AI.AzureAI`. 
+  Adding `Azure.AI.Projects` manually may introduce version mismatches and build errors.
+  However, you SHOULD include `using Azure.AI.Projects;` in your code to access types such as `AIProjectClient`.
+
 - **Workflows and Orchestration** - For multi-agent systems and workflow features, also add:
   ```bash
   dotnet add package Microsoft.Agents.AI.Workflows --prerelease
