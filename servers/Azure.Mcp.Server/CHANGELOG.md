@@ -6,6 +6,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
+- Added [Hidden] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
+
 ### Breaking Changes
 
 ### Bugs Fixed
@@ -16,6 +18,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added logging customization options to the `azmcp server start` command:
   - Added `--log-level` option to set the minimum logging level (Trace, Debug, Information, Warning, Error, Critical, None)
   - Added `--log-file-path` option to write logs to a specified file with automatic directory creation and thread-safe file handling
+- Renamed Microsoft Azure AI Foundry to Microsoft Foundry. [[#1211](https://github.com/microsoft/mcp/pull/1211/)]
+- Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 
 ## 2.0.0-beta.5 (2025-11-14)
 
@@ -61,7 +65,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Features Added
 
-- Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Azure AI Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
+- Added Azure AI Best Practices toolset providing comprehensive guidance for building AI apps with Microsoft Foundry and Microsoft Agent Framework. Includes model selection guidance, SDK recommendations, and implementation patterns for agent development. [[#1031](https://github.com/microsoft/mcp/pull/1031)]
 - Added support for text-to-speech synthesis via the command `speech_tts_synthesize`. [[#902](https://github.com/microsoft/mcp/pull/902)]
 
 ### Breaking Changes
@@ -91,12 +95,12 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Enhanced the `tools list` command with new filtering and output options: [[#741](https://github.com/microsoft/mcp/pull/741)]
   - Added the `--namespace` option to filter tools by one or more service namespaces (e.g., 'storage', 'keyvault').
   - Added the `--name-only` option to return only tool names without descriptions or metadata.
-- Added the following AI Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
-  - `foundry_agents_create`: Create a new AI Foundry agent.
-  - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the AI Foundry SDK.
-  - `foundry_threads_create`: Create a new AI Foundry Agent Thread.
-  - `foundry_threads_list`: List all AI Foundry Agent Threads.
-  - `foundry_threads_get-messages`: Get messages in an AI Foundry Agent Thread.
+- Added the following Microsoft Foundry tools: [[#945](https://github.com/microsoft/mcp/pull/945)]
+  - `foundry_agents_create`: Create a new Microsoft Foundry agent.
+  - `foundry_agents_get-sdk-sample`: Get a code sample to interact with a Foundry Agent using the Microsoft Foundry SDK.
+  - `foundry_threads_create`: Create a new Microsoft Foundry Agent Thread.
+  - `foundry_threads_list`: List all Microsoft Foundry Agent Threads.
+  - `foundry_threads_get-messages`: Get messages in a Microsoft Foundry Agent Thread.
 
 ### Breaking Changes
 
@@ -131,7 +135,7 @@ We're excited to announce the first stable release of the Azure MCP Server! This
 
 The Azure MCP Server now offers:
 
-- **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
+- **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), Microsoft Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
 - **Flexible Server Modes**:
   - Namespace mode (default): Organizes tools by service for easy discovery
@@ -312,7 +316,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
   - `azmcp_eventhubs_eventhub_delete`: Delete an Event Hub from a namespace
   - `azmcp_eventhubs_namespace_update`: Create or update an Event Hubs namespace
   - `azmcp_eventhubs_namespace_delete`: Delete an existing Event Hubs namespace.
-- Added support for listing Azure AI Foundry (Cognitive Services) resources or getting details of a specific one via the command `azmcp_foundry_resource_get`. [[#762](https://github.com/microsoft/mcp/pull/762)]
+- Added support for listing Microsoft Foundry (Cognitive Services) resources or getting details of a specific one via the command `azmcp_foundry_resource_get`. [[#762](https://github.com/microsoft/mcp/pull/762)]
 - Added support for Azure Monitor Web Tests management operations: [[#529](https://github.com/microsoft/mcp/issues/529)]
   - `azmcp_monitor_webtests_create`: Create a new web test in Azure Monitor
   - `azmcp_monitor_webtests_get`: Get details for a specific web test
@@ -380,8 +384,8 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 ### Features Added
 
 - Added the following OpenAI commands: [[#647](https://github.com/microsoft/mcp/pull/647)]
-  - `azmcp_foundry_openai_chat-completions-create`: Create interactive chat completions using Azure OpenAI chat models in AI Foundry.
-  - `azmcp_foundry_openai_embeddings-create`: Generate vector embeddings using Azure OpenAI embedding models in AI Foundry
+  - `azmcp_foundry_openai_chat-completions-create`: Create interactive chat completions using Azure OpenAI chat models in Microsoft Foundry.
+  - `azmcp_foundry_openai_embeddings-create`: Generate vector embeddings using Azure OpenAI embedding models in Microsoft Foundry
   - `azmcp_foundry_openai_models-list`: List all available OpenAI models and deployments in an Azure resource.
 - Added support for sending SMS messages via Azure Communication Services with the command `azmcp_communication_sms_send`. [[#473](https://github.com/microsoft/mcp/pull/473)]
 - Added support for appending tamper-proof ledger entries backed by TEEs and blockchain-style integrity guarantees in Azure Confidential Ledger via the command `azmcp_confidentialledger_entries_append`. [[#705](https://github.com/microsoft/mcp/pull/705)]
@@ -471,7 +475,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 - Added support for Azure Developer CLI (azd) MCP tools when azd CLI is installed locally - [[#566](https://github.com/microsoft/mcp/issues/566)]
 - Added support to proxy MCP capabilities when child servers leverage sampling or elicitation. [[#581](https://github.com/microsoft/mcp/pull/581)]
 - Added support for publishing custom events to Event Grid topics via the command `azmcp_eventgrid_events_publish`. [[#514](https://github.com/microsoft/mcp/pull/514)]
-- Added support for generating text completions using deployed Azure OpenAI models in AI Foundry via the command `azmcp_foundry_openai_create-completion`. [[#54](https://github.com/microsoft/mcp/pull/54)]
+- Added support for generating text completions using deployed Azure OpenAI models in Microsoft Foundry via the command `azmcp_foundry_openai_create-completion`. [[#54](https://github.com/microsoft/mcp/pull/54)]
 - Added support for speech recognition from an audio file with Azure AI Services Speech via the command `azmcp_speech_stt_recognize`. [[#436](https://github.com/microsoft/mcp/pull/436)]
 - Added support for getting the details of an Azure Event Hubs namespace via the command `azmcp_eventhubs_namespace_get`. [[#105](https://github.com/microsoft/mcp/pull/105)]
 
@@ -500,7 +504,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
   - `azmcp_postgres_server_param_param`   → `azmcp_postgres_server_param_get`
   - `azmcp_postgres_table_schema_schema`  → `azmcp_postgres_table_schema_get`
 - Updated the description of the following commands to increase selection accuracy by LLMs:
-  - AI Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
+  - Microsoft Foundry: [[#599](https://github.com/microsoft/mcp/pull/599)]
     - `azmcp_foundry_agents_connect`
     - `azmcp_foundry_models_deploy`
     - `azmcp_foundry_models_deployments_list`
@@ -555,10 +559,10 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 - Added support for listing SQL servers in a subscription and resource group via the command `azmcp_sql_server_list`. [[#503](https://github.com/microsoft/mcp/issues/503)]
 - Added support for renaming Azure SQL databases within a server while retaining configuration via the `azmcp sql db rename` command. [[#542](https://github.com/microsoft/mcp/pull/542)]
 - Added support for Azure App Service database management via the command `azmcp_appservice_database_add`. [[#59](https://github.com/microsoft/mcp/pull/59)]
-- Added the following Azure Foundry agents commands: [[#55](https://github.com/microsoft/mcp/pull/55)]
-  - `azmcp_foundry_agents_connect`: Connect to an agent in an AI Foundry project and query it
+- Added the following Microsoft Foundry agents commands: [[#55](https://github.com/microsoft/mcp/pull/55)]
+  - `azmcp_foundry_agents_connect`: Connect to an agent in a Microsoft Foundry project and query it
   - `azmcp_foundry_agents_evaluate`: Evaluate a response from an agent by passing query and response inline
-  - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in an AI Foundry project, query it, and evaluate the response in one step
+  - `azmcp_foundry_agents_query_and_evaluate`: Connect to an agent in a Microsoft Foundry project, query it, and evaluate the response in one step
 - Enhanced AKS managed cluster information with comprehensive properties. [[#490](https://github.com/microsoft/mcp/pull/490)]
 - Added support retrieving Key Vault Managed HSM account settings via the command `azmcp-keyvault-admin-settings-get`. [[#358](https://github.com/microsoft/mcp/pull/358)]
 
@@ -683,7 +687,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
 ### Features Added
 
 - Added support for listing all Event Grid topics in a subscription via the command `azmcp_eventgrid_topic_list`. [[#43](https://github.com/microsoft/mcp/pull/43)]
-- Added support for retrieving knowledge index schema information in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
+- Added support for retrieving knowledge index schema information in Microsoft Foundry projects via the command `azmcp_foundry_knowledge_index_schema`. [[#41](https://github.com/microsoft/mcp/pull/41)]
 - Added support for listing service health events in a subscription via the command `azmcp_resourcehealth_service-health-events_list`. [[#367](https://github.com/microsoft/mcp/pull/367)]
 
 ### Breaking Changes
@@ -752,7 +756,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Features Added
 
-- Added support for listing knowledge indexes in Azure AI Foundry projects via the command `azmcp_foundry_knowledge_index_list`. [[#1004](https://github.com/Azure/azure-mcp/pull/1004)]
+- Added support for listing knowledge indexes in Microsoft Foundry projects via the command `azmcp_foundry_knowledge_index_list`. [[#1004](https://github.com/Azure/azure-mcp/pull/1004)]
 - Added support for getting details of an Azure Function App via the command `azmcp_functionapp_get`. [[#970](https://github.com/Azure/azure-mcp/pull/970)]
 - Added the following Azure Managed Lustre commands: [[#1003](https://github.com/Azure/azure-mcp/issues/1003)]
   - `azmcp_azuremanagedlustre_filesystem_list`: List available Azure Managed Lustre filesystems.
@@ -1107,7 +1111,7 @@ AOT- Added a verb to the namespace name for bestpractices [[#109](https://github
 
 ### Features Added
 
-- Added support for Azure AI Foundry [[#274](https://github.com/Azure/azure-mcp/pull/274)]. The following tools are now available:
+- Added support for Microsoft Foundry [[#274](https://github.com/Azure/azure-mcp/pull/274)]. The following tools are now available:
   - `azmcp-foundry-models-list`
   - `azmcp-foundry-models-deploy`
   - `azmcp-foundry-models-deployments-list`

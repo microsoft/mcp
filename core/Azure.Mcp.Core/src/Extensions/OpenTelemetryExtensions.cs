@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Logging;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
@@ -36,7 +37,7 @@ public static class OpenTelemetryExtensions
                 var entryAssembly = Assembly.GetEntryAssembly();
                 if (entryAssembly != null)
                 {
-                    options.Version = GetServerVersion(entryAssembly);
+                    options.Version = AssemblyHelper.GetAssemblyVersion(entryAssembly);
                 }
 
                 // This environment variable can be used to disable telemetry collection entirely. This takes precedence
@@ -224,7 +225,6 @@ public static class OpenTelemetryExtensions
 
         return version;
     }
-
 
     private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
     {

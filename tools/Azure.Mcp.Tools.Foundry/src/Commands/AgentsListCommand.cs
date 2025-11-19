@@ -18,7 +18,7 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 
     public override string Description =>
         """
-        List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, 
+        List all Azure AI Agents in a Microsoft Foundry project. Shows agents that can be used for AI workflows, 
         evaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
         """;
 

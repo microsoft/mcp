@@ -15,12 +15,12 @@ Use this hierarchy to analyze and select AI models
 **Core Capabilities:**
   - **Flexible Agent Framework**: Build, orchestrate, and deploy AI agents and multi-agent systems
   - **Cross-Platform Support**: Available for both .NET and Python
-  - **Multi-LLM Support**: Works with OpenAI, Azure OpenAI, Azure AI Foundry, and other providers
+  - **Multi-LLM Support**: Works with OpenAI, Azure OpenAI, Microsoft Foundry, and other providers
 
 **Agent Types:**
-  - **[RECOMMENDED] Azure AI Foundry Agent (`PersistentAgentsClient`)**: Service-managed persistent agents with conversation threads - best for production applications requiring conversation continuity
+  - **[RECOMMENDED] Microsoft Foundry Agent (`PersistentAgentsClient`)**: Service-managed persistent agents with conversation threads - best for production applications requiring conversation continuity
   - **OpenAI ChatCompletion / Responses / Assistants Agent (`OpenAIClient`)**: Stateless or service-managed agents using OpenAI service
-  - **Azure AI Foundry Models ChatCompletion / Responses Agent (`OpenAIClient` / `AzureOpenAIClient`)**: For testing Foundry-deployed models (stateless)
+  - **Microsoft Foundry Models ChatCompletion / Responses Agent (`OpenAIClient` / `AzureOpenAIClient`)**: For testing Foundry-deployed models (stateless)
   - **Azure OpenAI ChatCompletion / Responses (`AzureOpenAIClient`)**: Stateless agents using Azure OpenAI ChatCompletion / Responses service  
   - **Advanced & Custom Agents**: Custom agents, A2A proxy agents, Any IChatClient
   
@@ -52,7 +52,7 @@ Use this hierarchy to analyze and select AI models
 
 **Integration Features:**:
   - **MCP tools**: Model Context Protocol integration
-  - **MCP with Foundry Agents**: MCP + Azure AI Foundry
+  - **MCP with Foundry Agents**: MCP + Microsoft Foundry
   - **Request and response handling**: External API integration
   - **Shared states**: Pass data between executors
   - **Visualization**: Visual workflow representations

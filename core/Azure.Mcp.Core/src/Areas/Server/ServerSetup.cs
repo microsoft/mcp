@@ -23,6 +23,7 @@ public sealed class ServerSetup : IAreaSetup
     public void ConfigureServices(IServiceCollection services)
     {
         services.AddSingleton<ServiceStartCommand>();
+        services.AddSingleton<ServiceInfoCommand>();
     }
 
     /// <summary>
@@ -38,6 +39,9 @@ public sealed class ServerSetup : IAreaSetup
         // Register MCP Server commands
         var startCommand = serviceProvider.GetRequiredService<ServiceStartCommand>();
         mcpServer.AddCommand(startCommand.Name, startCommand);
+
+        var infoCommand = serviceProvider.GetRequiredService<ServiceInfoCommand>();
+        mcpServer.AddCommand(infoCommand.Name, infoCommand);
 
         return mcpServer;
     }

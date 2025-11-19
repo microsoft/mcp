@@ -27,7 +27,7 @@ public class OpenAiChatCompletionsCreateCommandTests
         // Act & Assert
         Assert.Contains("Create chat completions", command.Description);
         Assert.Contains("Azure OpenAI", command.Description);
-        Assert.Contains("AI Foundry", command.Description);
+        Assert.Contains("Microsoft Foundry", command.Description);
         Assert.Contains("message-array", command.Description);
     }
 
