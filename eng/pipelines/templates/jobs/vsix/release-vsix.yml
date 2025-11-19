@@ -57,12 +57,10 @@ jobs:
 
                 $baseName = Get-ChildItem *.vsix | Select-Object -ExpandProperty BaseName -First 1
 
-                $args = @('--azure-credential', "--packagePath `"$baseName.vsix`"", "--manifestPath `"$baseName.manifest`"", "--signaturePath `"$baseName.signature.p7s`"")
+                $publishArgs = @('--azure-credential', "--packagePath `"$baseName.vsix`"", "--manifestPath `"$baseName.manifest`"", "--signaturePath `"$baseName.signature.p7s`"")
                 if ($server.vsixIsPrerelease) {
-                    $args += '--pre-release'
+                    $publishArgs += '--pre-release'
                 }
-
-                $publishCmd = "vsce publish $($args -join ' ')"
 
                 Write-Host @"
                 Server: $($server.name)
@@ -72,12 +70,12 @@ jobs:
                 Is Prerelease: $($server.vsixIsPrerelease)
 
                 Publish arguments:
-                  $($args -join '`n  ')
+                  $($publishArgs -join "`n  ")
                 "@
 
                 Write-Host ''
                 Write-Host 'Installing vsce...'
                 npm install -g @vscode/vsce
 
-                Write-Host "Executing: $publishCmd"
-                Invoke-Expression $publishCmd
+                Write-Host "Executing: vsce publish $($publishArgs -join ' ')"
+                vsce publish @publishArgs
