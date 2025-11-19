@@ -79,7 +79,7 @@ Authentication & Authorization
 - Monitor data access patterns
 
 Generation steps:
-1. Analyze service requirements
+1. Analyze service requirements, Retrieve Azure Policy assignments and corresponding policy definitions for the target scope using the 'policy_assignment_list' and 'policy_definition_get' tools with the appropriate `subscription` parameter and optional `scope` parameters. Review the policy assignments and corresponding definitions and ensure that any generated script/IaC files comply with these policies.
 2. Plan security measures
 3. Design error handling
 4. Optimize performance

@@ -1,9 +1,10 @@
 Azure Functions code generation best practices:
-    - Use the latest programming models (v4 for JavaScript, v2 for Python) 
+    - Use the latest programming models (v4 for JavaScript, v2 for Python)
     - If the project runtime is Python or Node.js, do not create a function.json file
     - Only if the project runtime is .NET, PowerShell or Java create a function.json file with the required bindings and triggers.
     - Use this extension bundles version `[4.*, 5.0.0)` in the host.json file.
     - Use Azure Functions Core Tools for creating Function Apps
+    - Retrieve Azure Policy assignments and corresponding policy definitions for the target scope using the 'policy_assignment_list' and 'policy_definition_get' tools with the appropriate `subscription` parameter and optional `scope` parameters. Review the policy assignments and corresponding definitions and ensure that any generated code complies with these policies.
     - Blob triggers should use eventgrid source
     - Generate local.settings.json during setup to manage configuration settings locally
     - Ensure the Function App is configured to use Functions Host v4
@@ -25,4 +26,4 @@ Azure Functions code generation best practices:
         │   └── [modules].js      # Business logic
         └── tests/                # Test suite
         ```
-    - Provide steps for testing Functions locally after code generation to ensure functionality and correctness. 
+    - Provide steps for testing Functions locally after code generation to ensure functionality and correctness.
