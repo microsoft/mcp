@@ -20,11 +20,6 @@
     <DnxPackageId>Microsoft.Template.Mcp</DnxPackageId>
     <DnxToolCommandName>$(CliName)</DnxToolCommandName>
     <DnxPackageTags>template,mcp</DnxPackageTags>
-
-    <!-- vsix settings -->
-    <VsixPackagePrefix>vscode-template-mcp</VsixPackagePrefix>
-    <VsixDescription>Template project for validating the microsoft/mcp engineering system</VsixDescription>
-    <VsixPublisher>ms-azuretools</VsixPublisher>
   </PropertyGroup>
 
   <PropertyGroup>
