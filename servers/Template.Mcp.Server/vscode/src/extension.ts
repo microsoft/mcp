@@ -31,13 +31,13 @@ export function activate(context: vscode.ExtensionContext) {
     const arch = process.arch;
     if (process.platform === 'win32') {
         if (arch === 'x64' || arch === 'arm64') {
-            binary = 'azmcp.exe';
+            binary = 'mcptmp.exe';
         } else {
             throw new Error('Unsupported Windows architecture: ' + arch);
         }
     } else if (process.platform === 'darwin' || process.platform === 'linux') {
         if (arch === 'x64' || arch === 'arm64') {
-            binary = 'azmcp';
+            binary = 'mcptmp';
         } else {
             throw new Error(`Unsupported ${process.platform} architecture: ${arch}`);
         }
@@ -48,7 +48,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Use the binary from the extension's server/os folder
     const binPath = path.join(context.extensionPath, 'server', binary);
     if (!fs.existsSync(binPath)) {
-        throw new Error(`azmcp binary not found at ${binPath}. Please ensure the server binary is present.`);
+        throw new Error(`mcptmp binary not found at ${binPath}. Please ensure the server binary is present.`);
     }
 
     // Ensure executable permission on macOS and Linux (once at activation)
