@@ -6,8 +6,6 @@ This repository ships CLI tools. Specifically, multiple combinations of `tools` 
 
 ## Architecture Overview
 
-
-
 - **CLI and Servers** – MCP ships multiple CLI-like toolsets that can run under the MCP server host. Commands typically interact with Azure resources.
 - **Test Harness** – Live tests inherit from [`CommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/CommandTestsBase.cs). **Recorded** tests inherit from [`RecordedCommandTestsBase`](https://github.com/microsoft/mcp/blob/main/core/Azure.Mcp.Core/tests/Azure.Mcp.Tests/Client/RecordedCommandTestsBase.cs) The harness:
   - Auto-downloads the Test Proxy into the repo at `.proxy/Azure.Sdk.Tools.TestProxy.exe` (Windows) or `.proxy/Azure.Sdk.Tools.TestProxy` for unix platforms.
