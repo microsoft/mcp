@@ -40,16 +40,6 @@ jobs:
       runOnce:
         deploy:
           steps:
-          - pwsh: |
-              $buildInfoPath = "$(Pipeline.Workspace)/build_info/build_info.json"
-              $buildInfo = Get-Content $buildInfoPath -Raw | ConvertFrom-Json
-              $server = $buildInfo.servers | Where-Object { $_.name -eq '${{ parameters.ServerName }}' }
-              $prereleaseArg = $server.vsixIsPrerelease ? "--pre-release" : ""
-              Write-Host "Server: $($server.name), Version: $($server.version), VSIX Version: $($server.vsixVersion), Is Prerelease: $($server.vsixIsPrerelease)"
-              Write-Host "Prerelease argument: '$prereleaseArg'"
-              Write-Host "##vso[task.setvariable variable=prereleaseArg]$prereleaseArg"
-            displayName: Determine prerelease flag from build_info
-          
           - task: AzureCLI@2
             displayName: "Publish (using vsce) - ${{ VsixTarget }}"
             inputs:
@@ -59,19 +49,35 @@ jobs:
               workingDirectory: $(Pipeline.Workspace)/drop/${{ parameters.ServerName }}/${{ VsixTarget }}
               inlineScript: |
                 Write-Host "Publishing VSIX for ${{ VsixTarget }}"
-                
+                Write-Host "VS Code Marketplace info for az login:"
+                az rest -u https://app.vssps.visualstudio.com/_apis/profile/profiles/me --resource 499b84ac-1321-427f-aa17-267ca6975798
+
+                $buildInfo = Get-Content "$(Pipeline.Workspace)/build_info/build_info.json" -Raw | ConvertFrom-Json
+                $server = $buildInfo.servers | Where-Object { $_.name -eq '${{ parameters.ServerName }}' }
+
                 $baseName = Get-ChildItem *.vsix | Select-Object -ExpandProperty BaseName -First 1
-                Write-Host "VSIX baseName: $baseName"
-                Write-Host "Prerelease argument: '$(prereleaseArg)'"
-                
-                npm install -g @vscode/vsce
-                
-                if ("$(prereleaseArg)" -ne "") {
-                    $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`" --pre-release"
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s" --pre-release
-                } else {
-                    $publishCmd = "vsce publish --azure-credential --packagePath `"$baseName.vsix`" --manifestPath `"$baseName.manifest`" --signaturePath `"$baseName.signature.p7s`""
-                    Write-Host "Executing: $publishCmd"
-                    vsce publish --azure-credential --packagePath "$baseName.vsix" --manifestPath "$baseName.manifest" --signaturePath "$baseName.signature.p7s"
+
+                $args = @('--azure-credential', "--packagePath `"$baseName.vsix`"", "--manifestPath `"$baseName.manifest`"", "--signaturePath `"$baseName.signature.p7s`"")
+                if ($server.vsixIsPrerelease) {
+                    $args += '--pre-release'
                 }
+
+                $publishCmd = "vsce publish $($args -join ' ')"
+
+                Write-Host @"
+                Server: $($server.name)
+                Version: $($server.version)
+                VSIX Version: $($server.vsixVersion)
+                VSIX baseName: $baseName
+                Is Prerelease: $($server.vsixIsPrerelease)
+
+                Publish arguments:
+                  $($args -join '`n  ')
+                "@
+
+                Write-Host ''
+                Write-Host 'Installing vsce...'
+                npm install -g @vscode/vsce
+
+                Write-Host "Executing: $publishCmd"
+                Invoke-Expression $publishCmd
