@@ -74,79 +74,115 @@ var data = await context.ReadStateAsync<string>(key: stateId, scopeName: "MyScop
 
 ### Agent Type 
 #### Agent Type Selection
-**IMPORTANT**: When using Microsoft Foundry, always use `PersistentAgentsClient` to create agents - NOT `AzureOpenAIClient`.
+
+**For .NET:**
+**IMPORTANT**: When using Microsoft Foundry, always use `AIProjectClient` to create agents - NOT `AzureOpenAIClient`.
 - ❌ Do NOT use `AzureOpenAIClient` for Microsoft Foundry models - that's only for testing and lacks conversation persistence
-- ✅ DO use `PersistentAgentsClient` - it provides full agent capabilities with service-managed state
+- ✅ DO use `AIProjectClient` - it provides full agent capabilities with service-managed state and is the latest recommended approach
+- ⚠️ `PersistentAgentsClient` is a legacy client (deprecated) - use `AIProjectClient` instead
 
-Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `PersistentAgentsClient` for Microsoft Foundry.
+Code samples may show `AzureOpenAIClient` for simplicity or backward compatibility, but production implementations should use `AIProjectClient` for Microsoft Foundry.
 
-#### Key Difference: When to Pass ChatOptions
-The main difference between `PersistentAgentsClient` and `AzureOpenAIClient` is **when** you configure ChatOptions (Tools, ResponseFormat, etc. ):
-- **PersistentAgentsClient**: Pass ChatOptions when **retrieving** the agent via `GetAIAgentAsync()`
-- **AzureOpenAIClient**: Pass options when **creating** the agent via `CreateAIAgent()`
+#### Key Differences: AIProjectClient vs AzureOpenAIClient
 
-Note: Only add ChatOptions properties (Tools, ResponseFormat, etc.) when user requirements explicitly need them. Do NOT add them by default.
+**1. Creation Pattern:**
+- `AIProjectClient` uses `await aiProjectClient.CreateAIAgentAsync(...)` - creates agents on the server
+- `AzureOpenAIClient` uses `.GetChatClient(deploymentName).CreateAIAgent(...)` - creates local agents
 
-#### ✅ CORRECT - PersistentAgentsClient Pattern
-Pass all ChatOptions properties (tools, ResponseFormat, etc.) to `GetAIAgentAsync()`:
+#### ✅ CORRECT - AIProjectClient Pattern (Recommended)
 
 ```csharp
-using Azure.AI.Agents.Persistent;
+using System.ComponentModel;
+using System.Text.Json.Serialization;
+using Azure.AI.Projects;
 using Azure.Identity;
 using Microsoft.Agents.AI;
 using Microsoft.Extensions.AI;
-using System.ComponentModel;
-using System.Text.Json.Serialization;
 
-// Define function tool
-[Description("Get weather for a location")]
-static string GetWeather([Description("Location")] string location)
-    => $"Weather in {location}: 25°C, sunny";
+string endpoint = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_PROJECT_ENDPOINT") ?? throw new InvalidOperationException("AZURE_FOUNDRY_PROJECT_ENDPOINT is not set.");
+string deploymentName = Environment.GetEnvironmentVariable("AZURE_FOUNDRY_PROJECT_DEPLOYMENT_NAME") ?? "gpt-4o-mini";
 
-// Define response schema
+[Description("Get the weather for a given location.")]
+static string GetWeather([Description("The location to get the weather for.")] string location)
+    => $"The weather in {location} is cloudy with a high of 15°C.";
+
+const string AssistantInstructions = "You are a helpful assistant that can get weather information.";
+const string AssistantName = "WeatherAssistant";
+
+// Define structured output schema for weather response
+[Description("Weather information for a location")]
 public class WeatherResponse
 {
     [JsonPropertyName("location")]
     public string Location { get; set; } = string.Empty;
 
     [JsonPropertyName("temperature")]
-    public double Temperature { get; set; }
+    public string Temperature { get; set; } = string.Empty;
+
+    [JsonPropertyName("condition")]
+    public string Condition { get; set; } = string.Empty;
 }
 
-var client = new PersistentAgentsClient(
-    "https://<resource>.services.ai.azure.com/api/projects/<project>",
-    new AzureCliCredential());
+// Get a client to create/retrieve/delete server side agents with Microsoft Foundry agents.
+AIProjectClient aiProjectClient = new(new Uri(endpoint), new AzureCliCredential());
 
-// Step 1: Create agent (only model, name, instructions)
-var agentMetadata = await client.Administration.CreateAgentAsync(
-    model: "gpt-4o-mini", // Just for example
-    name: "WeatherAgent",
-    instructions: "Provide weather information");
+// Define the agent with function tools.
+AITool tool = AIFunctionFactory.Create(GetWeather);
 
-// Step 2: Get agent with ChatOptions (tools, ResponseFormat, etc.)
-AIAgent agent = await client.GetAIAgentAsync(
-    agentId: agentMetadata.Value.Id,
-    new ChatOptions
+// Create AIAgent directly - Simple agent with tools for basic scenarios
+AIAgent agent = await aiProjectClient.CreateAIAgentAsync(
+    name: AssistantName,
+    model: deploymentName,
+    instructions: AssistantInstructions,
+    tools: [tool]);
+
+// Create ChatClientAgent - Advanced agent with structured output support via ResponseFormat
+// Use this when you need structured JSON responses with schema validation
+ChatClientAgent agent1 = await aiProjectClient.CreateAIAgentAsync(
+    model: deploymentName,
+    new ChatClientAgentOptions(name: AssistantName, instructions: AssistantInstructions, tools: [tool])
     {
-        Tools = [AIFunctionFactory.Create(GetWeather)],  // ✅ Tools passed here
-        ResponseFormat = ChatResponseFormat.ForJsonSchema<WeatherResponse>(  // ✅ ResponseFormat passed here
-            schemaName: "WeatherResponse",
-            schemaDescription: "Weather data")
+        ChatOptions = new()
+        {
+            ResponseFormat = Microsoft.Extensions.AI.ChatResponseFormat.ForJsonSchema<WeatherResponse>()
+        }
     });
 
-var response = await agent.RunAsync("What's the weather in Seattle?");
+// Non-streaming agent interaction with function tools.
+Console.WriteLine(await agent.RunAsync("What is the weather like in Amsterdam?"));
+
+// Streaming agent interaction with function tools.
+await foreach (AgentRunResponseUpdate update in agent.RunStreamingAsync("What is the weather like in Amsterdam?"))
+{
+    Console.WriteLine(update);
+}
+
+// Cleanup: Delete the created agent instance by name.
+await aiProjectClient.Agents.DeleteAgentAsync(agent.Name);
+await aiProjectClient.Agents.DeleteAgentAsync(agent1.Name);
+
+
+
 ```
 
-#### ❌ INCORRECT - Don't Use AzureOpenAIClient Pattern with PersistentAgentsClient
+#### ❌ INCORRECT - AzureOpenAIClient Patterns to Avoid
+
+**Don't use explicit thread management with AzureOpenAIClient:**
+```csharp
+
+// Create AIAgent with AzureOpenAIClient
+AIAgent agent = new AzureOpenAIClient(new Uri(endpoint), new AzureCliCredential()) // ❌ WRONG: Use AIProjectClient instead
+    .GetChatClient(deploymentName)
+    .CreateAIAgent(instructions: "You are a helpful assistant");
+```
+
+#### ❌ INCORRECT - Don't Use Legacy PersistentAgentsClient Pattern
 
 ```csharp
-var client = new PersistentAgentsClient(
+using Azure.AI.Agents.Persistent;  // ❌ WRONG: Use Azure.AI.Projects instead
+
+var client = new PersistentAgentsClient(  // ❌ WRONG: Use AIProjectClient instead
     "https://<resource>.services.ai.azure.com/api/projects/<project>",
     new AzureCliCredential());
-
-// ❌ WRONG PATTERN: Trying to pass tools at agent creation
-AIAgent agent = await client.Administration.CreateAgentAsync(
-        model: "gpt-4o-mini",
-        tools: [AIFunctionFactory.Create(GetWeather)]  // ❌ Wrong: Can't pass tools here
-    );
 ```
+

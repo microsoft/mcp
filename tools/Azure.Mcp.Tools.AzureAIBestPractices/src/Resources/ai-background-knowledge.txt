@@ -18,7 +18,8 @@ Use this hierarchy to analyze and select AI models
   - **Multi-LLM Support**: Works with OpenAI, Azure OpenAI, Microsoft Foundry, and other providers
 
 **Agent Types:**
-  - **[RECOMMENDED] Microsoft Foundry Agent (`PersistentAgentsClient`)**: Service-managed persistent agents with conversation threads - best for production applications requiring conversation continuity
+  - **[RECOMMENDED] Microsoft Foundry Agent (`AIProjectClient`)**: Latest unified client for Microsoft Foundry agents with conversation threads - best for production applications requiring conversation continuity and modern agent features
+  - **[LEGACY] Microsoft Foundry Agent (`PersistentAgentsClient`)**: Older client for service-managed persistent agents - superseded by `AIProjectClient`
   - **OpenAI ChatCompletion / Responses / Assistants Agent (`OpenAIClient`)**: Stateless or service-managed agents using OpenAI service
   - **Microsoft Foundry Models ChatCompletion / Responses Agent (`OpenAIClient` / `AzureOpenAIClient`)**: For testing Foundry-deployed models (stateless)
   - **Azure OpenAI ChatCompletion / Responses (`AzureOpenAIClient`)**: Stateless agents using Azure OpenAI ChatCompletion / Responses service  
