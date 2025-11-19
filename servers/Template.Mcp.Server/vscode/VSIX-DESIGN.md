@@ -16,7 +16,6 @@ The Template MCP Server VSIX extension provides Template MCP server integration 
   "templateMcp.enabledServices": ["service1", "service2"]
   ```
 
-
 ### Getting Started
 
 Follow these steps to get up and running with the Template MCP extension:
@@ -40,7 +39,7 @@ Follow these steps to get up and running with the Template MCP extension:
 3. **Start the MCP Server**
 	- Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
 	- Type `MCP: List Servers` and select it
-	- Choose `Template MCP Server ext` from the list
+	- Choose `Template MCP Server` from the list
 	- Click `Start Server`
 
 4. **Verify the server is running**
@@ -58,11 +57,10 @@ You're now ready to use Template MCP features in VS Code!
 - **Main Entry Point:**
   `src/extension.ts` – Handles activation, server definition, and integration with VS Code APIs.
 
-
 - **Server Binaries:**
-  Platform binaries are located in a flat `server/` folder:
-  - `server/azmcp.exe` (Windows)
-  - `server/azmcp` (Linux/macOS)
+  Platform binaries will be added to a flat `server/` folder by the Pack-Vsix.ps1 script:
+  - `server/mcptmp.exe` (Windows)
+  - `server/mcptmp` (Linux/macOS)
 
 - **Packaging Scripts:**
   - `/eng/scripts/New-BuildInfo.ps1` – Creates a build_info.json file used in build and pack scripts.
@@ -78,7 +76,7 @@ You're now ready to use Template MCP features in VS Code!
 
 - Run `/eng/scripts/New-BuildInfo.ps1` to prepare a build_info.json file that will provide metadata to the build and pack scripts.
 - The .NET MCP server is built for each supported platform (x64 and arm64) using `/eng/scripts/Build-Code.ps1 -Server Template.Mcp.Server`.
-- Output binaries are placed in the `.work/build/Template.Mcp.Server/{platform}` folders as `azmcp.exe` (Windows) and `azmcp` (Linux/macOS).
+- Output binaries are placed in the `.work/build/Template.Mcp.Server/{platform}` folders as `mcptmp.exe` (Windows) and `mcptmp` (Linux/macOS).
 
 #### b. VSIX Packaging
 
@@ -101,19 +99,18 @@ You're now ready to use Template MCP features in VS Code!
 ```typescript
 let binary = '';
 if (process.platform === 'win32') {
-    binary = 'azmcp.exe';
+    binary = 'mcptmp.exe';
 } else if (process.platform === 'darwin' || process.platform === 'linux') {
-    binary = 'azmcp';
+    binary = 'mcptmp';
 }
 const serverPath = path.join(context.extensionPath, 'server', binary);
 ```
 
 ---
 
-
 ### 4. Cross-Platform Support
 
-- The VSIX is shipped per platform (Windows, Linux, macOS), with binaries for each supported architecture included for that platform.
+- A separate VSIX file is packaged and shipped per platform (Windows, Linux, macOS), with binaries for each supported architecture included for that platform.
 - Supported platforms and architectures:
   - **Windows**: x64, arm64
   - **Linux**: x64, arm64
@@ -128,9 +125,11 @@ const serverPath = path.join(context.extensionPath, 'server', binary);
 - As an optimization, the extension could download the latest platform-specific server binary from a public URL at runtime.
 - This reduces VSIX size but requires HTTP(S) download logic.
 - Not currently implemented in the default design for maximum compatibility and offline support.
-- Note: This can also be achieved by dynamically downloading the platform-specific package via npm, but this approach introduces a dependency on Node.js for the end user.
----
+- Note: Platform specific .zip files are hosted on GitHub in each release:
+  - https://github.com/microsoft/mcp/releases/download/Template.Mcp.Server-0.0.12-alpha.5502650/Template.Mcp.Server-win-x64.zip
+  - https://github.com/microsoft/mcp/releases/download/Template.Mcp.Server-0.0.12-alpha.5502650/Template.Mcp.Server-osx-arm64.zip
 
+---
 
 ### 6. Exclusion & Inclusion
 
@@ -139,7 +138,6 @@ const serverPath = path.join(context.extensionPath, 'server', binary);
 
 ---
 
-
 ## File/Folder Structure
 
 ```
@@ -147,8 +145,7 @@ vsix/
 ├── src/
 │   └── extension.ts
 ├── server/
-│   ├── azmcp.exe
-│   └── azmcp
+│   ├── mcptmp[.exe]
 ├── package.json
 └── ...
 ```
