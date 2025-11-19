@@ -15,8 +15,6 @@ namespace Azure.Mcp.Core.Services.ProcessExecution;
 /// </summary>
 public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IExternalProcessService
 {
-    private readonly ILogger<ExternalProcessService> _logger = logger;
-
     /// <summary>
     /// Executes an external process and captures its stdout and stderr.
     /// </summary>
@@ -124,62 +122,58 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         var operationTimeout = ValidateTimeout(operationTimeoutSeconds);
 
         using Process process = CreateProcess(executablePath, arguments, environmentVariables);
-        using ProcessStreamReader stdoutReader = new(process, isErrorStream: false, _logger);
-        using ProcessStreamReader stderrReader = new(process, isErrorStream: true, _logger);
+        using ProcessStreamReader stdoutReader = new(process, isErrorStream: false, logger);
+        using ProcessStreamReader stderrReader = new(process, isErrorStream: true, logger);
+
+        if (!process.Start())
+        {
+            throw new InvalidOperationException($"Failed to start process: {executablePath}");
+        }
+
+        Task<string> stdoutTask = stdoutReader.ReadToEndAsync();
+        Task<string> stderrTask = stderrReader.ReadToEndAsync();
+        Task exitTask = process.WaitForExitAsync(cancellationToken);
+
+        Task operation = Task.WhenAll(exitTask, stdoutTask, stderrTask);
 
         try
         {
-            if (!process.Start())
-            {
-                throw new InvalidOperationException($"Failed to start process: {executablePath}");
-            }
-
-            var stdoutTask = stdoutReader.StartReading();
-            var stderrTask = stderrReader.StartReading();
-            var exitTask = process.WaitForExitAsync(cancellationToken);
-
-            var operation = Task.WhenAll(exitTask, stdoutTask, stderrTask);
-
-            try
-            {
-                await operation.WaitAsync(operationTimeout, cancellationToken).ConfigureAwait(false);
-            }
-            catch (TimeoutException)
-            {
-                // Timeout may be thrown either:
-                //   - Case A: before the process had exited, or
-                //   - Case B: after the process had already exited, but before streams were fully drained.
-                throw HandleTimeout(process, operationTimeout, executablePath, arguments);
-            }
-            catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested)
-            {
-                // Cancellation was explicitly requested by the caller (not a timeout).
-                // OCE may be thrown either:
-                //   - Case A: by WaitForExitAsync while the process is still running, or
-                //   - Case B: by WaitAsync after the process has already exited.
-                HandleCancellation(process, executablePath, arguments, oce);
-                // 'throw;' here preserves the original stack trace from where the OCE was first thrown,
-                // inside WaitAsync or WaitForExitAsync not from this catch block.
-                throw;
-            }
-
-            // The earlier await on Task.WhenAll(...) guarantees that stdoutTask and stderrTask have already run to completion.
-            // The .Result simply retrieves their already-computed output without any blocking.
-            var stdout = stdoutTask.Result.TrimEnd();
-            var stderr = stderrTask.Result.TrimEnd();
-
-            // Normal completion: the process has exited, and stdout/stderr have fully drained.
-            return new ProcessResult(
-                process.ExitCode,
-                stdout,
-                stderr,
-                $"{executablePath} {arguments}");
+            await operation.WaitAsync(operationTimeout, cancellationToken).ConfigureAwait(false);
         }
-        finally
+        catch (TimeoutException)
         {
-            // ProcessStreamReader.Dispose unsubscribes 'DataReceived' event handlers from the Process.
-            // Process.Dispose releases OS resources.
+            // Timeout may be thrown either:
+            //   - Case A: before the process had exited, or
+            //   - Case B: after the process had already exited, but before streams were fully drained.
+            throw HandleTimeout(process, operationTimeout, executablePath, arguments);
         }
+        catch (OperationCanceledException oce) when (cancellationToken.IsCancellationRequested)
+        {
+            // Cancellation was explicitly requested by the caller (not a timeout).
+            // OCE may be thrown either:
+            //   - Case A: by WaitForExitAsync while the process is still running, or
+            //   - Case B: by WaitAsync after the process has already exited.
+            HandleCancellation(process, executablePath, arguments, oce);
+            // 'throw;' here preserves the original stack trace from where the OCE was first thrown,
+            // inside WaitAsync or WaitForExitAsync not from this catch block.
+            throw;
+        }
+
+        // The earlier await on Task.WhenAll(...) guarantees that stdoutTask and stderrTask have already run
+        // to completion. The .Result simply retrieves their already-computed output without any blocking.
+        var stdout = stdoutTask.Result.TrimEnd();
+        var stderr = stderrTask.Result.TrimEnd();
+
+        // Normal completion: the process has exited, and stdout/stderr have fully drained.
+        return new ProcessResult(
+            process.ExitCode,
+            stdout,
+            stderr,
+            $"{executablePath} {arguments}");
+
+        // The `using` declarations at the top ensure that both ProcessStreamReader and Process are disposed on
+        // every exit path—normal completion, timeout, or cancellation — unsubscribing handlers and releasing OS 
+        // resources.
     }
 
     public JsonElement ParseJsonOutput(ProcessResult result)
@@ -274,7 +268,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     private TimeoutException HandleTimeout(Process process, TimeSpan timeout, string executablePath, string arguments)
     {
         // Get the pre-kill exit state and any kill error (if termination was attempted).
-        (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(_logger);
+        (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(logger);
         string command = $"{executablePath} {arguments}";
 
         TimeoutException exception;
@@ -283,41 +277,41 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         {
             case ExitStatus.NotExited:
                 // Timeout occurred before the process had exited: the process itself exceeded the timeout.
-                tex = new TimeoutException($"Process execution timed out after {timeout.TotalSeconds} seconds: {command}");
+                exception = new TimeoutException($"Process execution timed out after {timeout.TotalSeconds} seconds: {command}");
                 if (killException is not null)
                 {
-                    tex.Data["ProcessKillException"] = killException;
-                    _logger.LogWarning(killException, "Failed to kill process after timeout for command: {Command}", command);
+                    exception.Data["ProcessKillException"] = killException;
+                    logger.LogWarning(killException, "Failed to kill process after timeout for command: {Command}", command);
                 }
                 break;
 
             case ExitStatus.Exited:
                 // Timeout occurred after the process had already exited, but before streams were fully drained.
-                tex = new TimeoutException($"Process streams draining timed out after {timeout.TotalSeconds} seconds: {command}");
+                exception = new TimeoutException($"Process streams draining timed out after {timeout.TotalSeconds} seconds: {command}");
                 break;
 
             case ExitStatus.Indeterminate:
                 // Could not determine exit state due to an exception from Process.HasExited (no kill was attempted).
-                tex = new TimeoutException($"Process execution or streams draining timed out after {timeout.TotalSeconds} seconds: {command}");
-                tex.Data["ProcessExitCheckException"] = exitCheck.CheckException;
-                _logger.LogWarning(exitCheck.CheckException, "Could not determine process exit state after the timeout for command: {Command}", command);
+                exception = new TimeoutException($"Process execution or streams draining timed out after {timeout.TotalSeconds} seconds: {command}");
+                exception.Data["ProcessExitCheckException"] = exitCheck.CheckException;
+                logger.LogWarning(exitCheck.CheckException, "Could not determine process exit state after the timeout for command: {Command}", command);
                 break;
 
             default:
                 throw new InvalidOperationException($"Unexpected exit status: {exitCheck.Status}");
         }
 
-        tex.Data["ProcessName"] = process.SafeName();
-        tex.Data["ProcessId"] = process.SafeId();
-        tex.Data["ProcessExitStatus"] = exitCheck.Status.ToString();
+        exception.Data["ProcessName"] = process.SafeName();
+        exception.Data["ProcessId"] = process.SafeId();
+        exception.Data["ProcessExitStatus"] = exitCheck.Status.ToString();
 
-        return tex;
+        return exception;
     }
 
     private void HandleCancellation(Process process, string executablePath, string arguments, OperationCanceledException exception)
     {
         // Get the pre-kill exit state and any kill error (if termination was attempted).
-        (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(_logger);
+        (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(logger);
         string command = $"{executablePath} {arguments}";
 
         switch (exitCheck.Status)
@@ -326,8 +320,8 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
                 // Cancellation occurred before the process had exited.
                 if (killException is not null)
                 {
-                    oce.Data["ProcessKillException"] = killException;
-                    _logger.LogWarning(killException, "Failed to kill process after cancellation for command: {Command}", command);
+                    exception.Data["ProcessKillException"] = killException;
+                    logger.LogWarning(killException, "Failed to kill process after cancellation for command: {Command}", command);
                 }
                 break;
 
@@ -337,17 +331,17 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
 
             case ExitStatus.Indeterminate:
                 // Could not determine exit state due to an exception from Process.HasExited (no kill was attempted).
-                oce.Data["ProcessExitCheckException"] = exitCheck.CheckException;
-                _logger.LogWarning(exitCheck.CheckException, "Could not determine process exit state during cancellation for command: {Command}", command);
+                exception.Data["ProcessExitCheckException"] = exitCheck.CheckException;
+                logger.LogWarning(exitCheck.CheckException, "Could not determine process exit state during cancellation for command: {Command}", command);
                 break;
 
             default:
                 throw new InvalidOperationException($"Unexpected exit status: {exitCheck.Status}");
         }
 
-        oce.Data["ProcessName"] = process.SafeName();
-        oce.Data["ProcessId"] = process.SafeId();
-        oce.Data["ProcessExitStatus"] = exitCheck.Status.ToString();
+        exception.Data["ProcessName"] = process.SafeName();
+        exception.Data["ProcessId"] = process.SafeId();
+        exception.Data["ProcessExitStatus"] = exitCheck.Status.ToString();
 
         // we deliberately preserve and rethrow (via 'throw;') the original OCE at call site.
     }
@@ -385,41 +379,41 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     /// </remarks>
     private sealed class ProcessStreamReader : IDisposable
     {
-        private readonly Process process;
-        private readonly bool isErrorStream;
+        private readonly Process _process;
+        private readonly bool _isErrorStream;
         private readonly ILogger<ExternalProcessService> _logger;
-        private readonly StringBuilder buffer = new();
-        private readonly TaskCompletionSource<string> tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
-        private readonly DataReceivedEventHandler handler;
-        private bool readingStarted;
-        private bool disposed;
+        private readonly StringBuilder _buffer = new();
+        private readonly TaskCompletionSource<string> _tcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
+        private readonly DataReceivedEventHandler _handler;
+        private bool _readingStarted;
+        private bool _disposed;
 
         public ProcessStreamReader(Process process, bool isErrorStream, ILogger<ExternalProcessService> logger)
         {
-            this.process = process ?? throw new ArgumentNullException(nameof(process));
-            this.isErrorStream = isErrorStream;
+            this._process = process ?? throw new ArgumentNullException(nameof(process));
+            this._isErrorStream = isErrorStream;
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            handler = (_, e) =>
+            _handler = (_, e) =>
             {
                 if (e.Data is null)
                 {
                     // Stream closed – finalize accumulated output and complete.
-                    tcs.TrySetResult(buffer.ToString());
+                    _tcs.TrySetResult(_buffer.ToString());
                 }
                 else
                 {
-                    buffer.AppendLine(e.Data);
+                    _buffer.AppendLine(e.Data);
                 }
             };
 
             if (isErrorStream)
             {
-                process.ErrorDataReceived += handler;
+                process.ErrorDataReceived += _handler;
             }
             else
             {
-                process.OutputDataReceived += handler;
+                process.OutputDataReceived += _handler;
             }
         }
 
@@ -441,32 +435,32 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         /// <c>e.Data == null</c> callback was never raised.
         /// </remarks>
         /// <returns>A task that completes when the stream has fully drained.</returns>
-        public Task<string> StartReadingAsync()
+        public Task<string> ReadToEndAsync()
         {
-            ObjectDisposedException.ThrowIf(disposed, this);
+            ObjectDisposedException.ThrowIf(_disposed, this);
 
-            if (readingStarted)
+            if (_readingStarted)
             {
                 throw new InvalidOperationException("StartReading has already been called for this reader.");
             }
 
-            readingStarted = true;
+            _readingStarted = true;
 
-            if (isErrorStream)
+            if (_isErrorStream)
             {
-                process.BeginErrorReadLine();
+                _process.BeginErrorReadLine();
             }
             else
             {
-                process.BeginOutputReadLine();
+                _process.BeginOutputReadLine();
             }
 
-            return tcs.Task;
+            return _tcs.Task;
         }
 
         /// <summary>
         /// Disposes the stream reader by unsubscribing the data-received handler and ensuring
-        /// that the task returned by <see cref="StartReading"/> is completed as a safety net.
+        /// that the task returned by <see cref="ReadToEndAsync"/> is completed as a safety net.
         /// </summary>
         /// <remarks>
         /// In the normal <c>ExecuteAsync</c> workflow, the read task will already have completed
@@ -477,28 +471,28 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         /// </list>
         ///
         /// In these cases, the fallback completion inside <see cref="Dispose"/> is a harmless no-op.
-        /// Its purpose is to guarantee that callers of <see cref="StartReading"/> never block indefinitely if
+        /// Its purpose is to guarantee that callers of <see cref="ReadToEndAsync"/> never block indefinitely if
         /// <c>ProcessStreamReader</c> is used outside the intended <c>ExecuteAsync</c> flow and the
         /// final <c>e.Data == null</c> callback is never delivered.
         /// </remarks>
         public void Dispose()
         {
-            if (disposed)
+            if (_disposed)
             {
                 return;
             }
 
-            disposed = true;
+            _disposed = true;
 
             try
             {
-                if (isErrorStream)
+                if (_isErrorStream)
                 {
-                    process.ErrorDataReceived -= handler;
+                    _process.ErrorDataReceived -= _handler;
                 }
                 else
                 {
-                    process.OutputDataReceived -= handler;
+                    _process.OutputDataReceived -= _handler;
                 }
             }
             catch (Exception ex)
@@ -508,21 +502,32 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
                     ex,
                     "Unsubscribe from {StreamType} stream during disposal was skipped. Process: {ProcessName}, PID: {Pid}.",
                     StreamType,
-                    process.SafeName(),
-                    process.SafeId());
+                    _process.SafeName(),
+                    _process.SafeId());
             }
 
-            if (tcs.TrySetResult(buffer.ToString()))
+            // Safety net: if the DataReceived handler _handler never observed the final e.Data == null
+            // and therefore never completed the read task, force completion here.
+            //
+            // We intentionally avoid calling ToString() on the shared StringBuilder _buffer to prevent
+            // any cross-thread races with AppendLine() inside the event handler. In all normal
+            // ExecuteAsync scenarios, the task will already be completed before Dispose() runs,
+            // making completion here a no-op.
+            //
+            // In timeout or cancellation scenarios, the caller receives an exception and does not
+            // consume stream output, so try completing with an empty string is sufficient and avoids
+            // touching potentially-mutating state.
+            if (_tcs.TrySetResult(string.Empty))
             {
                 _logger.LogDebug(
                     "ProcessStreamReader for {StreamType} (Process: {ProcessName}, PID: {Pid}) completed during disposal.",
                     StreamType,
-                    process.SafeName(),
-                    process.SafeId());
+                    _process.SafeName(),
+                    _process.SafeId());
             }
         }
 
-        private string StreamType => isErrorStream ? "stderr" : "stdout";
+        private string StreamType => _isErrorStream ? "stderr" : "stdout";
     }
 }
 
