@@ -49,6 +49,7 @@ Avoid:
 
 Preparation and deployment steps:
 1. Analyze project and deployment requirements. Generate a deployment plan with the `deploy_plan_get` command as parameters in mcp_azure_mcp_deploy tool, if available.
+2. Retrieve Azure Policy assignments and corresponding policy definitions for the target scope using the 'policy_assignment_list' and 'policy_definition_get' tools with the appropriate `subscription` parameter and optional `scope` parameters. Review the policy assignments and corresponding definitions and ensure that any generated script/IaC files comply with these policies.
 2. Execute the generated plan to generate the script/IaC files for deploying the application. Use the mcp_azure_mcp_deploy tool and set parameter `command` to be `deploy_iac_rules_get`, if available.
 3. Validate quota and regional availability of the relevant Azure resources. Use mcp_azure_mcp_quota tool and set the parameter `command` to be `quota_usage_check` or `quota_region_availability_list`, if available.
 4. Follow the plan to deploy using the appropriate deployment tools or scripts specified in the plan.
