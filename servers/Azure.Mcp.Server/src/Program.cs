@@ -22,7 +22,8 @@ internal class Program
 
     private static async Task<int> Main(string[] args)
     {
-        args = "server start --transport http --outgoing-auth-strategy UseOnBehalfOf".Split(' ').Concat(args).ToArray();
+        Console.WriteLine("svukel args: {0}", string.Join(";", args));
+//        Console.WriteLine("svukel env var: {0}", string.Join("; ", Environment.GetEnvironmentVariables().GetEnumerator()));
         try
         {
             ServiceStartCommand.ConfigureServices = ConfigureServices;

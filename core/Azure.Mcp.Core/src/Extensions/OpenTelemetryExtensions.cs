@@ -73,7 +73,7 @@ public static class OpenTelemetryExtensions
     {
         builder.AddOpenTelemetry(logger =>
         {
-            logger.AddProcessor(new TelemetryLogRecordEraser());
+            //logger.AddProcessor(new TelemetryLogRecordEraser());
         });
     }
 
@@ -91,11 +91,6 @@ public static class OpenTelemetryExtensions
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
             var serverConfig = sp.GetRequiredService<IOptions<AzureMcpServerConfiguration>>();
-            if (!serverConfig.Value.IsTelemetryEnabled)
-            {
-                return;
-            }
-
             builder.AddSource(serverConfig.Value.Name);
         });
 
@@ -122,13 +117,6 @@ public static class OpenTelemetryExtensions
         // - processor2: data scrubber before sending to Microsoft-owned App Insights
         // - exporter2: Microsoft-owned App Insights exporter
         ConfigureUserSuppliedAppInsightsExporter(otelBuilder);
-        var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
-        if (!string.IsNullOrEmpty(enableOtlp) && bool.TryParse(enableOtlp, out var shouldEnable) && shouldEnable)
-        {
-            otelBuilder.UseOtlpExporter();
-        }
-
-        ConfigureMicrosoftOwnedAppInsightsExporter(otelBuilder);
     }
 
     /// <summary>
@@ -160,7 +148,12 @@ public static class OpenTelemetryExtensions
 
     private static void ConfigureUserSuppliedAppInsightsExporter(OpenTelemetryBuilder otelBuilder)
     {
-        otelBuilder.UseAzureMonitor();
+        otelBuilder.UseAzureMonitorExporter()
+            .WithTracing(tracerBuilder =>
+            {
+                tracerBuilder.AddAspNetCoreInstrumentation()
+                    .AddHttpClientInstrumentation();
+            });
     }
 
     private static void ConfigureMicrosoftOwnedAppInsightsExporter(OpenTelemetryBuilder otelBuilder)

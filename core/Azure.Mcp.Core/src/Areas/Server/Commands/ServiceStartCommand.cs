@@ -19,6 +19,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Primitives;
 using Microsoft.Identity.Web;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
@@ -391,8 +392,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         IServiceCollection services = builder.Services;
 
-        var azureAd = builder.Configuration.GetSection("AzureAd");
-
         // Configure outgoing and incoming authentication and authorization.
         //
         // Configure incoming authentication and authorization.
@@ -411,7 +410,33 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     if (!context.Response.HasStarted)
                     {
                         HttpRequest request = context.Request;
-                        string resourceMetadataUrl = $"{request.Scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                        string scheme = request.Scheme;
+
+                        // Azure Container Apps setups usually use HTTP between the ACA platform's
+                        // reverse proxy and the application container. Our challenge needs to
+                        // match what the client will use as a scheme. So only in this case do we
+                        // use the X-Forwarded-Proto header if present. We're also going to limit
+                        // specifically to "http" and "https" values only, and we're going to use
+                        // their lowercase forms rather than the casing in the header.
+                        if (request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+                        {
+                            if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+                            {
+                                if (string.Equals(forwardedProtoValue, "https", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    scheme = "https";
+                                }
+                                else if (string.Equals(forwardedProtoValue, "http", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    scheme = "http";
+                                }
+                            }
+                        }
+
+                        string resourceMetadataUrl = $"{scheme}://{request.Host}/.well-known/oauth-protected-resource";
+
+                        Console.WriteLine("svukel headers: {0}", string.Join("; ", request.Headers));
 
                         // Modify the WWW-Authenticate header to include resource_metadata
                         context.Response.Headers.WWWAuthenticate =
@@ -490,12 +515,41 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             if (context.Request.Path == "/.well-known/oauth-protected-resource" &&
                 context.Request.Method == "GET")
             {
+                Console.WriteLine("svukel 12:24 pm: first");
+                Console.WriteLine("svukel 12:45 pm: back to useazuremonitor()");
+                Console.WriteLine("svukel 12:45 pm: useazuremonitor() without extra follow up");
+                Console.WriteLine("svukel 01:26 pm: scheme in oprm");
+
                 IOptionsMonitor<MicrosoftIdentityOptions> azureAdOptionsMonitor = context
                     .RequestServices
                     .GetRequiredService<IOptionsMonitor<MicrosoftIdentityOptions>>();
                 MicrosoftIdentityOptions azureAdOptions = azureAdOptionsMonitor.Get(JwtBearerDefaults.AuthenticationScheme);
                 HttpRequest request = context.Request;
-                string baseUrl = $"{request.Scheme}://{request.Host}";
+
+                string scheme = request.Scheme;
+
+                // Azure Container Apps setups usually use HTTP between the ACA platform's
+                // reverse proxy and the application container. Our challenge needs to
+                // match what the client will use as a scheme. So only in this case do we
+                // use the X-Forwarded-Proto header if present. We're also going to limit
+                // specifically to "http" and "https" values only, and we're going to use
+                // their lowercase forms rather than the casing in the header.
+                if (request.Headers.TryGetValue("X-Forwarded-Proto", out StringValues forwardedProto))
+                {
+                    if (forwardedProto.FirstOrDefault() is string forwardedProtoValue)
+                    {
+                        if (string.Equals(forwardedProtoValue, "https", StringComparison.OrdinalIgnoreCase))
+                        {
+                            scheme = "https";
+                        }
+                        else if (string.Equals(forwardedProtoValue, "http", StringComparison.OrdinalIgnoreCase))
+                        {
+                            scheme = "http";
+                        }
+                    }
+                }
+
+                string baseUrl = $"{scheme}://{request.Host}";
                 string? clientId = azureAdOptions.ClientId;
                 string? tenantId = azureAdOptions.TenantId;
                 string instance = azureAdOptions.Instance?.TrimEnd('/') ?? "https://login.microsoftonline.com";
