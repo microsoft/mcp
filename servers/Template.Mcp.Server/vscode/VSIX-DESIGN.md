@@ -35,7 +35,7 @@ Follow these steps to get up and running with the Template MCP extension:
 			 "service2"
 		 ]
 		 ```
-	 - The extension in next step will start the MCP server with only the selected services enabled.
+	 - The extension in the next step will start the MCP server with only the selected services enabled.
 
 3. **Start the MCP Server**
 	- Open the Command Palette (`Ctrl+Shift+P` or `Cmd+Shift+P`)
