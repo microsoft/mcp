@@ -277,7 +277,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(_logger);
         string command = $"{executablePath} {arguments}";
 
-        TimeoutException tex;
+        TimeoutException exception;
 
         switch (exitCheck.Status)
         {
@@ -314,7 +314,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         return tex;
     }
 
-    private void HandleCancellation(Process process, string executablePath, string arguments, OperationCanceledException oce)
+    private void HandleCancellation(Process process, string executablePath, string arguments, OperationCanceledException exception)
     {
         // Get the pre-kill exit state and any kill error (if termination was attempted).
         (ExitCheckResult exitCheck, Exception? killException) = process.TryKill(_logger);
@@ -441,7 +441,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
         /// <c>e.Data == null</c> callback was never raised.
         /// </remarks>
         /// <returns>A task that completes when the stream has fully drained.</returns>
-        public Task<string> StartReading()
+        public Task<string> StartReadingAsync()
         {
             ObjectDisposedException.ThrowIf(disposed, this);
 
@@ -503,7 +503,7 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
             }
             catch (Exception ex)
             {
-                // Unsubscribing the handlers are the best-effort cleanup step; log and swallow any exceptions to avoid disposal throwing.
+                // Unsubscribing the handlers is a best-effort cleanup step; log and swallow any exceptions to avoid disposal throwing.
                 _logger.LogDebug(
                     ex,
                     "Unsubscribe from {StreamType} stream during disposal was skipped. Process: {ProcessName}, PID: {Pid}.",
@@ -583,24 +583,24 @@ internal static class ProcessExtensions
                 ? new ExitCheckResult(ExitStatus.Exited, CheckException: null)
                 : new ExitCheckResult(ExitStatus.NotExited, CheckException: null);
         }
-        catch (InvalidOperationException e)
+        catch (InvalidOperationException checkException)
         {
             // Official docs: "No process is associated with this object." - treat as "already gone".
             logger.LogDebug(
-            e,
+            checkException,
             "Process.HasExited reported no associated process. Treating as already exited. " +
             "Process: {ProcessName}, PID: {Pid}", process.SafeName(), process.SafeId());
             return new ExitCheckResult(ExitStatus.Exited, CheckException: null);
         }
-        catch (System.ComponentModel.Win32Exception e)
+        catch (System.ComponentModel.Win32Exception checkException)
         {
             // Failure to read status (access denied, invalid handle, etc.).
-            return new ExitCheckResult(ExitStatus.Indeterminate, CheckException: e);
+            return new ExitCheckResult(ExitStatus.Indeterminate, checkException);
         }
-        catch (NotSupportedException e)
+        catch (NotSupportedException checkException)
         {
             // Remote process or unsupported scenario – not a valid case for Azure MCP Server.
-            return new ExitCheckResult(ExitStatus.Indeterminate, CheckException: e);
+            return new ExitCheckResult(ExitStatus.Indeterminate, checkException);
         }
     }
 
