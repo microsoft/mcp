@@ -635,6 +635,13 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
             {
                 logging.SetMinimumLevel(logLevel);
+
+                // If LogLevel.None is specified, clear all providers to disable logging
+                if (logLevel == LogLevel.None)
+                {
+                    logging.ClearProviders();
+                    return; // Exit early, don't add file logging
+                }
             }
         }
         else if (options.Debug)

@@ -387,6 +387,19 @@ public class ServiceStartCommandTests
     }
 
     [Fact]
+    public void LogLevelOption_ParsesNone_Correctly()
+    {
+        // Arrange
+        var parseResult = CreateParseResultWithLogLevel("None");
+
+        // Act
+        var actualLogLevel = parseResult.GetValue(ServiceOptionDefinitions.LogLevel);
+
+        // Assert
+        Assert.Equal("None", actualLogLevel);
+    }
+
+    [Fact]
     public void Validate_WithValidOptions_ReturnsValidResult()
     {
         // Arrange

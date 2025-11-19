@@ -87,6 +87,12 @@ public static class OpenTelemetryExtensions
             var options = sp.GetService<IOptions<ServiceStartOptions>>();
             var logLevel = GetAzureEventSourceLevel(options?.Value);
 
+            // Don't create the forwarder if logging is disabled (LogLevel.None)
+            if (IsLoggingDisabled(options?.Value))
+            {
+                return null!;
+            }
+
             // Create the forwarder - OnEventSourceCreated will be called automatically
             // for all existing and future EventSources
             return new AzureSdkEventSourceLogForwarder(
@@ -185,6 +191,29 @@ public static class OpenTelemetryExtensions
     }
 
     /// <summary>
+    /// Checks if logging is disabled based on the configured log level.
+    /// </summary>
+    /// <param name="options">Service start options containing log level configuration.</param>
+    /// <returns>True if logging is disabled (LogLevel.None), false otherwise.</returns>
+    private static bool IsLoggingDisabled(ServiceStartOptions? options)
+    {
+        if (options == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.LogLevel))
+        {
+            if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
+            {
+                return logLevel == LogLevel.None;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
     /// Maps Microsoft.Extensions.Logging.LogLevel to System.Diagnostics.Tracing.EventLevel.
     /// </summary>
     private static System.Diagnostics.Tracing.EventLevel MapLogLevelToEventLevel(LogLevel logLevel) => logLevel switch
@@ -195,7 +224,7 @@ public static class OpenTelemetryExtensions
         LogLevel.Warning => System.Diagnostics.Tracing.EventLevel.Warning,
         LogLevel.Error => System.Diagnostics.Tracing.EventLevel.Error,
         LogLevel.Critical => System.Diagnostics.Tracing.EventLevel.Critical,
-        LogLevel.None => System.Diagnostics.Tracing.EventLevel.LogAlways,
+        LogLevel.None => System.Diagnostics.Tracing.EventLevel.Critical, // Effectively disable logging
         _ => System.Diagnostics.Tracing.EventLevel.Warning
     };
 
