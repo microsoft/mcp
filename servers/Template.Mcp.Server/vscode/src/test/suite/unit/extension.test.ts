@@ -72,7 +72,7 @@ suite('Template MCP Extension - activate', () => {
         const call = registerStub.getCall(0);
         const provider = call.args[1];
         const defs = await provider.provideMcpServerDefinitions();
-        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'win-x64', 'azmcp.exe'));
+        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'win-x64', 'mcptmp.exe'));
     });
 
     test('constructs correct server path for darwin', async () => {
@@ -81,7 +81,7 @@ suite('Template MCP Extension - activate', () => {
         const call = registerStub.getCall(0);
         const provider = call.args[1];
         const defs = await provider.provideMcpServerDefinitions();
-        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'osx-x64', 'azmcp'));
+        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'osx-x64', 'mcptmp'));
     });
 
     test('constructs correct server path for linux', async () => {
@@ -90,6 +90,6 @@ suite('Template MCP Extension - activate', () => {
         const call = registerStub.getCall(0);
         const provider = call.args[1];
         const defs = await provider.provideMcpServerDefinitions();
-        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'linux-x64', 'azmcp'));
+        assert.strictEqual(defs[0].executablePath, path.join('/ext/path', 'server', 'linux-x64', 'mcptmp'));
     });
 });
