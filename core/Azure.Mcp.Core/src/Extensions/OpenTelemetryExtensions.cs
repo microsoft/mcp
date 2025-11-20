@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
+using Azure.Mcp.Core.Logging;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
 using Microsoft.Extensions.Azure;
@@ -78,14 +79,29 @@ public static class OpenTelemetryExtensions
 
     private static void EnableAzureMonitor(this IServiceCollection services)
     {
-#if DEBUG
-        services.AddSingleton(sp =>
+        // Enable Azure SDK event source logging based on configuration
+        // This captures Azure SDK diagnostic events (requests, responses, retries, authentication)
+        // and forwards them to the configured logging providers
+        services.AddSingleton<AzureSdkEventSourceLogForwarder>(sp =>
         {
-            var forwarder = new AzureEventSourceLogForwarder(sp.GetRequiredService<ILoggerFactory>());
-            forwarder.Start();
-            return forwarder;
+            var options = sp.GetService<IOptions<ServiceStartOptions>>();
+            var logLevel = GetAzureEventSourceLevel(options?.Value);
+
+            // Don't create the forwarder if logging is disabled (LogLevel.None)
+            if (IsLoggingDisabled(options?.Value))
+            {
+                return null!;
+            }
+
+            // Create the forwarder - OnEventSourceCreated will be called automatically
+            // for all existing and future EventSources
+            return new AzureSdkEventSourceLogForwarder(
+                sp.GetRequiredService<ILoggerFactory>(),
+                logLevel);
         });
-#endif
+
+        // Register a hosted service to keep the forwarder alive and ensure proper disposal
+        services.AddHostedService<AzureSdkLogForwarderHostedService>();
 
         services.ConfigureOpenTelemetryTracerProvider((sp, builder) =>
         {
@@ -138,6 +154,105 @@ public static class OpenTelemetryExtensions
                 .WithMetrics(metrics => metrics.AddOtlpExporter())
                 .WithLogging(logging => logging.AddOtlpExporter());
         }
+    }
+
+    /// <summary>
+    /// Maps the configured log level to an appropriate EventSource EventLevel for Azure SDK logging.
+    /// </summary>
+    /// <param name="options">Service start options containing log level configuration.</param>
+    /// <returns>The EventLevel to use for Azure SDK event sources.</returns>
+    private static System.Diagnostics.Tracing.EventLevel GetAzureEventSourceLevel(ServiceStartOptions? options)
+    {
+        // Default to Warning to avoid excessive logging from Azure SDK
+        // Azure SDK can be very verbose at Information/Debug levels
+        var defaultLevel = System.Diagnostics.Tracing.EventLevel.Warning;
+
+        if (options == null)
+        {
+            return defaultLevel;
+        }
+
+        // If LogLevel is explicitly set, use it
+        if (!string.IsNullOrWhiteSpace(options.LogLevel))
+        {
+            if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
+            {
+                return MapLogLevelToEventLevel(logLevel);
+            }
+        }
+
+        // If Debug mode is enabled, use Verbose for maximum Azure SDK diagnostics
+        if (options.Debug)
+        {
+            return System.Diagnostics.Tracing.EventLevel.Verbose;
+        }
+
+        return defaultLevel;
+    }
+
+    /// <summary>
+    /// Checks if logging is disabled based on the configured log level.
+    /// </summary>
+    /// <param name="options">Service start options containing log level configuration.</param>
+    /// <returns>True if logging is disabled (LogLevel.None), false otherwise.</returns>
+    private static bool IsLoggingDisabled(ServiceStartOptions? options)
+    {
+        if (options == null)
+        {
+            return false;
+        }
+
+        if (!string.IsNullOrWhiteSpace(options.LogLevel))
+        {
+            if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
+            {
+                return logLevel == LogLevel.None;
+            }
+        }
+
+        return false;
+    }
+
+    /// <summary>
+    /// Maps Microsoft.Extensions.Logging.LogLevel to System.Diagnostics.Tracing.EventLevel.
+    /// </summary>
+    private static System.Diagnostics.Tracing.EventLevel MapLogLevelToEventLevel(LogLevel logLevel) => logLevel switch
+    {
+        LogLevel.Trace => System.Diagnostics.Tracing.EventLevel.Verbose,
+        LogLevel.Debug => System.Diagnostics.Tracing.EventLevel.Verbose,
+        LogLevel.Information => System.Diagnostics.Tracing.EventLevel.Informational,
+        LogLevel.Warning => System.Diagnostics.Tracing.EventLevel.Warning,
+        LogLevel.Error => System.Diagnostics.Tracing.EventLevel.Error,
+        LogLevel.Critical => System.Diagnostics.Tracing.EventLevel.Critical,
+        LogLevel.None => System.Diagnostics.Tracing.EventLevel.Critical, // Effectively disable logging
+        _ => System.Diagnostics.Tracing.EventLevel.Warning
+    };
+
+    /// <summary>
+    /// Gets the version information for the server.  Uses logic from Azure SDK for .NET to generate the same version string.
+    /// https://github.com/Azure/azure-sdk-for-net/blob/main/sdk/core/System.ClientModel/src/Pipeline/UserAgentPolicy.cs#L91
+    /// For example, an informational version of "6.14.0-rc.116+54d611f7" will return "6.14.0-rc.116"
+    /// </summary>
+    /// <param name="entryAssembly">The entry assembly to extract name and version information from.</param>
+    /// <returns>A version string.</returns>
+    internal static string GetServerVersion(Assembly entryAssembly)
+    {
+        AssemblyInformationalVersionAttribute? versionAttribute = entryAssembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        if (versionAttribute == null)
+        {
+            throw new InvalidOperationException(
+                $"{nameof(AssemblyInformationalVersionAttribute)} is required on client SDK assembly '{entryAssembly.FullName}'.");
+        }
+
+        string version = versionAttribute.InformationalVersion;
+
+        int hashSeparator = version.IndexOf('+');
+        if (hashSeparator != -1)
+        {
+            version = version.Substring(0, hashSeparator);
+        }
+
+        return version;
     }
 
     private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)

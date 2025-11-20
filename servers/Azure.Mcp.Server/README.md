@@ -350,6 +350,110 @@ Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoin
 1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
+## Logging Configuration
+
+The Azure MCP Server supports flexible logging configuration for monitoring and troubleshooting through command-line options and environment variables.
+
+### Command-Line Options
+
+Configure logging behavior when starting the server:
+
+```bash
+azmcp server start [--log-level <level>] [--log-file-path <path>]
+```
+
+**Available Options:**
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--log-level` | Minimum logging level for all logging providers | `Information` (or `Debug` if `--debug` is set) |
+| `--log-file-path` | Path to write log file output | None (no file logging) |
+| `--debug` | Enable verbose debug logging to stderr | `false` |
+
+**Log Levels:**
+- `Trace` - Most verbose, includes all diagnostic information
+- `Debug` - Detailed debugging information
+- `Information` - General informational messages (default)
+- `Warning` - Warning messages for potential issues
+- `Error` - Error messages for failures
+- `Critical` - Critical failures requiring immediate attention
+- `None` - Disable all logging
+
+### Usage Examples
+
+**Example 1: Set log level only (no file output)**
+```bash
+azmcp server start --log-level Debug
+```
+Logs at Debug level and above go to configured providers (console, OpenTelemetry, EventSource), but NOT to a file.
+
+**Example 2: Enable file logging with default level**
+```bash
+azmcp server start --log-file-path c:\logs\azmcp.log
+```
+Logs at Information level and above are written to the file. Directory is created automatically if it doesn't exist.
+
+**Example 3: Custom log level with file output**
+```bash
+azmcp server start --log-level Warning --log-file-path /var/log/azmcp.log
+```
+Only Warning, Error, and Critical logs are written to the file and other configured providers.
+
+**Example 4: Configure in mcp.json**
+```json
+{
+  "mcpServers": {
+    "Azure MCP Server": {
+      "command": "azmcp",
+      "args": [
+        "server",
+        "start",
+        "--log-level", "Debug",
+        "--log-file-path", "/var/log/azmcp.log"
+      ]
+    }
+  }
+}
+```
+
+### Important Behaviors
+
+1. **`--log-level` affects all logging providers** - Sets the minimum log level globally for console, file, OpenTelemetry, and EventSource loggers.
+
+2. **`--log-file-path` enables file logging** - Adds file output in addition to other configured logging providers (doesn't replace them).
+
+3. **These options are independent** - You can use `--log-level` without `--log-file-path` and vice versa.
+
+4. **Directory auto-creation** - Parent directories in the log file path are created automatically if they don't exist.
+
+5. **Thread-safe file operations** - Log file writes use lock-based synchronization for multi-threaded scenarios.
+
+6. **Graceful failure handling** - File write failures are silently suppressed to prevent application crashes.
+
+### Security Considerations
+
+⚠️ **Security Warning**: `Debug` and `Trace` log levels may expose sensitive data including:
+- Azure access tokens and credentials
+- API keys and secrets
+- Connection strings
+- Personal or confidential data in API requests/responses
+
+**Best Practices:**
+- Use `Information` level (default) in production environments
+- Only enable `Debug` or `Trace` in secure, non-production environments
+- Ensure log files have appropriate file system permissions
+- Regularly rotate and purge log files containing sensitive data
+- Review log contents before sharing with others
+
+### File Logging Details
+
+When `--log-file-path` is specified:
+- **Format**: UTF-8 text with timestamps, log level, category name, and message
+- **Timestamp**: UTC time in format `[yyyy-MM-dd HH:mm:ss.fff]`
+- **Append mode**: Logs are appended to existing files (not overwritten)
+- **Entry format**: `[timestamp] [level] [category] message`
+- **Exception details**: Full exception stack traces are included when errors occur
+
 # Usage
 
 ## Getting Started

@@ -5,6 +5,7 @@ using System.CommandLine.Parsing;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
+using Azure.Mcp.Core.Areas.Server.Services;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
@@ -78,6 +79,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         command.Options.Add(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth);
         command.Options.Add(ServiceOptionDefinitions.InsecureDisableElicitation);
         command.Options.Add(ServiceOptionDefinitions.OutgoingAuthStrategy);
+        command.Options.Add(ServiceOptionDefinitions.LogLevel);
+        command.Options.Add(ServiceOptionDefinitions.LogFilePath);
         command.Validators.Add(commandResult =>
         {
             string transport = ResolveTransport(commandResult);
@@ -120,7 +123,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             Debug = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.Debug.Name),
             DangerouslyDisableHttpIncomingAuth = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.DangerouslyDisableHttpIncomingAuth.Name),
             InsecureDisableElicitation = parseResult.GetValueOrDefault<bool>(ServiceOptionDefinitions.InsecureDisableElicitation.Name),
-            OutgoingAuthStrategy = outgoingAuthStrategy
+            OutgoingAuthStrategy = outgoingAuthStrategy,
+            LogLevel = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogLevel.Name),
+            LogFilePath = parseResult.GetValueOrDefault<string?>(ServiceOptionDefinitions.LogFilePath.Name)
         };
         return options;
     }
@@ -362,6 +367,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
                     logging.AddFilter("Microsoft.Extensions.Logging.Console.ConsoleLoggerProvider", LogLevel.Debug);
                     logging.SetMinimumLevel(LogLevel.Debug);
                 }
+
+                // Apply custom logging configuration
+                ConfigureLogging(logging, serverOptions);
             })
             .ConfigureServices(services =>
             {
@@ -388,6 +396,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.ConfigureOpenTelemetryLogger();
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
+
+        // Apply custom logging configuration
+        ConfigureLogging(builder.Logging, serverOptions);
 
         IServiceCollection services = builder.Services;
 
@@ -566,6 +577,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         builder.Logging.AddEventSourceLogger();
         builder.Logging.AddConsole();
 
+        // Apply custom logging configuration
+        ConfigureLogging(builder.Logging, serverOptions);
+
         IServiceCollection services = builder.Services;
 
         // Configure single identity token credential provider for outgoing authentication
@@ -605,6 +619,57 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         app.MapMcp();
 
         return app;
+    }
+
+    /// <summary>
+    /// Configures logging based on the server options.
+    /// </summary>
+    /// <param name="logging">The logging builder to configure.</param>
+    /// <param name="options">The server configuration options.</param>
+    private static void ConfigureLogging(ILoggingBuilder logging, ServiceStartOptions options)
+    {
+        // Set minimum log level
+        // Default to Information to avoid logging sensitive data (Debug/Trace may contain secrets)
+        if (!string.IsNullOrWhiteSpace(options.LogLevel))
+        {
+            if (Enum.TryParse<LogLevel>(options.LogLevel, ignoreCase: true, out var logLevel))
+            {
+                logging.SetMinimumLevel(logLevel);
+
+                // If LogLevel.None is specified, clear all providers to disable logging
+                if (logLevel == LogLevel.None)
+                {
+                    logging.ClearProviders();
+                    return; // Exit early, don't add file logging
+                }
+            }
+        }
+        else if (options.Debug)
+        {
+            // Debug mode overrides default
+            logging.SetMinimumLevel(LogLevel.Debug);
+        }
+        else
+        {
+            // Default to Information level to prevent logging sensitive data
+            // (Debug and Trace levels may contain secrets, tokens, and other sensitive information)
+            logging.SetMinimumLevel(LogLevel.Information);
+        }
+
+        // Add file logging if path is specified
+        if (!string.IsNullOrWhiteSpace(options.LogFilePath))
+        {
+            // Ensure directory exists
+            var directory = Path.GetDirectoryName(options.LogFilePath);
+            if (!string.IsNullOrEmpty(directory))
+            {
+                Directory.CreateDirectory(directory);
+            }
+
+            // Add simple file logger
+            // Note: For production scenarios, consider using a more robust file logging provider
+            logging.AddProvider(new SimpleFileLoggerProvider(options.LogFilePath));
+        }
     }
 
     /// <summary>
