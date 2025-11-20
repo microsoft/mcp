@@ -351,8 +351,7 @@ public sealed class NamespaceToolLoader(
                         // Create the elicitation request using our custom model
                         var elicitationRequest = new ElicitationRequestParams
                         {
-                            Message = $"⚠️ SECURITY WARNING: The tool '{namespaceName} {command}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
-                            RequestedSchema = ElicitationSchema.CreateSecretSchema("confirmation", "Confirm Action", "Type 'yes' to confirm you want to proceed with this sensitive operation", true)
+                            Message = $"⚠️ SECURITY WARNING: The tool '{namespaceName} {command}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?"
                         };
 
                         // Use our extension method to handle the elicitation
