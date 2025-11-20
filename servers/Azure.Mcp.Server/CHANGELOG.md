@@ -2,15 +2,15 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.6 (Unreleased)
+## 2.0.0-beta.6 (2025-11-19)
 
 ### Features Added
 
 - Added [Hidden] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
 
-### Breaking Changes
-
 ### Bugs Fixed
+- Improved performance of AI Code generation in Visual Studio 2026 [[#1179](https://github.com/microsoft/mcp/pull/1179)]
+- Updated `AzureAIBestPractices` tool to recommend `AIProjectClient` instead of `PersistentAgentsClient` [[#1209](https://github.com/microsoft/mcp/pull/1209)]
 
 ### Other Changes
 
