@@ -12,6 +12,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations.
+
 ### Other Changes
 
 - Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
