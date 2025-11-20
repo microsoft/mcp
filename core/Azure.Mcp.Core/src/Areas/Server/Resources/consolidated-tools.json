@@ -1534,7 +1534,8 @@
         "managedlustre_fs_autoexport-job_create",
         "managedlustre_fs_autoexport-job_cancel",
         "managedlustre_fs_autoexport-job_get",
-        "managedlustre_fs_autoexport-job_list"
+        "managedlustre_fs_autoexport-job_list",
+        "managedlustre_fs_autoexport-job_delete"
       ]
     },
     {

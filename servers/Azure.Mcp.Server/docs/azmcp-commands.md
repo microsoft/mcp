@@ -1591,6 +1591,13 @@ azmcp managedlustre fs autoexport-job get --subscription <subscription> \
 azmcp managedlustre fs autoexport-job list --subscription <subscription> \
                                            --resource-group <resource-group> \
                                            --filesystem-name <filesystem-name>
+
+# Delete an autoexport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoexport-job delete --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             --job-name <job-name>
 ```
 
 ### Azure Native ISV Operations
