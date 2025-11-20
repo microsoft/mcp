@@ -757,7 +757,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </list>
     /// The tracer provider includes ASP.NET Core and HttpClient instrumentation with filtering
     /// to avoid duplicate spans and telemetry loops.
-    /// <remarks>
     /// This telemetry configuration is intended for self-hosted scenarios where
     /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
     /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
