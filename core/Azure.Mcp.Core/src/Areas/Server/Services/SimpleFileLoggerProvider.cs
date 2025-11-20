@@ -10,44 +10,28 @@ namespace Azure.Mcp.Core.Areas.Server.Services;
 /// </summary>
 internal sealed class SimpleFileLoggerProvider : ILoggerProvider
 {
-    private readonly StreamWriter _writer;
+    private readonly string _filePath;
     private readonly object _lock = new();
 
     public SimpleFileLoggerProvider(string filePath)
     {
-        if (string.IsNullOrEmpty(filePath))
-        {
-            throw new ArgumentNullException(nameof(filePath));
-        }
-
-        var directory = Path.GetDirectoryName(filePath);
-        if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-        {
-            Directory.CreateDirectory(directory);
-        }
-
-        // Open with FileShare.Read to allow reading but prevent deletion while open
-        var fileStream = new FileStream(filePath, FileMode.Append, FileAccess.Write, FileShare.Read);
-        _writer = new StreamWriter(fileStream) { AutoFlush = true };
+        _filePath = filePath ?? throw new ArgumentNullException(nameof(filePath));
     }
 
     public ILogger CreateLogger(string categoryName)
     {
-        return new SimpleFileLogger(categoryName, _writer, _lock);
+        return new SimpleFileLogger(categoryName, _filePath, _lock);
     }
 
     public void Dispose()
     {
-        lock (_lock)
-        {
-            _writer?.Dispose();
-        }
+        // Nothing to dispose
     }
 
-    private sealed class SimpleFileLogger(string categoryName, StreamWriter writer, object lockObject) : ILogger
+    private sealed class SimpleFileLogger(string categoryName, string filePath, object lockObject) : ILogger
     {
         private readonly string _categoryName = categoryName;
-        private readonly StreamWriter _writer = writer;
+        private readonly string _filePath = filePath;
         private readonly object _lock = lockObject;
 
         public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
@@ -73,7 +57,12 @@ internal sealed class SimpleFileLoggerProvider : ILoggerProvider
             {
                 try
                 {
-                    _writer.WriteLine(logEntry);
+                    var directory = Path.GetDirectoryName(_filePath);
+                    if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
+                    {
+                        Directory.CreateDirectory(directory);
+                    }
+                    File.AppendAllText(_filePath, logEntry + Environment.NewLine);
                 }
                 catch
                 {
