@@ -334,9 +334,10 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
     }
 
     [Fact]
-    public async Task Should_create_autoexport_job()
+    public async Task Should_create_and_get_autoexport_job()
     {
-        var result = await CallToolAsync(
+        // Create autoexport job
+        var createResult = await CallToolAsync(
             "managedlustre_fs_autoexport-job_create",
             new()
             {
@@ -346,8 +347,189 @@ public class ManagedLustreCommandTests(ITestOutputHelper output) : CommandTestsB
                 { "tenant", Settings.TenantId }
             });
 
-        var jobName = result.AssertProperty("jobName");
+        var jobName = createResult.AssertProperty("jobName");
         Assert.Equal(JsonValueKind.String, jobName.ValueKind);
         Assert.False(string.IsNullOrWhiteSpace(jobName.GetString()));
+
+        var jobNameString = jobName.GetString()!;
+
+        // Get the created job
+        var getResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_get",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", jobNameString }
+            });
+
+        var job = getResult.AssertProperty("job");
+        Assert.Equal(JsonValueKind.Object, job.ValueKind);
+
+        var retrievedJobName = job.AssertProperty("name");
+        Assert.Equal(jobNameString, retrievedJobName.GetString());
+
+        var status = job.AssertProperty("status");
+        Assert.Equal(JsonValueKind.String, status.ValueKind);
+    }
+
+    [Fact]
+    public async Task Should_list_autoexport_jobs()
+    {
+        // Create a job first to ensure we have at least one
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var createdJobName = createResult.AssertProperty("jobName").GetString()!;
+
+        // List all jobs
+        var listResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_list",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName }
+            });
+
+        var jobs = listResult.AssertProperty("jobs");
+        Assert.Equal(JsonValueKind.Array, jobs.ValueKind);
+
+        // Verify our created job is in the list
+        var found = false;
+        foreach (var job in jobs.EnumerateArray())
+        {
+            if (job.TryGetProperty("name", out var nameProp) &&
+                nameProp.GetString() == createdJobName)
+            {
+                found = true;
+                break;
+            }
+        }
+
+        Assert.True(found, $"Expected to find job '{createdJobName}' in the list.");
+    }
+
+    [Fact]
+    public async Task Should_cancel_autoexport_job()
+    {
+        // Create a job first
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = createResult.AssertProperty("jobName").GetString()!;
+
+        // Cancel the job
+        var cancelResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", jobName }
+            });
+
+        var canceledJobName = cancelResult.AssertProperty("jobName");
+        Assert.Equal(jobName, canceledJobName.GetString());
+
+        var status = cancelResult.AssertProperty("status");
+        Assert.Equal("Canceled", status.GetString());
+    }
+
+    [Fact]
+    public async Task Should_delete_autoexport_job()
+    {
+        // Create a job first
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = createResult.AssertProperty("jobName").GetString()!;
+
+        // Wait a moment for job to be available
+        await Task.Delay(1000);
+
+        // Delete the job
+        var deleteResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", jobName }
+            });
+
+        var deletedJobName = deleteResult.AssertProperty("jobName");
+        Assert.Equal(jobName, deletedJobName.GetString());
+
+        var status = deleteResult.AssertProperty("status");
+        Assert.Equal("Deleted", status.GetString());
+    }
+
+    [Fact]
+    public async Task Should_create_cancel_and_then_delete_autoexport_job()
+    {
+        // Create a job
+        var createResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_create",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "tenant", Settings.TenantId }
+            });
+
+        var jobName = createResult.AssertProperty("jobName").GetString()!;
+
+        // Cancel it first
+        var cancelResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_cancel",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", jobName }
+            });
+
+        Assert.Equal("Canceled", cancelResult.AssertProperty("status").GetString());
+
+        // Then delete the canceled job
+        var deleteResult = await CallToolAsync(
+            "managedlustre_fs_autoexport-job_delete",
+            new()
+            {
+                { "subscription", Settings.SubscriptionId },
+                { "resource-group", Settings.ResourceGroupName },
+                { "filesystem-name", Settings.ResourceBaseName },
+                { "job-name", jobName }
+            });
+
+        Assert.Equal(jobName, deleteResult.AssertProperty("jobName").GetString());
+        Assert.Equal("Deleted", deleteResult.AssertProperty("status").GetString());
     }
 }
