@@ -149,7 +149,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         try
         {
-            using var tracerProvider = ConfigureSelfHostingTelemetry(options);
+            using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
 
             using var host = CreateHost(options);
 
@@ -741,7 +741,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     }
 
     /// <summary>
-    /// Configures OpenTelemetry tracing for self-hosted HTTP mode with Azure Monitor exporter.
+    /// Configures incoming and outgoing HTTP spans for self-hosted HTTP mode with Azure Monitor exporter.
     /// </summary>
     /// <param name="options">The server configuration options.</param>
     /// <returns>
@@ -763,7 +763,7 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
     /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
     /// </remarks>
-    private static TracerProvider? ConfigureSelfHostingTelemetry(ServiceStartOptions options)
+    private static TracerProvider? AddIncomingAndOutgoingHttpSpans(ServiceStartOptions options)
     {
         if (options.Transport != TransportTypes.Http)
         {
@@ -811,6 +811,11 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         {
             return false;
         }
+
+        // **NOTE**: This check is copied from the UseAzureMonitor extension method in the Azure SDK repository:
+        // https://github.com/Azure/azure-sdk-for-net/blob/242ba3eca16d914522669ae62baac7437bf71db8/sdk/monitor/Azure.Monitor.OpenTelemetry.AspNetCore/src/OpenTelemetryBuilderExtensions.cs#L98-L108
+        // The decision to filter these out is not finalized for the product. We may revisit this in the future depending on
+        // how users want to see telemetry from Azure SDK calls made by the MCP server.
 
         // Azure SDKs create their own client span before calling the service using HttpClient.
         // To prevent duplicate spans (Azure SDK + HttpClient), filter HttpClient spans when
