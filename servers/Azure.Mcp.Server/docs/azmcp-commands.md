@@ -1578,6 +1578,13 @@ azmcp managedlustre fs autoexport-job cancel --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              --job-name <job-name>
+
+# Get details of an autoexport job for an Azure Managed Lustre filesystem
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoexport-job get --subscription <subscription> \
+                                          --resource-group <resource-group> \
+                                          --filesystem-name <filesystem-name> \
+                                          --job-name <job-name>
 ```
 
 ### Azure Native ISV Operations

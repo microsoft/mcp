@@ -554,6 +554,11 @@
     "Stop the autoexport job <job_name> on filesystem <filesystem_name>",
     "Terminate autoexport job <job_name>"
   ],
+  "managedlustre_fs_autoexport-job_get": [
+    "Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Show me the status of autoexport job <job_name> on filesystem <filesystem_name>",
+    "What is the state of autoexport job <job_name>"
+  ],
   "marketplace_product_get": [
     "Get details about marketplace product <product_name>"
   ],

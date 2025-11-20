@@ -1532,7 +1532,8 @@
       },
       "mappedToolList": [
         "managedlustre_fs_autoexport-job_create",
-        "managedlustre_fs_autoexport-job_cancel"
+        "managedlustre_fs_autoexport-job_cancel",
+        "managedlustre_fs_autoexport-job_get"
       ]
     },
     {
