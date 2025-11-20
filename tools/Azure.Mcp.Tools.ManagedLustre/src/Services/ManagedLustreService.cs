@@ -636,5 +636,53 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             throw new Exception($"Failed to get auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
+
+    public async Task<List<Models.AutoexportJob>> ListAutoexportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get all auto export jobs
+            var jobs = new List<Models.AutoexportJob>();
+            await foreach (var job in fs.Value.GetAutoExportJobs().GetAllAsync(cancellationToken: cancellationToken))
+            {
+                jobs.Add(new Models.AutoexportJob
+                {
+                    Name = job.Data.Name,
+                    Id = job.Data.Id.ToString(),
+                    ProvisioningState = job.Data.ProvisioningState?.ToString() ?? "Unknown"
+                });
+            }
+
+            return jobs;
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to list auto export jobs for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
 }
 

@@ -403,6 +403,7 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | managedlustre_fs_autoexport-job_create | Create an autoexport job for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_autoexport-job_cancel | Cancel the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_autoexport-job_get | Get the details of autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
+| managedlustre_fs_autoexport-job_list | List all autoexport jobs for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name> |
 | managedlustre_fs_subnetsize_ask | Tell me how many IP addresses I need for an Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_subnetsize_validate | Validate if the network <subnet_id> can host Azure Managed Lustre filesystem of size <filesystem_size> using the SKU <sku> |
 | managedlustre_fs_update | Update the maintenance window of the Azure Managed Lustre filesystem <filesystem_name> to <maintenance_window_day> at <maintenance_window_time> |

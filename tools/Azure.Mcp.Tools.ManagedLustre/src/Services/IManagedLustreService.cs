@@ -108,5 +108,13 @@ public interface IManagedLustreService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<List<Models.AutoexportJob>> ListAutoexportJobsAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
 

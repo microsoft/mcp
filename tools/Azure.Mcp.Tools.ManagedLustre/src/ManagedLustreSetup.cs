@@ -29,6 +29,7 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<AutoexportJobCreateCommand>();
         services.AddSingleton<AutoexportJobCancelCommand>();
         services.AddSingleton<AutoexportJobGetCommand>();
+        services.AddSingleton<AutoexportJobListCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -74,6 +75,9 @@ public class ManagedLustreSetup : IAreaSetup
 
         var autoexportJobGet = serviceProvider.GetRequiredService<AutoexportJobGetCommand>();
         autoexportJob.AddCommand(autoexportJobGet.Name, autoexportJobGet);
+
+        var autoexportJobList = serviceProvider.GetRequiredService<AutoexportJobListCommand>();
+        autoexportJob.AddCommand(autoexportJobList.Name, autoexportJobList);
 
         return managedLustre;
     }
