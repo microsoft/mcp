@@ -200,8 +200,7 @@ public abstract class BaseToolLoader(ILogger logger) : IToolLoader
             // Using an empty schema shows just the message with Submit/Cancel buttons
             var elicitationRequest = new ElicitationRequestParams
             {
-                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?",
-                RequestedSchema = new JsonObject() // Empty schema = message with Submit/Cancel only
+                Message = $"⚠️ SECURITY WARNING: The tool '{toolName}' may expose secrets or sensitive information.\n\nThis operation could reveal confidential data such as passwords, API keys, certificates, or other sensitive values.\n\nDo you want to continue with this potentially sensitive operation?"
             };
 
             // Use our extension method to handle the elicitation

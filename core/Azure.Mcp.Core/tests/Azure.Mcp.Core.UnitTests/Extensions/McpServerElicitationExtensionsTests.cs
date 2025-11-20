@@ -172,19 +172,9 @@ public class McpServerElicitationExtensionsTests
         var server = CreateMockServer();
         server.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var requestedSchema = new JsonObject
-        {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
-            {
-                ["confirm"] = new JsonObject { ["type"] = "boolean" }
-            }
-        };
-
         var request = new ElicitationRequestParams
         {
-            Message = "Test message",
-            RequestedSchema = requestedSchema
+            Message = "Test message"
         };
 
         // Act & Assert
@@ -205,19 +195,9 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var requestedSchema = new JsonObject
-        {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
-            {
-                ["confirm"] = new JsonObject { ["type"] = "boolean" }
-            }
-        };
-
         var request = new ElicitationRequestParams
         {
-            Message = message!,
-            RequestedSchema = requestedSchema
+            Message = message!
         };
 
         // Act & Assert

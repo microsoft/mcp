@@ -19,7 +19,8 @@ public sealed class ElicitationRequestParams
 
     /// <summary>
     /// Gets or sets the JSON schema defining the structure of the expected response.
+    /// This property is optional and currently not used by the elicitation implementation.
     /// </summary>
     [JsonPropertyName("requestedSchema")]
-    public required JsonObject RequestedSchema { get; set; }
+    public JsonObject? RequestedSchema { get; set; }
 }
