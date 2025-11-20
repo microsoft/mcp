@@ -2166,11 +2166,13 @@ azmcp foundry resource get --subscription <subscription> \
 
 # Create a Microsoft Foundry agent thread
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
+azmcp foundry threads create --endpoint <endpoint>
+                             --user-message <user-message>
 
 # Get messages of a Microsoft Foundry agent thread
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
+azmcp foundry threads get-messages --endpoint <endpoint>
+                                   --thread-id <thread-id>
 
 # List Microsoft Foundry agent threads in a Foundry project
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
