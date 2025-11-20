@@ -21,7 +21,7 @@ public class KeyVaultCommandTests(ITestOutputHelper output, TestProxyFixture fix
     private readonly KeyVaultTestCertificateAssets _importCertificateAssets = KeyVaultTestCertificates.Load();
 
     public override List<BodyRegexSanitizer> BodyRegexSanitizers => new List<BodyRegexSanitizer>() {
-        // should clear out `kid` hostnames of actual vault names
+        // Sanitizes all hostnames in URLs to remove actual vault names (not limited to `kid` fields)
         new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
           Regex = "(?<=http://|https://)(?<host>[^/?\\.]+)",
           GroupForReplace = "host",
