@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.CommandLine.Parsing;
+using System.Diagnostics;
 using System.Net;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Azure.Mcp.Core.Areas.Server.Options;
@@ -11,6 +12,7 @@ using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.Telemetry;
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -20,6 +22,7 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.Identity.Web;
+using OpenTelemetry;
 using OpenTelemetry.Logs;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
@@ -146,6 +149,8 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
 
         try
         {
+            using var tracerProvider = ConfigureSelfHostingTelemetry(options);
+
             using var host = CreateHost(options);
 
             await InitializeServicesAsync(host.Services);
@@ -733,5 +738,93 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
         }
 
         return app;
+    }
+
+    /// <summary>
+    /// Configures OpenTelemetry tracing for self-hosted HTTP mode with Azure Monitor exporter.
+    /// </summary>
+    /// <param name="options">The server configuration options.</param>
+    /// <returns>
+    /// A <see cref="TracerProvider"/> instance if telemetry is enabled and properly configured for HTTP transport;
+    /// otherwise, <c>null</c>.
+    /// </returns>
+    /// <remarks>
+    /// Telemetry is only configured when:
+    /// <list type="bullet">
+    /// <item><description>The transport is HTTP (not STDIO)</description></item>
+    /// <item><description>AZURE_MCP_COLLECT_TELEMETRY is not explicitly set to false</description></item>
+    /// <item><description>APPLICATIONINSIGHTS_CONNECTION_STRING environment variable is set</description></item>
+    /// </list>
+    /// The tracer provider includes ASP.NET Core and HttpClient instrumentation with filtering
+    /// to avoid duplicate spans and telemetry loops.
+    /// <remarks>
+    /// This telemetry configuration is intended for self-hosted scenarios where
+    /// the MCP server is running in HTTP mode. This creates an independent telemetry pipeline using TracerProvider to export
+    /// traces to user-configured Application Insights instance only when the necessary environment variables are set. This also honors 
+    /// the AZURE_MCP_COLLECT_TELEMETRY environment variable to allow users to disable telemetry collection if desired. Note that this is 
+    /// in addition to the telemetry configured in <see cref="OpenTelemetryExtensions"/>.
+    /// </remarks>
+    private static TracerProvider? ConfigureSelfHostingTelemetry(ServiceStartOptions options)
+    {
+#if RELEASE
+        if (options.Transport != TransportTypes.Http)
+        {
+            return null;
+        }
+
+        string? collectTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY");
+        bool isTelemetryEnabled = string.IsNullOrWhiteSpace(collectTelemetry) ||
+            (bool.TryParse(collectTelemetry, out bool shouldCollectTelemetry) && shouldCollectTelemetry);
+
+        string? connectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
+        if (!isTelemetryEnabled || string.IsNullOrWhiteSpace(connectionString))
+        {
+            return null;
+        }
+
+        return Sdk.CreateTracerProviderBuilder()
+            // captures incoming HTTP requests
+            .AddAspNetCoreInstrumentation()
+            // captures outgoing HTTP requests with filtering
+            .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
+            .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
+            .Build();
+#else
+        return null;
+#endif
+    }
+
+    /// <summary>
+    /// Determines whether an HTTP request should be instrumented for telemetry collection.
+    /// </summary>
+    /// <param name="request">The HTTP request message to evaluate.</param>
+    /// <returns>
+    /// <c>true</c> if the request should be instrumented; otherwise, <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// This method filters out specific requests to prevent telemetry issues:
+    /// <list type="bullet">
+    /// <item><description>Application Insights ingestion endpoints (to avoid telemetry loops)</description></item>
+    /// <item><description>Requests where the parent span is from Azure SDK (to avoid duplicate spans)</description></item>
+    /// </list>
+    /// </remarks>
+    private static bool ShouldInstrumentHttpRequest(HttpRequestMessage request)
+    {
+        // Exclude Application Insights ingestion requests to skip requests that are made to AppInsights when sending telemetry.
+        // See related issue - https://github.com/Azure/azure-sdk-for-net/issues/45366#issuecomment-2278511391
+        if (request.RequestUri?.AbsoluteUri.Contains("applicationinsights.azure.com/v2.1/track", StringComparison.Ordinal) == true)
+        {
+            return false;
+        }
+
+        // Azure SDKs create their own client span before calling the service using HttpClient.
+        // To prevent duplicate spans (Azure SDK + HttpClient), filter HttpClient spans when
+        // the parent span is from Azure SDK, as it contains all relevant information.
+        Activity? parentActivity = Activity.Current?.Parent;
+        if (parentActivity?.Source.Name == "Azure.Core.Http")
+        {
+            return false;
+        }
+        return true;
     }
 }
