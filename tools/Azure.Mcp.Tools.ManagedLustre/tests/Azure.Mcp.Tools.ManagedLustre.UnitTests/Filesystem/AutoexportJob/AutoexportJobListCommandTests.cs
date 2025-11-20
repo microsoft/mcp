@@ -17,23 +17,22 @@ using NSubstitute.ExceptionExtensions;
 
 namespace Azure.Mcp.Tools.ManagedLustre.UnitTests.FileSystem.AutoexportJob;
 
-public class AutoexportJobGetCommandTests
+public class AutoexportJobListCommandTests
 {
     private readonly IServiceProvider _serviceProvider;
     private readonly IManagedLustreService _managedLustreService;
-    private readonly ILogger<AutoexportJobGetCommand> _logger;
-    private readonly AutoexportJobGetCommand _command;
+    private readonly ILogger<AutoexportJobListCommand> _logger;
+    private readonly AutoexportJobListCommand _command;
     private readonly CommandContext _context;
     private readonly Command _commandDefinition;
     private readonly string _subscription = "sub123";
     private readonly string _resourceGroup = "rg1";
     private readonly string _fileSystemName = "fs1";
-    private readonly string _jobName = "job1";
 
-    public AutoexportJobGetCommandTests()
+    public AutoexportJobListCommandTests()
     {
         _managedLustreService = Substitute.For<IManagedLustreService>();
-        _logger = Substitute.For<ILogger<AutoexportJobGetCommand>>();
+        _logger = Substitute.For<ILogger<AutoexportJobListCommand>>();
 
         var services = new ServiceCollection().AddSingleton(_managedLustreService);
         _serviceProvider = services.BuildServiceProvider();
@@ -47,7 +46,7 @@ public class AutoexportJobGetCommandTests
     public void Constructor_InitializesCommandCorrectly()
     {
         var cmd = _command.GetCommand();
-        Assert.Equal("get", cmd.Name);
+        Assert.Equal("list", cmd.Name);
         Assert.False(string.IsNullOrWhiteSpace(cmd.Description));
     }
 
@@ -55,28 +54,25 @@ public class AutoexportJobGetCommandTests
     public async Task ExecuteAsync_Succeeds_WithRequiredParameters()
     {
         // Arrange
-        var expectedJob = new Models.AutoexportJob
+        var expectedJobs = new List<Models.AutoexportJob>
         {
-            Name = _jobName,
-            Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/{_jobName}",
-            ProvisioningState = "Succeeded"
+            new() { Name = "job1", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job1", ProvisioningState = "Succeeded" },
+            new() { Name = "job2", Id = $"/subscriptions/{_subscription}/resourceGroups/{_resourceGroup}/providers/Microsoft.StorageCache/amlFilesystems/{_fileSystemName}/autoExportJobs/job2", ProvisioningState = "Running" }
         };
 
-        _managedLustreService.GetAutoexportJobAsync(
+        _managedLustreService.ListAutoexportJobsAsync(
             Arg.Is(_subscription),
             Arg.Is(_resourceGroup),
             Arg.Is(_fileSystemName),
-            Arg.Is(_jobName),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .Returns(expectedJob);
+            .Returns(expectedJobs);
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--job-name", _jobName
+            "--filesystem-name", _fileSystemName
         ]);
 
         // Act
@@ -86,21 +82,48 @@ public class AutoexportJobGetCommandTests
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _managedLustreService.Received(1).GetAutoexportJobAsync(
+        await _managedLustreService.Received(1).ListAutoexportJobsAsync(
             _subscription,
             _resourceGroup,
             _fileSystemName,
-            _jobName,
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>());
     }
 
+    [Fact]
+    public async Task ExecuteAsync_ReturnsEmptyList_WhenNoJobsExist()
+    {
+        // Arrange
+        var expectedJobs = new List<Models.AutoexportJob>();
+
+        _managedLustreService.ListAutoexportJobsAsync(
+            Arg.Is(_subscription),
+            Arg.Is(_resourceGroup),
+            Arg.Is(_fileSystemName),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .Returns(expectedJobs);
+
+        var args = _commandDefinition.Parse([
+            "--subscription", _subscription,
+            "--resource-group", _resourceGroup,
+            "--filesystem-name", _fileSystemName
+        ]);
+
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, CancellationToken.None);
+
+        // Assert
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+    }
+
     [Theory]
-    [InlineData("--resource-group rg1 --filesystem-name fs1 --job-name job1", false)] // missing subscription
-    [InlineData("--subscription sub123 --filesystem-name fs1 --job-name job1", false)] // missing resource-group
-    [InlineData("--subscription sub123 --resource-group rg1 --job-name job1", false)] // missing filesystem-name
-    [InlineData("--subscription sub123 --resource-group rg1 --filesystem-name fs1", false)] // missing job-name
+    [InlineData("--resource-group rg1 --filesystem-name fs1", false)] // missing subscription
+    [InlineData("--subscription sub123 --filesystem-name fs1", false)] // missing resource-group
+    [InlineData("--subscription sub123 --resource-group rg1", false)] // missing filesystem-name
     public async Task ExecuteAsync_ValidationErrors_Return400(string argLine, bool shouldSucceed)
     {
         // Arrange
@@ -122,21 +145,19 @@ public class AutoexportJobGetCommandTests
     public async Task ExecuteAsync_ServiceThrows_RequestFailed_UsesStatusCode()
     {
         // Arrange
-        _managedLustreService.GetAutoexportJobAsync(
-            Arg.Any<string>(),
+        _managedLustreService.ListAutoexportJobsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<RetryPolicyOptions?>(),
             Arg.Any<CancellationToken>())
-            .ThrowsAsync(new Azure.RequestFailedException(404, "Autoexport job not found"));
+            .ThrowsAsync(new Azure.RequestFailedException(404, "Filesystem not found"));
 
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--job-name", "nonexistent-job"
+            "--filesystem-name", "nonexistent-fs"
         ]);
 
         // Act
@@ -151,8 +172,7 @@ public class AutoexportJobGetCommandTests
     public async Task ExecuteAsync_ServiceThrows_GenericException_Returns500()
     {
         // Arrange
-        _managedLustreService.GetAutoexportJobAsync(
-            Arg.Any<string>(),
+        _managedLustreService.ListAutoexportJobsAsync(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
@@ -164,8 +184,7 @@ public class AutoexportJobGetCommandTests
         var args = _commandDefinition.Parse([
             "--subscription", _subscription,
             "--resource-group", _resourceGroup,
-            "--filesystem-name", _fileSystemName,
-            "--job-name", _jobName
+            "--filesystem-name", _fileSystemName
         ]);
 
         // Act
