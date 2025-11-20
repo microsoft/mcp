@@ -210,7 +210,7 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "The name of the autoexport job"
+        Description = "The name of the auto export job to operate on"
     };
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();

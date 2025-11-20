@@ -65,7 +65,7 @@ public class ManagedLustreSetup : IAreaSetup
         var skuGet = serviceProvider.GetRequiredService<SkuGetCommand>();
         sku.AddCommand(skuGet.Name, skuGet);
 
-        var autoexportJob = new CommandGroup("autoexport-job", "Autoexport archive job operations for Azure Managed Lustre - Commands for creating archive jobs to export data from the filesystem to blob storage.");
+        var autoexportJob = new CommandGroup("autoexport-job", "Auto export job operations for Azure Managed Lustre - Commands for managing jobs that export data from the filesystem to blob storage.");
         fileSystem.AddSubGroup(autoexportJob);
 
         var autoexportJobCreate = serviceProvider.GetRequiredService<AutoexportJobCreateCommand>();

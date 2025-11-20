@@ -87,7 +87,7 @@ public sealed class AutoexportJobDeleteCommand(ILogger<AutoexportJobDeleteComman
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error deleting autoexport archive job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
+            _logger.LogError(ex, "Error deleting auto export job {JobName} for AMLFS filesystem {FileSystem}. Options: {@Options}",
                 options.JobName, options.FileSystemName, options);
             HandleException(context, ex);
         }
@@ -97,3 +97,4 @@ public sealed class AutoexportJobDeleteCommand(ILogger<AutoexportJobDeleteComman
 
     internal record AutoexportJobDeleteResult(string JobName, string Status);
 }
+
