@@ -300,7 +300,6 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         {
             throw new Exception($"Error importing certificate '{certificateName}' into vault {vaultName}: {ex.Message}", ex);
         }
-
     }
 
     private static Uri BuildVaultUri(string vaultName) => new($"https://{vaultName}.vault.azure.net");
@@ -332,7 +331,6 @@ public sealed class KeyVaultService(ITenantService tenantService, IHttpClientSer
         options.Transport = new Azure.Core.Pipeline.HttpClientTransport(httpClient);
         return new CertificateClient(BuildVaultUri(vaultName), credential, options);
     }
-
 
     public async Task<GetSettingsResult> GetVaultSettings(
         string vaultName,
