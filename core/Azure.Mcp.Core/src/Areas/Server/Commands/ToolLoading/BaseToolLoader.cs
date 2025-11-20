@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
-using System.Text.Json.Nodes;
 using Azure.Mcp.Core.Models.Elicitation;
 using Microsoft.Extensions.Logging;
 using ModelContextProtocol;
