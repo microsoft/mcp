@@ -7,7 +7,7 @@ using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Configuration;
 using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Telemetry;
-using Azure.Monitor.OpenTelemetry.Exporter; // Don't believe this is unused, it is needed for UseAzureMonitorExporter
+using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.Extensions.Azure;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -107,15 +107,16 @@ public static class OpenTelemetryExtensions
                     .AddTelemetrySdk();
             });
 
-        var appInsightsConnectionStrings = new List<(string Name, string ConnectionString)>();
-
         var userProvidedAppInsightsConnectionString = Environment.GetEnvironmentVariable("APPLICATIONINSIGHTS_CONNECTION_STRING");
 
         if (!string.IsNullOrWhiteSpace(userProvidedAppInsightsConnectionString))
         {
-            appInsightsConnectionStrings.Add(("UserProvided", userProvidedAppInsightsConnectionString));
+            // Configure telemetry to be sent to user-provided Application Insights instance regardless of build configuration.
+            ConfigureAzureMonitorExporter(otelBuilder, userProvidedAppInsightsConnectionString, "UserProvided");
         }
 
+        // Configure Microsoft-owned telemetry only in RELEASE builds to avoid polluting telemetry during development.
+#if RELEASE
         // This environment variable can be used to disable Microsoft telemetry collection.
         // By default, Microsoft telemetry is enabled.
         var microsoftTelemetry = Environment.GetEnvironmentVariable("AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT");
@@ -124,11 +125,8 @@ public static class OpenTelemetryExtensions
 
         if (shouldCollectMicrosoftTelemetry)
         {
-            appInsightsConnectionStrings.Add(("Microsoft", MicrosoftOwnedAppInsightsConnectionString));
+            ConfigureAzureMonitorExporter(otelBuilder, MicrosoftOwnedAppInsightsConnectionString, "Microsoft");
         }
-
-#if RELEASE
-        ConfigureAzureMonitorExporters(otelBuilder, appInsightsConnectionStrings);
 #endif
 
         var enableOtlp = Environment.GetEnvironmentVariable("AZURE_MCP_ENABLE_OTLP_EXPORTER");
@@ -140,36 +138,33 @@ public static class OpenTelemetryExtensions
         }
     }
 
-    private static void ConfigureAzureMonitorExporters(OpenTelemetry.OpenTelemetryBuilder otelBuilder, List<(string Name, string ConnectionString)> appInsightsConnectionStrings)
+    private static void ConfigureAzureMonitorExporter(OpenTelemetry.OpenTelemetryBuilder otelBuilder, string appInsightsConnectionString, string name)
     {
-        foreach (var exporter in appInsightsConnectionStrings)
+        otelBuilder.WithLogging(logging =>
         {
-            otelBuilder.WithLogging(logging =>
+            logging.AddAzureMonitorLogExporter(options =>
             {
-                logging.AddAzureMonitorLogExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
 
-            otelBuilder.WithMetrics(metrics =>
+        otelBuilder.WithMetrics(metrics =>
+        {
+            metrics.AddAzureMonitorMetricExporter(options =>
             {
-                metrics.AddAzureMonitorMetricExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
 
-            otelBuilder.WithTracing(tracing =>
+        otelBuilder.WithTracing(tracing =>
+        {
+            tracing.AddAzureMonitorTraceExporter(options =>
             {
-                tracing.AddAzureMonitorTraceExporter(options =>
-                {
-                    options.ConnectionString = exporter.ConnectionString;
-                },
-                name: exporter.Name);
-            });
-        }
+                options.ConnectionString = appInsightsConnectionString;
+            },
+            name: name);
+        });
     }
 }

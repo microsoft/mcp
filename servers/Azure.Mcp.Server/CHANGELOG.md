@@ -11,7 +11,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Enabled HTTP trace telemetry for self-hosted Azure MCP server. Added OpenTelemetry tracing support with Azure Monitor exporter for HTTP transport mode, allowing self-hosted instances to export traces to Application Insights when `APPLICATIONINSIGHTS_CONNECTION_STRING` is configured. [[#1227](https://github.com/microsoft/mcp/pull/1227)]
 
 ### Bugs Fixed
-- 
+-
 
 - Improved performance of AI Code generation in Visual Studio 2026. [[#1179](https://github.com/microsoft/mcp/pull/1179)]
 - Updated the `AzureAIBestPractices` tool to recommend `AIProjectClient` instead of `PersistentAgentsClient`. [[#1209](https://github.com/microsoft/mcp/pull/1209)]
