@@ -17,7 +17,6 @@ namespace Azure.Mcp.Tools.AppConfig.Commands;
 [JsonSerializable(typeof(AppConfigurationStoreData))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class AppConfigJsonContext : JsonSerializerContext
 {

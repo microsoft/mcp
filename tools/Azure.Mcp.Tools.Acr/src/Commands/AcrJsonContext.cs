@@ -13,7 +13,6 @@ namespace Azure.Mcp.Tools.Acr.Commands;
 [JsonSerializable(typeof(ContainerRegistryData))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    WriteIndented = true,
     DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal sealed partial class AcrJsonContext : JsonSerializerContext
 {

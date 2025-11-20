@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server;
 using Azure.Mcp.Core.Areas.Server.Models;
 using Xunit;
 
@@ -9,23 +10,17 @@ namespace Azure.Mcp.Core.UnitTests.Areas.Server.Models;
 
 public class RegistryRootTests
 {
-    private static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        WriteIndented = true
-    };
-
     [Fact]
     public void RegistryRoot_SerializesToJson_WithEmptyServers()
     {
         // Arrange
         var registryRoot = new RegistryRoot
         {
-            Servers = new Dictionary<string, RegistryServerInfo>()
+            Servers = []
         };
 
         // Act
-        var json = JsonSerializer.Serialize(registryRoot, JsonOptions);
+        var json = JsonSerializer.Serialize(registryRoot, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.Contains("\"servers\"", json);
@@ -59,22 +54,22 @@ public class RegistryRootTests
         };
 
         // Act
-        var json = JsonSerializer.Serialize(registryRoot, JsonOptions);
+        var json = JsonSerializer.Serialize(registryRoot, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.Contains("\"servers\"", json);
         Assert.Contains("\"test-server\"", json);
-        Assert.Contains("\"url\": \"https://example.com/mcp\"", json);
-        Assert.Contains("\"description\": \"Test MCP Server\"", json);
-        Assert.Contains("\"type\": \"stdio\"", json);
-        Assert.Contains("\"command\": \"node\"", json);
+        Assert.Contains("\"url\":\"https://example.com/mcp\"", json);
+        Assert.Contains("\"description\":\"Test MCP Server\"", json);
+        Assert.Contains("\"type\":\"stdio\"", json);
+        Assert.Contains("\"command\":\"node\"", json);
         Assert.Contains("\"args\"", json);
         Assert.Contains("\"server.js\"", json);
         Assert.Contains("\"--port\"", json);
         Assert.Contains("\"3000\"", json);
         Assert.Contains("\"env\"", json);
-        Assert.Contains("\"NODE_ENV\": \"production\"", json);
-        Assert.Contains("\"DEBUG\": \"true\"", json);
+        Assert.Contains("\"NODE_ENV\":\"production\"", json);
+        Assert.Contains("\"DEBUG\":\"true\"", json);
     }
 
     [Fact]
@@ -100,13 +95,13 @@ public class RegistryRootTests
         """;
 
         // Act
-        var registryRoot = JsonSerializer.Deserialize<RegistryRoot>(json, JsonOptions);
+        var registryRoot = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.NotNull(registryRoot);
         Assert.NotNull(registryRoot.Servers);
         Assert.Single(registryRoot.Servers);
-        Assert.True(registryRoot.Servers.ContainsKey("azure-mcp"));
+        Assert.Contains("azure-mcp", registryRoot.Servers);
 
         var serverInfo = registryRoot.Servers["azure-mcp"];
         Assert.NotNull(serverInfo);
@@ -149,14 +144,14 @@ public class RegistryRootTests
         """;
 
         // Act
-        var registryRoot = JsonSerializer.Deserialize<RegistryRoot>(json, JsonOptions);
+        var registryRoot = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.NotNull(registryRoot);
         Assert.NotNull(registryRoot.Servers);
         Assert.Equal(2, registryRoot.Servers.Count);
-        Assert.True(registryRoot.Servers.ContainsKey("azure-mcp"));
-        Assert.True(registryRoot.Servers.ContainsKey("local-server"));
+        Assert.Contains("azure-mcp", registryRoot.Servers);
+        Assert.Contains("local-server", registryRoot.Servers);
 
         var azureServer = registryRoot.Servers["azure-mcp"];
         Assert.Equal("stdio", azureServer.Type);
@@ -195,8 +190,8 @@ public class RegistryRootTests
         };
 
         // Act
-        var json = JsonSerializer.Serialize(originalRegistry, JsonOptions);
-        var deserializedRegistry = JsonSerializer.Deserialize<RegistryRoot>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(originalRegistry, ServerJsonContext.Default.RegistryRoot);
+        var deserializedRegistry = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.NotNull(deserializedRegistry);
@@ -231,8 +226,8 @@ public class RegistryRootTests
         var registryRoot = new RegistryRoot { Servers = null };
 
         // Act
-        var json = JsonSerializer.Serialize(registryRoot, JsonOptions);
-        var deserialized = JsonSerializer.Deserialize<RegistryRoot>(json, JsonOptions);
+        var json = JsonSerializer.Serialize(registryRoot, ServerJsonContext.Default.RegistryRoot);
+        var deserialized = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryRoot);
 
         // Assert
         Assert.NotNull(deserialized);
@@ -251,13 +246,13 @@ public class RegistryRootTests
         };
 
         // Act
-        var json = JsonSerializer.Serialize(serverInfo, JsonOptions);
+        var json = JsonSerializer.Serialize(serverInfo, ServerJsonContext.Default.RegistryServerInfo);
 
         // Assert
         Assert.DoesNotContain("\"name\"", json);
         Assert.DoesNotContain("test-name", json);
-        Assert.Contains("\"url\": \"https://example.com\"", json);
-        Assert.Contains("\"description\": \"Test server\"", json);
+        Assert.Contains("\"url\":\"https://example.com\"", json);
+        Assert.Contains("\"description\":\"Test server\"", json);
     }
 
     [Fact]
@@ -273,7 +268,7 @@ public class RegistryRootTests
         """;
 
         // Act
-        var serverInfo = JsonSerializer.Deserialize<RegistryServerInfo>(json, JsonOptions);
+        var serverInfo = JsonSerializer.Deserialize(json, ServerJsonContext.Default.RegistryServerInfo);
 
         // Assert
         Assert.NotNull(serverInfo);

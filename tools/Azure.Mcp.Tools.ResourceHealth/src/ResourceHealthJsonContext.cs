@@ -10,7 +10,6 @@ using Azure.Mcp.Tools.ResourceHealth.Models.Internal;
 namespace Azure.Mcp.Tools.ResourceHealth;
 
 [JsonSourceGenerationOptions(
-    WriteIndented = true,
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     GenerationMode = JsonSourceGenerationMode.Default)]
 [JsonSerializable(typeof(AvailabilityStatus))]

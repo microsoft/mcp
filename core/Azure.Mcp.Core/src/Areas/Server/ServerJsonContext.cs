@@ -27,8 +27,7 @@ namespace Azure.Mcp.Core.Areas.Server;
 [JsonSerializable(typeof(List<ConsolidatedToolDefinition>))]
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
-    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
-    WriteIndented = true
+    DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull
 )]
 internal sealed partial class ServerJsonContext : JsonSerializerContext
 {

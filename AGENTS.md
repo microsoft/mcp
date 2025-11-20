@@ -473,7 +473,7 @@ public class StorageService(ISubscriptionService subscriptionService, ITenantSer
 // All response models must be registered for AOT compatibility
 [JsonSerializable(typeof(StorageAccountGetCommand.StorageAccountListCommandResult))]
 [JsonSerializable(typeof(StorageAccount))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 internal partial class StorageJsonContext : JsonSerializerContext;
 
 // Usage in commands
