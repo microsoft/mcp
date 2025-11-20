@@ -564,6 +564,11 @@
     "Show me all autoexport jobs on filesystem <filesystem_name>",
     "What autoexport jobs are running on filesystem <filesystem_name>"
   ],
+  "managedlustre_fs_autoexport-job_delete": [
+    "Delete the autoexport job <job_name> for the Azure Managed Lustre filesystem <filesystem_name> in resource group <resource_group_name>",
+    "Remove the autoexport job <job_name> from filesystem <filesystem_name>",
+    "Clean up autoexport job <job_name>"
+  ],
   "marketplace_product_get": [
     "Get details about marketplace product <product_name>"
   ],
