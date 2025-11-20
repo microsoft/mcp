@@ -12,39 +12,6 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | azureaibestpractices_get | Create an AI app that helps me to manage travel queries. |
 | azureaibestpractices_get | Create an AI app that helps me to manage travel queries in Microsoft Foundry |
 
-## Microsoft Foundry
-
-| Tool Name | Test Prompt |
-|:----------|:----------|
-| foundry_agents_connect | Query an agent in my Microsoft Foundry resource |
-| foundry_agents_create | Create a new Microsoft Foundry agent using instructions in the active editor |
-| foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
-| foundry_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
-| foundry_agents_list | List all agents in my Microsoft Foundry resource |
-| foundry_agents_list | Show me the available agents in my Microsoft Foundry resource |
-| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Microsoft Foundry resource for task_adherence |
-| foundry_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
-| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
-| foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
-| foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
-| foundry_models_deployments_list | List all Microsoft Foundry model deployments |
-| foundry_models_deployments_list | Show me all Microsoft Foundry model deployments |
-| foundry_models_list | List all Microsoft Foundry models |
-| foundry_models_list | Show me the available Microsoft Foundry models |
-| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
-| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
-| foundry_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
-| foundry_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
-| foundry_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
-| foundry_resource_get | List all Microsoft Foundry resources in my subscription |
-| foundry_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
-| foundry_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
-| foundry_threads_create | Create a Microsoft Foundry thread to hold the conversation |
-| foundry_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
-| foundry_threads_list | List my Microsoft Foundry threads |
-
 ## Azure AI Search
 
 | Tool Name | Test Prompt |
@@ -714,3 +681,36 @@ This file contains prompts used for end-to-end testing to ensure each tool is in
 | cloudarchitect_design | Help me design an Azure cloud service that will serve as an ATM for users |
 | cloudarchitect_design | I want to design a cloud app for ordering groceries |
 | cloudarchitect_design | How can I design a cloud service in Azure that will store and present videos for users? |
+
+## Microsoft Foundry
+
+| Tool Name | Test Prompt |
+|:----------|:----------|
+| foundry_agents_connect | Query an agent in my Microsoft Foundry resource |
+| foundry_agents_create | Create a new Microsoft Foundry agent using instructions in the active editor |
+| foundry_agents_evaluate | Evaluate the full query and response I got from my agent for task_adherence |
+| foundry_agents_get-sdk-sample | Create a CLI app that can talk to a Microsoft Foundry Agent using Python SDK |
+| foundry_agents_list | List all agents in my Microsoft Foundry resource |
+| foundry_agents_list | Show me the available agents in my Microsoft Foundry resource |
+| foundry_agents_query-and-evaluate | Query and evaluate an agent in my Microsoft Foundry resource for task_adherence |
+| foundry_knowledge_index_list | List all knowledge indexes in my Microsoft Foundry project |
+| foundry_knowledge_index_list | Show me the knowledge indexes in my Microsoft Foundry project |
+| foundry_knowledge_index_schema | Show me the schema for knowledge index \<index-name> in my Microsoft Foundry resource |
+| foundry_knowledge_index_schema | Get the schema configuration for knowledge index \<index-name> |
+| foundry_models_deploy | Deploy a GPT4o instance on my resource \<resource-name> |
+| foundry_models_deployments_list | List all Microsoft Foundry model deployments |
+| foundry_models_deployments_list | Show me all Microsoft Foundry model deployments |
+| foundry_models_list | List all Microsoft Foundry models |
+| foundry_models_list | Show me the available Microsoft Foundry models |
+| foundry_openai_chat-completions-create | Create a chat completion with the message "Hello, how are you today?" using my Microsoft Foundry resource |
+| foundry_openai_create-completion | Create a completion with the prompt "What is Azure?" using my Microsoft Foundry resource |
+| foundry_openai_embeddings-create | Generate embeddings for the text "Azure OpenAI Service" using my Microsoft Foundry resource |
+| foundry_openai_embeddings-create | Create vector embeddings for my text using my Microsoft Foundry resource |
+| foundry_openai_models-list | List all available OpenAI models in my Microsoft Foundry resource |
+| foundry_openai_models-list | Show me the OpenAI model deployments in my Microsoft Foundry resource |
+| foundry_resource_get | List all Microsoft Foundry resources in my subscription |
+| foundry_resource_get | Show me the Microsoft Foundry resources in resource group <resource_group_name> |
+| foundry_resource_get | Get details for Microsoft Foundry resource <resource_name> in resource group <resource_group_name> |
+| foundry_threads_create | Create a Microsoft Foundry thread to hold the conversation |
+| foundry_threads_get-messages | Show me the messages in the Microsoft Foundry thread with id <thread_id> |
+| foundry_threads_list | List my Microsoft Foundry threads |
