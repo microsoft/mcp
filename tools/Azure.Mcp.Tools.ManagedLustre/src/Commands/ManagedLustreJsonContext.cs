@@ -9,6 +9,7 @@ using Azure.Mcp.Tools.ManagedLustre.Models;
 namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 
 [JsonSerializable(typeof(AutoexportJobCreateCommand.AutoexportJobCreateResult))]
+[JsonSerializable(typeof(AutoexportJobCancelCommand.AutoexportJobCancelResult))]
 [JsonSerializable(typeof(FileSystemCreateCommand.FileSystemCreateResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
 [JsonSerializable(typeof(FileSystemUpdateCommand.FileSystemUpdateResult))]

@@ -202,7 +202,15 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "The name of the Azure Managed Lustre filesystem. Example: --filesystem-name amlfs-001"
+        Description = "The name of the Azure Managed Lustre filesystem"
+    };
+
+    public static readonly Option<string> JobNameOption = new(
+        "--job-name"
+    )
+    {
+        Required = true,
+        Description = "The name of the autoexport job"
     };
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();

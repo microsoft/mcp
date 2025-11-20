@@ -1510,6 +1510,32 @@
       ]
     },
     {
+      "name": "manage_azure_managed_lustre_autoexport_jobs",
+      "description": "Create and cancel autoexport jobs for Azure Managed Lustre filesystems to sync data to blob storage.",
+      "toolMetadata": {
+        "destructive": {
+          "value": true,
+          "description": "This tool can cancel running autoexport jobs."
+        },
+        "idempotent": {
+          "value": true,
+          "description": "Canceling a job that's already cancelled or completed is safe."
+        },
+        "openWorld": {
+          "value": false,
+          "description": "This tool does not access external resources beyond Azure."
+        },
+        "readOnly": {
+          "value": false,
+          "description": "This tool creates and cancels autoexport jobs."
+        }
+      },
+      "mappedToolList": [
+        "managedlustre_fs_autoexport-job_create",
+        "managedlustre_fs_autoexport-job_cancel"
+      ]
+    },
+    {
       "name": "upload_azure_storage_blobs",
       "description": "Upload files and data to Azure Storage blob containers.",
       "toolMetadata": {
