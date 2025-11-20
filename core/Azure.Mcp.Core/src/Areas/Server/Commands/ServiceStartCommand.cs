@@ -765,7 +765,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
     /// </remarks>
     private static TracerProvider? ConfigureSelfHostingTelemetry(ServiceStartOptions options)
     {
-#if RELEASE
         if (options.Transport != TransportTypes.Http)
         {
             return null;
@@ -788,9 +787,6 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             .AddHttpClientInstrumentation(o => o.FilterHttpRequestMessage = ShouldInstrumentHttpRequest)
             .AddAzureMonitorTraceExporter(exporterOptions => exporterOptions.ConnectionString = connectionString)
             .Build();
-#else
-        return null;
-#endif
     }
 
     /// <summary>
