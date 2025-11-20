@@ -12,7 +12,7 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
-- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations.
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
 
 ### Other Changes
 
