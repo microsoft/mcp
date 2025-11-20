@@ -71,8 +71,10 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
     /// <summary>
     /// The test-proxy has a default set of ~90 sanitizers for common sensitive data (GUIDs, tokens, timestamps, etc). This list allows opting out of specific default sanitizers by name.
     /// Grab the names from the test-proxy source at https://github.com/Azure/azure-sdk-tools/blob/main/tools/test-proxy/Azure.Sdk.Tools.TestProxy/Common/SanitizerDictionary.cs#L65)
+    /// Default Set:
+    ///     - `AZSDK3430`: `$..id`
     /// </summary>
-    public virtual List<string> DisabledDefaultSanitizers { get; } = new();
+    public virtual List<string> DisabledDefaultSanitizers { get; } = new() { "AZSDK3430" };
 
     /// <summary>
     /// During recording, variables saved to this dictionary will be propagated to the test-proxy and saved in the recording file.
@@ -343,7 +345,7 @@ public abstract class RecordedCommandTestsBase(ITestOutputHelper output, TestPro
                 // Extract recording ID from response header
                 if (result.GetRawResponse().Headers.TryGetValue("x-recording-id", out var recordingId))
                 {
-                    RecordingId = recordingId ?? String.Empty;
+                    RecordingId = recordingId ?? string.Empty;
                     Output.WriteLine($"[Record] Recording ID: {RecordingId}");
                 }
             }
