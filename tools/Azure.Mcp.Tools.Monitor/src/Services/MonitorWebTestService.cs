@@ -23,17 +23,18 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
     public async Task<List<WebTestSummaryInfo>> ListWebTests(
         string subscription,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
             var webTests = await subscriptionResource
-                .GetApplicationInsightsWebTestsAsync()
+                .GetApplicationInsightsWebTestsAsync(cancellationToken)
                 .Select(webTest => new WebTestSummaryInfo
                 {
                     ResourceName = webTest.Data.Name,
@@ -42,7 +43,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                     Kind = webTest.Data.WebTestKind?.ToString(),
                     AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
                 })
-                .ToListAsync()
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return webTests;
@@ -57,7 +58,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         string subscription,
         string resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -65,12 +67,12 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
             var webTests = await resourceGroupResource
                 .GetApplicationInsightsWebTests()
-                .GetAllAsync()
+                .GetAllAsync(cancellationToken)
                 .Select(webTest => new WebTestSummaryInfo
                 {
                     ResourceName = webTest.Data.Name,
@@ -79,7 +81,7 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                     Kind = webTest.Data.WebTestKind?.ToString(),
                     AppInsightsComponentId = GetAppInsightsComponentIdFromWebTestData(webTest.Data)
                 })
-                .ToListAsync()
+                .ToListAsync(cancellationToken)
                 .ConfigureAwait(false);
 
             return webTests;
@@ -94,7 +96,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
       string resourceGroup,
       string resourceName,
       string? tenant = null,
-      RetryPolicyOptions? retryPolicy = null)
+      RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -103,10 +106,10 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
-            var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName).ConfigureAwait(false);
+            var webTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
             if (webTest == null || !webTest.HasValue || !webTest.Value!.HasData)
             {
                 throw new Exception($"Error retrieving details for web test '{resourceName}'");
@@ -176,7 +179,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -188,12 +192,12 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
             // Check if web test already exists
             var existingWebTestResponse = await resourceGroupResource.GetApplicationInsightsWebTests()
-                .ExistsAsync(resourceName)
+                .ExistsAsync(resourceName, cancellationToken)
                 .ConfigureAwait(false);
 
             if (existingWebTestResponse.HasValue && existingWebTestResponse.Value)
@@ -254,7 +258,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                 .CreateOrUpdateAsync(
                     WaitUntil.Completed,
                     resourceName,
-                    webTestData
+                    webTestData,
+                    cancellationToken
                 ).ConfigureAwait(false);
 
             if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)
@@ -320,7 +325,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
         int? sslLifetimeCheckInDays = null,
         int? timeoutInSeconds = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters(
             (nameof(subscription), subscription),
@@ -329,11 +335,11 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
 
         try
         {
-            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy) ??
+            var resourceGroupResource = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy, cancellationToken) ??
                 throw new Exception($"Resource group {resourceGroup} not found in subscription {subscription}");
 
             // Get existing web test
-            var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName).ConfigureAwait(false);
+            var existingWebTest = await resourceGroupResource.GetApplicationInsightsWebTestAsync(resourceName, cancellationToken).ConfigureAwait(false);
             if (existingWebTest == null || !existingWebTest.HasValue || !existingWebTest.Value!.HasData)
             {
                 throw new Exception($"Web test '{resourceName}' not found in resource group '{resourceGroup}'. Use the create command to create a new web test.");
@@ -426,7 +432,8 @@ public class MonitorWebTestService(ISubscriptionService subscriptionService, ITe
                 .CreateOrUpdateAsync(
                     WaitUntil.Completed,
                     resourceName,
-                    webTestData
+                    webTestData,
+                    cancellationToken
                 ).ConfigureAwait(false);
 
             if (webTestArmResource == null || !webTestArmResource.HasCompleted || !webTestArmResource.HasValue)

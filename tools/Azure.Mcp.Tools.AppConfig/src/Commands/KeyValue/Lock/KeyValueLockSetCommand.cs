@@ -53,7 +53,7 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -72,7 +72,8 @@ public sealed class KeyValueLockSetCommand(ILogger<KeyValueLockSetCommand> logge
                 options.Subscription!,
                 options.Tenant,
                 options.RetryPolicy,
-                options.Label);
+                options.Label,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(options.Key!, options.Label, options.Lock), AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
         }

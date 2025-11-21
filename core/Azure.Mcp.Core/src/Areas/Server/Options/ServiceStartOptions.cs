@@ -53,10 +53,11 @@ public class ServiceStartOptions
     public bool Debug { get; set; } = false;
 
     /// <summary>
-    /// Gets or sets whether insecure transport mechanisms are enabled.
+    /// Gets or sets whether HTTP incoming authentication is disabled.
+    /// When true, the server accepts unauthenticated HTTP requests.
     /// </summary>
-    [JsonPropertyName("enableInsecureTransports")]
-    public bool EnableInsecureTransports { get; set; } = false;
+    [JsonPropertyName("dangerouslyDisableHttpIncomingAuth")]
+    public bool DangerouslyDisableHttpIncomingAuth { get; set; } = false;
 
     /// <summary>
     /// Gets or sets whether elicitation (user confirmation for high-risk operations like accessing secrets) is disabled (insecure mode).
@@ -64,13 +65,6 @@ public class ServiceStartOptions
     /// </summary>
     [JsonPropertyName("insecureDisableElicitation")]
     public bool InsecureDisableElicitation { get; set; } = false;
-
-    /// <summary>
-    /// Gets or sets whether the server should run as a remote HTTP service.
-    /// When true, the server will require authentication and authorization.
-    /// </summary>
-    [JsonPropertyName("runAsRemoteHttpService")]
-    public bool RunAsRemoteHttpService { get; set; } = false;
 
     /// <summary>
     /// Gets or sets the outgoing authentication strategy for Azure service requests.

@@ -36,7 +36,7 @@ public class TableListCommandTests
     public async Task ExecuteAsync_ReturnsTables_WhenSuccessful()
     {
         var expectedTables = new List<string> { "users", "products", "orders" };
-        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1").Returns(expectedTables);
+        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>()).Returns(expectedTables);
 
         var command = new TableListCommand(_logger);
         var args = command.GetCommand().Parse([
@@ -48,7 +48,7 @@ public class TableListCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -64,7 +64,7 @@ public class TableListCommandTests
     [Fact]
     public async Task ExecuteAsync_ReturnsError_WhenServiceThrows()
     {
-        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1")
+        _mysqlService.GetTablesAsync("sub123", "rg1", "user1", "server1", "db1", Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Access denied"));
 
         var command = new TableListCommand(_logger);
@@ -77,7 +77,7 @@ public class TableListCommandTests
         ]);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

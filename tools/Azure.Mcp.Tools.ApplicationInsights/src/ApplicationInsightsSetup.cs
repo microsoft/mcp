@@ -18,10 +18,6 @@ public class ApplicationInsightsSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
-        services.AddHttpClientServices(options =>
-        {
-            options.DefaultUserAgent = "AzureMCPClient/1.0";
-        });
 
         // Service for accessing Profiler dataplane.
         services.AddSingleton<IProfilerDataService, ProfilerDataService>();

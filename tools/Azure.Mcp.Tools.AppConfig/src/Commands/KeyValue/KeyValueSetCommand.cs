@@ -55,7 +55,7 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
     }
 
     [McpServerTool(Destructive = true, ReadOnly = false, Title = CommandTitle)]
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -76,7 +76,8 @@ public sealed class KeyValueSetCommand(ILogger<KeyValueSetCommand> logger) : Bas
                 options.RetryPolicy,
                 options.Label,
                 options.ContentType,
-                options.Tags);
+                options.Tags,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(
                 new(options.Key, options.Value, options.Label, options.ContentType, options.Tags),
                 AppConfigJsonContext.Default.KeyValueSetCommandResult

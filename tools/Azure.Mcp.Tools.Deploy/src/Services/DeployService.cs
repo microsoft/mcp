@@ -14,9 +14,10 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
          string workspaceFolder,
          string azdEnvName,
          string subscriptionId,
-         int? limit = null)
+         int? limit = null,
+         CancellationToken cancellationToken = default)
     {
-        TokenCredential credential = await GetCredential();
+        TokenCredential credential = await GetCredential(cancellationToken);
         string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
             credential,
             workspaceFolder,

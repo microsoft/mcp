@@ -46,7 +46,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
@@ -57,7 +58,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -77,7 +78,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedLogs);
 
         var args = _commandDefinition.Parse([
@@ -88,7 +90,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -105,7 +107,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns("No logs found.");
 
         var args = _commandDefinition.Parse([
@@ -116,7 +119,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -133,7 +136,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .Returns(errorMessage);
 
         var args = _commandDefinition.Parse([
@@ -143,7 +147,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -161,7 +165,8 @@ public class LogsGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<int?>())
+            Arg.Any<int?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Failed to connect to Azure"));
 
         var args = _commandDefinition.Parse([
@@ -171,7 +176,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -191,7 +196,7 @@ public class LogsGetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);

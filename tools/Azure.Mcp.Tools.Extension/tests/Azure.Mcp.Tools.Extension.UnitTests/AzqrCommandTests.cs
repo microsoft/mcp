@@ -74,13 +74,14 @@ public sealed class AzqrCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<int>(),
-            Arg.Any<IEnumerable<string>>())
+            Arg.Any<IEnumerable<string>>(),
+            Arg.Any<CancellationToken>())
             .Returns(new ProcessResult(0, expectedOutput, string.Empty, $"scan --subscription-id {mockSubscriptionId}"));
 
         try
         {
             // Act
-            var response = await command.ExecuteAsync(context, args);
+            var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
             // Assert
             Assert.NotNull(response);
@@ -90,7 +91,8 @@ public sealed class AzqrCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<int>(),
-                Arg.Any<IEnumerable<string>>());
+                Arg.Any<IEnumerable<string>>(),
+                Arg.Any<CancellationToken>());
         }
         finally
         {
@@ -120,7 +122,7 @@ public sealed class AzqrCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

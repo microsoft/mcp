@@ -52,7 +52,7 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -75,7 +75,8 @@ public class CheckCommand(ILogger<CheckCommand> logger) : SubscriptionCommand<Ch
             Dictionary<string, List<UsageInfo>> toolResult = await quotaService.GetAzureQuotaAsync(
                 resourceTypes,
                 options.Subscription!,
-                options.Region);
+                options.Region,
+                cancellationToken);
 
             _logger.LogInformation("Quota check result: {ToolResult}", toolResult);
 

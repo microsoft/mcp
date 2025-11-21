@@ -12,6 +12,7 @@ using Azure.Mcp.Tools.Monitor.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Monitor.UnitTests.WebTests;
@@ -121,16 +122,16 @@ public class WebTestsGetCommandTests
             Id = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/webtests/webtest1"
         };
 
-        _service.GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>())
+        _service.GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -157,13 +158,13 @@ public class WebTestsGetCommandTests
             AppInsightsComponentId = "/subscriptions/sub1/resourceGroups/rg1/providers/Microsoft.Insights/components/appinsights1"
         };
 
-        _service.GetWebTest("sub1", "rg1", "webtest1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.GetWebTest("sub1", "rg1", "webtest1", Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -188,13 +189,19 @@ public class WebTestsGetCommandTests
         var args = new string[] { "--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "nonexistent" };
 
         // The service throws an exception when a web test is not found (as seen in implementation)
-        _service.When(x => x.GetWebTest(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw new Exception("Error retrieving details for web test 'nonexistent'"));
+        _service.GetWebTest(
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string>(),
+            Arg.Any<string?>(),
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(new Exception("Error retrieving details for web test 'nonexistent'"));
 
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // Exception handling returns 500, not 404
@@ -211,16 +218,16 @@ public class WebTestsGetCommandTests
             Location = "eastus"
         };
 
-        _service.GetWebTest(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>())
+        _service.GetWebTest(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string>(), Arg.Any<string?>(), Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
-        await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>());
+        await _service.Received(1).GetWebTest("sub1", "rg1", "webtest1", null, Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
     }
 
     #endregion
@@ -239,7 +246,7 @@ public class WebTestsGetCommandTests
         var parseResult = _commandDefinition.Parse(argArray);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -256,18 +263,19 @@ public class WebTestsGetCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service unavailable");
-        _service.When(x => x.GetWebTest(
+        _service.GetWebTest(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -280,18 +288,19 @@ public class WebTestsGetCommandTests
     {
         // Arrange
         var expectedException = new Exception("Service error");
-        _service.When(x => x.GetWebTest(
+        _service.GetWebTest(
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>()))
-            .Do(x => throw expectedException);
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
+            .ThrowsAsync(expectedException);
 
         var parseResult = _commandDefinition.Parse(["--subscription", "sub1", "--resource-group", "rg1", "--webtest-resource", "webtest1"]);
 
         // Act
-        await _command.ExecuteAsync(_context, parseResult);
+        await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         _logger.Received(1).Log(

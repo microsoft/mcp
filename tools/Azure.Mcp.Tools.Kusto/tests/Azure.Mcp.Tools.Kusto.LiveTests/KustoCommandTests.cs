@@ -39,13 +39,13 @@ public class KustoCommandTests(ITestOutputHelper output)
 
             // Create HttpClientService for KustoClient
             var httpClientOptions = new HttpClientOptions();
-            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions));
+            var httpClientService = new HttpClientService(MsOptions.Create(httpClientOptions), null!);
 
             var kustoClient = new KustoClient(clusterUri ?? string.Empty, credentials, "ua", httpClientService);
             var resp = await kustoClient.ExecuteControlCommandAsync(
                 TestDatabaseName,
                 ".set-or-replace ToDoList <| datatable (Title: string, IsCompleted: bool) [' Hello World!', false]",
-                CancellationToken.None).ConfigureAwait(false);
+                TestContext.Current.CancellationToken).ConfigureAwait(false);
         }
         catch
         {

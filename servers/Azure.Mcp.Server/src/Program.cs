@@ -13,7 +13,6 @@ using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
@@ -45,6 +44,11 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
+            if (status == 0)
+            {
+                status = (int)HttpStatusCode.OK;
+            }
+
             return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
@@ -58,11 +62,13 @@ internal class Program
             return 1;
         }
     }
+
     private static IAreaSetup[] RegisterAreas()
     {
 
         return [
             // Register core areas
+            new Azure.Mcp.Tools.AzureAIBestPractices.AzureAIBestPracticesSetup(),
             new Azure.Mcp.Tools.AzureBestPractices.AzureBestPracticesSetup(),
             new Azure.Mcp.Tools.Extension.ExtensionSetup(),
             new Azure.Mcp.Core.Areas.Group.GroupSetup(),

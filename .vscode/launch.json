@@ -462,13 +462,11 @@
                 "server",
                 "start",
                 "--mode",
-                "consolidated",
-                "--namespace",
-                "storage"
+                "consolidated"
             ],
             "cwd": "${workspaceFolder}",
             "console": "integratedTerminal",
-            "stopAtEntry": true,
+            "stopAtEntry": false,
             "env": {
                 "DOTNET_ENVIRONMENT": "Development"
             }

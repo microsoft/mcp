@@ -49,7 +49,13 @@ public class TestGetCommandTests
     {
         var expected = new Test { TestId = "testId1", DisplayName = "TestDisplayName", Description = "TestDescription" };
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestGetCommand(_logger);
@@ -61,7 +67,7 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -80,7 +86,13 @@ public class TestGetCommandTests
     {
         var expected = new Test();
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(expected);
 
         var command = new TestGetCommand(_logger);
@@ -91,7 +103,7 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
     }
 
@@ -99,7 +111,13 @@ public class TestGetCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         _service.GetTestAsync(
-            Arg.Is("sub123"), Arg.Is("testResourceName"), Arg.Is("testId1"), Arg.Is("resourceGroup123"), Arg.Is("tenant123"), Arg.Any<RetryPolicyOptions>())
+            Arg.Is("sub123"),
+            Arg.Is("testResourceName"),
+            Arg.Is("testId1"),
+            Arg.Is("resourceGroup123"),
+            Arg.Is("tenant123"),
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<Test>(new Exception("Test error")));
 
         var command = new TestGetCommand(_logger);
@@ -111,7 +129,7 @@ public class TestGetCommandTests
             "--tenant", "tenant123"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
         Assert.Contains("Test error", response.Message);
         Assert.Contains("troubleshooting", response.Message);

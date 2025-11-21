@@ -83,7 +83,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -126,7 +126,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -156,7 +156,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -194,7 +194,7 @@ public class DesignCommandTests
         Assert.True(!parseResult.Errors.Any(), string.Join("; ", parseResult.Errors.Select(e => e.Message)));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -243,7 +243,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -266,7 +266,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -299,7 +299,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -557,7 +557,7 @@ public class DesignCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse(args);
-        var result = await _command.ExecuteAsync(_context, parseResult);
+        var result = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Empty(parseResult.Errors);
@@ -585,7 +585,7 @@ public class DesignCommandTests
     //     var parseResult = _commandDefinition.Parse(args);
 
     //     // Act
-    //     var response = await _command.ExecuteAsync(_context, parseResult);
+    //     var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
     //     // Assert - The command should handle the error gracefully and return an error response
     //     Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -600,7 +600,7 @@ public class DesignCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var result = await _command.ExecuteAsync(_context, parseResult);
+        var result = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, _context.Response.Status);

@@ -3,9 +3,11 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
+using Azure.Mcp.Tools.Postgres.Auth;
 using Azure.Mcp.Tools.Postgres.Commands.Database;
 using Azure.Mcp.Tools.Postgres.Commands.Server;
 using Azure.Mcp.Tools.Postgres.Commands.Table;
+using Azure.Mcp.Tools.Postgres.Providers;
 using Azure.Mcp.Tools.Postgres.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -19,6 +21,8 @@ public class PostgresSetup : IAreaSetup
 
     public void ConfigureServices(IServiceCollection services)
     {
+        services.AddSingleton<IEntraTokenProvider, EntraTokenProvider>();
+        services.AddSingleton<IDbProvider, DbProvider>();
         services.AddSingleton<IPostgresService, PostgresService>();
 
         services.AddSingleton<DatabaseListCommand>();

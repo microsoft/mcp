@@ -37,7 +37,7 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -58,14 +58,16 @@ public sealed class HostpoolListCommand(ILogger<HostpoolListCommand> logger) : B
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
                 hostpools = await virtualDesktopService.ListHostpoolsAsync(
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new([.. hostpools ?? []]), VirtualDesktopJsonContext.Default.HostPoolListCommandResult);

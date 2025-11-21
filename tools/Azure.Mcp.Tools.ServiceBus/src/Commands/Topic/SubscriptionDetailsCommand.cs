@@ -62,7 +62,7 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -79,7 +79,8 @@ public sealed class SubscriptionDetailsCommand(ILogger<SubscriptionDetailsComman
                 options.TopicName!,
                 options.SubscriptionName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(details), ServiceBusJsonContext.Default.SubscriptionDetailsCommandResult);
         }

@@ -121,7 +121,7 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -159,7 +159,8 @@ public sealed class WebTestsUpdateCommand(ILogger<WebTestsUpdateCommand> logger)
                 sslLifetimeCheckInDays: options.SslLifetimeCheckInDays,
                 timeoutInSeconds: options.TimeoutInSeconds,
                 tenant: options.Tenant,
-                retryPolicy: options.RetryPolicy);
+                retryPolicy: options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new(webTest),

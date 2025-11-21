@@ -97,7 +97,7 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
     }
 
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         try
@@ -133,7 +133,8 @@ public sealed class FileSystemCreateCommand(ILogger<FileSystemCreateCommand> log
                 options.SourceVaultId,
                 options.UserAssignedIdentityId,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(fs), ManagedLustreJsonContext.Default.FileSystemCreateResult);
         }

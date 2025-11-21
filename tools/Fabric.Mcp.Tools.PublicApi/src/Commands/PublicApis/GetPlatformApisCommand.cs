@@ -37,7 +37,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -49,7 +49,7 @@ public sealed class GetPlatformApisCommand(ILogger<GetPlatformApisCommand> logge
         try
         {
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var apis = await fabricService.GetWorkloadPublicApis("platform");
+            var apis = await fabricService.GetWorkloadPublicApis("platform", cancellationToken);
 
             context.Response.Results = ResponseResult.Create(apis, FabricJsonContext.Default.FabricWorkloadPublicApi);
         }

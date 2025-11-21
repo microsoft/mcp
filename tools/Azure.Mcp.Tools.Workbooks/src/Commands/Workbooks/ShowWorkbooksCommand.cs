@@ -50,7 +50,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -62,7 +62,7 @@ public sealed class ShowWorkbooksCommand(ILogger<ShowWorkbooksCommand> logger) :
         try
         {
             var workbooksService = context.GetService<IWorkbooksService>();
-            var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant) ?? throw new InvalidOperationException("Failed to retrieve workbook");
+            var workbook = await workbooksService.GetWorkbook(options.WorkbookId!, options.RetryPolicy, options.Tenant, cancellationToken) ?? throw new InvalidOperationException("Failed to retrieve workbook");
 
             context.Response.Results = ResponseResult.Create(new(workbook), WorkbooksJsonContext.Default.ShowWorkbooksCommandResult);
         }

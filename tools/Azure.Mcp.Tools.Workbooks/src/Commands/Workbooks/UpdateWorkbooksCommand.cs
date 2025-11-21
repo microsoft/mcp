@@ -53,7 +53,7 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +70,8 @@ public sealed class UpdateWorkbooksCommand(ILogger<UpdateWorkbooksCommand> logge
                 options.DisplayName,
                 options.SerializedContent,
                 options.RetryPolicy,
-                options.Tenant) ?? throw new InvalidOperationException("Failed to update workbook");
+                options.Tenant,
+                cancellationToken) ?? throw new InvalidOperationException("Failed to update workbook");
 
             context.Response.Results = ResponseResult.Create(new(updatedWorkbook), WorkbooksJsonContext.Default.UpdateWorkbooksCommandResult);
         }

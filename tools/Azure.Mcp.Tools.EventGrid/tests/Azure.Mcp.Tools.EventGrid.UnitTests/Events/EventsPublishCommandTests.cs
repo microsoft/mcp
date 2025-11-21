@@ -90,13 +90,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -148,13 +149,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -183,13 +185,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new System.Text.Json.JsonException("Invalid JSON format"));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", invalidEventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -218,13 +221,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException($"Event Grid topic '{topicName}' not found in resource group '{resourceGroup}'."));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status); // The base command returns InternalServerError for general exceptions by default
@@ -258,14 +262,15 @@ public class EventsPublishCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(Task.FromResult(expectedResult));
         }
 
         var parseResult = _commandDefinition.Parse(args.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -309,13 +314,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -359,13 +365,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("CloudEvents"), // Verify CloudEvents schema is passed
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -408,13 +415,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("Custom"), // Verify Custom schema is passed
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -474,13 +482,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is(schema), // Verify the schema parameter is passed correctly
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -514,13 +523,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is<string?>(schema => schema == null), // Should be null when not specified
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -547,13 +557,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Azure.RequestFailedException(403, "Access denied to Event Grid topic"));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -581,13 +592,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new ArgumentException("Invalid event schema specified. Supported schemas are: CloudEvents, EventGrid, or Custom."));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "InvalidSchema"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -615,13 +627,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Azure.RequestFailedException(400, "Invalid event data or schema format"));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -675,13 +688,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -718,13 +732,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -764,13 +779,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("CloudEvents"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "CloudEvents"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -808,13 +824,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("Custom"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -859,13 +876,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is(schema),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", schema]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -914,13 +932,14 @@ public class EventsPublishCommandTests
             Arg.Any<string>(),
             Arg.Is("Custom"),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(expectedResult));
 
         var args = _commandDefinition.Parse(["--subscription", subscriptionId, "--resource-group", resourceGroup, "--topic", topicName, "--data", eventData, "--schema", "Custom"]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);

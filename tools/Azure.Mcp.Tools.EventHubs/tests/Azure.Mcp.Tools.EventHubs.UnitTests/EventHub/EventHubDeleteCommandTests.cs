@@ -51,12 +51,13 @@ public class EventHubDeleteCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
                 .Returns(true);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -84,11 +85,12 @@ public class EventHubDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Namespace 'test-namespace' not found in resource group 'test-rg'"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -108,11 +110,12 @@ public class EventHubDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(200, (int)response.Status);
@@ -132,11 +135,12 @@ public class EventHubDeleteCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(true);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);
@@ -156,11 +160,12 @@ public class EventHubDeleteCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-subscription"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(false);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(200, (int)response.Status);

@@ -12,20 +12,57 @@ namespace Azure.Mcp.Core.Services.Azure;
 
 public abstract class BaseAzureService
 {
-    private static readonly UserAgentPolicy s_sharedUserAgentPolicy;
-    public static readonly string DefaultUserAgent;
-
+    private static UserAgentPolicy s_sharedUserAgentPolicy;
+    private static string? s_userAgent;
+    private static volatile bool s_initialized = false;
+    private static readonly object s_initializeLock = new();
     private readonly ITenantService? _tenantServiceDoNotUseDirectly;
+
+    // Cache assembly metadata to avoid repeated reflection
+    private static readonly string s_version;
+    private static readonly string s_framework;
+    private static readonly string s_platform;
+    private static readonly string s_defaultUserAgent;
 
     static BaseAzureService()
     {
         var assembly = typeof(BaseAzureService).Assembly;
-        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version;
-        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+        s_version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        s_framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        s_platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
 
-        DefaultUserAgent = $"azmcp/{version} ({framework}; {platform})";
-        s_sharedUserAgentPolicy = new UserAgentPolicy(DefaultUserAgent);
+        // Initialize the default user agent policy without transport type
+        s_defaultUserAgent = $"azmcp/{s_version} ({s_framework}; {s_platform})";
+        s_sharedUserAgentPolicy = new UserAgentPolicy(s_defaultUserAgent);
+    }
+
+    /// <summary>
+    /// Initializes the user agent policy to include the transport type for all Azure service calls.
+    /// This method must be called once during application startup before creating any <see cref="BaseAzureService"/> instances.
+    /// Subsequent calls will be safely ignored to ensure the policy is initialized only once.
+    /// </summary>
+    /// <param name="transportType">The transport type (e.g., "stdio", "http"). Cannot be null or empty.</param>
+    /// <exception cref="ArgumentException">Thrown when <paramref name="transportType"/> is null or empty.</exception>
+    /// <remarks>
+    /// The user agent string will be formatted as: azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})
+    /// </remarks>
+    public static void InitializeUserAgentPolicy(string transportType)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(transportType, nameof(transportType));
+
+        // Ensure this method is called only once
+        lock (s_initializeLock)
+        {
+            if (s_initialized)
+            {
+                return;
+            }
+
+            s_userAgent = $"azmcp/{s_version} azmcp-{transportType}/{s_version} ({s_framework}; {s_platform})";
+            s_sharedUserAgentPolicy = new UserAgentPolicy(s_userAgent);
+
+            s_initialized = true;
+        }
     }
 
     /// <summary>
@@ -38,6 +75,7 @@ public abstract class BaseAzureService
     {
         ArgumentNullException.ThrowIfNull(tenantService, nameof(tenantService));
         TenantService = tenantService;
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
     /// <summary>
@@ -47,9 +85,10 @@ public abstract class BaseAzureService
     /// This is only to be used by <see cref="Tenant.TenantService"/> to overcome a circular dependency on itself.</remarks>
     internal BaseAzureService()
     {
+        UserAgent = s_userAgent ?? s_defaultUserAgent;
     }
 
-    protected string UserAgent { get; } = DefaultUserAgent;
+    protected string UserAgent { get; }
 
     /// <summary>
     /// Gets or initializes the tenant service for resolving tenant IDs and obtaining credentials.
@@ -90,23 +129,23 @@ public abstract class BaseAzureService
         return value.Replace("\\", "\\\\").Replace("'", "''");
     }
 
-    protected async Task<string?> ResolveTenantIdAsync(string? tenant)
+    protected async Task<string?> ResolveTenantIdAsync(string? tenant, CancellationToken cancellationToken)
     {
         if (tenant == null)
             return tenant;
-        return await TenantService.GetTenantId(tenant);
+        return await TenantService.GetTenantId(tenant, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
         return await GetCredential(null, cancellationToken);
     }
 
-    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken = default)
+    protected async Task<TokenCredential> GetCredential(string? tenant, CancellationToken cancellationToken)
     {
         // TODO @vukelich: separate PR for cancellationToken to be required, not optional default
-        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant);
+        var tenantId = string.IsNullOrEmpty(tenant) ? null : await ResolveTenantIdAsync(tenant, cancellationToken);
 
         try
         {
@@ -121,7 +160,6 @@ public abstract class BaseAzureService
     protected static T AddDefaultPolicies<T>(T clientOptions) where T : ClientOptions
     {
         clientOptions.AddPolicy(s_sharedUserAgentPolicy, HttpPipelinePosition.BeforeTransport);
-
         return clientOptions;
     }
 
@@ -173,7 +211,7 @@ public abstract class BaseAzureService
         ArmClientOptions? armClientOptions = null,
         CancellationToken cancellationToken = default)
     {
-        var tenantId = await ResolveTenantIdAsync(tenantIdOrName);
+        var tenantId = await ResolveTenantIdAsync(tenantIdOrName, cancellationToken);
 
         try
         {

@@ -1,0 +1,643 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "GraphModel REST APIs",
+    "version": "v1"
+  },
+  "schemes": [
+    "https"
+  ],
+  "host": "api.fabric.microsoft.com",
+  "basePath": "/v1",
+  "paths": {
+    "/workspaces/{workspaceId}/GraphModels": {
+      "get": {
+        "summary": "Returns a list of GraphModels from the specified workspace.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ListGraphModels",
+        "x-ms-pageable": {
+          "nextLinkName": "continuationUri"
+        },
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "continuationToken",
+            "description": "A token for retrieving the next page of results.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphModels"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Invalid item type.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "List GraphModels in workspace example": {
+            "$ref": "./examples/ListGraphModelsInWorkspace.json"
+          }
+        }
+      },
+      "post": {
+        "summary": "Creates a GraphModel in the specified workspace.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n To create GraphModel with a public definition, refer to [GraphModel](/rest/api/fabric/articles/item-management/definitions/graph-model) article. \n\n ## Permissions \n The caller must have a *contributor* workspace role. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All \n\n## Limitations \n- To create a GraphModel the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_CreateGraphModel",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createGraphModelRequest",
+            "description": "Create item request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/CreateGraphModelRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Successfully created",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphModel"
+            }
+          },
+          "202": {
+            "description": "Request accepted, GraphModel provisioning in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* InvalidItemType - Item type is invalid\n\n* ItemDisplayNameAlreadyInUse - Item display name is already used.\n\n* CorruptedPayload - The provided payload is corrupted.\n\n* WorkspaceItemsLimitExceeded - Workspace item limit exceeded.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Create a GraphModel example": {
+            "$ref": "./examples/CreateGraphModelWithoutDefinition.json"
+          },
+          "Create a GraphModel with public definition example": {
+            "$ref": "./examples/CreateGraphModel.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}": {
+      "get": {
+        "summary": "Returns properties of the specified GraphModel.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.Read.All or Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetGraphModel",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphModel"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a GraphModel example": {
+            "$ref": "./examples/GetGraphModel.json"
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the properties of the specified GraphModel.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel.\n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateGraphModel",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "updateGraphModelRequest",
+            "description": "Update GraphModel request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateGraphModelRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphModel"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found. \n\n* InvalidRequest - Invalid update request.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a GraphModel example": {
+            "$ref": "./examples/UpdateGraphModel.json"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Deletes the specified GraphModel.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Permissions\n\n The caller must have *write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_DeleteGraphModel",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Delete a GraphModel example": {
+            "$ref": "./examples/DeleteGraphModel.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/getDefinition": {
+      "post": {
+        "summary": "Returns the specified GraphModel public definition.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\nWhen you get a GraphModel's public definition, the sensitivity label is not a part of the definition.\n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n\n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetGraphModelDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "format",
+            "description": "The format of the GraphModel public definition.",
+            "type": "string",
+            "required": false
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphModelDefinitionResponse"
+            }
+          },
+          "202": {
+            "description": "Request accepted. Retrieving the definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get a GraphModel public definition example": {
+            "$ref": "./examples/GetGraphModelDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/updateDefinition": {
+      "post": {
+        "summary": "Overrides the definition for the specified GraphModel.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\nThis API supports [long running operations (LRO)](/rest/api/fabric/articles/long-running-operation).\n\n \nUpdating the GraphModel's definition, does not affect its sensitivity label. \n\n## Permissions\n\n The caller must have *read and write* permissions for the GraphModel. \n## Required Delegated Scopes\n\n Item.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_UpdateGraphModelDefinition",
+        "produces": [
+          "application/json"
+        ],
+        "x-ms-fabric-sdk-long-running-operation": true,
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "updateMetadata",
+            "description": "When set to true and the .platform file is provided as part of the definition, the item's metadata is updated using the metadata in the .platform file",
+            "type": "boolean",
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "updateGraphModelDefinitionRequest",
+            "description": "Update GraphModel definition request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/UpdateGraphModelDefinitionRequest"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted. Update definition is in progress.",
+            "headers": {
+              "Location": {
+                "description": "The URL of the operation status, which can be used to track the operation state.",
+                "type": "string"
+              },
+              "x-ms-operation-id": {
+                "description": "The operation ID which can be used with long running operations (LRO) APIs to track the operation state and get the result.",
+                "type": "string",
+                "format": "uuid"
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Update a GraphModel public definition example": {
+            "$ref": "./examples/UpdateGraphModelDefinition.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/jobs/RefreshGraph/instances": {
+      "post": {
+        "summary": "Run on-demand RefreshGraph job model.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n\n## Required Delegated Scopes\n\nGraphModel.Execute.All or Item.Execute.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "BackgroundJobs"
+        ],
+        "operationId": "BackgroundJobs_RunOnDemandRefreshGraph",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel item ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully."
+          },
+          "202": {
+            "description": "Request accepted, job execution is in progress.",
+            "headers": {
+              "Location": {
+                "type": "string",
+                "description": "The URL to the job instance resource."
+              },
+              "Retry-After": {
+                "type": "integer",
+                "description": "The number of seconds to wait before retrying the request."
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* MissingMinimalPermisisons - The caller does not have sufficient permissions to run job instance. n\n* InvalidJobType - The requested job type is invalid. \n\n* TooManyRequestsForJobs - The caller is making to many run on-demand job requests. \n\n* ItemNotFound - Requested item id not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Run on demand refresh graph job.": {
+            "$ref": "./examples/RunOnDemandRefreshGraph.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/executeQuery": {
+      "post": {
+        "summary": "Executes a query on the specified graph model.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_ExecuteQuery_(preview)",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "createQueryResultRequest",
+            "description": "Execute query request payload.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/ExecuteQueryRequest"
+            },
+            "required": true
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in preview."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Query execution completed successfully. Results are in JSON format. Refer to the [MSFT GQL API](https://aka.ms/msft-gqlapi) on how to read the data.",
+            "schema": {
+              "type": "file",
+              "format": "binary"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* OperationNotSupportedForItem - Operation not supported for requested item. \n\n* CorruptedPayload - The provided payload is corrupted.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Execute a graph query example": {
+            "$ref": "./examples/ExecuteQuery.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/GraphModels/{GraphModelId}/getQueryableGraphType": {
+      "get": {
+        "summary": "Get the current queryable graph type.",
+        "description": "> [!NOTE]\n> GraphModel item is currently in Preview ([learn more](/fabric/fundamentals/preview)).\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n**When calling this API, callers must specify `true` as the value for the query parameter `preview`.**\n\nThis API supports [pagination](/rest/api/fabric/articles/pagination).\n\n## Permissions\n\n The caller must have a *viewer* workspace role. \n The caller must have *read* permissions for the graph model. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | No |\n\n## Interface",
+        "tags": [
+          "Items"
+        ],
+        "operationId": "Items_GetQueryableGraphType_(preview)",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "GraphModelId",
+            "description": "The GraphModel ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "name": "preview",
+            "in": "query",
+            "required": true,
+            "type": "boolean",
+            "description": "This required parameter must be set to `true` to access this API, which is currently in preview."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The current queryable graph type.",
+            "schema": {
+              "$ref": "./definitions.json#/definitions/GraphType"
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* ItemNotFound - The requested item was not found.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get queryable graph type example": {
+            "$ref": "./examples/GetQueryableGraphType.json"
+          }
+        }
+      }
+    }
+  },
+  "responses": {},
+  "security": [],
+  "tags": []
+}

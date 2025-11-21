@@ -37,7 +37,7 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -58,7 +58,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolResourceId,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -68,7 +69,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolName!,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -77,7 +79,8 @@ public sealed class SessionHostUserSessionListCommand(ILogger<SessionHostUserSes
                     options.HostPoolName!,
                     options.SessionHostName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new([.. userSessions ?? []]), VirtualDesktopJsonContext.Default.SessionHostUserSessionListCommandResult);

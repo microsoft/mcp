@@ -74,7 +74,7 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -98,7 +98,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
                     options.ResourceGroup!,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = namespaceDetails != null
                     ? ResponseResult.Create(new(namespaceDetails), EventHubsJsonContext.Default.NamespaceGetCommandResult)
@@ -110,7 +111,8 @@ public sealed class NamespaceGetCommand(ILogger<NamespaceGetCommand> logger)
                     options.ResourceGroup,
                     options.Subscription!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(new(namespaces ?? []), EventHubsJsonContext.Default.NamespacesGetCommandResult);
             }

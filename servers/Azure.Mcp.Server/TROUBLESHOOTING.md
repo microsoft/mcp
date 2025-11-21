@@ -18,9 +18,7 @@ This guide helps you diagnose and resolve common issues with the Azure MCP Serve
     - [VS Code Permission Dialog for Language Model Calls](#vs-code-permission-dialog-for-language-model-calls)
     - [VS Code Cache Problems](#vs-code-cache-problems)
     - [MCP Tools That Require Additional Input Fail Silently](#mcp-tools-that-require-additional-input-fail-silently)
-  - [Remote MCP Server](#remote-mcp-server)
-      - [SSE Transport](#sse-transport)
-      - [Streamable HTTP Transport](#streamable-http-transport)
+  - [Remote MCP Server (preview)](#remote-mcp-server-preview)
   - [Logging and Diagnostics](#logging-and-diagnostics)
     - [Logging](#logging)
       - [Collecting logs with dotnet-trace](#collecting-logs-with-dotnet-trace)
@@ -407,7 +405,7 @@ To use only a specific credential type, set `AZURE_TOKEN_CREDENTIALS` to the nam
 # Use only Azure CLI credential
 AZURE_TOKEN_CREDENTIALS=AzureCliCredential
 
-# Use only Visual Studio Code credential  
+# Use only Visual Studio Code credential
 AZURE_TOKEN_CREDENTIALS=VisualStudioCodeCredential
 
 # Use only Environment credential (for CI/CD scenarios)
@@ -424,7 +422,7 @@ AZURE_TOKEN_CREDENTIALS=ManagedIdentityCredential
 
 **Available credential names:**
 - `AzureCliCredential`
-- `AzureDeveloperCliCredential` 
+- `AzureDeveloperCliCredential`
 - `AzurePowerShellCredential`
 - `EnvironmentCredential`
 - `InteractiveBrowserCredential`
@@ -814,18 +812,98 @@ On Windows, Azure CLI stores credentials in an encrypted format that cannot be a
       }
    ```
 
-## Remote MCP Server
+## Remote MCP Server (preview)
 
-### SSE Transport
+Azure MCP Server 1.0 does not support remote and only supports local (STDIO) transport.  However, the latest 2.0-beta (preview) does support being deployed as a Remote MCP Server (HTTPS). Detailed setup instructions on how to self-host the Azure MCP server with HTTPS transport can be found here:
+- [Azure MCP Server - Azure Container Apps with Microsoft Foundry agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/README.md) 
+- [Azure MCP Server - Azure Container Apps with Copilot Studio agent](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/README.md)
 
->[!WARNING]
->**Deprecation Notice: SSE transport mode has been removed in version [0.4.0 (2025-07-15)](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/CHANGELOG.md#breaking-changes-11).**
->
-> SSE was deprecated in MCP `2025-03-26` due to [security vulnerabilities and architectural limitations](https://blog.fka.dev/blog/2025-06-06-why-mcp-deprecated-sse-and-go-with-streamable-http/). Users must discontinue use of SSE transport mode and upgrade to version `0.4.0` or newer to maintain compatibility with current MCP clients.
+### HTTPS redirection issues
 
-### Streamable HTTP Transport
+In some environments, HTTPS redirection is not needed and may need to be disabled. HTTPS redirection can be opted-out by using the `AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION` environment variable.
 
-See the [contributing guide](https://github.com/microsoft/mcp/blob/main/CONTRIBUTING.md#run-the-azure-mcp-server-in-http-mode) for running the Azure MCP server with Streamable HTTP Transport.
+```bash
+export AZURE_MCP_DANGEROUSLY_DISABLE_HTTPS_REDIRECTION=false
+```
+
+### Common Issues
+
+#### 401 Unauthorized - Invalid Token
+
+**Causes:** Token expired, wrong audience, or missing bearer token.
+
+**Resolution:**
+1. Verify token acquisition:
+   ```bash
+   az account get-access-token --resource api://<your-client-id>
+   ```
+
+2. Validate token claims at [jwt.ms](https://jwt.ms):
+   - `aud`: Must match server's ClientId
+   - `tid`: Must match server's TenantId
+   - `scp`: Must include `Mcp.Tools.ReadWrite`
+
+#### 403 Forbidden - Insufficient Permissions
+
+**Causes:** Missing scope/app role or user not assigned to application.
+
+**Resolution:**
+1. For delegated permissions, check scope in token:
+   ```bash
+   az ad app permission admin-consent --id <client-id>
+   ```
+
+2. Verify user assignment in Azure Portal:
+   - Entra ID → Enterprise Applications → [Your App] → Users and groups
+
+#### OBO Token Exchange Failures
+
+**Causes:** Server app missing API permissions or client token lacks scopes.
+
+**Resolution:**
+1. Grant Azure Management API permissions:
+   ```bash
+   az ad app permission add \
+     --id <server-client-id> \
+     --api https://management.azure.com/ \
+     --api-permissions user_impersonation=Scope
+
+   az ad app permission admin-consent --id <server-client-id>
+   ```
+
+2. Add `knownClientApplications` to server's app manifest:
+   ```json
+   {
+     "knownClientApplications": ["<client-app-id>"]
+   }
+   ```
+
+#### Azure Service Access Denied
+
+**Causes:** Missing RBAC permissions on Azure resources.
+
+**Resolution:**
+
+**For OBO (per-user):**
+```bash
+az role assignment create \
+  --assignee user@domain.com \
+  --role "Storage Blob Data Reader" \
+  --scope /subscriptions/<sub-id>/resourceGroups/<rg>
+```
+
+**For Hosting Environment (managed identity):**
+```bash
+IDENTITY_ID=$(az webapp identity show \
+  --name <app-name> \
+  --resource-group <rg> \
+  --query principalId -o tsv)
+
+az role assignment create \
+  --assignee $IDENTITY_ID \
+  --role Reader \
+  --scope /subscriptions/<sub-id>
+```
 
 ## Logging and Diagnostics
 
@@ -928,7 +1006,7 @@ Before running the server in HTTP mode, you need to create the `launchSettings.j
      "profiles": {
        "debug-remotemcp": {
          "commandName": "Project",
-         "commandLineArgs": "server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity",
+         "commandLineArgs": "server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity",
          "environmentVariables": {
            "ASPNETCORE_ENVIRONMENT": "Development",
            "ASPNETCORE_URLS": "http://localhost:<port>",
@@ -949,9 +1027,9 @@ dotnet run --project servers/Azure.Mcp.Server/src/ --launch-profile debug-remote
 ```
 
 This starts the MCP server in **remote HTTP mode** with the following configuration:
-- **Command line arguments:** `server start --run-as-remote-http-service --outgoing-auth-strategy UseHostingEnvironmentIdentity`
+- **Command line arguments:** `server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity`
 - **Environment variables** for Entra ID authentication and ASP.NET Core settings
-- **HTTP endpoint:** `http://localhost:1031` for easier debugging and testing
+- **HTTP endpoint:** `https://localhost:1031` for easier debugging and testing
 
 **To connect to the MCP server, configure your mcp.json:**
 
@@ -959,7 +1037,7 @@ This starts the MCP server in **remote HTTP mode** with the following configurat
 {
   "servers": {
     "Azure MCP Server": {
-      "url": "http://localhost:1031/",
+      "url": "https://localhost:1031/",
       "type": "http"
     }
   }

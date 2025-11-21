@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -39,7 +39,7 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : S
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -54,8 +54,8 @@ public sealed class ResourceListCommand(ILogger<ResourceListCommand> logger) : S
             var resources = await redisService.ListResourcesAsync(
                 options.Subscription!,
                 options.Tenant,
-                options.AuthMethod,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(resources ?? []), RedisJsonContext.Default.ResourceListCommandResult);
         }

@@ -16,5 +16,5 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 [JsonSerializable(typeof(LustreFileSystem))]
 [JsonSerializable(typeof(ManagedLustreSkuInfo))]
 [JsonSerializable(typeof(ManagedLustreSkuCapability))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class ManagedLustreJsonContext : JsonSerializerContext;

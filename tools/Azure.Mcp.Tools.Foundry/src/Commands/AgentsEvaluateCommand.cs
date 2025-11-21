@@ -57,7 +57,7 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -75,7 +75,8 @@ public sealed class AgentsEvaluateCommand : GlobalCommand<AgentsEvaluateOptions>
                 options.Response!,
                 options.AzureOpenAIEndpoint!,
                 options.AzureOpenAIDeployment!,
-                options.ToolDefinitions);
+                options.ToolDefinitions,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new AgentsEvaluateCommandResult(result),

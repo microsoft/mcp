@@ -46,6 +46,11 @@ internal class Program
             var parseResult = rootCommand.Parse(args);
             var status = await parseResult.InvokeAsync();
 
+            if (status == 0)
+            {
+                status = (int)HttpStatusCode.OK;
+            }
+
             return (status >= (int)HttpStatusCode.OK && status < (int)HttpStatusCode.MultipleChoices) ? 0 : 1;
         }
         catch (Exception ex)
@@ -65,8 +70,8 @@ internal class Program
         return [
             // Register core areas
             new Azure.Mcp.Core.Areas.Server.ServerSetup(),
+            new Azure.Mcp.Core.Areas.Tools.ToolsSetup()
             // Register template areas
-
         ];
     }
 

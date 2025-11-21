@@ -93,7 +93,7 @@ foreach ($server in $buildInfo.servers) {
         Copy-Item -Path "$RepoRoot/NOTICE.txt" -Destination $tempPath -Force
 
         # Skip native platforms for now
-        $filteredPlatforms = $server.platforms | Where-Object { -not $_.native }
+        $filteredPlatforms = $server.platforms | Where-Object { -not $_.native -and -not $_.specialPurpose }
 
         ## Update the version number
         $vsixPackageJsonPath = "./package.json"

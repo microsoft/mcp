@@ -39,7 +39,7 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -59,7 +59,8 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.Subscription!,
                     options.HostPoolResourceId,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else if (!string.IsNullOrEmpty(options.ResourceGroup))
             {
@@ -68,7 +69,8 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.ResourceGroup,
                     options.HostPoolName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -76,7 +78,8 @@ public sealed class SessionHostListCommand(ILogger<SessionHostListCommand> logge
                     options.Subscription!,
                     options.HostPoolName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new([.. sessionHosts ?? []]), VirtualDesktopJsonContext.Default.SessionHostListCommandResult);

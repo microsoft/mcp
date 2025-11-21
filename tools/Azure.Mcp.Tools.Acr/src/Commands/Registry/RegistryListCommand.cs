@@ -36,7 +36,7 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -52,7 +52,8 @@ public sealed class RegistryListCommand(ILogger<RegistryListCommand> logger) : B
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(registries ?? []), AcrJsonContext.Default.RegistryListCommandResult);
         }

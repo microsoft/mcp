@@ -58,7 +58,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -76,7 +76,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
 
             var subscriptionService = context.GetService<ISubscriptionService>();
             var dateTimeProvider = context.GetService<IDateTimeProvider>();
-            var subscription = await subscriptionService.GetSubscription(options.Subscription, options.Tenant);
+            var subscription = await subscriptionService.GetSubscription(options.Subscription, options.Tenant, cancellationToken: cancellationToken);
 
             // Compose azqr command
             var command = $"scan --subscription-id {subscription.Id}";
@@ -103,7 +103,7 @@ public sealed class AzqrCommand(ILogger<AzqrCommand> logger, int processTimeoutS
             command += " --json";
 
             var processService = context.GetService<IExternalProcessService>();
-            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds);
+            var result = await processService.ExecuteAsync(azqrPath, command, _processTimeoutSeconds, cancellationToken: cancellationToken);
 
             if (result.ExitCode != 0)
             {

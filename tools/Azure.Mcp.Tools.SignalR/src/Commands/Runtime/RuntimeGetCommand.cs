@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -55,7 +55,7 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -73,7 +73,8 @@ public sealed class RuntimeGetCommand(ILogger<RuntimeGetCommand> logger)
                 options.SignalR,
                 options.Tenant,
                 options.AuthMethod,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             _logger.LogInformation("Found {Count} SignalR service(s) in subscription {SubscriptionId}",
                 runtimes.Count(), options.Subscription);

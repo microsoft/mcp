@@ -28,6 +28,7 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
     /// <param name="authMethod">Optional. The authentication method to use for the request.</param>
     /// <param name="tenantId">Optional. The Azure tenant ID for authentication.</param>
     /// <param name="retryPolicy">Optional. Policy parameters for retrying failed requests.</param>
+    /// <param name="cancellationToken">A cancellation token.</param>
     /// <returns>A JSON node containing the entity's health information.</returns>
     /// <exception cref="ArgumentException">Thrown when required parameters are missing or invalid.</exception>
     /// <exception cref="Exception">Thrown when parsing the health response fails.</exception>
@@ -38,9 +39,9 @@ public class MonitorHealthModelService(ITenantService tenantService, IHttpClient
         string subscription,
         AuthMethod? authMethod = null,
         string? tenantId = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
-        CancellationToken cancellationToken = CancellationToken.None;
         ValidateRequiredParameters((nameof(entity), entity), (nameof(healthModelName), healthModelName), (nameof(resourceGroupName), resourceGroupName), (nameof(subscription), subscription));
 
         string dataplaneEndpoint = await GetDataplaneEndpointAsync(subscription, resourceGroupName, healthModelName, cancellationToken);

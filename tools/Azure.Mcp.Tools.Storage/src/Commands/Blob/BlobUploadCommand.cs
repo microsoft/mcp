@@ -50,7 +50,7 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +70,8 @@ public sealed class BlobUploadCommand(ILogger<BlobUploadCommand> logger) : BaseB
                 options.LocalFilePath!,
                 options.Subscription!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(result, StorageJsonContext.Default.BlobUploadResult);
 

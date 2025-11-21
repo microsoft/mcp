@@ -50,7 +50,7 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +64,8 @@ public sealed class LedgerEntryGetCommand(IConfidentialLedgerService service, IL
             var result = await _service.GetLedgerEntryAsync(
                 options.LedgerName!,
                 options.TransactionId!,
-                options.CollectionId).ConfigureAwait(false);
+                options.CollectionId,
+                cancellationToken).ConfigureAwait(false);
 
             context.Response.Results = ResponseResult.Create(
                 result,

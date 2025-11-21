@@ -67,7 +67,7 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
             return context.Response;
@@ -81,8 +81,8 @@ public sealed class SubnetSizeAskCommand(ILogger<SubnetSizeAskCommand> logger)
                 options.Subscription!,
                 options.Sku!, options.Size,
                 options.Tenant,
-                options.RetryPolicy
-                );
+                options.RetryPolicy,
+                cancellationToken);
             context.Response.Results = ResponseResult.Create(new(result), ManagedLustreJsonContext.Default.FileSystemSubnetSizeResult);
         }
         catch (Exception ex)

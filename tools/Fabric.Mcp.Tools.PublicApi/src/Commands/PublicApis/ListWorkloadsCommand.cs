@@ -37,7 +37,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         try
         {
@@ -47,7 +47,7 @@ public sealed class ListWorkloadsCommand(ILogger<ListWorkloadsCommand> logger) :
             }
 
             var fabricService = context.GetService<IFabricPublicApiService>();
-            var workloads = await fabricService.ListWorkloadsAsync();
+            var workloads = await fabricService.ListWorkloadsAsync(cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workloads), FabricJsonContext.Default.ItemListCommandResult);
         }

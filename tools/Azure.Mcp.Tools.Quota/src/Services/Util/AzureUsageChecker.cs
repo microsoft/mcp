@@ -40,7 +40,7 @@ public record UsageInfo(
 
 public interface IUsageChecker
 {
-    Task<List<UsageInfo>> GetUsageForLocationAsync(string location);
+    Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 }
 
 // Abstract base class for checking Azure quotas
@@ -60,7 +60,7 @@ public abstract class AzureUsageChecker : IUsageChecker
         Logger = logger;
     }
 
-    public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location);
+    public abstract Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken);
 
 }
 
@@ -114,7 +114,8 @@ public static class AzureQuotaService
         string subscriptionId,
         string location,
         ILoggerFactory loggerFactory,
-        IHttpClientService httpClientService)
+        IHttpClientService httpClientService,
+        CancellationToken cancellationToken)
     {
         // Group resource types by provider to avoid duplicate processing
         var providerToResourceTypes = resourceTypes
@@ -130,7 +131,7 @@ public static class AzureQuotaService
             try
             {
                 var usageChecker = UsageCheckerFactory.CreateUsageChecker(credential, provider, subscriptionId, loggerFactory, httpClientService);
-                var quotaInfo = await usageChecker.GetUsageForLocationAsync(location);
+                var quotaInfo = await usageChecker.GetUsageForLocationAsync(location, cancellationToken);
                 logger.LogDebug("Retrieved quota info for provider {Provider}: {ItemCount} items", provider, quotaInfo.Count);
 
                 return resourceTypesForProvider.Select(rt => new KeyValuePair<string, List<UsageInfo>>(rt, quotaInfo));

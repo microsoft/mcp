@@ -55,14 +55,14 @@ public sealed class ClusterGetCommandTests
         );
 
         _kusto.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedCluster);
         var command = new ClusterGetCommand(_logger);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -79,14 +79,14 @@ public sealed class ClusterGetCommandTests
     public async Task ExecuteAsync_Returns404_WhenClusterDoesNotExist()
     {
         _kusto.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<KustoClusterModel>(new KeyNotFoundException("Kusto cluster 'clusterA' not found for subscription 'sub123'.")));
         var command = new ClusterGetCommand(_logger);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
         Assert.Contains("not found", response.Message);
@@ -97,14 +97,14 @@ public sealed class ClusterGetCommandTests
     {
         var expectedError = "Test error. To mitigate this issue, please refer to the troubleshooting guidelines here at https://aka.ms/azmcp/troubleshooting.";
         _kusto.GetClusterAsync(
-            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            "sub123", "clusterA", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Test error"));
         var command = new ClusterGetCommand(_logger);
 
         var args = command.GetCommand().Parse("--subscription sub123 --cluster clusterA");
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

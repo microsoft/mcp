@@ -50,7 +50,8 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string subscription,
         AuthMethod authMethod,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         // Enable bulk execution and distributed tracing telemetry features once they are supported by the Microsoft.Azure.Cosmos.Aot package.
         // var clientOptions = new CosmosClientOptions { AllowBulkExecution = true };
@@ -69,7 +70,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         {
             case AuthMethod.Key:
                 var cosmosAccount = await GetCosmosAccountAsync(subscription, accountName, tenant);
-                var keys = await cosmosAccount.GetKeysAsync();
+                var keys = await cosmosAccount.GetKeysAsync(cancellationToken);
                 cosmosClient = new CosmosClient(
                     string.Format(CosmosBaseUri, accountName),
                     keys.Value.PrimaryMasterKey,
@@ -80,18 +81,18 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             default:
                 cosmosClient = new CosmosClient(
                     string.Format(CosmosBaseUri, accountName),
-                    await GetCredential(tenant),
+                    await GetCredential(cancellationToken),
                     clientOptions);
                 break;
         }
 
         // Validate the client by performing a lightweight operation
-        await ValidateCosmosClientAsync(cosmosClient);
+        await ValidateCosmosClientAsync(cosmosClient, cancellationToken);
 
         return cosmosClient;
     }
 
-    private async Task ValidateCosmosClientAsync(CosmosClient client)
+    private async Task ValidateCosmosClientAsync(CosmosClient client, CancellationToken cancellationToken = default)
     {
         try
         {
@@ -113,12 +114,13 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var key = CosmosClientsCacheKeyPrefix + accountName;
-        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationResources);
+        var cosmosClient = await _cacheService.GetAsync<CosmosClient>(CacheGroup, key, s_cacheDurationResources, cancellationToken);
         if (cosmosClient != null)
             return cosmosClient;
 
@@ -130,9 +132,10 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
                 subscription,
                 authMethod,
                 tenant,
-                retryPolicy);
+                retryPolicy,
+                cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
             return cosmosClient;
         }
         catch (Exception ex) when (
@@ -145,24 +148,25 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
                 subscription,
                 AuthMethod.Key,
                 tenant,
-                retryPolicy);
+                retryPolicy,
+                cancellationToken);
 
-            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources);
+            await _cacheService.SetAsync(CacheGroup, key, cosmosClient, s_cacheDurationResources, cancellationToken);
             return cosmosClient;
         }
 
         throw new Exception($"Failed to create Cosmos client for account '{accountName}' with any authentication method");
     }
 
-    public async Task<List<string>> GetCosmosAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null)
+    public async Task<List<string>> GetCosmosAccounts(string subscription, string? tenant = null, RetryPolicyOptions? retryPolicy = null, CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
         var accounts = new List<string>();
         try
         {
-            await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync())
+            await foreach (var account in subscriptionResource.GetCosmosDBAccountsAsync(cancellationToken))
             {
                 if (account?.Data?.Name != null)
                 {
@@ -183,19 +187,20 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(subscription), subscription));
 
         var cacheKey = CosmosDatabasesCacheKeyPrefix + accountName;
 
-        var cachedDatabases = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources);
+        var cachedDatabases = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedDatabases != null)
         {
             return cachedDatabases;
         }
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var databases = new List<string>();
 
         try
@@ -203,7 +208,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             var iterator = client.GetDatabaseQueryStreamIterator();
             while (iterator.HasMoreResults)
             {
-                using ResponseMessage dbResponse = await iterator.ReadNextAsync();
+                using ResponseMessage dbResponse = await iterator.ReadNextAsync(cancellationToken);
                 if (!dbResponse.IsSuccessStatusCode)
                 {
                     throw new Exception(dbResponse.ErrorMessage);
@@ -227,7 +232,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             throw new Exception($"Error listing databases in the account '{accountName}': {ex.Message}", ex);
         }
 
-        await _cacheService.SetAsync(CacheGroup, cacheKey, databases, s_cacheDurationResources);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, databases, s_cacheDurationResources, cancellationToken);
         return databases;
     }
 
@@ -237,19 +242,20 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(subscription), subscription));
 
         var cacheKey = CosmosContainersCacheKeyPrefix + accountName + "_" + databaseName;
 
-        var cachedContainers = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources);
+        var cachedContainers = await _cacheService.GetAsync<List<string>>(CacheGroup, cacheKey, s_cacheDurationResources, cancellationToken);
         if (cachedContainers != null)
         {
             return cachedContainers;
         }
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
         var containers = new List<string>();
 
         try
@@ -258,7 +264,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             var iterator = database.GetContainerQueryStreamIterator();
             while (iterator.HasMoreResults)
             {
-                using ResponseMessage containerRResponse = await iterator.ReadNextAsync();
+                using ResponseMessage containerRResponse = await iterator.ReadNextAsync(cancellationToken);
                 if (!containerRResponse.IsSuccessStatusCode)
                 {
                     throw new Exception(containerRResponse.ErrorMessage);
@@ -282,7 +288,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             throw new Exception($"Error listing containers in database '{databaseName}' of account '{accountName}': {ex.Message}", ex);
         }
 
-        await _cacheService.SetAsync(CacheGroup, cacheKey, containers, s_cacheDurationResources);
+        await _cacheService.SetAsync(CacheGroup, cacheKey, containers, s_cacheDurationResources, cancellationToken);
         return containers;
     }
 
@@ -294,11 +300,12 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
         string subscription,
         AuthMethod authMethod = AuthMethod.Credential,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(accountName), accountName), (nameof(databaseName), databaseName), (nameof(containerName), containerName), (nameof(subscription), subscription));
 
-        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy);
+        var client = await GetCosmosClientAsync(accountName, subscription, authMethod, tenant, retryPolicy, cancellationToken);
 
         try
         {
@@ -314,7 +321,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
 
             while (queryIterator.HasMoreResults)
             {
-                using ResponseMessage response = await queryIterator.ReadNextAsync();
+                using ResponseMessage response = await queryIterator.ReadNextAsync(cancellationToken);
                 using var document = JsonDocument.Parse(response.Content);
                 items.Add(document.RootElement.Clone());
             }
@@ -338,7 +345,7 @@ public class CosmosService(ISubscriptionService subscriptionService, ITenantServ
             if (disposing)
             {
                 // Get all cached client keys
-                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup);
+                var keys = await _cacheService.GetGroupKeysAsync(CacheGroup, CancellationToken.None);
 
                 // Filter for client keys only (those that start with the client prefix)
                 var clientKeys = keys.Where(k => k.StartsWith(CosmosClientsCacheKeyPrefix));

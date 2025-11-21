@@ -32,7 +32,7 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +53,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                     options.ClusterUri!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -62,7 +63,8 @@ public sealed class DatabaseListCommand(ILogger<DatabaseListCommand> logger) : B
                     options.ClusterName!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new(databasesNames ?? []), KustoJsonContext.Default.DatabaseListCommandResult);

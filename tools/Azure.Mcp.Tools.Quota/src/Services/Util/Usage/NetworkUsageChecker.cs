@@ -9,12 +9,12 @@ namespace Azure.Mcp.Tools.Quota.Services.Util.Usage;
 
 public class NetworkUsageChecker(TokenCredential credential, string subscriptionId, ILogger<NetworkUsageChecker> logger) : AzureUsageChecker(credential, subscriptionId, logger)
 {
-    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location)
+    public override async Task<List<UsageInfo>> GetUsageForLocationAsync(string location, CancellationToken cancellationToken)
     {
         try
         {
             var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
-            var usages = subscription.GetUsagesAsync(location);
+            var usages = subscription.GetUsagesAsync(location, cancellationToken);
             var result = new List<UsageInfo>();
 
             await foreach (var item in usages)

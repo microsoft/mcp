@@ -7,21 +7,23 @@ See eng\scripts\Process-PackageReadMe.ps1 for instruction on how to annotate thi
 > Azure MCP Server 1.0 is now [generally available](https://aka.ms/azmcp/announcement/ga).
 <!-- remove-section: end remove_note_ga -->
 
+<!-- insert-section: nuget {{MCPRepositoryMetadata}} -->
+
 All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP specification](https://modelcontextprotocol.io) to create a seamless connection between AI agents and Azure services. Azure MCP Server can be used alone or with the [GitHub Copilot for Azure extension](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-github-copilot) in VS Code.
 <!-- remove-section: start nuget;vsix;npm remove_install_links -->
-[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio](https://img.shields.io/badge/Visual_Studio-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022)  [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
+[![Install Azure MCP in VS Code](https://img.shields.io/badge/VS_Code-Install_Azure_MCP_Server-0098FF?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-Install_Azure_MCP_Server-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=white)](https://vscode.dev/redirect?url=vscode-insiders:extension/ms-azuretools.vscode-azure-mcp-server) [![Install Azure MCP in Visual Studio 2026](https://img.shields.io/badge/Visual_Studio_2026-Install_Azure_MCP_Server-8D52F3?style=flat-square&logo=visualstudio&logoColor=white)](https://aka.ms/ghcp4a/vs2026) [![Install Azure MCP in Visual Studio 2022](https://img.shields.io/badge/Visual_Studio_2022-Install_Azure_MCP_Server-C16FDE?style=flat-square&logo=visualstudio&logoColor=white)](https://marketplace.visualstudio.com/items?itemName=github-copilot-azure.GitHubCopilotForAzure2022) [![Install Azure MCP Server](https://img.shields.io/badge/IntelliJ%20IDEA-Install%20Azure%20MCP%20Server-1495b1?style=flat-square&logo=intellijidea&logoColor=white)](https://plugins.jetbrains.com/plugin/8053) [![Install Azure MCP in Eclipse](https://img.shields.io/badge/Eclipse-Install_Azure_MCP_Server-b6ae1d?style=flat-square&logo=eclipse&logoColor=white)](https://marketplace.eclipse.org/content/azure-toolkit-eclipse)
 
 [![GitHub](https://img.shields.io/badge/github-microsoft/mcp-blue.svg?style=flat-square&logo=github&color=2787B7)](https://github.com/microsoft/mcp)
 [![GitHub Release](https://img.shields.io/github/v/release/microsoft/mcp?include_prereleases&filter=Azure.Mcp.*&style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/releases?q=Azure.Mcp.Server-)
 [![License](https://img.shields.io/badge/license-MIT-green?style=flat-square&color=2787B7)](https://github.com/microsoft/mcp/blob/main/LICENSE)
 
 <!-- remove-section: end remove_install_links -->
-
 ## Table of Contents
 - [Overview](#overview)
 - [Installation](#installation)<!-- remove-section: start nuget;vsix;npm remove_installation_sub_sections -->
     - [IDE](#ide)
         - [VS Code (Recommended)](#vs-code-recommended)
+        - [Visual Studio 2026](#visual-studio-2026)
         - [Visual Studio 2022](#visual-studio-2022)
         - [IntelliJ IDEA](#intellij-idea)
         - [Eclipse IDE](#eclipse-ide)
@@ -29,7 +31,10 @@ All Azure MCP tools in a single server. The Azure MCP Server implements the [MCP
     - [Package Manager](#package-manager)
         - [NuGet](#nuget)
         - [NPM](#npm)
-        - [Docker](#docker)<!-- remove-section: end remove_installation_sub_sections -->
+        - [Docker](#docker)
+    - [Remote MCP Server (preview)](#remote-mcp-server-preview)
+        - [Microsoft Foundry](#microsoft-foundry)
+        - [Microsoft Copilot Studio](#microsoft-copilot-studio)<!-- remove-section: end remove_installation_sub_sections -->
 - [Usage](#usage)
     - [Getting Started](#getting-started)
     - [What can you do with the Azure MCP Server?](#what-can-you-do-with-the-azure-mcp-server)
@@ -116,6 +121,14 @@ Compatible with both the [Stable](https://code.visualstudio.com/download) and [I
 1. Install the [GitHub Copilot Chat](https://marketplace.visualstudio.com/items?itemName=GitHub.copilot-chat) extension.
 1. Install the [Azure MCP Server](https://marketplace.visualstudio.com/items?itemName=ms-azuretools.vscode-azure-mcp-server) extension.
 1. Sign in to Azure ([Command Palette](https://code.visualstudio.com/docs/getstarted/getting-started#_access-commands-with-the-command-palette): `Azure: Sign In`).
+
+### Visual Studio 2026
+1. Download [Visual Studio 2026](https://visualstudio.microsoft.com/) or [Visual Studio 2026 Insiders](https://visualstudio.microsoft.com/insiders/) and install using the **Visual Studio Installer**.
+    - If Visual Studio 2026 is already installed, open the **Visual Studio Installer** and select the **Modify** button, which displays the available workloads.
+1. On the Workloads tab, select **Azure and AI development** and select **GitHub Copilot**.
+1. Click **install while downloading** to complete the installation.
+   
+For more information, visit [Install GitHub Copilot for Azure in Visual Studio 2026](https://aka.ms/ghcp4a/vs2026)
 
 ### Visual Studio 2022
 
@@ -322,6 +335,19 @@ AZURE_CLIENT_SECRET={YOUR_AZURE_CLIENT_SECRET}
 
 To use Azure Entra ID, review the [troubleshooting guide](https://github.com/microsoft/mcp/blob/main/servers/Azure.Mcp.Server/TROUBLESHOOTING.md#using-azure-entra-id-with-docker).
 <!-- remove-section: end remove_package_manager_section -->
+
+## Remote MCP Server (preview)
+
+Microsoft Foundry and Microsoft Copilot Studio require remote MCP server endpoints. To self-host the Azure MCP Server for use with these platforms, deploy it as a remote MCP server on [Azure Container Apps](https://learn.microsoft.com/azure/container-apps/overview).
+
+### Microsoft Foundry
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-foundry-managed-identity/) for Microsoft Foundry.
+2. See [Microsoft Foundry's MCP documentation](https://learn.microsoft.com/azure/ai-foundry/agents/how-to/tools/model-context-protocol) for more details.
+
+### Microsoft Copilot Studio
+
+1. Follow the [deployment guide](https://github.com/microsoft/mcp/tree/main/servers/Azure.Mcp.Server/azd-templates/aca-copilot-studio-managed-identity/) for Microsoft Copilot Studio.
 <!-- remove-section: end remove_entire_installation_sub_section -->
 
 # Usage
@@ -341,13 +367,21 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 ✨ The Azure MCP Server supercharges your agents with Azure context. Here are some cool prompts you can try:
 
-### 🧮 Azure AI Foundry
+### 🧮 Microsoft Foundry
 
-* List Azure Foundry models
-* Deploy foundry models
-* List foundry model deployments
+* List Microsoft Foundry models
+* Deploy Microsoft Foundry models
+* List Microsoft Foundry model deployments
 * List knowledge indexes
 * Get knowledge index schema configuration
+* Create Microsoft Foundry agents
+* List Microsoft Foundry agents
+* Connect and query Microsoft Foundry agents
+* Evaluate Microsoft Foundry agents
+* Get SDK samples for interacting with Microsoft Foundry agent
+* Create Microsoft Foundry agent threads
+* List Microsoft Foundry agent threads
+* Get messages of a Microsoft Foundry thread
   
 ### 🔎 Azure AI Search
 
@@ -360,6 +394,9 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 * "Recognize speech from my audio file with language detection"
 * "Transcribe speech from audio with profanity filtering"
 * "Transcribe audio with phrase hints for better accuracy"
+* "Convert text to speech and save to output.wav"
+* "Synthesize speech from 'Hello, welcome to Azure' with Spanish voice"
+* "Generate MP3 audio from text with high quality format"
 
 ### ⚙️ Azure App Configuration
 
@@ -499,9 +536,10 @@ To use Azure Entra ID, review the [troubleshooting guide](https://github.com/mic
 
 The Azure MCP Server provides tools for interacting with **40+ Azure service areas**:
 
-- 🧮 **Azure AI Foundry** - AI model management, AI model deployment, and knowledge index management
+- 🧮 **Microsoft Foundry** - AI model management, AI model deployment, and knowledge index management
 - 🔎 **Azure AI Search** - Search engine/vector database operations
-- 🎤 **Azure AI Services Speech** - Speech-to-text recognition
+- 🎤 **Azure AI Services Speech** - Speech-to-text recognition and text-to-speech synthesis
+- 🤖 **Azure AI Best Practices** - AI app development guidance for Microsoft Foundry and Microsoft Agent Framework
 - ⚙️ **Azure App Configuration** - Configuration management
 - 🕸️ **Azure App Service** - Web app hosting
 - 🛡️ **Azure Best Practices** - Secure, production-grade guidance
@@ -577,9 +615,27 @@ The software may collect information about you and your use of the software and 
 <!-- remove-section: start vsix remove_telemetry_config_section -->
 ### Telemetry Configuration
 
-Telemetry collection is on by default.
+Telemetry collection is on by default. The server supports two telemetry streams:
 
-To opt out, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false` in your environment.
+1. **User-provided telemetry**: If you configure your own Application Insights connection string via the `APPLICATIONINSIGHTS_CONNECTION_STRING` environment variable, telemetry will be sent to your Application Insights resource.
+
+2. **Microsoft telemetry**: By default, telemetry is also sent to Microsoft to help improve the product. This can be disabled separately from user-provided telemetry. See [Disabling All Telemetry](#disabling-all-telemetry) section below for more details.
+
+#### Disabling All Telemetry
+
+To disable all telemetry collection (both user-provided and Microsoft), set the environment variable `AZURE_MCP_COLLECT_TELEMETRY` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY=false
+```
+
+#### Disabling Microsoft Telemetry Only
+
+To disable only Microsoft telemetry collection while keeping your own Application Insights telemetry active, set the environment variable `AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT` to `false`:
+
+```bash
+export AZURE_MCP_COLLECT_TELEMETRY_MICROSOFT=false
+```
 <!-- remove-section: end remove_telemetry_config_section -->
 
 ## Compliance Responsibility

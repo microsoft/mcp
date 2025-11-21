@@ -127,7 +127,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = "test-transport"
+            Transport = TransportTypes.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 
@@ -191,13 +191,13 @@ public class TelemetryServiceTests
         // Test both overloads.
         Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id"));
 
-        var implementation = new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
             Title = "Test MCP server"
         };
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
@@ -216,7 +216,7 @@ public class TelemetryServiceTests
         var mockOptions = Substitute.For<IOptions<AzureMcpServerConfiguration>>();
         mockOptions.Value.Returns(configuration);
 
-        var implementation = new Implementation
+        var clientInfo = new Implementation
         {
             Name = "Foo-Bar-MCP",
             Version = "1.0.0",
@@ -228,7 +228,7 @@ public class TelemetryServiceTests
 
         await Assert.ThrowsAsync<ArgumentNullException>(() => service.InitializeAsync());
 
-        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", implementation));
+        Assert.Throws<InvalidOperationException>(() => service.StartActivity("an-activity-id", clientInfo));
     }
 
     [Fact]
@@ -239,7 +239,7 @@ public class TelemetryServiceTests
         {
             Mode = "test-mode",
             Debug = true,
-            Transport = "test-transport"
+            Transport = TransportTypes.StdIo
         };
         _mockServiceOptions.Value.Returns(serviceStartOptions);
 

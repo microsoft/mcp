@@ -13,7 +13,8 @@ public interface IAksService
         string? clusterName,
         string? resourceGroup,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<NodePool>> GetNodePools(
         string subscription,
@@ -21,5 +22,6 @@ public interface IAksService
         string clusterName,
         string? nodePoolName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

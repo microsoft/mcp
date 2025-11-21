@@ -12,12 +12,14 @@ public interface IManagedLustreService
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<int> GetRequiredAmlFSSubnetsSize(string subscription,
         string sku, int size,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<bool> CheckAmlFSSubnetAsync(
         string subscription,
@@ -26,13 +28,15 @@ public interface IManagedLustreService
         string subnetId,
         string location,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<List<ManagedLustreSkuInfo>> SkuGetInfoAsync(
         string subscription,
         string? tenant = null,
         string? location = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<LustreFileSystem> CreateFileSystemAsync(
         string subscription,
@@ -61,7 +65,8 @@ public interface IManagedLustreService
         string? sourceVaultId = null,
         string? userAssignedIdentityId = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 
     Task<LustreFileSystem> UpdateFileSystemAsync(
         string subscription,
@@ -76,6 +81,7 @@ public interface IManagedLustreService
         long? squashUid = null,
         long? squashGid = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
 

@@ -119,7 +119,7 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -160,7 +160,8 @@ public sealed class NamespaceUpdateCommand(ILogger<NamespaceUpdateCommand> logge
                 options.ZoneRedundant,
                 tags,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(
                 new NamespaceUpdateCommandResult(updatedNamespace),

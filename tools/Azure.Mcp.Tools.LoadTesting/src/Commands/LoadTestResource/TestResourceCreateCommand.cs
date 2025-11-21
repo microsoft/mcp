@@ -33,7 +33,7 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +53,8 @@ public sealed class TestResourceCreateCommand(ILogger<TestResourceCreateCommand>
                 options.ResourceGroup!,
                 options.TestResourceName!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
             // Set results if any were returned
             context.Response.Results = results != null ?
                 ResponseResult.Create(new(results), LoadTestJsonContext.Default.TestResourceCreateCommandResult) :

@@ -9,8 +9,8 @@ parameters:
   type: object
 - name: TestTimeoutInMinutes
   type: number
-- name: ServerName
-  type: string
+- name: PackageDocker
+  type: boolean
 
 jobs:
 - job: Verify_Packages_${{ parameters.OSName }}
@@ -46,12 +46,13 @@ jobs:
       versionSpec: 20.x
 
   - task: Powershell@2
-    displayName: "Verify npm and nuget packages"
+    displayName: "Verify packages/images and run smoke tests"
     inputs:
       pwsh: true
-      filePath: $(Build.SourcesDirectory)/eng/scripts/McpServerSmokeTests.ps1
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Invoke-PackageSmokeTests.ps1
       arguments: >
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -ArtifactsDirectory $(Pipeline.Workspace)
         -TargetOs ${{ parameters.OSName }}
         -TargetArch $(Architecture)
+        -TestDocker:$${{ parameters.PackageDocker }}

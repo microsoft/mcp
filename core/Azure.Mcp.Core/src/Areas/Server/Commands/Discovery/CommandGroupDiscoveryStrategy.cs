@@ -26,11 +26,8 @@ public sealed class CommandGroupDiscoveryStrategy(CommandFactory commandFactory,
     /// </summary>
     public string? EntryPoint { get; set; } = null;
 
-    /// <summary>
-    /// Discovers available command groups and converts them to MCP server providers.
-    /// </summary>
-    /// <returns>A collection of command group server providers.</returns>
-    public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync()
+    /// <inheritdoc/>
+    public override Task<IEnumerable<IMcpServerProvider>> DiscoverServersAsync(CancellationToken cancellationToken)
     {
         var providers = _commandFactory.RootGroup.SubGroup
             .Where(group => !DiscoveryConstants.IgnoredCommandGroups.Contains(group.Name, StringComparer.OrdinalIgnoreCase))

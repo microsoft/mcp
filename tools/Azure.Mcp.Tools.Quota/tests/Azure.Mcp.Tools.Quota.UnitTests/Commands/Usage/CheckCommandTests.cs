@@ -73,7 +73,8 @@ public sealed class CheckCommandTests
                     list.Contains("Microsoft.App") &&
                     list.Contains("Microsoft.Storage/storageAccounts")),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -85,7 +86,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -99,7 +100,8 @@ public sealed class CheckCommandTests
                 list.Contains("Microsoft.App") &&
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -135,7 +137,8 @@ public sealed class CheckCommandTests
         _quotaService.GetAzureQuotaAsync(
                 Arg.Any<List<string>>(),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -147,7 +150,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -166,7 +169,8 @@ public sealed class CheckCommandTests
         _quotaService.GetAzureQuotaAsync(
                 Arg.Any<List<string>>(),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(expectedException);
 
         var args = _commandDefinition.Parse([
@@ -178,7 +182,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -208,7 +212,8 @@ public sealed class CheckCommandTests
                     list.Contains("Microsoft.Storage/storageAccounts") &&
                     list.Contains("Microsoft.Compute/virtualMachines")),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -220,7 +225,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -234,7 +239,8 @@ public sealed class CheckCommandTests
                 list.Contains("Microsoft.Storage/storageAccounts") &&
                 list.Contains("Microsoft.Compute/virtualMachines")),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -248,7 +254,8 @@ public sealed class CheckCommandTests
         _quotaService.GetAzureQuotaAsync(
                 Arg.Any<List<string>>(),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _commandDefinition.Parse([
@@ -260,7 +267,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -291,7 +298,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -320,7 +327,8 @@ public sealed class CheckCommandTests
                     list.Contains("microsoft.storage/storageaccounts") &&
                     list.Contains("Microsoft.Compute/VirtualMachines")),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -332,7 +340,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -347,7 +355,8 @@ public sealed class CheckCommandTests
                 list.Contains("microsoft.storage/storageaccounts") &&
                 list.Contains("Microsoft.Compute/VirtualMachines")),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -374,7 +383,8 @@ public sealed class CheckCommandTests
                     list.Count == 1 &&
                     list.Contains("Microsoft.UnsupportedProvider/resourceType")),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -386,7 +396,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -399,7 +409,8 @@ public sealed class CheckCommandTests
                 list.Count == 1 &&
                 list.Contains("Microsoft.UnsupportedProvider/resourceType")),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure
         var json = JsonSerializer.Serialize(result.Results);
@@ -443,7 +454,8 @@ public sealed class CheckCommandTests
         _quotaService.GetAzureQuotaAsync(
                 Arg.Is<List<string>>(list => list.Count == 50),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -455,7 +467,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -466,7 +478,8 @@ public sealed class CheckCommandTests
         await _quotaService.Received(1).GetAzureQuotaAsync(
             Arg.Is<List<string>>(list => list.Count == 50),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
 
         // Verify the response contains all expected resource types
         var json = JsonSerializer.Serialize(result.Results);
@@ -501,7 +514,8 @@ public sealed class CheckCommandTests
                     list.Count == 1 &&
                     list.Contains("Microsoft.Storage/storageAccounts")),
                 subscriptionId,
-                region)
+                region,
+                Arg.Any<CancellationToken>())
             .Returns(expectedQuotaInfo);
 
         var args = _commandDefinition.Parse([
@@ -513,7 +527,7 @@ public sealed class CheckCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var result = await _command.ExecuteAsync(context, args);
+        var result = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(result);
@@ -526,7 +540,8 @@ public sealed class CheckCommandTests
                 list.Count == 1 &&
                 list.Contains("Microsoft.Storage/storageAccounts")),
             subscriptionId,
-            region);
+            region,
+            Arg.Any<CancellationToken>());
 
         // Verify the response structure contains descriptive error in Description
         var json = JsonSerializer.Serialize(result.Results);

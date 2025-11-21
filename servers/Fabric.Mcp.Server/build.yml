@@ -3,6 +3,15 @@ parameters:
   type: string
   values: [ none, internal, public ]
   default: 'none'
+- name: PackageDocker
+  type: boolean
+  default: false
+- name: PackageVSIX
+  type: boolean
+  default: true
+- name: IncludeNative
+  type: boolean
+  default: true
 
 trigger: none
 pr: none
@@ -13,6 +22,6 @@ extends:
     ServerName: Fabric.Mcp.Server
     PublishTarget: ${{ parameters.PublishTarget }}
     RunLiveTests: true
-    PackageDocker: false
-    PackageVSIX: false
-    IncludeNative: false
+    PackageDocker: ${{ parameters.PackageDocker }}
+    PackageVSIX: ${{ parameters.PackageVSIX }}
+    IncludeNative: ${{ parameters.IncludeNative }}
