@@ -2,11 +2,9 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.6 (Unreleased)
+## 2.0.0-beta.7 (Unreleased)
 
 ### Features Added
-
-- Added [Hidden] command `azmcp server info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164/)]
 
 ### Breaking Changes
 
@@ -14,8 +12,26 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Other Changes
 
-- Begin capturing information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
-- Renamed Microsoft Azure AI Foundry to Microsoft Foundry. [[#1211](https://github.com/microsoft/mcp/pull/1211/)]
+## 2.0.0-beta.6 (2025-11-19)
+
+### Features Added
+
+- Added a [hidden] command `server_info` to provide server information (name, version) so server metadata is programmatically parsed in telemetry. [[#1164](https://github.com/microsoft/mcp/pull/1164)]
+
+- Added OpenTelemetry tracing support with Azure Monitor exporter for HTTP transport mode, allowing self-hosted instances to export traces to Application Insights when `APPLICATIONINSIGHTS_CONNECTION_STRING` is configured. [[#1227](https://github.com/microsoft/mcp/pull/1227)]
+
+### Bugs Fixed
+-
+
+- Improved performance of AI Code generation in Visual Studio 2026. [[#1179](https://github.com/microsoft/mcp/pull/1179)]
+- Updated the `AzureAIBestPractices` tool to recommend `AIProjectClient` instead of `PersistentAgentsClient`. [[#1209](https://github.com/microsoft/mcp/pull/1209)]
+
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
+
+### Other Changes
+
+- We now capture information for the MCP client request's `_meta` store. [[#1154](https://github.com/microsoft/mcp/pull/1154)]
+- Renamed Microsoft Azure AI Foundry to Microsoft Foundry. [[#1211](https://github.com/microsoft/mcp/pull/1211)]
 - Added version display to CLI help output. The version now appears on the first line when running any help command (e.g., `azmcp --help`). [[#1161](https://github.com/microsoft/mcp/pull/1161)]
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
 
