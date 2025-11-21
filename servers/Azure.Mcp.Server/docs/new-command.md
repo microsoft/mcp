@@ -1185,7 +1185,7 @@ using Azure.Mcp.Tools.{Toolset}.Models;
 
 [JsonSerializable(typeof({Resource}{Operation}Command.{Resource}{Operation}CommandResult))]
 [JsonSerializable(typeof(YourModelType))]
-[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
+[JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
 internal partial class {Toolset}JsonContext : JsonSerializerContext;
 ```
 
