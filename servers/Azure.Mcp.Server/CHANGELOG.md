@@ -10,6 +10,8 @@ The Azure MCP Server updates automatically by default whenever a new release com
 
 ### Bugs Fixed
 
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
+
 ### Other Changes
 
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
@@ -23,12 +25,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 - Added OpenTelemetry tracing support with Azure Monitor exporter for HTTP transport mode, allowing self-hosted instances to export traces to Application Insights when `APPLICATIONINSIGHTS_CONNECTION_STRING` is configured. [[#1227](https://github.com/microsoft/mcp/pull/1227)]
 
 ### Bugs Fixed
--
 
 - Improved performance of AI Code generation in Visual Studio 2026. [[#1179](https://github.com/microsoft/mcp/pull/1179)]
 - Updated the `AzureAIBestPractices` tool to recommend `AIProjectClient` instead of `PersistentAgentsClient`. [[#1209](https://github.com/microsoft/mcp/pull/1209)]
-
-- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
 
 ### Other Changes
 
