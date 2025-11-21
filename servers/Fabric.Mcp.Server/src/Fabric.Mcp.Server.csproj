@@ -8,7 +8,7 @@
     <ReadmePath>$(RepoRoot)/servers/Fabric.Mcp.Server/README.md</ReadmePath>
     <PackageIcon>$(RepoRoot)/servers/Fabric.Mcp.Server/fabric-icon.png</PackageIcon>
     <McpRepositoryName>com.microsoft/microsoft-fabric</McpRepositoryName>
-    <ServerJsonPath>$(RepoRoot)/servers/Fabric.Mcp.Server/server.json</ServerJsonPath>
+    <ServerJsonPath>servers/Fabric.Mcp.Server/server.json</ServerJsonPath>
 
     <!-- npm settings -->
     <NpmPackageName>@microsoft/fabric-mcp</NpmPackageName>
