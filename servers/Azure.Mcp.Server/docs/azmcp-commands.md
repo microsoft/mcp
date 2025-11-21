@@ -88,7 +88,7 @@ azmcp server start \
 
 #### Specific Tool Filtering
 
-Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode. 
+Exposes only specific tools by name, providing the finest level of granularity. The `--namespace` and `--tool` options cannot be used together. Use multiple `--tool` parameters to include multiple tools. Using `--tool` automatically switches to `all` mode.
 
 ```bash
 # Start MCP Server with default mode and only subscription and resource group tools
@@ -218,150 +218,6 @@ azmcp azureaibestpractices get
 #   - Microsoft Agent Framework usage and patterns
 #   - Microsoft Foundry model selection
 #   - Best practices for ai app / agent development in Azure
-```
-
-### Microsoft Foundry Operations
-
-```bash
-# Create an agent in a Microsoft Foundry project
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents create --endpoint <endpoint> \
-                            --model-deployment <model-deployment> \
-                            --agent-name <agent-name> \
-                            --systemInstruction <system-instruction>
-
-# Connect to an agent in a Microsoft Foundry project and query it
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents connect --agent-id <agent-id> \
-                             --query <query> \
-                             --endpoint <endpoint>
-
-# Evaluate a response from an agent by passing query and response inline
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents evaluate --agent-id <agent-id> \
-                              --query <query> \
-                              --response <response> \
-                              --evaluator <evaluator> \
-                              --azure-openai-endpoint <azure-openai-endpoint> \
-                              --azure-openai-deployment <azure-openai-deployment> \
-                              [--tool-definitions <tool-definitions>]
-
-# Get SDK samples for interacting with a Microsoft Foundry agent
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
-
-# List all Azure AI Agents available in the configured project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents list --endpoint <endpoint>
-
-# Query and evaluate an agent in one command
-# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
-                                        --query <query> \
-                                        --endpoint <endpoint> \
-                                        --azure-openai-endpoint <azure-openai-endpoint> \
-                                        --azure-openai-deployment <azure-openai-deployment> \
-                                        [--evaluators <evaluators>]
-
-# List knowledge indexes in a Microsoft Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index list --endpoint <endpoint>
-
-# Get knowledge index schema information
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry knowledge index schema --endpoint <endpoint> \
-                                     --index <index>
-
-# Deploy a Microsoft Foundry model
-# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deploy --subscription <subscription> \
-                            --resource-group <resource-group> \
-                            --deployment <deployment> \
-                            --model-name <model> \
-                            --model-format <model-format> \
-                            --azure-ai-services <azure-ai-services> \
-                            [--model-version <model-version>] \
-                            [--model-source <model-source>] \
-                            [--sku <sku>] \
-                            [--sku-capacity <sku-capacity>] \
-                            [--scale-type <scale-type>] \
-                            [--scale-capacity <scale-capacity>]
-
-# List Microsoft Foundry model deployments
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models deployments list --endpoint <endpoint>
-
-# List Microsoft Foundry models
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
-                          [--publisher <publisher>] \
-                          [--license <license>] \
-                          [--model-name <model>]
-
-# Create interactive chat completions using Azure OpenAI chat models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai chat-completions-create --subscription <subscription> \
-                                             --resource-group <resource-group> \
-                                             --resource-name <resource-name> \
-                                             --deployment <deployment-name> \
-                                             --message-array <message-array> \
-                                             [--max-tokens <max-tokens>] \
-                                             [--temperature <temperature>] \
-                                             [--top-p <top-p>] \
-                                             [--frequency-penalty <frequency-penalty>] \
-                                             [--presence-penalty <presence-penalty>] \
-                                             [--stop <stop-sequences>] \
-                                             [--stream <stream>] \
-                                             [--seed <seed>] \
-                                             [--user <user>] \
-                                             [--auth-method <auth-method>]
-
-# Generate text completions using deployed Azure OpenAI models in Microsoft Foundry
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai create-completion --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --prompt-text <prompt-text> \
-                                       [--max-tokens <max-tokens>] \
-                                       [--temperature <temperature>]
-
-# Generate vector embeddings for text using Azure OpenAI embedding models
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai embeddings-create --subscription <subscription> \
-                                       --resource-group <resource-group> \
-                                       --resource-name <resource-name> \
-                                       --deployment <deployment-name> \
-                                       --input-text <input-text> \
-                                       [--user <user>] \
-                                       [--encoding-format <encoding-format>] \
-                                       [--dimensions <dimensions>] \
-                                       [--auth-method <auth-method>]
-
-# List all available OpenAI models and deployments in an Azure resource
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry openai models-list --subscription <subscription> \
-                                 --resource-group <resource-group> \
-                                 --resource-name <resource-name> \
-                                 [--auth-method <auth-method>]
-
-# Get Microsoft Foundry (Cognitive Services) resource details
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry resource get --subscription <subscription> \
-                           [--resource-group <resource-group>] \
-                           [--resource-name <resource-name>]
-
-# Create a Microsoft Foundry agent thread
-# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads create --endpoint <endpoint> --user-message <user-message>
-
-# Get messages of a Microsoft Foundry agent thread
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads get-messages --endpoint <endpoint> --thread-id <thread-id>
-
-# List Microsoft Foundry agent threads in a Foundry project
-# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
-azmcp foundry threads list --endpoint <endpoint>
 ```
 
 ### Azure AI Search Operations
@@ -1662,7 +1518,7 @@ azmcp monitor webtests update --subscription <subscription> \
 # List Azure Managed Lustre Filesystems available in a subscription or resource group
 # ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs list --subscription <subscription> \
-                                         --resource-group <resource-group> 
+                                         --resource-group <resource-group>
 
 # Create an Azure Managed Lustre filesystem
 # ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
@@ -2175,6 +2031,152 @@ azmcp cloudarchitect design --question "What type of application are you buildin
                             --question-number 1 \
                             --total-questions 5 \
                             --confidence-score 0.1
+```
+
+### Microsoft Foundry Operations
+
+```bash
+# Create an agent in a Microsoft Foundry project
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents create --endpoint <endpoint> \
+                            --model-deployment <model-deployment> \
+                            --agent-name <agent-name> \
+                            --systemInstruction <system-instruction>
+
+# Connect to an agent in a Microsoft Foundry project and query it
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents connect --agent-id <agent-id> \
+                             --query <query> \
+                             --endpoint <endpoint>
+
+# Evaluate a response from an agent by passing query and response inline
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents evaluate --agent-id <agent-id> \
+                              --query <query> \
+                              --response <response> \
+                              --evaluator <evaluator> \
+                              --azure-openai-endpoint <azure-openai-endpoint> \
+                              --azure-openai-deployment <azure-openai-deployment> \
+                              [--tool-definitions <tool-definitions>]
+
+# Get SDK samples for interacting with a Microsoft Foundry agent
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents get-sdk-sample --programming-language <python|typescript|csharp>
+
+# List all Azure AI Agents available in the configured project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents list --endpoint <endpoint>
+
+# Query and evaluate an agent in one command
+# ❌ Destructive | ❌ Idempotent | ✅ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry agents query-and-evaluate --agent-id <agent-id> \
+                                        --query <query> \
+                                        --endpoint <endpoint> \
+                                        --azure-openai-endpoint <azure-openai-endpoint> \
+                                        --azure-openai-deployment <azure-openai-deployment> \
+                                        [--evaluators <evaluators>]
+
+# List knowledge indexes in a Microsoft Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry knowledge index list --endpoint <endpoint>
+
+# Get knowledge index schema information
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry knowledge index schema --endpoint <endpoint> \
+                                     --index <index>
+
+# Deploy a Microsoft Foundry model
+# ✅ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deploy --subscription <subscription> \
+                            --resource-group <resource-group> \
+                            --deployment <deployment> \
+                            --model-name <model> \
+                            --model-format <model-format> \
+                            --azure-ai-services <azure-ai-services> \
+                            [--model-version <model-version>] \
+                            [--model-source <model-source>] \
+                            [--sku <sku>] \
+                            [--sku-capacity <sku-capacity>] \
+                            [--scale-type <scale-type>] \
+                            [--scale-capacity <scale-capacity>]
+
+# List Microsoft Foundry model deployments
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models deployments list --endpoint <endpoint>
+
+# List Microsoft Foundry models
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry models list [--search-for-free-playground <search-for-free-playground>] \
+                          [--publisher <publisher>] \
+                          [--license <license>] \
+                          [--model-name <model>]
+
+# Create interactive chat completions using Azure OpenAI chat models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai chat-completions-create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --resource-name <resource-name> \
+                                             --deployment <deployment-name> \
+                                             --message-array <message-array> \
+                                             [--max-tokens <max-tokens>] \
+                                             [--temperature <temperature>] \
+                                             [--top-p <top-p>] \
+                                             [--frequency-penalty <frequency-penalty>] \
+                                             [--presence-penalty <presence-penalty>] \
+                                             [--stop <stop-sequences>] \
+                                             [--stream <stream>] \
+                                             [--seed <seed>] \
+                                             [--user <user>] \
+                                             [--auth-method <auth-method>]
+
+# Generate text completions using deployed Azure OpenAI models in Microsoft Foundry
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai create-completion --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --prompt-text <prompt-text> \
+                                       [--max-tokens <max-tokens>] \
+                                       [--temperature <temperature>]
+
+# Generate vector embeddings for text using Azure OpenAI embedding models
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai embeddings-create --subscription <subscription> \
+                                       --resource-group <resource-group> \
+                                       --resource-name <resource-name> \
+                                       --deployment <deployment-name> \
+                                       --input-text <input-text> \
+                                       [--user <user>] \
+                                       [--encoding-format <encoding-format>] \
+                                       [--dimensions <dimensions>] \
+                                       [--auth-method <auth-method>]
+
+# List all available OpenAI models and deployments in an Azure resource
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry openai models-list --subscription <subscription> \
+                                 --resource-group <resource-group> \
+                                 --resource-name <resource-name> \
+                                 [--auth-method <auth-method>]
+
+# Get Microsoft Foundry (Cognitive Services) resource details
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry resource get --subscription <subscription> \
+                           [--resource-group <resource-group>] \
+                           [--resource-name <resource-name>]
+
+# Create a Microsoft Foundry agent thread
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads create --endpoint <endpoint>
+                             --user-message <user-message>
+
+# Get messages of a Microsoft Foundry agent thread
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads get-messages --endpoint <endpoint>
+                                   --thread-id <thread-id>
+
+# List Microsoft Foundry agent threads in a Foundry project
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp foundry threads list --endpoint <endpoint>
 ```
 
 ## Response Format
