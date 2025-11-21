@@ -11,8 +11,6 @@ namespace Azure.Mcp.Core.Models;
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
-[JsonSerializable(typeof(ElicitationSchemaRoot))]
-[JsonSerializable(typeof(ElicitationSchemaProperty))]
 [JsonSerializable(typeof(ToolMetadata))]
 [JsonSerializable(typeof(ToolsListCommand.ToolNamesResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
