@@ -87,39 +87,44 @@ if ($BuildOnly) {
     exit 0
 }
 
-# log in using Key Vault
 $StagingRegistry = "-registry https://staging.registry.modelcontextprotocol.io"
 $hasError = $false
+$matchingServer = $buildInfo.servers | Where-Object { $_.name -eq $ServerName }
+
+if ($matchingServer.Count -eq 0) {
+    LogError "No server found with name '$ServerName' in build info."
+    exit 1
+}
 
 try {
-    foreach($server in $buildInfo.servers) {
+    foreach($server in $matchingServer) {
         $serverJsonPath = "$RepoRoot/$($server.serverJsonPath)"
 
         if (!(Test-Path $serverJsonPath))
         {
-            LogError "server.json file $serverJsonPath does not exist."
+            LogError "$(ServerName): server.json file $serverJsonPath does not exist."
             $hasError = $true
             continue
         }
 
         if ($publishTarget -eq 'internal') {
-            Write-Host "Deploying server.json to staging instance: $StagingRegistry"
+            Write-Host "$(ServerName): Deploying server.json to staging instance: $StagingRegistry"
 
             & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com -registry https://staging.registry.modelcontextprotocol.io
             & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath -registry https://staging.registry.modelcontextprotocol.io
         } elseif ($publishTarget -eq 'public') {
-            Write-Host "Deploying server.json to production instance."
+            Write-Host "$(ServerName): Deploying server.json to production instance."
 
             & $TemporaryDirectory/mcp-publisher.exe login dns azure-key-vault -vault $KeyVaultName -key $KeyVaultKeyName -domain microsoft.com
             & $TemporaryDirectory/mcp-publisher.exe publish $serverJsonPath
         } else {
-            LogError "Unknown publish target: $publishTarget"
+            LogError "$(ServerName): Unknown publish target: $publishTarget"
             continue
         }
     }
 
     if ($hasError) {
-        LogError "One or more errors occurred during deployment."
+        LogError "$(ServerName): One or more errors occurred during deployment."
         exit 1
     }
 }
