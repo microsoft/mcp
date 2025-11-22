@@ -10,15 +10,10 @@
     - "Breaking Changes" + "Other Changes" → "Changed"
     - "Bugs Fixed" → "Fixed"
 
-.PARAMETER ServerName
-    Name of the server to sync changelog for (e.g., "Azure.Mcp.Server", "Fabric.Mcp.Server").
-    Defaults to "Azure.Mcp.Server".
-
-.PARAMETER MainChangelogPath
-    Path to the main CHANGELOG.md file. If not specified, uses servers/{ServerName}/CHANGELOG.md.
-
-.PARAMETER VsCodeChangelogPath
-    Path to the VS Code extension CHANGELOG.md file. If not specified, uses servers/{ServerName}/vscode/CHANGELOG.md.
+.PARAMETER ChangelogPath
+    Path to the main CHANGELOG.md file (required).
+    The VS Code CHANGELOG.md path is inferred from this path (vscode subdirectory).
+    Examples: "servers/Azure.Mcp.Server/CHANGELOG.md", "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
 .PARAMETER Version
     The version number to use for the new VS Code changelog entry. If not specified, extracts from the Unreleased section header.
@@ -27,36 +22,30 @@
     Preview the changes without modifying the VS Code CHANGELOG.
 
 .EXAMPLE
-    ./eng/scripts/Sync-VsCodeChangelog.ps1 -DryRun
+    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -DryRun
 
     Preview the sync for Azure.Mcp.Server without making changes.
 
 .EXAMPLE
-    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ServerName "Fabric.Mcp.Server"
+    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
     Sync the Unreleased section for Fabric.Mcp.Server.
 
 .EXAMPLE
-    ./eng/scripts/Sync-VsCodeChangelog.ps1 -Version "2.0.3"
+    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Version "2.0.3"
 
     Sync the Unreleased section and create version 2.0.3 entry in Azure.Mcp.Server VS Code CHANGELOG.
 
 .EXAMPLE
-    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ServerName "Fabric.Mcp.Server" -Version "1.0.0"
+    ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Version "1.0.0"
 
     Sync and create version 1.0.0 entry for Fabric.Mcp.Server.
 #>
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$ServerName = "Azure.Mcp.Server",
-
-    [Parameter(Mandatory = $false)]
-    [string]$MainChangelogPath,
-
-    [Parameter(Mandatory = $false)]
-    [string]$VsCodeChangelogPath,
+    [Parameter(Mandatory = $true)]
+    [string]$ChangelogPath,
 
     [Parameter(Mandatory = $false)]
     [string]$Version,
@@ -66,15 +55,12 @@ param(
 )
 
 Set-StrictMode -Version Latest
-$ErrorActionPreference = "Stop"
+$ErrorActionPreference = 'Stop'
 
-# Set default paths based on ServerName
-if (-not $MainChangelogPath) {
-    $MainChangelogPath = "servers/$ServerName/CHANGELOG.md"
-}
-if (-not $VsCodeChangelogPath) {
-    $VsCodeChangelogPath = "servers/$ServerName/vscode/CHANGELOG.md"
-}
+# Infer VS Code changelog path from main CHANGELOG.md path
+$changelogDir = Split-Path $ChangelogPath -Parent
+$VsCodeChangelogPath = Join-Path $changelogDir "vscode/CHANGELOG.md"
+$MainChangelogPath = $ChangelogPath
 
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent

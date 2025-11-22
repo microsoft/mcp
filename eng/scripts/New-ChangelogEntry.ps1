@@ -14,37 +14,51 @@
     The changelog section. Valid values: "Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes".
 
 .PARAMETER Subsection
-    Optional subsection for grouping related changes (e.g., "Dependency Updates", "Telemetry").
+    Optional subsection for grouping related changes. Valid values: "Dependency Updates".
 
 .PARAMETER PR
     Pull request number (integer).
 
-.PARAMETER ServerName
-    Name of the server to create changelog entry for (e.g., "Azure.Mcp.Server", "Fabric.Mcp.Server").
-    Defaults to "Azure.Mcp.Server".
+.PARAMETER Filename
+    Optional custom filename for the changelog entry (without path).
+    If not provided, a timestamp-based filename will be generated.
+    Example: "vcolin7-fix-serialization.yaml"
 
-.PARAMETER ChangelogEntriesPath
-    Path to the changelog-entries directory. If not specified, uses servers/{ServerName}/changelog-entries.
+.PARAMETER ChangelogPath
+    Path to the CHANGELOG.md file
+    The changelog-entries directory is inferred from this path (same directory as CHANGELOG.md).
+    Examples: "servers/Azure.Mcp.Server/CHANGELOG.md", "servers/Fabric.Mcp.Server/CHANGELOG.md"
+    If not provided, you will be prompted to select a server interactively.
 
 .EXAMPLE
     ./eng/scripts/New-ChangelogEntry.ps1
 
+    Runs in fully interactive mode, prompting for server selection and all required fields.
+
+.EXAMPLE
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md"
+
     Runs in interactive mode for Azure.Mcp.Server, prompting for all required fields.
 
 .EXAMPLE
-    ./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
     Runs in interactive mode for Fabric.Mcp.Server.
 
 .EXAMPLE
-    ./eng/scripts/New-ChangelogEntry.ps1 -Description "Added new feature" -Section "Features Added" -PR 1234
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description "Added new feature" -Section "Features Added" -PR 1234
 
     Creates a changelog entry for Azure.Mcp.Server with the specified parameters.
 
 .EXAMPLE
-    ./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server" -Description "Updated Azure.Core to 1.2.3" -Section "Other Changes" -Subsection "Dependency Updates" -PR 1234
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Description "Updated Azure.Core to 1.2.3" -Section "Other Changes" -Subsection "Dependency Updates" -PR 1234
 
     Creates a changelog entry for Fabric.Mcp.Server with a subsection.
+
+.EXAMPLE
+    ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description "Fixed serialization bug" -Section "Bugs Fixed" -PR 1234 -Filename "vcolin7-fix-serialization"
+
+    Creates a changelog entry with a custom filename (vcolin7-fix-serialization.yaml).
 
 .EXAMPLE
     $description = @"
@@ -61,7 +75,7 @@ Added new AI Foundry tools:
 [CmdletBinding()]
 param(
     [Parameter(Mandatory = $false)]
-    [string]$ServerName = "Azure.Mcp.Server",
+    [string]$ChangelogPath,
 
     [Parameter(Mandatory = $false)]
     [string]$Description,
@@ -76,15 +90,20 @@ param(
     [int]$PR,
 
     [Parameter(Mandatory = $false)]
-    [string]$ChangelogEntriesPath
+    [string]$Filename
 )
 
 Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
-# Set default path based on ServerName
-if (-not $ChangelogEntriesPath) {
-    $ChangelogEntriesPath = "servers/$ServerName/changelog-entries"
+# Determine if we're in interactive mode (any required parameter is missing)
+$isInteractive = (-not $ChangelogPath) -or (-not $Description) -or (-not $Section) -or (-not $PSBoundParameters.ContainsKey('PR'))
+
+# Show header once if in interactive mode
+if ($isInteractive) {
+    Write-Host "`nChangelog Entry Creator" -ForegroundColor Cyan
+    Write-Host "======================" -ForegroundColor Cyan
+    Write-Host ""
 }
 
 # Helper function to convert text to title case (capitalize first letter of each word)
@@ -97,11 +116,12 @@ function ConvertTo-TitleCase {
     
     # Use TextInfo for proper title casing
     $textInfo = (Get-Culture).TextInfo
-    return $textInfo.ToTitleCase($Text.ToLower())
+    return $textInfo.ToTitleCase($Text.ToLowerInvariant())  
 }
 
 # Valid sections for validation
 $validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
+$validSubsections = @("Dependency Updates")
 
 # Validate and normalize Section parameter if provided (case-insensitive)
 if ($Section) {
@@ -136,8 +156,59 @@ if ($PR -and $PR -lt 1) {
 
 # Normalize subsection to title case if provided
 if ($Subsection) {
-    $Subsection = ConvertTo-TitleCase -Text $Subsection.Trim()
+    $Subsection = ConvertTo-TitleCase -Text $Subsection
+    
+    # Validate subsection against allowed values
+    $matchedSubsection = $validSubsections | Where-Object { $_ -ieq $Subsection }
+    if (-not $matchedSubsection) {
+        Write-Host ""
+        Write-Host "ERROR: Invalid subsection '$Subsection'" -ForegroundColor Red
+        Write-Host ""
+        Write-Host "Valid subsections are:" -ForegroundColor Yellow
+        foreach ($validSub in $validSubsections) {
+            Write-Host "  - $validSub" -ForegroundColor Yellow
+        }
+        Write-Host ""
+        Write-Host "If you need a new subsection, please add it to the schema first." -ForegroundColor Cyan
+        Write-Host ""
+        exit 1
+    }
+    # Use the properly cased version
+    $Subsection = $matchedSubsection
 }
+
+# Interactive prompt for ChangelogPath if not provided
+if (-not $ChangelogPath) {
+    Write-Host "Available servers:" -ForegroundColor Yellow
+    Write-Host "  1. Azure.Mcp.Server   (servers/Azure.Mcp.Server/CHANGELOG.md)"
+    Write-Host "  2. Fabric.Mcp.Server  (servers/Fabric.Mcp.Server/CHANGELOG.md)"
+    Write-Host "  3. Custom path"
+    Write-Host ""
+    
+    $serverChoice = Read-Host "Select server (1-3)"
+    $ChangelogPath = switch ($serverChoice) {
+        "1" { "servers/Azure.Mcp.Server/CHANGELOG.md" }
+        "2" { "servers/Fabric.Mcp.Server/CHANGELOG.md" }
+        "3" { 
+            $customPath = Read-Host "Enter custom CHANGELOG.md path"
+            $customPath.Trim()
+        }
+        default {
+            Write-Host ""
+            Write-Host "ERROR: Invalid choice '$serverChoice'. Please select 1-3." -ForegroundColor Red
+            Write-Host ""
+            exit 1
+        }
+    }
+    
+    Write-Host ""
+    Write-Host "Using: $ChangelogPath" -ForegroundColor Green
+    Write-Host ""
+}
+
+# Infer changelog-entries path from CHANGELOG.md path
+$changelogDir = Split-Path $ChangelogPath -Parent
+$ChangelogEntriesPath = Join-Path $changelogDir "changelog-entries"
 
 # Get repository root
 $repoRoot = Split-Path (Split-Path $PSScriptRoot -Parent) -Parent
@@ -150,14 +221,8 @@ if (-not (Test-Path $changelogEntriesDir)) {
     New-Item -ItemType Directory -Path $changelogEntriesDir | Out-Null
 }
 
-# Determine if we're in interactive mode (missing Description, Section, or PR)
-$isInteractive = (-not $Description) -or (-not $Section) -or (-not $PSBoundParameters.ContainsKey('PR'))
-
 # Interactive mode if parameters not provided
 if (-not $Description) {
-    Write-Host "`nChangelog Entry Creator" -ForegroundColor Cyan
-    Write-Host "======================" -ForegroundColor Cyan
-    Write-Host ""
     Write-Host "Note: For multi-line descriptions (e.g., with lists), use the -Description parameter with a here-string." -ForegroundColor Gray
     Write-Host ""
     
@@ -200,6 +265,24 @@ if (-not $PSBoundParameters.ContainsKey('Subsection') -and $isInteractive) {
     if ($subsectionInput) {
         # Trim and title case the subsection
         $Subsection = ConvertTo-TitleCase -Text $subsectionInput.Trim()
+        
+        # Validate subsection against allowed values
+        $matchedSubsection = $validSubsections | Where-Object { $_ -ieq $Subsection }
+        if (-not $matchedSubsection) {
+            Write-Host ""
+            Write-Host "ERROR: Invalid subsection '$Subsection'" -ForegroundColor Red
+            Write-Host ""
+            Write-Host "Valid subsections are:" -ForegroundColor Yellow
+            foreach ($validSub in $validSubsections) {
+                Write-Host "  - $validSub" -ForegroundColor Yellow
+            }
+            Write-Host ""
+            Write-Host "If you need a new subsection, please add it to the schema first." -ForegroundColor Cyan
+            Write-Host ""
+            exit 1
+        }
+        # Use the properly cased version
+        $Subsection = $matchedSubsection
     }
 }
 
@@ -213,43 +296,52 @@ if (-not $PR -and $isInteractive) {
 # Trim whitespace from description if provided via parameter
 $Description = $Description.Trim()
 
-# Generate filename with timestamp in milliseconds
-$timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-$filename = "$timestamp.yml"
+# Generate filename (use custom if provided, otherwise timestamp-based)
+if ($Filename) {
+    # Ensure filename has proper extension
+    if (-not ($Filename.EndsWith('.yml') -or $Filename.EndsWith('.yaml'))) {
+        $Filename = "$Filename.yaml"
+    }
+    $filename = $Filename
+} else {
+    $timestamp = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+    $filename = "$timestamp.yaml"
+}
 $filepath = Join-Path $changelogEntriesDir $filename
 
-# Create YAML content
+# Create YAML content in new format: pr at top level, changes as an array
+if ($PR) {
+    $yamlContent = "pr: $PR`n"
+} else {
+    $yamlContent = "pr: 0  # TODO: Update with actual PR number`n"
+}
+
+$yamlContent += "changes:`n"
+
+# Create the change entry
+$yamlContent += "  - section: `"$Section`"`n"
+
 # Use block scalar (|) for multi-line descriptions, quoted string for single-line
 if ($Description.Contains("`n")) {
     # Multi-line description - use block scalar with proper indentation
     $descriptionLines = $Description -split "`n"
-    $indentedLines = $descriptionLines | ForEach-Object { "  $_" }
-    $yamlContent = @"
-section: "$Section"
-description: |
-$($indentedLines -join "`n")
-"@
+    $yamlContent += "    description: |`n"
+    foreach ($line in $descriptionLines) {
+        $yamlContent += "      $line`n"
+    }
 } else {
     # Single-line description - use quoted string
     # Escape double quotes in the description
     $escapedDescription = $Description -replace '"', '\"'
-    $yamlContent = @"
-section: "$Section"
-description: "$escapedDescription"
-"@
+    $yamlContent += "    description: `"$escapedDescription`"`n"
 }
 
 if ($Subsection) {
-    $yamlContent += "`nsubsection: `"$Subsection`""
-} else {
-    $yamlContent += "`nsubsection: null"
+    $yamlContent += "    subsection: `"$Subsection`"`n"
 }
 
-if ($PR) {
-    $yamlContent += "`npr: $PR"
-} else {
-    $yamlContent += "`npr: 0  # TODO: Update with actual PR number"
-}
+# Remove trailing newline
+$yamlContent = $yamlContent.TrimEnd("`n")
 
 # Write YAML file
 $yamlContent | Set-Content -Path $filepath -Encoding UTF8 -NoNewline
@@ -279,19 +371,28 @@ if (Test-Path $schemaPath) {
         try {
             $yamlData = Get-Content -Path $filepath -Raw | ConvertFrom-Yaml
             
-            # Basic validation (section already validated at top of script)
-            if ($yamlData.description.Length -lt 10) {
+            # Validate new format
+            if (-not $yamlData.pr -and $yamlData.pr -ne 0) {
                 Write-Host ""
-                Write-Host "ERROR: Description must be at least 10 characters" -ForegroundColor Red
+                Write-Host "ERROR: PR field is required" -ForegroundColor Red
                 Write-Host ""
                 exit 1
             }
             
-            if ($PR -and $yamlData.pr -lt 1) {
+            if (-not $yamlData.changes -or $yamlData.changes.Count -eq 0) {
                 Write-Host ""
-                Write-Host "ERROR: PR number must be positive" -ForegroundColor Red
+                Write-Host "ERROR: At least one change is required" -ForegroundColor Red
                 Write-Host ""
                 exit 1
+            }
+            
+            foreach ($change in $yamlData.changes) {
+                if ($change.description.Length -lt 10) {
+                    Write-Host ""
+                    Write-Host "ERROR: Description must be at least 10 characters" -ForegroundColor Red
+                    Write-Host ""
+                    exit 1
+                }
             }
             
             Write-Host "✓ Validation passed" -ForegroundColor Green

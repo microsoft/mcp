@@ -6,7 +6,6 @@ This document describes the implementation of a conflict-free changelog manageme
 
 **Key Benefits:**
 - ✅ No merge conflicts on CHANGELOG.md
-- ✅ Easier code reviews (changelog entry visible in PR)
 - ✅ Automated compilation and formatting
 - ✅ Structured, validated data
 - ✅ Flexible organization with sections and subsections
@@ -18,19 +17,18 @@ This document describes the implementation of a conflict-free changelog manageme
 
 ```
 servers/Azure.Mcp.Server/
-├── CHANGELOG.md                    # Main changelog (compiled output)
+├── CHANGELOG.md                    # Main changelog
 └── changelog-entries/              # Individual entry files
-    ├── 1731260400123.yml
-    ├── 1731260405789.yml
+    ├── vcolin7-fix-changelog-system.yml
+    ├── jfree-documentation-update.yml
     ├── ...
-    └── README.md                   # Documentation for contributors
+    └── alzimmermsft-improve-performance.yml
 ```
 
 **Why keep it simple with a single flat directory?**
-- We only release from one branch at a time, so we never need multiple folders
-- Simpler workflow: contributors only need to know one location
-- All files get compiled and removed together on release
-- No unnecessary nesting
+- Each release train (i.e. beta, stable) lives in a separate branch with its own `CHANGELOG.md` and `changelog-entries/` folder, so there is no need for subdirectories.
+- Simpler workflow: contributors only need to create files in a single known location
+- Simplified file compilation and removal together on release
 
 ---
 
@@ -38,52 +36,42 @@ servers/Azure.Mcp.Server/
 
 ### Filename Convention
 
-**Format:** `{unix-timestamp-milliseconds}.yml`
+**Format:** `{username-brief-change-description}.yml`
 
-**Example:** `1731260400123.yml`
+**Example:** `jdoe-add-user-authentication.yml`
 
 **Why this approach?**
-- **Uniqueness**: Millisecond precision makes collisions extremely unlikely (1000 unique values per second)
-- **Sortable**: Files naturally sort chronologically
-- **Simple**: Just a number, no need to coordinate PR numbers
+- **Uniqueness**: Usernames and brief descriptions make filenames unique and descriptive
+- **Sortable**: Files naturally sort alphabetically by username and description
+- **Simple**: Easy to understand and manage
 - **Pre-PR friendly**: Can create entries before opening a PR
-- **Cross-platform safe**: No special characters
-
-**How to generate:**
-```powershell
-# In PowerShell
-[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-
-# In Bash
-date +%s%3N
-```
 
 ### YAML Schema
 
 ```yaml
-# Required fields
-section: "Features Added"  # One of: Features Added, Breaking Changes, Bugs Fixed, Other Changes
-description: "Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable."
-pr: 1033  # PR number (integer) - can be added later if not known yet
-
-# Optional fields
-subsection: null  # Optional: "Dependency Updates", "Telemetry", etc.
+pr: <number>          # Required: PR number (use 0 if not known yet)
+changes:              # Required: Array of changes (minimum 1)
+  - section: <string>     # Required
+    description: <string> # Required
+    subsection: <string>  # Optional
 ```
 
+#### Required Fields
+
+- **pr**: Pull request number at the top level (integer, use 0 if not known yet)
+- **changes**: Array of `change` objects (must have at least one). Each `change` requires:
+  - **section**: One of the following:
+    - `Features Added` - New features, tools, or capabilities
+    - `Breaking Changes` - Changes that break backward compatibility
+    - `Bugs Fixed` - Bug fixes
+    - `Other Changes` - Everything else (dependency updates, refactoring, etc.)
+  - **description**: Description of the change
+
+#### Optional Fields
+
+- **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
+
 **Note:** Not every PR needs a changelog entry! Only include entries for changes that are worth mentioning to users or maintainers (new features, breaking changes, important bug fixes, etc.). Minor internal refactoring, documentation updates, or test changes typically don't need entries.
-
-### Valid Values
-
-**Sections (required):**
-- `Features Added`
-- `Breaking Changes`
-- `Bugs Fixed`
-- `Other Changes`
-
-**Subsections (optional):**
-- `Dependency Updates`
-- `Telemetry`
-- Any custom subsection for grouping related changes
 
 **When to create a changelog entry:**
 - ✅ New user-facing features or tools
@@ -109,28 +97,49 @@ Validates YAML structure and ensures required fields are present.
 ```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Changelog Entry",
+  "description": "Schema for individual changelog entry YAML files. One file per PR, supporting multiple changes.",
   "type": "object",
-  "required": ["section", "description", "pr"],
+  "required": ["pr", "changes"],
   "properties": {
-    "section": {
-      "type": "string",
-      "enum": [
-        "Features Added",
-        "Breaking Changes",
-        "Bugs Fixed",
-        "Other Changes"
-      ]
-    },
-    "subsection": {
-      "type": ["string", "null"]
-    },
-    "description": {
-      "type": "string",
-      "minLength": 10
-    },
     "pr": {
       "type": "integer",
-      "minimum": 1
+      "description": "Pull request number (use 0 if not known yet)",
+      "minimum": 0
+    },
+    "changes": {
+      "type": "array",
+      "description": "List of changes in this PR (must have at least one)",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["section", "description"],
+        "properties": {
+          "section": {
+            "type": "string",
+            "description": "The changelog section this entry belongs to",
+            "enum": [
+              "Features Added",
+              "Breaking Changes",
+              "Bugs Fixed",
+              "Other Changes"
+            ]
+          },
+          "subsection": {
+            "type": "string",
+            "description": "Optional subsection for grouping related changes",
+            "enum": [
+              "Dependency Updates"
+            ]
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the change",
+            "minLength": 10
+          }
+        },
+        "additionalProperties": false
+      }
     }
   },
   "additionalProperties": false
@@ -141,7 +150,7 @@ Validates YAML structure and ensures required fields are present.
 
 **File:** `eng/scripts/New-ChangelogEntry.ps1`
 
-Helper script to create properly formatted changelog entries.
+Helper script to create properly formatted changelog entries. It supports both interactive and one-line modes.
 
 **Usage:**
 
@@ -149,25 +158,41 @@ Helper script to create properly formatted changelog entries.
 # Interactive mode (prompts for all fields)
 ./eng/scripts/New-ChangelogEntry.ps1
 
-# With parameters
+# One-line with parameters
 ./eng/scripts/New-ChangelogEntry.ps1 `
-  -Description "Added new feature" `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description "Added support for User-Assigned Managed Identity" `
   -Section "Features Added" `
   -PR 1234
 
 # With subsection
 ./eng/scripts/New-ChangelogEntry.ps1 `
-  -Description "Updated Azure.Core to 1.2.3" `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description "Updated ModelContextProtocol.AspNetCore to version 0.4.0-preview.3" `
   -Section "Other Changes" `
   -Subsection "Dependency Updates" `
+  -PR 1234
+
+# With a multi-line entry
+$description = @"
+Added new Foundry tools:
+- foundry_agents_create: Create a new AI Foundry agent
+- foundry_threads_create: Create a new AI Foundry Agent Thread
+- foundry_threads_list: List all AI Foundry Agent Threads
+"@
+
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description $description `
+  -Section "Features Added" `
   -PR 1234
 ```
 
 **Features:**
 - Interactive prompts for section, description, PR number
-- Auto-generates filename with timestamp
+- Auto-generates filename based on username and description
 - Validates YAML against schema
-- Places file in correct directory
+- Places file in correct `changelog-entries/` directory
 - Creates `changelog-entries/` directory if it doesn't exist
 
 ### 3. Compiler Script
@@ -180,37 +205,43 @@ Compiles all YAML entries into CHANGELOG.md.
 
 ```powershell
 # Preview what will be compiled (dry run)
-./eng/scripts/Compile-Changelog.ps1 -DryRun
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
 
 # Compile entries into CHANGELOG.md
-./eng/scripts/Compile-Changelog.ps1
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
+
+# Compile to a specific version
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>"
 
 # Compile and remove YAML files after successful compilation
-./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
-
-# Custom changelog path
-./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "path/to/CHANGELOG.md"
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
 ```
+
+**Parameters:**
+- `-ChangelogPath`: Required. Path to the CHANGELOG.md file (e.g., `servers/Azure.Mcp.Server/CHANGELOG.md`)
+- `-Version`: Optional. Target version section to compile into. If not specified, compiles to "Unreleased" section
+- `-DryRun`: Preview compilation without modifying files
+- `-DeleteFiles`: Remove YAML files after successful compilation
 
 **Features:**
 - Reads all YAML files from `changelog-entries/`
 - Validates each file against schema
 - Groups entries by section, then by subsection
 - Formats entries as markdown with PR links
-- Inserts compiled entries into CHANGELOG.md under "Unreleased"
+- Inserts compiled entries into CHANGELOG.md
 - Optional deletion of YAML files after compilation
 - Error handling for missing/invalid files
 - Summary output
 
 **Compilation Logic:**
 
-1. Read all `.yml` files from `changelog-entries/` (excluding README.md)
+1. Read all `.yml` and `.yaml` files from `changelog-entries/`
 2. Validate each file against schema
 3. Group by section (preserving order: Features, Breaking, Bugs, Other)
 4. Within each section, group by subsection (if present)
 5. Sort entries within groups
 6. Generate markdown format with PR links
-7. Find the "Unreleased" section in CHANGELOG.md
+7. Find the target version section in CHANGELOG.md (or "Unreleased")
 8. Insert compiled entries under appropriate section headers
 9. Optionally delete YAML files if `-DeleteFiles` flag is set
 
@@ -227,6 +258,7 @@ When making a change that needs a changelog entry:
 2. **Create a changelog entry:**
    ```powershell
    ./eng/scripts/New-ChangelogEntry.ps1 `
+     -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
      -Description "Your change description" `
      -Section "Features Added" `
      -PR <pr-number>
@@ -242,21 +274,30 @@ Before tagging a release:
 
 1. **Preview compilation:**
    ```powershell
-   ./eng/scripts/Compile-Changelog.ps1 -DryRun
+   # Preview to Unreleased section
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
+   
+   # Or preview to a specific version
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DryRun
    ```
 
 2. **Compile and clean up:**
    ```powershell
-   ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
    ```
 
-3. **Update version in CHANGELOG.md:**
+3. **Sync VS Code extension CHANGELOG (if applicable):**
+   ```powershell
+   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
+   ```
+
+4. **Update version in CHANGELOG.md:**
    - Change "Unreleased" to actual version number
    - Add release date
 
-4. **Commit the compiled changelog**
+5. **Commit the compiled changelog**
 
-5. **Tag the release**
+6. **Tag the release**
 
 ---
 
@@ -264,29 +305,44 @@ Before tagging a release:
 
 ### Input YAML Files
 
-**File:** `1731260400123.yml`
+**File:** `vcolin7-managed-identity.yaml`
 ```yaml
-section: "Features Added"
-description: "Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable."
 pr: 1033
+changes:
+  - section: "Features Added"
+    description: "Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable."
 ```
 
-**File:** `1731260405789.yml`
+**File:** `jdoe-speech-recognition.yaml`
 ```yaml
-section: "Features Added"
-description: "Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`."
 pr: 1054
+changes:
+  - section: "Features Added"
+    description: "Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`."
 ```
 
-**File:** `1731260410456.yml`
+**File:** `alzimmermsft-dependency-update.yaml`
 ```yaml
-section: "Other Changes"
-subsection: "Telemetry"
-description: "Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command."
-pr: 1028
+pr: 887
+changes:
+  - section: "Other Changes"
+    subsection: "Dependency Updates"
+    description: "Updated the `ModelContextProtocol.AspNetCore` package from version `0.4.0-preview.2` to `0.4.0-preview.3`."
+```
+
+**File:** `jfree-multiple-changes.yaml` (multiple entries in one file)
+```yaml
+pr: 1234
+changes:
+  - section: "Features Added"
+    description: "Added support for multiple changes per PR in changelog entries"
+  - section: "Bugs Fixed"
+    description: "Fixed issue with subsection title casing"
 ```
 
 ### Compiled Output in CHANGELOG.md
+
+When compiled, entries are grouped by section and subsection. Empty sections will not be included.
 
 ```markdown
 ## 2.0.0-beta.3 (Unreleased)
@@ -295,16 +351,20 @@ pr: 1028
 
 - Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
 - Added support for speech recognition from an audio file with Fast Transcription via the command `azmcp_speech_stt_recognize`. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
-
-### Breaking Changes
+- Added support for multiple changes per PR in changelog entries [[#1234](https://github.com/microsoft/mcp/pull/1234)]
 
 ### Bugs Fixed
 
+- Fixed issue with subsection title casing [[#1234](https://github.com/microsoft/mcp/pull/1234)]
+
 ### Other Changes
 
-#### Telemetry
-- Added `ToolId` into telemetry, based on `IBaseCommand.Id`, a unique GUID for each command. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+#### Dependency Updates
+
+- Updated the `ModelContextProtocol.AspNetCore` package from version `0.4.0-preview.2` to `0.4.0-preview.3`. [[#887](https://github.com/microsoft/mcp/pull/887)]
 ```
+
+**Note:** When dealing with multi-line descriptions the PR link will be added to the last line. If the first line is followed by lines that are bullet items, they'll be automatically indented as sub-bullets and the PR link will be added to the first line instead.
 
 ---
 
@@ -317,8 +377,8 @@ All YAML files are validated against the JSON schema before compilation. Invalid
 ### Filename Validation
 
 The compiler checks that filenames follow the expected pattern:
-- Must end with `.yml`
-- Should be numeric (timestamp format) - warning if not
+- Must end with `.yml` or `.yaml`
+- Should follow `{username}-{brief-description}` format
 - Ignores `README.md` and other non-YAML files
 
 ### CI Integration (Recommended)
@@ -329,34 +389,31 @@ Add validation to your CI pipeline:
 # Example GitHub Actions check
 - name: Validate Changelog Entries
   run: |
-    # Validate YAML syntax and schema
-    ./eng/scripts/Validate-ChangelogEntries.ps1
-    
-    # Test compilation (dry run)
-    ./eng/scripts/Compile-Changelog.ps1 -DryRun
+    # Test compilation (dry run) - includes entry validation
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
 ```
 
 ### Pre-commit Hooks (Optional)
 
-- Validate YAML schema for changed `.yml` files in `changelog-entries/`
-- Ensure filename follows numeric timestamp convention
-- Warn if YAML file is missing a `pr` field (can be added later)
+- Validate YAML schema for changed `.yml` or `.yaml` files in `changelog-entries/`
+- Ensure filename follows `{username}-{brief-description}` convention
+- Warn if YAML file has `pr: 0` (can be updated later)
 
 ---
 
 ## Implementation Checklist
 
-- [ ] Create `changelog-entries/` directory
-- [ ] Create JSON schema: `eng/schemas/changelog-entry.schema.json`
-- [ ] Create generator script: `eng/scripts/New-ChangelogEntry.ps1`
-- [ ] Create compiler script: `eng/scripts/Compile-Changelog.ps1`
-- [ ] Create documentation: `changelog-entries/README.md`
-- [ ] Update `CONTRIBUTING.md` with new changelog workflow
-- [ ] Update `docs/new-command.md` to mention changelog entries for AI coding agents
-- [ ] Update `AGENTS.md` to include changelog workflow for AI agents
+- [x] Create `changelog-entries/` directory
+- [x] Create JSON schema: `eng/schemas/changelog-entry.schema.json`
+- [x] Create generator script: `eng/scripts/New-ChangelogEntry.ps1`
+- [x] Create compiler script: `eng/scripts/Compile-Changelog.ps1`
+- [x] Create documentation: `docs/changelog-entries`
+- [x] Update `CONTRIBUTING.md` with new changelog workflow
+- [x] Update `docs/new-command.md` to mention changelog entries for AI coding agents
+- [x] Update `AGENTS.md` to include changelog workflow for AI agents
 - [ ] Add CI validation for YAML files (optional but recommended)
-- [ ] Create sample YAML files for testing
-- [ ] Test compilation with sample data
+- [x] Create sample YAML files for testing
+- [x] Test compilation with sample data
 - [ ] Document in team wiki/onboarding materials
 - [ ] Migrate any existing unreleased entries to YAML format
 
@@ -378,7 +435,8 @@ For existing unreleased entries in CHANGELOG.md:
 
 | Strategy | Pros | Cons | Verdict |
 |----------|------|------|---------|
-| **Timestamp milliseconds** (chosen) | Unique, sortable, simple, pre-PR friendly | None significant | ✅ Best choice |
+| **Username + description** (chosen) | Unique, descriptive, simple, pre-PR friendly | None significant | ✅ Best choice |
+| Timestamp milliseconds | Unique, sortable | Opaque, not descriptive | ❌ Less readable |
 | Timestamp + PR number | Guaranteed unique, traceable | Verbose, requires PR first | ❌ Unnecessary complexity |
 | Git commit SHA | Unique, Git-native | Harder to read/sort, requires commit | ❌ Less convenient |
 | GUID only | Guaranteed unique | Completely opaque, no sorting | ❌ Too opaque |
@@ -397,9 +455,9 @@ Add it later in a follow-up PR. Each entry is a separate file, so there's no con
 
 Yes! Just edit the YAML file and commit the change. It will be picked up in the next compilation.
 
-### Q: What if two entries use the same timestamp?
+### Q: What if two entries use the same filename?
 
-The timestamp is in milliseconds, giving 1000 unique values per second. Collisions are extremely unlikely. If one does occur, Git will highlight a file is being modified instead of added, and you can simply regenerate the timestamp.
+The filename is the unique identifier for each changelog entry. If two entries use the same filename, Git will show a conflict, and you can simply update the filename for your new change.
 
 ### Q: Do I need to compile the changelog in my PR?
 
@@ -407,7 +465,7 @@ No! Contributors only create YAML files. Release managers compile during the rel
 
 ### Q: Can I add multiple changelog entries in one PR?
 
-Yes, just create multiple YAML files with different filenames (different timestamps).
+Yes! Just create a single YAML file with multiple entries under the `changes` section. This is common when a PR includes several distinct user-facing changes.
 
 ### Q: Do I need to know the PR number when creating an entry?
 
@@ -452,14 +510,15 @@ When adding user-facing changes (new features, breaking changes, important bug f
 
 1. Create a changelog entry YAML file:
    ```bash
-   ./eng/scripts/New-ChangelogEntry.ps1 -Description "Your change" -Section "Features Added" -PR <number>
+   ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Description "Your change" -Section "Features Added" -PR <number>
    ```
 
-2. Or manually create `changelog-entries/{timestamp}.yml`:
+2. Or manually create `changelog-entries/{username}-{brief-description}.yaml`:
    ```yaml
-   section: "Features Added"
-   description: "Your change description"
-   pr: 1234  # Can be added later if not known yet
+   pr: 1234  # Can use 0 if not known yet
+   changes:
+     - section: "Features Added"
+       description: "Your change description"
    ```
 
 3. Not every change needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates.

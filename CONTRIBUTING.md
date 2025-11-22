@@ -93,6 +93,7 @@ If you are contributing significant changes, or if the issue is already assigned
       - `test-resources.bicep` - Infrastructure templates for testing
 - `eng/` - Shared tools, templates, CLI helpers
 - `docs/` - Central documentation and onboarding materials
+
 ## Development Workflow
 
 ### Development Process
@@ -117,6 +118,7 @@ If you are contributing significant changes, or if the issue is already assigned
 > - **Incremental progress**: Get your first tool merged to establish baseline, then build upon it
 >
 > If you're planning to contribute multiple tools, please:
+>
 > 1. Submit your most important or representative tool as your first PR to establish the code patterns.
 > 2. Use that baseline to inform your subsequent tool PRs.
 
@@ -145,7 +147,12 @@ If you are contributing significant changes, or if the issue is already assigned
 6. **Create a changelog entry** (if your change is a new feature, bug fix, or breaking change):
    - Use the generator script to create a changelog entry (see `docs/changelog-entries.md` for details):
      ```powershell
-     ./eng/scripts/New-ChangelogEntry.ps1 -ServerName <server-name> -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     # Interactive mode (prompts for server)
+     ./eng/scripts/New-ChangelogEntry.ps1
+     
+     # Or with all parameters
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
+     ./eng/scripts/New-ChangelogEntry.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Description <your-change-description> -Section <changelog-section> -PR <pr-number>
      ```
    - Or manually create a YAML file in `servers/{ServerName}/changelog-entries/`
    - Not every PR needs a changelog entry - skip for internal refactoring, test-only changes, or minor updates. If unsure, add to the "Other Changes" section or ask a maintainer.

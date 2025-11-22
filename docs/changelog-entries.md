@@ -1,10 +1,65 @@
 # Changelog Entries
 
-This directory contains individual changelog entry files that are compiled into the main `CHANGELOG.md` during the release process.
+## Overview
 
-## Why Individual Files?
+Each server's `/changelog-entries` directory contains individual YAML entry files that are compiled into the main `CHANGELOG.md` during the release process. This document describes how to create, manage, and compile said entries files.
 
-Using separate YAML files for each changelog entry **eliminates merge conflicts** on `CHANGELOG.md` when multiple contributors work on the same branch simultaneously.
+**Why individual files?**
+
+Using separate YAML files for each changelog entry **eliminates merge conflicts** on `CHANGELOG.md` when multiple contributors work on the same branch simultaneously, allowing for smoother collaboration on a repository with numerous active contributors.
+
+## Quick Start
+
+For most contributors, here's all you need:
+
+```powershell
+# Create a changelog entry for your PR
+./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" `
+  -Description "Your change description here" `
+  -Section "Features Added" `
+  -PR 1234
+```
+
+That's it! The script creates the YAML file for you. Commit it with your code changes.
+
+> **Tip:** Not every PR needs a changelog entry. Skip it for internal refactoring, test-only changes, or minor cleanup.
+
+## Table of Contents
+
+- [Changelog Entries](#changelog-entries)
+  - [Overview](#overview)
+  - [Quick Start](#quick-start)
+  - [Table of Contents](#table-of-contents)
+  - [Creating a Changelog Entry](#creating-a-changelog-entry)
+    - [When to Create an Entry](#when-to-create-an-entry)
+    - [File Format](#file-format)
+      - [Required Fields](#required-fields)
+      - [Optional Fields](#optional-fields)
+    - [Using the Generator Script](#using-the-generator-script)
+      - [Interactive mode](#interactive-mode)
+      - [One-line](#one-line)
+        - [With a subsection](#with-a-subsection)
+        - [With a multi-line entry](#with-a-multi-line-entry)
+    - [Manual Creation](#manual-creation)
+      - [Simple entry](#simple-entry)
+      - [Multi-line entry](#multi-line-entry)
+      - [Using a subsection](#using-a-subsection)
+      - [Multiple-entries](#multiple-entries)
+  - [Preparing a New Release](#preparing-a-new-release)
+    - [Compiled Output](#compiled-output)
+    - [Validation](#validation)
+  - [Tips](#tips)
+  - [FAQ](#faq)
+    - [Do I need to compile the changelog in my PR?](#do-i-need-to-compile-the-changelog-in-my-pr)
+    - [Can I edit an existing changelog entry?](#can-i-edit-an-existing-changelog-entry)
+    - [What if I forget to add a changelog entry?](#what-if-i-forget-to-add-a-changelog-entry)
+    - [What if two entries use the same filename?](#what-if-two-entries-use-the-same-filename)
+    - [Can I add multiple changelog entries in one PR?](#can-i-add-multiple-changelog-entries-in-one-pr)
+    - [Do I need to know the PR number when creating an entry?](#do-i-need-to-know-the-pr-number-when-creating-an-entry)
+    - [Does every PR need a changelog entry?](#does-every-pr-need-a-changelog-entry)
+    - [What happens to the YAML files after release?](#what-happens-to-the-yaml-files-after-release)
+    - [What if I have any other questions?](#what-if-i-have-any-other-questions)
 
 ## Creating a Changelog Entry
 
@@ -23,205 +78,174 @@ Create a changelog entry for:
 - ❌ Test-only changes
 - ❌ Minor code cleanup or formatting
 
-### Using the Generator Script (Recommended)
+### File Format
 
-The easiest way to create a changelog entry is using the generator script:
+**Structure**: One file per PR, supporting multiple changelog entries
+
+```yaml
+pr: <number>          # Required: PR number (use 0 if not known yet)
+changes:              # Required: Array of changes (minimum 1)
+  - section: <string>     # Required
+    description: <string> # Required
+    subsection: <string>  # Optional
+```
+
+#### Required Fields
+
+- **pr**: Pull request number at the top level (integer, use 0 if not known yet)
+- **changes**: Array of `change` objects (must have at least one). Each `change` requires:
+  - **section**: One of the following:
+    - `Features Added` - New features, tools, or capabilities
+    - `Breaking Changes` - Changes that break backward compatibility
+    - `Bugs Fixed` - Bug fixes
+    - `Other Changes` - Everything else (dependency updates, refactoring, etc.)
+  - **description**: Description of the change
+
+#### Optional Fields
+
+- **subsection**: Optional subsection to group changes under. Currently, the only valid subsection is `Dependency Updates` under the `Other Changes` section.
+
+### Using the Generator Script
+
+The easiest way to create a changelog entry is using the generator script located at `./eng/scripts/New-ChangelogEntry.ps1`. It supports both interactive and one-line modes:
+
+#### Interactive mode
 
 ```powershell
-# Interactive mode (prompts for all fields)
-# Defaults to Azure.Mcp.Server
 ./eng/scripts/New-ChangelogEntry.ps1
+```
 
-# For a different server
-./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
+#### One-line
 
-# With parameters (defaults to Azure.Mcp.Server)
+```powershell
 ./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
   -Description "Added support for User-Assigned Managed Identity" `
   -Section "Features Added" `
-  -PR 1033
-
-# For a specific server
-./eng/scripts/New-ChangelogEntry.ps1 `
-  -ServerName "Fabric.Mcp.Server" `
-  -Description "Added new Fabric workspace tools" `
-  -Section "Features Added" `
   -PR 1234
+```
 
-# With subsection (automatically title-cased)
+##### With a subsection
+
+```powershell
 ./eng/scripts/New-ChangelogEntry.ps1 `
-  -Description "Updated Azure.Core to 1.2.3" `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
+  -Description "Updated ModelContextProtocol.AspNetCore to version 0.4.0-preview.3" `
   -Section "Other Changes" `
-  -Subsection "dependency updates" `
+  -Subsection "Dependency Updates" `
   -PR 1234
+```
 
-# Multi-line description with a list
+##### With a multi-line entry
+
+```powershell
 $description = @"
-Added new AI Foundry tools:
+Added new Foundry tools:
 - foundry_agents_create: Create a new AI Foundry agent
 - foundry_threads_create: Create a new AI Foundry Agent Thread
 - foundry_threads_list: List all AI Foundry Agent Threads
 "@
 
 ./eng/scripts/New-ChangelogEntry.ps1 `
+  -ChangelogPath "servers/<server-name>/CHANGELOG.md" `
   -Description $description `
   -Section "Features Added" `
-  -PR 945
+  -PR 1234
 ```
-
-**Features:**
-- Works with any server (Azure.Mcp.Server, Fabric.Mcp.Server, etc.) via `-ServerName` parameter
-- Automatic title-casing of subsections
-- Whitespace trimming from descriptions
-- Support for multi-line descriptions with lists
-- Interactive validation
 
 ### Manual Creation
 
-If you prefer to create the file manually:
+If you prefer to do things manually, create a new YAML file with your changes and save it in the appropriate `servers/<server-name>/changelog-entries` directory. **Use a unique name** made up of your alias or GitHub username and a brief description of the change, like this: `alias-brief-description.yaml`. For example: `servers/Azure.Mcp.Server/changelog-entries/vcolin7-fix-serialization.yaml`.
 
-1. **Generate a unique filename** using the current timestamp in milliseconds:
-   ```powershell
-   # PowerShell
-   [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
-   
-   # Bash
-   date +%s%3N
-   ```
-   Example: `1731260400123.yml`
-
-2. **Create a YAML file** with this structure:
-   ```yaml
-   section: "Features Added"
-   description: "Your change description here"
-   subsection: null  # Or a subsection name like "Dependency Updates"
-   pr: 1234  # Can be added later if not known yet
-   ```
-
-3. **Save the file** in the appropriate server's changelog-entries directory:
-   - Azure MCP Server: `servers/Azure.Mcp.Server/changelog-entries/`
-   - Fabric MCP Server: `servers/Fabric.Mcp.Server/changelog-entries/`
-   - Other servers: `servers/{ServerName}/changelog-entries/`
-
-## YAML File Format
-
-### Required Fields
-
-- **section**: The changelog section (one of: `Features Added`, `Breaking Changes`, `Bugs Fixed`, `Other Changes`)
-- **description**: Description of the change (minimum 10 characters)
-- **pr**: Pull request number (integer)
-
-### Optional Fields
-
-- **subsection**: Optional subsection for grouping (e.g., `Dependency Updates`, `Telemetry`)
-
-### Valid Sections
-
-- `Features Added` - New features, tools, or capabilities
-- `Breaking Changes` - Changes that break backward compatibility
-- `Bugs Fixed` - Bug fixes
-- `Other Changes` - Everything else (dependency updates, refactoring, etc.)
-
-### Example Entries
-
-**Simple entry:**
-
-**Filename:** `1731260400123.yml`
+#### Simple entry
 
 ```yaml
-section: "Features Added"
-description: "Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable."
-subsection: null
-pr: 1033
+pr: 1234
+changes:
+  - section: "Features Added"
+    description: "Added support for User-Assigned Managed Identity"
 ```
 
-**Multi-line entry with a list:**
-
-**Filename:** `1731260401234.yml`
+#### Multi-line entry
 
 ```yaml
-section: "Features Added"
-description: |
-  Added new AI Foundry tools:
-  - foundry_agents_create: Create a new AI Foundry agent
-  - foundry_threads_create: Create a new AI Foundry Agent Thread
-  - foundry_threads_list: List all AI Foundry Agent Threads
-subsection: null
-pr: 945
+pr: 1234
+changes:
+  - section: "Features Added"
+    description: |
+      Added new AI Foundry tools:
+      - foundry_agents_create: Create a new AI Foundry agent
+      - foundry_threads_create: Create a new AI Foundry Agent Thread
+      - foundry_threads_list: List all AI Foundry Agent Threads
 ```
 
-**Note:** When using multi-line descriptions with the `|` block scalar:
-- The first line becomes the main bullet point
-- If the following lines are bullet items (`- item`), they'll be automatically indented as sub-bullets
-- The PR link is added to the last line
-- Trailing newlines are automatically handled
+#### Using a subsection
 
-## Workflow
+```yaml
+pr: 1234
+changes:
+  - section: "Other Changes"
+    subsection: "Dependency Updates"
+    description: "Updated ModelContextProtocol.AspNetCore to version 0.4.0-preview.3"
+```
 
-### For Contributors
+#### Multiple-entries
 
-1. **Make your code changes**
-2. **Create a changelog entry** (if your change needs one)
-3. **Commit both your code and the YAML file** in the same PR
-4. **Open your PR** - no CHANGELOG.md conflicts!
+```yaml
+pr: 1234
+changes:
+  - section: "Features Added"
+    description: "Added support for multiple changes per PR in changelog entries"
+  - section: "Bugs Fixed"
+    description: "Fixed issue with subsection title casing"
+  - section: "Other Changes"
+    subsection: "Dependency Updates"
+    description: "Updated ModelContextProtocol.AspNetCore to version 0.4.0-preview.3"
+```
 
-You can create the YAML file before you have a PR number. Just set `pr: 0` initially and update it later when you know the PR number.
+## Preparing a New Release
 
-### For Release Managers
+If you are a release manager, follow these steps before initiaiting a new release pipeline run:
 
-Before tagging a release:
-
-1. **Preview compilation:**
+1. Preview the changelog section for the version you are about to release:*
    ```powershell
-   # Compile to the default Unreleased section (defaults to Azure.Mcp.Server)
-   ./eng/scripts/Compile-Changelog.ps1 -DryRun
-   
-   # For a different server
-   ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
+   # Compile to the default Unreleased section for Azure MCP Server
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
    
    # Or compile to a specific version
-   ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DryRun
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DryRun
    ```
 
-2. **Compile entries:**
+2. Compile entries and delete files:
    ```powershell
-   # Compile to Unreleased section and delete YAML files (defaults to Azure.Mcp.Server)
-   ./eng/scripts/Compile-Changelog.ps1 -DeleteFiles
-   
-   # For a specific server
-   ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DeleteFiles
-   
+   # Compile to Unreleased section and delete YAML files for Azure MCP Server
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DeleteFiles
+
    # Or compile to a specific version
-   ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3" -DeleteFiles
+   ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -Version "<version>" -DeleteFiles
    ```
 
-3. **Server and version behavior:**
-   - `-ServerName`: Defaults to `Azure.Mcp.Server`, can be any server (e.g., `Fabric.Mcp.Server`)
-   - If `-Version` is specified: Entries are compiled into that version section (must exist in CHANGELOG.md)
+   Notes:
+   - `-ChangelogPath`: Required parameter specifying which changelog file to compile changes for
+   - If `-Version` is specified: Entries are compiled into that version section (must exist in `CHANGELOG.md`)
    - If no `-Version` is specified: Entries are compiled into the "Unreleased" section at the top
    - If no "Unreleased" section exists and no `-Version` is specified: A new "Unreleased" section is created with the next version number
 
-4. **Sync the VS Code extension CHANGELOG** (if applicable):
+3. Sync the VS Code extension CHANGELOG (if applicable):
    ```powershell
-   # Preview the sync (Azure.Mcp.Server)
-   ./eng/scripts/Sync-VsCodeChangelog.ps1 -DryRun
-   
-   # For a different server
-   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
+   # Preview the sync
+   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
    
    # Apply the sync
-   ./eng/scripts/Sync-VsCodeChangelog.ps1
+   ./eng/scripts/Sync-VsCodeChangelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md"
    ```
 
-5. **Update CHANGELOG.md** (if compiling to Unreleased):
-   - Change "Unreleased" to the actual version number
-   - Add release date
+4. Update release date in CHANGELOG.md
+5. Commit and initiate the release process
 
-6. **Commit and tag the release**
+### Compiled Output
 
-## Compiled Output
-
-When compiled, entries are grouped by section and subsection:
+When compiled, entries are grouped by section and subsection. Empty sections will not be included.
 
 ```markdown
 ## 2.0.0-beta.3 (Unreleased)
@@ -231,63 +255,32 @@ When compiled, entries are grouped by section and subsection:
 - Added support for User-Assigned Managed Identity via the `AZURE_CLIENT_ID` environment variable. [[#1033](https://github.com/microsoft/mcp/pull/1033)]
 - Added speech recognition support. [[#1054](https://github.com/microsoft/mcp/pull/1054)]
 
-### Breaking Changes
-
-### Bugs Fixed
-
 ### Other Changes
 
-#### Telemetry
-- Added `ToolId` into telemetry. [[#1028](https://github.com/microsoft/mcp/pull/1028)]
+#### Dependency Updates
+
+- Updated the `ModelContextProtocol.AspNetCore` package from version `0.4.0-preview.2` to `0.4.0-preview.3`. [[#887](https://github.com/Azure/azure-mcp/pull/887)]
 ```
 
-## Validation
+**Note:** When dealing with multi-line descriptions the PR link will be added to the last line. If the first line is followed by lines that are bullet items, they'll be automatically indented as sub-bullets and the PR link will be added to the first line instead.
 
-The scripts automatically validate your YAML files against the schema at `eng/schemas/changelog-entry.schema.json`.
+### Validation
 
-To manually validate:
+The scripts automatically validate YAML files against the schema at `eng/schemas/changelog-entry.schema.json`. To manually validate, you can use the `-DryRun` flag as follows:
+
 ```powershell
-# The New-ChangelogEntry.ps1 script validates automatically (defaults to Azure.Mcp.Server)
-./eng/scripts/New-ChangelogEntry.ps1
-
-# For a specific server
-./eng/scripts/New-ChangelogEntry.ps1 -ServerName "Fabric.Mcp.Server"
-
-# The Compile-Changelog.ps1 script also validates
-./eng/scripts/Compile-Changelog.ps1 -DryRun
-
-# For a specific server
-./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -DryRun
+./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/<server-name>/CHANGELOG.md" -DryRun
 ```
 
 ## Tips
 
-- **Multiple servers**: All scripts support the `-ServerName` parameter (defaults to `Azure.Mcp.Server`)
+- **Multiple servers**: All scripts require the `-ChangelogPath` parameter
   - Available servers: `Azure.Mcp.Server`, `Fabric.Mcp.Server`, `Template.Mcp.Server`, etc.
   - Each server has its own `changelog-entries/` folder and `CHANGELOG.md`
-- **Filename collisions**: The timestamp is in milliseconds, giving 1000 unique values per second. Collisions are extremely unlikely.
+  - Example paths: `servers/Azure.Mcp.Server/CHANGELOG.md`, `servers/Fabric.Mcp.Server/CHANGELOG.md`
 - **PR number unknown**: You can create the entry before opening a PR. Just use `pr: 0` and update it later.
-- **Edit existing entry**: Just edit the YAML file and commit the change.
-- **Multiple entries**: Create multiple YAML files with different timestamps.
-- **Subsections**: Use sparingly for grouping related changes (e.g., dependency updates).
-
-## Why Timestamp Filenames?
-
-We use Unix timestamp in milliseconds (e.g., `1731260400123.yml`) for changelog entry filenames because:
-
-| Strategy | Pros | Cons |
-|----------|------|------|
-| **Timestamp milliseconds** ✅ | Unique, sortable, simple, can create before PR | None significant |
-| Timestamp + PR number | Guaranteed unique, traceable | Verbose, requires PR first |
-| PR number only | Simple, short | Not unique across repos, requires PR first |
-| Sequential counter | Simple, short | Requires coordination, conflict-prone |
-| GUID only | Guaranteed unique | Completely opaque, no sorting |
-
-**Key benefits:**
-- **Pre-PR friendly**: Create entries before you have a PR number
-- **No coordination needed**: No need to check what number to use next
-- **Chronological**: Files naturally sort by creation time
-- **Collision-resistant**: 1000 unique values per second makes conflicts extremely unlikely
+- **Edit an existing entry**: Just edit the YAML file and commit the change.
+- **Multiple entries**: Create a single YAML file with multiple entries under the `changes` section.
 
 ## FAQ
 
@@ -303,13 +296,13 @@ Yes! Just edit the YAML file and commit the change. It will be picked up in the 
 
 Add it later in a follow-up PR or ask the maintainer to create one. Each entry is a separate file, so there's no conflict with other ongoing work.
 
-### What if two entries use the same timestamp?
+### What if two entries use the same filename?
 
-The timestamp is in milliseconds, giving 1000 unique values per second. Collisions are extremely unlikely. If one does occur (perhaps you created two entries in the same second), Git will show a conflict and you can simply regenerate a new timestamp for one of them.
+The filename is the unique identifier for each changelog entry. If two entries use the same filename, Git will show a conflict, and you can simply update the filename for your new change.
 
 ### Can I add multiple changelog entries in one PR?
 
-Yes! Just create multiple YAML files with different timestamps. This is common when a PR includes several distinct user-facing changes.
+Yes! Just create a single YAML file with multiple entries under the `changes` section. This is common when a PR includes several distinct user-facing changes.
 
 ### Do I need to know the PR number when creating an entry?
 
@@ -323,12 +316,8 @@ No! Only include entries for changes worth mentioning to users:
 
 ### What happens to the YAML files after release?
 
-They're deleted by the release manager using `./eng/scripts/Compile-Changelog.ps1 -DeleteFiles` after the entries are compiled into the main CHANGELOG.md.
+They're deleted by the release manager using the `-DeleteFiles` flag when compiling entries into the main `CHANGELOG.md`.
 
-## Background
-
-This system replaces the traditional approach of directly editing `CHANGELOG.md`, which often caused merge conflicts when multiple contributors were working simultaneously. Inspired by [GitLab's changelog system](https://about.gitlab.com/blog/solving-gitlabs-changelog-conflict-crisis/), individual YAML files eliminate these conflicts while making the changelog process more structured and reviewable.
-
-## Questions?
+### What if I have any other questions?
 
 Reach out to the maintainers if you have questions or encounter issues with the changelog entry system.

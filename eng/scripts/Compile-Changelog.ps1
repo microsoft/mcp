@@ -12,15 +12,10 @@
     If there is no "Unreleased" section and no version is specified, a new "Unreleased" 
     section is created using the next semantic version number.
 
-.PARAMETER ServerName
-    Name of the server to compile changelog for (e.g., "Azure.Mcp.Server", "Fabric.Mcp.Server").
-    Defaults to "Azure.Mcp.Server".
-
 .PARAMETER ChangelogPath
-    Path to the CHANGELOG.md file. If not specified, uses servers/{ServerName}/CHANGELOG.md.
-
-.PARAMETER ChangelogEntriesPath
-    Path to the changelog-entries directory. If not specified, uses servers/{ServerName}/changelog-entries.
+    Path to the CHANGELOG.md file (required).
+    The changelog-entries directory is inferred from this path (same directory as CHANGELOG.md).
+    Examples: "servers/Azure.Mcp.Server/CHANGELOG.md", "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
 .PARAMETER Version
     Target version section to compile entries into (e.g., "2.0.0-beta.3", "1.5.2").
@@ -33,22 +28,22 @@
     Delete YAML files after successful compilation.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1 -DryRun
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -DryRun
 
     Preview what will be compiled for Azure.Mcp.Server without making changes.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server"
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md"
 
     Compile entries into the Unreleased section for Fabric.Mcp.Server.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1 -Version "2.0.0-beta.3"
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Azure.Mcp.Server/CHANGELOG.md" -Version "2.0.0-beta.3"
 
     Compile entries into the 2.0.0-beta.3 version section for Azure.Mcp.Server.
 
 .EXAMPLE
-    ./eng/scripts/Compile-Changelog.ps1 -ServerName "Fabric.Mcp.Server" -Version "1.0.0"
+    ./eng/scripts/Compile-Changelog.ps1 -ChangelogPath "servers/Fabric.Mcp.Server/CHANGELOG.md" -Version "1.0.0"
 
     Compile entries into the 1.0.0 version section for Fabric.Mcp.Server.
 
@@ -60,14 +55,8 @@
 
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $false)]
-    [string]$ServerName = "Azure.Mcp.Server",
-
-    [Parameter(Mandatory = $false)]
+    [Parameter(Mandatory = $true)]
     [string]$ChangelogPath,
-
-    [Parameter(Mandatory = $false)]
-    [string]$ChangelogEntriesPath,
 
     [Parameter(Mandatory = $false)]
     [string]$Version,
@@ -82,13 +71,9 @@ param(
 Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
-# Set default paths based on ServerName
-if (-not $ChangelogPath) {
-    $ChangelogPath = "servers/$ServerName/CHANGELOG.md"
-}
-if (-not $ChangelogEntriesPath) {
-    $ChangelogEntriesPath = "servers/$ServerName/changelog-entries"
-}
+# Infer changelog-entries path from CHANGELOG.md path
+$changelogDir = Split-Path $ChangelogPath -Parent
+$ChangelogEntriesPath = Join-Path $changelogDir "changelog-entries"
 
 # Helper function to convert text to title case (capitalize first letter of each word)
 function ConvertTo-TitleCase {
@@ -100,7 +85,7 @@ function ConvertTo-TitleCase {
     
     # Use TextInfo for proper title casing
     $textInfo = (Get-Culture).TextInfo
-    return $textInfo.ToTitleCase($Text.ToLower())
+    return $textInfo.ToTitleCase($Text.ToLowerInvariant())
 }
 
 # Helper function to format a changelog entry with description and PR link
@@ -269,6 +254,7 @@ Import-Module powershell-yaml -ErrorAction Stop
 # Parse and validate YAML files
 $entries = @()
 $validSections = @("Features Added", "Breaking Changes", "Bugs Fixed", "Other Changes")
+$validSubsections = @("Dependency Updates")
 
 foreach ($file in $yamlFiles) {
     Write-Host "Processing: $($file.Name)" -ForegroundColor Gray
@@ -282,50 +268,77 @@ foreach ($file in $yamlFiles) {
         $yamlContent = Get-Content -Path $file.FullName -Raw
         $entry = $yamlContent | ConvertFrom-Yaml
         
-        # Validate required fields
-        if (-not $entry.section) {
-            Write-Error "  Missing required field 'section' in $($file.Name)"
+        # Validate required top-level fields
+        if (-not $entry.ContainsKey('pr')) {
+            Write-Error "  Missing required field 'pr' in $($file.Name)"
             continue
         }
         
-        # Validate and normalize section (case-insensitive)
-        $matchedSection = $validSections | Where-Object { $_ -ieq $entry.section }
-        if ($matchedSection) {
-            # Use the properly cased version
-            $normalizedSection = $matchedSection
-        } else {
-            Write-Error "  Invalid section '$($entry.section)' in $($file.Name). Must be one of: $($validSections -join ', ')"
+        if ($entry['pr'] -eq 0) {
+            Write-Warning "  PR number is 0 in $($file.Name) (update when known)"
+        }
+        elseif ($entry['pr'] -lt 0) {
+            Write-Error "  Invalid PR number in $($file.Name) (must be non-negative)"
             continue
         }
         
-        if (-not $entry.description) {
-            Write-Error "  Missing required field 'description' in $($file.Name)"
+        if (-not $entry.ContainsKey('changes') -or -not $entry['changes'] -or $entry['changes'].Count -eq 0) {
+            Write-Error "  Missing or empty 'changes' array in $($file.Name)"
             continue
         }
         
-        if ($entry.description.Length -lt 10) {
-            Write-Error "  Description too short in $($file.Name) (minimum 10 characters)"
-            continue
+        # Process each change in the array
+        $changeCount = 0
+        foreach ($change in $entry.changes) {
+            # Validate required fields for each change
+            if (-not $change['section']) {
+                Write-Error "  Missing required field 'section' in change #$($changeCount + 1) of $($file.Name)"
+                continue
+            }
+            
+            # Validate and normalize section (case-insensitive)
+            $matchedSection = $validSections | Where-Object { $_ -ieq $change['section'] }
+            if ($matchedSection) {
+                $normalizedSection = $matchedSection
+            } else {
+                Write-Error "  Invalid section '$($change['section'])' in change #$($changeCount + 1) of $($file.Name). Must be one of: $($validSections -join ', ')"
+                continue
+            }
+            
+            if (-not $change['description']) {
+                Write-Error "  Missing required field 'description' in change #$($changeCount + 1) of $($file.Name)"
+                continue
+            }
+            
+            if ($change['description'].Length -lt 10) {
+                Write-Error "  Description too short in change #$($changeCount + 1) of $($file.Name) (minimum 10 characters)"
+                continue
+            }
+            
+            # Validate subsection if provided
+            $subsection = $null
+            if ($change.ContainsKey('subsection') -and $change['subsection'] -and $change['subsection'] -ne "null") {
+                $providedSubsection = $change['subsection']
+                $matchedSubsection = $validSubsections | Where-Object { $_ -ieq $providedSubsection }
+                if (-not $matchedSubsection) {
+                    Write-Error "  Invalid subsection '$providedSubsection' in change #$($changeCount + 1) of $($file.Name). Valid subsections: $($validSubsections -join ', ')"
+                    continue
+                }
+                $subsection = $matchedSubsection
+            }
+            
+            # Add to entries collection with normalized section name
+            $entries += [PSCustomObject]@{
+                Section = $normalizedSection
+                Subsection = $subsection
+                Description = $change['description']
+                PR = $entry['pr']
+                Filename = $file.Name
+            }
+            $changeCount++
         }
         
-        if (-not $entry.pr -or $entry.pr -eq 0) {
-            Write-Warning "  Missing or invalid PR number in $($file.Name)"
-        }
-        elseif ($entry.pr -lt 1) {
-            Write-Error "  Invalid PR number in $($file.Name) (must be positive)"
-            continue
-        }
-        
-        # Add to entries collection with normalized section name
-        $entries += [PSCustomObject]@{
-            Section = $normalizedSection
-            Subsection = if ($entry.subsection -and $entry.subsection -ne "null") { $entry.subsection } else { $null }
-            Description = $entry.description
-            PR = $entry.pr
-            Filename = $file.Name
-        }
-        
-        Write-Host "  ✓ Valid" -ForegroundColor Green
+        Write-Host "  ✓ Valid ($changeCount change(s))" -ForegroundColor Green
     }
     catch {
         Write-Error "  Failed to parse $($file.Name): $_"
