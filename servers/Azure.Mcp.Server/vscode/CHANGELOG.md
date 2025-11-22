@@ -1,5 +1,10 @@
 # Release History
 
+## 2.0.7 (Unreleased) (pre-release)
+
+### Fixed
+- Adds version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration.
+
 ## 2.0.6 (2025-11-19) (pre-release)
 
 ### Added

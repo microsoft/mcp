@@ -102,7 +102,8 @@ export function activate(context: vscode.ExtensionContext) {
                         'Azure MCP',
                         binPath,
                         args,
-                        env
+                        env,
+                        context.extension.packageJSON.version
                     )
                 ];
             },
