@@ -4,7 +4,6 @@
 import * as vscode from 'vscode';
 import * as path from 'path';
 import * as fs from 'fs';
-import packageJson from '../../package.json';
 
 function isMcpAutoStartEnabled(): boolean {
     const config = vscode.workspace.getConfiguration('chat.mcp');
@@ -104,7 +103,7 @@ export function activate(context: vscode.ExtensionContext) {
                         binPath,
                         args,
                         env,
-                        packageJson.version
+                        context.extension.packageJSON.version
                     )
                 ];
             },
