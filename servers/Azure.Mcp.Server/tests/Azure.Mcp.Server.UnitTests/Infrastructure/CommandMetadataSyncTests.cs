@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Services.ProcessExecution;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Server.UnitTests.Infrastructure;
@@ -31,7 +32,7 @@ public class CommandMetadataSyncTests
         var originalContent = File.ReadAllText(docsPath);
 
         // Act - Run the update script using ExternalProcessService
-        var processService = new ExternalProcessService();
+        var processService = new ExternalProcessService(NullLogger<ExternalProcessService>.Instance);
         var pwshPath = FindPowerShellExecutable();
         var arguments = $"-NoProfile -ExecutionPolicy Bypass -File \"{updateScriptPath}\" -AzmcpPath \"{azmcpPath}\" -DocsPath \"{docsPath}\"";
 
