@@ -11,6 +11,7 @@ using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Services.Azure;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Monitor.OpenTelemetry.Exporter;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -152,6 +153,9 @@ public sealed class ServiceStartCommand : BaseCommand<ServiceStartOptions>
             using var tracerProvider = AddIncomingAndOutgoingHttpSpans(options);
 
             using var host = CreateHost(options);
+
+            var httpClientService = host.Services.GetRequiredService<IHttpClientService>();
+            BaseAzureService.InitializeHttpClientTransport(httpClientService);
 
             await InitializeServicesAsync(host.Services);
 
