@@ -102,4 +102,7 @@ public interface ITenantService
     Task<TokenCredential> GetTokenCredentialAsync(
         string? tenantId,
         CancellationToken cancellationToken);
+
+
+    HttpClient GetClient();
 }

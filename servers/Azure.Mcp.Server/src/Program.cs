@@ -1,18 +1,27 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System;
+using System.ClientModel.Primitives;
+using System.Linq;
 using System.Net;
+using System.Net.Http;
+using System.Reflection;
+using System.Runtime.Versioning;
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using ServiceStartCommand = Azure.Mcp.Core.Areas.Server.Commands.ServiceStartCommand;
 
 internal class Program
@@ -193,6 +202,25 @@ internal class Program
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
 
+        // Named overload returns IHttpClientBuilder enabling handler configuration.
+        // without passing named overload, we cannot configure handler.
+        var httpClientBuilder = services.AddHttpClient("default");
+
+        httpClientBuilder.ConfigureHttpClient((serviceProvider, client) =>
+        {
+            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            client.Timeout = httpClientOptions.DefaultTimeout;
+
+            var transport = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value.Transport ?? "stdio";
+            client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
+        });
+
+        httpClientBuilder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
+        {
+            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            return CreateHttpMessageHandler(httpClientOptions);
+        });
+
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
         // The http-traport-specific implementations and configurations must be registered
@@ -215,4 +243,102 @@ internal class Program
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
         await telemetryService.InitializeAsync();
     }
+
+    private static HttpMessageHandler CreateHttpMessageHandler(HttpClientOptions options)
+    {
+        var handler = new HttpClientHandler();
+
+        var proxy = CreateProxy(options);
+        if (proxy != null)
+        {
+            handler.Proxy = proxy;
+            handler.UseProxy = true;
+        }
+
+#if DEBUG
+        var testProxyUrl = Environment.GetEnvironmentVariable("TEST_PROXY_URL");
+        if (!string.IsNullOrWhiteSpace(testProxyUrl) && Uri.TryCreate(testProxyUrl, UriKind.Absolute, out var proxyUri))
+        {
+            return new RecordingRedirectHandler(proxyUri)
+            {
+                InnerHandler = handler
+            };
+        }
+#endif
+
+        return handler;
+    }
+
+    private static WebProxy? CreateProxy(HttpClientOptions options)
+    {
+        string? proxyAddress = options.AllProxy ?? options.HttpsProxy ?? options.HttpProxy;
+
+        if (string.IsNullOrEmpty(proxyAddress))
+        {
+            return null;
+        }
+
+        if (!Uri.TryCreate(proxyAddress, UriKind.Absolute, out var proxyUri))
+        {
+            return null;
+        }
+
+        var proxy = new WebProxy(proxyUri);
+
+        if (!string.IsNullOrEmpty(options.NoProxy))
+        {
+            var bypassList = options.NoProxy
+                .Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(s => s.Trim())
+                .Where(s => !string.IsNullOrEmpty(s))
+                .Select(ConvertGlobToRegex)
+                .ToArray();
+
+            if (bypassList.Length > 0)
+            {
+                proxy.BypassList = bypassList;
+            }
+        }
+
+        return proxy;
+    }
+
+    private static string ConvertGlobToRegex(string globPattern)
+    {
+        if (string.IsNullOrEmpty(globPattern))
+        {
+            return string.Empty;
+        }
+
+        var escaped = globPattern
+            .Replace("\\", "\\\\")
+            .Replace(".", "\\.")
+            .Replace("+", "\\+")
+            .Replace("$", "\\$")
+            .Replace("^", "\\^")
+            .Replace("{", "\\{")
+            .Replace("}", "\\}")
+            .Replace("[", "\\[")
+            .Replace("]", "\\]")
+            .Replace("(", "\\(")
+            .Replace(")", "\\)")
+            .Replace("|", "\\|");
+
+        var regex = escaped
+            .Replace("*", ".*")
+            .Replace("?", ".");
+
+        return $"^{regex}$";
+    }
+
+    private static string BuildUserAgent(string transport)
+    {
+        var assembly = typeof(HttpClientService).Assembly;
+        var version = assembly.GetCustomAttribute<AssemblyFileVersionAttribute>()?.Version ?? "unknown";
+        var framework = assembly.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName ?? "unknown";
+        var platform = System.Runtime.InteropServices.RuntimeInformation.OSDescription;
+
+        return $"azmcp/{version} azmcp-{transport}/{version} ({framework}; {platform})";
+    }
+
 }
