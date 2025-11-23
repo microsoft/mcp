@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
@@ -8,10 +9,12 @@ using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
@@ -22,6 +25,7 @@ public class AppConfigCommandTests : CommandTestsBase
     private const string SettingsKey = "settings";
     private readonly AppConfigService _appConfigService;
     private readonly ILogger<AppConfigService> _logger;
+    private readonly ServiceProvider _httpClientProvider;
 
     public AppConfigCommandTests(ITestOutputHelper output) : base(output)
     {
@@ -29,9 +33,21 @@ public class AppConfigCommandTests : CommandTestsBase
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var tenantService = new TenantService(tokenProvider, cacheService);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create();
+        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
         _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _httpClientProvider.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     [Fact]

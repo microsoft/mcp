@@ -1,15 +1,18 @@
 // Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
+using System.Net.Http;
 using System.Text.Json;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.Marketplace.Services;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Marketplace.LiveTests;
@@ -22,14 +25,27 @@ public class ProductGetCommandTests : CommandTestsBase
     private const string Language = "en";
     private const string Market = "US";
     private readonly MarketplaceService _marketplaceService;
+    private readonly ServiceProvider _httpClientProvider;
 
     public ProductGetCommandTests(ITestOutputHelper output) : base(output)
     {
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
-        var tenantService = new TenantService(tokenProvider, cacheService);
+        _httpClientProvider = TestHttpClientFactoryProvider.Create();
+        var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
+        var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         _marketplaceService = new MarketplaceService(tenantService);
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing)
+        {
+            _httpClientProvider.Dispose();
+        }
+
+        base.Dispose(disposing);
     }
 
     [Fact]
