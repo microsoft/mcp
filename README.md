@@ -54,7 +54,7 @@ This repository contains core libraries, test frameworks, engineering systems, p
 - **INSTALL**: [![Install Microsoft Foundry MCP in VS Code](https://img.shields.io/badge/VS_Code-0098FF?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D) [![Install Microsoft Foundry in VS Code Insiders](https://img.shields.io/badge/VS_Code_Insiders-24bfa5?style=flat-square&logo=visualstudiocode&logoColor=ffffff)](https://vscode.dev/redirect?url=vscode-insiders:mcp/install?%7B%22name%22%3A%22foundry-mcp-remote%22%2C%22type%22%3A%22http%22%2C%22url%22%3A%22https%3A%2F%2Fmcp.ai.azure.com%22%7D)
 
 ### <img height="18" width="18" src="https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/1062064-Products-1.2-24x24" alt="Microsoft Azure DevOps Logo" /> Azure DevOps
-- **REPOSITORY**: [Azure DevOps MCP Server - Public Preview](https://github.com/microsoft/azure-devops-mcp)
+- **REPOSITORY**: [Azure DevOps MCP Server](https://github.com/microsoft/azure-devops-mcp)
 - **DESCRIPTION**: This TypeScript project provides a local MCP server for Azure DevOps, enabling you to perform a wide range of Azure DevOps tasks directly from your code editor.
 - **CATEGORY**: `DEVELOPER TOOLS`
 - **TYPE**: `Local`
