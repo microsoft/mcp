@@ -18,9 +18,11 @@ If you are contributing significant changes, or if the issue is already assigned
     - [Adding a New Command](#adding-a-new-command)
   - [Testing](#testing)
     - [Unit Tests](#unit-tests)
+      - [Cancellation plumbing](#cancellation-plumbing)
     - [End-to-end Tests](#end-to-end-tests)
     - [Testing Local Build with VS Code](#testing-local-build-with-vs-code)
       - [Build the Server](#build-the-server)
+      - [Run the Azure MCP server in HTTP mode](#run-the-azure-mcp-server-in-http-mode)
       - [Configure mcp.json](#configure-mcpjson)
       - [Server Modes](#server-modes)
       - [Start from IDE](#start-from-ide)
@@ -152,7 +154,7 @@ If you are contributing significant changes, or if the issue is already assigned
       ```
    - Use the following command to find out the correct tool name for your new tool
       ```
-      cd servers/Azure.Mcp.Server/src/bin/Debug/net9.0
+      cd servers/Azure.Mcp.Server/src/bin/Debug/net10.0
       ./azmcp[.exe] tools list --name --namespace <tool_area>
       ```
    - Commit the change.
@@ -193,7 +195,7 @@ Requirements:
 
 To ensure the product code and unit tests can be cancelled quickly, contributors are required to write async methods (any returning `Task`, `ValueTask`, generic variants of those, etc.) to accept and invoke async methods with a `System.Threading.CancellationToken` parameter. The latter is enforced with the [CA2016 analyzer](https://learn.microsoft.com/dotnet/fundamentals/code-analysis/quality-rules/ca2016).
 
-Mocks created with `NSubstitute.Substitue.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
+Mocks created with `NSubstitute.Substitute.For<T>()` and have [methods set up](https://nsubstitute.github.io/help/set-return-value/#for-methods) should be passed `NSubstitute.Arg.Any<CancellationToken>()` for required `System.Threading.CancellationToken` parameters. The same should be used when [checking for received calls on a mocked object](https://nsubstitute.github.io/help/received-calls/index.html). If the product code is expected to do something interesting with a supplied `System.Threading.CancellationToken` parameter, such as linking with other `System.Threading.CancellationToken`s with [`System.Threading.CancellationTokenSource.CreateLinkedTokenSource`](https://learn.microsoft.com/dotnet/api/system.threading.cancellationtokensource.createlinkedtokensource), then consider testing for that behavior.
 
 Real product code under unit testing must be passed `Xunit.TestContext.Current.CancellationToken` when async methods are invoked. This is to ensure the tests can end to avoid possible issues with the parent process waiting indefinitely for the test runner executable to exit.
 
@@ -267,7 +269,7 @@ $env:AzureAd__ClientId = "<your-client-id>"
 $env:AzureAd__Instance = "https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp.exe server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 ```bash
@@ -279,7 +281,7 @@ export AzureAd__ClientId="<your-client-id>"
 export AzureAd__Instance="https://login.microsoftonline.com/"
 
 # Run the executable
-./servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
+./servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp server start --transport http --outgoing-auth-strategy UseHostingEnvironmentIdentity
 ```
 
 > **Note:** The environment variables listed above are taken from the `debug-remotemcp` profile in `launchSettings.json`. Replace `<your-tenant-id>` and `<your-client-id>` with your actual Azure AD tenant ID and client ID. These variables configure Azure AD authentication and the server endpoint for HTTP mode operation.
@@ -309,7 +311,7 @@ Update your mcp.json to point to the locally built azmcp executable.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -345,7 +347,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start"]
     }
   }
@@ -359,7 +361,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault"]
     }
   }
@@ -373,7 +375,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "namespace"]
     }
   }
@@ -387,7 +389,7 @@ Optional `--namespace` and `--mode` parameters can be used to configure differen
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "single"]
     }
   }
@@ -402,7 +404,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--mode", "consolidated"]
     }
   }
@@ -416,7 +418,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--namespace", "storage", "--namespace", "keyvault", "--mode", "namespace"]
     }
   }
@@ -430,7 +432,7 @@ It honors both --read-only and --namespace switches.
   "servers": {
     "azure-mcp-server": {
       "type": "stdio",
-      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net9.0/azmcp[.exe]",
+      "command": "<absolute-path-to>/mcp/servers/Azure.Mcp.Server/src/bin/Debug/net10.0/azmcp[.exe]",
       "args": ["server", "start", "--tool", "azmcp_storage_account_get", "--tool", "azmcp_subscription_list"]
     }
   }

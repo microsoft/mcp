@@ -66,7 +66,7 @@ The Fabric MCP Server unlocks practical developer workflows by providing local a
 
 <!-- remove-section: start vsix -->
 ## Prerequisites
-- .NET 9.x SDK is recommended. Check `global.json` at the repository root for any pinned SDK version.
+- .NET 10.x SDK is recommended. Check `global.json` at the repository root for any pinned SDK version.
   - If `global.json` pins a preview SDK not installed locally, either install the requested preview SDK or update `global.json` for local development.
 - An MCP-compatible client (VS Code with an MCP extension, Claude Desktop, etc.).
 
