@@ -3,23 +3,27 @@
 
 using System.Net.Http;
 using System.Text.Json;
+using Azure.Mcp.Core.Areas.Server.Options;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Azure.Mcp.Tests.Client.Helpers;
+using Azure.Mcp.Tests.Generated.Models;
 using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
 
-public class AppConfigCommandTests : CommandTestsBase
+public class AppConfigCommandTests : RecordedCommandTestsBase
 {
     private const string AccountsKey = "accounts";
     private const string SettingsKey = "settings";
@@ -27,18 +31,30 @@ public class AppConfigCommandTests : CommandTestsBase
     private readonly ILogger<AppConfigService> _logger;
     private readonly ServiceProvider _httpClientProvider;
 
-    public AppConfigCommandTests(ITestOutputHelper output) : base(output)
+    public AppConfigCommandTests(ITestOutputHelper output, TestProxyFixture fixture) : base(output, fixture)
     {
         _logger = NullLogger<AppConfigService>.Instance;
         var memoryCache = new MemoryCache(Microsoft.Extensions.Options.Options.Create(new MemoryCacheOptions()));
         var cacheService = new SingleUserCliCacheService(memoryCache);
         var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
         _httpClientProvider = TestHttpClientFactoryProvider.Create();
+        var httpClientOptions = Microsoft.Extensions.Options.Options.Create(new HttpClientOptions());
+        var serviceStartOptions = Microsoft.Extensions.Options.Options.Create(new ServiceStartOptions());
+        var httpClientService = new HttpClientService(httpClientOptions, serviceStartOptions);
         var httpClientFactory = _httpClientProvider.GetRequiredService<IHttpClientFactory>();
         var tenantService = new TenantService(tokenProvider, cacheService, httpClientFactory);
         var subscriptionService = new SubscriptionService(cacheService, tenantService);
-        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger);
+        _appConfigService = new AppConfigService(subscriptionService, tenantService, _logger, httpClientService);
     }
+
+    public override List<BodyRegexSanitizer> BodyRegexSanitizers => new()
+    {
+        new BodyRegexSanitizer(new BodyRegexSanitizerBody() {
+          Regex = "\"domains\"\\s*:\\s*\\[(?s)(?<domains>.*?)\\]",
+          GroupForReplace = "domains",
+          Value = "\"contoso.com\""
+        })
+    };
 
     protected override void Dispose(bool disposing)
     {
