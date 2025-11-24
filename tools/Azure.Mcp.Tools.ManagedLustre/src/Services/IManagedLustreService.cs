@@ -125,5 +125,19 @@ public interface IManagedLustreService
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
+
+    Task<string> CreateAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? conflictResolutionMode = null,
+        List<string>? autoimportPrefixes = null,
+        string? adminStatus = null,
+        bool? enableDeletions = null,
+        long? maximumErrors = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }
 

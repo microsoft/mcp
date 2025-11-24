@@ -210,7 +210,55 @@ public static class ManagedLustreOptionDefinitions
     )
     {
         Required = true,
-        Description = "The name of the autoexport job"
+        Description = "The name of the autoexport/autoimport job"
+    };
+
+    public static readonly Option<string> OptionalJobNameOption = new(
+        "--job-name"
+    )
+    {
+        Required = false,
+        Description = "The name of the autoimport job. If not specified, a timestamped name will be generated."
+    };
+
+    public static readonly Option<string> ConflictResolutionModeOption = new(
+        "--conflict-resolution-mode"
+    )
+    {
+        Required = false,
+        Description = "How the auto import job handles conflicts. Fail: stop immediately on conflict. Skip: pass over the conflict. OverwriteIfDirty: delete and re-import if conflicting type, dirty, or currently released. OverwriteAlways: extends OverwriteIfDirty to include releasing restored but not dirty files. Default: Skip. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways."
+    };
+
+    public static readonly Option<List<string>> AutoimportPrefixesOption = new(
+        "--autoimport-prefixes"
+    )
+    {
+        Required = false,
+        Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data /logs /archive"
+    };
+
+    public static readonly Option<string> AdminStatusOption = new(
+        "--admin-status"
+    )
+    {
+        Required = false,
+        Description = "The administrative status of the auto import job. Enable: job is active. Disable: disables the current active auto import job. Default: Enable. Allowed values: Enable, Disable."
+    };
+
+    public static readonly Option<bool> EnableDeletionsOption = new(
+        "--enable-deletions"
+    )
+    {
+        Required = false,
+        Description = "Whether to enable deletions during auto import. This only affects overwrite-dirty mode. Default: false."
+    };
+
+    public static readonly Option<long> MaximumErrorsOption = new(
+        "--maximum-errors"
+    )
+    {
+        Required = false,
+        Description = "Total non-conflict-oriented errors (e.g., OS errors) that import will tolerate before exiting with failure. -1: infinite. 0: exit immediately on any error."
     };
 
     public static readonly Option<string> OptionalMaintenanceDayOption = MaintenanceDayOption.AsOptional();

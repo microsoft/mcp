@@ -730,5 +730,105 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             throw new Exception($"Failed to delete auto export job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
+
+    public async Task<string> CreateAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string? jobName = null,
+        string? conflictResolutionMode = null,
+        List<string>? autoimportPrefixes = null,
+        string? adminStatus = null,
+        bool? enableDeletions = null,
+        long? maximumErrors = null,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Generate job name from timestamp if not provided
+            var actualJobName = jobName ?? $"autoimport-{DateTime.UtcNow:yyyyMMddHHmmss}";
+
+            // Create auto import job data with filesystem location
+            var autoImportJobData = new AutoImportJobData(fs.Value.Data.Location);
+
+            // Set optional properties
+            if (!string.IsNullOrWhiteSpace(conflictResolutionMode))
+            {
+                autoImportJobData.ConflictResolutionMode = conflictResolutionMode switch
+                {
+                    "Fail" => ConflictResolutionMode.Fail,
+                    "Skip" => ConflictResolutionMode.Skip,
+                    "OverwriteIfDirty" => ConflictResolutionMode.OverwriteIfDirty,
+                    "OverwriteAlways" => ConflictResolutionMode.OverwriteAlways,
+                    _ => throw new ArgumentException($"Invalid conflict resolution mode: {conflictResolutionMode}. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways")
+                };
+            }
+
+            if (autoimportPrefixes != null && autoimportPrefixes.Count > 0)
+            {
+                if (autoimportPrefixes.Count > 100)
+                {
+                    throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
+                }
+                foreach (var prefix in autoimportPrefixes)
+                {
+                    autoImportJobData.AutoImportPrefixes.Add(prefix);
+                }
+            }
+
+            if (!string.IsNullOrWhiteSpace(adminStatus))
+            {
+                autoImportJobData.AdminStatus = adminStatus switch
+                {
+                    "Enable" => AutoImportJobPropertiesAdminStatus.Enable,
+                    "Disable" => AutoImportJobPropertiesAdminStatus.Disable,
+                    _ => throw new ArgumentException($"Invalid admin status: {adminStatus}. Allowed values: Enable, Disable")
+                };
+            }
+
+            if (enableDeletions.HasValue)
+            {
+                autoImportJobData.EnableDeletions = enableDeletions.Value;
+            }
+
+            if (maximumErrors.HasValue)
+            {
+                autoImportJobData.MaximumErrors = maximumErrors.Value;
+            }
+
+            // Create the auto import job
+            var createOperation = await fs.Value.GetAutoImportJobs().CreateOrUpdateAsync(
+                WaitUntil.Completed,
+                actualJobName,
+                autoImportJobData,
+                cancellationToken);
+
+            return createOperation.Value.Data.Name;
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
 }
 

@@ -1598,6 +1598,18 @@ azmcp managedlustre fs autoexport-job delete --subscription <subscription> \
                                              --resource-group <resource-group> \
                                              --filesystem-name <filesystem-name> \
                                              --job-name <job-name>
+
+# Create an autoimport job for an Azure Managed Lustre filesystem
+# ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoimport-job create --subscription <subscription> \
+                                             --resource-group <resource-group> \
+                                             --filesystem-name <filesystem-name> \
+                                             [--job-name <job-name>] \
+                                             [--conflict-resolution-mode <Fail|Skip|OverwriteIfDirty|OverwriteAlways>] \
+                                             [--autoimport-prefixes <prefix1> <prefix2> ...] \
+                                             [--admin-status <Enable|Disable>] \
+                                             [--enable-deletions <true|false>] \
+                                             [--maximum-errors <number>]
 ```
 
 ### Azure Native ISV Operations
