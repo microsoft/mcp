@@ -830,5 +830,51 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
             throw new Exception($"Failed to create auto import job for filesystem '{filesystemName}': {ex.Message}", ex);
         }
     }
+
+    public async Task<Models.AutoimportJob> GetAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(subscription, nameof(subscription));
+        ArgumentException.ThrowIfNullOrWhiteSpace(resourceGroup, nameof(resourceGroup));
+        ArgumentException.ThrowIfNullOrWhiteSpace(filesystemName, nameof(filesystemName));
+        ArgumentException.ThrowIfNullOrWhiteSpace(jobName, nameof(jobName));
+
+        try
+        {
+            // Get the resource group
+            var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy);
+
+            // Get the filesystem
+            var fs = await rg.GetAmlFileSystems().GetAsync(filesystemName, cancellationToken: cancellationToken);
+
+            // Get the auto import job
+            var job = await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+
+            return new Models.AutoimportJob
+            {
+                Name = job.Value.Data.Name,
+                Id = job.Value.Data.Id.ToString(),
+                ProvisioningState = job.Value.Data.ProvisioningState?.ToString() ?? "Unknown"
+            };
+        }
+        catch (Azure.RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Autoimport job '{jobName}' not found for filesystem '{filesystemName}' in resource group '{resourceGroup}'.", rfe);
+        }
+        catch (Azure.RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to get auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
 }
 

@@ -1599,6 +1599,13 @@ azmcp managedlustre fs autoexport-job delete --subscription <subscription> \
                                              --filesystem-name <filesystem-name> \
                                              --job-name <job-name>
 
+# Get an autoimport job for an Azure Managed Lustre filesystem
+# ❌ Destructive | ✅ Idempotent | ❌ OpenWorld | ✅ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoimport-job get --subscription <subscription> \
+                                           --resource-group <resource-group> \
+                                           --filesystem-name <filesystem-name> \
+                                           --job-name <job-name>
+
 # Create an autoimport job for an Azure Managed Lustre filesystem
 # ❌ Destructive | ❌ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
 azmcp managedlustre fs autoimport-job create --subscription <subscription> \
