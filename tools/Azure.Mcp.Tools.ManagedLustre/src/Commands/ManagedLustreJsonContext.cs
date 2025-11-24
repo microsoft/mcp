@@ -4,6 +4,7 @@
 using System.Text.Json.Serialization;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Models;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands;
@@ -14,6 +15,8 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 [JsonSerializable(typeof(AutoexportJobListCommand.AutoexportJobListResult))]
 [JsonSerializable(typeof(AutoexportJobDeleteCommand.AutoexportJobDeleteResult))]
 [JsonSerializable(typeof(AutoexportJob))]
+[JsonSerializable(typeof(AutoimportJobCreateCommand.AutoimportJobCreateResult))]
+[JsonSerializable(typeof(AutoimportJob))]
 [JsonSerializable(typeof(FileSystemCreateCommand.FileSystemCreateResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
 [JsonSerializable(typeof(FileSystemUpdateCommand.FileSystemUpdateResult))]

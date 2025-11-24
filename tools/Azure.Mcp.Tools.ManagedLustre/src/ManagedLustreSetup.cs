@@ -3,6 +3,7 @@
 
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem;
 using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoexportJob;
+using Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Mcp.Core.Areas;
@@ -31,6 +32,7 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<AutoexportJobGetCommand>();
         services.AddSingleton<AutoexportJobListCommand>();
         services.AddSingleton<AutoexportJobDeleteCommand>();
+        services.AddSingleton<AutoimportJobCreateCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -82,6 +84,12 @@ public class ManagedLustreSetup : IAreaSetup
 
         var autoexportJobDelete = serviceProvider.GetRequiredService<AutoexportJobDeleteCommand>();
         autoexportJob.AddCommand(autoexportJobDelete.Name, autoexportJobDelete);
+
+        var autoimportJob = new CommandGroup("autoimport-job", "Autoimport archive job operations for Azure Managed Lustre - Commands for creating archive jobs to import data from blob storage to the filesystem.");
+        fileSystem.AddSubGroup(autoimportJob);
+
+        var autoimportJobCreate = serviceProvider.GetRequiredService<AutoimportJobCreateCommand>();
+        autoimportJob.AddCommand(autoimportJobCreate.Name, autoimportJobCreate);
 
         return managedLustre;
     }
