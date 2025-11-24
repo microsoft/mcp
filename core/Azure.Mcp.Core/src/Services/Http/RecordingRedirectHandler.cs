@@ -12,7 +12,7 @@ namespace Azure.Mcp.Core.Services.Http;
 /// This handler is intended to be injected as the LAST delegating handler (closest to the transport) so
 /// that it rewrites the final outgoing wire request.
 /// </summary>
-public class RecordingRedirectHandler : DelegatingHandler
+internal sealed class RecordingRedirectHandler : DelegatingHandler
 {
     private readonly Uri _proxyUri;
 

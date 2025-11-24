@@ -12,9 +12,9 @@ using Azure.Mcp.Tests.Client;
 using Azure.Mcp.Tests.Helpers;
 using Azure.Mcp.Tools.AppConfig.Services;
 using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.DependencyInjection;
 using Xunit;
 
 namespace Azure.Mcp.Tools.AppConfig.LiveTests;
