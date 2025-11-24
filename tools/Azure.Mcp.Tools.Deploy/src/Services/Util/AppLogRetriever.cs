@@ -84,7 +84,7 @@ public class AppLogRetriever(TokenCredential credential, string subscriptionId, 
         return resources;
     }
 
-    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string resourceName)
+    public async Task<GenericResource> RegisterAppAsync(ResourceType resourceType, string rgName)
     {
         var subscription = _armClient!.GetSubscriptionResource(new($"/subscriptions/{_subscriptionId}"));
         var resourceGroup = await subscription.GetResourceGroupAsync(_resourceGroupName);
@@ -93,7 +93,7 @@ public class AppLogRetriever(TokenCredential credential, string subscriptionId, 
 
         await foreach (var resource in resourceGroup.Value.GetGenericResourcesAsync())
         {
-            if (resource.Data.Name.Equals(resourceName, StringComparison.OrdinalIgnoreCase))
+            if (resource.Data.Name.Equals(rgName, StringComparison.OrdinalIgnoreCase))
             {
                 if (IsResourceTypeMatch(resource, resourceType))
                 {
@@ -105,8 +105,8 @@ public class AppLogRetriever(TokenCredential credential, string subscriptionId, 
 
         return apps.Count switch
         {
-            0 => throw new InvalidOperationException($"No resources found for resource type {resourceType} in resource {resourceName}"),
-            > 1 => throw new InvalidOperationException($"Multiple resources found for resource type {resourceType} in resource {resourceName}"),
+            0 => throw new InvalidOperationException($"No resources found for resource type {resourceType} in resource group {rgName}"),
+            > 1 => throw new InvalidOperationException($"Multiple resources found for resource type {resourceType} in resource group {rgName}"),
             _ => apps[0]
         };
     }

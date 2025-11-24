@@ -1,0 +1,2 @@
+- Expected files: main.tf, main.tfvars.json (with the minimally required parameters), outputs.tf.
+- Resource names should use Azure CAF naming convention. This is required for deployments. Add aztfmod/azurecaf in the required provider. DO NOT use random_length. NO suffixes needed.
