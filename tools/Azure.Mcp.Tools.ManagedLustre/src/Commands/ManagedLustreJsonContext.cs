@@ -19,6 +19,7 @@ namespace Azure.Mcp.Tools.ManagedLustre.Commands;
 [JsonSerializable(typeof(AutoimportJobCancelCommand.AutoimportJobCancelResult))]
 [JsonSerializable(typeof(AutoimportJobGetCommand.AutoimportJobGetResult))]
 [JsonSerializable(typeof(AutoimportJobListCommand.AutoimportJobListResult))]
+[JsonSerializable(typeof(AutoimportJobDeleteCommand.AutoimportJobDeleteResult))]
 [JsonSerializable(typeof(AutoimportJob))]
 [JsonSerializable(typeof(FileSystemCreateCommand.FileSystemCreateResult))]
 [JsonSerializable(typeof(FileSystemListCommand.FileSystemListResult))]
