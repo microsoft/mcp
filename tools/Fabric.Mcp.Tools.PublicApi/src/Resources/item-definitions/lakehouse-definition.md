@@ -10,7 +10,7 @@ ms.date: 11/02/2024
 
 # Lakehouse definition
   
-This article provides a breakdown of the definition structure for Lakehouse items using `LakehouseDefinitionV1` format. For detailed information, see: [How to create a lakehouse with Microsoft Fabric Rest API](/fabric/data-engineering/lakehouse-api)
+This article provides a breakdown of the definition structure for Lakehouse items using `LakehouseDefinitionV1` format. For detailed information, see: [How to create a lakehouse with Microsoft Fabric Rest API](https://learn.microsoft.com/fabric/data-engineering/lakehouse-api)
 
 ## Supported formats
 
@@ -182,7 +182,7 @@ Indicates a constraint that determines the rows in a table that users can see. R
 
 The members object which contains the members of the role as arrays of different member types.
 
-In addition to FabricItemMembers, Onelake security supports adding a list of [MicrosoftEntraMembers](/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles?tabs=HTTP#microsoftentramember). This is not supported in lakehouse item definition APIs, and lakehouse CICD and will be ignored if specified.
+In addition to FabricItemMembers, Onelake security supports adding a list of [MicrosoftEntraMembers](https://learn.microsoft.com/rest/api/fabric/core/onelake-data-access-security/create-or-update-data-access-roles?tabs=HTTP#microsoftentramember). This is not supported in lakehouse item definition APIs, and lakehouse CICD and will be ignored if specified.
 
 | Name | Type | Description |
 | --- | --- | --- |
