@@ -22,6 +22,15 @@ jobs:
     displayName: Download build_info
     artifact: build_info
 
+  - task: Powershell@2
+    displayName: 'Verify Nuget package was published'
+    inputs:
+      pwsh: true
+      filePath: $(Build.SourcesDirectory)/eng/scripts/Verify-NuGetRelease.ps1
+      arguments: >
+        -ServerName '${{ parameters.ServerName }}'
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+
   - task: AzureCLI@2
     inputs:
       azureSubscription: 'Azure SDK Engineering System'
