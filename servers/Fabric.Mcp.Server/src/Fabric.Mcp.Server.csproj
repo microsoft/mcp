@@ -14,7 +14,7 @@
     <NpmPackageKeywords>fabric,mcp,model-context-protocol</NpmPackageKeywords>
 
     <!-- docker settings -->
-    <DockerImageName></DockerImageName>
+    <DockerImageName>fabric/fabric-mcp</DockerImageName>
 
     <!-- dnx/nuget settings -->
     <DnxPackageId>Microsoft.Fabric.Mcp</DnxPackageId>
