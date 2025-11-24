@@ -31,6 +31,7 @@ public static class HttpClientFactoryConfigurator
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        // for curious eyes, if one doesn't use named clients, AddHttpClient() doesn't return a builder that can be further configured
         var builder = services.AddHttpClient("default");
 
         builder.ConfigureHttpClient((serviceProvider, client) =>

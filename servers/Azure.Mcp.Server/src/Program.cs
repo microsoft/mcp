@@ -197,7 +197,7 @@ internal class Program
 
         // Named overload returns IHttpClientBuilder enabling handler configuration.
         // without passing named overload, we cannot configure handler.
-            services.AddConfiguredHttpClient();
+        services.AddConfiguredHttpClient();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
