@@ -831,6 +831,52 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         }
     }
 
+    public async Task CancelAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
+    {
+        ValidateRequiredParameters(
+            (nameof(subscription), subscription),
+            (nameof(resourceGroup), resourceGroup),
+            (nameof(filesystemName), filesystemName),
+            (nameof(jobName), jobName));
+
+        var rg = await _resourceGroupService.GetResourceGroupResource(subscription, resourceGroup, tenant, retryPolicy)
+            ?? throw new Exception($"Resource group '{resourceGroup}' not found");
+
+        try
+        {
+            var fs = await rg.GetAmlFileSystemAsync(filesystemName, cancellationToken: cancellationToken);
+            if (fs?.Value == null)
+            {
+                throw new Exception($"Filesystem '{filesystemName}' not found in resource group '{resourceGroup}'");
+            }
+
+            // Delete (cancel) the auto import job
+            await fs.Value.GetAutoImportJobs().GetAsync(jobName, cancellationToken: cancellationToken);
+            await fs.Value.GetAutoImportJobs().Get(jobName, cancellationToken).Value.DeleteAsync(
+                WaitUntil.Completed,
+                cancellationToken);
+        }
+        catch (RequestFailedException rfe) when (rfe.Status == 404)
+        {
+            throw new Exception($"Auto import job '{jobName}' not found for filesystem '{filesystemName}'", rfe);
+        }
+        catch (RequestFailedException rfe)
+        {
+            throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {rfe.Message}", rfe);
+        }
+        catch (Exception ex)
+        {
+            throw new Exception($"Failed to cancel auto import job '{jobName}' for filesystem '{filesystemName}': {ex.Message}", ex);
+        }
+    }
+
     public async Task<Models.AutoimportJob> GetAutoimportJobAsync(
         string subscription,
         string resourceGroup,

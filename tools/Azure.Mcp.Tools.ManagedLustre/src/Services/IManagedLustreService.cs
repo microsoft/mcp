@@ -140,6 +140,15 @@ public interface IManagedLustreService
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);
 
+    Task CancelAutoimportJobAsync(
+        string subscription,
+        string resourceGroup,
+        string filesystemName,
+        string jobName,
+        string? tenant = null,
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
+
     Task<Models.AutoimportJob> GetAutoimportJobAsync(
         string subscription,
         string resourceGroup,
