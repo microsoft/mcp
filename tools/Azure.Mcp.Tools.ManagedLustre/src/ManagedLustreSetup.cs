@@ -36,6 +36,7 @@ public class ManagedLustreSetup : IAreaSetup
         services.AddSingleton<AutoimportJobCancelCommand>();
         services.AddSingleton<AutoimportJobGetCommand>();
         services.AddSingleton<AutoimportJobListCommand>();
+        services.AddSingleton<AutoimportJobDeleteCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
@@ -102,6 +103,9 @@ public class ManagedLustreSetup : IAreaSetup
 
         var autoimportJobList = serviceProvider.GetRequiredService<AutoimportJobListCommand>();
         autoimportJob.AddCommand(autoimportJobList.Name, autoimportJobList);
+
+        var autoimportJobDelete = serviceProvider.GetRequiredService<AutoimportJobDeleteCommand>();
+        autoimportJob.AddCommand(autoimportJobDelete.Name, autoimportJobDelete);
 
         return managedLustre;
     }
