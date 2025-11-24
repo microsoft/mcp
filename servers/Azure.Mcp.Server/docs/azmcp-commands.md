@@ -1623,6 +1623,13 @@ azmcp managedlustre fs autoimport-job create --subscription <subscription> \
                                              [--admin-status <Enable|Disable>] \
                                              [--enable-deletions <true|false>] \
                                              [--maximum-errors <number>]
+
+# Cancel an autoimport job for an Azure Managed Lustre filesystem
+# ✅ Destructive | ✅ Idempotent | ❌ OpenWorld | ❌ ReadOnly | ❌ Secret | ❌ LocalRequired
+azmcp managedlustre fs autoimport-job cancel --subscription <subscription> \
+                                              --resource-group <resource-group> \
+                                              --filesystem-name <filesystem-name> \
+                                              --job-name <job-name>
 ```
 
 ### Azure Native ISV Operations
