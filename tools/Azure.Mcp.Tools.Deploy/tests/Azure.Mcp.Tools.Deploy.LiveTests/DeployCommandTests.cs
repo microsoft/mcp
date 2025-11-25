@@ -47,7 +47,7 @@ public class DeployCommandTests(ITestOutputHelper output) : CommandTestsBase(out
                 { "resource-types", "appservice, azurestorage" }
             });
 
-        Assert.Contains("Deployment Tool AzCli rules", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("If creating AzCli script, the script should stop if any command fails", result ?? string.Empty, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
