@@ -8,5 +8,5 @@ public interface IDeployService
     Task<string> GetResourceLogsAsync(
         string subscriptionId,
         string resourceGroupName,
-        int? limit = null);
+        int? limit = null, CancellationToken cancellationToken = default);
 }

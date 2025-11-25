@@ -3,7 +3,7 @@
 
 using System.CommandLine;
 using System.Net;
-using Azure;
+using Azure.Mcp.Core.Helpers;
 using Azure.Mcp.Core.Models.Command;
 using Azure.Mcp.Core.Options;
 using Azure.Mcp.Tools.Sql.Commands.Database;
@@ -71,7 +71,8 @@ public class DatabaseRenameCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.RenameDatabaseAsync(
+        _sqlService
+            .RenameDatabaseAsync(
                 Arg.Is("server1"),
                 Arg.Is("olddb"),
                 Arg.Is("newdb"), // Verify new-database-name is correctly bound (not null)
@@ -89,7 +90,7 @@ public class DatabaseRenameCommandTests
             "--new-database-name", "newdb"
         ]);
 
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -141,21 +142,22 @@ public class DatabaseRenameCommandTests
                 ZoneRedundant: false
             );
 
-            _sqlService.RenameDatabaseAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+            _sqlService
+                .RenameDatabaseAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(mockDatabase);
         }
 
         var args = _commandDefinition.Parse(commandArgs.Split(' ', StringSplitOptions.RemoveEmptyEntries));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -177,7 +179,8 @@ public class DatabaseRenameCommandTests
     {
         // Arrange
         var notFoundException = new RequestFailedException((int)HttpStatusCode.NotFound, "Database not found");
-        _sqlService.RenameDatabaseAsync(
+        _sqlService
+            .RenameDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -196,7 +199,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -208,7 +211,8 @@ public class DatabaseRenameCommandTests
     {
         // Arrange
         var conflictException = new RequestFailedException((int)HttpStatusCode.Conflict, "Database name already exists");
-        _sqlService.RenameDatabaseAsync(
+        _sqlService
+            .RenameDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -227,7 +231,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Conflict, response.Status);
@@ -240,7 +244,8 @@ public class DatabaseRenameCommandTests
     {
         // Arrange
         var badRequestException = new RequestFailedException((int)HttpStatusCode.BadRequest, "Invalid rename operation");
-        _sqlService.RenameDatabaseAsync(
+        _sqlService
+            .RenameDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -259,7 +264,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -270,7 +275,8 @@ public class DatabaseRenameCommandTests
     public async Task ExecuteAsync_HandlesGeneralException()
     {
         // Arrange
-        _sqlService.RenameDatabaseAsync(
+        _sqlService
+            .RenameDatabaseAsync(
                 Arg.Any<string>(),
                 Arg.Any<string>(),
                 Arg.Any<string>(),
@@ -289,7 +295,7 @@ public class DatabaseRenameCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -301,7 +307,7 @@ public class DatabaseRenameCommandTests
     public async Task ExecuteAsync_WithSubscriptionFromEnvironment_Succeeds()
     {
         // Arrange - Test when subscription comes from environment variable
-        Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", "env-sub-id");
+        EnvironmentHelpers.SetAzureSubscriptionId("env-sub-id");
 
         var mockDatabase = new SqlDatabase(
             Name: "newdb",
@@ -321,39 +327,31 @@ public class DatabaseRenameCommandTests
             ZoneRedundant: false
         );
 
-        _sqlService.RenameDatabaseAsync(
-            Arg.Is("server1"),
-            Arg.Is("olddb"),
-            Arg.Is("newdb"),
-            Arg.Is("rg"),
-            Arg.Is("env-sub-id"),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .RenameDatabaseAsync(
+                Arg.Is("server1"),
+                Arg.Is("olddb"),
+                Arg.Is("newdb"),
+                Arg.Is("rg"),
+                Arg.Is("env-sub-id"),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(mockDatabase);
 
-        try
-        {
-            var args = _commandDefinition.Parse([
-                "--resource-group", "rg",
-                "--server", "server1",
-                "--database", "olddb",
-                "--new-database-name", "newdb"
-            ]);
+        var args = _commandDefinition.Parse([
+            "--resource-group", "rg",
+            "--server", "server1",
+            "--database", "olddb",
+            "--new-database-name", "newdb"
+        ]);
 
-            // Act
-            var response = await _command.ExecuteAsync(_context, args);
+        // Act
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
-            // Assert
-            Assert.NotNull(response);
-            Assert.Equal(HttpStatusCode.OK, response.Status);
-            Assert.NotNull(response.Results);
-            Assert.Equal("Success", response.Message);
-        }
-        finally
-        {
-            // Clean up environment variable
-            Environment.SetEnvironmentVariable("AZURE_SUBSCRIPTION_ID", null);
-        }
+        // Assert
+        Assert.NotNull(response);
+        Assert.Equal(HttpStatusCode.OK, response.Status);
+        Assert.NotNull(response.Results);
+        Assert.Equal("Success", response.Message);
     }
-
 }

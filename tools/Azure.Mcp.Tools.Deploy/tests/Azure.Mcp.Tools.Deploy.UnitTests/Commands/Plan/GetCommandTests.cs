@@ -43,7 +43,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -64,7 +64,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -85,7 +85,7 @@ public class GetCommandTests
         ]);
 
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);
@@ -105,7 +105,7 @@ public class GetCommandTests
             "--target-app-service", "unknown-service" // This should default to Container Apps
         ]);
         // act
-        var result = await _command.ExecuteAsync(_context, args);
+        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // assert
         Assert.NotNull(result);

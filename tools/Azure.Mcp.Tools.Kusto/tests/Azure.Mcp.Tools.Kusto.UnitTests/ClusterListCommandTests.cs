@@ -37,7 +37,7 @@ public sealed class ClusterListCommandTests
         // Arrange
         var expectedClusters = new List<string> { "clusterA", "clusterB" };
         _kusto.ListClustersAsync(
-            "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            "sub123", Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedClusters);
 
         var command = new ClusterListCommand(_logger);
@@ -46,7 +46,7 @@ public sealed class ClusterListCommandTests
 
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -63,7 +63,7 @@ public sealed class ClusterListCommandTests
     public async Task ExecuteAsync_ReturnsEmpty_WhenNoClustersExist()
     {
         // Arrange
-        _kusto.ListClustersAsync("sub123", null, null)
+        _kusto.ListClustersAsync("sub123", null, null, Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new ClusterListCommand(_logger);
@@ -71,7 +71,7 @@ public sealed class ClusterListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -92,7 +92,7 @@ public sealed class ClusterListCommandTests
         var subscriptionId = "sub123";
 
         // Arrange
-        _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>())
+        _kusto.ListClustersAsync(subscriptionId, null, Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<string>>(new Exception("Test error")));
 
         var command = new ClusterListCommand(_logger);
@@ -100,7 +100,7 @@ public sealed class ClusterListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

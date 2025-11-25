@@ -56,7 +56,7 @@ public class ServerShowCommandTests
     public async Task ExecuteAsync_ValidationScenarios_ReturnsExpectedResults(string args, bool shouldSucceed)
     {
         var parseResult = _commandDefinition.Parse(args);
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         if (shouldSucceed)
         {
@@ -96,7 +96,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -117,7 +117,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server nonexistent-server");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -139,7 +139,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server missing-server");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.NotFound, response.Status);
@@ -161,7 +161,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.Forbidden, response.Status);
@@ -182,7 +182,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server invalid");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -203,7 +203,7 @@ public class ServerShowCommandTests
 
         // Act
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

@@ -27,5 +27,6 @@ public interface IResourceResolverService
         string? resourceType,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null);
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default);
 }

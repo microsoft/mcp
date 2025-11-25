@@ -56,7 +56,7 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -74,7 +74,8 @@ public sealed class AvailabilityStatusListCommand(ILogger<AvailabilityStatusList
                 options.Subscription!,
                 options.ResourceGroup,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(statuses ?? []), ResourceHealthJsonContext.Default.AvailabilityStatusListCommandResult);
         }

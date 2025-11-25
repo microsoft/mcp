@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 
 using System.Text.Json.Serialization;
+using Azure.Mcp.Core.Areas.Tools.Commands;
 using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Models.Elicitation;
 
@@ -10,9 +11,8 @@ namespace Azure.Mcp.Core.Models;
 [JsonSerializable(typeof(List<CommandInfo>))]
 [JsonSerializable(typeof(CommandResponse))]
 [JsonSerializable(typeof(ETag), TypeInfoPropertyName = "McpETag")]
-[JsonSerializable(typeof(ElicitationSchemaRoot))]
-[JsonSerializable(typeof(ElicitationSchemaProperty))]
 [JsonSerializable(typeof(ToolMetadata))]
+[JsonSerializable(typeof(ToolsListCommand.ToolNamesResult))]
 [JsonSourceGenerationOptions(PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase)]
 public sealed partial class ModelsJsonContext : JsonSerializerContext
 {

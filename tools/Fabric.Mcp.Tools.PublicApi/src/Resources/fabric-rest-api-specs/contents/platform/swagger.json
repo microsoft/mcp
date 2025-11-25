@@ -2486,66 +2486,66 @@
         ],
         "x-ms-fabric-sdk-long-running-operation": true,
         "parameters": [
-            {
-                "in": "path",
-                "name": "workspaceId",
-                "description": "The ID of the workspace.",
-                "type": "string",
-                "format": "uuid",
-                "required": true
-            },
-            {
-                "in": "path",
-                "name": "itemId",
-                "description": "The ID of the data item.",
-                "type": "string",
-                "format": "uuid",
-                "required": true
-            },
-            {
-                "in": "query",
-                "name": "shortcutConflictPolicy",
-                "description": "When provided, it defines the action to take when a shortcut with the same name and path already exists. The default action is 'Abort'. Additional ShortcutConflictPolicy types may be added over time.",
-                "type": "string",
-                "enum": [
-                    "Abort",
-                    "GenerateUniqueName",
-                    "CreateOrOverwrite",
-                    "OverwriteOnly"
-                ],
-                "x-ms-enum": {
-                    "name": "ShortcutConflictPolicy",
-                    "modelAsString": true,
-                    "values": [
-                        {
-                            "value": "Abort",
-                            "description": "When a shortcut with the same name and path already exists the shortcut creation will be cancelled."
-                        },
-                        {
-                            "value": "GenerateUniqueName",
-                            "description": "When a shortcut with the same name and path already exists the shortcut creation will continue with a new unique shortcut name."
-                        },
-                        {
-                            "value": "CreateOrOverwrite",
-                            "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut. Create shortcut if it does not exist."
-                        },
-                        {
-                            "value": "OverwriteOnly",
-                            "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut."
-                        }
-                    ]
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The ID of the workspace.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "path",
+            "name": "itemId",
+            "description": "The ID of the data item.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "query",
+            "name": "shortcutConflictPolicy",
+            "description": "When provided, it defines the action to take when a shortcut with the same name and path already exists. The default action is 'Abort'. Additional ShortcutConflictPolicy types may be added over time.",
+            "type": "string",
+            "enum": [
+              "Abort",
+              "GenerateUniqueName",
+              "CreateOrOverwrite",
+              "OverwriteOnly"
+            ],
+            "x-ms-enum": {
+              "name": "ShortcutConflictPolicy",
+              "modelAsString": true,
+              "values": [
+                {
+                  "value": "Abort",
+                  "description": "When a shortcut with the same name and path already exists the shortcut creation will be cancelled."
                 },
-                "required": false
-            },
-            {
-                "in": "body",
-                "name": "bulkCreateShortcutsRequest",
-                "description": "A shortcut bulk create request includes an array of shortcut objects, each representing a reference pointing to internal or external storage locations within OneLake.",
-                "schema": {
-                    "$ref": "./definitions/platform.json#/definitions/BulkCreateShortcutsRequest"
+                {
+                  "value": "GenerateUniqueName",
+                  "description": "When a shortcut with the same name and path already exists the shortcut creation will continue with a new unique shortcut name."
                 },
-                "required": true
-            }
+                {
+                  "value": "CreateOrOverwrite",
+                  "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut. Create shortcut if it does not exist."
+                },
+                {
+                  "value": "OverwriteOnly",
+                  "description": "When a shortcut with the same name and path already exists the shortcut creation will overwrite the existing shortcut."
+                }
+              ]
+            },
+            "required": false
+          },
+          {
+            "in": "body",
+            "name": "bulkCreateShortcutsRequest",
+            "description": "A shortcut bulk create request includes an array of shortcut objects, each representing a reference pointing to internal or external storage locations within OneLake.",
+            "schema": {
+              "$ref": "./definitions/platform.json#/definitions/BulkCreateShortcutsRequest"
+            },
+            "required": true
+          }
         ],
         "responses": {
           "202": {
@@ -3025,7 +3025,7 @@
         }
       }
     },
-    "/domains/{domainId}":{
+    "/domains/{domainId}": {
       "get": {
         "summary": "Returns specified domain information.",
         "description": "## Required Delegated Scopes\n\nDomain.Read.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
@@ -5500,7 +5500,7 @@
     "/workspaces/{workspaceId}/managedPrivateEndpoints": {
       "get": {
         "summary": "Returns a list of managed private endpoints associated with the specified workspace.",
-        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -5553,7 +5553,7 @@
       },
       "post": {
         "summary": "Creates a managed private endpoint in the specified workspace.",
-        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All.\n\n## Limitations \n- To create managed private endpoint the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All.\n\n## Limitations \n- To create managed private endpoint the workspace must be on a supported Fabric capacity. For more information see: [Microsoft Fabric license types](/fabric/enterprise/licenses#microsoft-fabric-license-types).\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -5606,9 +5606,6 @@
         "x-ms-examples": {
           "Create a managed private endpoint example": {
             "$ref": "./examples/managedPrivateEndpoint/CreateManagedPrivateEndpoint.json"
-          },
-          "Create a managed private endpont with FQDNs example": {
-            "$ref": "./examples/managedPrivateEndpoint/CreateManagedPrivateEndpointWithFQDNs.json"
           }
         }
       }
@@ -5616,7 +5613,7 @@
     "/workspaces/{workspaceId}/managedPrivateEndpoints/{managedPrivateEndpointId}": {
       "delete": {
         "summary": "Deletes the specified managed private endpoint.",
-        "description": "## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -5661,7 +5658,7 @@
       },
       "get": {
         "summary": "Gets the specified managed private endpoint.",
-        "description": "## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use.\n\n## Permissions\n\nThe caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes \n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
           "ManagedPrivateEndpoints"
         ],
@@ -7022,17 +7019,255 @@
         }
       }
     },
-    "/workspaces/{workspaceId}/managedPrivateEndpoints/{managedPrivateEndpointId}/targetFQDNs": {
+    "/workspaces/{workspaceId}/networking/communicationPolicy/outbound/connections": {
       "get": {
-        "summary": "Returns a list of fully qualified domain names (FQDNs) associated with the specified managed private endpoint.",
-        "description": "## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "summary": "Returns the cloud connection rules for the workspace enabled with Outbound Access Protection (OAP). This API is designed to help workspace administrators view the effective outbound network communication policies that are enforced for cloud connections. Outbound access protection cloud connection rules are only returned and applied if the workspace’s network communication policy has `outbound.publicAccessRules.defaultAction` set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
         "tags": [
-          "ManagedPrivateEndpoints"
+          "Workspaces"
         ],
-        "operationId": "ManagedPrivateEndpoints_ListFQDNs",
-        "x-ms-pageable": {
-          "nextLinkName": "continuationUri"
+        "operationId": "Workspaces_GetOutboundCloudConnectionRules",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "Unique identifier of the workspace whose outbound rules are being queried.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundConnections"
+            },
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
         },
+        "x-ms-examples": {
+          "Get workspace outbound access protection cloud connection rule for example": {
+            "$ref": "./examples/platform/GetWorkspaceOutboundConnections.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Sets the outbound access protection cloud connection rules for the workspace. This API enables workspace administrators to set of outbound network communication rules that control which cloud connection types and their external endpoints/workspaces where ever applicable are to be allowed from the workspace. This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. \n\n> [!NOTE]\n> This API uses the PUT method and will overwrite all outbound access connections for the workspace. Remaining policy will be set to default value if partial policy is provided in the request body. Always run Get first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_SetOutboundCloudConnectionRules",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "Unique identifier of the workspace to update.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "WorkspaceOutboundConnections",
+            "description": "Set outbound access protection cloud connection rules for the workspace request payload.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundConnections"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Set workspace outbound access protection cloud connection rule for example": {
+            "$ref": "./examples/platform/SetWorkspaceOutboundConnections.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/networking/communicationPolicy/outbound/gateways": {
+      "get": {
+        "summary": "Returns the gateway rules for the workspace enabled with Outbound Access Protection (OAP). This API is designed to help workspace administrators view the effective outbound network communication policies that are enforced for On-prem and Vnet Data gateways. Outbound access protection gateway rules are only returned and applied if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_GetOutboundGatewayRules",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "Unique identifier of the workspace whose outbound rules are being queried.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundGateways"
+            },
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get workspace outbound access protection gateway rule for example": {
+            "$ref": "./examples/platform/GetWorkspaceOutboundGateways.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Sets the gateway rules for the workspace enabled with Outbound Access Protection (OAP). This API enables workspace administrators to define, replace, or override the set of outbound network communication policies that control which on-prem /Vnet Data Gateways are to be allowed from current workspace.  This feature is currently in preview.",
+        "description": "> [!NOTE]\n> This API is part of a Preview release and is provided for evaluation and development purposes only. It may change based on feedback and is not recommended for production use. \n\n> [!NOTE]\n> Outbound access protection rules are only enforced if the workspace’s network communication policy has outbound.publicAccessRules.defaultAction set to Deny. If OAP is not enabled on workspace, API fails as outbound connections are not being restricted. \n\n> [!NOTE]\n>This API uses the PUT method and will overwrite all outbound access gateways for the workspace. Remaining policy will be set to default value if partial policy is provided in the request body. Always run Get first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_SetOutboundGatewayRules",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "Unique identifier of the workspace to update.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          },
+          {
+            "in": "body",
+            "name": "WorkspaceOutboundGateways",
+            "description": "Set outbound access protection gateway rules for the workspace request payload.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/WorkspaceOutboundGateways"
+            },
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Set workspace outbound access protection gateway rule for example": {
+            "$ref": "./examples/platform/SetWorkspaceOutboundGateways.json"
+          }
+        }
+      }
+    },
+    "/workspaces/{workspaceId}/networking/communicationPolicy/outbound/git": {
+      "get": {
+        "summary": "Returns Git Outbound policy for the specified workspace.",
+        "description": "In cases the workspace restricts outbound policy, a workspace admin needs to allow the use of Git integration on the specified workspace. \n\n## Permissions\n\n The caller must have *viewer* or higher workspace role. \n\n## Required Delegated Scopes\n\nWorkspace.Read.All or Workspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_GetGitOutboundPolicy",
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "workspaceId",
+            "description": "The workspace ID.",
+            "type": "string",
+            "format": "uuid",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Request completed successfully.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+            },
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
+            }
+          },
+          "default": {
+            "description": "Common error codes:\n\n* UnknownError - An error occurred.",
+            "schema": {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponse"
+            }
+          }
+        },
+        "x-ms-examples": {
+          "Get workspace networking communication policy example": {
+            "$ref": "./examples/platform/GetWorkspaceGitNetworkingCommunicationPolicy.json"
+          }
+        }
+      },
+      "put": {
+        "summary": "Sets Git Outbound policy for the specified workspace, when Outbound policy is set to 'Deny'.",
+        "description": "This API uses the PUT method and will overwrite all settings. In cases the workspace restrict outbound policy, a workspace admin needs to allow the use of Git integration on the specified workspace. When there's no outbound restriction on the workspace, changing this property will fail and it will not impact Git integration setting. \nAlways run Get Git outbound Policy first and provide full policy in the request body.\n\n## Permissions\n\nThe caller must have *admin* workspace role.\n\n## Required Delegated Scopes \n\nWorkspace.ReadWrite.All\n\n## Microsoft Entra supported identities\n\nThis API supports the Microsoft [identities](/rest/api/fabric/articles/identity-support) listed in this section.\n\n| Identity | Support |\n|-|-|\n| User | Yes |\n| [Service principal](/entra/identity-platform/app-objects-and-service-principals#service-principal-object) and [Managed identities](/entra/identity/managed-identities-azure-resources/overview) | Yes |\n\n## Interface",
+        "tags": [
+          "Workspaces"
+        ],
+        "operationId": "Workspaces_SetGitOutboundPolicy",
         "produces": [
           "application/json"
         ],
@@ -7046,26 +7281,29 @@
             "required": true
           },
           {
-            "in": "path",
-            "name": "managedPrivateEndpointId",
-            "description": "The managed private endpoint ID.",
-            "type": "string",
-            "format": "uuid",
+            "in": "body",
+            "name": "SetWorkspaceGitNetworkingCommunicationPolicy",
+            "description": "Set workspace Git outbound policy request payload.",
+            "schema": {
+              "$ref": "./definitions/workspaceNetworkingPolicy.json#/definitions/NetworkRules"
+            },
             "required": true
           },
           {
-            "in": "query",
-            "name": "continuationToken",
-            "description": "A token for retrieving the next page of results.",
-            "type": "string",
-            "required": false
+            "in": "header",
+            "name": "If-Match",
+            "description": "An ETag value. The ETag must be specified in quotes. If provided, the call will succeed only if the resource's ETag matches the provided ETag.",
+            "required": false,
+            "type": "string"
           }
         ],
         "responses": {
           "200": {
             "description": "Request completed successfully.",
-            "schema": {
-              "$ref": "./definitions/managedPrivateEndpoint.json#/definitions/ManagedPrivateEndpointTargetFQDNs"
+            "headers": {
+              "ETag": {
+                "type": "string"
+              }
             }
           },
           "default": {
@@ -7076,8 +7314,8 @@
           }
         },
         "x-ms-examples": {
-          "List managed private endpoints in workspace example": {
-            "$ref": "./examples/managedPrivateEndpoint/ListFQDNsInManagedPrivateEndpoint.json"
+          "Set workspace networking communication policy example": {
+            "$ref": "./examples/platform/SetWorkspacegitNetworkingCommunicationPolicy.json"
           }
         }
       }

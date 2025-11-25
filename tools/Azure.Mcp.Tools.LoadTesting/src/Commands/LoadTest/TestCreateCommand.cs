@@ -63,7 +63,7 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -90,7 +90,8 @@ public sealed class TestCreateCommand(ILogger<TestCreateCommand> logger)
                 options.RampUpTime,
                 options.Endpoint,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken);
 
             // Set results if any were returned
             context.Response.Results = results != null ?

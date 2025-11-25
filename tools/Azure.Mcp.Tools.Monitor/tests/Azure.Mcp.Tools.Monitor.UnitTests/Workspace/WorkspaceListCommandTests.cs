@@ -58,12 +58,12 @@ public sealed class WorkspaceListCommandTests
                 new() { Name = "workspace1", CustomerId = "guid1" },
                 new() { Name = "workspace2", CustomerId = "guid2" }
             };
-            _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+            _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(testWorkspaces);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -88,18 +88,18 @@ public sealed class WorkspaceListCommandTests
             new() { Name = "workspace2", CustomerId = "guid2" },
             new() { Name = "workspace3", CustomerId = "guid3" }
         };
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(expectedWorkspaces);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
         // Verify the mock was called
-        await _monitorService.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>());
+        await _monitorService.Received(1).ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, MonitorJsonContext.Default.WorkspaceListCommandResult);
@@ -116,11 +116,11 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_ReturnsEmptyWhenNoWorkspaces()
     {
         // Arrange
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns([]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -137,11 +137,11 @@ public sealed class WorkspaceListCommandTests
     public async Task ExecuteAsync_HandlesServiceErrors()
     {
         // Arrange
-        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>())
+        _monitorService.ListWorkspaces(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<WorkspaceInfo>>(new Exception("Test error")));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse($"--subscription {_knownSubscription}"), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);

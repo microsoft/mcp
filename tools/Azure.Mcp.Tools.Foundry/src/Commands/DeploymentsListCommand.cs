@@ -19,7 +19,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
 
     public override string Description =>
         """
-        List model deployments in an Azure AI Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. 
+        List model deployments in a Microsoft Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. 
         Use this to audit what models are deployed before invoking or creating new deployments. Requires the project 
         endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists 
         deployed models only - use models_list to discover available catalog/base models.
@@ -51,7 +51,7 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -67,7 +67,8 @@ public sealed class DeploymentsListCommand : GlobalCommand<DeploymentsListOption
             var deployments = await service.ListDeployments(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(deployments ?? []), FoundryJsonContext.Default.DeploymentsListCommandResult);
         }

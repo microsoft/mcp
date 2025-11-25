@@ -2,48 +2,50 @@ parameters:
 - name: NugetDevFeed
   type: string
   default: 'public/azure-sdk-for-net'
+- name: NpmRegistry
+  type: string
+  default: 'https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/'
 
 jobs:
-- job: PublishNpmToDev
-  displayName: "Publish npm packages to dev feed"
+- job: PublishToDev
+  displayName: Publish packages to dev feeds
   condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
   steps:
   - checkout: self
+
+  - download: current
+    displayName: "Download build_info"
+    artifact: build_info
 
   - download: current
     displayName: Download packages_npm
     artifact: packages_npm
 
+  - download: current
+    displayName: Download packages_nuget_signed
+    artifact: packages_nuget_signed
+
   - template: /eng/pipelines/templates/steps/publish-to-dev-feed.yml
     parameters:
       PathToArtifacts: $(Pipeline.Workspace)/packages_npm
-      Registry: https://pkgs.dev.azure.com/azure-sdk/public/_packaging/azure-sdk-for-js/npm/registry/
+      Registry: ${{ parameters.NpmRegistry }}
       ${{ if and(eq(variables['Build.SourceBranch'], 'refs/heads/main'), eq(variables['Build.Reason'], 'IndividualCI')) }}:
         Tag: dev
       ${{ else }}:
         Tag: pre
 
-- job: PublishNugetToDev
-  displayName: "Publish NuGet packages to dev feed"
-  condition: and(succeeded(), ne(variables['Skip.PublishPackage'], 'true'))
-  steps:
-  - checkout: self
-
-  - download: current
-    displayName: Download packages_nuget_signed
-    artifact: packages_nuget_signed
-
   - task: 1ES.PublishNuget@1
-    displayName: Publish platform-specific Nugets
+    displayName: Publish Nuget packages to dev feed
     inputs:
       packageParentPath: '$(Pipeline.Workspace)'
       packagesToPush: '$(Pipeline.Workspace)/packages_nuget_signed/**/*.nupkg;!$(Pipeline.Workspace)/packages_nuget_signed/**/*.symbols.nupkg'
       publishVstsFeed: ${{ parameters.NugetDevFeed }}
 
-# - job: PublishDocsToNightly
-#   displayName: "Update Package Versions"
-#   condition: and(succeeded(), or(eq(variables['SetDevVersion'], 'true'), and(eq(variables['Build.Reason'],'Schedule'), eq(variables['System.TeamProject'], 'internal'))))
-#   dependsOn: PublishDev
-#   steps:
-#   - checkout: self
-#   TODO: Add the steps to publish the docs
+  - task: PowerShell@2
+    displayName: 'Attach usage instructions to build summary'
+    inputs:
+      targetType: 'filePath'
+      filePath: 'eng/scripts/Get-PackageUsageText.ps1'
+      arguments: >
+        -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
+        -NpmRegistry '${{ parameters.NpmRegistry }}'

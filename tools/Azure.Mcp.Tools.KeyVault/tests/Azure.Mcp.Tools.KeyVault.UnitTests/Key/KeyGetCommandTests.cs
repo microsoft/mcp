@@ -64,12 +64,14 @@ public class KeyGetCommandTests
     public async Task ExecuteAsync_ReturnsKey()
     {
         // Arrange
-        _keyVaultService.GetKey(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownKeyName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetKey(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownKeyName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .Returns(_knownKeyVaultKey);
 
         var args = _commandDefinition.Parse([
@@ -79,7 +81,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -105,7 +107,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert - Should return validation error response
         Assert.NotNull(response);
@@ -119,12 +121,14 @@ public class KeyGetCommandTests
         // Arrange
         var expectedError = "Test error";
 
-        _keyVaultService.GetKey(
-            Arg.Is(_knownVaultName),
-            Arg.Is(_knownKeyName),
-            Arg.Is(_knownSubscriptionId),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+        _keyVaultService
+            .GetKey(
+                Arg.Is(_knownVaultName),
+                Arg.Is(_knownKeyName),
+                Arg.Is(_knownSubscriptionId),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var args = _commandDefinition.Parse([
@@ -134,7 +138,7 @@ public class KeyGetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

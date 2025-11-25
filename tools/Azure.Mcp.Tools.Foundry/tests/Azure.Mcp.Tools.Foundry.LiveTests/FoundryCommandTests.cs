@@ -6,6 +6,7 @@ using Azure.AI.Agents.Persistent;
 using Azure.Mcp.Core.Services.Azure.Authentication;
 using Azure.Mcp.Tests;
 using Azure.Mcp.Tests.Client;
+using Microsoft.Extensions.Logging.Abstractions;
 using Xunit;
 
 namespace Azure.Mcp.Tools.Foundry.LiveTests;
@@ -422,6 +423,37 @@ public class FoundryCommandTests(ITestOutputHelper output)
         var commandResourceName = result.AssertProperty("resourceName");
         Assert.Equal(JsonValueKind.String, commandResourceName.ValueKind);
         Assert.Equal(resourceName, commandResourceName.GetString());
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_create_agent()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var agentName = $"test-agent-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        // Model deployment name hardcoded in the test-resources.bicep
+        var modelDeploymentName = "gpt-4o";
+        var systemInstruction = "Help user with your knowledge";
+        var result = await CallToolAsync(
+            "foundry_agents_create",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "model-deployment", modelDeploymentName },
+                { "agent-name", agentName },
+                { "system-instruction", systemInstruction }
+            });
+
+        var agentIdResult = result.AssertProperty("agentId");
+        var agentNameResult = result.AssertProperty("agentName");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        var modelDeploymentNameResult = result.AssertProperty("modelDeploymentName");
+        Assert.Equal(JsonValueKind.String, agentIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, agentNameResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, modelDeploymentNameResult.ValueKind);
     }
 
     [Fact]
@@ -1007,11 +1039,72 @@ public class FoundryCommandTests(ITestOutputHelper output)
         }
     }
 
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_create_thread()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var userMessage = "Message from user";
+        var result = await CallToolAsync(
+            "foundry_threads_create",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "user-message", userMessage }
+            });
+        var threadIdResult = result.AssertProperty("threadId");
+        var projectEndpointResult = result.AssertProperty("projectEndpoint");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.String, projectEndpointResult.ValueKind);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_list_threads()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var result = await CallToolAsync(
+            "foundry_threads_list",
+            new()
+            {
+                { "endpoint", endpoint }
+            });
+        var threads = result.AssertProperty("threads");
+        Assert.Equal(JsonValueKind.Array, threads.ValueKind);
+    }
+
+    [Fact]
+    [Trait("Category", "Live")]
+    public async Task Should_get_messages()
+    {
+        var projectName = $"{Settings.ResourceBaseName}-ai-projects";
+        var accounts = Settings.ResourceBaseName;
+        var endpoint = $"https://{accounts}.services.ai.azure.com/api/projects/{projectName}";
+        var threadId = await CreateThread("Hello from user", endpoint);
+        var result = await CallToolAsync(
+            "foundry_threads_get-messages",
+            new()
+            {
+                { "endpoint", endpoint },
+                { "thread-id", threadId }
+            });
+        var threadIdResult = result.AssertProperty("threadId");
+        var messagesResult = result.AssertProperty("messages");
+        Assert.Equal(JsonValueKind.String, threadIdResult.ValueKind);
+        Assert.Equal(JsonValueKind.Array, messagesResult.ValueKind);
+    }
+
     private async Task<string> CreateAgent(string agentName, string projectEndpoint, string deploymentName)
     {
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
         var client = new PersistentAgentsClient(
             projectEndpoint,
-            new CustomChainedCredential());
+            await tokenProvider.GetTokenCredentialAsync(default, default));
 
         var bingConnectionId = $"/subscriptions/{Settings.SubscriptionId}/resourceGroups/{Settings.ResourceGroupName}/providers/Microsoft.CognitiveServices/accounts/{Settings.ResourceBaseName}/projects/{Settings.ResourceBaseName}-ai-projects/connections/{Settings.ResourceBaseName}-bing-connection";
 
@@ -1025,5 +1118,18 @@ public class FoundryCommandTests(ITestOutputHelper output)
             instructions: "You politely help with general knowledge questions. Use the bing search tool to help ground your responses.",
             tools: [new BingGroundingToolDefinition(bingGroundingToolParameters)]);
         return agent.Id;
+    }
+
+    private async Task<string> CreateThread(string userMessage, string projectEndpoint)
+    {
+        var tokenProvider = new SingleIdentityTokenCredentialProvider(NullLoggerFactory.Instance);
+
+        var client = new PersistentAgentsClient(
+            projectEndpoint,
+            await tokenProvider.GetTokenCredentialAsync(default, default));
+
+        PersistentAgentThread thread = await client.Threads.CreateThreadAsync([
+            new(MessageRole.User, userMessage)]);
+        return thread.Id;
     }
 }

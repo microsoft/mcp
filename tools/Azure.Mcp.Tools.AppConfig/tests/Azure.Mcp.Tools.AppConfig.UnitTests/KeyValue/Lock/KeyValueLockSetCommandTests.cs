@@ -52,7 +52,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -63,7 +63,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
@@ -86,7 +87,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -97,7 +98,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod");
+            "prod",
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
@@ -119,7 +121,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -130,7 +132,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null);
+            null,
+            Arg.Any<CancellationToken>());
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
@@ -151,7 +154,7 @@ public class KeyValueLockSetCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -162,7 +165,8 @@ public class KeyValueLockSetCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod");
+            "prod",
+            Arg.Any<CancellationToken>());
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueLockSetCommandResult);
 
@@ -184,7 +188,8 @@ public class KeyValueLockSetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to lock key-value"));
 
         var argsToParse = locked
@@ -193,7 +198,7 @@ public class KeyValueLockSetCommandTests
         var args = _commandDefinition.Parse(argsToParse);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -212,7 +217,7 @@ public class KeyValueLockSetCommandTests
         var parsedArgs = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parsedArgs);
+        var response = await _command.ExecuteAsync(_context, parsedArgs, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

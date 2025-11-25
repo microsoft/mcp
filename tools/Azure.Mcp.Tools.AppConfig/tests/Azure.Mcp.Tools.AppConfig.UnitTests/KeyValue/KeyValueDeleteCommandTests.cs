@@ -51,7 +51,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -61,7 +61,8 @@ public class KeyValueDeleteCommandTests
             "sub123",
             null,
             Arg.Any<RetryPolicyOptions>(),
-            null);
+            null,
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
@@ -82,7 +83,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -91,7 +92,8 @@ public class KeyValueDeleteCommandTests
             "my-key",
             "sub123", null,
             Arg.Any<RetryPolicyOptions>(),
-            "prod");
+            "prod",
+            Arg.Any<CancellationToken>());
 
         var json = JsonSerializer.Serialize(response.Results);
         var result = JsonSerializer.Deserialize(json, AppConfigJsonContext.Default.KeyValueDeleteCommandResult);
@@ -111,7 +113,8 @@ public class KeyValueDeleteCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<RetryPolicyOptions>(),
-            Arg.Any<string>())
+            Arg.Any<string>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception("Failed to delete key-value"));
 
         var args = _commandDefinition.Parse([
@@ -121,7 +124,7 @@ public class KeyValueDeleteCommandTests
         ]);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -138,7 +141,7 @@ public class KeyValueDeleteCommandTests
         var parseResult = _commandDefinition.Parse(args);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

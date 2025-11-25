@@ -14,14 +14,14 @@ namespace Fabric.Mcp.Tools.PublicApi.Services
             return EmbeddedResourceHelper.ReadEmbeddedResource(assembly, resourceFileName);
         }
 
-        public Task<string> GetResource(string resourceName)
+        public Task<string> GetResource(string resourceName, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Loading embedded resource: {ResourceName}", resourceName);
 
             return Task.FromResult(GetEmbeddedResource(resourceName));
         }
 
-        public Task<string[]> ListResourcesInPath(string path, ResourceType? filterResources = null)
+        public Task<string[]> ListResourcesInPath(string path, ResourceType? filterResources = null, CancellationToken cancellationToken = default)
         {
             _logger.LogInformation("Listing resources in path: {Path}", path);
 

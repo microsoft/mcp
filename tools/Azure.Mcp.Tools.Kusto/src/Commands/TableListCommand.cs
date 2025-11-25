@@ -32,7 +32,7 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
         Secret = false
     };
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -53,7 +53,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
                     options.Database!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
             else
             {
@@ -63,7 +64,8 @@ public sealed class TableListCommand(ILogger<TableListCommand> logger) : BaseDat
                     options.Database!,
                     options.Tenant,
                     options.AuthMethod,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken);
             }
 
             context.Response.Results = ResponseResult.Create(new(tableNames ?? []), KustoJsonContext.Default.TableListCommandResult);

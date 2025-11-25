@@ -21,7 +21,7 @@ public class LedgerEntryAppendCommandTests
     {
         var service = Substitute.For<IConfidentialLedgerService>();
         var logger = Substitute.For<ILogger<LedgerEntryAppendCommand>>();
-        service.AppendEntryAsync("ledger1", "data")
+        service.AppendEntryAsync("ledger1", "data", cancellationToken: Arg.Any<CancellationToken>())
             .Returns(new AppendEntryResult { TransactionId = "tx1", State = "Committed" });
 
         var provider = new ServiceCollection()
@@ -31,7 +31,7 @@ public class LedgerEntryAppendCommandTests
         var command = new LedgerEntryAppendCommand(service, logger);
         var context = new CommandContext(provider);
         var parse = command.GetCommand().Parse(["--ledger", "ledger1", "--content", "data"]);
-        var response = await command.ExecuteAsync(context, parse);
+        var response = await command.ExecuteAsync(context, parse, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response.Results);
         var json = JsonSerializer.Serialize(response.Results);

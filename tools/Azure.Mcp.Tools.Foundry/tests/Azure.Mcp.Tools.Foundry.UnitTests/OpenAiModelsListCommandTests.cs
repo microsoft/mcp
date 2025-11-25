@@ -73,7 +73,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -84,7 +85,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -129,7 +130,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         // Act
@@ -140,7 +142,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -169,7 +171,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         // Act
@@ -180,7 +183,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -231,14 +234,15 @@ public class OpenAiModelsListCommandTests
                     Arg.Any<string>(),
                     Arg.Any<string?>(),
                     Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                    Arg.Any<RetryPolicyOptions?>())
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(expectedResult);
         }
 
         var parseResult = command.GetCommand().Parse(args.Split(' '));
 
         // Act
-        var response = await command.ExecuteAsync(context, parseResult);
+        var response = await command.ExecuteAsync(context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -268,7 +272,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Is<string>(s => s == resourceGroup),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedResult);
 
         var command = new OpenAiModelsListCommand();
@@ -280,7 +285,7 @@ public class OpenAiModelsListCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await command.ExecuteAsync(context, args);
+        await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert - Verify the service was called with exact parameters
         await _foundryService.Received(1).ListOpenAiModelsAsync(
@@ -289,7 +294,8 @@ public class OpenAiModelsListCommandTests
             resourceGroup,
             Arg.Any<string?>(),
             AuthMethod.Credential,
-            Arg.Any<RetryPolicyOptions?>());
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -306,7 +312,8 @@ public class OpenAiModelsListCommandTests
                 Arg.Any<string>(),
                 Arg.Any<string?>(),
                 Arg.Is<AuthMethod>(s => s == AuthMethod.Credential),
-                Arg.Any<RetryPolicyOptions?>())
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new UnauthorizedAccessException("Authentication failed"));
 
         // Act
@@ -317,7 +324,7 @@ public class OpenAiModelsListCommandTests
             "--resource-name", resourceName
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);

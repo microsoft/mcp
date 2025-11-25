@@ -1,4 +1,4 @@
-﻿// Copyright (c) Microsoft Corporation.
+// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
 using Azure.Mcp.Core.Commands;
@@ -59,7 +59,7 @@ This tool can provide installation instructions for the specified CLI tool among
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
 
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
@@ -82,10 +82,10 @@ This tool can provide installation instructions for the specified CLI tool among
             // Only log the cli type when we know for sure it doesn't have private data.
             context.Activity?.AddTag("cliType", cliType);
 
-            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType);
+            using HttpResponseMessage responseMessage = await cliInstallService.GetCliInstallInstructions(cliType, cancellationToken);
             responseMessage.EnsureSuccessStatusCode();
 
-            var responseBody = await responseMessage.Content.ReadAsStringAsync();
+            var responseBody = await responseMessage.Content.ReadAsStringAsync(cancellationToken);
             CliInstallResult result = new(responseBody, cliType);
             context.Response.Results = ResponseResult.Create(result, ExtensionJsonContext.Default.CliInstallResult);
 

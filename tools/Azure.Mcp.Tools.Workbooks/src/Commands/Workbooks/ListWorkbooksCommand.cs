@@ -59,7 +59,7 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -77,7 +77,8 @@ public sealed class ListWorkbooksCommand(ILogger<ListWorkbooksCommand> logger) :
                 options.ResourceGroup!,
                 filters,
                 options.RetryPolicy,
-                options.Tenant);
+                options.Tenant,
+                cancellationToken);
 
             context.Response.Results = ResponseResult.Create(new(workbooks ?? []), WorkbooksJsonContext.Default.ListWorkbooksCommandResult);
         }

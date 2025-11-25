@@ -16,7 +16,7 @@ namespace Azure.Mcp.Tools.Foundry.Commands;
 
 public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : SubscriptionCommand<ResourceGetOptions>()
 {
-    private const string CommandTitle = "Get AI Foundry Resource Details";
+    private const string CommandTitle = "Get Microsoft Foundry Resource Details";
     private readonly ILogger<ResourceGetCommand> _logger = logger;
 
     public override string Id => "422dd6ec-d36e-4ff3-8e0d-b57e892c325e";
@@ -25,9 +25,9 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
 
     public override string Description =>
         """
-        Gets detailed information about Azure AI Foundry (Cognitive Services) resources, including endpoint URL, 
+        Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL, 
         location, SKU, and all deployed models with their configuration. If a specific resource name is provided, 
-        returns details for that resource only. If no resource name is provided, lists all AI Foundry resources 
+        returns details for that resource only. If no resource name is provided, lists all Microsoft Foundry resources 
         in the subscription or resource group. Use this tool when users need endpoint information, want to discover 
         available AI resources, or need to see all models deployed on AI resources.
         """;
@@ -59,7 +59,7 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -80,7 +80,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     options.ResourceGroup!,
                     options.ResourceName!,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new ResourceGetCommandResult([resource]),
@@ -93,7 +94,8 @@ public sealed class ResourceGetCommand(ILogger<ResourceGetCommand> logger) : Sub
                     options.Subscription!,
                     options.ResourceGroup,
                     options.Tenant,
-                    options.RetryPolicy);
+                    options.RetryPolicy,
+                    cancellationToken: cancellationToken);
 
                 context.Response.Results = ResponseResult.Create(
                     new ResourceGetCommandResult(resources ?? []),

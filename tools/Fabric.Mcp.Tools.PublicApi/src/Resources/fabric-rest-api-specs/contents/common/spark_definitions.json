@@ -144,6 +144,33 @@
                 "livySessionItemResourceUri": {
                     "type": "string",
                     "description": "The URI used to retrieve all Livy sessions for a given item."
+                },
+                "driverMemory": {
+                    "type": "integer",
+                    "description": "The amount of memory (in GB) assigned to the Spark driver process. Affects the driver's ability to handle job coordination and metadata. "
+                },
+                "driverCores": {
+                    "type": "integer",
+                    "description": "The number of CPU cores allocated to the Spark driver. Controls how much parallel processing the driver can handle."
+                },
+                "executorMemory": {
+                    "type": "integer",
+                    "description": "The amount of memory (in GB) assigned to each Spark executor process. Impacts how much data can be processed in memory per executor."
+                },
+                "executorCores": {
+                    "description": "The number of CPU cores allocated to each Spark executor. Determines how many tasks each executor can run in parallel. "
+                },
+                "numExecutors": {
+                    "type": "integer",
+                    "description": "The total number of executors requested for the Spark job. Controls the parallelism and scalability of the job. "
+                },
+                "isDynamicAllocationEnabled": {
+                    "type": "boolean",
+                    "description": "Flag indicating whether dynamic allocation is enabled for the Spark job."
+                },
+                "dynamicAllocationMaxExecutors": {
+                    "type": "integer",
+                    "description": "Sets the maximum number of executors that Spark's dynamic allocation can scale up to during job execution. "
                 }
             }
         },
@@ -220,7 +247,7 @@
                 "Notebook"
             ],
             "x-ms-enum": {
-                "name": "ItemType",
+                "name": "LivySessionItemType",
                 "modelAsString": true,
                 "values": [
                     {

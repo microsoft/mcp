@@ -71,12 +71,13 @@ public sealed class ResourceLogQueryCommandTests
                 Arg.Any<int?>(),
                 Arg.Any<int?>(),
                 Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions>())
+                Arg.Any<RetryPolicyOptions>(),
+                Arg.Any<CancellationToken>())
                 .Returns(mockResults);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args));
+        var response = await _command.ExecuteAsync(_context, _commandDefinition.Parse(args), TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(shouldSucceed ? HttpStatusCode.OK : HttpStatusCode.BadRequest, response.Status);
@@ -109,13 +110,14 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -130,7 +132,8 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -146,13 +149,14 @@ public sealed class ResourceLogQueryCommandTests
             int.Parse(_knownHours),
             int.Parse(_knownLimit),
             _knownTenant,
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\" --hours {_knownHours} --limit {_knownLimit} --tenant {_knownTenant}");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -164,7 +168,8 @@ public sealed class ResourceLogQueryCommandTests
             int.Parse(_knownHours),
             int.Parse(_knownLimit),
             _knownTenant,
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -180,13 +185,14 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -198,7 +204,8 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(), // Default hours
             Arg.Any<int?>(), // Default limit
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -213,13 +220,14 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<JsonNode>>(new Exception("Test error")));
 
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id {_knownResourceId} --table {_knownTable} --query \"{_knownQuery}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -243,13 +251,14 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>())
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>())
             .Returns(mockResults);
 
         var args = _commandDefinition.Parse($"--subscription {_knownSubscription} --resource-id \"{complexResourceId}\" --table {table} --query \"{query}\"");
 
         // Act
-        var response = await _command.ExecuteAsync(_context, args);
+        var response = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -261,6 +270,7 @@ public sealed class ResourceLogQueryCommandTests
             Arg.Any<int?>(),
             Arg.Any<int?>(),
             Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions>());
+            Arg.Any<RetryPolicyOptions>(),
+            Arg.Any<CancellationToken>());
     }
 }

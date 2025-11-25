@@ -19,6 +19,13 @@
     <DefineConstants>$(DefineConstants);BUILD_NATIVE</DefineConstants>
   </PropertyGroup>
 
+    <!-- HTTP transport is unsupported for native and trimmed variants. ENABLE_HTTP is not set for these build variants.
+       See https://github.com/AzureAD/microsoft-identity-web/issues/3576 -->
+
+  <PropertyGroup Condition="'$(PublishTrimmed)' != 'true' and '$(BuildNative)' != 'true'">
+    <DefineConstants>$(DefineConstants);ENABLE_HTTP</DefineConstants>
+  </PropertyGroup>
+
     <!-- Windows AOT native build security flags to enable 'Control Flow Guard' (CFG) -->
   <PropertyGroup Condition="'$(BuildNative)' == 'true' and $(RuntimeIdentifier.StartsWith('win'))">
     <ControlFlowGuard>Guard</ControlFlowGuard>
@@ -49,5 +56,11 @@
     <PublishAot>true</PublishAot>
     <IlcOptimizationPreference>Size</IlcOptimizationPreference>
     <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Company>Microsoft Corporation</Company>
+    <Copyright>© Microsoft Corporation. All rights reserved.</Copyright>
+    <RepositoryUrl>https://github.com/microsoft/mcp</RepositoryUrl>
   </PropertyGroup>
 </Project>

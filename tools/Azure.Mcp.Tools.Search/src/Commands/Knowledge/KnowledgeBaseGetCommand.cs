@@ -58,7 +58,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -70,7 +70,7 @@ public sealed class KnowledgeBaseGetCommand(ILogger<KnowledgeBaseGetCommand> log
         try
         {
             var searchService = context.GetService<ISearchService>();
-            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy);
+            var bases = await searchService.ListKnowledgeBases(options.Service!, options.KnowledgeBase, options.RetryPolicy, cancellationToken);
             context.Response.Results = ResponseResult.Create(new(bases ?? []), SearchJsonContext.Default.KnowledgeBaseGetCommandResult);
         }
         catch (Exception ex)

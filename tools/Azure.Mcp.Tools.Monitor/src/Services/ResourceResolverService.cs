@@ -20,7 +20,8 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         string? resourceType,
         string resourceName,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription), (nameof(resourceName), resourceName));
 
@@ -37,12 +38,12 @@ public class ResourceResolverService(ISubscriptionService subscriptionService, I
         }
 
         // Need to discover the resource - get subscription resource
-        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+        var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
 
         // Get all resources matching the name
-        var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync()
+        var allMatchingResources = await subscriptionResource.GetGenericResourcesAsync(cancellationToken: cancellationToken)
             .Where(r => r.Data.Name?.Equals(resourceName, StringComparison.OrdinalIgnoreCase) == true)
-            .ToListAsync();
+            .ToListAsync(cancellationToken: cancellationToken);
 
         if (allMatchingResources.Count == 0)
         {

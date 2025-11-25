@@ -3,7 +3,6 @@
 
 using Azure.Mcp.Core.Areas;
 using Azure.Mcp.Core.Commands;
-using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Tools.Foundry.Commands;
 using Azure.Mcp.Tools.Foundry.Services;
 using Microsoft.Extensions.DependencyInjection;
@@ -14,7 +13,7 @@ public class FoundrySetup : IAreaSetup
 {
     public string Name => "foundry";
 
-    public string Title => "Azure AI Foundry";
+    public string Title => "Microsoft Foundry";
 
     public void ConfigureServices(IServiceCollection services)
     {
@@ -27,21 +26,27 @@ public class FoundrySetup : IAreaSetup
         services.AddSingleton<KnowledgeIndexSchemaCommand>();
 
         services.AddSingleton<AgentsListCommand>();
+        services.AddSingleton<AgentsCreateCommand>();
         services.AddSingleton<AgentsConnectCommand>();
         services.AddSingleton<AgentsQueryAndEvaluateCommand>();
         services.AddSingleton<AgentsEvaluateCommand>();
+        services.AddSingleton<AgentsGetSdkSampleCommand>();
+
+        services.AddSingleton<ThreadCreateCommand>();
+        services.AddSingleton<ThreadListCommand>();
+        services.AddSingleton<ThreadGetMessagesCommand>();
 
         services.AddSingleton<ResourceGetCommand>();
     }
 
     public CommandGroup RegisterCommands(IServiceProvider serviceProvider)
     {
-        var foundry = new CommandGroup(Name, "Foundry service operations - Commands for listing and managing services and resources in AI Foundry.", Title);
+        var foundry = new CommandGroup(Name, "Foundry service operations - Commands for listing and managing services and resources in Microsoft Foundry.", Title);
 
-        var models = new CommandGroup("models", "Foundry models operations - Commands for listing and managing models in AI Foundry.");
+        var models = new CommandGroup("models", "Foundry models operations - Commands for listing and managing models in Microsoft Foundry.");
         foundry.AddSubGroup(models);
 
-        var deployments = new CommandGroup("deployments", "Foundry models deployments operations - Commands for listing and managing models deployments in AI Foundry.");
+        var deployments = new CommandGroup("deployments", "Foundry models deployments operations - Commands for listing and managing models deployments in Microsoft Foundry.");
         models.AddSubGroup(deployments);
 
         var deploymentList = serviceProvider.GetRequiredService<DeploymentsListCommand>();
@@ -53,10 +58,10 @@ public class FoundrySetup : IAreaSetup
         var deploymentCommand = serviceProvider.GetRequiredService<ModelDeploymentCommand>();
         models.AddCommand(deploymentCommand.Name, deploymentCommand);
 
-        var knowledge = new CommandGroup("knowledge", "Foundry knowledge operations - Commands for managing knowledge bases and indexes in AI Foundry.");
+        var knowledge = new CommandGroup("knowledge", "Foundry knowledge operations - Commands for managing knowledge bases and indexes in Microsoft Foundry.");
         foundry.AddSubGroup(knowledge);
 
-        var index = new CommandGroup("index", "Foundry knowledge index operations - Commands for managing knowledge indexes in AI Foundry.");
+        var index = new CommandGroup("index", "Foundry knowledge index operations - Commands for managing knowledge indexes in Microsoft Foundry.");
         knowledge.AddSubGroup(index);
 
         var indexList = serviceProvider.GetRequiredService<KnowledgeIndexListCommand>();
@@ -65,25 +70,34 @@ public class FoundrySetup : IAreaSetup
         var indexSchema = serviceProvider.GetRequiredService<KnowledgeIndexSchemaCommand>();
         index.AddCommand(indexSchema.Name, indexSchema);
 
-        var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in AI Foundry.");
+        var openai = new CommandGroup("openai", "Foundry OpenAI operations - Commands for working with Azure OpenAI models deployed in Microsoft Foundry.");
         foundry.AddSubGroup(openai);
 
         openai.AddCommand("create-completion", new OpenAiCompletionsCreateCommand());
         openai.AddCommand("embeddings-create", new OpenAiEmbeddingsCreateCommand());
         openai.AddCommand("models-list", new OpenAiModelsListCommand());
         openai.AddCommand("chat-completions-create", new OpenAiChatCompletionsCreateCommand());
-        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, querying, and evaluating agents in AI Foundry.");
+        var agents = new CommandGroup("agents", "Foundry agents operations - Commands for listing, creating, querying, and evaluating agents in Microsoft Foundry.");
         foundry.AddSubGroup(agents);
 
         agents.AddCommand("list", serviceProvider.GetRequiredService<AgentsListCommand>());
+        agents.AddCommand("create", serviceProvider.GetRequiredService<AgentsCreateCommand>());
         agents.AddCommand("connect", serviceProvider.GetRequiredService<AgentsConnectCommand>());
         agents.AddCommand("query-and-evaluate", serviceProvider.GetRequiredService<AgentsQueryAndEvaluateCommand>());
         agents.AddCommand("evaluate", serviceProvider.GetRequiredService<AgentsEvaluateCommand>());
+        agents.AddCommand("get-sdk-sample", serviceProvider.GetRequiredService<AgentsGetSdkSampleCommand>());
 
-        var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Azure AI Foundry resources.");
+        var resources = new CommandGroup("resource", "Foundry resource operations - Commands for listing and managing Microsoft Foundry resources.");
         foundry.AddSubGroup(resources);
 
         resources.AddCommand("get", serviceProvider.GetRequiredService<ResourceGetCommand>());
+
+        var threads = new CommandGroup("threads", "Foundry agent threads operations - Commands for listing, creating threads and getting messages in a thread in Microsoft Foundry.");
+        foundry.AddSubGroup(threads);
+
+        threads.AddCommand("create", serviceProvider.GetRequiredService<ThreadCreateCommand>());
+        threads.AddCommand("list", serviceProvider.GetRequiredService<ThreadListCommand>());
+        threads.AddCommand("get-messages", serviceProvider.GetRequiredService<ThreadGetMessagesCommand>());
 
         return foundry;
     }

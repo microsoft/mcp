@@ -1,16 +1,17 @@
 parameters:
 - name: DependsOn
   type: object
+- name: ServerMatrix
+  type: string
 
 jobs:
-- job: CreateDockerArtifact
-  displayName: 'Creating Docker artifact'
+- job: StageDocker
+  displayName: "Stage Docker"
   dependsOn: ${{ parameters.DependsOn }}
   pool:
     name: $(LINUXPOOL)
     image: $(LINUXVMIMAGE)
     os: linux
-
   steps:
   - checkout: self
 
@@ -23,6 +24,7 @@ jobs:
     artifact: binaries_signed
 
   - task: Powershell@2
+    name: PrepareFilesForDocker
     displayName: "Prepare files for Docker"
     inputs:
       pwsh: true
@@ -33,6 +35,12 @@ jobs:
         -OutputPath '$(Build.ArtifactStagingDirectory)'
 
   - task: 1ES.PublishPipelineArtifact@1
+    displayName: Publish docker staging
     inputs:
       path: $(Build.ArtifactStagingDirectory)
-      artifact: docker_staged
+      artifact: docker_staging
+
+- template: /eng/pipelines/templates/jobs/docker/build-docker.yml
+  parameters:
+    DependsOn: StageDocker
+    ServerMatrix: ${{ parameters.ServerMatrix }}

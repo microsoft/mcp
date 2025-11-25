@@ -172,24 +172,14 @@ public class McpServerElicitationExtensionsTests
         var server = CreateMockServer();
         server.ClientCapabilities.Returns((ClientCapabilities?)null);
 
-        var requestedSchema = new JsonObject
-        {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
-            {
-                ["confirm"] = new JsonObject { ["type"] = "boolean" }
-            }
-        };
-
         var request = new ElicitationRequestParams
         {
-            Message = "Test message",
-            RequestedSchema = requestedSchema
+            Message = "Test message"
         };
 
         // Act & Assert
         var exception = await Assert.ThrowsAsync<NotSupportedException>(
-            () => server.RequestElicitationAsync(request, CancellationToken.None));
+            () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
 
         Assert.Contains("elicitation", exception.Message, StringComparison.OrdinalIgnoreCase);
     }
@@ -205,24 +195,14 @@ public class McpServerElicitationExtensionsTests
         var clientCapabilities = new ClientCapabilities { Elicitation = new() };
         server.ClientCapabilities.Returns(clientCapabilities);
 
-        var requestedSchema = new JsonObject
-        {
-            ["type"] = "object",
-            ["properties"] = new JsonObject
-            {
-                ["confirm"] = new JsonObject { ["type"] = "boolean" }
-            }
-        };
-
         var request = new ElicitationRequestParams
         {
-            Message = message!,
-            RequestedSchema = requestedSchema
+            Message = message!
         };
 
         // Act & Assert
         await Assert.ThrowsAsync<ArgumentException>(
-            () => server.RequestElicitationAsync(request, CancellationToken.None));
+            () => server.RequestElicitationAsync(request, TestContext.Current.CancellationToken));
     }
 
     private static McpServer CreateMockServer()

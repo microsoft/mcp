@@ -49,7 +49,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -66,7 +66,7 @@ public sealed class LogsGetCommand(ILogger<LogsGetCommand> logger) : Subscriptio
             string result = await deployService.GetResourceLogsAsync(
                 options.Subscription!,
                 options.ResourceGroup!,
-                options.Limit);
+                options.Limit, cancellationToken);
 
             context.Response.Message = result;
         }

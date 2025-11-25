@@ -62,17 +62,18 @@ public class DatabaseListCommandTests
                     DateTimeOffset.UtcNow, 268435456000, "S0", "Standard", null, DateTimeOffset.UtcNow, "Disabled", false)
             };
 
-            _sqlService.ListDatabasesAsync(
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<string>(),
-                Arg.Any<RetryPolicyOptions?>(),
-                Arg.Any<CancellationToken>())
+            _sqlService
+                .ListDatabasesAsync(
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<string>(),
+                    Arg.Any<RetryPolicyOptions?>(),
+                    Arg.Any<CancellationToken>())
                 .Returns(databases);
         }
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         if (shouldSucceed)
@@ -92,16 +93,17 @@ public class DatabaseListCommandTests
         // Arrange
         var parseResult = _commandDefinition.Parse("--subscription test-sub --resource-group test-rg --server test-server");
 
-        _sqlService.ListDatabasesAsync(
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<string>(),
-            Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<CancellationToken>())
+        _sqlService
+            .ListDatabasesAsync(
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<string>(),
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .ThrowsAsync(new InvalidOperationException("Test error"));
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotEqual(HttpStatusCode.OK, response.Status);
@@ -125,16 +127,27 @@ public class DatabaseListCommandTests
                 DateTimeOffset.UtcNow, 268435456000, "S0", "Standard", null, DateTimeOffset.UtcNow, "Disabled", false)
         };
 
-        _sqlService.ListDatabasesAsync("test-server", "test-rg", "test-sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>())
+        _sqlService
+            .ListDatabasesAsync(
+                "test-server",
+                "test-rg",
+                "test-sub",
+                Arg.Any<RetryPolicyOptions?>(),
+                Arg.Any<CancellationToken>())
             .Returns(expectedDatabases);
 
         // Act
-        var response = await _command.ExecuteAsync(_context, parseResult);
+        var response = await _command.ExecuteAsync(_context, parseResult, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.Status);
         Assert.NotNull(response.Results);
 
-        await _sqlService.Received(1).ListDatabasesAsync("test-server", "test-rg", "test-sub", Arg.Any<RetryPolicyOptions?>(), Arg.Any<CancellationToken>());
+        await _sqlService.Received(1).ListDatabasesAsync(
+            "test-server",
+            "test-rg",
+            "test-sub",
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>());
     }
 }

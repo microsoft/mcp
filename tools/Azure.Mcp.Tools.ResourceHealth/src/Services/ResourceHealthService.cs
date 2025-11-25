@@ -24,26 +24,27 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
 
     public async Task<AvailabilityStatus> GetAvailabilityStatusAsync(
         string resourceId,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(resourceId), resourceId));
 
         try
         {
-            var credential = await GetCredential();
+            var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
-                CancellationToken.None);
+                cancellationToken);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
 
             var url = $"{resourceId}/providers/Microsoft.ResourceHealth/availabilityStatuses/current?api-version={ResourceHealthApiVersion}";
 
-            using var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusResponse);
 
             if (apiResponse == null)
@@ -67,19 +68,20 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         string subscription,
         string? resourceGroup = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-            var credential = await GetCredential();
+            var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
-                CancellationToken.None);
+                cancellationToken);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
@@ -88,10 +90,10 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 ? $"/subscriptions/{subscriptionId}/resourceGroups/{resourceGroup}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}"
                 : $"/subscriptions/{subscriptionId}/providers/Microsoft.ResourceHealth/availabilityStatuses?api-version={ResourceHealthApiVersion}";
 
-            using var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
 
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
             var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.AvailabilityStatusListResponse);
 
             if (apiResponse?.Value == null)
@@ -120,19 +122,20 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
         string? queryStartTime = null,
         string? queryEndTime = null,
         string? tenant = null,
-        RetryPolicyOptions? retryPolicy = null)
+        RetryPolicyOptions? retryPolicy = null,
+        CancellationToken cancellationToken = default)
     {
         ValidateRequiredParameters((nameof(subscription), subscription));
 
         try
         {
-            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy);
+            var subscriptionResource = await _subscriptionService.GetSubscription(subscription, tenant, retryPolicy, cancellationToken);
             var subscriptionId = subscriptionResource.Id.SubscriptionId;
 
-            var credential = await GetCredential();
+            var credential = await GetCredential(cancellationToken);
             var token = await credential.GetTokenAsync(
                 new TokenRequestContext([$"{AzureManagementBaseUrl}/.default"]),
-                CancellationToken.None);
+                cancellationToken);
 
             using var client = _httpClientService.CreateClient(new Uri(AzureManagementBaseUrl));
             client.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", token.Token);
@@ -184,9 +187,9 @@ public class ResourceHealthService(ISubscriptionService subscriptionService, ITe
                 url += $"&$filter={Uri.EscapeDataString(combinedFilter)}";
             }
 
-            using var response = await client.GetAsync(url);
+            using var response = await client.GetAsync(url, cancellationToken);
             response.EnsureSuccessStatusCode();
-            var content = await response.Content.ReadAsStringAsync();
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
 
             var apiResponse = JsonSerializer.Deserialize(content, ResourceHealthJsonContext.Default.ServiceHealthEventListResponse);
 

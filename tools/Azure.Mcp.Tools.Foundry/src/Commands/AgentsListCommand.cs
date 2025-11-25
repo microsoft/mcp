@@ -18,7 +18,7 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
 
     public override string Description =>
         """
-        List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, 
+        List all Azure AI Agents in a Microsoft Foundry project. Shows agents that can be used for AI workflows, 
         evaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).
         """;
 
@@ -47,7 +47,7 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -62,7 +62,8 @@ public sealed class AgentsListCommand : GlobalCommand<AgentsListOptions>
             var agents = await service.ListAgents(
                 options.Endpoint!,
                 options.Tenant,
-                options.RetryPolicy);
+                options.RetryPolicy,
+                cancellationToken: cancellationToken);
 
             context.Response.Results = agents?.Count > 0 ?
                 ResponseResult.Create(

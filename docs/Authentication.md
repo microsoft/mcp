@@ -49,19 +49,28 @@ If environment variable `AZURE_MCP_ONLY_USE_BROKER_CREDENTIAL` is:
     | 7 | [AzureDeveloperCliCredential](https://learn.microsoft.com/dotnet/api/azure.identity.azuredeveloperclicredential?view=azure-dotnet) | Uses your Azure Developer CLI login | Yes |
     | 8 | [InteractiveBrowserCredential](https://learn.microsoft.com/dotnet/api/azure.identity.interactivebrowsercredential?view=azure-dotnet) | Uses a broker and falls back to browser-based login if needed. The account picker dialog allows you to ensure you're selecting the correct account. | Yes |
 
+    **Note:** `InteractiveBrowserCredential` is included as a fallback only in default and "dev" credential chains. When using `AZURE_TOKEN_CREDENTIALS=prod` or specifying a specific credential, the interactive browser credential is not added, ensuring production scenarios fail fast if authentication is unavailable.
+
     If you're logged in through any of these mechanisms, the Azure MCP Server will automatically use those credentials. Ensure that you have the correct authorization permissions in Azure. For example, read access to your Storage account via Role-Based Access Control (RBAC). To learn more about Azure's RBAC authorization system, see [What is Azure RBAC?](https://learn.microsoft.com/azure/role-based-access-control/overview).
 
 ## Recommended Authentication Configuration by Environment
 
 ### Production Environments
 
-For Kubernetes workloads or Azure-hosted apps, set the following environment variable:
+For Kubernetes workloads or Azure-hosted apps (Web Apps, Function Apps, Container Apps, AKS), set the following environment variable:
 
 ```bash
 export AZURE_TOKEN_CREDENTIALS=prod
 ```
 
-This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order.
+This configuration modifies the credential chain to use only production credentials (Environment, Workload Identity, and Managed Identity), in that order. The `InteractiveBrowserCredential` is NOT included, ensuring authentication fails fast if none of the production credentials are available.
+
+**For User-Assigned Managed Identity**, also set:
+```bash
+export AZURE_CLIENT_ID=<your-managed-identity-client-id>
+```
+
+If `AZURE_CLIENT_ID` is not set, System-Assigned Managed Identity will be used.
 
 ### Development Environments
 
@@ -72,6 +81,8 @@ az login
 # Verify access
 az account show
 ```
+
+The default credential chain includes `InteractiveBrowserCredential` as a fallback for development convenience.
 
 ### CI/CD Pipelines
 

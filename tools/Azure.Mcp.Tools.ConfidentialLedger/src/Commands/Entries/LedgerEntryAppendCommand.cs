@@ -53,7 +53,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -64,7 +64,7 @@ public sealed class LedgerEntryAppendCommand(IConfidentialLedgerService service,
 
         try
         {
-            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId);
+            var result = await _service.AppendEntryAsync(options.LedgerName!, options.Content!, options.CollectionId, cancellationToken);
             context.Response.Results = ResponseResult.Create(result, ConfidentialLedgerJsonContext.Default.AppendEntryResult);
         }
         catch (Exception ex)

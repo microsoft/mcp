@@ -48,14 +48,14 @@ public sealed class QueryCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         else
         {
             _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(expectedJson);
         }
         var command = new QueryCommand(_logger);
@@ -64,7 +64,7 @@ public sealed class QueryCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -89,14 +89,14 @@ public sealed class QueryCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         else
         {
             _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns([]);
         }
         var command = new QueryCommand(_logger);
@@ -104,7 +104,7 @@ public sealed class QueryCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);
@@ -125,14 +125,14 @@ public sealed class QueryCommandTests
                 "https://mycluster.kusto.windows.net",
                 "db1",
                 "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
         }
         else
         {
             _kusto.QueryItemsAsync(
                 "sub1", "mycluster", "db1", "StormEvents | take 1",
-                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>())
+                Arg.Any<string>(), Arg.Any<AuthMethod?>(), Arg.Any<RetryPolicyOptions>(), Arg.Any<CancellationToken>())
                 .Returns(Task.FromException<List<JsonElement>>(new Exception("Test error")));
         }
         var command = new QueryCommand(_logger);
@@ -140,7 +140,7 @@ public sealed class QueryCommandTests
         var args = command.GetCommand().Parse(cliArgs);
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -155,7 +155,7 @@ public sealed class QueryCommandTests
         var args = command.GetCommand().Parse(""); // No arguments
         var context = new CommandContext(_serviceProvider);
 
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);

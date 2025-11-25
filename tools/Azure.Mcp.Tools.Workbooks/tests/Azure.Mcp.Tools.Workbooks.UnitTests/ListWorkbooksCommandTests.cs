@@ -109,7 +109,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -121,7 +122,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -155,7 +156,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var args = _command.GetCommand().Parse([
@@ -167,7 +169,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -190,7 +192,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromResult<List<WorkbookInfo>>(null!));
 
         var args = _command.GetCommand().Parse([
@@ -202,7 +205,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -225,7 +228,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(Task.FromException<List<WorkbookInfo>>(new Exception("Service error")));
 
         var args = _command.GetCommand().Parse([
@@ -237,7 +241,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -255,7 +259,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -267,7 +272,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -275,7 +280,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("test-resource-group"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -288,7 +294,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -299,7 +306,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -307,7 +314,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("test-resource-group"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -320,7 +328,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -332,7 +341,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        await _command.ExecuteAsync(context, args);
+        await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         await _service.Received(1).ListWorkbooks(
@@ -340,7 +349,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("test-resource-group"),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -357,7 +367,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.Status);
@@ -403,7 +413,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Any<WorkbookFilters?>(),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -414,7 +425,7 @@ public class ListWorkbooksCommandTests
         var context = new CommandContext(_serviceProvider);
 
         // Act
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -460,7 +471,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared"),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -471,7 +483,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -483,7 +495,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared"),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -513,7 +526,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == "sentinel"),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -524,7 +538,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -536,7 +550,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == "sentinel"),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -567,7 +582,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -578,7 +594,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -590,7 +606,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -621,7 +638,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -634,7 +652,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -646,7 +664,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -677,7 +696,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -690,7 +710,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -702,7 +722,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == "shared" && f.Category == "sentinel" && f.SourceId == sourceId),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -732,7 +753,8 @@ public class ListWorkbooksCommandTests
             Arg.Is("rg123"),
             Arg.Is<WorkbookFilters?>(f => f != null && !f.HasFilters),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -742,7 +764,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -754,7 +776,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && !f.HasFilters),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -769,7 +792,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == kind),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -780,7 +804,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -791,7 +815,8 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Kind == kind),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 
     [Theory]
@@ -808,7 +833,8 @@ public class ListWorkbooksCommandTests
             Arg.Any<string>(),
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>())
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedWorkbooks);
 
         var args = _command.GetCommand().Parse([
@@ -819,7 +845,7 @@ public class ListWorkbooksCommandTests
 
         // Act
         var context = new CommandContext(_serviceProvider);
-        var response = await _command.ExecuteAsync(context, args);
+        var response = await _command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         // Assert
         Assert.NotNull(response);
@@ -830,6 +856,7 @@ public class ListWorkbooksCommandTests
             "rg123",
             Arg.Is<WorkbookFilters?>(f => f != null && f.Category == category),
             Arg.Any<RetryPolicyOptions?>(),
-            Arg.Any<string?>());
+            Arg.Any<string?>(),
+            Arg.Any<CancellationToken>());
     }
 }

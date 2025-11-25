@@ -14,7 +14,7 @@ namespace Azure.Mcp.Tools.Quota.Services.Util;
 
 public interface IRegionChecker
 {
-    Task<List<string>> GetAvailableRegionsAsync(string resourceType);
+    Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken);
 }
 
 public abstract class AzureRegionChecker : IRegionChecker
@@ -30,12 +30,12 @@ public abstract class AzureRegionChecker : IRegionChecker
         Logger = logger;
     }
 
-    public abstract Task<List<string>> GetAvailableRegionsAsync(string resourceType);
+    public abstract Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken);
 }
 
 public class DefaultRegionChecker(ArmClient armClient, string subscriptionId, ILogger<DefaultRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
 {
-    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType)
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
     {
         try
         {
@@ -44,7 +44,7 @@ public class DefaultRegionChecker(ArmClient armClient, string subscriptionId, IL
             var resourceTypeName = parts[1];
 
             var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
-            var provider = await subscription.GetResourceProviderAsync(providerNamespace);
+            var provider = await subscription.GetResourceProviderAsync(providerNamespace, cancellationToken: cancellationToken);
 
             if (provider?.Value?.Data?.ResourceTypes == null)
             {
@@ -82,14 +82,14 @@ public class CognitiveServicesRegionChecker : AzureRegionChecker
         _modelName = modelName;
     }
 
-    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType)
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
     {
         var parts = resourceType.Split('/');
         var providerNamespace = parts[0];
         var resourceTypeName = parts[1];
 
         var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
-        var provider = await subscription.GetResourceProviderAsync(providerNamespace);
+        var provider = await subscription.GetResourceProviderAsync(providerNamespace, cancellationToken: cancellationToken);
 
         List<string> regions = provider?.Value?.Data?.ResourceTypes?
             .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
@@ -134,14 +134,14 @@ public class CognitiveServicesRegionChecker : AzureRegionChecker
 
 public class PostgreSqlRegionChecker(ArmClient armClient, string subscriptionId, ILogger<PostgreSqlRegionChecker> logger) : AzureRegionChecker(armClient, subscriptionId, logger)
 {
-    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType)
+    public override async Task<List<string>> GetAvailableRegionsAsync(string resourceType, CancellationToken cancellationToken)
     {
         var parts = resourceType.Split('/');
         var providerNamespace = parts[0];
         var resourceTypeName = parts[1];
 
         var subscription = ResourceClient.GetSubscriptionResource(new ResourceIdentifier($"/subscriptions/{SubscriptionId}"));
-        var provider = await subscription.GetResourceProviderAsync(providerNamespace);
+        var provider = await subscription.GetResourceProviderAsync(providerNamespace, cancellationToken: cancellationToken);
         var regions = provider?.Value?.Data?.ResourceTypes?
             .FirstOrDefault(rt => rt.ResourceType.Equals(resourceTypeName, StringComparison.OrdinalIgnoreCase))
             ?.Locations?
@@ -212,12 +212,13 @@ public static class AzureRegionService
         string[] resourceTypes,
         string subscriptionId,
         ILoggerFactory loggerFactory,
-        CognitiveServiceProperties? cognitiveServiceProperties = null)
+        CognitiveServiceProperties? cognitiveServiceProperties = null,
+        CancellationToken cancellationToken = default)
     {
         var tasks = resourceTypes.Select(async resourceType =>
         {
             var checker = RegionCheckerFactory.CreateRegionChecker(armClient, subscriptionId, resourceType, loggerFactory, cognitiveServiceProperties);
-            var regions = await checker.GetAvailableRegionsAsync(resourceType);
+            var regions = await checker.GetAvailableRegionsAsync(resourceType, cancellationToken);
             return new KeyValuePair<string, List<string>>(resourceType, regions);
         });
 

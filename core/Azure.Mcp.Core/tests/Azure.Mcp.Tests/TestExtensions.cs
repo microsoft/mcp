@@ -32,6 +32,7 @@ public static class TestExtensions
         Assert.NotNull(element);
         return element.Value.AssertProperty(propertyName);
     }
+
     public static JsonElement AssertProperty(this JsonElement element, string propertyName)
     {
         Assert.True(element.TryGetProperty(propertyName, out var property), $"Property '{propertyName}' not found. Full element: '{JsonSerializer.Serialize(element)}'");

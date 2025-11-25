@@ -1,21 +1,14 @@
 ﻿// Copyright (c) Microsoft Corporation.
 // Licensed under the MIT License.
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
 using Azure.Mcp.Core.Models.Identity;
 using Azure.Mcp.Tools.Redis.Models.CacheForRedis;
 using Azure.Mcp.Tools.Redis.Models.ManagedRedis;
 
 namespace Azure.Mcp.Tools.Redis.Models
 {
-    [JsonSourceGenerationOptions
-        (
-        WriteIndented = true,
+    [JsonSourceGenerationOptions(
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
         PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase
     )]

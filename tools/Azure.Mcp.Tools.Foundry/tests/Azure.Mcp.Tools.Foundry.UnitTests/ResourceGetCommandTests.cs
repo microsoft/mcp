@@ -80,13 +80,14 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -122,13 +123,14 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Is("test-rg"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResources);
 
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub", "--resource-group", "test-rg"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -175,7 +177,8 @@ public class ResourceGetCommandTests
             Arg.Is("test-rg"),
             Arg.Is("test-resource"),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(expectedResource);
 
         var command = new ResourceGetCommand(_logger);
@@ -185,7 +188,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -209,13 +212,14 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -237,13 +241,14 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ResourceGetCommand(_logger);
         var args = command.GetCommand().Parse(["--subscription", "test-sub"]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -260,7 +265,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .ThrowsAsync(new Exception(expectedError));
 
         var command = new ResourceGetCommand(_logger);
@@ -270,7 +276,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.InternalServerError, response.Status);
@@ -287,7 +293,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string?>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns([]);
 
         _foundryService.GetAiResourceAsync(
@@ -295,13 +302,14 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(new AiResourceInformation());
 
         var command = new ResourceGetCommand(_logger);
         var parsedArgs = command.GetCommand().Parse(args);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, parsedArgs);
+        var response = await command.ExecuteAsync(context, parsedArgs, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.Equal(HttpStatusCode.OK, response.Status);
@@ -350,7 +358,8 @@ public class ResourceGetCommandTests
             Arg.Any<string>(),
             Arg.Any<string>(),
             Arg.Any<string?>(),
-            Arg.Any<RetryPolicyOptions?>())
+            Arg.Any<RetryPolicyOptions?>(),
+            Arg.Any<CancellationToken>())
             .Returns(resourceWithDeployments);
 
         var command = new ResourceGetCommand(_logger);
@@ -360,7 +369,7 @@ public class ResourceGetCommandTests
             "--resource-name", "test-resource"
         ]);
         var context = new CommandContext(_serviceProvider);
-        var response = await command.ExecuteAsync(context, args);
+        var response = await command.ExecuteAsync(context, args, TestContext.Current.CancellationToken);
 
         Assert.NotNull(response);
         Assert.NotNull(response.Results);

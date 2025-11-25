@@ -56,7 +56,7 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
         return options;
     }
 
-    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult)
+    public override async Task<CommandResponse> ExecuteAsync(CommandContext context, ParseResult parseResult, CancellationToken cancellationToken)
     {
         if (!Validate(parseResult.CommandResult, context.Response).IsValid)
         {
@@ -71,7 +71,8 @@ public sealed class MonitoredResourcesListCommand(ILogger<MonitoredResourcesList
             List<string> results = await service.ListMonitoredResources(
                 options.ResourceGroup!,
                 options.Subscription!,
-                options.DatadogResource!);
+                options.DatadogResource!,
+                cancellationToken);
             context.Response.Results = results?.Count > 0
                 ? ResponseResult.Create(new(results), DatadogJsonContext.Default.MonitoredResourcesListResult)
                 : ResponseResult.Create(new(["No monitored resources found for the specified Datadog resource."]), DatadogJsonContext.Default.MonitoredResourcesListResult);

@@ -16,7 +16,6 @@ namespace Azure.Mcp.Tools.Authorization.Services;
 public class AuthorizationService(ISubscriptionService subscriptionService, ITenantService tenantService, ILogger<AuthorizationService> logger)
     : BaseAzureResourceService(subscriptionService, tenantService), IAuthorizationService
 {
-    private readonly ISubscriptionService _subscriptionService = subscriptionService ?? throw new ArgumentNullException(nameof(subscriptionService));
     private readonly ILogger<AuthorizationService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public async Task<List<RoleAssignment>> ListRoleAssignmentsAsync(

@@ -6,7 +6,7 @@ param(
     [string] $TestResultsPath,
     [string[]] $Paths,
     [string[]] $Members,
-    [ValidateSet('Live', 'Unit', 'All')]
+    [ValidateSet('Live', 'Unit', 'All', 'Recorded')]
     [string] $TestType = 'Unit',
     [switch] $CollectCoverage,
     [switch] $OpenReport,
@@ -37,6 +37,7 @@ function FilterTestProjects {
     $fileNameFilters = switch ($testType) {
         'Live' { '*.LiveTests.csproj' }
         'Unit' { '*.UnitTests.csproj' }
+        'Recorded' { '*.LiveTests.csproj' }
         'All'  { '*.LiveTests.csproj', '*.UnitTests.csproj' }
     }
 
@@ -45,6 +46,15 @@ function FilterTestProjects {
         FullName = $_.FullName
         Relative = (Resolve-Path -Path $_.FullName -Relative -RelativeBasePath $RepoRoot).Replace('\', '/').TrimStart('./')
     }}
+
+    # until all LiveTest projects are migrated to recorded tests, we _must_ complete
+    # an additional filter such that we'll only invoke those csprojs where playback is possible
+    if ($testType -eq 'Recorded') {
+        $testProjects = $testProjects | Where-Object {
+            $projectDirectory = Split-Path -Path $_.FullName -Parent
+            Test-Path -Path (Join-Path -Path $projectDirectory -ChildPath 'assets.json')
+        }
+    }
 
     $normalizedPathFilters = $Paths ? ($Paths | ForEach-Object { "*$($_.Replace('\', '/'))*" }) : @()
 

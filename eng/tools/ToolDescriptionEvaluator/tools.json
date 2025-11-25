@@ -898,6 +898,12 @@
     },
     {
       "name": "get",
+      "description": "Returns best practices and code generation guidance for building AI applications in Azure. \r\n        Use this tool when you need recommendations on how to write code for AI agents, chatbots, workflows, or other AI features.\r\n        This tool also provides guidance for code generation using the Azure resources (e.g. Microsoft Foundry) for application development only. \r\n        Call this tool first before creating any plans, todos or code.\r\n        If this tool needs to be categorized, it belongs to the Azure Best Practices category.",
+      "command": "azureaibestpractices get",
+      "option": []
+    },
+    {
+      "name": "get",
       "description": "Returns Terraform best practices for Azure. Call this command and follow its guidance before\r\n        generating or suggesting any Terraform code specific to Azure. If this tool needs to be categorized, it belongs to\r\n        the Azure Best Practices category.",
       "command": "azureterraformbestpractices get",
       "option": []
@@ -3023,7 +3029,7 @@
     },
     {
       "name": "connect",
-      "description": "Query an Azure AI Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows - instead, use agents_query-and-evaluate or agents_evaluate.",
+      "description": "Query an Microsoft Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows - instead, use agents_query-and-evaluate or agents_evaluate.",
       "command": "foundry agents connect",
       "option": [
         {
@@ -3082,7 +3088,80 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "    Creates an Microsoft Foundry Agent that processes messages according to a given system instruction using an existing Microsoft Foundry model deployment.",
+      "command": "foundry agents create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--model-deployment",
+          "description": "Name of the model deployment",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--agent-name",
+          "description": "A human-readable name of the Agent",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--system-instruction",
+          "description": "System instruction for the agent to follow when process messages",
           "type": "string",
           "required": true
         }
@@ -3174,8 +3253,21 @@
       ]
     },
     {
+      "name": "get-sdk-sample",
+      "description": "Get code samples to interact with a Foundry Agent using Microsoft Foundry SDK and programming language of your choice.",
+      "command": "foundry agents get-sdk-sample",
+      "option": [
+        {
+          "name": "--programming-language",
+          "description": "The programming language of the sdk for interacting with a Foundry Agent. Supported values are csharp, python and typescript.",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
       "name": "list",
-      "description": "List all Azure AI Agents in an Azure AI Foundry project. Shows agents that can be used for AI workflows, \r\nevaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).",
+      "description": "List all Azure AI Agents in an Microsoft Foundry project. Shows agents that can be used for AI workflows, \r\nevaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).",
       "command": "foundry agents list",
       "option": [
         {
@@ -3222,7 +3314,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3289,7 +3381,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
           "type": "string",
           "required": true
         },
@@ -3315,7 +3407,7 @@
     },
     {
       "name": "list",
-      "description": "Retrieves a list of knowledge indexes from Azure AI Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Azure AI Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\nRequires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Azure AI Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Azure AI Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
+      "description": "Retrieves a list of knowledge indexes from Microsoft Foundry.\r\n\r\nThis function is used when a user requests information about the available knowledge indexes in Microsoft Foundry. It provides an overview of the knowledge bases and search indexes that are currently deployed and available for use with AI agents and applications.\r\nRequires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).\r\nUsage:\r\n    Use this function when a user wants to explore the available knowledge indexes in Microsoft Foundry. This can help users understand what knowledge bases are currently operational and how they can be utilized for retrieval-augmented generation (RAG) scenarios.\r\n\r\nNotes:\r\n    - The indexes listed are knowledge indexes specifically created within Microsoft Foundry projects.\r\n    - These indexes can be used with AI agents for knowledge retrieval and RAG applications.\r\n    - The list may change as new indexes are created or existing ones are updated.",
       "command": "foundry knowledge index list",
       "option": [
         {
@@ -3362,7 +3454,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3370,7 +3462,7 @@
     },
     {
       "name": "schema",
-      "description": "Retrieves the detailed schema configuration of a specific knowledge index from Azure AI Foundry.\r\n\r\nThis function provides comprehensive information about the structure and configuration of a knowledge index, including field definitions, data types, searchable attributes, and other schema properties. The schema information is essential for understanding how the index is structured and how data is indexed and searchable.\r\n\r\nUsage:\r\n    Use this function when you need to examine the detailed configuration of a specific knowledge index. This is helpful for troubleshooting search issues, understanding index capabilities, planning data mapping, or when integrating with the index programmatically.\r\n\r\nNotes:\r\n    - Returns the index schema.",
+      "description": "Retrieves the detailed schema configuration of a specific knowledge index from Microsoft Foundry.\r\n\r\nThis function provides comprehensive information about the structure and configuration of a knowledge index, including field definitions, data types, searchable attributes, and other schema properties. The schema information is essential for understanding how the index is structured and how data is indexed and searchable.\r\n\r\nUsage:\r\n    Use this function when you need to examine the detailed configuration of a specific knowledge index. This is helpful for troubleshooting search issues, understanding index capabilities, planning data mapping, or when integrating with the index programmatically.\r\n\r\nNotes:\r\n    - Returns the index schema.",
       "command": "foundry knowledge index schema",
       "option": [
         {
@@ -3417,7 +3509,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
           "type": "string",
           "required": true
         },
@@ -3431,7 +3523,7 @@
     },
     {
       "name": "deploy",
-      "description": "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Azure AI Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.",
+      "description": "Deploys (create) a model instance (e.g. GPT4o / gpt-4o, OpenAI, OSS, proprietary) in Microsoft Foundry as a named inference deployment, which's bound to a specified Azure AI Services resource, resource group, and subscription. Do not use this tool for for Azure OpenAI Services to deploy OpenAI models.",
       "command": "foundry models deploy",
       "option": [
         {
@@ -3552,7 +3644,7 @@
     },
     {
       "name": "list",
-      "description": "List model deployments in an Azure AI Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. \r\nUse this to audit what models are deployed before invoking or creating new deployments. Requires the project \r\nendpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists \r\ndeployed models only - use models_list to discover available catalog/base models.",
+      "description": "List model deployments in an Microsoft Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. \r\nUse this to audit what models are deployed before invoking or creating new deployments. Requires the project \r\nendpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists \r\ndeployed models only - use models_list to discover available catalog/base models.",
       "command": "foundry models deployments list",
       "option": [
         {
@@ -3599,7 +3691,7 @@
         },
         {
           "name": "--endpoint",
-          "description": "The endpoint URL for the Azure AI Foundry project/service.",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
           "type": "string",
           "required": true
         }
@@ -3607,7 +3699,7 @@
     },
     {
       "name": "list",
-      "description": "Retrieves a list of supported models from the Azure AI Foundry catalog.\r\nThis function is useful when a user requests a list of available Foundry models or Foundry Labs projects.\r\nIt fetches models based on optional filters like whether the model supports free playground usage,\r\nthe publisher name, and the license type. The function will return the list of models with useful fields.\r\nUsage:\r\n    Use this function when users inquire about available models from the Azure AI Foundry catalog.\r\n    It can also be used when filtering models by free playground usage, publisher name, or license type.\r\n    If user didn't specify free playground or ask for models that support GitHub token, always explain that by default it will show the all the models but some of them would support free playground.\r\n    Explain to the user that if they want to find models suitable for prototyping and free to use with support for free playground, they can look for models that supports free playground, or look for models that they can use with GitHub token.",
+      "description": "Retrieves a list of supported models from the Microsoft Foundry catalog.\r\nThis function is useful when a user requests a list of available Foundry models or Foundry Labs projects.\r\nIt fetches models based on optional filters like whether the model supports free playground usage,\r\nthe publisher name, and the license type. The function will return the list of models with useful fields.\r\nUsage:\r\n    Use this function when users inquire about available models from the Microsoft Foundry catalog.\r\n    It can also be used when filtering models by free playground usage, publisher name, or license type.\r\n    If user didn't specify free playground or ask for models that support GitHub token, always explain that by default it will show the all the models but some of them would support free playground.\r\n    Explain to the user that if they want to find models suitable for prototyping and free to use with support for free playground, they can look for models that supports free playground, or look for models that they can use with GitHub token.",
       "command": "foundry models list",
       "option": [
         {
@@ -3680,7 +3772,7 @@
     },
     {
       "name": "chat-completions-create",
-      "description": "Create chat completions using Azure OpenAI in AI Foundry. Send messages to Azure OpenAI chat models deployed \r\nin your AI Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations \r\nwith message history, system instructions, and response customization. Use this when you need to create chat \r\ncompletions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI. \r\nRequires resource-name, deployment-name, and message-array.",
+      "description": "Create chat completions using Azure OpenAI in Microsoft Foundry. Send messages to Azure OpenAI chat models deployed \r\nin your Microsoft Foundry resource and receive AI-generated conversational responses. Supports multi-turn conversations \r\nwith message history, system instructions, and response customization. Use this when you need to create chat \r\ncompletions, have AI conversations, get conversational responses, or build interactive dialogues with Azure OpenAI. \r\nRequires resource-name, deployment-name, and message-array.",
       "command": "foundry openai chat-completions-create",
       "option": [
         {
@@ -3813,7 +3905,7 @@
     },
     {
       "name": "create-completion",
-      "description": "Create text completions using Azure OpenAI in AI Foundry. Send a prompt or question to Azure OpenAI models \r\ndeployed in your AI Foundry resource and receive generated text answers. Use this when you need to create \r\ncompletions, get AI-generated content, generate answers to questions, or produce text completions from Azure \r\nOpenAI based on any input prompt. Supports customization with temperature and max tokens. \r\nRequires resource-name, deployment-name, and prompt-text.",
+      "description": "Create text completions using Azure OpenAI in Microsoft Foundry. Send a prompt or question to Azure OpenAI models \r\ndeployed in your Microsoft Foundry resource and receive generated text answers. Use this when you need to create \r\ncompletions, get AI-generated content, generate answers to questions, or produce text completions from Azure \r\nOpenAI based on any input prompt. Supports customization with temperature and max tokens. \r\nRequires resource-name, deployment-name, and prompt-text.",
       "command": "foundry openai create-completion",
       "option": [
         {
@@ -3904,7 +3996,7 @@
     },
     {
       "name": "embeddings-create",
-      "description": "Create embeddings using Azure OpenAI in AI Foundry. Generate vector embeddings from text using Azure OpenAI \r\ndeployments in your AI Foundry resource for semantic search, similarity comparisons, clustering, or machine \r\nlearning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to \r\nnumerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.",
+      "description": "Create embeddings using Azure OpenAI in Microsoft Foundry. Generate vector embeddings from text using Azure OpenAI \r\ndeployments in your Microsoft Foundry resource for semantic search, similarity comparisons, clustering, or machine \r\nlearning. Use this when you need to create foundry embeddings, generate vectors from text, or convert text to \r\nnumerical representations using Azure OpenAI. Requires resource-name, deployment-name, and input-text.",
       "command": "foundry openai embeddings-create",
       "option": [
         {
@@ -4001,7 +4093,7 @@
     },
     {
       "name": "models-list",
-      "description": "List all available Azure OpenAI models and deployments in an AI Foundry resource. This tool retrieves information \r\nabout Azure OpenAI models deployed in your AI Foundry resource including model names, versions, capabilities, \r\nand deployment status. Use this when you need to see what OpenAI models are available, check model deployments, \r\nor list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.",
+      "description": "List all available Azure OpenAI models and deployments in an Microsoft Foundry resource. This tool retrieves information \r\nabout Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities, \r\nand deployment status. Use this when you need to see what OpenAI models are available, check model deployments, \r\nor list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.",
       "command": "foundry openai models-list",
       "option": [
         {
@@ -4068,7 +4160,7 @@
     },
     {
       "name": "get",
-      "description": "Gets detailed information about Azure AI Foundry (Cognitive Services) resources, including endpoint URL, \r\nlocation, SKU, and all deployed models with their configuration. If a specific resource name is provided, \r\nreturns details for that resource only. If no resource name is provided, lists all AI Foundry resources \r\nin the subscription or resource group. Use this tool when users need endpoint information, want to discover \r\navailable AI resources, or need to see all models deployed on AI resources.",
+      "description": "Gets detailed information about Microsoft Foundry (Cognitive Services) resources, including endpoint URL, \r\nlocation, SKU, and all deployed models with their configuration. If a specific resource name is provided, \r\nreturns details for that resource only. If no resource name is provided, lists all Microsoft Foundry resources \r\nin the subscription or resource group. Use this tool when users need endpoint information, want to discover \r\navailable AI resources, or need to see all models deployed on AI resources.",
       "command": "foundry resource get",
       "option": [
         {
@@ -4130,6 +4222,183 @@
           "description": "The name of the Azure OpenAI resource.",
           "type": "string",
           "required": null
+        }
+      ]
+    },
+    {
+      "name": "create",
+      "description": "    Creates an Microsoft Foundry Agent Thread that holds the messages between the Agent and the user.",
+      "command": "foundry threads create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--user-message",
+          "description": "The user message to add to the thread",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "get-messages",
+      "description": "    Get messages in an Microsoft Foundry Agent Thread.",
+      "command": "foundry threads get-messages",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--thread-id",
+          "description": "The Foundry Agent Thread Id",
+          "type": "string",
+          "required": true
+        }
+      ]
+    },
+    {
+      "name": "list",
+      "description": "    List Microsoft Foundry Agent Threads.",
+      "command": "foundry threads list",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The endpoint URL for the Microsoft Foundry project/service.",
+          "type": "string",
+          "required": true
         }
       ]
     },
@@ -8906,6 +9175,18 @@
           "description": "The PostgreSQL server to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -8985,6 +9266,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--query",
@@ -9374,6 +9667,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         }
       ]
     },
@@ -9453,6 +9758,18 @@
           "description": "The PostgreSQL database to be accessed.",
           "type": "string",
           "required": true
+        },
+        {
+          "name": "--auth-type",
+          "description": "The authentication type to access PostgreSQL server. Supported values are 'MicrosoftEntra' or 'PostgreSQL'. By default 'MicrosoftEntra' is used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--password",
+          "description": "The user password to access PostgreSQL server, Only required if 'auth-type' is set to 'PostgreSQL' authentication, not needed for 'MicrosoftEntra' authentication.",
+          "type": "string",
+          "required": null
         },
         {
           "name": "--table",
@@ -10668,13 +10985,110 @@
         },
         {
           "name": "--format",
-          "description": "Output format: simple or detailed. Default is simple.",
+          "description": "Output format: simple or detailed.",
           "type": "string",
           "required": null
         },
         {
           "name": "--profanity",
           "description": "Profanity filter: masked, removed, or raw. Default is masked.",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
+      "name": "synthesize",
+      "description": "Convert text to speech using Azure AI Services Speech. This command takes text input and generates an audio file using advanced neural text-to-speech capabilities.\r\nYou must provide an Azure AI Services endpoint (e.g., https://your-service.cognitiveservices.azure.com/), the text to convert, and an output file path.\r\nOptional parameters include language specification (default: en-US), voice selection, audio output format (default: Riff24Khz16BitMonoPcm), and custom voice endpoint ID.\r\nThe command supports a wide variety of output formats and neural voices for natural-sounding speech synthesis.",
+      "command": "speech tts synthesize",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpoint",
+          "description": "The Azure AI Services endpoint URL (e.g., https://your-service.cognitiveservices.azure.com/).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--text",
+          "description": "The text to convert to speech.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--outputAudio",
+          "description": "Path where the synthesized audio file will be saved.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--language",
+          "description": "The language for speech recognition (e.g., en-US, es-ES). Default is en-US.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--voice",
+          "description": "The voice to use for speech synthesis (e.g., en-US-JennyNeural). If not specified, the default voice for the language will be used.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--format",
+          "description": "Output format: simple or detailed.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--endpointId",
+          "description": "The endpoint ID of a custom voice model for speech synthesis.",
           "type": "string",
           "required": null
         }
@@ -12866,5 +13280,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 50
+  "duration": 60
 }

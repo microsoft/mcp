@@ -8,7 +8,7 @@
   "definitions": {
     "MLModels": {
       "description": "A list of machine learning models.",
-          "required": ["value"],
+      "required": [ "value" ],
       "type": "object",
       "properties": {
         "value": {
@@ -28,7 +28,7 @@
     "MLModel": {
       "description": "A machine learning model object.",
       "type": "object",
-          "required": ["type"],
+      "required": [ "type" ],
       "allOf": [
         {
           "$ref": "../common/definitions.json#/definitions/Item"
@@ -37,7 +37,7 @@
     },
     "CreateMLModelRequest": {
       "description": "Create machine learning model request payload.",
-          "required": ["displayName"],
+      "required": [ "displayName" ],
       "properties": {
         "displayName": {
           "description": "The machine learning model display name. The display name must follow naming rules according to item type.",
@@ -50,16 +50,16 @@
           "readOnly": false
         },
         "folderId": {
-            "description": "The folder ID. If not specified or null, the machine learning model is created with the workspace as its folder.",
-            "type": "string",
-            "format": "uuid",
-            "readOnly": false
+          "description": "The folder ID. If not specified or null, the machine learning model is created with the workspace as its folder.",
+          "type": "string",
+          "format": "uuid",
+          "readOnly": false
         }
       }
     },
     "UpdateMLModelDefinitionRequest": {
       "description": "Update machine learning model public definition request payload.",
-          "required": ["definition"],
+      "required": [ "definition" ],
       "properties": {
         "definition": {
           "$ref": "#/definitions/MLModelDefinition"
@@ -68,7 +68,7 @@
     },
     "MLModelDefinitionResponse": {
       "description": "Machine learning model public definition response.",
-          "required": ["definition"],
+      "required": [ "definition" ],
       "properties": {
         "definition": {
           "$ref": "#/definitions/MLModelDefinition",
@@ -76,10 +76,10 @@
         }
       }
     },
-      "MLModelDefinition" : {
+    "MLModelDefinition": {
       "description": "Machine learning model public definition object.",
       "type": "object",
-          "required": ["parts"],
+      "required": [ "parts" ],
       "properties": {
         "format": {
           "description": "The format of the item definition.",
@@ -110,7 +110,7 @@
           "type": "string",
           "readOnly": false
         },
-              "payloadType":{
+        "payloadType": {
           "description": "The payload type.",
           "$ref": "../common/definitions.json#/definitions/PayloadType",
           "readOnly": false
@@ -226,6 +226,15 @@
         },
         "scaleRule": {
           "$ref": "#/definitions/ScaleRule"
+        },
+        "failureDetails": {
+          "description": "Activation Failure details.",
+          "type": "object",
+          "allOf": [
+            {
+              "$ref": "../common/definitions.json#/definitions/ErrorResponseDetails"
+            }
+          ]
         }
       }
     },

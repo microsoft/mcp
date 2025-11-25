@@ -53,7 +53,9 @@ $propertyList = @(
     'DnxDescription',
     'DnxToolCommandName',
 
-    'IsAotCompatible'
+    'IsAotCompatible',
+
+    'McpRepositoryName'
 )
 
 $projectFile = $projectFiles | Select-Object -First 1
