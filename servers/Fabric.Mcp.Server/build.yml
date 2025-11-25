@@ -5,7 +5,7 @@ parameters:
   default: 'none'
 - name: PackageDocker
   type: boolean
-  default: false
+  default: true
 - name: PackageVSIX
   type: boolean
   default: true
