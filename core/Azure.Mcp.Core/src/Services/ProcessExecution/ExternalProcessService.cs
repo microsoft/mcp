@@ -36,6 +36,21 @@ public class ExternalProcessService(ILogger<ExternalProcessService> logger) : IE
     /// <returns>
     /// A <see cref="ProcessResult"/> containing the exit code, stdout, stderr, and the full command.
     /// </returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    /// Thrown when <paramref name="operationTimeoutSeconds"/> is less than or equal to zero.
+    /// </exception>
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="fileName"/> is null or empty.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// Thrown when the process fails to start.
+    /// </exception>
+    /// <exception cref="TimeoutException">
+    /// Thrown when the operation (process execution and stream draining) exceeds <paramref name="operationTimeoutSeconds"/>.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// Thrown when <paramref name="cancellationToken"/> is triggered before the operation completes.
+    /// </exception>
     /// <remarks>
     /// <para><b>Timeout vs. cancellation:</b></para>
     /// <para>
