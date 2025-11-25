@@ -103,6 +103,21 @@ public interface ITenantService
         string? tenantId,
         CancellationToken cancellationToken);
 
-
+    /// <summary>
+    /// Gets a new instance of <see cref="HttpClient"/> configured with the following options:
+    /// - Proxy
+    /// - Record/playback handler
+    /// - TimeOut
+    /// - User-Agent header
+    ///
+    /// Do:
+    ///  - Utilize for a single method or MCP tool invocation.
+    ///  - Add any additional options that are specific to the operation being performed.
+    /// Don't:
+    ///  - Store instances from this function that last beyond the lifetime of the invoking tool.
+    /// </summary>
+    /// <returns>
+    /// An <see cref="HttpClient"/> instance configured for use with Azure tenant operations.
+    /// </returns>
     HttpClient GetClient();
 }

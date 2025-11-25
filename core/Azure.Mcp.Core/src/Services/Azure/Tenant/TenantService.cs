@@ -21,8 +21,7 @@ public class TenantService : BaseAzureService, ITenantService
     public TenantService(
         IAzureTokenCredentialProvider credentialProvider,
         ICacheService cacheService,
-        IHttpClientFactory clientFactory
-        )
+        IHttpClientFactory clientFactory)
     {
         _credentialProvider = credentialProvider;
         _cacheService = cacheService ?? throw new ArgumentNullException(nameof(cacheService));
@@ -107,6 +106,7 @@ public class TenantService : BaseAzureService, ITenantService
         return await _credentialProvider.GetTokenCredentialAsync(tenantId, cancellationToken);
     }
 
+    /// <inheritdoc/>
     public HttpClient GetClient()
     {
         return _httpClientFactory.CreateClient();

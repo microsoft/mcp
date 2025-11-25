@@ -8,8 +8,8 @@ using Azure.Mcp.Core.Commands;
 using Azure.Mcp.Core.Services.Azure.ResourceGroup;
 using Azure.Mcp.Core.Services.Azure.Subscription;
 using Azure.Mcp.Core.Services.Azure.Tenant;
-using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.Caching;
+using Azure.Mcp.Core.Services.Http;
 using Azure.Mcp.Core.Services.ProcessExecution;
 using Azure.Mcp.Core.Services.Telemetry;
 using Azure.Mcp.Core.Services.Time;
@@ -195,9 +195,9 @@ internal class Program
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
 
-        // Named overload returns IHttpClientBuilder enabling handler configuration.
-        // without passing named overload, we cannot configure handler.
-            services.AddConfiguredHttpClient();
+        services.AddHttpClient();
+        // customize the default client with Proxy, Record/Playback, and User-Agent defaults
+        services.ConfigureDefaultHttpClient();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
@@ -221,5 +221,4 @@ internal class Program
         var telemetryService = serviceProvider.GetRequiredService<ITelemetryService>();
         await telemetryService.InitializeAsync();
     }
-
 }
