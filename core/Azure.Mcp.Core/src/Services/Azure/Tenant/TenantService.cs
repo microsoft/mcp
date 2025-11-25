@@ -109,9 +109,6 @@ public class TenantService : BaseAzureService, ITenantService
     /// <inheritdoc/>
     public HttpClient GetClient()
     {
-        // in the HttpClientFactoryConfigurator, we registered a named client "default" as we HAD to register it that way to get access
-        // to the builder. Just honor that registered named client here. Remember this is just a "configuration" of a client, not sharing
-        // the same client instance.
-        return _httpClientFactory.CreateClient("default");
+        return _httpClientFactory.CreateClient();
     }
 }

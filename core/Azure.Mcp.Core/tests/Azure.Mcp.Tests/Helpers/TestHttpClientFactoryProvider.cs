@@ -22,7 +22,7 @@ public static class TestHttpClientFactoryProvider
     {
         var services = new ServiceCollection();
         services.AddOptions();
-        services.AddConfiguredHttpClient();
+        services.AddHttpClient();
         return services.BuildServiceProvider();
     }
 }

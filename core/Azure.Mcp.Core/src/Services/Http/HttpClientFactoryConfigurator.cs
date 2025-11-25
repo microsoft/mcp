@@ -9,6 +9,7 @@ using System.Runtime.InteropServices;
 using System.Runtime.Versioning;
 using Azure.Mcp.Core.Areas.Server.Options;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Options;
 
 namespace Azure.Mcp.Core.Services.Http;
@@ -27,13 +28,17 @@ public static class HttpClientFactoryConfigurator
         s_platform = RuntimeInformation.OSDescription;
     }
 
-    public static IHttpClientBuilder AddConfiguredHttpClient(this IServiceCollection services)
+    public static IServiceCollection ConfigureDefaultHttpClient(this IServiceCollection services)
     {
         ArgumentNullException.ThrowIfNull(services);
 
-        // for curious eyes, if one doesn't use named clients, AddHttpClient() doesn't return a builder that can be further configured
-        var builder = services.AddHttpClient("default");
+        services.ConfigureHttpClientDefaults(static builder => ConfigureHttpClientBuilder(builder));
 
+        return services;
+    }
+
+    private static void ConfigureHttpClientBuilder(IHttpClientBuilder builder)
+    {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
             var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
@@ -48,8 +53,6 @@ public static class HttpClientFactoryConfigurator
             var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
             return CreateHttpMessageHandler(httpClientOptions);
         });
-
-        return builder;
     }
 
     private static HttpMessageHandler CreateHttpMessageHandler(HttpClientOptions options)

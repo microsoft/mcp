@@ -195,9 +195,9 @@ internal class Program
         services.AddSingleton<ISubscriptionService, SubscriptionService>();
         services.AddSingleton<CommandFactory>();
 
-        // Named overload returns IHttpClientBuilder enabling handler configuration.
-        // without passing named overload, we cannot configure handler.
-        services.AddConfiguredHttpClient();
+        services.AddHttpClient();
+        // customize the default client with Proxy, Record/Playback, and User-Agent defaults
+        services.ConfigureDefaultHttpClient();
 
         // !!! WARNING !!!
         // stdio-transport-specific implementations of ITenantService and ICacheService.
