@@ -1,11 +1,18 @@
 # Release History
 
-## 2.0.7 (Unreleased) (pre-release)
+## 2.0.7 (2025-11-25) (pre-release)
+
+### Changed
+
+- Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
+- Updated the .NET 10 SDK version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/Azure/azure-mcp/pull/1243)]
 
 ### Fixed
-- Adds version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration.
 
-## 2.0.6 (2025-11-19) (pre-release)
+- Added version parameter to the Azure MCP Server registration, which indicates VS code to refresh the tools for the latest MCP server registration. [[#1050](https://github.com/microsoft/mcp/pull/1050)]
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1225](https://github.com/microsoft/mcp/pull/1225/)]
+
+## 2.0.6 (2025-11-20) (pre-release)
 
 ### Added
 

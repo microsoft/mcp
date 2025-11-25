@@ -2,11 +2,7 @@
 
 The Azure MCP Server updates automatically by default whenever a new release comes out 🚀. We ship updates twice a week on Tuesdays and Thursdays 😊
 
-## 2.0.0-beta.7 (Unreleased)
-
-### Features Added
-
-### Breaking Changes
+## 2.0.0-beta.7 (2025-11-25)
 
 ### Bugs Fixed
 
@@ -15,8 +11,9 @@ The Azure MCP Server updates automatically by default whenever a new release com
 ### Other Changes
 
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
+- Updated the .NET 10 SDK version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/Azure/azure-mcp/pull/1243)]
 
-## 2.0.0-beta.6 (2025-11-19)
+## 2.0.0-beta.6 (2025-11-20)
 
 ### Features Added
 
