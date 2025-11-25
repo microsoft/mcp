@@ -104,18 +104,26 @@ public interface ITenantService
         CancellationToken cancellationToken);
 
     /// <summary>
-    /// Gets a new instance of <see cref="HttpClient"/> configured with the following options:
-    /// - Proxy
-    /// - Record/playback handler
-    /// - TimeOut
-    /// - User-Agent header
-    ///
-    /// Do:
-    ///  - Utilize for a single method or MCP tool invocation.
-    ///  - Add any additional options that are specific to the operation being performed.
-    /// Don't:
-    ///  - Store instances from this function that last beyond the lifetime of the invoking tool.
+    /// Gets a new instance of <see cref="HttpClient"/> configured for use with Azure tenant operations.
     /// </summary>
+    /// <remarks>
+    /// <para>Each instance includes the following configuration:</para>
+    /// <list type="bullet">
+    /// <item><description>Proxy settings</description></item>
+    /// <item><description>Record/playback handler</description></item>
+    /// <item><description>Timeout configuration</description></item>
+    /// <item><description>User-Agent header</description></item>
+    /// </list>
+    /// <para>Do:</para>
+    /// <list type="bullet">
+    /// <item><description>Utilize the client for a single method or MCP tool invocation.</description></item>
+    /// <item><description>Add request-specific configuration that is scoped to the current operation.</description></item>
+    /// </list>
+    /// <para>Don't:</para>
+    /// <list type="bullet">
+    /// <item><description>Persist the client beyond the lifetime of the invoking tool.</description></item>
+    /// </list>
+    /// </remarks>
     /// <returns>
     /// An <see cref="HttpClient"/> instance configured for use with Azure tenant operations.
     /// </returns>

@@ -32,6 +32,8 @@ public static class HttpClientFactoryConfigurator
     {
         ArgumentNullException.ThrowIfNull(services);
 
+        // builder is static to prevent to access instance members or external state beyond what's been injected
+        // within the service collection.
         services.ConfigureHttpClientDefaults(static builder => ConfigureHttpClientBuilder(builder));
 
         return services;
@@ -41,16 +43,16 @@ public static class HttpClientFactoryConfigurator
     {
         builder.ConfigureHttpClient((serviceProvider, client) =>
         {
-            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             client.Timeout = httpClientOptions.DefaultTimeout;
 
-            var transport = serviceProvider.GetService<IOptions<ServiceStartOptions>>()?.Value.Transport ?? TransportTypes.StdIo;
+            var transport = serviceProvider.GetRequiredService<IOptions<ServiceStartOptions>>().Value.Transport;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(BuildUserAgent(transport));
         });
 
         builder.ConfigurePrimaryHttpMessageHandler(serviceProvider =>
         {
-            var httpClientOptions = serviceProvider.GetService<IOptions<HttpClientOptions>>()?.Value ?? new HttpClientOptions();
+            var httpClientOptions = serviceProvider.GetRequiredService<IOptions<HttpClientOptions>>().Value;
             return CreateHttpMessageHandler(httpClientOptions);
         });
     }
