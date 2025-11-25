@@ -57,7 +57,7 @@ jobs:
 
                 $baseName = Get-ChildItem *.vsix | Select-Object -ExpandProperty BaseName -First 1
 
-                $publishArgs = @('--azure-credential', "--packagePath `"$baseName.vsix`"", "--manifestPath `"$baseName.manifest`"", "--signaturePath `"$baseName.signature.p7s`"")
+                $publishArgs = @('--azure-credential', '--packagePath', "$baseName.vsix", "--manifestPath", "$baseName.manifest", "--signaturePath", "$baseName.signature.p7s")
                 if ($server.vsixIsPrerelease) {
                     $publishArgs += '--pre-release'
                 }
@@ -68,10 +68,6 @@ jobs:
                 VSIX Version: $($server.vsixVersion)
                 VSIX baseName: $baseName
                 Is Prerelease: $($server.vsixIsPrerelease)
-
-                Publish arguments:
-                  $($publishArgs -join "`n  ")
-                "@
 
                 Write-Host ''
                 Write-Host 'Installing vsce...'
