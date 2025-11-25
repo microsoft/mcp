@@ -1,5 +1,10 @@
 # Release History
 
+## 1.0.1 (Unreleased)
+
+### Fixed
+- Added version parameter to the Azure MCP Server registration, prompting VS Code to refresh the tools for the latest MCP server registration.
+
 ## 1.0.0 (2025-10-27)
 
 **🎉 First Stable Release**
@@ -12,7 +17,7 @@ The Azure MCP Server now offers:
 
 - **Comprehensive Azure Service Coverage**: Support for 40+ Azure services including Storage, Key Vault, Cosmos DB, SQL, Kubernetes (AKS), AI Foundry, Event Hubs, Service Bus, PostgreSQL, MySQL, Redis, Azure Monitor, Application Insights, and many more
 - **Multiple Installation Methods**: Available through NuGet, NPM, and Docker; or as an extension/plugin for VS Code, Visual Studio 2022, and IntelliJ IDEA.
-- **Flexible Server Modes**: 
+- **Flexible Server Modes**:
   - Namespace mode (default): Organizes tools by service for easy discovery
   - Consolidated mode: Groups tools by tasks and actions for streamlined workflows
   - Single mode: All tools behind one unified "azure" tool
@@ -325,7 +330,7 @@ For a complete history of pre-release changes, see versions [0.9.9](#099-2025-10
   - App Lens: `azmcp_applens_resource_diagnose` [[#556](https://github.com/microsoft/mcp/pull/556)]
   - Cloud Architect: `azmcp_cloudarchitect_design` [[#587](https://github.com/microsoft/mcp/pull/587)]
   - Cosmos DB: `azmcp_cosmos_database_container_item_query` [[#625](https://github.com/microsoft/mcp/pull/625)]
-  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)] 
+  - Event Grid: [[#552](https://github.com/microsoft/mcp/pull/552)]
     - `azmcp_eventgrid_subscription_list`
     - `azmcp_eventgrid_topic_list`
   - Key Vault: [[#608](https://github.com/microsoft/mcp/pull/608)]
