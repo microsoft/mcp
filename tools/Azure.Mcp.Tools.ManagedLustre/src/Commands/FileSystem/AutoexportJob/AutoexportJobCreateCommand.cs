@@ -49,6 +49,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
 
         command.Options.Add(OptionDefinitions.Common.ResourceGroup.AsRequired());
         command.Options.Add(ManagedLustreOptionDefinitions.FileSystemNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AutoexportJobNameOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AutoexportPrefixOption);
+        command.Options.Add(ManagedLustreOptionDefinitions.AdminStatusOption);
     }
 
     protected override AutoexportJobCreateOptions BindOptions(ParseResult parseResult)
@@ -56,6 +59,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
         var options = base.BindOptions(parseResult);
         options.ResourceGroup ??= parseResult.GetValueOrDefault<string>(OptionDefinitions.Common.ResourceGroup.Name);
         options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
+        options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AutoexportJobNameOption.Name);
+        options.AutoexportPrefix = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AutoexportPrefixOption.Name);
+        options.AdminStatus = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AdminStatusOption.Name);
         return options;
     }
 
@@ -75,6 +81,9 @@ public sealed class AutoexportJobCreateCommand(ILogger<AutoexportJobCreateComman
                 options.Subscription!,
                 options.ResourceGroup!,
                 options.FileSystemName!,
+                options.JobName,
+                options.AutoexportPrefix,
+                options.AdminStatus,
                 options.Tenant,
                 options.RetryPolicy,
                 cancellationToken);

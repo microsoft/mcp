@@ -82,6 +82,9 @@ public interface IManagedLustreService
         string subscription,
         string resourceGroup,
         string filesystemName,
+        string? jobName = null,
+        string? autoexportPrefix = null,
+        string? adminStatus = null,
         string? tenant = null,
         RetryPolicyOptions? retryPolicy = null,
         CancellationToken cancellationToken = default);

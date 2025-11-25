@@ -238,6 +238,22 @@ public static class ManagedLustreOptionDefinitions
         Arity = ArgumentArity.OneOrMore
     };
 
+    public static readonly Option<string> AutoexportPrefixOption = new(
+        "--autoexport-prefix"
+    )
+    {
+        Required = false,
+        Description = "Blob path/prefix that gets auto exported from the cluster namespace. Default: '/'. Note: Only 1 prefix is supported for autoexport jobs. Example: --autoexport-prefix /data"
+    };
+
+    public static readonly Option<string> AutoexportJobNameOption = new(
+        "--job-name"
+    )
+    {
+        Required = false,
+        Description = "The name of the autoexport job. If not specified, a timestamped name will be generated."
+    };
+
     public static readonly Option<string> AdminStatusOption = new(
         "--admin-status"
     )
