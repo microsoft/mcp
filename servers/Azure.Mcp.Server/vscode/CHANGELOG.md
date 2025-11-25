@@ -5,7 +5,7 @@
 ### Changed
 
 - Removed usage of `writeIndented = true` (pretty printing) from `JsonSourceGenerationOptions` to reduce token usage. [[#1226](https://github.com/microsoft/mcp/pull/1226)]
-- Updated the .NET 10 SDK version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/Azure/azure-mcp/pull/1243)]
+- Updated the .NET 10 SDK version: `10.0.100-preview.7.25380.108` → `10.0.100`. [[#1243](https://github.com/microsoft/mcp/pull/1243)]
 
 ### Fixed
 
