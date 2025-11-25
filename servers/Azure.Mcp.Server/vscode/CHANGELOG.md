@@ -1,9 +1,15 @@
 # Release History
 
-## 1.0.1 (Unreleased)
+## 1.0.1 (2025-11-25)
+
+### Added
+
+- Added support for User-Assigned Managed Identity via `AZURE_CLIENT_ID` environment variable. [[#1038](https://github.com/microsoft/mcp/pull/1038)]
 
 ### Fixed
-- Added version parameter to the Azure MCP Server registration, prompting VS Code to refresh the tools for the latest MCP server registration.
+
+- Added version parameter to the Azure MCP Server registration, prompting VS Code to refresh the tools for the latest MCP server registration. [[#1242](https://github.com/microsoft/mcp/pull/1242)]
+- Fixed elicitation flow to request user confirmation only once for security prompts. Previously, users saw two dialogs (input form + confirmation); now they see a single confirmation dialog (Submit/Cancel) for sensitive operations. [[#1232](https://github.com/microsoft/mcp/pull/1232)]
 
 ## 1.0.0 (2025-10-27)
 
