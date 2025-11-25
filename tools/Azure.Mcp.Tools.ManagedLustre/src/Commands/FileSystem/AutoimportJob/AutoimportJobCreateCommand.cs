@@ -8,6 +8,7 @@ using Azure.Mcp.Tools.ManagedLustre.Options;
 using Azure.Mcp.Tools.ManagedLustre.Options.FileSystem.AutoimportJob;
 using Azure.Mcp.Tools.ManagedLustre.Services;
 using Microsoft.Extensions.Logging;
+using System.Linq;
 
 namespace Azure.Mcp.Tools.ManagedLustre.Commands.FileSystem.AutoimportJob;
 
@@ -71,7 +72,7 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
         options.FileSystemName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.FileSystemNameOption.Name);
         options.JobName = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.OptionalJobNameOption.Name);
         options.ConflictResolutionMode = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.ConflictResolutionModeOption.Name);
-        options.AutoimportPrefixes = parseResult.GetValueOrDefault<List<string>>(ManagedLustreOptionDefinitions.AutoimportPrefixesOption.Name);
+        options.AutoimportPrefixes = parseResult.GetValueOrDefault<string[]>(ManagedLustreOptionDefinitions.AutoimportPrefixesOption.Name);
         options.AdminStatus = parseResult.GetValueOrDefault<string>(ManagedLustreOptionDefinitions.AdminStatusOption.Name);
         options.EnableDeletions = parseResult.GetValueOrDefault<bool?>(ManagedLustreOptionDefinitions.EnableDeletionsOption.Name);
         options.MaximumErrors = parseResult.GetValueOrDefault<long?>(ManagedLustreOptionDefinitions.MaximumErrorsOption.Name);
@@ -90,6 +91,17 @@ public sealed class AutoimportJobCreateCommand(ILogger<AutoimportJobCreateComman
             }
 
             var svc = context.GetService<IManagedLustreService>();
+            
+            // Log the prefixes for debugging
+            if (options.AutoimportPrefixes != null && options.AutoimportPrefixes.Length > 0)
+            {
+                _logger.LogInformation("Autoimport prefixes received: {Prefixes}", string.Join(", ", options.AutoimportPrefixes));
+            }
+            else
+            {
+                _logger.LogInformation("No autoimport prefixes received, will use default");
+            }
+            
             var job = await svc.CreateAutoimportJobAsync(
                 options.Subscription!,
                 options.ResourceGroup!,

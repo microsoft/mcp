@@ -737,7 +737,7 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
         string filesystemName,
         string? jobName = null,
         string? conflictResolutionMode = null,
-        List<string>? autoimportPrefixes = null,
+        string[]? autoimportPrefixes = null,
         string? adminStatus = null,
         bool? enableDeletions = null,
         long? maximumErrors = null,
@@ -780,13 +780,13 @@ public sealed class ManagedLustreService(ISubscriptionService subscriptionServic
                 };
             }
 
-            if (autoimportPrefixes != null && autoimportPrefixes.Count > 0)
+            if (autoimportPrefixes != null && autoimportPrefixes.Length > 0)
             {
-                if (autoimportPrefixes.Count > 100)
+                if (autoimportPrefixes.Length > 100)
                 {
                     throw new ArgumentException("Maximum of 100 autoimport prefixes allowed");
                 }
-                foreach (var prefix in autoimportPrefixes)
+                foreach (var prefix in autoimportPrefixes!)
                 {
                     autoImportJobData.AutoImportPrefixes.Add(prefix);
                 }

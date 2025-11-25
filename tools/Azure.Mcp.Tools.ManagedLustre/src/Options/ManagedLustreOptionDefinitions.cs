@@ -229,12 +229,13 @@ public static class ManagedLustreOptionDefinitions
         Description = "How the auto import job handles conflicts. Fail: stop immediately on conflict. Skip: pass over the conflict. OverwriteIfDirty: delete and re-import if conflicting type, dirty, or currently released. OverwriteAlways: extends OverwriteIfDirty to include releasing restored but not dirty files. Default: Skip. Allowed values: Fail, Skip, OverwriteIfDirty, OverwriteAlways."
     };
 
-    public static readonly Option<List<string>> AutoimportPrefixesOption = new(
+    public static readonly Option<string[]> AutoimportPrefixesOption = new(
         "--autoimport-prefixes"
     )
     {
         Required = false,
-        Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data /logs /archive"
+        Description = "Array of blob paths/prefixes that get auto imported to the cluster namespace. Default: '/'. Maximum: 100 paths. Example: --autoimport-prefixes /data /logs /archive",
+        Arity = ArgumentArity.OneOrMore
     };
 
     public static readonly Option<string> AdminStatusOption = new(

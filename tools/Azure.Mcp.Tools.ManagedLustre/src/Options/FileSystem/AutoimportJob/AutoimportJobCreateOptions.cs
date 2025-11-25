@@ -17,7 +17,7 @@ public sealed class AutoimportJobCreateOptions : BaseManagedLustreOptions
     public string? ConflictResolutionMode { get; set; }
 
     [JsonPropertyName("autoimport-prefixes")]
-    public List<string>? AutoimportPrefixes { get; set; }
+    public string[]? AutoimportPrefixes { get; set; }
 
     [JsonPropertyName("admin-status")]
     public string? AdminStatus { get; set; }
