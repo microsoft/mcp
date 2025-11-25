@@ -38,6 +38,7 @@ jobs:
       scriptLocation: 'scriptPath'
       scriptPath: $(Build.SourcesDirectory)/eng/scripts/Deploy-ServerJson.ps1
       arguments: >
+        -ServerJsonPath: '$(Pipeline.Workspace)/build_info/${{ parameters.ServerName }}/server.json'
         -ServerName '${{ parameters.ServerName }}'
         -BuildInfoPath '$(Pipeline.Workspace)/build_info/build_info.json'
         -KeyVaultName 'azuresdkengkeyvault'
