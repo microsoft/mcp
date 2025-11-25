@@ -3029,7 +3029,7 @@
     },
     {
       "name": "connect",
-      "description": "Query an Microsoft Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows - instead, use agents_query-and-evaluate or agents_evaluate.",
+      "description": "Query a Microsoft Foundry agent and get the response as is (no query and evaluate). Use for one-off interaction or to capture run/thread IDs before calling evaluation tools. Do not use this tool for combined answer-plus-score workflows - instead, use agents_query-and-evaluate or agents_evaluate.",
       "command": "foundry agents connect",
       "option": [
         {
@@ -3096,7 +3096,7 @@
     },
     {
       "name": "create",
-      "description": "    Creates an Microsoft Foundry Agent that processes messages according to a given system instruction using an existing Microsoft Foundry model deployment.",
+      "description": "    Creates a Microsoft Foundry Agent that processes messages according to a given system instruction using an existing Microsoft Foundry model deployment.",
       "command": "foundry agents create",
       "option": [
         {
@@ -3267,7 +3267,7 @@
     },
     {
       "name": "list",
-      "description": "List all Azure AI Agents in an Microsoft Foundry project. Shows agents that can be used for AI workflows, \r\nevaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).",
+      "description": "List all Azure AI Agents in a Microsoft Foundry project. Shows agents that can be used for AI workflows, \r\nevaluations, and interactive tasks. Requires the project endpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>).",
       "command": "foundry agents list",
       "option": [
         {
@@ -3644,7 +3644,7 @@
     },
     {
       "name": "list",
-      "description": "List model deployments in an Microsoft Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. \r\nUse this to audit what models are deployed before invoking or creating new deployments. Requires the project \r\nendpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists \r\ndeployed models only - use models_list to discover available catalog/base models.",
+      "description": "List model deployments in a Microsoft Foundry (Cognitive Services) project. Shows currently deployed AI models at the project level. \r\nUse this to audit what models are deployed before invoking or creating new deployments. Requires the project \r\nendpoint URL (format: https://<resource>.services.ai.azure.com/api/projects/<project-name>). Note: This lists \r\ndeployed models only - use models_list to discover available catalog/base models.",
       "command": "foundry models deployments list",
       "option": [
         {
@@ -4093,7 +4093,7 @@
     },
     {
       "name": "models-list",
-      "description": "List all available Azure OpenAI models and deployments in an Microsoft Foundry resource. This tool retrieves information \r\nabout Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities, \r\nand deployment status. Use this when you need to see what OpenAI models are available, check model deployments, \r\nor list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.",
+      "description": "List all available Azure OpenAI models and deployments in a Microsoft Foundry resource. This tool retrieves information \r\nabout Azure OpenAI models deployed in your Microsoft Foundry resource including model names, versions, capabilities, \r\nand deployment status. Use this when you need to see what OpenAI models are available, check model deployments, \r\nor list Azure OpenAI models in your foundry resource. Returns model information as JSON array. Requires resource-name.",
       "command": "foundry openai models-list",
       "option": [
         {
@@ -4227,7 +4227,7 @@
     },
     {
       "name": "create",
-      "description": "    Creates an Microsoft Foundry Agent Thread that holds the messages between the Agent and the user.",
+      "description": "    Creates a Microsoft Foundry Agent Thread that holds the messages between the Agent and the user.",
       "command": "foundry threads create",
       "option": [
         {
@@ -4288,7 +4288,7 @@
     },
     {
       "name": "get-messages",
-      "description": "    Get messages in an Microsoft Foundry Agent Thread.",
+      "description": "    Get messages in a Microsoft Foundry Agent Thread.",
       "command": "foundry threads get-messages",
       "option": [
         {
@@ -9926,6 +9926,97 @@
       ]
     },
     {
+      "name": "create",
+      "description": "Create a new Azure Managed Redis resource in Azure. Use this command to provision a new Redis resource in your subscription.",
+      "command": "redis create",
+      "option": [
+        {
+          "name": "--tenant",
+          "description": "The Microsoft Entra ID tenant ID or name. This can be either the GUID identifier or the display name of your Entra ID tenant.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--auth-method",
+          "description": "Authentication method to use. Options: 'credential' (Azure CLI/managed identity), 'key' (access key), or 'connectionString'.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-delay",
+          "description": "Initial delay in seconds between retry attempts. For exponential backoff, this value is used as the base.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-delay",
+          "description": "Maximum delay in seconds between retries, regardless of the retry strategy.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-max-retries",
+          "description": "Maximum number of retry attempts for failed operations before giving up.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-mode",
+          "description": "Retry strategy to use. 'fixed' uses consistent delays, 'exponential' increases delay between attempts.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--retry-network-timeout",
+          "description": "Network operation timeout in seconds. Operations taking longer than this will be cancelled.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--subscription",
+          "description": "Specifies the Azure subscription to use. Accepts either a subscription ID (GUID) or display name. If not specified, the AZURE_SUBSCRIPTION_ID environment variable will be used instead.",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--resource",
+          "description": "The name of the Redis resource (e.g., my-redis).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--resource-group",
+          "description": "The name of the Azure resource group. This is a logical container for Azure resources.",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--sku",
+          "description": "The SKU for the Redis resource. (Default: Balanced_B0)",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--location",
+          "description": "The location for the Redis resource (e.g. eastus).",
+          "type": "string",
+          "required": true
+        },
+        {
+          "name": "--access-keys-authentication",
+          "description": "Whether to enable access keys for authentication for the Redis resource. (Default: false)",
+          "type": "string",
+          "required": null
+        },
+        {
+          "name": "--modules",
+          "description": "A list of modules to enable on the Azure Managed Redis resource (e.g., RedisBloom, RedisJSON).",
+          "type": "string",
+          "required": null
+        }
+      ]
+    },
+    {
       "name": "list",
       "description": "List/show all Redis resources in a subscription. Returns details of all Azure Managed Redis, Azure Cache for Redis, and Azure Redis Enterprise resources. Use this command to explore and view which Redis resources are available in your subscription.",
       "command": "redis list",
@@ -13280,5 +13371,5 @@
     }
   ],
   "consolidated_tools": null,
-  "duration": 60
+  "duration": 51
 }

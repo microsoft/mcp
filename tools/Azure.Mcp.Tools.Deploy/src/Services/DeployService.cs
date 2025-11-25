@@ -17,7 +17,7 @@ public class DeployService(ITenantService tenantService) : BaseAzureService(tena
          CancellationToken cancellationToken = default)
     {
         TokenCredential credential = await GetCredential(cancellationToken);
-        string result = await AzdResourceLogService.GetAzdResourceLogsAsync(
+        string result = await ResourceLogService.GetResourceLogsAsync(
             credential,
             subscriptionId,
             resourceGroupName,
