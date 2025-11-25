@@ -132,7 +132,7 @@ public interface IManagedLustreService
         string filesystemName,
         string? jobName = null,
         string? conflictResolutionMode = null,
-        List<string>? autoimportPrefixes = null,
+        string[]? autoimportPrefixes = null,
         string? adminStatus = null,
         bool? enableDeletions = null,
         long? maximumErrors = null,
