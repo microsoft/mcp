@@ -14,7 +14,6 @@ export function run(): Promise<void> {
     };
 
     const mocha = new Mocha(opts);
-
     const testsRoot = path.resolve(__dirname, '..');
 
     return new Promise((c, e) => {
