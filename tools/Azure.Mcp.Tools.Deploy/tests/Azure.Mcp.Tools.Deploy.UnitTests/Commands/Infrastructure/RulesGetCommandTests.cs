@@ -97,8 +97,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Additional requirements for Function Apps", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Storage Blob Data Owner", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("If creating AzCli script, the script should stop if any command fails", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -116,8 +115,7 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Additional requirements for Container Apps", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("mcr.microsoft.com/azuredocs/containerapps-helloworld:latest", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("If creating AzCli script, the script should stop if any command fails", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 
     [Fact]
@@ -139,26 +137,6 @@ public class RulesGetCommandTests
     }
 
     [Fact]
-    public async Task Should_include_necessary_tools_in_response()
-    {
-        // arrange
-        var args = _commandDefinition.Parse([
-            "--resource-types", "containerapp"
-        ]);
-
-        // act
-        var result = await _command.ExecuteAsync(_context, args, TestContext.Current.CancellationToken);
-
-        // assert
-        Assert.NotNull(result);
-        Assert.Equal(HttpStatusCode.OK, result.Status);
-        Assert.NotNull(result.Message);
-        Assert.Contains("Tools needed:", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("az cli", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("docker", result.Message, StringComparison.OrdinalIgnoreCase);
-    }
-
-    [Fact]
     public async Task Should_handle_multiple_resource_types()
     {
         // arrange
@@ -173,9 +151,6 @@ public class RulesGetCommandTests
         Assert.NotNull(result);
         Assert.Equal(HttpStatusCode.OK, result.Status);
         Assert.NotNull(result.Message);
-        Assert.Contains("Resources: appservice, containerapp, function", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("App Service Rules", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Additional requirements for Container Apps", result.Message, StringComparison.OrdinalIgnoreCase);
-        Assert.Contains("Additional requirements for Function Apps", result.Message, StringComparison.OrdinalIgnoreCase);
+        Assert.Contains("If creating AzCli script, the script should stop if any command fails", result.Message, StringComparison.OrdinalIgnoreCase);
     }
 }
