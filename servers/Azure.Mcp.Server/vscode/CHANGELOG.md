@@ -3,7 +3,7 @@
 ## 1.0.1 (Unreleased)
 
 ### Fixed
-- Adds version parameter to the Azure MCP Server registration, which indicates VS Code to refresh the tools for the latest MCP server registration.
+- Added version parameter to the Azure MCP Server registration, prompting VS Code to refresh the tools for the latest MCP server registration.
 
 ## 1.0.0 (2025-10-27)
 
